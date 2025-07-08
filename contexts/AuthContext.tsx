@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import ApiService from '../services/api/ApiService';
+import CustomerService from '../services/api/CustomerService';
+import PreCacheService from '../services/PreCacheService';
 import TokenStorageService from '../services/TokenStorageService';
 import { User } from '../types/auth';
 import { NavigationHelper } from '../utils/NavigationHelper';
+import StartupPerformanceMonitor from '../utils/StartupPerformanceMonitor';
 
 export interface AuthContextType {
   isAuthenticated: boolean;
@@ -10,8 +12,10 @@ export interface AuthContextType {
   userRole: string | null;
   isLoading: boolean;
   checkAuthStatus: () => Promise<void>;
+  refreshUserData: () => Promise<void>; // Nouvelle méthode pour forcer le rafraîchissement
   logout: () => Promise<void>;
   redirectToRoleBasedHome: (role?: string) => void;
+  handlePostRegistration: (userData: User, role: string) => Promise<void>; // Nouvelle méthode
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,39 +40,136 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const checkAuthStatus = async () => {
     try {
-      setIsLoading(true);
+      // DÉMARRAGE ULTRA-RAPIDE : Précharger les données puis les utiliser
+      StartupPerformanceMonitor.mark('AuthContext - Début vérification');
+      console.log('⚡ Démarrage de vérification auth...');
       
-      // Check if user is logged in
-      const isLoggedIn = await TokenStorageService.isLoggedIn();
+      // Précharger toutes les données en cache avant de les utiliser
+      await PreCacheService.preloadCriticalData();
       
-      if (isLoggedIn) {
-        // Get user role
-        const role = await ApiService.getUserRole();
-        const userData = await TokenStorageService.getUserData();
-        
-        if (role && userData) {
-          setIsAuthenticated(true);
-          setUser(userData);
-          setUserRole(role);
-        } else {
-          // Clear invalid session
-          await TokenStorageService.clearAll();
-          setIsAuthenticated(false);
-          setUser(null);
-          setUserRole(null);
-        }
-      } else {
+      // Utiliser une seule méthode optimisée pour éviter les appels multiples
+      const [tokens, storedUserData, storedRole] = await Promise.all([
+        TokenStorageService.getTokens(),
+        TokenStorageService.getUserData(),
+        TokenStorageService.getUserRole()
+      ]);
+      
+      StartupPerformanceMonitor.mark('AuthContext - Données en cache récupérées');
+      console.log('⚡ Données récupérées du cache');
+      
+      // *** NETTOYAGE AUTOMATIQUE DES TOKENS MOCK ***
+      if (tokens.accessToken && tokens.accessToken.includes('mock-access-token')) {
+        console.log('🧹 Détection de tokens mock - nettoyage automatique');
+        await TokenStorageService.clearAll();
         setIsAuthenticated(false);
         setUser(null);
         setUserRole(null);
+        setIsLoading(false);
+        StartupPerformanceMonitor.mark('AuthContext - Nettoyage tokens mock terminé');
+        return;
+      }
+      
+      // Vérification rapide : si on a des tokens, des données utilisateur et un rôle
+      if (tokens.accessToken && storedUserData && storedRole) {
+        // Charger immédiatement avec les données disponibles
+        setIsAuthenticated(true);
+        setUser(storedUserData);
+        setUserRole(storedRole);
+        setIsLoading(false); // Stopper le loading immédiatement
+        
+        StartupPerformanceMonitor.mark('AuthContext - Session restaurée (cache)');
+        console.log('⚡ Démarrage rapide avec données en cache terminé');
+        
+        // Puis vérifier et rafraîchir en arrière-plan (sans bloquer)
+        // Délai réduit pour un démarrage encore plus rapide
+        setTimeout(() => {
+          refreshUserDataInBackground(storedRole);
+        }, 10); // Réduit de 100ms à 10ms
+        
+      } else {
+        // Pas de session valide complète
+        console.log('❌ Session incomplète, nettoyage...');
+        await TokenStorageService.clearAll();
+        setIsAuthenticated(false);
+        setUser(null);
+        setUserRole(null);
+        setIsLoading(false);
+        StartupPerformanceMonitor.mark('AuthContext - Session nettoyée');
       }
     } catch (error) {
       console.error('Error checking auth status:', error);
       setIsAuthenticated(false);
       setUser(null);
       setUserRole(null);
-    } finally {
       setIsLoading(false);
+      StartupPerformanceMonitor.mark('AuthContext - Erreur de vérification');
+    }
+  };
+
+  // Fonction pour charger les données fraîches en arrière-plan
+  const refreshUserDataInBackground = async (role: string) => {
+    try {
+      console.log('🔄 Rafraîchissement des données utilisateur en arrière-plan...');
+      let userData: User | null = null;
+      
+      if (role === 'CLIENT') {
+        userData = await CustomerService.getProfile();
+      } else if (role === 'ENTERPRISE') {
+        // Pour les entreprises, récupérer les données utilisateur de base
+        // Les données spécifiques de l'entreprise seront chargées par les composants qui en ont besoin
+        const tokens = await TokenStorageService.getTokens();
+        if (tokens.accessToken) {
+          // Récupérer les données utilisateur de base
+          userData = await CustomerService.getProfile();
+        }
+      }
+      
+      if (userData) {
+        // Mettre à jour silencieusement les données
+        setUser(userData);
+        await TokenStorageService.setUserData(userData);
+        console.log('✅ Données utilisateur rafraîchies');
+      }
+    } catch (error) {
+      console.warn('⚠️ Erreur lors du rafraîchissement des données (ignorée):', error);
+      // Ne pas affecter l'état de l'app si le rafraîchissement échoue
+    }
+  };
+
+  // Fonction pour charger les données fraîches (bloquante)
+  const loadFreshUserData = async (role: string) => {
+    try {
+      let userData: User | null = null;
+      
+      if (role === 'CLIENT') {
+        userData = await CustomerService.getProfile();
+      } else if (role === 'ENTERPRISE') {
+        // Pour les entreprises, récupérer les données utilisateur de base
+        const tokens = await TokenStorageService.getTokens();
+        if (tokens.accessToken) {
+          userData = await CustomerService.getProfile();
+        }
+      }
+      
+      if (userData) {
+        setIsAuthenticated(true);
+        setUser(userData);
+        setUserRole(role);
+        await TokenStorageService.setUserData(userData);
+      } else {
+        // Clear invalid session
+        await TokenStorageService.clearAll();
+        setIsAuthenticated(false);
+        setUser(null);
+        setUserRole(null);
+      }
+    } catch (apiError) {
+      console.warn('API error during fresh load:', apiError);
+      // Clear session on API error
+      await TokenStorageService.clearAll();
+      setIsAuthenticated(false);
+      setUser(null);
+      setUserRole(null);
     }
   };
 
@@ -101,9 +202,78 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Nouvelle méthode pour forcer le rafraîchissement des données
+  const refreshUserData = async () => {
+    if (!userRole) {
+      console.warn('No user role found, cannot refresh user data');
+      return;
+    }
+
+    try {
+      console.log('🔄 Forcing user data refresh...');
+      await loadFreshUserData(userRole);
+    } catch (error) {
+      console.error('Error forcing user data refresh:', error);
+    }
+  };
+
+  // Nouvelle méthode pour gérer l'état après inscription réussie
+  const handlePostRegistration = async (userData: User, role: string) => {
+    try {
+      console.log('🎯 Traitement post-inscription pour:', userData.email);
+      
+      // Double vérification que les données sont bien stockées
+      const tokens = await TokenStorageService.getTokens();
+      const storedRole = await TokenStorageService.getUserRole();
+      const storedUser = await TokenStorageService.getUserData();
+      
+      if (!tokens.accessToken || !storedRole || !storedUser) {
+        console.warn('⚠️ Données manquantes après inscription, attente et nouvelle vérification...');
+        
+        // Attendre un peu et vérifier à nouveau
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const retryTokens = await TokenStorageService.getTokens();
+        const retryRole = await TokenStorageService.getUserRole();
+        const retryUser = await TokenStorageService.getUserData();
+        
+        if (!retryTokens.accessToken || !retryRole || !retryUser) {
+          console.error('❌ Données toujours manquantes après nouvelle tentative');
+          // Forcer une re-vérification complète
+          await checkAuthStatus();
+          return;
+        }
+      }
+      
+      // Mettre à jour immédiatement l'état de l'authentification
+      setIsAuthenticated(true);
+      setUser(userData);
+      setUserRole(role);
+      setIsLoading(false);
+      
+      console.log('✅ État post-inscription mis à jour avec succès');
+      console.log('🔍 État final - Authentifié:', true);
+      console.log('🔍 État final - Utilisateur:', userData.email);
+      console.log('🔍 État final - Rôle:', role);
+      
+      // Optionnel : charger des données fraîches en arrière-plan après un délai
+      setTimeout(() => {
+        refreshUserDataInBackground(role);
+      }, 1000);
+      
+    } catch (error) {
+      console.error('❌ Erreur lors du traitement post-inscription:', error);
+      // En cas d'erreur, forcer une re-vérification complète
+      await checkAuthStatus();
+    }
+  };
+
   useEffect(() => {
-    checkAuthStatus();
-  }, []);
+    const initAuth = async () => {
+      await checkAuthStatus();
+    };
+    initAuth();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const value: AuthContextType = {
     isAuthenticated,
@@ -111,8 +281,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     userRole,
     isLoading,
     checkAuthStatus,
+    refreshUserData, // Ajout de la nouvelle méthode ici
     logout,
     redirectToRoleBasedHome,
+    handlePostRegistration, // Ajout de la nouvelle méthode ici
   };
 
   return (

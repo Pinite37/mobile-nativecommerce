@@ -5,8 +5,9 @@ import React, { useState } from 'react';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useToast } from '../../components/ui/ToastManager';
-import AuthService from '../../services/api/AuthService';
+import { useAuth } from '../../contexts/AuthContext';
 import { ErrorHandler } from '../../utils/ErrorHandler';
+import { RegistrationHelper } from '../../utils/RegistrationHelper';
 
 export default function SignUpScreen() {
   const { role } = useLocalSearchParams<{ role: string }>();
@@ -22,6 +23,7 @@ export default function SignUpScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
+  const { redirectToRoleBasedHome, handlePostRegistration } = useAuth();
 
   const handleSignUp = async () => {
     if (!firstName || !lastName || !email || !phone || !address || !password || !confirmPassword) {
@@ -51,16 +53,32 @@ export default function SignUpScreen() {
         role: (role || 'CLIENT') as 'CLIENT' | 'ENTERPRISE',
       };
 
-      const response = await AuthService.register(userData);
+      console.log('🚀 Début de l\'inscription...');
       
-      if (response.success) {
+      // Utiliser l'utilitaire d'inscription avec connexion automatique
+      const response = await RegistrationHelper.registerWithAutoLogin(userData, false);
+      
+      if (response.success && response.data) {
+        console.log('✅ Inscription réussie, traitement de l\'état...');
+        
+        // Afficher l'état d'authentification pour debug
+        await RegistrationHelper.logAuthenticationState();
+        
+        // Mettre à jour l'état d'authentification
+        await handlePostRegistration(response.data.user, response.data.user.role);
+        
         const successMessage = ErrorHandler.getSuccessMessage('register');
         toast.showSuccess(successMessage.title, successMessage.message);
         
-        // Navigate to main app
-        router.replace('/');
+        console.log('🎯 Redirection vers l\'interface utilisateur...');
+        
+        // Rediriger vers l'interface correspondant au rôle avec un délai optimisé
+        setTimeout(() => {
+          redirectToRoleBasedHome(response.data.user.role);
+        }, 1200);
       }
     } catch (error: any) {
+      console.error('❌ Erreur inscription:', error);
       const errorMessage = ErrorHandler.parseApiError(error);
       toast.showError(errorMessage.title, errorMessage.message);
     } finally {

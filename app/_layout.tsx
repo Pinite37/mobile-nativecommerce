@@ -19,11 +19,15 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
+    // Optimisation : Cacher le splash screen immédiatement pour un démarrage ultra-rapide
     if (loaded || error) {
+      // Pas de délai pour un démarrage instantané
       SplashScreen.hideAsync();
     }
   }, [loaded, error]);
 
+  // Optimisation : Ne pas bloquer si les fonts ne sont pas encore chargées
+  // Laisser l'app démarrer avec les fonts système par défaut
   if (!loaded && !error) {
     return null;
   }

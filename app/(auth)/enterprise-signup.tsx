@@ -2,10 +2,23 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
+import { useToast } from '../../components/ui/ToastManager';
+import { useAuth } from '../../contexts/AuthContext';
+import { EnterpriseRegisterRequest } from '../../types/auth';
+import { RegistrationHelper } from '../../utils/RegistrationHelper';
 
 export default function EnterpriseSignUpScreen() {
-  // Personal Information
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -13,40 +26,33 @@ export default function EnterpriseSignUpScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [address, setAddress] = useState('');
-  
-  // Enterprise Information
   const [companyName, setCompanyName] = useState('');
   const [description, setDescription] = useState('');
-  
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const toast = useToast();
+  const { redirectToRoleBasedHome, handlePostRegistration } = useAuth();
 
   const handleSignUp = async () => {
-    if (!firstName || !lastName || !email || !phone || !password || !confirmPassword || !address) {
-      Alert.alert('Error', 'Please fill in all personal information fields');
-      return;
-    }
-
-    if (!companyName || !description) {
-      Alert.alert('Error', 'Please fill in all company information fields');
+    if (!firstName || !lastName || !email || !phone || !password || !confirmPassword || !address || !companyName) {
+      toast.showError('Erreur', 'Veuillez remplir tous les champs obligatoires');
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      toast.showError('Erreur', 'Les mots de passe ne correspondent pas');
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters long');
+      toast.showError('Erreur', 'Le mot de passe doit contenir au moins 6 caractères');
       return;
     }
 
     setIsLoading(true);
     try {
-      // TODO: Implement enterprise sign up logic
-      const userData = {
+      const userData: EnterpriseRegisterRequest = {
         firstName,
         lastName,
         email,
@@ -58,11 +64,32 @@ export default function EnterpriseSignUpScreen() {
         description,
       };
       
-      console.log('Enterprise Sign up:', userData);
-      Alert.alert('Success', 'Enterprise account created successfully!');
-      // Navigate to main app or dashboard
-    } catch {
-      Alert.alert('Error', 'Sign up failed. Please try again.');
+      console.log('🏢 Enterprise Sign up:', userData);
+      
+      // Utiliser l'utilitaire d'inscription avec connexion automatique
+      const response = await RegistrationHelper.registerWithAutoLogin(userData, true);
+      
+      if (response.success && response.data) {
+        console.log('✅ Inscription entreprise réussie, traitement de l\'état...');
+        
+        // Afficher l'état d'authentification pour debug
+        await RegistrationHelper.logAuthenticationState();
+        
+        // Mettre à jour l'état d'authentification
+        await handlePostRegistration(response.data.user, response.data.user.role);
+        
+        toast.showSuccess('Succès', 'Compte entreprise créé avec succès !');
+        
+        console.log('🎯 Redirection vers l\'interface entreprise...');
+        
+        // Rediriger vers l'interface entreprise avec un délai optimisé
+        setTimeout(() => {
+          redirectToRoleBasedHome('ENTERPRISE');
+        }, 1200);
+      }
+    } catch (error: any) {
+      console.error('❌ Enterprise registration error:', error);
+      toast.showError('Erreur', error.message || 'Échec de la création du compte. Veuillez réessayer.');
     } finally {
       setIsLoading(false);
     }
@@ -73,10 +100,19 @@ export default function EnterpriseSignUpScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1 bg-white"
+    >
       <StatusBar style="dark" />
       
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView 
+          className="flex-1" 
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingBottom: 100 }}
+        >
         {/* Header */}
         <View className="px-6 pt-16 pb-8">
           <TouchableOpacity
@@ -108,10 +144,11 @@ export default function EnterpriseSignUpScreen() {
                 First Name
               </Text>
               <TextInput
+                className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
+                placeholder="John"
+                placeholderTextColor="#9CA3AF"
                 value={firstName}
                 onChangeText={setFirstName}
-                placeholder="First name"
-                className="border border-neutral-200 rounded-xl px-4 py-4 text-base font-quicksand"
               />
             </View>
             <View className="flex-1 ml-2">
@@ -119,53 +156,57 @@ export default function EnterpriseSignUpScreen() {
                 Last Name
               </Text>
               <TextInput
+                className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
+                placeholder="Doe"
+                placeholderTextColor="#9CA3AF"
                 value={lastName}
                 onChangeText={setLastName}
-                placeholder="Last name"
-                className="border border-neutral-200 rounded-xl px-4 py-4 text-base font-quicksand"
               />
             </View>
           </View>
-
-          {/* Email Input */}
+          
+          {/* Email */}
           <View className="mb-4">
             <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
               Email
             </Text>
             <TextInput
+              className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
+              placeholder="john.doe@example.com"
+              placeholderTextColor="#9CA3AF"
               value={email}
               onChangeText={setEmail}
-              placeholder="Enter your email"
               keyboardType="email-address"
               autoCapitalize="none"
-              className="border border-neutral-200 rounded-xl px-4 py-4 text-base font-quicksand"
             />
           </View>
 
-          {/* Phone Input */}
+          {/* Phone */}
           <View className="mb-4">
             <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
               Phone Number
             </Text>
             <TextInput
+              className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
+              placeholder="+1 (555) 123-4567"
+              placeholderTextColor="#9CA3AF"
               value={phone}
               onChangeText={setPhone}
-              placeholder="Enter your phone number"
               keyboardType="phone-pad"
-              className="border border-neutral-200 rounded-xl px-4 py-4 text-base font-quicksand"
             />
           </View>
 
-          {/* Address Input */}
+          {/* Address */}
           <View className="mb-6">
             <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
               Address
             </Text>
             <TextInput
+              className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
+              placeholder="123 Main St, City, State"
+              placeholderTextColor="#9CA3AF"
               value={address}
               onChangeText={setAddress}
-              placeholder="Enter your address"
-              className="border border-neutral-200 rounded-xl px-4 py-4 text-base font-quicksand"
             />
           </View>
 
@@ -180,81 +221,85 @@ export default function EnterpriseSignUpScreen() {
               Company Name
             </Text>
             <TextInput
+              className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
+              placeholder="Your Company Ltd."
+              placeholderTextColor="#9CA3AF"
               value={companyName}
               onChangeText={setCompanyName}
-              placeholder="Enter your company name"
-              className="border border-neutral-200 rounded-xl px-4 py-4 text-base font-quicksand"
             />
           </View>
 
           {/* Description */}
           <View className="mb-6">
             <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-              Business Description
+              Business Description (Optional)
             </Text>
             <TextInput
+              className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
+              placeholder="Describe your business..."
+              placeholderTextColor="#9CA3AF"
               value={description}
               onChangeText={setDescription}
-              placeholder="Describe your business"
               multiline
-              numberOfLines={4}
-              className="border border-neutral-200 rounded-xl px-4 py-4 text-base font-quicksand"
-              style={{ textAlignVertical: 'top' }}
+              numberOfLines={3}
+              textAlignVertical="top"
             />
           </View>
 
-          {/* Security Section */}
+          {/* Password Section */}
           <Text className="text-lg font-quicksand-semibold text-neutral-900 mb-4">
             Security
           </Text>
 
-          {/* Password Input */}
+          {/* Password */}
           <View className="mb-4">
             <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
               Password
             </Text>
             <View className="relative">
               <TextInput
+                className="w-full px-4 py-3 pr-12 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
+                placeholder="Enter your password"
+                placeholderTextColor="#9CA3AF"
                 value={password}
                 onChangeText={setPassword}
-                placeholder="Enter your password"
                 secureTextEntry={!showPassword}
-                className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 text-base font-quicksand"
               />
               <TouchableOpacity
+                className="absolute right-4 top-3"
                 onPress={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-4"
               >
                 <Ionicons
                   name={showPassword ? 'eye-off' : 'eye'}
                   size={20}
-                  color="#6B7280"
+                  color="#9CA3AF"
                 />
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* Confirm Password Input */}
-          <View className="mb-8">
+          {/* Confirm Password */}
+          <View className="mb-6">
             <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
               Confirm Password
             </Text>
             <View className="relative">
               <TextInput
+                className="w-full px-4 py-3 pr-12 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
+                placeholder="Confirm your password"
+                placeholderTextColor="#9CA3AF"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
-                placeholder="Confirm your password"
                 secureTextEntry={!showConfirmPassword}
-                className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 text-base font-quicksand"
               />
               <TouchableOpacity
+                className="absolute right-4 top-3"
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-4 top-4"
               >
                 <Ionicons
                   name={showConfirmPassword ? 'eye-off' : 'eye'}
                   size={20}
-                  color="#6B7280"
+                  color="#9CA3AF"
                 />
               </TouchableOpacity>
             </View>
@@ -262,30 +307,31 @@ export default function EnterpriseSignUpScreen() {
 
           {/* Sign Up Button */}
           <TouchableOpacity
+            className={`w-full py-4 rounded-2xl mb-4 ${
+              isLoading ? 'bg-primary-300' : 'bg-primary-500'
+            }`}
             onPress={handleSignUp}
             disabled={isLoading}
-            className={`rounded-xl py-4 mb-6 ${
-              isLoading ? 'bg-primary/70' : 'bg-primary'
-            }`}
           >
-            <Text className="text-white font-quicksand-semibold text-base text-center">
-              {isLoading ? 'Creating Business Account...' : 'Create Business Account'}
+            <Text className="text-white text-center font-quicksand-semibold text-lg">
+              {isLoading ? 'Creating Account...' : 'Create Business Account'}
             </Text>
           </TouchableOpacity>
 
           {/* Sign In Link */}
-          <View className="flex-row justify-center items-center pb-6">
-            <Text className="text-neutral-600 font-quicksand text-sm">
+          <View className="flex-row justify-center mb-8">
+            <Text className="text-neutral-600 font-quicksand">
               Already have an account?{' '}
             </Text>
             <TouchableOpacity onPress={handleSignIn}>
-              <Text className="text-primary font-quicksand-semibold text-sm">
+              <Text className="text-primary-500 font-quicksand-semibold">
                 Sign In
               </Text>
             </TouchableOpacity>
           </View>
         </View>
-      </ScrollView>
-    </View>
+        </ScrollView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }

@@ -1,307 +1,482 @@
-import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import React, { useState } from "react";
+import { Ionicons } from '@expo/vector-icons';
+import { StatusBar } from 'expo-status-bar';
+import React, { useEffect, useState } from 'react';
 import {
+    ActivityIndicator,
+    Alert,
     Image,
-    SafeAreaView,
+    Modal,
+    RefreshControl,
     ScrollView,
     Switch,
     Text,
+    TextInput,
     TouchableOpacity,
     View,
-} from "react-native";
+} from 'react-native';
+import ImagePickerModal from '../../../components/ui/ImagePickerModal';
+import { useToast } from '../../../components/ui/ToastManager';
+import { useAuth } from '../../../contexts/AuthContext';
+import CustomerService, { UpdateProfileRequest } from '../../../services/api/CustomerService';
+import { User } from '../../../types/auth';
 
-// Données fictives
-const userProfile = {
-  name: "John Doe",
-  email: "john.doe@example.com",
-  phone: "+229 12 34 56 78",
-  avatar: "https://via.placeholder.com/120x120/3B82F6/FFFFFF?text=JD",
-  memberSince: "2023-06-15",
-  totalOrders: 12,
-  totalSpent: 2450000,
-  loyaltyPoints: 1240,
-};
+export default function ProfileScreen() {
+  const { logout, checkAuthStatus } = useAuth();
+  const toast = useToast();
+  const [profileData, setProfileData] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showImagePicker, setShowImagePicker] = useState(false);
+  
+  // Form states
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [notifications, setNotifications] = useState({
+    email: true,
+    push: true,
+    sms: false,
+  });
 
-const menuItems = [
-  {
-    id: 1,
-    title: "Informations personnelles",
-    icon: "person-outline",
-    action: "personal-info",
-    hasArrow: true,
-  },
-  {
-    id: 2,
-    title: "Adresses de livraison",
-    icon: "location-outline",
-    action: "addresses",
-    hasArrow: true,
-  },
-  {
-    id: 3,
-    title: "Méthodes de paiement",
-    icon: "card-outline",
-    action: "payment",
-    hasArrow: true,
-  },
-  {
-    id: 4,
-    title: "Notifications",
-    icon: "notifications-outline",
-    action: "notifications",
-    hasArrow: false,
-    hasSwitch: true,
-  },
-  {
-    id: 5,
-    title: "Historique des achats",
-    icon: "time-outline",
-    action: "history",
-    hasArrow: true,
-  },
-  {
-    id: 6,
-    title: "Avis et évaluations",
-    icon: "star-outline",
-    action: "reviews",
-    hasArrow: true,
-  },
-];
+  useEffect(() => {
+    loadProfile();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-const supportItems = [
-  {
-    id: 1,
-    title: "Centre d'aide",
-    icon: "help-circle-outline",
-    action: "help",
-  },
-  {
-    id: 2,
-    title: "Nous contacter",
-    icon: "mail-outline",
-    action: "contact",
-  },
-  {
-    id: 3,
-    title: "Conditions d'utilisation",
-    icon: "document-text-outline",
-    action: "terms",
-  },
-  {
-    id: 4,
-    title: "Politique de confidentialité",
-    icon: "shield-outline",
-    action: "privacy",
-  },
-];
-
-export default function ClientProfile() {
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
+  const loadProfile = async () => {
+    try {
+      setIsLoading(true);
+      const profile = await CustomerService.getProfile();
+      setProfileData(profile);
+      
+      // Initialize form with current data
+      setFirstName(profile.firstName || '');
+      setLastName(profile.lastName || '');
+      setPhone(profile.phone || '');
+      setAddress(profile.address || '');
+      setNotifications(profile.preferences?.notifications || {
+        email: true,
+        push: true,
+        sms: false,
+      });
+    } catch (error: any) {
+      console.error('Error loading profile:', error);
+      toast.showError('Erreur', 'Impossible de charger le profil');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      month: 'long',
-      year: 'numeric'
-    });
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await loadProfile();
+    setIsRefreshing(false);
   };
 
-  const handleMenuPress = (action: string) => {
-    switch (action) {
-      case 'personal-info':
-        // Navigate to personal info page
-        break;
-      case 'addresses':
-        // Navigate to addresses page
-        break;
-      case 'payment':
-        // Navigate to payment methods page
-        break;
-      case 'notifications':
-        // Handle notification settings
-        break;
-      case 'history':
-        // Navigate to purchase history
-        break;
-      case 'reviews':
-        // Navigate to reviews page
-        break;
-      case 'help':
-        // Navigate to help center
-        break;
-      case 'contact':
-        // Navigate to contact page
-        break;
-      case 'terms':
-        // Navigate to terms page
-        break;
-      case 'privacy':
-        // Navigate to privacy policy
-        break;
-      default:
-        break;
+  const handleSaveProfile = async () => {
+    try {
+      if (!firstName.trim() || !lastName.trim()) {
+        toast.showError('Erreur', 'Prénom et nom sont requis');
+        return;
+      }
+
+      setIsLoading(true);
+      
+      const updateData: UpdateProfileRequest = {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phone: phone.trim(),
+        address: address.trim(),
+      };
+
+      const updatedProfile = await CustomerService.updateProfile(updateData);
+      setProfileData(updatedProfile);
+      setIsEditing(false);
+      
+      // Update auth context
+      await checkAuthStatus();
+      
+      toast.showSuccess('Succès', 'Profil mis à jour avec succès');
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      toast.showError('Erreur', error.message || 'Impossible de mettre à jour le profil');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdateNotifications = async () => {
+    try {
+      setIsLoading(true);
+      const updatedProfile = await CustomerService.updatePreferences({
+        notifications,
+      });
+      setProfileData(updatedProfile);
+      toast.showSuccess('Succès', 'Préférences mises à jour');
+    } catch (error: any) {
+      console.error('Error updating notifications:', error);
+      toast.showError('Erreur', 'Impossible de mettre à jour les préférences');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleLogout = () => {
-    // Clear user data and navigate to auth
-    router.replace('/(auth)/welcome');
+    Alert.alert(
+      'Déconnexion',
+      'Êtes-vous sûr de vouloir vous déconnecter ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { 
+          text: 'Déconnecter', 
+          style: 'destructive',
+          onPress: logout 
+        },
+      ]
+    );
   };
 
-  const renderMenuItem = (item: typeof menuItems[0]) => (
-    <TouchableOpacity
-      key={item.id}
-      className="bg-white rounded-2xl p-4 mx-4 mb-3 shadow-sm border border-neutral-100"
-      onPress={() => handleMenuPress(item.action)}
-    >
-      <View className="flex-row items-center justify-between">
-        <View className="flex-row items-center flex-1">
-          <View className="w-10 h-10 bg-background-secondary rounded-full justify-center items-center">
-            <Ionicons name={item.icon as any} size={20} color="#374151" />
-          </View>
-          <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-            {item.title}
-          </Text>
-        </View>
-        
-        {item.hasSwitch && (
-          <Switch
-            value={notificationsEnabled}
-            onValueChange={setNotificationsEnabled}
-            thumbColor="#FFFFFF"
-            trackColor={{ false: "#D1D5DB", true: "#FE8C00" }}
-          />
-        )}
-        
-        {item.hasArrow && (
-          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-        )}
-      </View>
-    </TouchableOpacity>
-  );
+  const formatUserInitials = (user: User) => {
+    return `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase();
+  };
 
-  const renderSupportItem = (item: typeof supportItems[0]) => (
-    <TouchableOpacity
-      key={item.id}
-      className="flex-row items-center justify-between py-4 px-6 border-b border-neutral-100"
-      onPress={() => handleMenuPress(item.action)}
-    >
-      <View className="flex-row items-center">
-        <Ionicons name={item.icon as any} size={20} color="#6B7280" />
-        <Text className="text-base font-quicksand-medium text-neutral-700 ml-3">
-          {item.title}
-        </Text>
+  const handleImageUpdated = (imageUrl: string) => {
+    if (profileData) {
+      setProfileData({
+        ...profileData,
+        profileImage: imageUrl || undefined,
+      });
+    }
+  };
+
+  if (isLoading && !profileData) {
+    return (
+      <View className="flex-1 bg-gray-50 justify-center items-center">
+        <ActivityIndicator size="large" color="#FE8C00" />
+        <Text className="text-gray-600 mt-4 font-quicksand">Chargement du profil...</Text>
       </View>
-      <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
-    </TouchableOpacity>
-  );
+    );
+  }
 
   return (
-    <SafeAreaView className="flex-1 bg-background-secondary">
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {/* Profile Header */}
-        <View className="bg-white px-6 py-8">
-          <View className="flex-row items-center">
-            <Image
-              source={{ uri: userProfile.avatar }}
-              className="w-20 h-20 rounded-full"
-              resizeMode="cover"
-            />
-            <View className="ml-4 flex-1">
-              <Text className="text-xl font-quicksand-bold text-neutral-800">
-                {userProfile.name}
-              </Text>
-              <Text className="text-sm text-neutral-600 mt-1">
-                {userProfile.email}
-              </Text>
-              <Text className="text-sm text-neutral-600">
-                {userProfile.phone}
-              </Text>
-              <Text className="text-xs text-neutral-500 mt-2">
-                Membre depuis {formatDate(userProfile.memberSince)}
-              </Text>
-            </View>
-            <TouchableOpacity>
-              <Ionicons name="create-outline" size={24} color="#374151" />
+    <View className="flex-1 bg-gray-50">
+      <StatusBar style="dark" />
+      
+      <ScrollView 
+        className="flex-1"
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+        }
+      >
+        {/* Header */}
+        <View className="bg-white px-6 pt-16 pb-8">
+          <View className="flex-row justify-between items-center mb-6">
+            <Text className="text-2xl font-quicksand-bold text-gray-900">
+              Profil
+            </Text>
+            <TouchableOpacity
+              onPress={() => setShowSettingsModal(true)}
+              className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center"
+            >
+              <Ionicons name="settings-outline" size={20} color="#6B7280" />
             </TouchableOpacity>
           </View>
+
+          {/* Profile Image */}
+          <View className="items-center mb-6">
+            {profileData?.profileImage ? (
+              <Image
+                source={{ uri: profileData.profileImage }}
+                className="w-24 h-24 rounded-full bg-gray-200"
+              />
+            ) : (
+              <View className="w-24 h-24 rounded-full bg-primary items-center justify-center">
+                <Text className="text-white font-quicksand-bold text-2xl">
+                  {profileData ? formatUserInitials(profileData) : 'U'}
+                </Text>
+              </View>
+            )}
+            <TouchableOpacity 
+              className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary items-center justify-center"
+              onPress={() => setShowImagePicker(true)}
+            >
+              <Ionicons name="camera" size={16} color="white" />
+            </TouchableOpacity>
+          </View>
+
+          {/* User Info */}
+          <View className="items-center">
+            <Text className="text-xl font-quicksand-bold text-gray-900">
+              {profileData?.firstName} {profileData?.lastName}
+            </Text>
+            <Text className="text-sm font-quicksand text-gray-600 mt-1">
+              {profileData?.email}
+            </Text>
+          </View>
         </View>
 
-        {/* Stats Cards */}
-        <View className="flex-row px-4 py-4 space-x-2">
-          <View className="flex-1 bg-white rounded-2xl p-4 shadow-sm border border-neutral-100">
-            <Text className="text-2xl font-quicksand-bold text-primary-500">
-              {userProfile.totalOrders}
+        {/* Profile Form */}
+        <View className="bg-white mx-4 rounded-2xl p-6 mt-4">
+          <View className="flex-row justify-between items-center mb-6">
+            <Text className="text-lg font-quicksand-bold text-gray-900">
+              Informations personnelles
             </Text>
-            <Text className="text-sm font-quicksand-medium text-neutral-600">
-              Commandes
-            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                if (isEditing) {
+                  handleSaveProfile();
+                } else {
+                  setIsEditing(true);
+                }
+              }}
+              className="px-4 py-2 rounded-lg bg-primary"
+            >
+              <Text className="text-white font-quicksand-semibold text-sm">
+                {isEditing ? 'Sauvegarder' : 'Modifier'}
+              </Text>
+            </TouchableOpacity>
           </View>
-          
-          <View className="flex-1 bg-white rounded-2xl p-4 shadow-sm border border-neutral-100">
-            <Text className="text-2xl font-quicksand-bold text-success-500">
-              {formatPrice(userProfile.totalSpent)}
-            </Text>
-            <Text className="text-sm font-quicksand-medium text-neutral-600">
-              Dépensé
-            </Text>
+
+          {/* Form Fields */}
+          <View className="space-y-4">
+            {/* First Name */}
+            <View>
+              <Text className="text-sm font-quicksand-medium text-gray-700 mb-2">
+                Prénom
+              </Text>
+              <TextInput
+                value={firstName}
+                onChangeText={setFirstName}
+                placeholder="Entrez votre prénom"
+                editable={isEditing}
+                className={`border rounded-xl px-4 py-3 text-base font-quicksand ${
+                  isEditing ? 'border-gray-300 bg-white' : 'border-gray-200 bg-gray-50'
+                }`}
+              />
+            </View>
+
+            {/* Last Name */}
+            <View>
+              <Text className="text-sm font-quicksand-medium text-gray-700 mb-2">
+                Nom
+              </Text>
+              <TextInput
+                value={lastName}
+                onChangeText={setLastName}
+                placeholder="Entrez votre nom"
+                editable={isEditing}
+                className={`border rounded-xl px-4 py-3 text-base font-quicksand ${
+                  isEditing ? 'border-gray-300 bg-white' : 'border-gray-200 bg-gray-50'
+                }`}
+              />
+            </View>
+
+            {/* Phone */}
+            <View>
+              <Text className="text-sm font-quicksand-medium text-gray-700 mb-2">
+                Téléphone
+              </Text>
+              <TextInput
+                value={phone}
+                onChangeText={setPhone}
+                placeholder="Entrez votre numéro"
+                keyboardType="phone-pad"
+                editable={isEditing}
+                className={`border rounded-xl px-4 py-3 text-base font-quicksand ${
+                  isEditing ? 'border-gray-300 bg-white' : 'border-gray-200 bg-gray-50'
+                }`}
+              />
+            </View>
+
+            {/* Address */}
+            <View>
+              <Text className="text-sm font-quicksand-medium text-gray-700 mb-2">
+                Adresse
+              </Text>
+              <TextInput
+                value={address}
+                onChangeText={setAddress}
+                placeholder="Entrez votre adresse"
+                multiline
+                numberOfLines={3}
+                editable={isEditing}
+                className={`border rounded-xl px-4 py-3 text-base font-quicksand ${
+                  isEditing ? 'border-gray-300 bg-white' : 'border-gray-200 bg-gray-50'
+                }`}
+                style={{ textAlignVertical: 'top' }}
+              />
+            </View>
           </View>
-          
-          <View className="flex-1 bg-white rounded-2xl p-4 shadow-sm border border-neutral-100">
-            <Text className="text-2xl font-quicksand-bold text-secondary-500">
-              {userProfile.loyaltyPoints}
-            </Text>
-            <Text className="text-sm font-quicksand-medium text-neutral-600">
-              Points
-            </Text>
-          </View>
+
+          {isEditing && (
+            <TouchableOpacity
+              onPress={() => setIsEditing(false)}
+              className="mt-4 px-4 py-2 rounded-lg bg-gray-200"
+            >
+              <Text className="text-gray-700 font-quicksand-semibold text-sm text-center">
+                Annuler
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
-        {/* Menu Items */}
-        <View className="py-4">
-          <Text className="text-lg font-quicksand-bold text-neutral-800 px-6 mb-4">
-            Mon Compte
+        {/* Quick Actions */}
+        <View className="bg-white mx-4 rounded-2xl p-6 mt-4">
+          <Text className="text-lg font-quicksand-bold text-gray-900 mb-4">
+            Actions rapides
           </Text>
-          {menuItems.map(renderMenuItem)}
-        </View>
-
-        {/* Support Section */}
-        <View className="py-4">
-          <Text className="text-lg font-quicksand-bold text-neutral-800 px-6 mb-4">
-            Support
-          </Text>
-          <View className="bg-white mx-4 rounded-2xl shadow-sm border border-neutral-100">
-            {supportItems.map(renderSupportItem)}
-          </View>
-        </View>
-
-        {/* Logout Button */}
-        <View className="px-4 py-6">
-          <TouchableOpacity
-            className="bg-error-500 rounded-2xl py-4"
-            onPress={handleLogout}
-          >
-            <View className="flex-row items-center justify-center">
-              <Ionicons name="log-out-outline" size={20} color="#FFFFFF" />
-              <Text className="text-white font-quicksand-semibold ml-2">
-                Se déconnecter
+          
+          <TouchableOpacity className="flex-row items-center justify-between py-3 border-b border-gray-100">
+            <View className="flex-row items-center">
+              <Ionicons name="notifications-outline" size={20} color="#6B7280" />
+              <Text className="text-base font-quicksand text-gray-900 ml-3">
+                Notifications
               </Text>
             </View>
+            <Ionicons name="chevron-forward" size={20} color="#6B7280" />
+          </TouchableOpacity>
+
+          <TouchableOpacity className="flex-row items-center justify-between py-3 border-b border-gray-100">
+            <View className="flex-row items-center">
+              <Ionicons name="location-outline" size={20} color="#6B7280" />
+              <Text className="text-base font-quicksand text-gray-900 ml-3">
+                Adresse de livraison
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#6B7280" />
+          </TouchableOpacity>
+
+          <TouchableOpacity className="flex-row items-center justify-between py-3 border-b border-gray-100">
+            <View className="flex-row items-center">
+              <Ionicons name="card-outline" size={20} color="#6B7280" />
+              <Text className="text-base font-quicksand text-gray-900 ml-3">
+                Méthodes de paiement
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#6B7280" />
+          </TouchableOpacity>
+
+          <TouchableOpacity className="flex-row items-center justify-between py-3">
+            <View className="flex-row items-center">
+              <Ionicons name="help-circle-outline" size={20} color="#6B7280" />
+              <Text className="text-base font-quicksand text-gray-900 ml-3">
+                Aide & Support
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#6B7280" />
           </TouchableOpacity>
         </View>
 
-        {/* App Info */}
-        <View className="px-6 py-4">
-          <Text className="text-center text-xs text-neutral-500 font-quicksand-medium">
-            NativeCommerce v1.0.0
-          </Text>
+        {/* Logout Button */}
+        <View className="mx-4 mt-6 mb-8">
+          <TouchableOpacity
+            onPress={handleLogout}
+            className="bg-red-500 rounded-xl py-4 items-center"
+          >
+            <Text className="text-white font-quicksand-semibold text-base">
+              Se déconnecter
+            </Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+
+      {/* Settings Modal */}
+      <Modal
+        visible={showSettingsModal}
+        animationType="slide"
+        presentationStyle="formSheet"
+        onRequestClose={() => setShowSettingsModal(false)}
+      >
+        <View className="flex-1 bg-white">
+          <View className="px-6 pt-4 pb-4 border-b border-gray-200">
+            <View className="flex-row justify-between items-center">
+              <Text className="text-xl font-quicksand-bold text-gray-900">
+                Paramètres
+              </Text>
+              <TouchableOpacity
+                onPress={() => setShowSettingsModal(false)}
+                className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center"
+              >
+                <Ionicons name="close" size={20} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <ScrollView className="flex-1 px-6 pt-6">
+            <Text className="text-lg font-quicksand-bold text-gray-900 mb-4">
+              Notifications
+            </Text>
+
+            <View className="space-y-4">
+              <View className="flex-row justify-between items-center">
+                <View>
+                  <Text className="text-base font-quicksand text-gray-900">
+                    Notifications par email
+                  </Text>
+                  <Text className="text-sm font-quicksand text-gray-600">
+                    Recevoir des notifications par email
+                  </Text>
+                </View>
+                <Switch
+                  value={notifications.email}
+                  onValueChange={(value) => {
+                    setNotifications(prev => ({ ...prev, email: value }));
+                    handleUpdateNotifications();
+                  }}
+                  trackColor={{ false: '#E5E7EB', true: '#FE8C00' }}
+                />
+              </View>
+
+              <View className="flex-row justify-between items-center">
+                <View>
+                  <Text className="text-base font-quicksand text-gray-900">
+                    Notifications push
+                  </Text>
+                  <Text className="text-sm font-quicksand text-gray-600">
+                    Recevoir des notifications push
+                  </Text>
+                </View>
+                <Switch
+                  value={notifications.push}
+                  onValueChange={(value) => {
+                    setNotifications(prev => ({ ...prev, push: value }));
+                    handleUpdateNotifications();
+                  }}
+                  trackColor={{ false: '#E5E7EB', true: '#FE8C00' }}
+                />
+              </View>
+
+              <View className="flex-row justify-between items-center">
+                <View>
+                  <Text className="text-base font-quicksand text-gray-900">
+                    Notifications SMS
+                  </Text>
+                  <Text className="text-sm font-quicksand text-gray-600">
+                    Recevoir des notifications par SMS
+                  </Text>
+                </View>
+                <Switch
+                  value={notifications.sms}
+                  onValueChange={(value) => {
+                    setNotifications(prev => ({ ...prev, sms: value }));
+                    handleUpdateNotifications();
+                  }}
+                  trackColor={{ false: '#E5E7EB', true: '#FE8C00' }}
+                />
+              </View>
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Image Picker Modal */}
+      <ImagePickerModal
+        visible={showImagePicker}
+        onClose={() => setShowImagePicker(false)}
+        onImageUpdated={handleImageUpdated}
+      />
+    </View>
   );
 }

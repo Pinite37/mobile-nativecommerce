@@ -9,6 +9,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { useAuth } from '../../../contexts/AuthContext';
 
 // Données fictives
 const categories = [
@@ -76,6 +77,8 @@ const popularStores = [
 ];
 
 export default function ClientHome() {
+  const { user } = useAuth();
+  
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
   };
@@ -160,14 +163,14 @@ export default function ClientHome() {
     <SafeAreaView className="flex-1 bg-background-secondary">
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View className="px-6 py-4 bg-white">
+        <View className="px-6 pt-20 pb-4 bg-white">
           <View className="flex-row items-center justify-between">
             <View>
               <Text className="text-sm font-quicksand-medium text-neutral-600">
                 Bonjour,
               </Text>
               <Text className="text-lg font-quicksand-bold text-neutral-800">
-                John Doe
+                {user ? `${user.firstName} ${user.lastName}` : 'Utilisateur'}
               </Text>
             </View>
             <TouchableOpacity className="relative">

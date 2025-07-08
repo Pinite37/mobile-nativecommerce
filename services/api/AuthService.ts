@@ -10,10 +10,6 @@ import {
 } from '../../types/auth';
 import TokenStorageService from '../TokenStorageService';
 import ApiService from './ApiService';
-import { MockAuthService } from './MockAuthService';
-
-// Enable mock mode for testing
-const USE_MOCK_API = __DEV__; // Use mock in development mode
 
 class AuthService {
   private readonly BASE_URL = '/auth';
@@ -69,23 +65,7 @@ class AuthService {
   // Login user
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     try {
-      // Use mock service in development mode
-      if (USE_MOCK_API) {
-        const response = await MockAuthService.login(credentials);
-        
-        if (response.success && response.data) {
-          // Store tokens
-          await ApiService.setAuthTokens(response.data.tokens.accessToken, response.data.tokens.refreshToken);
-          // Store user role
-          await ApiService.setUserRole(response.data.user.role);
-          // Store user data
-          await TokenStorageService.setUserData(response.data.user);
-        }
-        
-        return response;
-      }
-      
-      // Use real API service
+      // Use real API service only
       const response = await ApiService.post<AuthResponse['data']>(`${this.BASE_URL}/login`, credentials);
       
       if (response.success && response.data) {
@@ -237,6 +217,110 @@ class AuthService {
       }
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Device disconnection failed');
+    }
+  }
+
+  // Nouvelle méthode pour gérer l'inscription avec connexion automatique
+  async registerAndLogin(userData: RegisterRequest): Promise<AuthResponse> {
+    try {
+      console.log('🚀 Inscription et connexion automatique...');
+      
+      const response = await ApiService.post<AuthResponse['data']>(`${this.BASE_URL}/register`, userData);
+      
+      if (response.success && response.data) {
+        console.log('✅ Inscription réussie, traitement de la connexion automatique...');
+        
+        // Stocker immédiatement les tokens de façon séquentielle pour éviter les conflits
+        await ApiService.setAuthTokens(response.data.tokens.accessToken, response.data.tokens.refreshToken);
+        
+        // Stocker le rôle utilisateur
+        await ApiService.setUserRole(response.data.user.role);
+        
+        // Stocker les données utilisateur
+        await TokenStorageService.setUserData(response.data.user);
+        
+        // Vérifier que les données sont bien stockées
+        const storedTokens = await TokenStorageService.getTokens();
+        const storedRole = await TokenStorageService.getUserRole();
+        const storedUser = await TokenStorageService.getUserData();
+        
+        if (!storedTokens.accessToken || !storedRole || !storedUser) {
+          console.warn('⚠️ Données non stockées correctement, nouvelle tentative...');
+          
+          // Nouvelle tentative de stockage
+          await ApiService.setAuthTokens(response.data.tokens.accessToken, response.data.tokens.refreshToken);
+          await ApiService.setUserRole(response.data.user.role);
+          await TokenStorageService.setUserData(response.data.user);
+        }
+        
+        console.log('🎉 Tokens et données utilisateur stockés avec succès');
+        console.log('🔍 Vérification - Access Token:', storedTokens.accessToken ? 'Présent' : 'Manquant');
+        console.log('🔍 Vérification - Rôle:', storedRole);
+        console.log('🔍 Vérification - Utilisateur:', storedUser?.email);
+        
+        return {
+          success: response.success,
+          message: response.message,
+          data: response.data,
+        };
+      } else {
+        throw new Error('Réponse invalide du serveur');
+      }
+    } catch (error: any) {
+      console.error('❌ Erreur lors de l\'inscription:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Inscription échouée');
+    }
+  }
+
+  // Nouvelle méthode pour gérer l'inscription entreprise avec connexion automatique
+  async registerEnterpriseAndLogin(userData: EnterpriseRegisterRequest): Promise<AuthResponse> {
+    try {
+      console.log('🚀 Inscription entreprise et connexion automatique...');
+      
+      const response = await ApiService.post<AuthResponse['data']>(`${this.BASE_URL}/register`, userData);
+      
+      if (response.success && response.data) {
+        console.log('✅ Inscription entreprise réussie, traitement de la connexion automatique...');
+        
+        // Stocker immédiatement les tokens de façon séquentielle pour éviter les conflits
+        await ApiService.setAuthTokens(response.data.tokens.accessToken, response.data.tokens.refreshToken);
+        
+        // Stocker le rôle utilisateur
+        await ApiService.setUserRole(response.data.user.role);
+        
+        // Stocker les données utilisateur
+        await TokenStorageService.setUserData(response.data.user);
+        
+        // Vérifier que les données sont bien stockées
+        const storedTokens = await TokenStorageService.getTokens();
+        const storedRole = await TokenStorageService.getUserRole();
+        const storedUser = await TokenStorageService.getUserData();
+        
+        if (!storedTokens.accessToken || !storedRole || !storedUser) {
+          console.warn('⚠️ Données entreprise non stockées correctement, nouvelle tentative...');
+          
+          // Nouvelle tentative de stockage
+          await ApiService.setAuthTokens(response.data.tokens.accessToken, response.data.tokens.refreshToken);
+          await ApiService.setUserRole(response.data.user.role);
+          await TokenStorageService.setUserData(response.data.user);
+        }
+        
+        console.log('🎉 Tokens et données entreprise stockés avec succès');
+        console.log('🔍 Vérification - Access Token:', storedTokens.accessToken ? 'Présent' : 'Manquant');
+        console.log('🔍 Vérification - Rôle:', storedRole);
+        console.log('🔍 Vérification - Entreprise:', storedUser?.email);
+        
+        return {
+          success: response.success,
+          message: response.message,
+          data: response.data,
+        };
+      } else {
+        throw new Error('Réponse invalide du serveur');
+      }
+    } catch (error: any) {
+      console.error('❌ Erreur lors de l\'inscription entreprise:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Inscription entreprise échouée');
     }
   }
 }

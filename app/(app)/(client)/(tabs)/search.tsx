@@ -9,7 +9,6 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { useRouter } from 'expo-router';
 
 // Données fictives
 const recentSearches = [
@@ -81,7 +80,6 @@ export default function ClientSearch() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(1);
   const [isSearching, setIsSearching] = useState(false);
-  const router = useRouter();
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
@@ -136,10 +134,7 @@ export default function ClientSearch() {
   );
 
   const renderProduct = ({ item }: { item: typeof searchResults[0] }) => (
-    <TouchableOpacity 
-      className="bg-white rounded-2xl p-4 mx-4 mb-4 shadow-sm border border-neutral-100"
-      onPress={() => router.push(`/(app)/(client)/product/${item.id}`)}
-    >
+    <TouchableOpacity className="bg-white rounded-2xl p-4 mx-4 mb-4 shadow-sm border border-neutral-100">
       <View className="flex-row">
         <Image
           source={{ uri: item.image }}

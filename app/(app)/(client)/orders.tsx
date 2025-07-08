@@ -288,10 +288,10 @@ export default function ClientOrders() {
   return (
     <SafeAreaView className="flex-1 bg-background-secondary">
       {/* Header */}
-      <View className="bg-white px-6 py-4">
+      <View className="bg-white pt-20 px-6 py-4">
         <View className="flex-row items-center justify-between">
           <Text className="text-xl font-quicksand-bold text-neutral-800">
-            Mes Commandes
+            Ordres
           </Text>
           <TouchableOpacity>
             <Ionicons name="search" size={24} color="#374151" />

@@ -10,7 +10,7 @@ class ApiService {
   constructor() {
     // Configure baseURL based on platform
     if (Platform.OS === 'android') {
-      this.baseURL = 'http://192.168.0.105:4000/api'; // Android emulator
+      this.baseURL = 'http://192.168.86.143:4000/api'; // Android emulator
     } else if (Platform.OS === 'ios') {
       this.baseURL = 'http://localhost:4000/api'; // iOS simulator
     } else {
@@ -22,9 +22,6 @@ class ApiService {
     this.axiosInstance = axios.create({
       baseURL: this.baseURL,
       timeout: 10000,
-      headers: {
-        'Content-Type': 'application/json',
-      },
     });
 
     this.setupInterceptors();
@@ -33,7 +30,7 @@ class ApiService {
   private setupInterceptors() {
     // Request interceptor
     this.axiosInstance.interceptors.request.use(
-      async (config) => {
+      async (config: any) => {
         // Add auth token if available
         const token = await TokenStorageService.getAccessToken();
         if (token) {
@@ -46,10 +43,15 @@ class ApiService {
           config.headers['X-Device-Info'] = JSON.stringify(deviceInfo);
         }
 
+        // Toujours utiliser JSON maintenant que nous n'utilisons plus FormData
+        config.headers['Content-Type'] = 'application/json';
+
         console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`);
+        console.log('📤 Request Headers:', config.headers);
+        console.log('📤 Request Data Type:', typeof config.data);
         return config;
       },
-      (error) => {
+      (error: any) => {
         console.error('❌ API Request Error:', error);
         return Promise.reject(error);
       }
@@ -61,7 +63,7 @@ class ApiService {
         console.log(`✅ API Response: ${response.status} ${response.config.url}`);
         return response;
       },
-      async (error) => {
+      async (error: any) => {
         console.error('❌ API Response Error:', error.response?.status, error.response?.data);
         
         // Handle 401 errors (unauthorized)
@@ -192,6 +194,29 @@ class ApiService {
   // Get tokens method
   async getTokens(): Promise<{ accessToken: string | null; refreshToken: string | null }> {
     return await TokenStorageService.getTokens();
+  }
+
+  // Méthode optimisée pour les appels critiques (profil utilisateur)
+  async getFast<T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    try {
+      // Timeout réduit pour les appels de démarrage
+      const fastConfig = {
+        ...config,
+        timeout: 5000, // 5s au lieu de 10s
+      };
+      
+      const response = await this.axiosInstance.get(url, fastConfig);
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ GET Fast Error:', error);
+      
+      // Logging spécial pour les timeouts
+      if (error.code === 'ECONNABORTED') {
+        console.warn('⚠️ Connexion lente détectée - timeout de 5s atteint');
+      }
+      
+      throw this.handleError(error);
+    }
   }
 }
 
