@@ -65,6 +65,7 @@ export interface CreateProductRequest {
   stock: number;
   category: string;
   images: string[]; // Les images sont des chaînes base64 directes
+  isActive?: boolean;
   
   // Champs optionnels du modèle backend uniquement
   specifications?: {

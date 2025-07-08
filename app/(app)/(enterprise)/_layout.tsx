@@ -9,12 +9,6 @@ export default function EnterpriseLayout() {
           headerShown: false 
         }} 
       />
-      <Stack.Screen 
-        name="products" 
-        options={{ 
-          headerShown: false 
-        }} 
-      />
     </Stack>
   );
 }

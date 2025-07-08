@@ -3,21 +3,20 @@ import * as ImagePicker from 'expo-image-picker';
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
-import { useToast } from "../../../../../components/ui/ToastManager";
 import CategoryService from "../../../../../services/api/CategoryService";
 import ProductService from "../../../../../services/api/ProductService";
 import { Category, CreateProductRequest } from "../../../../../types/product";
@@ -96,7 +95,11 @@ export default function CreateProduct() {
   const [newTag, setNewTag] = useState('');
   const [showSpecModal, setShowSpecModal] = useState(false);
   const [newSpec, setNewSpec] = useState({ key: '', value: '' });
-  const toast = useToast();
+  
+  // Fonction temporaire pour éviter l'erreur de navigation context
+  const showToast = (message: string) => {
+    Alert.alert("Succès", message);
+  };
 
   const [form, setForm] = useState<ProductForm>({
     name: "",
@@ -375,11 +378,11 @@ export default function CreateProduct() {
       await ProductService.createProduct(productData);
       
       // Affichage du toast de succès
-      toast.showSuccess("Produit créé avec succès !");
+      showToast("Produit créé avec succès !");
       
       // Retour automatique à la liste des produits avec rafraîchissement
       router.push({
-        pathname: '/(app)/(enterprise)/products',
+        pathname: '/(app)/(enterprise)/(tabs)/products',
         params: { refresh: 'true' }
       });
     } catch (error: any) {

@@ -145,7 +145,7 @@ export default function EnterpriseProducts() {
   useEffect(() => {
     if (params.refresh === 'true') {
       // Remove the refresh param and reload data
-      router.replace('/(app)/(enterprise)/products');
+      router.replace('/(app)/(enterprise)/(tabs)/products');
       loadInitialData();
     }
   }, [params.refresh, loadInitialData]);
@@ -262,7 +262,7 @@ export default function EnterpriseProducts() {
       <TouchableOpacity 
         className="bg-white rounded-2xl p-4 mx-4 mb-4 shadow-sm border border-neutral-100"
         onPress={() => {
-          router.push(`/(app)/(enterprise)/products/${item._id}`);
+          router.push(`/(app)/(enterprise)/(tabs)/products/${item._id}`);
         }}
       >
         <View className="flex-row">
@@ -424,7 +424,7 @@ export default function EnterpriseProducts() {
             <TouchableOpacity 
               className="bg-neutral-200 rounded-xl py-4 px-6"
               onPress={() => {
-                router.push('./products/create');
+                router.push('/(app)/(enterprise)/(tabs)/products/create');
               }}
             >
               <Text className="text-neutral-700 font-quicksand-semibold">
@@ -452,7 +452,7 @@ export default function EnterpriseProducts() {
         <TouchableOpacity 
           className="bg-primary-500 rounded-xl py-4 px-8"
           onPress={() => {
-            router.push('./products/create');
+            router.push('/(app)/(enterprise)/(tabs)/products/create');
           }}
         >
           <Text className="text-white font-quicksand-semibold">
@@ -538,7 +538,7 @@ export default function EnterpriseProducts() {
           <TouchableOpacity 
             className="bg-primary-500 rounded-xl py-2 px-4"
             onPress={() => {
-              router.push('./products/create');
+              router.push('/(app)/(enterprise)/(tabs)/products/create');
             }}
           >
             <View className="flex-row items-center">
