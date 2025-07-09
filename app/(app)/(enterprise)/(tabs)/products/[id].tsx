@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -15,14 +16,8 @@ import {
 import ProductService from "../../../../../services/api/ProductService";
 import { Product } from "../../../../../types/product";
 
-// Variable globale pour récupérer l'ID du produit
-declare global {
-  var __CURRENT_PRODUCT_ID__: string | undefined;
-}
-
 export default function ProductDetails() {
-  // États du composant
-  const [productId, setProductId] = useState<string | null>(null);
+  const { id } = useLocalSearchParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -30,77 +25,42 @@ export default function ProductDetails() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showFullDescription, setShowFullDescription] = useState(false);
 
-  // Fonction pour afficher un toast
-  const showToast = (message: string) => {
-    Alert.alert('Info', message);
-  };
+  console.log('🚀 ProductDetails - Product ID:', id);
 
-  // Récupérer l'ID au démarrage
-  useEffect(() => {
-    let currentId: string | null = null;
-    
+  const loadProduct = useCallback(async () => {
     try {
-      // Méthode 1: Variable globale
-      if (typeof global !== 'undefined' && global.__CURRENT_PRODUCT_ID__) {
-        currentId = global.__CURRENT_PRODUCT_ID__;
-        console.log('✅ ID extrait depuis global:', currentId);
-      }
-      
-      // Méthode 2: Fallback vers un ID de test
-      if (!currentId) {
-        currentId = "686d07b0edb27d4770997a75"; // iPhone 15 pour test
-        console.warn('⚠️ Utilisation de l\'ID de fallback:', currentId);
-      }
-    } catch (err) {
-      console.error('❌ Erreur extraction ID:', err);
-      currentId = "686d07b0edb27d4770997a75";
-    }
-    
-    console.log('🔍 ID final:', currentId);
-    setProductId(currentId);
-  }, []);
-
-  // Charger le produit
-  useEffect(() => {
-    if (!productId) return;
-    
-    const loadProduct = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        console.log('🚀 Chargement produit:', productId);
-        
-        const productData = await ProductService.getProductById(productId);
-        console.log('✅ Produit chargé:', productData);
-        setProduct(productData);
-      } catch (err: any) {
-        console.error('❌ Erreur:', err);
-        setError(err.message || 'Erreur lors du chargement');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadProduct();
-  }, [productId]);
-
-  // Fonction de refresh
-  const onRefresh = async () => {
-    if (!productId) return;
-    
-    setRefreshing(true);
-    try {
-      const productData = await ProductService.getProductById(productId);
-      setProduct(productData);
+      setLoading(true);
       setError(null);
+      console.log('📡 Chargement du produit:', id);
+      
+      const productData = await ProductService.getProductById(id);
+      console.log('✅ Produit chargé:', productData.name);
+      setProduct(productData);
     } catch (err: any) {
-      setError(err.message);
+      console.error('❌ Erreur chargement produit:', err);
+      setError(err.message || 'Erreur lors du chargement du produit');
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      loadProduct();
+    }
+  }, [id, loadProduct]);
+
+  const onRefresh = async () => {
+    try {
+      setRefreshing(true);
+      await loadProduct();
+    } catch (error) {
+      console.error('❌ Erreur refresh:', error);
     } finally {
       setRefreshing(false);
     }
   };
 
-  // Actions sur le produit
   const handleToggleStatus = async () => {
     if (!product) return;
     
@@ -114,10 +74,12 @@ export default function ProductDetails() {
           text: action.charAt(0).toUpperCase() + action.slice(1),
           onPress: async () => {
             try {
+              console.log('🔄 Changement de statut:', product._id, !product.isActive);
               await ProductService.toggleProductStatus(product._id, !product.isActive);
               setProduct(prev => prev ? { ...prev, isActive: !prev.isActive } : null);
               showToast(`Produit ${action}é avec succès`);
             } catch (error: any) {
+              console.error('❌ Erreur changement statut:', error);
               showToast(error.message || 'Erreur');
             }
           }
@@ -139,15 +101,28 @@ export default function ProductDetails() {
           style: "destructive",
           onPress: async () => {
             try {
+              console.log('🗑️ Suppression du produit:', product._id);
               await ProductService.deleteProduct(product._id);
               showToast("Produit supprimé avec succès");
+              router.back();
             } catch (error: any) {
+              console.error('❌ Erreur suppression:', error);
               showToast(error.message || 'Erreur');
             }
           }
         }
       ]
     );
+  };
+
+  const handleEditProduct = () => {
+    console.log('✏️ Édition du produit à implémenter:', product?._id);
+    Alert.alert("Information", "La fonctionnalité d'édition sera bientôt disponible");
+  };
+
+  // Fonction temporaire pour les toasts
+  const showToast = (message: string) => {
+    Alert.alert("Information", message);
   };
 
   // Utilitaires
@@ -161,12 +136,20 @@ export default function ProductDetails() {
     return { text: 'En stock', color: 'text-green-500', bgColor: 'bg-green-100' };
   };
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
   // États d'affichage
   if (loading) {
     return (
       <SafeAreaView className="flex-1 bg-background-secondary">
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#6366F1" />
+          <ActivityIndicator size="large" color="#FE8C00" />
           <Text className="mt-4 text-neutral-600 font-quicksand-medium">
             Chargement du produit...
           </Text>
@@ -179,19 +162,27 @@ export default function ProductDetails() {
     return (
       <SafeAreaView className="flex-1 bg-background-secondary">
         <View className="flex-1 justify-center items-center px-6">
-          <Ionicons name="alert-circle-outline" size={80} color="#EF4444" />
-          <Text className="text-xl font-quicksand-bold text-neutral-800 mt-4 mb-2">
-            Erreur
+          <Ionicons name="warning" size={64} color="#EF4444" />
+          <Text className="text-xl font-quicksand-bold text-neutral-800 mt-4 text-center">
+            Erreur de chargement
           </Text>
-          <Text className="text-center text-neutral-600 font-quicksand-medium mb-6">
+          <Text className="text-neutral-600 font-quicksand mt-2 text-center">
             {error || 'Produit non trouvé'}
           </Text>
-          <TouchableOpacity 
-            className="bg-primary-500 rounded-xl py-4 px-8"
-            onPress={onRefresh}
+          <TouchableOpacity
+            onPress={loadProduct}
+            className="bg-primary-500 py-3 px-6 rounded-2xl mt-6"
           >
             <Text className="text-white font-quicksand-semibold">
               Réessayer
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="mt-4"
+          >
+            <Text className="text-neutral-500 font-quicksand">
+              Retour
             </Text>
           </TouchableOpacity>
         </View>
@@ -203,28 +194,26 @@ export default function ProductDetails() {
 
   return (
     <SafeAreaView className="flex-1 bg-background-secondary">
-      {/* Header simplifié */}
-      <View className="bg-white px-6 py-4 pt-16 shadow-sm">
+      {/* Header */}
+      <View className="bg-white px-6 pt-16 py-4 border-b border-neutral-100">
         <View className="flex-row items-center justify-between">
           <TouchableOpacity
             onPress={() => {
-              if (typeof global !== 'undefined') {
-                delete global.__CURRENT_PRODUCT_ID__;
-              }
-              console.log('Retour demandé');
+              console.log('🔙 Retour demandé');
+              router.back();
             }}
             className="w-10 h-10 rounded-full bg-neutral-100 items-center justify-center"
           >
             <Ionicons name="arrow-back" size={20} color="#374151" />
           </TouchableOpacity>
-          <Text className="text-lg font-quicksand-bold text-neutral-800" numberOfLines={1}>
+          <Text className="text-lg font-quicksand-bold text-neutral-800 flex-1 text-center" numberOfLines={1}>
             {product.name}
           </Text>
           <TouchableOpacity
-            onPress={() => console.log('Édition à implémenter')}
+            onPress={handleEditProduct}
             className="w-10 h-10 rounded-full bg-primary-100 items-center justify-center"
           >
-            <Ionicons name="pencil" size={18} color="#6366F1" />
+            <Ionicons name="pencil" size={18} color="#FE8C00" />
           </TouchableOpacity>
         </View>
       </View>
@@ -236,7 +225,7 @@ export default function ProductDetails() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#6366F1']}
+            colors={['#FE8C00']}
           />
         }
       >
@@ -265,19 +254,19 @@ export default function ProductDetails() {
                   <ScrollView 
                     horizontal 
                     showsHorizontalScrollIndicator={false}
-                    className="px-2"
+                    className="space-x-3"
                   >
-                    {product.images.map((image: string, index: number) => (
+                    {product.images.map((image, index) => (
                       <TouchableOpacity
                         key={index}
                         onPress={() => setSelectedImageIndex(index)}
-                        className={`mr-3 rounded-xl overflow-hidden border-2 ${
+                        className={`border-2 rounded-xl ${
                           selectedImageIndex === index ? 'border-primary-500' : 'border-neutral-200'
                         }`}
                       >
                         <Image
                           source={{ uri: image }}
-                          className="w-16 h-16"
+                          className="w-20 h-20 rounded-xl"
                           resizeMode="cover"
                         />
                       </TouchableOpacity>
@@ -286,8 +275,8 @@ export default function ProductDetails() {
                 )}
               </>
             ) : (
-              <View className="bg-neutral-100 rounded-2xl items-center justify-center" style={{ height: 300 }}>
-                <Ionicons name="image-outline" size={60} color="#9CA3AF" />
+              <View className="w-full h-72 bg-neutral-100 rounded-2xl items-center justify-center">
+                <Ionicons name="image" size={48} color="#9CA3AF" />
                 <Text className="text-neutral-500 font-quicksand-medium mt-2">Aucune image</Text>
               </View>
             )}
@@ -337,6 +326,12 @@ export default function ProductDetails() {
                   </Text>
                 </View>
               )}
+              <View className="items-center">
+                <Text className="text-sm text-neutral-500 font-quicksand">Vues</Text>
+                <Text className="text-lg font-quicksand-bold text-neutral-800">
+                  {product.stats.views}
+                </Text>
+              </View>
             </View>
 
             <View className="border-t border-neutral-100 pt-4">
@@ -386,19 +381,67 @@ export default function ProductDetails() {
                 Tags
               </Text>
               <View className="flex-row flex-wrap gap-2">
-                {product.tags.map((tag: string, index: number) => (
-                  <View key={index} className="bg-primary-100 rounded-full px-3 py-2">
-                    <Text className="text-primary-700 font-quicksand-medium">{tag}</Text>
+                {product.tags.map((tag, index) => (
+                  <View key={index} className="bg-primary-100 px-3 py-1 rounded-full">
+                    <Text className="text-primary-600 font-quicksand-medium">#{tag}</Text>
                   </View>
                 ))}
               </View>
             </View>
           )}
+
+          {/* Informations additionnelles */}
+          <View className="bg-white rounded-3xl p-6 shadow-sm">
+            <Text className="text-xl font-quicksand-bold text-neutral-800 mb-4">
+              Informations
+            </Text>
+            <View className="space-y-3">
+              <View className="flex-row justify-between py-2">
+                <Text className="text-neutral-600 font-quicksand">Note moyenne</Text>
+                <View className="flex-row items-center">
+                  <Ionicons name="star" size={16} color="#FE8C00" />
+                  <Text className="text-neutral-800 font-quicksand-semibold ml-1">
+                    {product.stats.averageRating.toFixed(1)} ({product.stats.totalReviews} avis)
+                  </Text>
+                </View>
+              </View>
+              
+              <View className="flex-row justify-between py-2">
+                <Text className="text-neutral-600 font-quicksand">Ventes totales</Text>
+                <Text className="text-neutral-800 font-quicksand-semibold">
+                  {formatPrice(product.stats.totalSales)}
+                </Text>
+              </View>
+
+              {product.weight && (
+                <View className="flex-row justify-between py-2">
+                  <Text className="text-neutral-600 font-quicksand">Poids</Text>
+                  <Text className="text-neutral-800 font-quicksand-semibold">
+                    {product.weight} kg
+                  </Text>
+                </View>
+              )}
+
+              <View className="flex-row justify-between py-2">
+                <Text className="text-neutral-600 font-quicksand">Créé le</Text>
+                <Text className="text-neutral-800 font-quicksand-semibold">
+                  {formatDate(product.createdAt)}
+                </Text>
+              </View>
+
+              <View className="flex-row justify-between py-2">
+                <Text className="text-neutral-600 font-quicksand">Modifié le</Text>
+                <Text className="text-neutral-800 font-quicksand-semibold">
+                  {formatDate(product.updatedAt)}
+                </Text>
+              </View>
+            </View>
+          </View>
         </View>
       </ScrollView>
 
-      {/* Actions */}
-      <View className="px-6 py-4 bg-white border-t border-neutral-200">
+      {/* Actions Bottom */}
+      <View className="bg-white px-6 py-4 border-t border-neutral-100">
         <View className="flex-row space-x-3">
           <TouchableOpacity
             onPress={handleToggleStatus}
@@ -412,7 +455,7 @@ export default function ProductDetails() {
           </TouchableOpacity>
           
           <TouchableOpacity
-            onPress={() => console.log('Édition à implémenter')}
+            onPress={handleEditProduct}
             className="flex-1 bg-primary-500 py-4 rounded-2xl"
           >
             <Text className="text-white text-center font-quicksand-semibold">
