@@ -262,6 +262,9 @@ export default function EnterpriseProducts() {
       <TouchableOpacity 
         className="bg-white rounded-2xl p-4 mx-4 mb-4 shadow-sm border border-neutral-100"
         onPress={() => {
+          // Stocker l'ID globalement avant la navigation pour éviter les problèmes de contexte
+          (global as any).__CURRENT_PRODUCT_ID__ = item._id;
+          console.log('🚀 Navigation vers le produit:', item._id);
           router.push(`/(app)/(enterprise)/(tabs)/products/${item._id}`);
         }}
       >

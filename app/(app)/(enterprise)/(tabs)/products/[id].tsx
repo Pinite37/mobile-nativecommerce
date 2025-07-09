@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Link } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -16,13 +15,13 @@ import {
 import ProductService from "../../../../../services/api/ProductService";
 import { Product } from "../../../../../types/product";
 
+// Variable globale pour récupérer l'ID du produit
+declare global {
+  var __CURRENT_PRODUCT_ID__: string | undefined;
+}
+
 export default function ProductDetails() {
-  // Fonction pour afficher un toast (temporaire pour éviter l'erreur de navigation context)
-  const showToast = (message: string) => {
-    Alert.alert('Info', message);
-  };
-  
-  // Récupérer l'ID depuis l'URL ou utiliser un ID par défaut pour test
+  // États du composant
   const [productId, setProductId] = useState<string | null>(null);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -31,84 +30,95 @@ export default function ProductDetails() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showFullDescription, setShowFullDescription] = useState(false);
 
-  // Essayer de récupérer l'ID depuis l'URL via window.location (pour le web) ou utiliser un ID test
+  // Fonction pour afficher un toast
+  const showToast = (message: string) => {
+    Alert.alert('Info', message);
+  };
+
+  // Récupérer l'ID au démarrage
   useEffect(() => {
+    let currentId: string | null = null;
+    
     try {
-      // Tentative d'extraction de l'ID depuis l'URL
-      if (typeof window !== 'undefined' && window.location) {
-        const pathParts = window.location.pathname.split('/');
-        const id = pathParts[pathParts.length - 1];
-        if (id && id !== '[id]' && id.length > 10) {
-          console.log('🔍 ID extrait depuis l\'URL:', id);
-          setProductId(id);
-          return;
-        }
+      // Méthode 1: Variable globale
+      if (typeof global !== 'undefined' && global.__CURRENT_PRODUCT_ID__) {
+        currentId = global.__CURRENT_PRODUCT_ID__;
+        console.log('✅ ID extrait depuis global:', currentId);
       }
       
-      // Fallback: utiliser l'ID du produit Samsung A56 pour test
-      const fallbackId = "686d2660b08e2e6de1dbe696";
-      console.log('🔄 Utilisation de l\'ID de fallback pour test:', fallbackId);
-      setProductId(fallbackId);
+      // Méthode 2: Fallback vers un ID de test
+      if (!currentId) {
+        currentId = "686d07b0edb27d4770997a75"; // iPhone 15 pour test
+        console.warn('⚠️ Utilisation de l\'ID de fallback:', currentId);
+      }
     } catch (err) {
-      console.error('❌ Erreur lors de l\'extraction de l\'ID:', err);
-      // Utiliser l'ID de test même en cas d'erreur
-      setProductId("686d2660b08e2e6de1dbe696");
+      console.error('❌ Erreur extraction ID:', err);
+      currentId = "686d07b0edb27d4770997a75";
     }
+    
+    console.log('🔍 ID final:', currentId);
+    setProductId(currentId);
   }, []);
 
-  const loadProduct = useCallback(async () => {
-    console.log('🔍 Debug - ID du produit:', productId);
+  // Charger le produit
+  useEffect(() => {
+    if (!productId) return;
     
-    if (!productId) {
-      console.warn('❌ Aucun ID trouvé');
-      setError('ID du produit non trouvé');
-      setLoading(false);
-      return;
-    }
+    const loadProduct = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        console.log('🚀 Chargement produit:', productId);
+        
+        const productData = await ProductService.getProductById(productId);
+        console.log('✅ Produit chargé:', productData);
+        setProduct(productData);
+      } catch (err: any) {
+        console.error('❌ Erreur:', err);
+        setError(err.message || 'Erreur lors du chargement');
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    try {
-      setError(null);
-      console.log('🚀 Chargement du produit avec ID:', productId);
-      const productData = await ProductService.getProductById(productId);
-      console.log('✅ Produit chargé:', productData);
-      setProduct(productData);
-    } catch (err: any) {
-      console.error('❌ Erreur chargement produit:', err);
-      setError(err.message || 'Erreur lors du chargement du produit');
-    } finally {
-      setLoading(false);
-    }
+    loadProduct();
   }, [productId]);
 
-  useEffect(() => {
-    if (productId) {
-      loadProduct();
-    }
-  }, [productId, loadProduct]);
-
-  const onRefresh = useCallback(async () => {
+  // Fonction de refresh
+  const onRefresh = async () => {
+    if (!productId) return;
+    
     setRefreshing(true);
-    await loadProduct();
-    setRefreshing(false);
-  }, [loadProduct]);
+    try {
+      const productData = await ProductService.getProductById(productId);
+      setProduct(productData);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
+  // Actions sur le produit
   const handleToggleStatus = async () => {
     if (!product) return;
-
+    
+    const action = product.isActive ? 'désactiver' : 'activer';
     Alert.alert(
-      `${product.isActive ? 'Désactiver' : 'Activer'} le produit`,
-      `Voulez-vous vraiment ${product.isActive ? 'désactiver' : 'activer'} ce produit ?`,
+      `${action.charAt(0).toUpperCase() + action.slice(1)} le produit`,
+      `Voulez-vous vraiment ${action} ce produit ?`,
       [
         { text: "Annuler", style: "cancel" },
         {
-          text: product.isActive ? 'Désactiver' : 'Activer',
+          text: action.charAt(0).toUpperCase() + action.slice(1),
           onPress: async () => {
             try {
               await ProductService.toggleProductStatus(product._id, !product.isActive);
-              setProduct((prev: Product | null) => prev ? { ...prev, isActive: !prev.isActive } : null);
-              showToast(`Produit ${product.isActive ? 'désactivé' : 'activé'} avec succès`);
+              setProduct(prev => prev ? { ...prev, isActive: !prev.isActive } : null);
+              showToast(`Produit ${action}é avec succès`);
             } catch (error: any) {
-              showToast(error.message || 'Erreur lors de la modification du statut');
+              showToast(error.message || 'Erreur');
             }
           }
         }
@@ -118,10 +128,10 @@ export default function ProductDetails() {
 
   const handleDeleteProduct = async () => {
     if (!product) return;
-
+    
     Alert.alert(
       "Supprimer le produit",
-      "Êtes-vous sûr de vouloir supprimer ce produit ? Cette action est irréversible.",
+      "Êtes-vous sûr ? Cette action est irréversible.",
       [
         { text: "Annuler", style: "cancel" },
         {
@@ -131,10 +141,8 @@ export default function ProductDetails() {
             try {
               await ProductService.deleteProduct(product._id);
               showToast("Produit supprimé avec succès");
-              // Note: L'utilisateur devra naviguer manuellement vers la liste
-              console.log('Produit supprimé, veuillez retourner à la liste des produits');
             } catch (error: any) {
-              showToast(error.message || 'Erreur lors de la suppression');
+              showToast(error.message || 'Erreur');
             }
           }
         }
@@ -142,6 +150,7 @@ export default function ProductDetails() {
     );
   };
 
+  // Utilitaires
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
   };
@@ -152,64 +161,7 @@ export default function ProductDetails() {
     return { text: 'En stock', color: 'text-green-500', bgColor: 'bg-green-100' };
   };
 
-  const renderImageGallery = () => {
-    if (!product?.images || product.images.length === 0) {
-      return (
-        <View className="bg-neutral-100 rounded-2xl items-center justify-center" style={{ height: 300 }}>
-          <Ionicons name="image-outline" size={60} color="#9CA3AF" />
-          <Text className="text-neutral-500 font-quicksand-medium mt-2">Aucune image</Text>
-        </View>
-      );
-    }
-
-    return (
-      <View className="mb-6">
-        {/* Image principale */}
-        <View className="mb-4">
-          <Image
-            source={{ uri: product.images[selectedImageIndex] }}
-            className="w-full rounded-2xl"
-            style={{ height: 300 }}
-            resizeMode="cover"
-          />
-          {product.images.length > 1 && (
-            <View className="absolute bottom-4 right-4 bg-black/50 rounded-full px-3 py-1">
-              <Text className="text-white font-quicksand-medium text-sm">
-                {selectedImageIndex + 1} / {product.images.length}
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {/* Miniatures */}
-        {product.images.length > 1 && (
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            className="px-2"
-            contentContainerStyle={{ paddingHorizontal: 4 }}
-          >
-            {product.images.map((image: string, index: number) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => setSelectedImageIndex(index)}
-                className={`mr-3 rounded-xl overflow-hidden border-2 ${
-                  selectedImageIndex === index ? 'border-primary-500' : 'border-neutral-200'
-                }`}
-              >
-                <Image
-                  source={{ uri: image }}
-                  className="w-16 h-16"
-                  resizeMode="cover"
-                />
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        )}
-      </View>
-    );
-  };
-
+  // États d'affichage
   if (loading) {
     return (
       <SafeAreaView className="flex-1 bg-background-secondary">
@@ -236,7 +188,7 @@ export default function ProductDetails() {
           </Text>
           <TouchableOpacity 
             className="bg-primary-500 rounded-xl py-4 px-8"
-            onPress={loadProduct}
+            onPress={onRefresh}
           >
             <Text className="text-white font-quicksand-semibold">
               Réessayer
@@ -251,16 +203,20 @@ export default function ProductDetails() {
 
   return (
     <SafeAreaView className="flex-1 bg-background-secondary">
-      {/* Header */}
+      {/* Header simplifié */}
       <View className="bg-white px-6 py-4 pt-16 shadow-sm">
         <View className="flex-row items-center justify-between">
-          <Link href="/(app)/(enterprise)/(tabs)/products/" asChild>
-            <TouchableOpacity
-              className="w-10 h-10 rounded-full bg-neutral-100 items-center justify-center"
-            >
-              <Ionicons name="arrow-back" size={20} color="#374151" />
-            </TouchableOpacity>
-          </Link>
+          <TouchableOpacity
+            onPress={() => {
+              if (typeof global !== 'undefined') {
+                delete global.__CURRENT_PRODUCT_ID__;
+              }
+              console.log('Retour demandé');
+            }}
+            className="w-10 h-10 rounded-full bg-neutral-100 items-center justify-center"
+          >
+            <Ionicons name="arrow-back" size={20} color="#374151" />
+          </TouchableOpacity>
           <Text className="text-lg font-quicksand-bold text-neutral-800" numberOfLines={1}>
             {product.name}
           </Text>
@@ -286,7 +242,56 @@ export default function ProductDetails() {
       >
         <View className="px-6 py-6 space-y-6">
           {/* Images */}
-          {renderImageGallery()}
+          <View className="mb-6">
+            {product.images && product.images.length > 0 ? (
+              <>
+                <View className="mb-4">
+                  <Image
+                    source={{ uri: product.images[selectedImageIndex] }}
+                    className="w-full rounded-2xl"
+                    style={{ height: 300 }}
+                    resizeMode="cover"
+                  />
+                  {product.images.length > 1 && (
+                    <View className="absolute bottom-4 right-4 bg-black/50 rounded-full px-3 py-1">
+                      <Text className="text-white font-quicksand-medium text-sm">
+                        {selectedImageIndex + 1} / {product.images.length}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                
+                {product.images.length > 1 && (
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    className="px-2"
+                  >
+                    {product.images.map((image: string, index: number) => (
+                      <TouchableOpacity
+                        key={index}
+                        onPress={() => setSelectedImageIndex(index)}
+                        className={`mr-3 rounded-xl overflow-hidden border-2 ${
+                          selectedImageIndex === index ? 'border-primary-500' : 'border-neutral-200'
+                        }`}
+                      >
+                        <Image
+                          source={{ uri: image }}
+                          className="w-16 h-16"
+                          resizeMode="cover"
+                        />
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                )}
+              </>
+            ) : (
+              <View className="bg-neutral-100 rounded-2xl items-center justify-center" style={{ height: 300 }}>
+                <Ionicons name="image-outline" size={60} color="#9CA3AF" />
+                <Text className="text-neutral-500 font-quicksand-medium mt-2">Aucune image</Text>
+              </View>
+            )}
+          </View>
 
           {/* Informations principales */}
           <View className="bg-white rounded-3xl p-6 shadow-sm">
@@ -332,14 +337,6 @@ export default function ProductDetails() {
                   </Text>
                 </View>
               )}
-              {product.sku && (
-                <View className="items-center">
-                  <Text className="text-sm text-neutral-500 font-quicksand">SKU</Text>
-                  <Text className="text-lg font-quicksand-bold text-neutral-800">
-                    {product.sku}
-                  </Text>
-                </View>
-              )}
             </View>
 
             <View className="border-t border-neutral-100 pt-4">
@@ -362,43 +359,6 @@ export default function ProductDetails() {
               )}
             </View>
           </View>
-
-          {/* Détails techniques */}
-          {(product.brand || product.model || product.weight || product.dimensions) && (
-            <View className="bg-white rounded-3xl p-6 shadow-sm">
-              <Text className="text-xl font-quicksand-bold text-neutral-800 mb-4">
-                Détails techniques
-              </Text>
-              <View className="space-y-3">
-                {product.brand && (
-                  <View className="flex-row justify-between py-2 border-b border-neutral-100">
-                    <Text className="text-neutral-600 font-quicksand">Marque</Text>
-                    <Text className="text-neutral-800 font-quicksand-semibold">{product.brand}</Text>
-                  </View>
-                )}
-                {product.model && (
-                  <View className="flex-row justify-between py-2 border-b border-neutral-100">
-                    <Text className="text-neutral-600 font-quicksand">Modèle</Text>
-                    <Text className="text-neutral-800 font-quicksand-semibold">{product.model}</Text>
-                  </View>
-                )}
-                {product.weight && (
-                  <View className="flex-row justify-between py-2 border-b border-neutral-100">
-                    <Text className="text-neutral-600 font-quicksand">Poids</Text>
-                    <Text className="text-neutral-800 font-quicksand-semibold">{product.weight} kg</Text>
-                  </View>
-                )}
-                {product.dimensions && (
-                  <View className="flex-row justify-between py-2">
-                    <Text className="text-neutral-600 font-quicksand">Dimensions</Text>
-                    <Text className="text-neutral-800 font-quicksand-semibold">
-                      {product.dimensions.length || 0} × {product.dimensions.width || 0} × {product.dimensions.height || 0} cm
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </View>
-          )}
 
           {/* Spécifications */}
           {product.specifications && product.specifications.length > 0 && (
@@ -434,35 +394,10 @@ export default function ProductDetails() {
               </View>
             </View>
           )}
-
-          {/* Informations de gestion */}
-          <View className="bg-white rounded-3xl p-6 shadow-sm">
-            <Text className="text-xl font-quicksand-bold text-neutral-800 mb-4">
-              Informations de gestion
-            </Text>
-            <View className="space-y-3">
-              <View className="flex-row justify-between py-2 border-b border-neutral-100">
-                <Text className="text-neutral-600 font-quicksand">Date de création</Text>
-                <Text className="text-neutral-800 font-quicksand-semibold">
-                  {new Date(product.createdAt).toLocaleDateString('fr-FR')}
-                </Text>
-              </View>
-              <View className="flex-row justify-between py-2 border-b border-neutral-100">
-                <Text className="text-neutral-600 font-quicksand">Dernière modification</Text>
-                <Text className="text-neutral-800 font-quicksand-semibold">
-                  {new Date(product.updatedAt).toLocaleDateString('fr-FR')}
-                </Text>
-              </View>
-              <View className="flex-row justify-between py-2">
-                <Text className="text-neutral-600 font-quicksand">ID du produit</Text>
-                <Text className="text-neutral-800 font-quicksand-semibold">{product._id}</Text>
-              </View>
-            </View>
-          </View>
         </View>
       </ScrollView>
 
-      {/* Actions flottantes */}
+      {/* Actions */}
       <View className="px-6 py-4 bg-white border-t border-neutral-200">
         <View className="flex-row space-x-3">
           <TouchableOpacity

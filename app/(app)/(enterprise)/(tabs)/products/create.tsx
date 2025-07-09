@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from 'expo-image-picker';
-import { router } from "expo-router";
+import { Link } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -378,13 +378,7 @@ export default function CreateProduct() {
       await ProductService.createProduct(productData);
       
       // Affichage du toast de succès
-      showToast("Produit créé avec succès !");
-      
-      // Retour automatique à la liste des produits avec rafraîchissement
-      router.push({
-        pathname: '/(app)/(enterprise)/(tabs)/products',
-        params: { refresh: 'true' }
-      });
+      showToast("Produit créé avec succès ! Retournez à la liste des produits pour le voir.");
     } catch (error: any) {
       Alert.alert("Erreur", error.message || "Impossible de créer le produit");
     } finally {
@@ -401,12 +395,16 @@ export default function CreateProduct() {
         {/* Header */}
         <View className="bg-white px-6 py-4 pt-16 shadow-sm">
           <View className="flex-row items-center justify-between">
-            <TouchableOpacity
-              onPress={() => router.back()}
-              className="w-10 h-10 rounded-full bg-neutral-100 items-center justify-center"
+            <Link 
+              href="/(app)/(enterprise)/(tabs)/products"
+              asChild
             >
-              <Ionicons name="arrow-back" size={20} color="#374151" />
-            </TouchableOpacity>
+              <TouchableOpacity
+                className="w-10 h-10 rounded-full bg-neutral-100 items-center justify-center"
+              >
+                <Ionicons name="arrow-back" size={20} color="#374151" />
+              </TouchableOpacity>
+            </Link>
             <Text className="text-xl font-quicksand-bold text-neutral-800">
               Nouveau produit
             </Text>
