@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from 'expo-image-picker';
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -16,6 +16,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
+import { useToast } from "../../../../../components/ui/ToastManager";
 
 import CategoryService from "../../../../../services/api/CategoryService";
 import ProductService from "../../../../../services/api/ProductService";
@@ -96,10 +98,8 @@ export default function CreateProduct() {
   const [showSpecModal, setShowSpecModal] = useState(false);
   const [newSpec, setNewSpec] = useState({ key: '', value: '' });
   
-  // Fonction temporaire pour éviter l'erreur de navigation context
-  const showToast = (message: string) => {
-    Alert.alert("Succès", message);
-  };
+  // Hook pour afficher des notifications toast
+  const { showSuccess, showError } = useToast();
 
   const [form, setForm] = useState<ProductForm>({
     name: "",
@@ -375,12 +375,18 @@ export default function CreateProduct() {
 
       console.log('Creating product with data:', JSON.stringify(productData, null, 2));
 
+      // Création du produit
       await ProductService.createProduct(productData);
       
       // Affichage du toast de succès
-      showToast("Produit créé avec succès ! Retournez à la liste des produits pour le voir.");
+      showSuccess("Produit créé avec succès !", "Le produit a été ajouté à votre catalogue");
+      
+      // Redirection vers la liste des produits après un court délai
+      setTimeout(() => {
+        router.replace("/(app)/(enterprise)/(tabs)/products");
+      }, 1000);
     } catch (error: any) {
-      Alert.alert("Erreur", error.message || "Impossible de créer le produit");
+      showError("Erreur", error.message || "Impossible de créer le produit");
     } finally {
       setLoading(false);
     }

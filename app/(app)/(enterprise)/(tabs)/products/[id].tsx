@@ -229,8 +229,7 @@ export default function ProductDetails() {
           />
         }
       >
-        <View className="px-6 py-6 space-y-6">
-          {/* Images */}
+        <View className="px-6 py-6">
           <View className="mb-6">
             {product.images && product.images.length > 0 ? (
               <>
@@ -254,13 +253,12 @@ export default function ProductDetails() {
                   <ScrollView 
                     horizontal 
                     showsHorizontalScrollIndicator={false}
-                    className="space-x-3"
                   >
                     {product.images.map((image, index) => (
                       <TouchableOpacity
                         key={index}
                         onPress={() => setSelectedImageIndex(index)}
-                        className={`border-2 rounded-xl ${
+                        className={`border-2 rounded-xl mr-3 ${
                           selectedImageIndex === index ? 'border-primary-500' : 'border-neutral-200'
                         }`}
                       >
@@ -282,7 +280,6 @@ export default function ProductDetails() {
             )}
           </View>
 
-          {/* Informations principales */}
           <View className="bg-white rounded-3xl p-6 shadow-sm">
             <View className="flex-row items-start justify-between mb-4">
               <View className="flex-1 mr-4">
@@ -311,22 +308,22 @@ export default function ProductDetails() {
               </Text>
             </View>
 
-            <View className="flex-row items-center space-x-6 mb-4">
-              <View className="items-center">
+            <View className="flex-row items-center mb-4">
+              <View className="items-center flex-1">
                 <Text className="text-sm text-neutral-500 font-quicksand">Stock</Text>
                 <Text className="text-lg font-quicksand-bold text-neutral-800">
                   {product.stock}
                 </Text>
               </View>
               {typeof product.category === 'object' && (
-                <View className="items-center">
+                <View className="items-center flex-1">
                   <Text className="text-sm text-neutral-500 font-quicksand">Catégorie</Text>
                   <Text className="text-lg font-quicksand-bold text-neutral-800">
                     {product.category.name}
                   </Text>
                 </View>
               )}
-              <View className="items-center">
+              <View className="items-center flex-1">
                 <Text className="text-sm text-neutral-500 font-quicksand">Vues</Text>
                 <Text className="text-lg font-quicksand-bold text-neutral-800">
                   {product.stats.views}
@@ -355,13 +352,12 @@ export default function ProductDetails() {
             </View>
           </View>
 
-          {/* Spécifications */}
           {product.specifications && product.specifications.length > 0 && (
             <View className="bg-white rounded-3xl p-6 shadow-sm">
               <Text className="text-xl font-quicksand-bold text-neutral-800 mb-4">
                 Spécifications
               </Text>
-              <View className="space-y-3">
+              <View>
                 {product.specifications.map((spec: any, index: number) => (
                   <View key={index} className="flex-row justify-between py-2 border-b border-neutral-100">
                     <Text className="text-neutral-600 font-quicksand flex-1">{spec.key}</Text>
@@ -374,15 +370,14 @@ export default function ProductDetails() {
             </View>
           )}
 
-          {/* Tags */}
           {product.tags && product.tags.length > 0 && (
             <View className="bg-white rounded-3xl p-6 shadow-sm">
               <Text className="text-xl font-quicksand-bold text-neutral-800 mb-4">
                 Tags
               </Text>
-              <View className="flex-row flex-wrap gap-2">
+              <View className="flex-row flex-wrap">
                 {product.tags.map((tag, index) => (
-                  <View key={index} className="bg-primary-100 px-3 py-1 rounded-full">
+                  <View key={index} className="bg-primary-100 px-3 py-1 rounded-full mr-2 mb-2">
                     <Text className="text-primary-600 font-quicksand-medium">#{tag}</Text>
                   </View>
                 ))}
@@ -390,12 +385,11 @@ export default function ProductDetails() {
             </View>
           )}
 
-          {/* Informations additionnelles */}
           <View className="bg-white rounded-3xl p-6 shadow-sm">
             <Text className="text-xl font-quicksand-bold text-neutral-800 mb-4">
               Informations
             </Text>
-            <View className="space-y-3">
+            <View>
               <View className="flex-row justify-between py-2">
                 <Text className="text-neutral-600 font-quicksand">Note moyenne</Text>
                 <View className="flex-row items-center">
@@ -440,12 +434,11 @@ export default function ProductDetails() {
         </View>
       </ScrollView>
 
-      {/* Actions Bottom */}
       <View className="bg-white px-6 py-4 border-t border-neutral-100">
-        <View className="flex-row space-x-3">
+        <View className="flex-row">
           <TouchableOpacity
             onPress={handleToggleStatus}
-            className={`flex-1 py-4 rounded-2xl ${
+            className={`flex-1 py-4 rounded-2xl mr-3 ${
               product.isActive ? 'bg-orange-500' : 'bg-green-500'
             }`}
           >
@@ -456,7 +449,7 @@ export default function ProductDetails() {
           
           <TouchableOpacity
             onPress={handleEditProduct}
-            className="flex-1 bg-primary-500 py-4 rounded-2xl"
+            className="flex-1 bg-primary-500 py-4 rounded-2xl mr-3"
           >
             <Text className="text-white text-center font-quicksand-semibold">
               Modifier
