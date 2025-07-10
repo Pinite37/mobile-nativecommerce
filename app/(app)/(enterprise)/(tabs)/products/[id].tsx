@@ -1,20 +1,128 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
+  Dimensions,
+  FlatList,
   Image,
   RefreshControl,
   SafeAreaView,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 
+import { useToast } from "../../../../../components/ui/ToastManager";
+
 import ProductService from "../../../../../services/api/ProductService";
 import { Product } from "../../../../../types/product";
+
+const styles = StyleSheet.create({
+  carousel: {
+    width: '100%',
+    height: 350,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#f7f7f7',
+  },
+  carouselItem: {
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
+  },
+  carouselImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  paginationContainer: {
+    position: 'absolute',
+    bottom: 16,
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.5,
+    elevation: 2,
+  },
+  counter: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 20,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  imageNavButton: {
+    position: 'absolute',
+    top: '50%',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderRadius: 25,
+    width: 50,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
+    transform: [{ translateY: -25 }],
+  },
+  thumbnailContainer: {
+    marginTop: 12,
+    paddingBottom: 8,
+  },
+  thumbnailImage: {
+    width: 70, 
+    height: 70,
+    borderRadius: 10,
+    marginRight: 12,
+  },
+  thumbnailSelected: {
+    borderWidth: 3,
+    borderColor: '#FE8C00',
+  },
+  sectionHeader: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 10,
+    fontFamily: 'Quicksand-Bold',
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+});
 
 export default function ProductDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -24,6 +132,12 @@ export default function ProductDetails() {
   const [error, setError] = useState<string | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  
+  // Référence et variables pour le carrousel d'images
+  const flatListRef = useRef<FlatList>(null);
+  const screenWidth = Dimensions.get('window').width;
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const viewabilityConfig = { itemVisiblePercentThreshold: 50 };
 
   console.log('🚀 ProductDetails - Product ID:', id);
 
@@ -77,10 +191,10 @@ export default function ProductDetails() {
               console.log('🔄 Changement de statut:', product._id, !product.isActive);
               await ProductService.toggleProductStatus(product._id, !product.isActive);
               setProduct(prev => prev ? { ...prev, isActive: !prev.isActive } : null);
-              showToast(`Produit ${action}é avec succès`);
+              showSuccess(`Produit ${action}é avec succès`);
             } catch (error: any) {
               console.error('❌ Erreur changement statut:', error);
-              showToast(error.message || 'Erreur');
+              showError('Erreur', error.message || 'Une erreur est survenue');
             }
           }
         }
@@ -103,11 +217,11 @@ export default function ProductDetails() {
             try {
               console.log('🗑️ Suppression du produit:', product._id);
               await ProductService.deleteProduct(product._id);
-              showToast("Produit supprimé avec succès");
+              showSuccess("Produit supprimé avec succès");
               router.back();
             } catch (error: any) {
               console.error('❌ Erreur suppression:', error);
-              showToast(error.message || 'Erreur');
+              showError('Erreur', error.message || 'Une erreur est survenue');
             }
           }
         }
@@ -117,13 +231,11 @@ export default function ProductDetails() {
 
   const handleEditProduct = () => {
     console.log('✏️ Édition du produit à implémenter:', product?._id);
-    Alert.alert("Information", "La fonctionnalité d'édition sera bientôt disponible");
+    showInfo("Fonctionnalité à venir", "L'édition de produit sera bientôt disponible");
   };
 
-  // Fonction temporaire pour les toasts
-  const showToast = (message: string) => {
-    Alert.alert("Information", message);
-  };
+  // Hook pour les toasts
+  const { showSuccess, showError, showInfo } = useToast();
 
   // Utilitaires
   const formatPrice = (price: number) => {
@@ -143,6 +255,15 @@ export default function ProductDetails() {
       day: 'numeric'
     });
   };
+  
+  // Gestion du défilement des images
+  const handleViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: any[] }) => {
+    if (viewableItems.length > 0) {
+      setSelectedImageIndex(viewableItems[0].index);
+    }
+  }, []);
+  
+  const onViewRef = useRef(handleViewableItemsChanged);
 
   // États d'affichage
   if (loading) {
@@ -232,46 +353,140 @@ export default function ProductDetails() {
         <View className="px-6 py-6">
           <View className="mb-6">
             {product.images && product.images.length > 0 ? (
-              <>
-                <View className="mb-4">
-                  <Image
-                    source={{ uri: product.images[selectedImageIndex] }}
-                    className="w-full rounded-2xl"
-                    style={{ height: 300 }}
-                    resizeMode="cover"
+              <View>
+                {/* Carousel des images avec effet de défilement fluide */}
+                <View style={styles.carousel}>
+                  <FlatList
+                    ref={flatListRef}
+                    data={product.images}
+                    keyExtractor={(_, index) => index.toString()}
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    snapToAlignment="center"
+                    decelerationRate="normal"
+                    snapToInterval={screenWidth - 32}
+                    bounces={true}
+                    bouncesZoom={true}
+                    onViewableItemsChanged={onViewRef.current}
+                    viewabilityConfig={viewabilityConfig}
+                    onScroll={Animated.event(
+                      [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+                      { useNativeDriver: false }
+                    )}
+                    renderItem={({ item }) => (
+                      <View style={[styles.carouselItem, { width: screenWidth - 32 }]}>
+                        <Image
+                          source={{ uri: item }}
+                          style={styles.carouselImage}
+                        />
+                      </View>
+                    )}
                   />
-                  {product.images.length > 1 && (
-                    <View className="absolute bottom-4 right-4 bg-black/50 rounded-full px-3 py-1">
-                      <Text className="text-white font-quicksand-medium text-sm">
-                        {selectedImageIndex + 1} / {product.images.length}
-                      </Text>
-                    </View>
-                  )}
+                  
+                  {/* Indicateurs de pagination animés */}
+                  <View style={styles.paginationContainer}>
+                    {product.images.map((_, index) => {
+                      const inputRange = [
+                        (index - 1) * screenWidth,
+                        index * screenWidth,
+                        (index + 1) * screenWidth,
+                      ];
+                      
+                      const opacity = scrollX.interpolate({
+                        inputRange,
+                        outputRange: [0.4, 1, 0.4],
+                        extrapolate: 'clamp',
+                      });
+                      
+                      const scale = scrollX.interpolate({
+                        inputRange,
+                        outputRange: [1, 1.3, 1],
+                        extrapolate: 'clamp',
+                      });
+                      
+                      return (
+                        <Animated.View
+                          key={index}
+                          style={[
+                            styles.paginationDot,
+                            {
+                              opacity,
+                              transform: [{ scale }],
+                              backgroundColor: selectedImageIndex === index ? '#FE8C00' : '#FFFFFF',
+                            },
+                          ]}
+                        />
+                      );
+                    })}
+                  </View>
+                  
+                  {/* Compteur d'images */}
+                  <View style={styles.counter}>
+                    <Text className="text-white font-quicksand-medium text-sm">
+                      {selectedImageIndex + 1} / {product.images.length}
+                    </Text>
+                  </View>
                 </View>
                 
-                {product.images.length > 1 && (
-                  <ScrollView 
-                    horizontal 
-                    showsHorizontalScrollIndicator={false}
-                  >
-                    {product.images.map((image, index) => (
+                {/* Miniatures des images */}
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.thumbnailContainer}
+                >
+                  {product.images.map((image, index) => {
+                    // Animation de pulsation pour la miniature sélectionnée
+                    const scale = new Animated.Value(1);
+                    
+                    if (selectedImageIndex === index) {
+                      Animated.sequence([
+                        Animated.timing(scale, {
+                          toValue: 1.1,
+                          duration: 300,
+                          useNativeDriver: true
+                        }),
+                        Animated.timing(scale, {
+                          toValue: 1,
+                          duration: 300,
+                          useNativeDriver: true
+                        })
+                      ]).start();
+                    }
+                    
+                    return (
                       <TouchableOpacity
                         key={index}
-                        onPress={() => setSelectedImageIndex(index)}
-                        className={`border-2 rounded-xl mr-3 ${
-                          selectedImageIndex === index ? 'border-primary-500' : 'border-neutral-200'
-                        }`}
+                        onPress={() => {
+                          setSelectedImageIndex(index);
+                          flatListRef.current?.scrollToIndex({ index, animated: true });
+                        }}
                       >
-                        <Image
-                          source={{ uri: image }}
-                          className="w-20 h-20 rounded-xl"
-                          resizeMode="cover"
-                        />
+                        <Animated.View
+                          style={{
+                            transform: [{ scale }],
+                            borderWidth: selectedImageIndex === index ? 3 : 1,
+                            borderColor: selectedImageIndex === index ? '#FE8C00' : '#e0e0e0',
+                            borderRadius: 12,
+                            padding: 2,
+                            marginRight: 12
+                          }}
+                        >
+                          <Image
+                            source={{ uri: image }}
+                            style={{
+                              width: 65,
+                              height: 65,
+                              borderRadius: 8
+                            }}
+                            resizeMode="cover"
+                          />
+                        </Animated.View>
                       </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                )}
-              </>
+                    );
+                  })}
+                </ScrollView>
+              </View>
             ) : (
               <View className="w-full h-72 bg-neutral-100 rounded-2xl items-center justify-center">
                 <Ionicons name="image" size={48} color="#9CA3AF" />
@@ -280,19 +495,24 @@ export default function ProductDetails() {
             )}
           </View>
 
-          <View className="bg-white rounded-3xl p-6 shadow-sm">
+          <View style={styles.card}>
             <View className="flex-row items-start justify-between mb-4">
               <View className="flex-1 mr-4">
                 <Text className="text-2xl font-quicksand-bold text-neutral-800 mb-2">
                   {product.name}
                 </Text>
                 <View className="flex-row items-center">
-                  <View className={`px-3 py-1 rounded-full ${stockStatus.bgColor}`}>
+                  <Animated.View 
+                    className={`px-3 py-1 rounded-full ${stockStatus.bgColor}`}
+                    style={{
+                      transform: [{ scale: new Animated.Value(1) }]
+                    }}
+                  >
                     <Text className={`text-sm font-quicksand-semibold ${stockStatus.color}`}>
                       {stockStatus.text}
                     </Text>
-                  </View>
-                  <View className={`ml-2 px-3 py-1 rounded-full ${
+                  </Animated.View>
+                  <Animated.View className={`ml-2 px-3 py-1 rounded-full ${
                     product.isActive ? 'bg-green-100' : 'bg-red-100'
                   }`}>
                     <Text className={`text-sm font-quicksand-semibold ${
@@ -300,12 +520,21 @@ export default function ProductDetails() {
                     }`}>
                       {product.isActive ? 'Actif' : 'Inactif'}
                     </Text>
-                  </View>
+                  </Animated.View>
                 </View>
               </View>
-              <Text className="text-3xl font-quicksand-bold text-primary-500">
+              <Animated.Text 
+                className="text-3xl font-quicksand-bold text-primary-500"
+                style={{
+                  shadowColor: '#FE8C00',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 3,
+                  elevation: 3,
+                }}
+              >
                 {formatPrice(product.price)}
-              </Text>
+              </Animated.Text>
             </View>
 
             <View className="flex-row items-center mb-4">
@@ -434,31 +663,75 @@ export default function ProductDetails() {
         </View>
       </ScrollView>
 
-      <View className="bg-white px-6 py-4 border-t border-neutral-100">
+      <View className="bg-white px-6 py-6 border-t border-neutral-100" 
+        style={{
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -3 },
+          shadowOpacity: 0.1,
+          shadowRadius: 5,
+          elevation: 10,
+        }}
+      >
         <View className="flex-row">
-          <TouchableOpacity
-            onPress={handleToggleStatus}
-            className={`flex-1 py-4 rounded-2xl mr-3 ${
-              product.isActive ? 'bg-orange-500' : 'bg-green-500'
-            }`}
-          >
-            <Text className="text-white text-center font-quicksand-semibold">
-              {product.isActive ? 'Désactiver' : 'Activer'}
-            </Text>
-          </TouchableOpacity>
+          <Animated.View style={{ flex: 1, marginRight: 12 }}>
+            <TouchableOpacity
+              onPress={handleToggleStatus}
+              className={`py-4 rounded-2xl ${
+                product.isActive ? 'bg-orange-500' : 'bg-green-500'
+              }`}
+              style={{
+                shadowColor: product.isActive ? '#F97316' : '#22C55E',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+                elevation: 6,
+              }}
+            >
+              <View className="flex-row items-center justify-center">
+                <Ionicons 
+                  name={product.isActive ? "power" : "checkmark-circle"} 
+                  size={20} 
+                  color="white"
+                  style={{ marginRight: 6 }} 
+                />
+                <Text className="text-white text-center font-quicksand-semibold">
+                  {product.isActive ? 'Désactiver' : 'Activer'}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </Animated.View>
           
-          <TouchableOpacity
-            onPress={handleEditProduct}
-            className="flex-1 bg-primary-500 py-4 rounded-2xl mr-3"
-          >
-            <Text className="text-white text-center font-quicksand-semibold">
-              Modifier
-            </Text>
-          </TouchableOpacity>
+          <Animated.View style={{ flex: 1, marginRight: 12 }}>
+            <TouchableOpacity
+              onPress={handleEditProduct}
+              className="bg-primary-500 py-4 rounded-2xl"
+              style={{
+                shadowColor: '#FE8C00',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+                elevation: 6,
+              }}
+            >
+              <View className="flex-row items-center justify-center">
+                <Ionicons name="pencil" size={18} color="white" style={{ marginRight: 6 }} />
+                <Text className="text-white text-center font-quicksand-semibold">
+                  Modifier
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </Animated.View>
           
           <TouchableOpacity
             onPress={handleDeleteProduct}
             className="bg-red-500 py-4 px-6 rounded-2xl"
+            style={{
+              shadowColor: '#EF4444',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 4,
+              elevation: 6,
+            }}
           >
             <Ionicons name="trash" size={20} color="white" />
           </TouchableOpacity>
