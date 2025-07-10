@@ -2,10 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect } from "react";
 import { Alert, Image, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useToast } from "../../../../components/ui/ToastManager";
 import { useAuth } from "../../../../contexts/AuthContext";
 
 export default function ProfileScreen() {
   const { user, logout, refreshUserData } = useAuth();
+  const toast = useToast();
   
   // Rafraîchir les données utilisateur au chargement de la page
   useEffect(() => {
@@ -26,6 +28,7 @@ export default function ProfileScreen() {
           style: "destructive",
           onPress: () => {
             logout();
+            toast.showInfo("Déconnexion", "Vous avez été déconnecté avec succès");
             router.replace("/(auth)/signin");
           }
         }

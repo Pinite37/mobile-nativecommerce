@@ -2,19 +2,19 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import ImagePickerModal from "../../../../components/ui/ImagePickerModal";
+import { useToast } from "../../../../components/ui/ToastManager";
 import { useAuth } from "../../../../contexts/AuthContext";
 import CustomerService, { UpdateProfileRequest } from "../../../../services/api/CustomerService";
 
@@ -24,6 +24,7 @@ export default function ProfileDetailsScreen() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [imagePickerVisible, setImagePickerVisible] = useState(false);
+  const toast = useToast();
   
   // État local pour les informations du profil
   const [profile, setProfile] = useState({
@@ -55,7 +56,7 @@ export default function ProfileDetailsScreen() {
       // Le rafraîchissement du contexte est géré par l'API refreshUserData
       await refreshUserData();
     } catch (error) {
-      Alert.alert("Erreur", "Impossible de charger les informations du profil");
+      toast.showError("Erreur", "Impossible de charger les informations du profil");
       console.error("Erreur lors du chargement du profil:", error);
     } finally {
       setLoading(false);
@@ -85,13 +86,13 @@ export default function ProfileDetailsScreen() {
       // Rafraîchir les données utilisateur dans le contexte
       await refreshUserData();
       
-      // Afficher un message de succès
-      Alert.alert("Succès", "Votre profil a été mis à jour avec succès");
+      // Afficher un toast de succès
+      toast.showSuccess("Profil mis à jour", "Vos informations ont été enregistrées avec succès");
       
       // Retourner à la page précédente
       router.back();
     } catch (error) {
-      Alert.alert("Erreur", "Impossible de mettre à jour le profil");
+      toast.showError("Erreur", "Impossible de mettre à jour votre profil");
       console.error("Erreur lors de la mise à jour du profil:", error);
     } finally {
       setSaving(false);

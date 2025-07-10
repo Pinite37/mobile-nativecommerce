@@ -2,15 +2,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    SafeAreaView,
-    ScrollView,
-    Switch,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  SafeAreaView,
+  ScrollView,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import { useToast } from "../../../../components/ui/ToastManager";
 import { useAuth } from "../../../../contexts/AuthContext";
 import CustomerService, { UpdatePreferencesRequest } from "../../../../services/api/CustomerService";
 
@@ -19,6 +20,7 @@ export default function SettingsScreen() {
   const { user, refreshUserData } = useAuth();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const toast = useToast();
   
   // État local pour les paramètres
   const [settings, setSettings] = useState({
@@ -54,7 +56,7 @@ export default function SettingsScreen() {
       });
     } catch (error) {
       console.error("Erreur lors du chargement des préférences:", error);
-      Alert.alert("Erreur", "Impossible de charger vos préférences");
+      toast.showError("Erreur", "Impossible de charger vos préférences");
     } finally {
       setLoading(false);
     }
@@ -82,7 +84,7 @@ export default function SettingsScreen() {
       }
     } catch (error) {
       console.error("Erreur lors de la mise à jour des préférences:", error);
-      Alert.alert("Erreur", "Impossible de mettre à jour vos préférences");
+      toast.showError("Erreur", "Impossible de mettre à jour vos préférences");
       // Remettre l'état précédent en cas d'erreur
       setSettings(prev => ({ ...prev, [setting]: !prev[setting] }));
     } finally {
@@ -119,11 +121,11 @@ export default function SettingsScreen() {
               await CustomerService.updatePreferences(resetPrefs);
               await refreshUserData();
               
-              Alert.alert("Succès", "Vos données ont été réinitialisées");
+              toast.showSuccess("Données réinitialisées", "Vos préférences ont été remises à zéro");
               loadUserPreferences(); // Recharger les paramètres
             } catch (error) {
               console.error("Erreur lors de la réinitialisation des données:", error);
-              Alert.alert("Erreur", "Impossible de réinitialiser vos données");
+              toast.showError("Erreur", "Impossible de réinitialiser vos données");
             } finally {
               setSaving(false);
             }
