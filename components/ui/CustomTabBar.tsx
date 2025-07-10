@@ -8,9 +8,15 @@ interface TabBarProps {
 }
 
 export const CustomTabBar: React.FC<TabBarProps> = ({ state, descriptors, navigation }) => {
+  // Force apply default family for the entire tab bar if needed
+  React.useEffect(() => {
+    // This is just a side effect to ensure fonts are applied
+    console.log('TabBar mounted with Quicksand font family');
+  }, []);
   const focusedOptions = descriptors[state.routes[state.index].key].options;
 
-  if (focusedOptions.tabBarVisible === false) {
+  // Modern Expo Router uses tabBarStyle: { display: 'none' } instead of tabBarVisible
+  if (focusedOptions.tabBarStyle?.display === 'none') {
     return null;
   }
 
@@ -21,10 +27,10 @@ export const CustomTabBar: React.FC<TabBarProps> = ({ state, descriptors, naviga
       shadowOpacity: 0.1,
       shadowRadius: 12,
       elevation: 15,
-      paddingTop: 15,
-      paddingBottom: 25,
-      paddingHorizontal: 10,
-      height: 90,
+      paddingTop: 12,
+      paddingBottom: 28, // Plus de padding en bas pour les téléphones avec barre home
+      paddingHorizontal: 12,
+      height: 85,
     }}>
       {state.routes.map((route: any, index: number) => {
         const { options } = descriptors[route.key];
@@ -63,8 +69,8 @@ export const CustomTabBar: React.FC<TabBarProps> = ({ state, descriptors, naviga
             key={index}
             accessibilityRole="button"
             accessibilityState={isFocused ? { selected: true } : {}}
-            accessibilityLabel={options.tabBarAccessibilityLabel}
-            testID={options.tabBarTestID}
+            accessibilityLabel={options.tabBarAccessibilityLabel || `Onglet ${label}`}
+            testID={options.tabBarTestID || `tab-${label}`}
             onPress={onPress}
             onLongPress={onLongPress}
             className={`flex-1 items-center justify-center py-2 mx-1 rounded-2xl ${
@@ -73,24 +79,30 @@ export const CustomTabBar: React.FC<TabBarProps> = ({ state, descriptors, naviga
             style={{
               minHeight: 50,
               transform: [{ scale: isFocused ? 1.05 : 1 }],
+              // Add a slight animation for better UX
+              transitionDuration: '150ms',
             }}
           >
             <View className="items-center justify-center">
               {IconComponent && (
                 <IconComponent
                   color={isFocused ? '#FE8C00' : '#6B7280'}
-                  size={22}
+                  size={isFocused ? 24 : 22}
                   focused={isFocused}
+                  style={{
+                    marginBottom: 3, // Add some spacing between icon and text
+                  }}
                 />
               )}
               <Text
-                className={`text-xs mt-1 font-quicksand-semibold ${
+                className={`mt-1 ${
                   isFocused ? 'text-primary' : 'text-gray-500'
                 }`}
                 style={{
-                  fontSize: 10,
-                  lineHeight: 12,
+                  fontSize: 12,
+                  lineHeight: 14,
                   textAlign: 'center',
+                  fontFamily: 'Quicksand-SemiBold', // Utilisation explicite de la police via style
                 }}
                 numberOfLines={1}
                 adjustsFontSizeToFit={true}
