@@ -13,6 +13,9 @@ export interface Enterprise {
   companyName: string;
   logo: string;
   description: string;
+  website: string;
+  phone: string;
+  address: string;
   products: string[];
   socialLinks: SocialLink[];
   deliveryPartners: DeliveryPartner[];

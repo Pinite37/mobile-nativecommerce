@@ -9,6 +9,24 @@ export default function EnterpriseLayout() {
           headerShown: false 
         }} 
       />
+      <Stack.Screen
+        name="profile/settings"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="profile/help"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="profile/info"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }
