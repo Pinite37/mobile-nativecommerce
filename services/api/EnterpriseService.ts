@@ -11,15 +11,22 @@ export interface Enterprise {
   _id: string;
   user: string;
   companyName: string;
+  contactInfo: {
+    email: string;
+    phone: string;
+    whatsapp?: string;
+    website?: string;
+  };
   logo: string;
   description: string;
-  website: string;
-  phone: string;
-  address: string;
   products: string[];
   socialLinks: SocialLink[];
   deliveryPartners: DeliveryPartner[];
   stats: EnterpriseStats;
+  location: {
+    city: string;
+    district: string;
+  };
   isActive: boolean;
   lastActiveDate: string;
   blockedUntil?: string;
@@ -64,6 +71,10 @@ export interface UpdateEnterpriseInfoRequest {
   companyName?: string;
   description?: string;
   socialLinks?: SocialLink[];
+  location?: {
+    city: string;
+    district: string;
+  };
 }
 
 export interface UpdateStatsRequest {
@@ -106,6 +117,12 @@ class EnterpriseService {
             _id: 'mock-enterprise-id',
             user: 'mock-user-id',
             companyName: 'Entreprise Test',
+            contactInfo: {
+              email: 'contact@entreprise-test.com',
+              phone: '+229 12345678',
+              whatsapp: '+229 12345678',
+              website: 'https://entreprise-test.com'
+            },
             logo: 'https://via.placeholder.com/150x150/FE8C00/FFFFFF?text=ET',
             description: 'Une entreprise de test pour le développement',
             products: [],
@@ -119,6 +136,10 @@ class EnterpriseService {
               totalOrders: 85,
               averageRating: 4.3,
               totalReviews: 42
+            },
+            location: {
+              city: 'Cotonou',
+              district: 'Fidjrossè'
             },
             isActive: true,
             lastActiveDate: new Date().toISOString(),
@@ -196,6 +217,12 @@ class EnterpriseService {
           _id: 'mock-enterprise-id',
           user: 'mock-user-id',
           companyName: enterpriseData.companyName || 'Entreprise Test',
+          contactInfo: {
+            email: 'contact@entreprise-test.com',
+            phone: '+229 12345678',
+            whatsapp: '+229 12345678',
+            website: 'https://entreprise-test.com'
+          },
           logo: logoBase64 ? 'https://via.placeholder.com/150x150/FE8C00/FFFFFF?text=NEW' : 'https://via.placeholder.com/150x150/FE8C00/FFFFFF?text=ET',
           description: enterpriseData.description || 'Une entreprise de test',
           products: [],
@@ -206,6 +233,10 @@ class EnterpriseService {
             totalOrders: 85,
             averageRating: 4.3,
             totalReviews: 42
+          },
+          location: {
+            city: 'Cotonou',
+            district: 'Fidjrossè'
           },
           isActive: true,
           lastActiveDate: new Date().toISOString(),
@@ -250,6 +281,12 @@ class EnterpriseService {
           _id: 'mock-enterprise-id',
           user: 'mock-user-id',
           companyName: 'Entreprise Test',
+          contactInfo: {
+            email: 'contact@entreprise-test.com',
+            phone: '+229 12345678',
+            whatsapp: '+229 12345678',
+            website: 'https://entreprise-test.com'
+          },
           logo: 'https://via.placeholder.com/150x150/FE8C00/FFFFFF?text=ET',
           description: 'Une entreprise de test',
           products: [],
@@ -260,6 +297,10 @@ class EnterpriseService {
             totalOrders: stats.totalOrders || 85,
             averageRating: stats.averageRating || 4.3,
             totalReviews: stats.totalReviews || 42
+          },
+          location: {
+            city: 'Cotonou',
+            district: 'Fidjrossè'
           },
           isActive: true,
           lastActiveDate: new Date().toISOString(),
@@ -300,6 +341,12 @@ class EnterpriseService {
           _id: 'mock-enterprise-id',
           user: 'mock-user-id',
           companyName: 'Entreprise Test',
+          contactInfo: {
+            email: 'contact@entreprise-test.com',
+            phone: '+229 12345678',
+            whatsapp: '+229 12345678',
+            website: 'https://entreprise-test.com'
+          },
           logo: 'https://via.placeholder.com/150x150/FE8C00/FFFFFF?text=ET',
           description: 'Une entreprise de test',
           products: [],
@@ -310,6 +357,10 @@ class EnterpriseService {
             totalOrders: 85,
             averageRating: 4.3,
             totalReviews: 42
+          },
+          location: {
+            city: 'Cotonou',
+            district: 'Fidjrossè'
           },
           isActive: true,
           lastActiveDate: new Date().toISOString(),
@@ -342,6 +393,12 @@ class EnterpriseService {
           _id: 'mock-enterprise-id',
           user: 'mock-user-id',
           companyName: 'Entreprise Test',
+          contactInfo: {
+            email: 'contact@entreprise-test.com',
+            phone: '+229 12345678',
+            whatsapp: '+229 12345678',
+            website: 'https://entreprise-test.com'
+          },
           logo: 'https://via.placeholder.com/150x150/FE8C00/FFFFFF?text=ET',
           description: 'Une entreprise de test',
           products: [],
@@ -352,6 +409,10 @@ class EnterpriseService {
             totalOrders: 85,
             averageRating: 4.3,
             totalReviews: 42
+          },
+          location: {
+            city: 'Cotonou',
+            district: 'Fidjrossè'
           },
           isActive: true,
           lastActiveDate: new Date().toISOString(),
@@ -384,6 +445,12 @@ class EnterpriseService {
           _id: 'mock-enterprise-id',
           user: 'mock-user-id',
           companyName: 'Entreprise Test',
+          contactInfo: {
+            email: 'contact@entreprise-test.com',
+            phone: '+229 12345678',
+            whatsapp: '+229 12345678',
+            website: 'https://entreprise-test.com'
+          },
           logo: 'https://via.placeholder.com/150x150/FE8C00/FFFFFF?text=ET',
           description: 'Une entreprise de test',
           products: [],
@@ -394,6 +461,10 @@ class EnterpriseService {
             totalOrders: 85,
             averageRating: 4.3,
             totalReviews: 42
+          },
+          location: {
+            city: 'Cotonou',
+            district: 'Fidjrossè'
           },
           isActive: false, // Statut changé
           lastActiveDate: new Date().toISOString(),

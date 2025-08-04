@@ -276,6 +276,7 @@ class AuthService {
   async registerEnterpriseAndLogin(userData: EnterpriseRegisterRequest): Promise<AuthResponse> {
     try {
       console.log('🚀 Inscription entreprise et connexion automatique...');
+      console.log('📤 Envoi des données d\'inscription entreprise:', JSON.stringify(userData, null, 2));
       
       const response = await ApiService.post<AuthResponse['data']>(`${this.BASE_URL}/register`, userData);
       

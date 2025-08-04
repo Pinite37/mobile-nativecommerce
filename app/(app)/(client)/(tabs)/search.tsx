@@ -1,268 +1,653 @@
-import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
-    FlatList,
-    Image,
-    SafeAreaView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from "react-native";
+  View,
+  Text,
+  TextInput,
+  ScrollView,
+  TouchableOpacity,
+  FlatList,
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+  Dimensions,
+  Image,
+  StatusBar,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 
-// Données fictives
-const recentSearches = [
-  "iPhone 14",
-  "Samsung Galaxy",
-  "MacBook Pro",
-  "AirPods",
-  "iPad Air",
+import SearchService from '../../../../services/api/SearchService';
+
+const { width } = Dimensions.get('window');
+
+interface SearchFilters {
+  category?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  city?: string;
+  district?: string;
+  enterprise?: string;
+  sort: string;
+  inStock: boolean;
+}
+
+const SORT_OPTIONS = [
+  { value: 'relevance', label: 'Pertinence' },
+  { value: 'newest', label: 'Plus récent' },
+  { value: 'price_asc', label: 'Prix croissant' },
+  { value: 'price_desc', label: 'Prix décroissant' },
+  { value: 'rating', label: 'Mieux notés' },
+  { value: 'popular', label: 'Plus populaires' },
 ];
 
-const searchResults = [
-  {
-    id: 1,
-    name: "iPhone 14 Pro Max",
-    price: 759000,
-    image: "https://via.placeholder.com/100x100/3B82F6/FFFFFF?text=iPhone",
-    rating: 4.8,
-    reviews: 245,
-    store: "TechStore Cotonou",
+export default function SearchScreen() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  
+  const [filters, setFilters] = useState<SearchFilters>({
+    sort: 'relevance',
     inStock: true,
-  },
-  {
-    id: 2,
-    name: "Samsung Galaxy S23 Ultra",
-    price: 559000,
-    image: "https://via.placeholder.com/100x100/EF4444/FFFFFF?text=Samsung",
-    rating: 4.6,
-    reviews: 189,
-    store: "Mobile World",
-    inStock: true,
-  },
-  {
-    id: 3,
-    name: "Google Pixel 7 Pro",
-    price: 429000,
-    image: "https://via.placeholder.com/100x100/10B981/FFFFFF?text=Pixel",
-    rating: 4.7,
-    reviews: 156,
-    store: "Phone Center",
-    inStock: false,
-  },
-  {
-    id: 4,
-    name: "OnePlus 11",
-    price: 389000,
-    image: "https://via.placeholder.com/100x100/F59E0B/FFFFFF?text=OnePlus",
-    rating: 4.5,
-    reviews: 98,
-    store: "Digital Plaza",
-    inStock: true,
-  },
-];
+  });
+  
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    pages: 0,
+  });
 
-const categories = [
-  { id: 1, name: "Tous", selected: true },
-  { id: 2, name: "Téléphones", selected: false },
-  { id: 3, name: "Ordinateurs", selected: false },
-  { id: 4, name: "Accessoires", selected: false },
-];
+  const [searchInfo, setSearchInfo] = useState<any>(null);
 
-const filters = [
-  { id: 1, name: "Prix", icon: "pricetag-outline" },
-  { id: 2, name: "Marque", icon: "business-outline" },
-  { id: 3, name: "Note", icon: "star-outline" },
-  { id: 4, name: "Disponibilité", icon: "checkmark-circle-outline" },
-];
+  // Fonction de recherche simple avec setTimeout pour debounce
+  const [searchTimeout, setSearchTimeout] = useState<any>(null);
 
-export default function ClientSearch() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState(1);
-  const [isSearching, setIsSearching] = useState(false);
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
-  };
-
-  const handleSearch = (text: string) => {
+  const handleSearchQueryChange = (text: string) => {
     setSearchQuery(text);
-    setIsSearching(text.length > 0);
+    
+    // Clear previous timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    
+    // Set new timeout for auto-search
+    if (text.length >= 2) {
+      const timeout = setTimeout(() => {
+        performSearch(text);
+      }, 500);
+      setSearchTimeout(timeout);
+    }
   };
 
-  const renderRecentSearch = ({ item }: { item: string }) => (
-    <TouchableOpacity
-      className="flex-row items-center py-3 px-4 border-b border-neutral-100"
-      onPress={() => handleSearch(item)}
-    >
-      <Ionicons name="time-outline" size={20} color="#9CA3AF" />
-      <Text className="ml-3 flex-1 text-neutral-700 font-quicksand-medium">
-        {item}
-      </Text>
-      <TouchableOpacity>
-        <Ionicons name="close" size={18} color="#9CA3AF" />
-      </TouchableOpacity>
-    </TouchableOpacity>
-  );
+  // Effectuer la recherche
+  const performSearch = async (query?: string, page: number = 1, resetResults: boolean = true) => {
+    const searchTerm = query || searchQuery;
+    
+    if (!searchTerm.trim()) {
+      Alert.alert('Recherche', 'Veuillez saisir un terme de recherche');
+      return;
+    }
 
-  const renderCategory = ({ item }: { item: typeof categories[0] }) => (
-    <TouchableOpacity
-      className={`mr-3 px-4 py-2 rounded-full ${
-        item.selected
-          ? "bg-primary-500"
-          : "bg-white border border-neutral-200"
-      }`}
-      onPress={() => setSelectedCategory(item.id)}
-    >
-      <Text
-        className={`text-sm font-quicksand-medium ${
-          item.selected ? "text-white" : "text-neutral-700"
-        }`}
-      >
-        {item.name}
-      </Text>
-    </TouchableOpacity>
-  );
+    if (page === 1) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
 
-  const renderFilter = ({ item }: { item: typeof filters[0] }) => (
-    <TouchableOpacity className="flex-row items-center bg-white rounded-xl px-4 py-3 mr-3 shadow-sm border border-neutral-100">
-      <Ionicons name={item.icon as any} size={18} color="#374151" />
-      <Text className="ml-2 text-sm font-quicksand-medium text-neutral-700">
-        {item.name}
-      </Text>
-    </TouchableOpacity>
-  );
+    try {
+      const result = await SearchService.searchProducts(searchTerm);
+      
+      if (result.success) {
+        if (resetResults || page === 1) {
+          setProducts(result.data || []);
+        } else {
+          setProducts(prev => [...prev, ...(result.data || [])]);
+        }
+        
+        // Mise à jour des informations de pagination si disponibles
+        if (result.pagination) {
+          setPagination(result.pagination);
+        }
+        
+        // Mise à jour des informations de recherche si disponibles
+        if (result.searchInfo) {
+          setSearchInfo(result.searchInfo);
+        }
+      } else {
+        Alert.alert('Erreur', result.message || 'Aucun résultat trouvé');
+        setProducts([]);
+      }
+      
+    } catch (error: any) {
+      console.error('Erreur recherche:', error);
+      Alert.alert('Erreur', error.message || 'Erreur lors de la recherche');
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
 
-  const renderProduct = ({ item }: { item: typeof searchResults[0] }) => (
-    <TouchableOpacity className="bg-white rounded-2xl p-4 mx-4 mb-4 shadow-sm border border-neutral-100">
-      <View className="flex-row">
+  // Charger plus de résultats
+  const loadMore = () => {
+    if (!loadingMore && pagination.page < pagination.pages) {
+      performSearch(undefined, pagination.page + 1, false);
+    }
+  };
+
+  // Appliquer les filtres
+  const applyFilters = () => {
+    setShowFilters(false);
+    if (searchQuery.trim()) {
+      performSearch();
+    }
+  };
+
+  // Réinitialiser les filtres
+  const resetFilters = () => {
+    setFilters({
+      sort: 'relevance',
+      inStock: true,
+    });
+  };
+
+  // Naviguer vers les détails du produit
+  const navigateToProduct = (productId: string) => {
+    router.push(`/product/${productId}`);
+  };
+
+  // Composant ProductCard simple
+  const ProductCard = ({ product, onPress }: { product: any; onPress: () => void }) => (
+    <TouchableOpacity style={styles.productCard} onPress={onPress}>
+      {product.images && product.images.length > 0 ? (
         <Image
-          source={{ uri: item.image }}
-          className="w-20 h-20 rounded-xl"
+          source={{ uri: product.images[0] }}
+          style={styles.productImage}
           resizeMode="cover"
         />
-        <View className="ml-4 flex-1">
-          <Text className="text-base font-quicksand-semibold text-neutral-800 mb-1">
-            {item.name}
-          </Text>
-          <Text className="text-sm text-neutral-600 mb-1">
-            {item.store}
-          </Text>
-          <View className="flex-row items-center mb-2">
-            <Ionicons name="star" size={14} color="#FE8C00" />
-            <Text className="text-xs text-neutral-600 ml-1">
-              {item.rating} ({item.reviews} avis)
-            </Text>
-          </View>
-          <View className="flex-row items-center justify-between">
-            <Text className="text-lg font-quicksand-bold text-primary-500">
-              {formatPrice(item.price)}
-            </Text>
-            <View className="flex-row items-center">
-              <View
-                className={`w-2 h-2 rounded-full mr-2 ${
-                  item.inStock ? "bg-success-500" : "bg-error-500"
-                }`}
-              />
-              <Text
-                className={`text-xs font-quicksand-medium ${
-                  item.inStock ? "text-success-600" : "text-error-600"
-                }`}
-              >
-                {item.inStock ? "En stock" : "Rupture"}
-              </Text>
-            </View>
-          </View>
+      ) : (
+        <View style={[styles.productImage, styles.placeholderImage]}>
+          <Ionicons name="image-outline" size={32} color="#ccc" />
         </View>
+      )}
+      
+      <View style={styles.productInfo}>
+        <Text style={styles.productName} numberOfLines={2}>
+          {product.name}
+        </Text>
+        
+        <Text style={styles.productPrice}>
+          {product.price?.toLocaleString()} FCFA
+        </Text>
+        
+        {product.enterpriseInfo && (
+          <Text style={styles.enterpriseName} numberOfLines={1}>
+            {product.enterpriseInfo.companyName}
+          </Text>
+        )}
+        
+        {product.stats && (
+          <View style={styles.statsRow}>
+            <Ionicons name="star" size={12} color="#FFD700" />
+            <Text style={styles.rating}>
+              {product.stats.averageRating?.toFixed(1) || '0.0'}
+            </Text>
+            <Text style={styles.sales}>
+              • {product.stats.totalSales || 0} ventes
+            </Text>
+          </View>
+        )}
       </View>
     </TouchableOpacity>
+  );
+
+  // Rendu des produits
+  const renderProduct = ({ item }: { item: any }) => (
+    <ProductCard
+      product={item}
+      onPress={() => navigateToProduct(item._id)}
+    />
+  );
+
+  // Rendu des filtres
+  const renderFilters = () => (
+    <View style={styles.filtersContainer}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Tri */}
+        <View style={styles.filterSection}>
+          <Text style={styles.filterTitle}>Trier par</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {SORT_OPTIONS.map((option) => (
+              <TouchableOpacity
+                key={option.value}
+                style={[
+                  styles.filterChip,
+                  filters.sort === option.value && styles.filterChipActive
+                ]}
+                onPress={() => setFilters(prev => ({ ...prev, sort: option.value }))}
+              >
+                <Text style={[
+                  styles.filterChipText,
+                  filters.sort === option.value && styles.filterChipTextActive
+                ]}>
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Prix */}
+        <View style={styles.filterSection}>
+          <Text style={styles.filterTitle}>Prix (FCFA)</Text>
+          <View style={styles.priceInputsContainer}>
+            <TextInput
+              style={styles.priceInput}
+              placeholder="Min"
+              value={filters.minPrice?.toString() || ''}
+              onChangeText={(text) => setFilters(prev => ({ 
+                ...prev, 
+                minPrice: text ? parseInt(text) : undefined 
+              }))}
+              keyboardType="numeric"
+            />
+            <Text style={styles.priceSeparator}>-</Text>
+            <TextInput
+              style={styles.priceInput}
+              placeholder="Max"
+              value={filters.maxPrice?.toString() || ''}
+              onChangeText={(text) => setFilters(prev => ({ 
+                ...prev, 
+                maxPrice: text ? parseInt(text) : undefined 
+              }))}
+              keyboardType="numeric"
+            />
+          </View>
+        </View>
+
+        {/* Stock */}
+        <View style={styles.filterSection}>
+          <TouchableOpacity
+            style={styles.checkboxRow}
+            onPress={() => setFilters(prev => ({ ...prev, inStock: !prev.inStock }))}
+          >
+            <Ionicons
+              name={filters.inStock ? 'checkbox' : 'checkbox-outline'}
+              size={24}
+              color={filters.inStock ? '#007AFF' : '#666'}
+            />
+            <Text style={styles.checkboxText}>Produits en stock uniquement</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Boutons d'action */}
+        <View style={styles.filterActions}>
+          <TouchableOpacity style={styles.resetButton} onPress={resetFilters}>
+            <Text style={styles.resetButtonText}>Réinitialiser</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
+            <Text style={styles.applyButtonText}>Appliquer</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </View>
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-background-secondary">
-      {/* Search Header */}
-      <View className="bg-white px-6 py-4 pt-20">
-        <View className="flex-row items-center bg-background-secondary rounded-2xl px-4 py-3">
-          <Ionicons name="search" size={20} color="#9CA3AF" />
-          <TextInput
-            className="ml-3 flex-1 text-neutral-800 font-quicksand-medium"
-            placeholder="Rechercher des produits..."
-            placeholderTextColor="#9CA3AF"
-            value={searchQuery}
-            onChangeText={handleSearch}
-            autoFocus={false}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => handleSearch("")}>
-              <Ionicons name="close-circle" size={20} color="#9CA3AF" />
-            </TouchableOpacity>
-          )}
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      
+      {/* Header de recherche moderne */}
+      <View style={styles.searchHeader}>
+        <View style={styles.searchHeaderGradient}>
+          <View style={styles.searchInputContainer}>
+            <View style={styles.searchIconContainer}>
+              <Ionicons name="search" size={20} color="#6C7293" />
+            </View>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Que recherchez-vous ?"
+              placeholderTextColor="#9CA3AF"
+              value={searchQuery}
+              onChangeText={handleSearchQueryChange}
+              onSubmitEditing={() => performSearch()}
+              returnKeyType="search"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity 
+                style={styles.clearButton}
+                onPress={() => {
+                  setSearchQuery('');
+                  setProducts([]);
+                }}
+              >
+                <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+              </TouchableOpacity>
+            )}
+          </View>
+          
+          <TouchableOpacity
+            style={[styles.filterButton, showFilters && styles.filterButtonActive]}
+            onPress={() => setShowFilters(!showFilters)}
+          >
+            <Ionicons 
+              name="options" 
+              size={20} 
+              color={showFilters ? "#fff" : "#6366F1"} 
+            />
+          </TouchableOpacity>
         </View>
       </View>
 
-      {!isSearching ? (
-        /* Recent Searches */
-        <View className="flex-1">
-          <Text className="text-lg font-quicksand-bold text-neutral-800 px-6 py-4">
-            Recherches récentes
-          </Text>
-          <FlatList
-            data={recentSearches}
-            renderItem={renderRecentSearch}
-            keyExtractor={(item, index) => index.toString()}
-            className="bg-white mx-4 rounded-2xl"
-          />
-        </View>
-      ) : (
-        /* Search Results */
-        <View className="flex-1">
-          {/* Categories */}
-          <View className="py-4">
-            <FlatList
-              data={categories}
-              renderItem={renderCategory}
-              keyExtractor={(item) => item.id.toString()}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 24 }}
-            />
-          </View>
+      {/* Filtres */}
+      {showFilters && renderFilters()}
 
-          {/* Filters */}
-          <View className="py-2">
-            <FlatList
-              data={filters}
-              renderItem={renderFilter}
-              keyExtractor={(item) => item.id.toString()}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 24 }}
-            />
-          </View>
-
-          {/* Results Header */}
-          <View className="flex-row items-center justify-between px-6 py-4">
-            <Text className="text-base font-quicksand-semibold text-neutral-800">
-              {searchResults.length} résultats pour &quot;{searchQuery}&quot;
+      {/* Résultats */}
+      <View style={styles.resultsContainer}>
+        {/* Info de recherche */}
+        {searchInfo && (
+          <View style={styles.searchInfoContainer}>
+            <Text style={styles.searchInfoText}>
+              {searchInfo.totalResults} résultat{searchInfo.totalResults > 1 ? 's' : ''} pour &quot;{searchInfo.query}&quot;
             </Text>
-            <TouchableOpacity className="flex-row items-center">
-              <Text className="text-sm font-quicksand-medium text-neutral-600 mr-1">
-                Trier
-              </Text>
-              <Ionicons name="chevron-down" size={16} color="#9CA3AF" />
-            </TouchableOpacity>
+            <Text style={styles.searchTimeText}>
+              en {searchInfo.searchTime}ms
+            </Text>
           </View>
+        )}
 
-          {/* Results */}
+        {/* Liste des produits */}
+        {loading && products.length === 0 ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#007AFF" />
+            <Text style={styles.loadingText}>Recherche en cours...</Text>
+          </View>
+        ) : (
           <FlatList
-            data={searchResults}
+            data={products}
             renderItem={renderProduct}
-            keyExtractor={(item) => item.id.toString()}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 20 }}
+            keyExtractor={(item) => item._id}
+            numColumns={2}
+            columnWrapperStyle={styles.productRow}
+            contentContainerStyle={styles.productsList}
+            onEndReached={loadMore}
+            onEndReachedThreshold={0.1}
+            ListFooterComponent={loadingMore ? (
+              <View style={styles.loadingMore}>
+                <ActivityIndicator size="small" color="#007AFF" />
+                <Text style={styles.loadingMoreText}>Chargement...</Text>
+              </View>
+            ) : null}
+            ListEmptyComponent={
+              !loading && searchQuery.length > 0 ? (
+                <View style={styles.emptyContainer}>
+                  <Ionicons name="search" size={64} color="#ccc" />
+                  <Text style={styles.emptyTitle}>Aucun résultat</Text>
+                  <Text style={styles.emptyMessage}>
+                    Essayez avec d&apos;autres mots-clés ou modifiez vos filtres
+                  </Text>
+                </View>
+              ) : null
+            }
           />
-        </View>
-      )}
-    </SafeAreaView>
+        )}
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  searchHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+  },
+  searchInputContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 25,
+    paddingHorizontal: 16,
+    marginRight: 12,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    height: 40,
+    fontSize: 16,
+  },
+  filterButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#f8f9fa',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filtersContainer: {
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+    maxHeight: 300,
+  },
+  filterSection: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f8f9fa',
+  },
+  filterTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  filterChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#f8f9fa',
+    marginRight: 8,
+  },
+  filterChipActive: {
+    backgroundColor: '#007AFF',
+  },
+  filterChipText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  filterChipTextActive: {
+    color: '#fff',
+  },
+  priceInputsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  priceInput: {
+    flex: 1,
+    height: 40,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    fontSize: 14,
+  },
+  priceSeparator: {
+    marginHorizontal: 12,
+    fontSize: 16,
+    color: '#666',
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkboxText: {
+    marginLeft: 8,
+    fontSize: 16,
+  },
+  filterActions: {
+    flexDirection: 'row',
+    padding: 16,
+    gap: 12,
+  },
+  resetButton: {
+    flex: 1,
+    height: 44,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  resetButtonText: {
+    fontSize: 16,
+    color: '#666',
+  },
+  applyButton: {
+    flex: 1,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: '#007AFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  applyButtonText: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  resultsContainer: {
+    flex: 1,
+  },
+  searchInfoContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+  },
+  searchInfoText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  searchTimeText: {
+    fontSize: 12,
+    color: '#666',
+  },
+  productsList: {
+    padding: 8,
+  },
+  productRow: {
+    justifyContent: 'space-around',
+  },
+  productCard: {
+    width: (width - 32) / 2,
+    margin: 8,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  productImage: {
+    width: '100%',
+    height: 120,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  placeholderImage: {
+    backgroundColor: '#f8f9fa',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  productInfo: {
+    padding: 12,
+  },
+  productName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  productPrice: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#007AFF',
+    marginBottom: 4,
+  },
+  enterpriseName: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rating: {
+    fontSize: 12,
+    color: '#333',
+    marginLeft: 2,
+  },
+  sales: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 4,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 64,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+  },
+  loadingMore: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+  },
+  loadingMoreText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#666',
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 64,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 16,
+  },
+  emptyMessage: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 8,
+    paddingHorizontal: 32,
+  },
+});

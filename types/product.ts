@@ -1,3 +1,39 @@
+// Types pour les entreprises
+export interface Enterprise {
+  _id: string;
+  user: string;
+  companyName: string;
+  contactInfo: {
+    email: string;
+    phone: string;
+    whatsapp?: string;
+    website?: string;
+  };
+  logo?: string;
+  description: string;
+  products: string[];
+  socialLinks: {
+    platform: string;
+    url: string;
+  }[];
+  deliveryPartners: string[];
+  stats: {
+    totalSales: number;
+    totalOrders: number;
+    averageRating: number;
+    totalReviews: number;
+  };
+  location: {
+    city: string;
+    district: string;
+  };
+  isActive: boolean;
+  lastActiveDate: Date;
+  blockedUntil?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // Types pour les produits
 export interface Product {
   _id: string;
@@ -6,12 +42,7 @@ export interface Product {
   price: number;
   stock: number;
   images: string[];
-  enterprise: string | {
-    _id: string;
-    companyName: string;
-    logo?: string;
-    user?: string;
-  };
+  enterprise: string | Enterprise;
   category: string | {
     _id: string;
     name: string;
@@ -105,6 +136,8 @@ export interface UpdateProductRequest {
 }
 
 export interface ProductFilters {
+  page?: number;
+  limit?: number;
   category?: string;
   isActive?: boolean;
   name?: string;

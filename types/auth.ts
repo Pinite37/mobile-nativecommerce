@@ -62,6 +62,11 @@ export interface RegisterRequest {
 export interface EnterpriseRegisterRequest extends RegisterRequest {
   companyName: string;
   description: string;
+  city: string;
+  district: string;
+  companyEmail?: string;
+  whatsapp?: string;
+  website?: string;
   socialLinks?: {
     platform: string;
     url: string;

@@ -198,9 +198,10 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({ visible, onCl
   const toast = useToast();
   const [companyName, setCompanyName] = useState(initialData.companyName || '');
   const [description, setDescription] = useState(initialData.description || '');
-  const [website, setWebsite] = useState(initialData.website || '');
-  const [phone, setPhone] = useState(initialData.phone || '');
-  const [address, setAddress] = useState(initialData.address || '');
+  const [website, setWebsite] = useState(initialData.contactInfo?.website || '');
+  const [phone, setPhone] = useState(initialData.contactInfo?.phone || '');
+  const [email, setEmail] = useState(initialData.contactInfo?.email || '');
+  const [whatsapp, setWhatsapp] = useState(initialData.contactInfo?.whatsapp || '');
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>(initialData.socialLinks || []);
   const [selectedLogo, setSelectedLogo] = useState<string | null>(null);
   const [logoBase64, setLogoBase64] = useState<string | null>(null);
@@ -250,9 +251,12 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({ visible, onCl
     const enterpriseData = {
       companyName,
       description,
-      website,
-      phone,
-      address,
+      contactInfo: {
+        email,
+        phone,
+        whatsapp,
+        website
+      },
       socialLinks: socialLinks.filter(link => link.platform && link.url),
     };
     onSave(enterpriseData, logoBase64 || undefined);
@@ -366,19 +370,31 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({ visible, onCl
                     className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
                   />
                 </View>
-                
+
                 <View className="mb-4">
                   <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
-                    Adresse
+                    Email professionnel
                   </Text>
                   <TextInput
-                    value={address}
-                    onChangeText={setAddress}
-                    placeholder="Adresse de votre entreprise"
-                    multiline
-                    numberOfLines={3}
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder="contact@entreprise.com"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
                     className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
-                    textAlignVertical="top"
+                  />
+                </View>
+
+                <View className="mb-4">
+                  <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
+                    WhatsApp
+                  </Text>
+                  <TextInput
+                    value={whatsapp}
+                    onChangeText={setWhatsapp}
+                    placeholder="Numéro WhatsApp"
+                    keyboardType="phone-pad"
+                    className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
                   />
                 </View>
               </View>
@@ -491,34 +507,25 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({ visible
               Coordonnées
             </Text>
             <View className="bg-neutral-50 rounded-xl p-4 space-y-3">
-              {enterprise.website && (
+              {enterprise.contactInfo?.website && (
                 <View className="flex-row items-center">
                   <Ionicons name="globe-outline" size={20} color="#FE8C00" />
                   <Text className="text-neutral-700 font-quicksand-medium ml-3">
-                    {enterprise.website}
+                    {enterprise.contactInfo.website}
                   </Text>
                 </View>
               )}
               
-              {enterprise.phone && (
+              {enterprise.contactInfo?.phone && (
                 <View className="flex-row items-center">
                   <Ionicons name="call-outline" size={20} color="#FE8C00" />
                   <Text className="text-neutral-700 font-quicksand-medium ml-3">
-                    {enterprise.phone}
+                    {enterprise.contactInfo.phone}
                   </Text>
                 </View>
               )}
               
-              {enterprise.address && (
-                <View className="flex-row items-center">
-                  <Ionicons name="location-outline" size={20} color="#FE8C00" />
-                  <Text className="text-neutral-700 font-quicksand-medium ml-3">
-                    {enterprise.address}
-                  </Text>
-                </View>
-              )}
-              
-              {!enterprise.website && !enterprise.phone && !enterprise.address && (
+              {!enterprise.contactInfo?.website && !enterprise.contactInfo?.phone && (
                 <Text className="text-neutral-600 font-quicksand-regular italic">
                   Aucune coordonnée disponible
                 </Text>
@@ -887,12 +894,14 @@ function EnterpriseProfilePage() {
 
   // Navigation vers les paramètres
   const handleNavigateToSettings = () => {
-    router.push('/(app)/(enterprise)/profile/settings');
+    // Implémentation future: router.push('/(app)/(enterprise)/settings');
+    toast.showInfo('Fonctionnalité à venir', 'Les paramètres avancés seront disponibles prochainement');
   };
 
   // Navigation vers l'aide
   const handleNavigateToHelp = () => {
-    router.push('/(app)/(enterprise)/profile/help');
+    // Implémentation future: router.push('/(app)/(enterprise)/help');
+    toast.showInfo('Fonctionnalité à venir', 'La section d\'aide sera disponible prochainement');
   };
   
   // Ouvrir la modal d'édition des informations de l'entreprise
@@ -962,181 +971,313 @@ function EnterpriseProfilePage() {
       >
         {/* Header avec profil utilisateur et entreprise */}
         <View className="bg-white px-6 pt-20 py-8">
-          <View className="flex-row items-center">
-            <View className="relative">
-              {profileData.user.profileImage ? (
-                <Image
-                  source={{ uri: profileData.user.profileImage }}
-                  className="w-20 h-20 rounded-2xl"
-                  resizeMode="cover"
-                />
-              ) : (
-                <View className="w-20 h-20 rounded-2xl bg-primary-500 items-center justify-center">
-                  <Text className="text-white font-quicksand-bold text-2xl">
-                    {`${profileData.user.firstName?.[0] || ''}${profileData.user.lastName?.[0] || ''}`.toUpperCase()}
+          {/* Logo et nom de l'entreprise en premier */}
+          <View className="items-center mb-6">
+            {profileData.enterprise.logo ? (
+              <Image
+                source={{ uri: profileData.enterprise.logo }}
+                className="w-24 h-24 rounded-2xl"
+                resizeMode="cover"
+              />
+            ) : (
+              <View className="w-24 h-24 rounded-2xl bg-primary-500 items-center justify-center">
+                <Text className="text-white font-quicksand-bold text-3xl">
+                  {profileData.enterprise.companyName?.[0]?.toUpperCase() || 'E'}
+                </Text>
+              </View>
+            )}
+            <View className="absolute top-0 right-0 w-6 h-6 bg-success-500 rounded-full justify-center items-center">
+              <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+            </View>
+          </View>
+
+          {/* Informations entreprise */}
+          <View className="items-center mb-6">
+            <Text className="text-2xl font-quicksand-bold text-neutral-800 text-center">
+              {profileData.enterprise.companyName}
+            </Text>
+            <View className="flex-row items-center mt-2">
+              <Ionicons name="location" size={16} color="#6B7280" />
+              <Text className="text-sm text-neutral-600 ml-1">
+                {profileData.enterprise.location.district}, {profileData.enterprise.location.city}
+              </Text>
+            </View>
+            <View className="flex-row items-center justify-center mt-2">
+              <View className={`w-3 h-3 rounded-full mr-2 ${profileData.enterprise.isActive ? 'bg-success-500' : 'bg-neutral-400'}`} />
+              <Text className={`text-sm font-quicksand-medium ${profileData.enterprise.isActive ? 'text-success-500' : 'text-neutral-500'}`}>
+                {profileData.enterprise.isActive ? 'Entreprise Active' : 'Entreprise Inactive'}
+              </Text>
+            </View>
+          </View>
+
+          {/* Description de l'entreprise */}
+          {profileData.enterprise.description && (
+            <View className="bg-neutral-50 rounded-xl p-4 mb-6">
+              <Text className="text-neutral-700 font-quicksand-medium text-center leading-5">
+                {profileData.enterprise.description}
+              </Text>
+            </View>
+          )}
+
+          {/* Informations de contact de l'entreprise */}
+          <View className="bg-neutral-50 rounded-xl p-4 mb-6">
+            <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-3">
+              Contact Entreprise
+            </Text>
+            <View className="space-y-2">
+              {profileData.enterprise.contactInfo?.email && (
+                <View className="flex-row items-center">
+                  <Ionicons name="mail" size={16} color="#FE8C00" />
+                  <Text className="text-sm text-neutral-700 ml-2 font-quicksand-medium">
+                    {profileData.enterprise.contactInfo.email}
                   </Text>
                 </View>
               )}
-              <View className="absolute -top-1 -right-1 w-6 h-6 bg-success-500 rounded-full justify-center items-center">
-                <Ionicons name="checkmark" size={14} color="#FFFFFF" />
-              </View>
-            </View>
-            <View className="ml-4 flex-1">
-              <Text className="text-xl font-quicksand-bold text-neutral-800">
-                {profileData.user.firstName} {profileData.user.lastName}
-              </Text>
-              <Text className="text-sm text-neutral-600 mt-1">
-                {profileData.enterprise.companyName}
-              </Text>
-              <Text className="text-sm text-neutral-600">
-                {profileData.user.email}
-              </Text>
-              <Text className="text-xs text-neutral-500 mt-2">
-                Membre depuis {formatDate(profileData.enterprise.createdAt)}
-              </Text>
-            </View>
-            <TouchableOpacity onPress={() => setShowEditProfile(true)}>
-              <Ionicons name="create-outline" size={24} color="#374151" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Statut de l'entreprise */}
-        <View className="px-4 py-4">
-          <View className={`${profileData.enterprise.isActive ? 'bg-success-500' : 'bg-neutral-500'} rounded-2xl p-4 shadow-sm`}>
-            <View className="flex-row items-center justify-between">
-              <View className="flex-1">
-                <View className="flex-row items-center mb-1">
-                  <View className={`w-3 h-3 rounded-full mr-2 ${profileData.enterprise.isActive ? 'bg-white' : 'bg-neutral-300'}`} />
-                  <Text className="text-white font-quicksand-bold text-lg">
-                    {profileData.enterprise.isActive ? 'Entreprise Active' : 'Entreprise Inactive'}
+              {profileData.enterprise.contactInfo?.phone && (
+                <View className="flex-row items-center">
+                  <Ionicons name="call" size={16} color="#FE8C00" />
+                  <Text className="text-sm text-neutral-700 ml-2 font-quicksand-medium">
+                    {profileData.enterprise.contactInfo.phone}
                   </Text>
                 </View>
-                <Text className="text-white opacity-90 text-sm ml-5">
-                  {profileData.enterprise.isActive ? 'Visible aux clients' : 'Invisible aux clients'}
+              )}
+              {profileData.enterprise.contactInfo?.whatsapp && (
+                <View className="flex-row items-center">
+                  <Ionicons name="logo-whatsapp" size={16} color="#10B981" />
+                  <Text className="text-sm text-neutral-700 ml-2 font-quicksand-medium">
+                    {profileData.enterprise.contactInfo.whatsapp}
+                  </Text>
+                </View>
+              )}
+              {profileData.enterprise.contactInfo?.website && (
+                <View className="flex-row items-center">
+                  <Ionicons name="globe" size={16} color="#3B82F6" />
+                  <Text className="text-sm text-neutral-700 ml-2 font-quicksand-medium">
+                    {profileData.enterprise.contactInfo.website}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
+
+          {/* Informations du propriétaire (plus discrètes) */}
+          <View className="bg-neutral-50 rounded-xl p-4">
+            <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-2">
+              Propriétaire
+            </Text>
+            <View className="flex-row items-center">
+              <View className="relative mr-3">
+                {profileData.user.profileImage ? (
+                  <Image
+                    source={{ uri: profileData.user.profileImage }}
+                    className="w-12 h-12 rounded-full"
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View className="w-12 h-12 rounded-full bg-neutral-300 items-center justify-center">
+                    <Text className="text-neutral-600 font-quicksand-bold text-sm">
+                      {`${profileData.user.firstName?.[0] || ''}${profileData.user.lastName?.[0] || ''}`.toUpperCase()}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <View className="flex-1">
+                <Text className="text-base font-quicksand-semibold text-neutral-800">
+                  {profileData.user.firstName} {profileData.user.lastName}
+                </Text>
+                <Text className="text-sm text-neutral-600">
+                  {profileData.user.email}
                 </Text>
               </View>
-              <TouchableOpacity
-                onPress={handleToggleStatus}
-                className={`${profileData.enterprise.isActive ? 'bg-white' : 'bg-primary-500'} rounded-xl px-4 py-2`}
-              >
-                <Text className={`${profileData.enterprise.isActive ? 'text-success-500' : 'text-white'} font-quicksand-semibold`}>
-                  {profileData.enterprise.isActive ? 'Désactiver' : 'Activer'}
-                </Text>
+              <TouchableOpacity onPress={() => setShowEditProfile(true)}>
+                <Ionicons name="create-outline" size={20} color="#6B7280" />
               </TouchableOpacity>
             </View>
           </View>
         </View>
 
-        {/* Résumé de l'activité */}
+        {/* Statut de l'entreprise - Version simplifiée */}
+        <View className="px-4 py-4">
+          <TouchableOpacity
+            onPress={handleToggleStatus}
+            className={`${profileData.enterprise.isActive ? 'bg-success-500' : 'bg-neutral-500'} rounded-2xl p-4 shadow-sm`}
+          >
+            <View className="flex-row items-center justify-between">
+              <View className="flex-1">
+                <View className="flex-row items-center mb-1">
+                  <Ionicons 
+                    name={profileData.enterprise.isActive ? "checkmark-circle" : "pause-circle"} 
+                    size={20} 
+                    color="white" 
+                  />
+                  <Text className="text-white font-quicksand-bold text-lg ml-2">
+                    {profileData.enterprise.isActive ? 'Boutique Ouverte' : 'Boutique Fermée'}
+                  </Text>
+                </View>
+                <Text className="text-white opacity-90 text-sm ml-7">
+                  {profileData.enterprise.isActive ? 'Les clients peuvent vous voir et commander' : 'Votre boutique est invisible aux clients'}
+                </Text>
+              </View>
+              <View className={`${profileData.enterprise.isActive ? 'bg-white' : 'bg-primary-500'} rounded-xl px-4 py-2`}>
+                <Text className={`${profileData.enterprise.isActive ? 'text-success-500' : 'text-white'} font-quicksand-semibold text-sm`}>
+                  {profileData.enterprise.isActive ? 'Fermer' : 'Ouvrir'}
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Tableau de bord de l'entreprise */}
         <View className="px-4 py-4">
           <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4 pl-1">
-            Résumé de l&apos;activité
+            Tableau de bord
           </Text>
           <View className="flex-row flex-wrap justify-between">
             <View className="w-[48%] bg-white rounded-2xl p-4 mb-3 shadow-sm border border-neutral-100">
-              <Text className="text-2xl font-quicksand-bold text-primary-500">
+              <View className="flex-row items-center justify-between mb-2">
+                <Ionicons name="cash" size={20} color="#FE8C00" />
+                <Text className="text-xs text-neutral-500 font-quicksand-medium">VENTES</Text>
+              </View>
+              <Text className="text-xl font-quicksand-bold text-primary-500">
                 {profileData.enterprise.stats.totalSales ? formatPrice(profileData.enterprise.stats.totalSales) : '0 FCFA'}
               </Text>
-              <Text className="text-sm font-quicksand-medium text-neutral-600">
-                Ventes totales
+              <Text className="text-xs font-quicksand-medium text-neutral-600 mt-1">
+                Chiffre d&apos;affaires total
               </Text>
             </View>
             
             <View className="w-[48%] bg-white rounded-2xl p-4 mb-3 shadow-sm border border-neutral-100">
-              <Text className="text-2xl font-quicksand-bold text-success-500">
+              <View className="flex-row items-center justify-between mb-2">
+                <Ionicons name="receipt" size={20} color="#10B981" />
+                <Text className="text-xs text-neutral-500 font-quicksand-medium">COMMANDES</Text>
+              </View>
+              <Text className="text-xl font-quicksand-bold text-success-500">
                 {profileData.enterprise.stats.totalOrders || 0}
               </Text>
-              <Text className="text-sm font-quicksand-medium text-neutral-600">
-                Commandes
+              <Text className="text-xs font-quicksand-medium text-neutral-600 mt-1">
+                Total des commandes
               </Text>
             </View>
             
             <View className="w-[48%] bg-white rounded-2xl p-4 mb-3 shadow-sm border border-neutral-100">
-              <View className="flex-row items-center">
-                <Ionicons name="star" size={16} color="#FE8C00" />
-                <Text className="text-2xl font-quicksand-bold text-warning-500 ml-1">
-                  {profileData.enterprise.stats.averageRating || 0}
-                </Text>
+              <View className="flex-row items-center justify-between mb-2">
+                <Ionicons name="star" size={20} color="#F59E0B" />
+                <Text className="text-xs text-neutral-500 font-quicksand-medium">NOTE</Text>
               </View>
-              <Text className="text-sm font-quicksand-medium text-neutral-600">
+              <View className="flex-row items-center">
+                <Text className="text-xl font-quicksand-bold text-warning-500">
+                  {profileData.enterprise.stats.averageRating ? profileData.enterprise.stats.averageRating.toFixed(1) : '0.0'}
+                </Text>
+                <Text className="text-sm text-neutral-500 ml-1">/5</Text>
+              </View>
+              <Text className="text-xs font-quicksand-medium text-neutral-600 mt-1">
                 Note moyenne
               </Text>
             </View>
             
             <View className="w-[48%] bg-white rounded-2xl p-4 mb-3 shadow-sm border border-neutral-100">
-              <Text className="text-2xl font-quicksand-bold text-secondary-500">
-                {profileData.enterprise.stats.totalReviews || 0}
+              <View className="flex-row items-center justify-between mb-2">
+                <Ionicons name="storefront" size={20} color="#8B5CF6" />
+                <Text className="text-xs text-neutral-500 font-quicksand-medium">PRODUITS</Text>
+              </View>
+              <Text className="text-xl font-quicksand-bold text-purple-500">
+                {profileData.enterprise.products?.length || 0}
               </Text>
-              <Text className="text-sm font-quicksand-medium text-neutral-600">
-                Avis clients
+              <Text className="text-xs font-quicksand-medium text-neutral-600 mt-1">
+                Produits en ligne
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Liste des options de profil */}
+        {/* Actions rapides pour l'entreprise */}
         <View className="px-4 py-4">
+          <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4 pl-1">
+            Actions rapides
+          </Text>
           <View className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden">
-            {/* Informations entreprise */}
-            <TouchableOpacity 
-              onPress={() => setShowEnterpriseDetails(true)}
-              className="flex-row items-center justify-between px-4 py-5 border-b border-neutral-100"
-            >
-              <View className="flex-row items-center">
-                <View className="w-10 h-10 bg-primary-100 rounded-full justify-center items-center">
-                  <Ionicons name="business-outline" size={20} color="#FE8C00" />
-                </View>
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Informations entreprise
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-            </TouchableOpacity>
-            
-            {/* Modifier informations entreprise */}
-            <TouchableOpacity 
-              onPress={handleNavigateToEnterpriseInfo}
-              className="flex-row items-center justify-between px-4 py-5 border-b border-neutral-100"
-            >
-              <View className="flex-row items-center">
-                <View className="w-10 h-10 bg-blue-100 rounded-full justify-center items-center">
-                  <Ionicons name="create-outline" size={20} color="#3B82F6" />
-                </View>
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Modifier les informations
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-            </TouchableOpacity>
-
-            {/* Mes produits */}
+            {/* Gestion des produits */}
             <TouchableOpacity 
               onPress={handleNavigateToProducts}
               className="flex-row items-center justify-between px-4 py-5 border-b border-neutral-100"
             >
               <View className="flex-row items-center">
-                <View className="w-10 h-10 bg-primary-100 rounded-full justify-center items-center">
-                  <Ionicons name="storefront-outline" size={20} color="#FE8C00" />
+                <View className="w-12 h-12 bg-primary-100 rounded-2xl justify-center items-center">
+                  <Ionicons name="storefront" size={24} color="#FE8C00" />
                 </View>
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Mes produits
-                </Text>
+                <View className="ml-4">
+                  <Text className="text-base font-quicksand-semibold text-neutral-800">
+                    Mes Produits
+                  </Text>
+                  <Text className="text-sm text-neutral-600">
+                    {profileData.enterprise.products?.length || 0} produit(s) en ligne
+                  </Text>
+                </View>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
             </TouchableOpacity>
 
-            {/* Commandes */}
+            {/* Gestion des commandes */}
             <TouchableOpacity 
               onPress={handleNavigateToOrders}
               className="flex-row items-center justify-between px-4 py-5 border-b border-neutral-100"
             >
               <View className="flex-row items-center">
-                <View className="w-10 h-10 bg-success-100 rounded-full justify-center items-center">
-                  <Ionicons name="receipt-outline" size={20} color="#10B981" />
+                <View className="w-12 h-12 bg-success-100 rounded-2xl justify-center items-center">
+                  <Ionicons name="receipt" size={24} color="#10B981" />
+                </View>
+                <View className="ml-4">
+                  <Text className="text-base font-quicksand-semibold text-neutral-800">
+                    Mes Commandes
+                  </Text>
+                  <Text className="text-sm text-neutral-600">
+                    {profileData.enterprise.stats.totalOrders || 0} commande(s) total
+                  </Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+            </TouchableOpacity>
+
+            {/* Modifier les informations entreprise */}
+            <TouchableOpacity 
+              onPress={handleNavigateToEnterpriseInfo}
+              className="flex-row items-center justify-between px-4 py-5"
+            >
+              <View className="flex-row items-center">
+                <View className="w-12 h-12 bg-blue-100 rounded-2xl justify-center items-center">
+                  <Ionicons name="create" size={24} color="#3B82F6" />
+                </View>
+                <View className="ml-4">
+                  <Text className="text-base font-quicksand-semibold text-neutral-800">
+                    Modifier mon Entreprise
+                  </Text>
+                  <Text className="text-sm text-neutral-600">
+                    Informations, contact, description
+                  </Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Menu de gestion */}
+        <View className="px-4 py-4">
+          <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4 pl-1">
+            Gestion & Outils
+          </Text>
+          <View className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden">
+            {/* Statistiques détaillées */}
+            <TouchableOpacity 
+              onPress={handleNavigateToStats}
+              className="flex-row items-center justify-between px-4 py-5 border-b border-neutral-100"
+            >
+              <View className="flex-row items-center">
+                <View className="w-10 h-10 bg-warning-100 rounded-full justify-center items-center">
+                  <Ionicons name="analytics-outline" size={20} color="#F59E0B" />
                 </View>
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Mes commandes
+                  Statistiques & Rapports
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
@@ -1148,33 +1289,24 @@ function EnterpriseProfilePage() {
               className="flex-row items-center justify-between px-4 py-5 border-b border-neutral-100"
             >
               <View className="flex-row items-center">
-                <View className="w-10 h-10 bg-warning-100 rounded-full justify-center items-center">
-                  <Ionicons name="people-outline" size={20} color="#F59E0B" />
+                <View className="w-10 h-10 bg-indigo-100 rounded-full justify-center items-center">
+                  <Ionicons name="people-outline" size={20} color="#6366F1" />
                 </View>
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Partenaires de livraison
-                </Text>
-                <View className="bg-primary-500 rounded-full px-2 py-1 ml-2">
+                <View className="flex-1 ml-3">
+                  <Text className="text-base font-quicksand-medium text-neutral-800">
+                    Partenaires de Livraison
+                  </Text>
+                  {profileData.enterprise.deliveryPartners && profileData.enterprise.deliveryPartners.length > 0 && (
+                    <Text className="text-sm text-neutral-600">
+                      {profileData.enterprise.deliveryPartners.length} partenaire(s)
+                    </Text>
+                  )}
+                </View>
+                <View className="bg-primary-500 rounded-full px-2 py-1 mr-2">
                   <Text className="text-xs text-white font-quicksand-bold">
                     {profileData.enterprise.deliveryPartners?.length || 0}
                   </Text>
                 </View>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-            </TouchableOpacity>
-
-            {/* Statistiques */}
-            <TouchableOpacity 
-              onPress={handleNavigateToStats}
-              className="flex-row items-center justify-between px-4 py-5 border-b border-neutral-100"
-            >
-              <View className="flex-row items-center">
-                <View className="w-10 h-10 bg-warning-100 rounded-full justify-center items-center">
-                  <Ionicons name="analytics-outline" size={20} color="#F59E0B" />
-                </View>
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Statistiques
-                </Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
             </TouchableOpacity>
@@ -1269,6 +1401,7 @@ function EnterpriseProfilePage() {
             initialData={profileData}
             loading={editLoading}
           />
+
           <EditEnterpriseModal
             visible={showEditEnterprise}
             onClose={() => setShowEditEnterprise(false)}
@@ -1276,12 +1409,14 @@ function EnterpriseProfilePage() {
             initialData={profileData.enterprise}
             loading={editLoading}
           />
+
           <AddPartnerModal
             visible={showAddPartner}
             onClose={() => setShowAddPartner(false)}
             onAdd={handleAddPartner}
             loading={editLoading}
           />
+
           <EnterpriseDetailsModal
             visible={showEnterpriseDetails}
             onClose={() => setShowEnterpriseDetails(false)}

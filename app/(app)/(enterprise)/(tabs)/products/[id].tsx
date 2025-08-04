@@ -8,6 +8,7 @@ import {
   Dimensions,
   FlatList,
   Image,
+  Platform,
   RefreshControl,
   SafeAreaView,
   ScrollView,
@@ -26,7 +27,6 @@ const styles = StyleSheet.create({
   carousel: {
     width: '100%',
     height: 350,
-    borderRadius: 16,
     overflow: 'hidden',
     backgroundColor: '#f7f7f7',
   },
@@ -34,7 +34,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 16,
   },
   carouselImage: {
     width: '100%',
@@ -113,14 +112,59 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#fff',
-    borderRadius: 16,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 2,
+  },
+  featuresRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 10,
+    marginBottom: 16,
+  },
+  featureTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  chatSection: {
+    backgroundColor: '#fff',
+    padding: 16,
+    marginBottom: 16,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    borderRadius: 24,
+    marginRight: 8,
+  },
+  bottomButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 16,
+  },
+  sendMessageInput: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    marginVertical: 12,
   },
 });
 
@@ -147,8 +191,20 @@ export default function ProductDetails() {
       setError(null);
       console.log('📡 Chargement du produit:', id);
       
-      const productData = await ProductService.getProductById(id);
-      console.log('✅ Produit chargé:', productData.name);
+      const response: any = await ProductService.getProductById(id);
+      console.log("✅ Réponse API complète:", JSON.stringify(response, null, 2));
+      
+      // Extraire les données du produit de la réponse API
+      const productData = response.product || response;
+      const enterpriseData = response.enterprise;
+      
+      // Si l'enterprise est fournie séparément, l'attacher au produit
+      if (enterpriseData && typeof productData.enterprise === 'string') {
+        productData.enterprise = enterpriseData;
+      }
+      
+      console.log('✅ Produit traité:', productData.name);
+      console.log('📊 Enterprise data:', typeof productData.enterprise === 'object' ? JSON.stringify(productData.enterprise) : 'ID only');
       setProduct(productData);
     } catch (err: any) {
       console.error('❌ Erreur chargement produit:', err);
@@ -242,12 +298,6 @@ export default function ProductDetails() {
     return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
   };
 
-  const getStockStatus = (stock: number) => {
-    if (stock === 0) return { text: 'Rupture de stock', color: 'text-red-500', bgColor: 'bg-red-100' };
-    if (stock <= 5) return { text: 'Stock faible', color: 'text-orange-500', bgColor: 'bg-orange-100' };
-    return { text: 'En stock', color: 'text-green-500', bgColor: 'bg-green-100' };
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
       year: 'numeric',
@@ -268,7 +318,7 @@ export default function ProductDetails() {
   // États d'affichage
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-background-secondary">
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF', paddingTop: Platform.OS === 'android' ? 30 : 0 }}>
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#FE8C00" />
           <Text className="mt-4 text-neutral-600 font-quicksand-medium">
@@ -281,13 +331,13 @@ export default function ProductDetails() {
 
   if (error || !product) {
     return (
-      <SafeAreaView className="flex-1 bg-background-secondary">
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF', paddingTop: Platform.OS === 'android' ? 30 : 0 }}>
         <View className="flex-1 justify-center items-center px-6">
           <Ionicons name="warning" size={64} color="#EF4444" />
           <Text className="text-xl font-quicksand-bold text-neutral-800 mt-4 text-center">
             Erreur de chargement
           </Text>
-          <Text className="text-neutral-600 font-quicksand mt-2 text-center">
+          <Text className="text-neutral-600 font-quicksand-regular mt-2 text-center">
             {error || 'Produit non trouvé'}
           </Text>
           <TouchableOpacity
@@ -302,7 +352,7 @@ export default function ProductDetails() {
             onPress={() => router.back()}
             className="mt-4"
           >
-            <Text className="text-neutral-500 font-quicksand">
+            <Text className="text-neutral-500 font-quicksand-medium">
               Retour
             </Text>
           </TouchableOpacity>
@@ -311,36 +361,28 @@ export default function ProductDetails() {
     );
   }
 
-  const stockStatus = getStockStatus(product.stock);
-
   return (
-    <SafeAreaView className="flex-1 bg-background-secondary">
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF', paddingTop: Platform.OS === 'android' ? 30 : 0 }}>
       {/* Header */}
-      <View className="bg-white px-6 pt-16 py-4 border-b border-neutral-100">
-        <View className="flex-row items-center justify-between">
-          <TouchableOpacity
-            onPress={() => {
-              console.log('🔙 Retour demandé');
-              router.back();
-            }}
-            className="w-10 h-10 rounded-full bg-neutral-100 items-center justify-center"
-          >
-            <Ionicons name="arrow-back" size={20} color="#374151" />
-          </TouchableOpacity>
-          <Text className="text-lg font-quicksand-bold text-neutral-800 flex-1 text-center" numberOfLines={1}>
-            {product.name}
-          </Text>
-          <TouchableOpacity
-            onPress={handleEditProduct}
-            className="w-10 h-10 rounded-full bg-primary-100 items-center justify-center"
-          >
-            <Ionicons name="pencil" size={18} color="#FE8C00" />
-          </TouchableOpacity>
-        </View>
+      <View className="px-4 py-4 border-b border-neutral-200 flex-row items-center justify-between">
+        <TouchableOpacity
+          onPress={() => {
+            console.log('🔙 Retour demandé');
+            router.back();
+          }}
+          className="flex-row items-center"
+        >
+          <Ionicons name="arrow-back" size={20} color="#333333" />
+          <Text className="ml-2 text-neutral-800 font-quicksand-medium">Produits</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleEditProduct}>
+          <Ionicons name="ellipsis-vertical" size={22} color="#333333" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView 
         className="flex-1"
+        style={{ backgroundColor: '#FFFFFF' }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -350,388 +392,343 @@ export default function ProductDetails() {
           />
         }
       >
-        <View className="px-6 py-6">
-          <View className="mb-6">
-            {product.images && product.images.length > 0 ? (
-              <View>
-                {/* Carousel des images avec effet de défilement fluide */}
-                <View style={styles.carousel}>
-                  <FlatList
-                    ref={flatListRef}
-                    data={product.images}
-                    keyExtractor={(_, index) => index.toString()}
-                    horizontal
-                    pagingEnabled
-                    showsHorizontalScrollIndicator={false}
-                    snapToAlignment="center"
-                    decelerationRate="normal"
-                    snapToInterval={screenWidth - 32}
-                    bounces={true}
-                    bouncesZoom={true}
-                    onViewableItemsChanged={onViewRef.current}
-                    viewabilityConfig={viewabilityConfig}
-                    onScroll={Animated.event(
-                      [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-                      { useNativeDriver: false }
-                    )}
-                    renderItem={({ item }) => (
-                      <View style={[styles.carouselItem, { width: screenWidth - 32 }]}>
-                        <Image
-                          source={{ uri: item }}
-                          style={styles.carouselImage}
-                        />
-                      </View>
-                    )}
-                  />
-                  
-                  {/* Indicateurs de pagination animés */}
-                  <View style={styles.paginationContainer}>
-                    {product.images.map((_, index) => {
-                      const inputRange = [
-                        (index - 1) * screenWidth,
-                        index * screenWidth,
-                        (index + 1) * screenWidth,
-                      ];
-                      
-                      const opacity = scrollX.interpolate({
-                        inputRange,
-                        outputRange: [0.4, 1, 0.4],
-                        extrapolate: 'clamp',
-                      });
-                      
-                      const scale = scrollX.interpolate({
-                        inputRange,
-                        outputRange: [1, 1.3, 1],
-                        extrapolate: 'clamp',
-                      });
-                      
-                      return (
-                        <Animated.View
-                          key={index}
-                          style={[
-                            styles.paginationDot,
-                            {
-                              opacity,
-                              transform: [{ scale }],
-                              backgroundColor: selectedImageIndex === index ? '#FE8C00' : '#FFFFFF',
-                            },
-                          ]}
-                        />
-                      );
-                    })}
+        {/* Carousel d'images */}
+        {product.images && product.images.length > 0 ? (
+          <View>
+            <View style={styles.carousel}>
+              <FlatList
+                ref={flatListRef}
+                data={product.images}
+                keyExtractor={(_, index) => index.toString()}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                snapToAlignment="center"
+                decelerationRate="normal"
+                snapToInterval={screenWidth}
+                bounces={true}
+                onViewableItemsChanged={onViewRef.current}
+                viewabilityConfig={viewabilityConfig}
+                onScroll={Animated.event(
+                  [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+                  { useNativeDriver: false }
+                )}
+                renderItem={({ item }) => (
+                  <View style={[styles.carouselItem, { width: screenWidth }]}>
+                    <Image
+                      source={{ uri: item }}
+                      style={styles.carouselImage}
+                    />
                   </View>
-                  
-                  {/* Compteur d'images */}
-                  <View style={styles.counter}>
-                    <Text className="text-white font-quicksand-medium text-sm">
-                      {selectedImageIndex + 1} / {product.images.length}
-                    </Text>
-                  </View>
-                </View>
-                
-                {/* Miniatures des images */}
-                <ScrollView 
-                  horizontal 
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.thumbnailContainer}
-                >
-                  {product.images.map((image, index) => {
-                    // Animation de pulsation pour la miniature sélectionnée
-                    const scale = new Animated.Value(1);
-                    
-                    if (selectedImageIndex === index) {
-                      Animated.sequence([
-                        Animated.timing(scale, {
-                          toValue: 1.1,
-                          duration: 300,
-                          useNativeDriver: true
-                        }),
-                        Animated.timing(scale, {
-                          toValue: 1,
-                          duration: 300,
-                          useNativeDriver: true
-                        })
-                      ]).start();
-                    }
-                    
-                    return (
-                      <TouchableOpacity
-                        key={index}
-                        onPress={() => {
-                          setSelectedImageIndex(index);
-                          flatListRef.current?.scrollToIndex({ index, animated: true });
-                        }}
-                      >
-                        <Animated.View
-                          style={{
-                            transform: [{ scale }],
-                            borderWidth: selectedImageIndex === index ? 3 : 1,
-                            borderColor: selectedImageIndex === index ? '#FE8C00' : '#e0e0e0',
-                            borderRadius: 12,
-                            padding: 2,
-                            marginRight: 12
-                          }}
-                        >
-                          <Image
-                            source={{ uri: image }}
-                            style={{
-                              width: 65,
-                              height: 65,
-                              borderRadius: 8
-                            }}
-                            resizeMode="cover"
-                          />
-                        </Animated.View>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
+                )}
+              />
+              
+              {/* Compteur d'images */}
+              <View style={styles.counter}>
+                <Text className="text-white font-quicksand-medium text-sm">
+                  {selectedImageIndex + 1} / {product.images?.length || 0}
+                </Text>
               </View>
-            ) : (
-              <View className="w-full h-72 bg-neutral-100 rounded-2xl items-center justify-center">
-                <Ionicons name="image" size={48} color="#9CA3AF" />
-                <Text className="text-neutral-500 font-quicksand-medium mt-2">Aucune image</Text>
+            </View>
+          </View>
+        ) : (
+          <View className="w-full h-[280px] bg-gray-100 items-center justify-center">
+            <Ionicons name="image" size={48} color="#9CA3AF" />
+            <Text className="mt-2 text-gray-500 font-quicksand-medium">Aucune image</Text>
+          </View>
+        )}
+
+        {/* Nom du produit et prix */}
+        <View className="bg-white p-4 shadow-sm border-b border-neutral-100">
+          <Text className="text-neutral-800 text-2xl font-quicksand-bold mb-2">
+            {product.name}
+          </Text>
+          <Text className="text-primary-500 text-xl font-quicksand-bold">
+            {formatPrice(product.price)}
+          </Text>
+        </View>
+
+        {/* Statut et performance du produit */}
+        <View className="bg-white mt-2 p-4 shadow-sm">
+          <Text className="text-neutral-800 text-lg font-quicksand-bold mb-3">
+            Performance du produit
+          </Text>
+          <View className="flex-row flex-wrap mb-4">
+            <View className="bg-neutral-50 rounded-lg p-3 mr-2 mb-2 w-[48%]">
+              <Text className="text-neutral-500 text-xs font-quicksand-regular">Vues</Text>
+              <Text className="text-neutral-800 font-quicksand-medium text-lg">
+                {product.stats?.views?.toLocaleString('fr-FR') || '0'}
+              </Text>
+            </View>
+            <View className="bg-neutral-50 rounded-lg p-3 mb-2 w-[48%]">
+              <Text className="text-neutral-500 text-xs font-quicksand-regular">Ventes</Text>
+              <Text className="text-neutral-800 font-quicksand-medium text-lg">
+                {product.stats?.totalSales ? formatPrice(product.stats.totalSales) : '0 FCFA'}
+              </Text>
+            </View>
+            <View className="bg-neutral-50 rounded-lg p-3 mr-2 mb-2 w-[48%]">
+              <Text className="text-neutral-500 text-xs font-quicksand-regular">Note moyenne</Text>
+              <View className="flex-row items-center">
+                <Ionicons name="star" size={16} color="#F59E0B" />
+                <Text className="text-neutral-800 font-quicksand-medium ml-1">
+                  {product.stats?.averageRating?.toFixed(1) || '0.0'}
+                </Text>
+              </View>
+            </View>
+            <View className="bg-neutral-50 rounded-lg p-3 mb-2 w-[48%]">
+              <Text className="text-neutral-500 text-xs font-quicksand-regular">Avis clients</Text>
+              <Text className="text-neutral-800 font-quicksand-medium text-lg">
+                {product.stats?.totalReviews || '0'}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Caractéristiques du produit */}
+        <View className="bg-white mt-2 p-4 shadow-sm">
+          <Text className="text-neutral-800 text-lg font-quicksand-bold mb-3">
+            Détails du produit
+          </Text>
+          
+          <View className="flex-row flex-wrap mb-4">
+            <View className="bg-neutral-50 rounded-lg p-3 mr-2 mb-2 w-[48%]">
+              <Text className="text-neutral-500 text-xs font-quicksand-regular">Statut</Text>
+              <View className="flex-row items-center">
+                <View
+                  className={`w-2 h-2 rounded-full mr-2 ${
+                    product.isActive ? 'bg-success-500' : 'bg-error-500'
+                  }`}
+                />
+                <Text className="text-neutral-800 font-quicksand-medium">
+                  {product.isActive ? 'Actif' : 'Inactif'}
+                </Text>
+              </View>
+            </View>
+            <View className="bg-neutral-50 rounded-lg p-3 mb-2 w-[48%]">
+              <Text className="text-neutral-500 text-xs font-quicksand-regular">Stock</Text>
+              <Text className="text-neutral-800 font-quicksand-medium">{product.stock} unités</Text>
+            </View>
+            {typeof product.category === 'object' && (
+              <View className="bg-neutral-50 rounded-lg p-3 mr-2 mb-2 w-[48%]">
+                <Text className="text-neutral-500 text-xs font-quicksand-regular">Catégorie</Text>
+                <Text className="text-neutral-800 font-quicksand-medium">{product.category.name}</Text>
+              </View>
+            )}
+            {product.weight && (
+              <View className="bg-neutral-50 rounded-lg p-3 mb-2 w-[48%]">
+                <Text className="text-neutral-500 text-xs font-quicksand-regular">Poids</Text>
+                <Text className="text-neutral-800 font-quicksand-medium">{product.weight} kg</Text>
               </View>
             )}
           </View>
 
-          <View style={styles.card}>
-            <View className="flex-row items-start justify-between mb-4">
-              <View className="flex-1 mr-4">
-                <Text className="text-2xl font-quicksand-bold text-neutral-800 mb-2">
-                  {product.name}
-                </Text>
-                <View className="flex-row items-center">
-                  <Animated.View 
-                    className={`px-3 py-1 rounded-full ${stockStatus.bgColor}`}
-                    style={{
-                      transform: [{ scale: new Animated.Value(1) }]
-                    }}
-                  >
-                    <Text className={`text-sm font-quicksand-semibold ${stockStatus.color}`}>
-                      {stockStatus.text}
-                    </Text>
-                  </Animated.View>
-                  <Animated.View className={`ml-2 px-3 py-1 rounded-full ${
-                    product.isActive ? 'bg-green-100' : 'bg-red-100'
-                  }`}>
-                    <Text className={`text-sm font-quicksand-semibold ${
-                      product.isActive ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {product.isActive ? 'Actif' : 'Inactif'}
-                    </Text>
-                  </Animated.View>
-                </View>
-              </View>
-              <Animated.Text 
-                className="text-3xl font-quicksand-bold text-primary-500"
-                style={{
-                  shadowColor: '#FE8C00',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 3,
-                  elevation: 3,
-                }}
-              >
-                {formatPrice(product.price)}
-              </Animated.Text>
-            </View>
-
-            <View className="flex-row items-center mb-4">
-              <View className="items-center flex-1">
-                <Text className="text-sm text-neutral-500 font-quicksand">Stock</Text>
-                <Text className="text-lg font-quicksand-bold text-neutral-800">
-                  {product.stock}
-                </Text>
-              </View>
-              {typeof product.category === 'object' && (
-                <View className="items-center flex-1">
-                  <Text className="text-sm text-neutral-500 font-quicksand">Catégorie</Text>
-                  <Text className="text-lg font-quicksand-bold text-neutral-800">
-                    {product.category.name}
-                  </Text>
-                </View>
-              )}
-              <View className="items-center flex-1">
-                <Text className="text-sm text-neutral-500 font-quicksand">Vues</Text>
-                <Text className="text-lg font-quicksand-bold text-neutral-800">
-                  {product.stats.views}
-                </Text>
-              </View>
-            </View>
-
-            <View className="border-t border-neutral-100 pt-4">
-              <Text className="text-sm text-neutral-500 font-quicksand mb-2">Description</Text>
-              <Text 
-                className="text-neutral-700 font-quicksand-medium leading-6"
-                numberOfLines={showFullDescription ? undefined : 3}
-              >
-                {product.description}
+          {/* Description */}
+          <Text className="text-neutral-800 text-lg font-quicksand-bold mb-2">
+            Description
+          </Text>
+          <Text 
+            className="text-neutral-600 font-quicksand-regular leading-5 mb-3"
+            numberOfLines={showFullDescription ? undefined : 3}
+          >
+            {product.description}
+          </Text>
+          {product.description && product.description.length > 150 && (
+            <TouchableOpacity
+              onPress={() => setShowFullDescription(!showFullDescription)}
+            >
+              <Text className="text-primary-500 font-quicksand-semibold">
+                {showFullDescription ? 'Voir moins' : 'Voir plus'}
               </Text>
-              {product.description.length > 150 && (
-                <TouchableOpacity
-                  onPress={() => setShowFullDescription(!showFullDescription)}
-                  className="mt-2"
-                >
-                  <Text className="text-primary-500 font-quicksand-semibold">
-                    {showFullDescription ? 'Voir moins' : 'Voir plus'}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
+            </TouchableOpacity>
+          )}
 
+          {/* Spécifications */}
           {product.specifications && product.specifications.length > 0 && (
-            <View className="bg-white rounded-3xl p-6 shadow-sm">
-              <Text className="text-xl font-quicksand-bold text-neutral-800 mb-4">
-                Spécifications
+            <View className="mt-4">
+              <Text className="text-neutral-800 text-lg font-quicksand-bold mb-3">
+                Spécifications techniques
               </Text>
-              <View>
-                {product.specifications.map((spec: any, index: number) => (
-                  <View key={index} className="flex-row justify-between py-2 border-b border-neutral-100">
-                    <Text className="text-neutral-600 font-quicksand flex-1">{spec.key}</Text>
-                    <Text className="text-neutral-800 font-quicksand-semibold flex-1 text-right">
-                      {spec.value}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {product.tags && product.tags.length > 0 && (
-            <View className="bg-white rounded-3xl p-6 shadow-sm">
-              <Text className="text-xl font-quicksand-bold text-neutral-800 mb-4">
-                Tags
-              </Text>
-              <View className="flex-row flex-wrap">
-                {product.tags.map((tag, index) => (
-                  <View key={index} className="bg-primary-100 px-3 py-1 rounded-full mr-2 mb-2">
-                    <Text className="text-primary-600 font-quicksand-medium">#{tag}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-
-          <View className="bg-white rounded-3xl p-6 shadow-sm">
-            <Text className="text-xl font-quicksand-bold text-neutral-800 mb-4">
-              Informations
-            </Text>
-            <View>
-              <View className="flex-row justify-between py-2">
-                <Text className="text-neutral-600 font-quicksand">Note moyenne</Text>
-                <View className="flex-row items-center">
-                  <Ionicons name="star" size={16} color="#FE8C00" />
-                  <Text className="text-neutral-800 font-quicksand-semibold ml-1">
-                    {product.stats.averageRating.toFixed(1)} ({product.stats.totalReviews} avis)
+              {product.specifications.map((spec: any, index: number) => (
+                <View key={index} className="flex-row justify-between py-2 border-b border-neutral-200">
+                  <Text className="text-neutral-500 font-quicksand-regular flex-1">{spec.key}</Text>
+                  <Text className="text-neutral-700 font-quicksand-medium flex-1 text-right">
+                    {spec.value}
                   </Text>
                 </View>
+              ))}
+            </View>
+          )}
+        </View>
+
+        {/* Informations sur l'entreprise */}
+        <View className="bg-white mt-2 p-4 shadow-sm">
+          <Text className="text-neutral-800 text-lg font-quicksand-bold mb-3">
+            Informations sur votre entreprise
+          </Text>
+          
+          <View className="bg-neutral-50 rounded-lg p-4">
+            <View className="flex-row items-center mb-3">
+              {typeof product.enterprise === 'object' && product.enterprise.logo ? (
+                <Image 
+                  source={{ uri: product.enterprise.logo }}
+                  className="w-14 h-14 rounded-full mr-3"
+                />
+              ) : (
+                <View className="w-14 h-14 rounded-full bg-primary-500 items-center justify-center mr-3">
+                  <Text className="text-white font-quicksand-bold text-lg">
+                    {typeof product.enterprise === 'object' && product.enterprise.companyName
+                      ? product.enterprise.companyName.charAt(0)
+                      : "E"}
+                  </Text>
+                </View>
+              )}
+              <View>
+                <Text className="text-neutral-800 font-quicksand-bold text-base">
+                  {typeof product.enterprise === 'object' && product.enterprise.companyName 
+                    ? product.enterprise.companyName 
+                    : "Votre Entreprise"}
+                </Text>
+                <View className="flex-row items-center mt-1">
+                  <Ionicons name="shield-checkmark-outline" size={14} color="#64748B" />
+                  <Text className="text-neutral-600 font-quicksand-medium ml-1 text-sm">
+                    {typeof product.enterprise === 'object' && product.enterprise.isActive ? 'Active' : 'Inactive'}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Statistiques de l'entreprise */}
+            <View className="mt-3 mb-3">
+              <View className="flex-row justify-between py-2 border-b border-neutral-100">
+                <Text className="text-neutral-500 font-quicksand-regular">Localisation</Text>
+                <Text className="text-neutral-700 font-quicksand-medium">
+                  {typeof product.enterprise === 'object' && product.enterprise.location 
+                    ? `${product.enterprise.location.district}, ${product.enterprise.location.city}` 
+                    : "Non spécifiée"}
+                </Text>
+              </View>
+
+              <View className="flex-row justify-between py-2 border-b border-neutral-100">
+                <Text className="text-neutral-500 font-quicksand-regular">Date d&apos;inscription</Text>
+                <Text className="text-neutral-700 font-quicksand-medium">
+                  {(() => {
+                    if (typeof product.enterprise === 'object') {
+                      const dateToFormat = product.enterprise.createdAt || product.enterprise.lastActiveDate;
+                      if (dateToFormat) {
+                        const dateString = typeof dateToFormat === 'string' ? dateToFormat : dateToFormat.toISOString();
+                        return formatDate(dateString);
+                      }
+                    }
+                    return "Non disponible";
+                  })()}
+                </Text>
               </View>
               
-              <View className="flex-row justify-between py-2">
-                <Text className="text-neutral-600 font-quicksand">Ventes totales</Text>
-                <Text className="text-neutral-800 font-quicksand-semibold">
-                  {formatPrice(product.stats.totalSales)}
+              <View className="flex-row justify-between py-2 border-b border-neutral-100">
+                <Text className="text-neutral-500 font-quicksand-regular">Commandes totales</Text>
+                <Text className="text-neutral-700 font-quicksand-medium">
+                  {typeof product.enterprise === 'object' && product.enterprise.stats?.totalOrders 
+                    ? product.enterprise.stats.totalOrders 
+                    : "0"}
                 </Text>
               </View>
 
-              {product.weight && (
-                <View className="flex-row justify-between py-2">
-                  <Text className="text-neutral-600 font-quicksand">Poids</Text>
-                  <Text className="text-neutral-800 font-quicksand-semibold">
-                    {product.weight} kg
+              <View className="flex-row justify-between py-2">
+                <Text className="text-neutral-500 font-quicksand-regular">Note entreprise</Text>
+                <View className="flex-row items-center">
+                  <Ionicons name="star" size={16} color="#F59E0B" />
+                  <Text className="text-neutral-700 font-quicksand-medium ml-1">
+                    {typeof product.enterprise === 'object' && product.enterprise.stats?.averageRating 
+                      ? `${product.enterprise.stats?.averageRating?.toFixed(1)} (${product.enterprise.stats?.totalReviews || 0} avis)` 
+                      : "Non évalué"}
                   </Text>
                 </View>
-              )}
-
-              <View className="flex-row justify-between py-2">
-                <Text className="text-neutral-600 font-quicksand">Créé le</Text>
-                <Text className="text-neutral-800 font-quicksand-semibold">
-                  {formatDate(product.createdAt)}
-                </Text>
               </View>
+            </View>
+          </View>
+        </View>
 
-              <View className="flex-row justify-between py-2">
-                <Text className="text-neutral-600 font-quicksand">Modifié le</Text>
-                <Text className="text-neutral-800 font-quicksand-semibold">
-                  {formatDate(product.updatedAt)}
-                </Text>
-              </View>
+        {/* Informations supplémentaires */}
+        <View className="bg-white mt-2 p-4 shadow-sm mb-6">
+          <Text className="text-neutral-800 text-lg font-quicksand-bold mb-3">
+            Informations de gestion
+          </Text>
+          
+          <View className="flex-row justify-between py-3 border-b border-neutral-100">
+            <Text className="text-neutral-500 font-quicksand-regular">Date de création</Text>
+            <Text className="text-neutral-700 font-quicksand-medium">
+              {formatDate(product.createdAt)}
+            </Text>
+          </View>
+
+          <View className="flex-row justify-between py-3 border-b border-neutral-100">
+            <Text className="text-neutral-500 font-quicksand-regular">Dernière modification</Text>
+            <Text className="text-neutral-700 font-quicksand-medium">
+              {formatDate(product.updatedAt)}
+            </Text>
+          </View>
+          
+          <View className="flex-row justify-between py-3 border-b border-neutral-100">
+            <Text className="text-neutral-500 font-quicksand-regular">Chiffre d&apos;affaires</Text>
+            <Text className="text-primary-500 font-quicksand-semibold">
+              {product.stats?.totalSales ? formatPrice(product.stats.totalSales) : '0 FCFA'}
+            </Text>
+          </View>
+
+          <View className="flex-row justify-between py-3 border-b border-neutral-100">
+            <Text className="text-neutral-500 font-quicksand-regular">Total des vues</Text>
+            <Text className="text-neutral-700 font-quicksand-medium">
+              {product.stats?.views?.toLocaleString('fr-FR') || '0'}
+            </Text>
+          </View>
+
+          <View className="flex-row justify-between py-3">
+            <Text className="text-neutral-500 font-quicksand-regular">Évaluations clients</Text>
+            <View className="flex-row items-center">
+              <Ionicons name="star" size={16} color="#F59E0B" />
+              <Text className="text-neutral-700 font-quicksand-medium ml-1">
+                {product.stats?.averageRating?.toFixed(1) || '0.0'} ({product.stats?.totalReviews || 0} avis)
+              </Text>
             </View>
           </View>
         </View>
       </ScrollView>
 
-      <View className="bg-white px-6 py-6 border-t border-neutral-100" 
-        style={{
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -3 },
-          shadowOpacity: 0.1,
-          shadowRadius: 5,
-          elevation: 10,
-        }}
-      >
+      {/* Boutons d'action fixes en bas */}
+      <View className="bg-white p-4 border-t border-neutral-200 shadow-lg">
         <View className="flex-row">
-          <Animated.View style={{ flex: 1, marginRight: 12 }}>
+          <View className="flex-1 mr-2">
             <TouchableOpacity
               onPress={handleToggleStatus}
-              className={`py-4 rounded-2xl ${
-                product.isActive ? 'bg-orange-500' : 'bg-green-500'
-              }`}
-              style={{
-                shadowColor: product.isActive ? '#F97316' : '#22C55E',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 4,
-                elevation: 6,
-              }}
+              className={`${product.isActive ? 'bg-warning-500' : 'bg-success-500'} py-3 rounded-2xl flex-row items-center justify-center`}
             >
-              <View className="flex-row items-center justify-center">
-                <Ionicons 
-                  name={product.isActive ? "power" : "checkmark-circle"} 
-                  size={20} 
-                  color="white"
-                  style={{ marginRight: 6 }} 
-                />
-                <Text className="text-white text-center font-quicksand-semibold">
-                  {product.isActive ? 'Désactiver' : 'Activer'}
-                </Text>
-              </View>
+              <Ionicons 
+                name={product.isActive ? "power" : "checkmark-circle"} 
+                size={20} 
+                color="white"
+                style={{ marginRight: 8 }} 
+              />
+              <Text className="text-white font-quicksand-semibold">
+                {product.isActive ? 'Désactiver' : 'Activer'}
+              </Text>
             </TouchableOpacity>
-          </Animated.View>
+          </View>
           
-          <Animated.View style={{ flex: 1, marginRight: 12 }}>
+          <View className="flex-1 mr-2">
             <TouchableOpacity
               onPress={handleEditProduct}
-              className="bg-primary-500 py-4 rounded-2xl"
-              style={{
-                shadowColor: '#FE8C00',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 4,
-                elevation: 6,
-              }}
+              className="bg-primary-500 py-3 rounded-2xl flex-row items-center justify-center"
             >
-              <View className="flex-row items-center justify-center">
-                <Ionicons name="pencil" size={18} color="white" style={{ marginRight: 6 }} />
-                <Text className="text-white text-center font-quicksand-semibold">
-                  Modifier
-                </Text>
-              </View>
+              <Ionicons name="pencil" size={18} color="white" style={{ marginRight: 8 }} />
+              <Text className="text-white font-quicksand-semibold">
+                Modifier
+              </Text>
             </TouchableOpacity>
-          </Animated.View>
+          </View>
           
           <TouchableOpacity
             onPress={handleDeleteProduct}
-            className="bg-red-500 py-4 px-6 rounded-2xl"
-            style={{
-              shadowColor: '#EF4444',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 4,
-              elevation: 6,
-            }}
+            className="bg-error-500 py-3 px-3 rounded-2xl items-center justify-center"
           >
             <Ionicons name="trash" size={20} color="white" />
           </TouchableOpacity>

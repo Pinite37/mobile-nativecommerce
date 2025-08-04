@@ -2,20 +2,20 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  FlatList,
-  Image,
-  Linking,
-  SafeAreaView,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    FlatList,
+    Image,
+    Linking,
+    SafeAreaView,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import ProductService from "../../../../services/api/ProductService";
-import { Product } from "../../../../types/product";
+import ProductService from "../../../../../services/api/ProductService";
+import { Product } from "../../../../../types/product";
 
 const { width: screenWidth } = Dimensions.get('window');
 

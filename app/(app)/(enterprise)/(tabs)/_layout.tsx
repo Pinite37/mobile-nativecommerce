@@ -67,20 +67,6 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="marketplace"
-        options={{
-          title: "Marketplace",
-          headerShown: false,
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons 
-              name={focused ? "storefront" : "storefront-outline"} 
-              size={focused ? 26 : 24} 
-              color={color} 
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="products"
         options={{
           title: "Mes Produits",
@@ -123,6 +109,19 @@ export default function TabsLayout() {
         }}
       />
       {/* Pages cachées */}
+      <Tabs.Screen
+        name="marketplace"
+        options={{
+          href: null, // Cache cet onglet
+        }}
+      />
+      <Tabs.Screen
+        name="product"
+        options={{
+          href: null, // Cache cet onglet
+          headerShown: false, // Assure que le header est caché
+        }}
+      />
       <Tabs.Screen
         name="cart"
         options={{

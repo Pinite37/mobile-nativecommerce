@@ -10,8 +10,8 @@ class ApiService {
   constructor() {
     // Configure baseURL based on platform
     if (Platform.OS === 'android') {
-      this.baseURL = 'http://192.168.86.143:4000/api'; 
-      // this.baseURL = 'http://192.168.0.106:4000/api'; 
+      // this.baseURL = 'http://192.168.86.143:4000/api'; 
+      this.baseURL = 'http://192.168.0.106:4000/api'; 
     } else if (Platform.OS === 'ios') {
       this.baseURL = 'http://localhost:4000/api'; // iOS simulator
     } else {
@@ -36,6 +36,9 @@ class ApiService {
         const token = await TokenStorageService.getAccessToken();
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
+          console.log('🔐 Token ajouté à la requête:', `***${token.slice(-10)}`);
+        } else {
+          console.log('⚠️ Aucun token disponible pour cette requête');
         }
 
         // Add device info
@@ -71,25 +74,51 @@ class ApiService {
         if (error.response?.status === 401) {
           const originalRequest = error.config;
           
+          // Éviter les boucles infinies
           if (!originalRequest._retry) {
             originalRequest._retry = true;
             
+            console.log('🔄 Tentative de refresh du token...');
+            
             try {
               const refreshToken = await TokenStorageService.getRefreshToken();
-              if (refreshToken) {
-                const newTokens = await this.refreshAccessToken(refreshToken);
-                await TokenStorageService.setTokens(newTokens.accessToken, newTokens.refreshToken);
-                
-                // Retry original request with new token
-                originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
-                return this.axiosInstance(originalRequest);
+              
+              if (!refreshToken) {
+                console.log('❌ Pas de refresh token disponible');
+                await TokenStorageService.clearAll();
+                return Promise.reject(error);
               }
+              
+              console.log('🔄 Refresh token trouvé, tentative de rafraîchissement...');
+              const newTokens = await this.refreshAccessToken(refreshToken);
+              
+              if (!newTokens || !newTokens.accessToken) {
+                console.log('❌ Refresh token invalide ou expiré');
+                await TokenStorageService.clearAll();
+                return Promise.reject(error);
+              }
+              
+              console.log('✅ Nouveaux tokens obtenus, mise à jour...');
+              await TokenStorageService.setTokens(newTokens.accessToken, newTokens.refreshToken);
+              
+              // Retry original request with new token
+              originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
+              console.log('🔄 Nouvelle tentative de la requête originale...');
+              
+              return this.axiosInstance(originalRequest);
+              
             } catch (refreshError) {
-              console.error('Token refresh failed:', refreshError);
+              console.error('❌ Échec du refresh token:', refreshError);
               await TokenStorageService.clearAll();
-              // Redirect to login screen
-              // You can emit an event or use a navigation service here
+              
+              // Emmetre un événement pour rediriger vers la page de connexion
+              // TODO: Implémenter un système d'événements pour la déconnexion
+              
+              return Promise.reject(refreshError);
             }
+          } else {
+            console.log('❌ Requête déjà retentée, échec final');
+            await TokenStorageService.clearAll();
           }
         }
         
@@ -107,11 +136,31 @@ class ApiService {
   }
 
   private async refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
-    const response = await axios.post(`${this.baseURL}/auth/refresh-token`, {
-      refreshToken,
-    });
+    console.log('🔄 Appel API refresh token...');
     
-    return response.data.data;
+    try {
+      // Utiliser axios directement pour éviter l'intercepteur
+      const response = await axios.post(`${this.baseURL}/auth/refresh-token`, {
+        refreshToken,
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 10000,
+      });
+      
+      console.log('✅ Refresh token réussi');
+      
+      if (!response.data || !response.data.data) {
+        throw new Error('Réponse de refresh token invalide');
+      }
+      
+      return response.data.data;
+      
+    } catch (error: any) {
+      console.error('❌ Erreur refresh token:', error.response?.data || error.message);
+      throw error;
+    }
   }
 
   private handleError(error: any): Error {

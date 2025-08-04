@@ -1,6 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
+import { useRouter } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
+  Dimensions,
   FlatList,
   Image,
   Modal,
@@ -11,6 +14,8 @@ import {
   View
 } from "react-native";
 import { useAuth } from "../../../../contexts/AuthContext";
+import ProductService from "../../../../services/api/ProductService";
+import { Product } from "../../../../types/product";
 
 // Données des villes et quartiers du Bénin
 const beninCities = [
@@ -65,36 +70,6 @@ const categories = [
   { id: 9, name: "Emplois", icon: "briefcase", color: "#0EA5E9" },
 ];
 
-const featuredProducts = [
-  {
-    id: 1,
-    name: "iPhone 14 Pro",
-    price: 659000,
-    image: "https://via.placeholder.com/150x150/3B82F6/FFFFFF?text=iPhone",
-    rating: 4.8,
-    reviews: 245,
-    discount: 15,
-  },
-  {
-    id: 2,
-    name: "Samsung Galaxy S23",
-    price: 459000,
-    image: "https://via.placeholder.com/150x150/EF4444/FFFFFF?text=Samsung",
-    rating: 4.6,
-    reviews: 189,
-    discount: 10,
-  },
-  {
-    id: 3,
-    name: "MacBook Air M2",
-    price: 1250000,
-    image: "https://via.placeholder.com/150x150/10B981/FFFFFF?text=MacBook",
-    rating: 4.9,
-    reviews: 78,
-    discount: 8,
-  },
-];
-
 const popularStores = [
   {
     id: 1,
@@ -124,15 +99,81 @@ const popularStores = [
 
 export default function ClientHome() {
   const { user } = useAuth();
+  const router = useRouter();
   const [selectedCity, setSelectedCity] = useState(beninCities[0].name);
   const [selectedNeighborhood, setSelectedNeighborhood] = useState("");
   const [cityModalVisible, setCityModalVisible] = useState(false);
   const [neighborhoodModalVisible, setNeighborhoodModalVisible] = useState(false);
+  const [currentAdIndex, setCurrentAdIndex] = useState(0);
   
+  // États pour les produits de l'API
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  
+  // Données pour le carrousel d'annonces boostées
+  const boostedAds = [
+    {
+      id: 1,
+      title: "Votre entreprise",
+      subtitle: "est visible",
+      description: "Augmentez votre visibilité avec nos services",
+      type: "main",
+      bgColor: "#FE8C00",
+      textColor: "#FFFFFF"
+    },
+    {
+      id: 2,
+      title: "Correcteur de posture",
+      subtitle: "Soulage les douleurs dorsales",
+      price: "15.000 FCFA",
+      badge: "PROMO",
+      type: "product",
+      bgColor: "#FFFFFF",
+      textColor: "#374151"
+    },
+    {
+      id: 3,
+      title: "Robe d'été",
+      subtitle: "Collection été 2025",
+      price: "25.000 FCFA",
+      badge: "FLASH",
+      type: "product",
+      bgColor: "#FFFFFF",
+      textColor: "#374151"
+    },
+    {
+      id: 4,
+      title: "Smartphone Samsung",
+      subtitle: "Galaxy A54 - Neuf",
+      price: "320.000 FCFA",
+      badge: "NOUVEAU",
+      type: "product",
+      bgColor: "#FFFFFF",
+      textColor: "#374151"
+    }
+  ];
+
   useEffect(() => {
     // Réinitialiser le quartier si la ville change
     setSelectedNeighborhood("");
   }, [selectedCity]);
+
+  useEffect(() => {
+    // Charger les produits populaires au montage
+    loadFeaturedProducts();
+  }, []);
+
+  const loadFeaturedProducts = async () => {
+    try {
+      setLoadingProducts(true);
+      const response = await ProductService.getPopularProducts(6);
+      setFeaturedProducts(response.products);
+    } catch (error) {
+      console.error('❌ Erreur chargement produits populaires:', error);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
   
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
@@ -167,18 +208,22 @@ export default function ClientHome() {
 
 
 
-  const renderProduct = ({ item }: { item: typeof featuredProducts[0] }) => (
-    <TouchableOpacity className="bg-white rounded-xl mr-3 shadow-sm border border-neutral-100">
+  const renderProduct = ({ item }: { item: Product }) => (
+    <TouchableOpacity 
+      className="bg-white rounded-xl mr-3 shadow-sm border border-neutral-100"
+      onPress={() => router.push(`/(app)/(client)/product/${item._id}`)}
+    >
       <View className="relative">
         <Image
-          source={{ uri: item.image }}
+          source={{ uri: item.images[0] || "https://via.placeholder.com/150x150/CCCCCC/FFFFFF?text=No+Image" }}
           className="w-36 h-28 rounded-t-xl"
           resizeMode="cover"
         />
-        {item.discount > 0 && (
-          <View className="absolute top-2 right-2 bg-error-500 rounded-full px-2 py-1">
+        {/* Badge pour les produits avec beaucoup de ventes */}
+        {item.stats.totalSales > 10 && (
+          <View className="absolute top-2 right-2 bg-success-500 rounded-full px-2 py-1">
             <Text className="text-white text-xs font-quicksand-bold">
-              -{item.discount}%
+              Populaire
             </Text>
           </View>
         )}
@@ -190,7 +235,7 @@ export default function ClientHome() {
         <View className="flex-row items-center my-1">
           <Ionicons name="star" size={12} color="#FE8C00" />
           <Text className="text-xs text-neutral-500 ml-1">
-            {item.rating}
+            {item.stats.averageRating.toFixed(1)}
           </Text>
         </View>
         <Text className="text-sm font-quicksand-bold text-primary-600">
@@ -288,13 +333,152 @@ export default function ClientHome() {
           
           {/* Search Bar */}
           <View className="px-6">
-            <TouchableOpacity className="flex-row items-center bg-white rounded-xl px-4 py-3 shadow-md">
+            <TouchableOpacity 
+              className="flex-row items-center bg-white rounded-xl px-4 py-3 shadow-md"
+              onPress={() => router.push('/(app)/(client)/(tabs)/search')}
+            >
               <Ionicons name="search" size={20} color="#9CA3AF" />
               <Text className="ml-3 flex-1 text-neutral-500 font-quicksand-medium">
                 Que cherchez-vous ?
               </Text>
               <Ionicons name="options-outline" size={20} color="#9CA3AF" />
             </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Annonces Boostées / Publicités - Carrousel */}
+        <View className="py-4">
+          <View className="flex-row items-center justify-between mb-4 px-4">
+            <Text className="text-lg font-quicksand-bold text-neutral-800">
+              Annonces Boostées
+            </Text>
+            <TouchableOpacity className="flex-row items-center">
+              <Text className="text-primary-500 font-quicksand-medium text-sm mr-1">
+                Voir tout
+              </Text>
+              <Ionicons name="chevron-forward" size={16} color="#FE8C00" />
+            </TouchableOpacity>
+          </View>
+          
+          <View className="relative">
+            <FlatList
+              ref={useRef(null)}
+              data={boostedAds}
+              renderItem={({ item }) => {
+                const screenWidth = Dimensions.get('window').width;
+                const cardWidth = screenWidth - 32; // 16px padding de chaque côté
+                
+                if (item.type === "main") {
+                  return (
+                    <View style={{ width: screenWidth, paddingHorizontal: 16 }}>
+                      <TouchableOpacity 
+                        className="rounded-2xl p-6 shadow-md"
+                        style={{ 
+                          backgroundColor: item.bgColor,
+                          width: cardWidth,
+                          minHeight: 140
+                        }}
+                      >
+                        <View className="flex-row items-center justify-between">
+                          <View className="flex-1">
+                            <Text 
+                              className="font-quicksand-bold text-xl mb-2"
+                              style={{ color: item.textColor }}
+                            >
+                              {item.title}
+                            </Text>
+                            <Text 
+                              className="font-quicksand-bold text-2xl mb-1"
+                              style={{ color: item.textColor }}
+                            >
+                              {item.subtitle}
+                            </Text>
+                            <Text 
+                              className="font-quicksand-medium text-sm mb-4 opacity-90"
+                              style={{ color: item.textColor }}
+                            >
+                              {item.description}
+                            </Text>
+                            <View className="bg-white rounded-full px-4 py-2 self-start">
+                              <Text className="text-primary-500 font-quicksand-bold text-sm">
+                                En savoir plus
+                              </Text>
+                            </View>
+                          </View>
+                          <View className="ml-4 items-center">
+                            <View className="bg-white/20 rounded-full p-3 mb-2">
+                              <Ionicons name="megaphone" size={32} color="white" />
+                            </View>
+                            <View className="bg-error-500 rounded-full px-3 py-1">
+                              <Text className="text-white font-quicksand-bold text-xs">
+                                ICI
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                } else {
+                  return (
+                    <View style={{ width: screenWidth, paddingHorizontal: 16 }}>
+                      <TouchableOpacity 
+                        className="rounded-2xl p-4 shadow-sm border border-neutral-100"
+                        style={{ 
+                          backgroundColor: item.bgColor,
+                          width: cardWidth,
+                          minHeight: 140
+                        }}
+                      >
+                        <View className="flex-row items-center justify-between mb-2">
+                          <View className="bg-success-100 rounded-full px-2 py-1">
+                            <Text className="text-success-600 font-quicksand-bold text-xs">
+                              {item.badge}
+                            </Text>
+                          </View>
+                          <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+                        </View>
+                        <Text 
+                          className="font-quicksand-bold text-sm mb-1"
+                          style={{ color: item.textColor }}
+                        >
+                          {item.title}
+                        </Text>
+                        <Text 
+                          className="font-quicksand-medium text-xs mb-2 opacity-75"
+                          style={{ color: item.textColor }}
+                        >
+                          {item.subtitle}
+                        </Text>
+                        <Text className="text-primary-500 font-quicksand-bold text-sm">
+                          {item.price}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                }
+              }}
+              keyExtractor={(item) => item.id.toString()}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={(event) => {
+                const newIndex = Math.round(event.nativeEvent.contentOffset.x / Dimensions.get('window').width);
+                setCurrentAdIndex(newIndex);
+              }}
+            />
+            
+            {/* Indicateurs de pagination */}
+            <View className="flex-row justify-center mt-4">
+              {boostedAds.map((_, index) => (
+                <View
+                  key={index}
+                  className={`w-2 h-2 rounded-full mx-1 ${
+                    index === currentAdIndex ? 'bg-primary-500' : 'bg-neutral-300'
+                  }`}
+                />
+              ))}
+            </View>
           </View>
         </View>
 
@@ -332,10 +516,26 @@ export default function ClientHome() {
           <FlatList
             data={featuredProducts}
             renderItem={renderProduct}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={(item) => item._id}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 16 }}
+            ListEmptyComponent={
+              loadingProducts ? (
+                <View className="flex-1 justify-center items-center py-8">
+                  <ActivityIndicator size="large" color="#FE8C00" />
+                  <Text className="mt-2 text-neutral-600 font-quicksand-medium">
+                    Chargement des produits...
+                  </Text>
+                </View>
+              ) : (
+                <View className="flex-1 justify-center items-center py-8">
+                  <Text className="text-neutral-600 font-quicksand-medium">
+                    Aucun produit disponible
+                  </Text>
+                </View>
+              )
+            }
           />
         </View>
 
@@ -354,6 +554,54 @@ export default function ClientHome() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 16 }}
           />
+        </View>
+
+        {/* Bannière Promotionnelle Finale */}
+        <View className="px-4 py-6">
+          <TouchableOpacity className="bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl p-6 shadow-lg">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-1">
+                <Text className="text-white font-quicksand-bold text-lg mb-1">
+                  DealToo
+                </Text>
+                <Text className="text-white/90 font-quicksand-medium text-sm mb-3">
+                  Votre marketplace #1 au Bénin
+                </Text>
+                <View className="bg-white/20 rounded-full px-4 py-2 self-start">
+                  <Text className="text-white font-quicksand-bold text-sm">
+                    Découvrir plus
+                  </Text>
+                </View>
+              </View>
+              <View className="ml-4">
+                <View className="bg-white/20 rounded-full p-3">
+                  <Ionicons name="storefront" size={32} color="white" />
+                </View>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Section Flash Deals inspirée de l'interface */}
+        <View className="px-4 pb-8">
+          <View className="bg-primary-50 rounded-2xl p-4 border border-primary-200">
+            <View className="flex-row items-center justify-between mb-3">
+              <View className="flex-row items-center">
+                <View className="bg-error-500 rounded-full p-2 mr-3">
+                  <Ionicons name="flash" size={16} color="white" />
+                </View>
+                <Text className="text-primary-700 font-quicksand-bold text-sm">
+                  Ventes Flash
+                </Text>
+              </View>
+              <Text className="text-primary-600 font-quicksand-medium text-xs">
+                Se termine dans 2h
+              </Text>
+            </View>
+            <Text className="text-primary-600 font-quicksand-medium text-xs">
+              Profitez des meilleures offres avant qu&apos;il ne soit trop tard !
+            </Text>
+          </View>
         </View>
       </ScrollView>
       

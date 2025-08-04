@@ -279,6 +279,131 @@ class ProductService {
       throw new Error(error.response?.data?.message || error.message || 'Mise à jour des statistiques échouée');
     }
   }
+
+  // ========== MÉTHODES PUBLIQUES POUR LES CLIENTS ==========
+
+  /**
+   * Récupérer tous les produits publics (pour clients)
+   */
+  async getAllPublicProducts(filters: ProductFilters = {}): Promise<ProductsResponse> {
+    try {
+      console.log('🔥 PRODUCT SERVICE - Récupération produits publics avec filtres:', filters);
+      
+      const queryParams = new URLSearchParams();
+      
+      // Ajouter les paramètres de filtrage
+      if (filters.page) queryParams.append('page', filters.page.toString());
+      if (filters.limit) queryParams.append('limit', filters.limit.toString());
+      if (filters.category) queryParams.append('category', filters.category);
+      if (filters.search) queryParams.append('search', filters.search);
+      if (filters.minPrice) queryParams.append('minPrice', filters.minPrice.toString());
+      if (filters.maxPrice) queryParams.append('maxPrice', filters.maxPrice.toString());
+      if (filters.sort) queryParams.append('sort', filters.sort);
+
+      const url = `${this.BASE_URL}?${queryParams.toString()}`;
+      const response = await ApiService.get<any>(url);
+      
+      if (response.success && response.data) {
+        console.log('✅ PRODUCT SERVICE - Produits publics récupérés:', response.data.length);
+        return {
+          products: response.data,
+          pagination: (response as any).pagination || {
+            page: filters.page || 1,
+            limit: filters.limit || 20,
+            total: response.data.length,
+            pages: 1
+          }
+        };
+      }
+      
+      throw new Error('Échec de la récupération des produits publics');
+    } catch (error: any) {
+      console.error('❌ PRODUCT SERVICE - Erreur récupération produits publics:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Récupération des produits publics échouée');
+    }
+  }
+
+  /**
+   * Récupérer les détails d'un produit spécifique (pour clients)
+   */
+  async getPublicProductById(productId: string): Promise<Product> {
+    try {
+      console.log('🔥 PRODUCT SERVICE - Récupération détails produit public:', productId);
+      
+      const response = await ApiService.get<any>(`${this.BASE_URL}/${productId}`);
+      
+      if (response.success && response.data) {
+        // Le backend renvoie maintenant { product: {...}, enterprise: {...} }
+        const productData = response.data.product;
+        const enterpriseData = response.data.enterprise;
+        
+        // Fusionner les données du produit avec les infos de l'entreprise
+        const completeProduct = {
+          ...productData,
+          enterprise: enterpriseData
+        };
+        
+        console.log('✅ PRODUCT SERVICE - Détails produit public récupérés:', completeProduct.name);
+        return completeProduct;
+      }
+      
+      throw new Error('Échec de la récupération des détails du produit');
+    } catch (error: any) {
+      console.error('❌ PRODUCT SERVICE - Erreur récupération détails produit public:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Récupération des détails du produit échouée');
+    }
+  }
+
+  /**
+   * Rechercher des produits publics
+   */
+  async searchPublicProducts(query: string, filters: Omit<ProductFilters, 'search'> = {}): Promise<ProductsResponse> {
+    try {
+      console.log('🔍 PRODUCT SERVICE - Recherche produits publics:', query);
+      
+      return this.getAllPublicProducts({
+        ...filters,
+        search: query
+      });
+    } catch (error: any) {
+      console.error('❌ PRODUCT SERVICE - Erreur recherche produits publics:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Récupérer les produits populaires
+   */
+  async getPopularProducts(limit: number = 10): Promise<ProductsResponse> {
+    try {
+      console.log('🔥 PRODUCT SERVICE - Produits populaires, limite:', limit);
+      
+      return this.getAllPublicProducts({
+        limit,
+        sort: 'popular'
+      });
+    } catch (error: any) {
+      console.error('❌ PRODUCT SERVICE - Erreur produits populaires:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Récupérer les nouveaux produits
+   */
+  async getNewProducts(limit: number = 10): Promise<ProductsResponse> {
+    try {
+      console.log('🆕 PRODUCT SERVICE - Nouveaux produits, limite:', limit);
+      
+      return this.getAllPublicProducts({
+        limit,
+        sort: 'newest'
+      });
+    } catch (error: any) {
+      console.error('❌ PRODUCT SERVICE - Erreur nouveaux produits:', error);
+      throw error;
+    }
+  }
 }
 
 export default new ProductService();
