@@ -10,8 +10,8 @@ class ApiService {
   constructor() {
     // Configure baseURL based on platform
     if (Platform.OS === 'android') {
-      // this.baseURL = 'http://192.168.86.143:4000/api'; 
-      this.baseURL = 'http://192.168.0.106:4000/api'; 
+      this.baseURL = 'http://192.168.86.143:4000/api'; 
+      // this.baseURL = 'http://192.168.0.106:4000/api'; 
     } else if (Platform.OS === 'ios') {
       this.baseURL = 'http://localhost:4000/api'; // iOS simulator
     } else {

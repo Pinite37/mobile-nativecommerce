@@ -486,6 +486,125 @@ class EnterpriseService {
       throw new Error(error.response?.data?.message || 'Failed to toggle active status');
     }
   }
+
+  /**
+   * Récupérer les informations publiques d'une entreprise par son ID
+   */
+  async getPublicEnterpriseById(enterpriseId: string): Promise<Enterprise> {
+    try {
+      console.log('🔄 ENTERPRISE SERVICE - Récupération entreprise publique:', enterpriseId);
+      
+      const response = await ApiService.get<Enterprise>(`${this.BASE_URL}/public/${enterpriseId}`);
+      
+      if (response.success && response.data) {
+        console.log('✅ Entreprise publique récupérée');
+        return response.data;
+      }
+      
+      throw new Error('Entreprise non trouvée');
+    } catch (error: any) {
+      console.error('❌ ENTERPRISE SERVICE - Erreur récupération entreprise publique:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Échec de récupération de l\'entreprise');
+    }
+  }
+
+  /**
+   * Récupérer les produits d'une entreprise (vue publique)
+   */
+  async getEnterpriseProducts(
+    enterpriseId: string, 
+    page: number = 1, 
+    limit: number = 20, 
+    filters: {
+      category?: string;
+      minPrice?: number;
+      maxPrice?: number;
+      sort?: string;
+      search?: string;
+    } = {}
+  ): Promise<{
+    products: any[];
+    enterprise: {
+      id: string;
+      companyName: string;
+      logo: string;
+    };
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      pages: number;
+    };
+  }> {
+    try {
+      console.log('🔄 ENTERPRISE SERVICE - Récupération produits entreprise:', enterpriseId);
+      console.log('📄 Page:', page, 'Limite:', limit);
+      console.log('🔍 Filtres:', filters);
+      
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        ...Object.fromEntries(
+          Object.entries(filters).filter(([_, value]) => value !== undefined && value !== '')
+        ),
+      });
+
+      const response = await ApiService.get<{
+        products: any[];
+        enterprise: {
+          id: string;
+          companyName: string;
+          logo: string;
+        };
+        pagination: {
+          page: number;
+          limit: number;
+          total: number;
+          pages: number;
+        };
+      }>(`${this.BASE_URL}/public/${enterpriseId}/products?${params}`);
+      
+      console.log('🔍 Response structure:', JSON.stringify(response, null, 2));
+      
+      if (response.success) {
+        // Gérer différentes structures de réponse possibles
+        let products = [];
+        let pagination = { page: 1, limit: 20, total: 0, pages: 0 };
+        let enterprise = { id: enterpriseId, companyName: 'Entreprise', logo: '' };
+        
+        if (response.data) {
+          // Si response.data contient directement les produits
+          if (Array.isArray(response.data)) {
+            products = response.data;
+          } 
+          // Si response.data a une structure avec products
+          else if (response.data.products) {
+            products = response.data.products;
+            pagination = response.data.pagination || pagination;
+            enterprise = response.data.enterprise || enterprise;
+          }
+          // Si response.data est un objet avec d'autres propriétés
+          else {
+            products = response.data.products || [];
+            pagination = response.data.pagination || pagination;
+            enterprise = response.data.enterprise || enterprise;
+          }
+        }
+        
+        console.log('✅ Produits entreprise récupérés:', products.length);
+        return {
+          products: products,
+          enterprise: enterprise,
+          pagination: pagination
+        };
+      }
+      
+      throw new Error('Échec de récupération des produits');
+    } catch (error: any) {
+      console.error('❌ ENTERPRISE SERVICE - Erreur récupération produits entreprise:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Échec de récupération des produits de l\'entreprise');
+    }
+  }
 }
 
 export default new EnterpriseService();

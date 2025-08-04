@@ -2,17 +2,17 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Dimensions,
-    FlatList,
-    Image,
-    Linking,
-    SafeAreaView,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  FlatList,
+  Image,
+  Linking,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import ProductService from "../../../../../services/api/ProductService";
 import { Product } from "../../../../../types/product";
@@ -26,6 +26,8 @@ export default function ProductDetails() {
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [similarProducts, setSimilarProducts] = useState<Product[]>([]);
+  const [loadingSimilar, setLoadingSimilar] = useState(false);
 
   useEffect(() => {
     const loadProductDetails = async () => {
@@ -34,6 +36,9 @@ export default function ProductDetails() {
         const productData = await ProductService.getPublicProductById(id!);
         console.log("✅ Produit chargé:", JSON.stringify(productData, null, 2));
         setProduct(productData);
+        
+        // Charger les produits similaires après avoir chargé le produit principal
+        loadSimilarProducts(id!);
       } catch (error) {
         console.error('❌ Erreur chargement détails produit:', error);
       } finally {
@@ -45,6 +50,20 @@ export default function ProductDetails() {
       loadProductDetails();
     }
   }, [id]);
+
+  const loadSimilarProducts = async (productId: string) => {
+    try {
+      setLoadingSimilar(true);
+      const response = await ProductService.getSimilarProducts(productId, 6);
+      setSimilarProducts(response.similarProducts);
+      console.log("✅ Produits similaires chargés:", response.similarProducts.length);
+    } catch (error) {
+      console.error('❌ Erreur chargement produits similaires:', error);
+      setSimilarProducts([]);
+    } finally {
+      setLoadingSimilar(false);
+    }
+  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
@@ -60,6 +79,88 @@ export default function ProductDetails() {
     </View>
   );
 
+  // Composant pour une carte de produit similaire
+  const SimilarProductCard = ({ product: similarProduct }: { product: Product }) => (
+    <TouchableOpacity 
+      className="bg-white rounded-2xl mr-4 shadow-sm border border-neutral-100"
+      style={{ width: 160 }}
+      onPress={() => {
+        // Navigation vers le produit similaire
+        router.push(`/(app)/(enterprise)/(tabs)/product/${similarProduct._id}`);
+      }}
+    >
+      <View className="relative">
+        <Image
+          source={{ 
+            uri: similarProduct.images[0] || "https://via.placeholder.com/160x120/CCCCCC/FFFFFF?text=No+Image" 
+          }}
+          className="w-full h-28 rounded-t-2xl"
+          resizeMode="cover"
+        />
+        {/* Badge de score de similarité si disponible */}
+        {(similarProduct as any).similarityScore && (
+          <View className="absolute top-2 right-2 bg-primary-500 rounded-full px-2 py-1">
+            <Text className="text-white text-xs font-quicksand-bold">
+              {Math.round((similarProduct as any).similarityScore)}%
+            </Text>
+          </View>
+        )}
+        {/* Badge stock si faible */}
+        {similarProduct.stock <= 5 && similarProduct.stock > 0 && (
+          <View className="absolute top-2 left-2 bg-warning-500 rounded-full px-2 py-1">
+            <Text className="text-white text-xs font-quicksand-bold">
+              {similarProduct.stock} restants
+            </Text>
+          </View>
+        )}
+      </View>
+      
+      <View className="p-3">
+        <Text numberOfLines={2} className="text-sm font-quicksand-semibold text-neutral-800 mb-2 h-10">
+          {similarProduct.name}
+        </Text>
+        
+        <Text className="text-base font-quicksand-bold text-primary-600 mb-2">
+          {formatPrice(similarProduct.price)}
+        </Text>
+        
+        {/* Entreprise */}
+        {(similarProduct as any).enterpriseInfo && (
+          <Text className="text-xs text-neutral-500 mb-2" numberOfLines={1}>
+            par {(similarProduct as any).enterpriseInfo.companyName}
+          </Text>
+        )}
+        
+        {/* Stats */}
+        {similarProduct.stats && (
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center">
+              <Ionicons name="star" size={12} color="#FFD700" />
+              <Text className="text-xs text-neutral-600 ml-1">
+                {similarProduct.stats.averageRating?.toFixed(1) || '0.0'}
+              </Text>
+            </View>
+            <Text className="text-xs text-neutral-400">
+              {similarProduct.stats.totalSales || 0} vendus
+            </Text>
+          </View>
+        )}
+        
+        {/* Bouton rapide */}
+        <TouchableOpacity 
+          className="bg-primary-50 rounded-xl py-2 mt-3"
+          onPress={() => {
+            router.push(`/(app)/(enterprise)/(tabs)/product/${similarProduct._id}`);
+          }}
+        >
+          <Text className="text-primary-600 font-quicksand-semibold text-xs text-center">
+            Voir le produit
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </TouchableOpacity>
+  );
+
   const handleAddToCart = () => {
     // TODO: Implémenter l'ajout au panier
     console.log('Ajouter au panier:', {
@@ -69,7 +170,7 @@ export default function ProductDetails() {
   };
 
   const openWhatsApp = (phone: string) => {
-    const message = `Bonjour ! Je suis intéressé(e) par votre produit "${product?.name}" sur DealToo. 
+    const message = `Bonjour ! Je suis intéressé(e) par votre produit "${product?.name}" sur Axi. 
 
 Prix affiché : ${product ? formatPrice(product.price) : ''}
 
@@ -242,9 +343,87 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
             </Text>
           </View>
 
-          {/* Enterprise Info */}
+          {/* Stats */}
+          <View className="flex-row justify-between mb-6">
+            <View className="flex-1 bg-neutral-50 rounded-2xl p-4 mr-2">
+              <View className="flex-row items-center mb-1">
+                <Ionicons name="star" size={16} color="#FE8C00" />
+                <Text className="text-base font-quicksand-bold text-neutral-800 ml-1">
+                  {product.stats.averageRating.toFixed(1)}
+                </Text>
+              </View>
+              <Text className="text-sm text-neutral-600">
+                {product.stats.totalReviews} avis
+              </Text>
+            </View>
+            
+            <View className="flex-1 bg-neutral-50 rounded-2xl p-4 ml-2">
+              <View className="flex-row items-center mb-1">
+                <Ionicons name="people" size={16} color="#10B981" />
+                <Text className="text-base font-quicksand-bold text-neutral-800 ml-1">
+                  {product.stats.totalSales}
+                </Text>
+              </View>
+              <Text className="text-sm text-neutral-600">
+                vendus
+              </Text>
+            </View>
+          </View>
+
+          {/* Stock Status */}
+          <View className="mb-6">
+            <View className="flex-row items-center">
+              <View
+                className={`w-3 h-3 rounded-full mr-2 ${
+                  product.stock > 0 ? 'bg-success-500' : 'bg-error-500'
+                }`}
+              />
+              <Text
+                className={`font-quicksand-semibold ${
+                  product.stock > 0 ? 'text-success-600' : 'text-error-600'
+                }`}
+              >
+                {product.stock > 0 ? `En stock (${product.stock} disponibles)` : 'Rupture de stock'}
+              </Text>
+            </View>
+          </View>
+
+          {/* Quantity Selector */}
+          {product.stock > 0 && (
+            <View className="mb-6">
+              <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">
+                Quantité
+              </Text>
+              <View className="flex-row items-center">
+                <TouchableOpacity
+                  onPress={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="w-10 h-10 bg-neutral-100 rounded-full justify-center items-center"
+                >
+                  <Ionicons name="remove" size={16} color="#374151" />
+                </TouchableOpacity>
+                <Text className="mx-4 text-lg font-quicksand-bold text-neutral-800">
+                  {quantity}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                  className="w-10 h-10 bg-neutral-100 rounded-full justify-center items-center"
+                >
+                  <Ionicons name="add" size={16} color="#374151" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {/* Section Entreprise - Déplacée juste avant les produits similaires */}
           <View className="bg-neutral-50 rounded-2xl p-4 mb-6">
-            <View className="flex-row items-center mb-4">
+            <TouchableOpacity 
+              className="flex-row items-center mb-4"
+              onPress={() => {
+                if (typeof product.enterprise === 'object') {
+                  router.push(`/(app)/(enterprise)/(tabs)/enterprise/${product.enterprise._id}`);
+                }
+              }}
+            >
               {(typeof product.enterprise === 'object' && product.enterprise.logo) ? (
                 <Image
                   source={{ uri: product.enterprise.logo }}
@@ -269,12 +448,15 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                   </Text>
                 )}
               </View>
-              <TouchableOpacity className="bg-primary-100 rounded-xl px-3 py-2">
-                <Text className="text-primary-500 font-quicksand-semibold text-sm">
-                  Voir la boutique
-                </Text>
-              </TouchableOpacity>
-            </View>
+              <View className="items-center">
+                <View className="bg-primary-100 rounded-xl px-3 py-2 mb-1">
+                  <Text className="text-primary-500 font-quicksand-semibold text-sm">
+                    Voir la boutique
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+              </View>
+            </TouchableOpacity>
 
             {/* Contact Options */}
             {typeof product.enterprise === 'object' && (product.enterprise.contactInfo?.phone || product.enterprise.contactInfo?.website) && (
@@ -363,74 +545,42 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
             )}
           </View>
 
-          {/* Stats */}
-          <View className="flex-row justify-between mb-6">
-            <View className="flex-1 bg-neutral-50 rounded-2xl p-4 mr-2">
-              <View className="flex-row items-center mb-1">
-                <Ionicons name="star" size={16} color="#FE8C00" />
-                <Text className="text-base font-quicksand-bold text-neutral-800 ml-1">
-                  {product.stats.averageRating.toFixed(1)}
+          {/* Section Produits Similaires - Intégrée dans le scroll */}
+          {(similarProducts.length > 0 || loadingSimilar) && (
+            <View className="mt-8 pt-6 border-t border-neutral-100">
+              <View className="mb-4">
+                <View className="flex-row items-center justify-between mb-2">
+                  <Text className="text-lg font-quicksand-bold text-neutral-800">
+                    Produits similaires
+                  </Text>
+                  {similarProducts.length > 0 && (
+                    <Text className="text-xs text-neutral-500 bg-neutral-100 px-2 py-1 rounded-full">
+                      {similarProducts.length} trouvés
+                    </Text>
+                  )}
+                </View>
+                <Text className="text-sm text-neutral-600">
+                  Basé sur la catégorie, le prix et les caractéristiques
                 </Text>
               </View>
-              <Text className="text-sm text-neutral-600">
-                {product.stats.totalReviews} avis
-              </Text>
-            </View>
-            
-            <View className="flex-1 bg-neutral-50 rounded-2xl p-4 ml-2">
-              <View className="flex-row items-center mb-1">
-                <Ionicons name="people" size={16} color="#10B981" />
-                <Text className="text-base font-quicksand-bold text-neutral-800 ml-1">
-                  {product.stats.totalSales}
-                </Text>
-              </View>
-              <Text className="text-sm text-neutral-600">
-                vendus
-              </Text>
-            </View>
-          </View>
-
-          {/* Stock Status */}
-          <View className="mb-6">
-            <View className="flex-row items-center">
-              <View
-                className={`w-3 h-3 rounded-full mr-2 ${
-                  product.stock > 0 ? 'bg-success-500' : 'bg-error-500'
-                }`}
-              />
-              <Text
-                className={`font-quicksand-semibold ${
-                  product.stock > 0 ? 'text-success-600' : 'text-error-600'
-                }`}
-              >
-                {product.stock > 0 ? `En stock (${product.stock} disponibles)` : 'Rupture de stock'}
-              </Text>
-            </View>
-          </View>
-
-          {/* Quantity Selector */}
-          {product.stock > 0 && (
-            <View className="mb-6">
-              <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">
-                Quantité
-              </Text>
-              <View className="flex-row items-center">
-                <TouchableOpacity
-                  onPress={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-10 h-10 bg-neutral-100 rounded-full justify-center items-center"
-                >
-                  <Ionicons name="remove" size={16} color="#374151" />
-                </TouchableOpacity>
-                <Text className="mx-4 text-lg font-quicksand-bold text-neutral-800">
-                  {quantity}
-                </Text>
-                <TouchableOpacity
-                  onPress={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                  className="w-10 h-10 bg-neutral-100 rounded-full justify-center items-center"
-                >
-                  <Ionicons name="add" size={16} color="#374151" />
-                </TouchableOpacity>
-              </View>
+              
+              {loadingSimilar ? (
+                <View className="h-40 justify-center items-center bg-neutral-50 rounded-2xl">
+                  <ActivityIndicator size="small" color="#FE8C00" />
+                  <Text className="mt-2 text-neutral-600 font-quicksand-medium text-sm">
+                    Chargement des produits similaires...
+                  </Text>
+                </View>
+              ) : (
+                <FlatList
+                  data={similarProducts}
+                  renderItem={({ item }) => <SimilarProductCard product={item} />}
+                  keyExtractor={(item) => item._id}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: 0, paddingBottom: 20 }}
+                />
+              )}
             </View>
           )}
         </View>

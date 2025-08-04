@@ -27,6 +27,12 @@ export default function EnterpriseLayout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="(tabs)/enterprise/[id]"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

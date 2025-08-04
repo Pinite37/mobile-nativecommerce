@@ -404,6 +404,44 @@ class ProductService {
       throw error;
     }
   }
+
+  /**
+   * Récupérer les produits similaires à un produit donné
+   */
+  async getSimilarProducts(productId: string, limit: number = 10): Promise<{
+    referenceProduct: {
+      id: string;
+      name: string;
+      category: string;
+    };
+    similarProducts: Product[];
+    totalFound: number;
+  }> {
+    try {
+      console.log('🔄 PRODUCT SERVICE - Produits similaires pour:', productId);
+      console.log('📊 Limite:', limit);
+      
+      const response = await ApiService.get<{
+        referenceProduct: {
+          id: string;
+          name: string;
+          category: string;
+        };
+        similarProducts: Product[];
+        totalFound: number;
+      }>(`${this.BASE_URL}/similar/${productId}?limit=${limit}`);
+      
+      if (response.success && response.data) {
+        console.log('✅ Produits similaires récupérés:', response.data.similarProducts.length);
+        return response.data;
+      }
+      
+      throw new Error('Échec de récupération des produits similaires');
+    } catch (error: any) {
+      console.error('❌ PRODUCT SERVICE - Erreur produits similaires:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Échec de récupération des produits similaires');
+    }
+  }
 }
 
 export default new ProductService();

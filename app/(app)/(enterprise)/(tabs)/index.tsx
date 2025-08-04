@@ -1272,47 +1272,10 @@ export default function EnterpriseDashboard() {
         </View>
 
         {/* Partenaires Business */}
-        <View className="py-4 pb-8">
-          <View className="px-4 mb-4">
-            <Text className="text-base font-quicksand-bold text-neutral-800">
-              Partenaires Business
-            </Text>
-          </View>
-          <FlatList
-            data={partnerEnterprises}
-            renderItem={renderPartner}
-            keyExtractor={(item) => item.id.toString()}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16 }}
-          />
-        </View>
+        
 
         {/* Bannière Promotion Entreprise */}
-        <View className="px-4 py-6">
-          <TouchableOpacity className="bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl p-6 shadow-lg">
-            <View className="flex-row items-center justify-between">
-              <View className="flex-1">
-                <Text className="text-white font-quicksand-bold text-lg mb-1">
-                  NativeCommerce Pro
-                </Text>
-                <Text className="text-white/90 font-quicksand-medium text-sm mb-3">
-                  Plateforme B2B #1 au Bénin
-                </Text>
-                <View className="bg-white/20 rounded-full px-4 py-2 self-start">
-                  <Text className="text-white font-quicksand-bold text-sm">
-                    Upgrader
-                  </Text>
-                </View>
-              </View>
-              <View className="ml-4">
-                <View className="bg-white/20 rounded-full p-3">
-                  <Ionicons name="business" size={32} color="white" />
-                </View>
-              </View>
-            </View>
-          </TouchableOpacity>
-        </View>
+       
 
         {/* Section Statistiques Rapides */}
         <View className="px-6 py-4">

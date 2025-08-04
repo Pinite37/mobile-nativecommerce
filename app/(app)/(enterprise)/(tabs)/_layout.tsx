@@ -134,6 +134,20 @@ export default function TabsLayout() {
           href: null, // Cache cet onglet
         }}
       />
+      <Tabs.Screen
+        name="enterprise"
+        options={{
+          href: null, // Cache cet onglet
+          headerShown: false, // Assure que le header est caché
+        }}
+      />
+      <Tabs.Screen
+        name="enterprise/[id]"
+        options={{
+          href: null, // Cache cet onglet
+          headerShown: false, // Assure que le header est caché
+        }}
+      />
     </Tabs>
   );
 }
