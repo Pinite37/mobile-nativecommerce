@@ -15,7 +15,9 @@ import {
   View,
 } from "react-native";
 import ProductService from "../../../../../services/api/ProductService";
+import MessagingService from "../../../../../services/api/MessagingService";
 import { Product } from "../../../../../types/product";
+
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -456,6 +458,25 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                 </View>
                 <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
               </View>
+            </TouchableOpacity>
+
+            {/* Bouton Faire une offre */}
+            <TouchableOpacity
+              onPress={async () => {
+                try {
+                  const conversation = await MessagingService.createConversationForProduct(id!);
+                  router.push(`/(app)/(enterprise)/conversation/${conversation._id}`);
+                } catch (error) {
+                  console.error('Erreur création conversation:', error);
+                  Alert.alert('Erreur', 'Impossible de créer la conversation');
+                }
+              }}
+              className="bg-amber-50 rounded-xl py-3 flex-row items-center justify-center border border-amber-200 mb-4"
+            >
+              <Ionicons name="pricetag" size={18} color="#F59E0B" />
+              <Text className="ml-2 text-amber-700 font-quicksand-semibold">
+                Faire une offre
+              </Text>
             </TouchableOpacity>
 
             {/* Contact Options */}

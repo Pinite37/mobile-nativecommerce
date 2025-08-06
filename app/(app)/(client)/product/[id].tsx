@@ -189,7 +189,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
           <Ionicons name="chevron-back" size={20} color="#374151" />
         </TouchableOpacity>
         <Text className="text-lg font-quicksand-bold text-neutral-800">
-          Détails du produit
+          Détails du produitss
         </Text>
         <TouchableOpacity className="w-10 h-10 bg-neutral-100 rounded-full justify-center items-center">
           <Ionicons name="heart-outline" size={20} color="#374151" />

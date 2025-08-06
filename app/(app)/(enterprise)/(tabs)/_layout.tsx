@@ -69,7 +69,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="products"
         options={{
-          title: "Mes Produits",
+          title: "Produits",
           headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons 
@@ -95,13 +95,27 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="messages"
+        options={{
+          title: "Messages",
+          headerShown: false,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons 
+              name={focused ? "chatbubbles" : "chatbubbles-outline"} 
+              size={focused ? 26 : 24} 
+              color={color} 
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: "Profil",
           headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons 
-              name={focused ? "business" : "business-outline"} 
+              name={focused ? "person" : "person-outline"} 
               size={focused ? 26 : 24} 
               color={color} 
             />
@@ -146,6 +160,41 @@ export default function TabsLayout() {
         options={{
           href: null, // Cache cet onglet
           headerShown: false, // Assure que le header est caché
+        }}
+      />
+      <Tabs.Screen
+        name="products/index"
+        options={{
+          href: null, // Cache cet onglet
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="products/create"
+        options={{
+          href: null, // Cache cet onglet
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="products/[id]"
+        options={{
+          href: null, // Cache cet onglet
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="product/[id]"
+        options={{
+          href: null, // Cache cet onglet
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="messages/index"
+        options={{
+          href: null, // Cache cet onglet
+          headerShown: false,
         }}
       />
     </Tabs>

@@ -526,7 +526,7 @@ export default function EnterpriseDashboard() {
     } else if (hours < 18) {
       return "Bon après-midi";
     } else {
-      return "Bonsoir";
+      return "Bonssoir";
     }
   };
 
