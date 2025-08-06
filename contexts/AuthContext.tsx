@@ -3,6 +3,7 @@ import CustomerService from '../services/api/CustomerService';
 import PreCacheService from '../services/PreCacheService';
 import TokenStorageService from '../services/TokenStorageService';
 import { User } from '../types/auth';
+import AuthEventEmitter from '../utils/AuthEventEmitter';
 import { NavigationHelper } from '../utils/NavigationHelper';
 import StartupPerformanceMonitor from '../utils/StartupPerformanceMonitor';
 
@@ -273,6 +274,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await checkAuthStatus();
     };
     initAuth();
+    
+    // Écouter les événements de tokens invalidés
+    const handleTokenInvalidated = async () => {
+      console.log('🔔 Tokens invalidés détectés - déconnexion automatique');
+      setIsAuthenticated(false);
+      setUser(null);
+      setUserRole(null);
+      setIsLoading(false);
+      
+      // Rediriger vers la page de connexion
+      setTimeout(() => {
+        NavigationHelper.navigateToAuth();
+      }, 100);
+    };
+    
+    AuthEventEmitter.onTokenInvalidated(handleTokenInvalidated);
+    
+    // Nettoyer les listeners à la destruction du composant
+    return () => {
+      AuthEventEmitter.removeAllAuthListeners();
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const value: AuthContextType = {

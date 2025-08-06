@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { Platform } from 'react-native';
 import { ApiResponse } from '../../types/auth';
+import AuthEventEmitter from '../../utils/AuthEventEmitter';
 import TokenStorageService from '../TokenStorageService';
 
 class ApiService {
@@ -10,8 +11,8 @@ class ApiService {
   constructor() {
     // Configure baseURL based on platform
     if (Platform.OS === 'android') {
-      this.baseURL = 'http://192.168.86.143:4000/api'; 
-      // this.baseURL = 'http://192.168.0.106:4000/api'; 
+      // this.baseURL = 'http://192.168.86.143:4000/api';
+      this.baseURL = 'http://192.168.0.106:4000/api'; 
     } else if (Platform.OS === 'ios') {
       this.baseURL = 'http://localhost:4000/api'; // iOS simulator
     } else {
@@ -86,6 +87,8 @@ class ApiService {
               if (!refreshToken) {
                 console.log('❌ Pas de refresh token disponible');
                 await TokenStorageService.clearAll();
+                // Notifier que les tokens ont été invalidés
+                AuthEventEmitter.emitTokenInvalidated();
                 return Promise.reject(error);
               }
               
@@ -95,6 +98,8 @@ class ApiService {
               if (!newTokens || !newTokens.accessToken) {
                 console.log('❌ Refresh token invalide ou expiré');
                 await TokenStorageService.clearAll();
+                // Notifier que les tokens ont été invalidés
+                AuthEventEmitter.emitTokenInvalidated();
                 return Promise.reject(error);
               }
               
@@ -111,14 +116,16 @@ class ApiService {
               console.error('❌ Échec du refresh token:', refreshError);
               await TokenStorageService.clearAll();
               
-              // Emmetre un événement pour rediriger vers la page de connexion
-              // TODO: Implémenter un système d'événements pour la déconnexion
+              // Notifier que les tokens ont été invalidés
+              AuthEventEmitter.emitTokenInvalidated();
               
               return Promise.reject(refreshError);
             }
           } else {
             console.log('❌ Requête déjà retentée, échec final');
             await TokenStorageService.clearAll();
+            // Notifier que les tokens ont été invalidés
+            AuthEventEmitter.emitTokenInvalidated();
           }
         }
         
