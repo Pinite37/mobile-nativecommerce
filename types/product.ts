@@ -147,6 +147,21 @@ export interface ProductFilters {
   sort?: 'price_asc' | 'price_desc' | 'rating' | 'popular' | 'newest';
 }
 
+export interface FavoriteItem {
+  _id: string;
+  user: string;
+  product: {
+    _id: string;
+    name: string;
+    description: string;
+    images: string[];
+  };
+  enterprise: string | null;
+  type: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ProductsResponse {
   products: Product[];
   pagination: {

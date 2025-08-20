@@ -123,11 +123,7 @@ export default function ClientTabsLayout() {
         options={{
           title: "Messages",
           headerShown: false,
-          tabBarLabelStyle: {
-            fontFamily: 'Quicksand-SemiBold',
-            fontSize: 12,
-          },
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ color, size, focused }) => (
             <Ionicons 
               name={focused ? "chatbubbles" : "chatbubbles-outline"} 
               size={focused ? 26 : 24} 
@@ -154,6 +150,13 @@ export default function ClientTabsLayout() {
           ),
         }}
       />
+        <Tabs.Screen
+            name="enterprise/[id]"
+            options={{
+                href: null,
+                headerShown: false,
+            }}
+        />
     </Tabs>
   );
 }

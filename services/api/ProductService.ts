@@ -5,6 +5,7 @@ import {
   ProductsResponse,
   RemoveImageRequest,
   UpdateProductRequest,
+  FavoriteItem
 } from '../../types/product';
 import ApiService from './ApiService';
 
@@ -143,6 +144,60 @@ class ProductService {
       throw new Error(error.response?.data?.message || error.message || 'Suppression de l\'image échouée');
     }
   }
+
+  // Ajouter un produit aux favoris
+  async addProductToFavorites(productId: string): Promise<void> {
+    try {
+      console.log('🚀 ProductService - Ajout produit aux favoris:', productId);
+      const response = await ApiService.post(`${this.BASE_URL}/${productId}/favorites`);
+      if (response.success) {
+        console.log('✅ Produit ajouté aux favoris avec succès');
+        return;
+      }
+      throw new Error('Échec de l\'ajout du produit aux favoris');
+    } catch (error: any) {
+      console.error('❌ Erreur ajout produit aux favoris:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Ajout du produit aux favoris échoué');
+    }
+  }
+
+  // Supprimer un produit des favoris
+
+  async removeProductFromFavorites(productId: string): Promise<void> {
+    try {
+      console.log('🚀 ProductService - Suppression produit des favoris:', productId);
+      const response = await ApiService.delete(`${this.BASE_URL}/${productId}/favorites`);
+      if (response.success) {
+        console.log('✅ Produit supprimé des favoris avec succès');
+        return;
+      }
+      throw new Error('Échec de la suppression du produit des favoris');
+    } catch (error: any) {
+      console.error('❌ Erreur suppression produit des favoris:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Suppression du produit des favoris échouée');
+    }
+  }
+
+  // Récupérer les produits favoris
+  async getFavoriteProducts(): Promise<FavoriteItem[]> {
+  try {
+    console.log('🚀 ProductService - Récupération produits favoris');
+    const response = await ApiService.get(`${this.BASE_URL}/favorites/list`);
+    
+    console.log('📦 Response complète:', response); // Pour débugger
+    
+    if (response.success && response.data) {
+      console.log('✅ Produits favoris récupérés:', response.data.length);
+      return response.data; // Directement response.data car c'est un tableau
+    }
+    
+    throw new Error('Échec de la récupération des produits favoris');
+  } catch (error: any) {
+    console.error('❌ Erreur récupération produits favoris:', error);
+    console.error('❌ Response data:', error.response?.data); // Pour voir la structure exacte
+    throw new Error(error.response?.data?.message || error.message || 'Récupération des produits favoris échouée');
+  }
+}
 
   // Supprimer un produit
   async deleteProduct(productId: string): Promise<void> {
