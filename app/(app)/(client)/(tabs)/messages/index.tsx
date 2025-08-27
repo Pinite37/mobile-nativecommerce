@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback, useState } from "react";
 import {
     ActivityIndicator,
@@ -22,6 +23,7 @@ export default function ClientMessagesPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<Conversation[]>([]);
     const [searching, setSearching] = useState(false);
+    const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
     const loadConversations = async () => {
         try {
@@ -159,9 +161,11 @@ export default function ClientMessagesPage() {
             unreadCountType: typeof conversation.unreadCount,
         });
 
+        const isUnread = (conversation.unreadCount && conversation.unreadCount > 0);
+
         return (
             <TouchableOpacity
-                className="bg-white rounded-xl mx-4 my-2 p-4 shadow-sm border border-neutral-100 active:opacity-70"
+                className={`rounded-xl mx-4 my-2 p-4 shadow-sm border border-neutral-100 active:opacity-70 ${isUnread ? 'bg-primary-50' : 'bg-white'}`}
                 onPress={() => {
                     console.log('Navigating to conversation:', conversation._id); // Debug navigation
                     router.push(`/(app)/(client)/conversation/${conversation._id}`);
@@ -187,7 +191,7 @@ export default function ClientMessagesPage() {
                         )}
 
                         {/* Badge de messages non lus */}
-                        {(conversation.unreadCount && conversation.unreadCount > 0) ? (
+                        {isUnread ? (
                             <View className="absolute -top-1 -right-1 bg-primary-500 rounded-full min-w-6 h-6 justify-center items-center px-2">
                                 <Text className="text-white text-xs font-quicksand-bold">
                                     {conversation.unreadCount > 99 ? '99+' : String(conversation.unreadCount)}
@@ -202,15 +206,23 @@ export default function ClientMessagesPage() {
                             <Text className="text-lg font-quicksand-semibold text-neutral-800" numberOfLines={1}>
                                 {participantName}
                             </Text>
-                            <Text className="text-xs text-neutral-500 font-quicksand-medium">
+                            <Text className="text-xs text-neutral-200 font-quicksand-medium">
                                 {lastMessageTime}
                             </Text>
                         </View>
 
                         {/* Produit concerné */}
                         <View className="flex-row items-center mb-2">
-                            <Ionicons name="cube-outline" size={14} color="#9CA3AF" />
-                            <Text className="text-sm text-neutral-600 font-quicksand-medium ml-1" numberOfLines={1}>
+                            {conversation.product?.images?.[0] ? (
+                                <Image
+                                    source={{ uri: conversation.product.images[0] }}
+                                    className="w-6 h-6 rounded-lg mr-2"
+                                    resizeMode="cover"
+                                />
+                            ) : (
+                                <Ionicons name="cube-outline" size={14} color="#9CA3AF" />
+                            )}
+                            <Text className="text-sm text-neutral-600 font-quicksand-medium" numberOfLines={1}>
                                 {(conversation.product?.name && conversation.product?.price)
                                     ? `${String(conversation.product.name)} • ${formatPrice(conversation.product.price)}`
                                     : 'Produit inconnu'}
@@ -219,11 +231,7 @@ export default function ClientMessagesPage() {
 
                         {/* Dernier message */}
                         <Text
-                            className={`text-sm ${
-                                (conversation.unreadCount && conversation.unreadCount > 0)
-                                    ? 'text-neutral-800 font-quicksand-medium'
-                                    : 'text-neutral-600 font-quicksand-regular'
-                            }`}
+                            className={`text-sm ${isUnread ? 'text-neutral-800 font-quicksand-semibold' : 'text-neutral-600 font-quicksand-regular'}`}
                             numberOfLines={2}
                         >
                             {String(messagePreview)}
@@ -239,7 +247,10 @@ export default function ClientMessagesPage() {
         );
     }
 
-    const displayedConversations = searchQuery.trim().length >= 2 ? searchResults : conversations;
+    const baseConversations = searchQuery.trim().length >= 2 ? searchResults : conversations;
+    const displayedConversations = showUnreadOnly
+        ? baseConversations.filter(c => (c.unreadCount ?? 0) > 0)
+        : baseConversations;
 
     if (loading) {
         return (
@@ -257,13 +268,13 @@ export default function ClientMessagesPage() {
     return (
         <SafeAreaView className="flex-1 bg-white">
             {/* Header */}
-            <View className="px-6 py-4 pt-20 bg-white border-b border-neutral-100">
+            <LinearGradient colors={['#FE8C00', '#FFAB38']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="px-6 py-6 pt-20 rounded-b-3xl">
                 <View className="flex-row items-center justify-between mb-4">
-                    <Text className="text-3xl font-quicksand-bold text-neutral-800">
+                    <Text className="text-3xl font-quicksand-bold text-white">
                         Messages
                     </Text>
                     <TouchableOpacity
-                        className="w-12 h-12 bg-neutral-100 rounded-full justify-center items-center shadow-sm"
+                        className="w-12 h-12 bg-white/90 rounded-full justify-center items-center shadow-sm"
                         onPress={() => router.push('/(app)/(client)/(tabs)/')}
                     >
                         <Ionicons name="add" size={24} color="#374151" />
@@ -271,7 +282,7 @@ export default function ClientMessagesPage() {
                 </View>
 
                 {/* Barre de recherche */}
-                <View className="relative bg-neutral-50 rounded-2xl shadow-sm">
+                <View className="relative bg-white rounded-2xl shadow-lg">
                     <View className="absolute left-4 top-3 z-10">
                         <Ionicons name="search" size={22} color="#9CA3AF" />
                     </View>
@@ -279,16 +290,47 @@ export default function ClientMessagesPage() {
                         value={searchQuery}
                         onChangeText={handleSearch}
                         placeholder="Rechercher une conversation..."
-                        className="bg-neutral-50 rounded-2xl pl-12 pr-4 py-3 text-neutral-800 font-quicksand-medium text-base"
+                        className="bg-white rounded-2xl pl-12 pr-12 py-3 text-neutral-800 font-quicksand-medium text-base"
                         placeholderTextColor="#9CA3AF"
                     />
-                    {searching && (
-                        <View className="absolute right-4 top-3">
+                    <View className="absolute right-3 top-3 flex-row items-center">
+                        {searchQuery.length > 0 && (
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setSearchQuery('');
+                                    setSearchResults([]);
+                                }}
+                                className="mr-2"
+                            >
+                                <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+                            </TouchableOpacity>
+                        )}
+                        {searching && (
                             <ActivityIndicator size="small" color="#FE8C00" />
-                        </View>
-                    )}
+                        )}
+                    </View>
                 </View>
-            </View>
+
+                {/* Filtres rapides */}
+                <View className="flex-row mt-3">
+                    <TouchableOpacity
+                        onPress={() => setShowUnreadOnly(false)}
+                        className={`px-3 py-1.5 rounded-full mr-2 ${!showUnreadOnly ? 'bg-white' : 'bg-white/30'}`}
+                    >
+                        <Text className={`text-xs font-quicksand-semibold ${!showUnreadOnly ? 'text-primary-600' : 'text-white'}`}>
+                            Tous ({conversations.length})
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => setShowUnreadOnly(true)}
+                        className={`px-3 py-1.5 rounded-full ${showUnreadOnly ? 'bg-white' : 'bg-white/30'}`}
+                    >
+                        <Text className={`text-xs font-quicksand-semibold ${showUnreadOnly ? 'text-primary-600' : 'text-white'}`}>
+                            Non lus ({conversations.filter(c => (c.unreadCount ?? 0) > 0).length})
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            </LinearGradient>
 
             {/* Liste des conversations */}
             <FlatList

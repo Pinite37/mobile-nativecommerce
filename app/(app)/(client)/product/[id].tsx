@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -13,7 +13,13 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Modal,
+  Share,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Image as ExpoImage } from "expo-image";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import ProductService from "../../../../services/api/ProductService";
 import MessagingService from "../../../../services/api/MessagingService";
 import { Product } from "../../../../types/product";
@@ -23,6 +29,7 @@ const { width: screenWidth } = Dimensions.get('window');
 export default function ProductDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -30,6 +37,8 @@ export default function ProductDetails() {
   const [similarProducts, setSimilarProducts] = useState<Product[]>([]);
   const [loadingSimilar, setLoadingSimilar] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [imageModalVisible, setImageModalVisible] = useState(false);
+  const imagesListRef = useRef<FlatList<string>>(null);
 
   useEffect(() => {
     const loadProductDetails = async () => {
@@ -91,11 +100,15 @@ export default function ProductDetails() {
 
   const renderImage = ({ item, index }: { item: string; index: number }) => (
     <View style={{ width: screenWidth }}>
-      <Image
-        source={{ uri: item }}
-        style={{ width: screenWidth, height: 300 }}
-        resizeMode="cover"
-      />
+      <TouchableOpacity activeOpacity={0.9} onPress={() => { setCurrentImageIndex(index); setImageModalVisible(true); }}>
+        <ExpoImage
+          source={{ uri: item }}
+          style={{ width: screenWidth, height: 350 }}
+          contentFit="cover"
+          transition={300}
+          cachePolicy="memory-disk"
+        />
+      </TouchableOpacity>
     </View>
   );
 
@@ -276,56 +289,135 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-6 py-4 pt-16 bg-white">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="w-10 h-10 bg-neutral-100 rounded-full justify-center items-center"
-        >
-          <Ionicons name="chevron-back" size={20} color="#374151" />
-        </TouchableOpacity>
-        <Text className="text-lg font-quicksand-bold text-neutral-800">
-          Détails du produit
-        </Text>
-        <TouchableOpacity 
-          className="w-10 h-10 bg-neutral-100 rounded-full justify-center items-center"
-          onPress={toggleFavorite}
-        >
-          <Ionicons 
-            name={isFavorite ? "heart" : "heart-outline"} 
-            size={20} 
-            color={isFavorite ? "#EF4444" : "#374151"} 
-          />
-        </TouchableOpacity>
-      </View>
+      <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
+      {/* Header overlay */}
+      <LinearGradient
+        colors={['rgba(0,0,0,0.6)', 'transparent']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        className="absolute top-0 left-0 right-0 z-10"
+        style={{ paddingTop: insets.top + 8 }}
+      >
+        <View className="flex-row items-center justify-between px-4 pb-3">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="w-10 h-10 bg-black/25 rounded-full justify-center items-center"
+          >
+            <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+          <View className="flex-1 items-center">
+            <Text numberOfLines={1} className="text-white font-quicksand-semibold">
+              Détails du produit
+            </Text>
+          </View>
+          <View className="flex-row">
+            <TouchableOpacity
+              onPress={async () => {
+                try {
+                  await Share.share({
+                    message: product ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ''}` : 'Voir ce produit',
+                  });
+                } catch {}
+              }}
+              className="w-10 h-10 bg-black/25 rounded-full justify-center items-center mr-2"
+            >
+              <Ionicons name="share-social-outline" size={18} color="#FFFFFF" />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              className="w-10 h-10 bg-black/25 rounded-full justify-center items-center"
+              onPress={toggleFavorite}
+            >
+              <Ionicons 
+                name={isFavorite ? "heart" : "heart-outline"} 
+                size={18} 
+                color={isFavorite ? "#EF4444" : "#FFFFFF"} 
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </LinearGradient>
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Images Carousel */}
-        <View className="relative">
-          <FlatList
-            data={product.images}
-            renderItem={renderImage}
-            keyExtractor={(item, index) => index.toString()}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onMomentumScrollEnd={(event) => {
-              const newIndex = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
-              setCurrentImageIndex(newIndex);
-            }}
-          />
-          
-          {/* Image Indicators */}
+        <View style={{ marginTop: insets.top  }}>
+          <View className="relative">
+            <FlatList
+              ref={imagesListRef}
+              data={product.images}
+              renderItem={renderImage}
+              keyExtractor={(item, index) => index.toString()}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={(event) => {
+                const newIndex = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
+                setCurrentImageIndex(newIndex);
+              }}
+              onScrollToIndexFailed={({ index }) => {
+                setTimeout(() => {
+                  imagesListRef.current?.scrollToIndex({ index, animated: true });
+                }, 100);
+              }}
+            />
+
+            {/* Indicators */}
+            {product.images.length > 1 && (
+              <View className="absolute bottom-4 left-0 right-0 flex-row justify-center">
+                {product.images.map((_: string, index: number) => {
+                  const active = index === currentImageIndex;
+                  return (
+                    <View
+                      key={index}
+                      style={{
+                        width: active ? 16 : 8,
+                        height: 8,
+                        borderRadius: 9999,
+                        backgroundColor: 'rgba(255,255,255,0.95)',
+                        opacity: active ? 1 : 0.5,
+                        marginHorizontal: 4,
+                      }}
+                    />
+                  );
+                })}
+              </View>
+            )}
+          </View>
+
+          {/* Thumbnails */}
           {product.images.length > 1 && (
-            <View className="absolute bottom-4 left-0 right-0 flex-row justify-center">
-              {product.images.map((_: string, index: number) => (
-                <View
-                  key={index}
-                  className={`w-2 h-2 rounded-full mx-1 ${
-                    index === currentImageIndex ? 'bg-white' : 'bg-white/50'
-                  }`}
-                />
-              ))}
+            <View className="px-6 mt-3">
+              <FlatList
+                data={product.images}
+                horizontal
+                keyExtractor={(item, index) => `thumb-${index}`}
+                showsHorizontalScrollIndicator={false}
+                renderItem={({ item, index }) => {
+                  const active = index === currentImageIndex;
+                  return (
+                    <TouchableOpacity
+                      onPress={() => {
+                        setCurrentImageIndex(index);
+                        imagesListRef.current?.scrollToIndex({ index, animated: true });
+                      }}
+                      className="mr-3"
+                    >
+                      <ExpoImage
+                        source={{ uri: item }}
+                        style={{
+                          width: 64,
+                          height: 64,
+                          borderRadius: 12,
+                          borderWidth: active ? 2 : 1,
+                          borderColor: active ? '#FE8C00' : '#E5E7EB',
+                        }}
+                        contentFit="cover"
+                        transition={200}
+                      />
+                    </TouchableOpacity>
+                  );
+                }}
+                contentContainerStyle={{ paddingHorizontal: 0 }}
+              />
             </View>
           )}
         </View>
@@ -552,6 +644,59 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
           )}
         </View>
       </ScrollView>
+
+      {/* Image Viewer Modal */}
+      <Modal
+        visible={imageModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setImageModalVisible(false)}
+      >
+        <View className="flex-1 bg-black/95">
+          <View className="absolute top-0 left-0 right-0" style={{ paddingTop: insets.top + 8 }}>
+            <View className="flex-row justify-between items-center px-4 pb-2">
+              <TouchableOpacity
+                onPress={() => setImageModalVisible(false)}
+                className="w-10 h-10 bg-white/15 rounded-full justify-center items-center"
+              >
+                <Ionicons name="close" size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+              <Text className="text-white font-quicksand-medium">
+                {currentImageIndex + 1}/{product.images.length}
+              </Text>
+              <View className="w-10" />
+            </View>
+          </View>
+
+          <FlatList
+            data={product.images}
+            renderItem={({ item }) => (
+              <View style={{ width: screenWidth, alignItems: 'center', justifyContent: 'center' }}>
+                <ExpoImage
+                  source={{ uri: item }}
+                  style={{ width: screenWidth, height: screenWidth }}
+                  contentFit="contain"
+                  transition={300}
+                />
+              </View>
+            )}
+            keyExtractor={(item, index) => `full-${index}`}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            initialScrollIndex={currentImageIndex}
+            onMomentumScrollEnd={(e) => {
+              const newIndex = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
+              setCurrentImageIndex(newIndex);
+            }}
+            onScrollToIndexFailed={({ index }) => {
+              setTimeout(() => {
+                // retry quietly
+              }, 100);
+            }}
+          />
+        </View>
+      </Modal>
 
       {/* Bottom Actions */}
       <View className="px-6 py-4 bg-white border-t border-neutral-200">

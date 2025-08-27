@@ -15,6 +15,9 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import { useAuth } from "../../../../contexts/AuthContext";
 import MessagingService, { Conversation, Message } from "../../../../services/api/MessagingService";
 import ProductService from "../../../../services/api/ProductService";
@@ -29,6 +32,8 @@ export default function ConversationDetails() {
   const flatListRef = useRef<FlatList>(null);
   const textInputRef = useRef<TextInput>(null);
   const { user } = useAuth(); // Récupérer l'utilisateur connecté
+  const insets = useSafeAreaInsets();
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   
   // Récupération sécurisée des paramètres
   let conversationId: string | null = null;
@@ -419,24 +424,32 @@ export default function ConversationDetails() {
                   );
                 }
               }}
-              className={`rounded-2xl px-4 py-3 shadow-sm ${
-                isCurrentUser 
-                  ? 'bg-primary-500 rounded-br-none' 
-                  : 'bg-white rounded-bl-none border border-neutral-100'
-              }`}
+              activeOpacity={0.9}
+              className={`${isCurrentUser ? 'rounded-2xl rounded-br-none overflow-hidden' : 'rounded-2xl rounded-bl-none border border-neutral-100'} shadow-sm`}
             >
-              {isDeleted ? (
-                <Text className={`italic text-xs ${
-                  isCurrentUser ? 'text-primary-200' : 'text-neutral-400'
-                }`}>
-                  [Message supprimé]
-                </Text>
+              {isCurrentUser && !isDeleted ? (
+                <LinearGradient
+                  colors={['#FE8C00', '#FFAB38']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  className="px-4 py-3"
+                >
+                  <Text className="text-sm font-quicksand-medium text-white">
+                    {message.text}
+                  </Text>
+                </LinearGradient>
               ) : (
-                <Text className={`text-sm font-quicksand-medium ${
-                  isCurrentUser ? 'text-white' : 'text-neutral-800'
-                }`}>
-                  {message.text}
-                </Text>
+                <View className="bg-white px-4 py-3">
+                  {isDeleted ? (
+                    <Text className="italic text-xs text-neutral-400">
+                      [Message supprimé]
+                    </Text>
+                  ) : (
+                    <Text className="text-sm font-quicksand-medium text-neutral-800">
+                      {message.text}
+                    </Text>
+                  )}
+                </View>
               )}
             </TouchableOpacity>
             
@@ -508,6 +521,54 @@ export default function ConversationDetails() {
     }
   };
 
+  // Séparateurs de date
+  const isSameDay = (a?: string, b?: string) => {
+    if (!a || !b) return false;
+    const da = new Date(a);
+    const db = new Date(b);
+    return da.getFullYear() === db.getFullYear() &&
+           da.getMonth() === db.getMonth() &&
+           da.getDate() === db.getDate();
+  };
+
+  const dayLabel = (ts?: string) => {
+    if (!ts) return '';
+    const d = new Date(ts);
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    const dStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const diffDays = Math.floor((todayStart - dStart) / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return "Aujourd'hui";
+    if (diffDays === 1) return "Hier";
+    return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  const renderMessageItem = ({ item, index }: { item: Message; index: number }) => {
+    const currentTs = (item as any).createdAt || (item as any).sentAt;
+    let showSep = false;
+    if (index === 0) showSep = true;
+    else {
+      const prev = messages[index - 1];
+      const prevTs = (prev as any)?.createdAt || (prev as any)?.sentAt;
+      if (!isSameDay(currentTs, prevTs)) showSep = true;
+    }
+
+    return (
+      <View>
+        {showSep && currentTs ? (
+          <View className="py-2 items-center">
+            <View className="bg-neutral-100 rounded-full px-3 py-1">
+              <Text className="text-xs text-neutral-600 font-quicksand-medium">
+                {dayLabel(currentTs)}
+              </Text>
+            </View>
+          </View>
+        ) : null}
+        <MessageBubble message={item} />
+      </View>
+    );
+  };
+
   if (loading) {
     return (
       <SafeAreaView className="flex-1 bg-white justify-center items-center">
@@ -546,22 +607,31 @@ export default function ConversationDetails() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
+      <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
       {/* Header */}
-      <View className="bg-white border-b border-neutral-100 px-4 py-3 pt-16 flex-row items-center justify-between">
-        <TouchableOpacity 
-          onPress={() => router.back()}
-          className="flex-row items-center"
-        >
-          <Ionicons name="chevron-back" size={24} color="#374151" />
-          <Text className="text-base font-quicksand-bold text-neutral-800 ml-2">
-            {correspondentName}
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity className="flex-row items-center">
-          <Ionicons name="ellipsis-vertical" size={20} color="#374151" />
-        </TouchableOpacity>
-      </View>
+      <LinearGradient
+        colors={['#FE8C00', '#FFAB38']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        className="px-4 pb-3 rounded-b-3xl shadow-sm"
+        style={{ paddingTop: insets.top + 8 }}
+      >
+        <View className="flex-row items-center justify-between">
+          <TouchableOpacity 
+            onPress={() => router.back()}
+            className="flex-row items-center"
+          >
+            <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+            <Text className="text-base font-quicksand-bold text-white ml-2" numberOfLines={1}>
+              {correspondentName}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity className="flex-row items-center">
+            <Ionicons name="ellipsis-vertical" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
 
       {/* Informations sur le produit */}
       <View className="bg-neutral-50 px-4 py-3 border-b border-neutral-100 flex-row items-center">
@@ -588,7 +658,7 @@ export default function ConversationDetails() {
           <FlatList
             ref={flatListRef}
             data={messages}
-            renderItem={({ item }) => <MessageBubble message={item} />}
+            renderItem={renderMessageItem}
             keyExtractor={(item) => item._id}
             className="flex-1 px-4"
             contentContainerStyle={{ 
@@ -599,6 +669,12 @@ export default function ConversationDetails() {
             onContentSizeChange={() => {
               flatListRef.current?.scrollToEnd({ animated: false });
             }}
+            onScroll={(e) => {
+              const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+              const distanceFromBottom = contentSize.height - (contentOffset.y + layoutMeasurement.height);
+              setShowScrollToBottom(distanceFromBottom > 200);
+            }}
+            scrollEventThrottle={16}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="interactive"
             ListEmptyComponent={
@@ -650,16 +726,18 @@ export default function ConversationDetails() {
               bottom: keyboardHeight > 0 ? keyboardHeight : 0
             }}
           >
-            <View className={`flex-row items-end rounded-3xl p-2 ${
+            <View className={`flex-row items-end rounded-3xl p-2 shadow-sm ${
               inputFocused ? 'bg-primary-50 border-2 border-primary-200' : 'bg-neutral-50 border-2 border-transparent'
-            } transition-all duration-200`}>
+            }`}>
               {/* Bouton d'attachement */}
               <TouchableOpacity
                 className="w-10 h-10 bg-white rounded-full justify-center items-center mr-2 shadow-sm"
+                disabled={sending}
+                style={{ opacity: sending ? 0.6 : 1 }}
               >
                 <Ionicons name="add" size={20} color="#9CA3AF" />
               </TouchableOpacity>
-              
+
               {/* Zone de texte */}
               <View className="flex-1 min-h-[40px] max-h-32 justify-center">
                 <TextInput
@@ -677,11 +755,12 @@ export default function ConversationDetails() {
                   }}
                   className="text-neutral-800 font-quicksand-medium text-base px-4 py-2"
                   placeholderTextColor="#9CA3AF"
-                  style={{ height: Math.max(40, inputHeight) }}
+                  style={{ height: Math.max(40, inputHeight), opacity: sending ? 0.95 : 1 }}
+                  editable={!sending}
                   textAlignVertical="center"
                 />
               </View>
-              
+
               {/* Compteur de caractères */}
               {newMessage.length > 1800 && (
                 <View className="absolute top-1 right-20 bg-white rounded-full px-2 py-1">
@@ -692,25 +771,32 @@ export default function ConversationDetails() {
                   </Text>
                 </View>
               )}
-              
-              {/* Bouton d'envoi amélioré */}
+
+              {/* Bouton d'envoi avec dégradé / état envoi */}
               <TouchableOpacity
                 onPress={handleSendPress}
                 disabled={!newMessage.trim() || sending}
-                className={`w-12 h-12 rounded-full justify-center items-center ml-2 ${
-                  newMessage.trim() && !sending
-                    ? 'bg-primary-500'
-                    : 'bg-neutral-300'
-                }`}
+                className="w-12 h-12 rounded-full justify-center items-center ml-2 overflow-hidden"
                 style={{
-                  shadowColor: newMessage.trim() ? '#FE8C00' : '#000',
+                  shadowColor: newMessage.trim() && !sending ? '#FE8C00' : '#000',
                   shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: newMessage.trim() ? 0.3 : 0.1,
+                  shadowOpacity: newMessage.trim() && !sending ? 0.3 : 0.1,
                   shadowRadius: 4,
-                  elevation: newMessage.trim() ? 8 : 2,
+                  elevation: newMessage.trim() && !sending ? 8 : 2,
                   transform: [{ scale: newMessage.trim() && !sending ? 1 : 0.95 }],
+                  opacity: sending ? 0.85 : 1,
                 }}
               >
+                {newMessage.trim() && !sending ? (
+                  <LinearGradient
+                    colors={['#FE8C00', '#FFAB38']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    className="absolute inset-0"
+                  />
+                ) : (
+                  <View className="absolute inset-0 bg-neutral-300" />
+                )}
                 {sending ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
@@ -722,18 +808,20 @@ export default function ConversationDetails() {
                 )}
               </TouchableOpacity>
             </View>
-            
+
             {/* Indicateur de frappe */}
             {inputFocused && (
-              <View className="flex-row items-center mt-2 px-4">
-                <View className="flex-row items-center">
-                  <View className="w-2 h-2 bg-primary-400 rounded-full mr-1" />
-                  <View className="w-2 h-2 bg-primary-400 rounded-full mr-1" />
-                  <View className="w-2 h-2 bg-primary-400 rounded-full" />
+              <View className="flex-row items-center mt-2">
+                <View className="mx-4 bg-primary-50 border border-primary-100 rounded-full px-3 py-1 flex-row items-center">
+                  <View className="flex-row items-center">
+                    <View className="w-2 h-2 bg-primary-500 rounded-full mr-1" />
+                    <View className="w-2 h-2 bg-primary-500 rounded-full mr-1" />
+                    <View className="w-2 h-2 bg-primary-500 rounded-full" />
+                  </View>
+                  <Text className="text-xs text-primary-700 font-quicksand-semibold ml-2">
+                    Vous tapez...
+                  </Text>
                 </View>
-                <Text className="text-xs text-primary-600 font-quicksand-medium ml-2">
-                  Vous tapez...
-                </Text>
               </View>
             )}
           </View>
@@ -750,7 +838,7 @@ export default function ConversationDetails() {
           <FlatList
             ref={flatListRef}
             data={messages}
-            renderItem={({ item }) => <MessageBubble message={item} />}
+            renderItem={renderMessageItem}
             keyExtractor={(item) => item._id}
             className="flex-1 px-4"
             contentContainerStyle={{ 
@@ -761,6 +849,12 @@ export default function ConversationDetails() {
             onContentSizeChange={() => {
               flatListRef.current?.scrollToEnd({ animated: false });
             }}
+            onScroll={(e) => {
+              const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+              const distanceFromBottom = contentSize.height - (contentOffset.y + layoutMeasurement.height);
+              setShowScrollToBottom(distanceFromBottom > 200);
+            }}
+            scrollEventThrottle={16}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="interactive"
             ListEmptyComponent={
@@ -811,16 +905,18 @@ export default function ConversationDetails() {
               borderTopColor: '#F3F4F6'
             }}
           >
-            <View className={`flex-row items-end rounded-3xl p-2 ${
+            <View className={`flex-row items-end rounded-3xl p-2 shadow-sm ${
               inputFocused ? 'bg-primary-50 border-2 border-primary-200' : 'bg-neutral-50 border-2 border-transparent'
-            } transition-all duration-200`}>
+            }`}>
               {/* Bouton d'attachement */}
               <TouchableOpacity
                 className="w-10 h-10 bg-white rounded-full justify-center items-center mr-2 shadow-sm"
+                disabled={sending}
+                style={{ opacity: sending ? 0.6 : 1 }}
               >
                 <Ionicons name="add" size={20} color="#9CA3AF" />
               </TouchableOpacity>
-              
+
               {/* Zone de texte */}
               <View className="flex-1 min-h-[40px] max-h-32 justify-center">
                 <TextInput
@@ -838,11 +934,12 @@ export default function ConversationDetails() {
                   }}
                   className="text-neutral-800 font-quicksand-medium text-base px-4 py-2"
                   placeholderTextColor="#9CA3AF"
-                  style={{ height: Math.max(40, inputHeight) }}
+                  style={{ height: Math.max(40, inputHeight), opacity: sending ? 0.95 : 1 }}
+                  editable={!sending}
                   textAlignVertical="center"
                 />
               </View>
-              
+
               {/* Compteur de caractères */}
               {newMessage.length > 1800 && (
                 <View className="absolute top-1 right-20 bg-white rounded-full px-2 py-1">
@@ -853,25 +950,32 @@ export default function ConversationDetails() {
                   </Text>
                 </View>
               )}
-              
-              {/* Bouton d'envoi amélioré */}
+
+              {/* Bouton d'envoi avec dégradé / état envoi */}
               <TouchableOpacity
                 onPress={handleSendPress}
                 disabled={!newMessage.trim() || sending}
-                className={`w-12 h-12 rounded-full justify-center items-center ml-2 ${
-                  newMessage.trim() && !sending
-                    ? 'bg-primary-500'
-                    : 'bg-neutral-300'
-                }`}
+                className="w-12 h-12 rounded-full justify-center items-center ml-2 overflow-hidden"
                 style={{
-                  shadowColor: newMessage.trim() ? '#FE8C00' : '#000',
+                  shadowColor: newMessage.trim() && !sending ? '#FE8C00' : '#000',
                   shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: newMessage.trim() ? 0.3 : 0.1,
+                  shadowOpacity: newMessage.trim() && !sending ? 0.3 : 0.1,
                   shadowRadius: 4,
-                  elevation: newMessage.trim() ? 8 : 2,
+                  elevation: newMessage.trim() && !sending ? 8 : 2,
                   transform: [{ scale: newMessage.trim() && !sending ? 1 : 0.95 }],
+                  opacity: sending ? 0.85 : 1,
                 }}
               >
+                {newMessage.trim() && !sending ? (
+                  <LinearGradient
+                    colors={['#FE8C00', '#FFAB38']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    className="absolute inset-0"
+                  />
+                ) : (
+                  <View className="absolute inset-0 bg-neutral-300" />
+                )}
                 {sending ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
@@ -883,22 +987,42 @@ export default function ConversationDetails() {
                 )}
               </TouchableOpacity>
             </View>
-            
+
             {/* Indicateur de frappe */}
             {inputFocused && (
-              <View className="flex-row items-center mt-2 px-4">
-                <View className="flex-row items-center">
-                  <View className="w-2 h-2 bg-primary-400 rounded-full mr-1" />
-                  <View className="w-2 h-2 bg-primary-400 rounded-full mr-1" />
-                  <View className="w-2 h-2 bg-primary-400 rounded-full" />
+              <View className="flex-row items-center mt-2">
+                <View className="mx-4 bg-primary-50 border border-primary-100 rounded-full px-3 py-1 flex-row items-center">
+                  <View className="flex-row items-center">
+                    <View className="w-2 h-2 bg-primary-500 rounded-full mr-1" />
+                    <View className="w-2 h-2 bg-primary-500 rounded-full mr-1" />
+                    <View className="w-2 h-2 bg-primary-500 rounded-full" />
+                  </View>
+                  <Text className="text-xs text-primary-700 font-quicksand-semibold ml-2">
+                    Vous tapez...
+                  </Text>
                 </View>
-                <Text className="text-xs text-primary-600 font-quicksand-medium ml-2">
-                  Vous tapez...
-                </Text>
               </View>
             )}
           </View>
         </KeyboardAvoidingView>
+      )}
+      {/* Bouton flottant descendre en bas */}
+      {showScrollToBottom && (
+        <TouchableOpacity
+          onPress={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          className="absolute right-4 rounded-full w-12 h-12 justify-center items-center"
+          style={{
+            bottom: 96,
+            backgroundColor: '#FE8C00',
+            shadowColor: '#FE8C00',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.3,
+            shadowRadius: 4,
+            elevation: 8,
+          }}
+        >
+          <Ionicons name="arrow-down" size={18} color="#FFFFFF" />
+        </TouchableOpacity>
       )}
     </SafeAreaView>
   );

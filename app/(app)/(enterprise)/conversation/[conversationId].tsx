@@ -15,6 +15,9 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import { useAuth } from "../../../../contexts/AuthContext";
 import MessagingService, { Conversation, Message } from "../../../../services/api/MessagingService";
 
@@ -24,9 +27,11 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes en millisecondes
 
 export default function ConversationDetails() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const flatListRef = useRef<FlatList>(null);
   const textInputRef = useRef<TextInput>(null);
   const { user } = useAuth(); // Récupérer l'utilisateur connecté
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   
   // Récupération sécurisée des paramètres
   let conversationId: string | null = null;
@@ -399,27 +404,27 @@ export default function ConversationDetails() {
                   );
                 }
               }}
-              className={`px-4 py-3 rounded-2xl ${
-                isCurrentUser 
-                  ? isDeleted 
-                    ? 'bg-neutral-200' 
-                    : 'bg-primary-500'
-                  : isDeleted 
-                    ? 'bg-neutral-100' 
-                    : 'bg-neutral-100'
-              }`}
+              activeOpacity={0.9}
+              className="rounded-2xl overflow-hidden"
             >
-              <Text className={`font-quicksand-medium ${
-                isCurrentUser 
-                  ? isDeleted 
-                    ? 'text-neutral-600 italic' 
-                    : 'text-white'
-                  : isDeleted 
-                    ? 'text-neutral-600 italic' 
-                    : 'text-neutral-800'
-              }`}>
-                {isDeleted ? '[Message supprimé]' : message.text}
-              </Text>
+              {isCurrentUser && !isDeleted ? (
+                <LinearGradient
+                  colors={['#FE8C00', '#FFAB38']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  className="px-4 py-3"
+                >
+                  <Text className="font-quicksand-medium text-white">
+                    {message.text}
+                  </Text>
+                </LinearGradient>
+              ) : (
+                <View className={`${isDeleted ? 'bg-neutral-100' : 'bg-neutral-100'} px-4 py-3`}>
+                  <Text className={`font-quicksand-medium ${isDeleted ? 'text-neutral-600 italic' : 'text-neutral-800'}`}>
+                    {isDeleted ? '[Message supprimé]' : message.text}
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
             
             {/* Heure et statut */}
@@ -462,6 +467,50 @@ export default function ConversationDetails() {
       console.error('❌ Erreur suppression message:', error);
       Alert.alert('Erreur', 'Impossible de supprimer le message');
     }
+  };
+
+  // Helpers pour séparateurs de date
+  const isSameDay = (a: string, b: string) => {
+    const da = new Date(a);
+    const db = new Date(b);
+    return da.getFullYear() === db.getFullYear() &&
+           da.getMonth() === db.getMonth() &&
+           da.getDate() === db.getDate();
+  };
+  const dayLabel = (ts: string) => {
+    const d = new Date(ts);
+    const today = new Date();
+    const diff = Math.floor((today.setHours(0,0,0,0) - new Date(d.setHours(0,0,0,0)).getTime()) / (1000*60*60*24));
+    if (diff === 0) return "Aujourd'hui";
+    if (diff === 1) return "Hier";
+    return new Date(ts).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+  const renderMessageItem = ({ item, index }: { item: Message; index: number }) => {
+    let showSeparator = false;
+    const currentTs = item.sentAt || (item as any).createdAt;
+    if (index === 0) {
+      showSeparator = true;
+    } else {
+      const prev = messages[index - 1];
+      const prevTs = prev?.sentAt || (prev as any)?.createdAt;
+      if (currentTs && prevTs && !isSameDay(currentTs, prevTs)) {
+        showSeparator = true;
+      }
+    }
+    return (
+      <View>
+        {showSeparator && currentTs ? (
+          <View className="py-2 items-center">
+            <View className="bg-neutral-100 rounded-full px-3 py-1">
+              <Text className="text-xs text-neutral-600 font-quicksand-medium">
+                {dayLabel(currentTs)}
+              </Text>
+            </View>
+          </View>
+        ) : null}
+        <MessageBubble message={item} />
+      </View>
+    );
   };
 
   if (loading) {
@@ -529,58 +578,67 @@ export default function ConversationDetails() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
+      <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
       {/* Header */}
-      <View className="flex-row items-center justify-between px-6 py-4 pt-16 bg-white border-b border-neutral-100">
-        <View className="flex-row items-center flex-1">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="w-10 h-10 bg-neutral-100 rounded-full justify-center items-center mr-3"
-          >
-            <Ionicons name="chevron-back" size={20} color="#374151" />
-          </TouchableOpacity>
-          
-          {otherParticipant?.profileImage ? (
-            <Image
-              source={{ uri: otherParticipant.profileImage }}
-              className="w-10 h-10 rounded-full mr-3"
-              resizeMode="cover"
-            />
-          ) : (
-            <View className="w-10 h-10 bg-primary-100 rounded-full justify-center items-center mr-3">
-              <Ionicons 
-                name={otherParticipant?.role === 'ENTERPRISE' ? "business" : "person"} 
-                size={18} 
-                color="#FE8C00" 
+      <LinearGradient
+        colors={['#FE8C00', '#FFAB38']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        className="px-6 pb-4 rounded-b-3xl shadow-sm"
+        style={{ paddingTop: insets.top + 8 }}
+      >
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center flex-1">
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="w-10 h-10 bg-white/20 rounded-full justify-center items-center mr-3"
+            >
+              <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            {otherParticipant?.profileImage ? (
+              <Image
+                source={{ uri: otherParticipant.profileImage }}
+                className="w-10 h-10 rounded-full mr-3"
+                resizeMode="cover"
               />
+            ) : (
+              <View className="w-10 h-10 bg-white/25 rounded-full justify-center items-center mr-3">
+                <Ionicons 
+                  name={otherParticipant?.role === 'ENTERPRISE' ? "business" : "person"} 
+                  size={18} 
+                  color="#FFFFFF" 
+                />
+              </View>
+            )}
+
+            <View className="flex-1">
+              <Text className="text-base font-quicksand-semibold text-white" numberOfLines={1}>
+                {otherParticipant 
+                  ? MessagingService.formatParticipantName(otherParticipant)
+                  : 'Conversation'}
+              </Text>
+              <Text className="text-xs text-white/90" numberOfLines={1}>
+                {typeof conversation.product === 'object' && conversation.product?.name 
+                  ? conversation.product.name 
+                  : conversation.subject || 'Discussion produit'}
+              </Text>
             </View>
-          )}
-          
-          <View className="flex-1">
-            <Text className="text-base font-quicksand-semibold text-neutral-800" numberOfLines={1}>
-              {otherParticipant 
-                ? MessagingService.formatParticipantName(otherParticipant)
-                : 'Conversation'}
-            </Text>
-            <Text className="text-xs text-neutral-600" numberOfLines={1}>
-              {typeof conversation.product === 'object' && conversation.product?.name 
-                ? conversation.product.name 
-                : conversation.subject || 'Discussion produit'}
-            </Text>
           </View>
+
+          <TouchableOpacity 
+            className="w-10 h-10 bg-white/20 rounded-full justify-center items-center"
+            onPress={() => {
+              const productId = typeof conversation.product === 'string' 
+                ? conversation.product 
+                : conversation.product._id;
+              router.push(`/(app)/(enterprise)/(tabs)/product/${productId}`);
+            }}
+          >
+            <Ionicons name="cube" size={18} color="#FFFFFF" />
+          </TouchableOpacity>
         </View>
-        
-        <TouchableOpacity 
-          className="w-10 h-10 bg-neutral-100 rounded-full justify-center items-center"
-          onPress={() => {
-            const productId = typeof conversation.product === 'string' 
-              ? conversation.product 
-              : conversation.product._id;
-            router.push(`/(app)/(enterprise)/(tabs)/product/${productId}`);
-          }}
-        >
-          <Ionicons name="cube" size={18} color="#374151" />
-        </TouchableOpacity>
-      </View>
+      </LinearGradient>
 
       {/* Informations du produit */}
       {typeof conversation.product === 'object' && conversation.product && (
@@ -624,7 +682,7 @@ export default function ConversationDetails() {
           <FlatList
             ref={flatListRef}
             data={messages}
-            renderItem={({ item }) => <MessageBubble message={item} />}
+            renderItem={renderMessageItem}
             keyExtractor={(item) => item._id}
             className="flex-1 px-4"
             contentContainerStyle={{ 
@@ -635,6 +693,12 @@ export default function ConversationDetails() {
             onContentSizeChange={() => {
               flatListRef.current?.scrollToEnd({ animated: false });
             }}
+            onScroll={(e) => {
+              const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+              const distanceFromBottom = contentSize.height - (contentOffset.y + layoutMeasurement.height);
+              setShowScrollToBottom(distanceFromBottom > 200);
+            }}
+            scrollEventThrottle={16}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="interactive"
             ListEmptyComponent={
@@ -786,7 +850,7 @@ export default function ConversationDetails() {
           <FlatList
             ref={flatListRef}
             data={messages}
-            renderItem={({ item }) => <MessageBubble message={item} />}
+            renderItem={renderMessageItem}
             keyExtractor={(item) => item._id}
             className="flex-1 px-4"
             contentContainerStyle={{ 
@@ -797,6 +861,12 @@ export default function ConversationDetails() {
             onContentSizeChange={() => {
               flatListRef.current?.scrollToEnd({ animated: false });
             }}
+            onScroll={(e) => {
+              const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+              const distanceFromBottom = contentSize.height - (contentOffset.y + layoutMeasurement.height);
+              setShowScrollToBottom(distanceFromBottom > 200);
+            }}
+            scrollEventThrottle={16}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="interactive"
             ListEmptyComponent={
@@ -935,6 +1005,24 @@ export default function ConversationDetails() {
             )}
           </View>
         </KeyboardAvoidingView>
+      )}
+      {/* Bouton flottant descendre en bas */}
+      {showScrollToBottom && (
+        <TouchableOpacity
+          onPress={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          className="absolute right-4 rounded-full w-12 h-12 justify-center items-center"
+          style={{
+            bottom: Platform.OS === 'android' ? (keyboardHeight > 0 ? keyboardHeight + 96 : 96) : 96,
+            backgroundColor: '#FE8C00',
+            shadowColor: '#FE8C00',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.3,
+            shadowRadius: 4,
+            elevation: 8,
+          }}
+        >
+          <Ionicons name="arrow-down" size={18} color="#FFFFFF" />
+        </TouchableOpacity>
       )}
     </SafeAreaView>
   );

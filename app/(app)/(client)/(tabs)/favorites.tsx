@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
 import { 
   SafeAreaView, 
@@ -12,16 +13,20 @@ import {
   RefreshControl
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import ProductService from "@/services/api/ProductService";
 
 import { FavoriteItem } from "@/types/product";
 
 export default function FavoritesScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [favoriteItems, setFavoriteItems] = useState<FavoriteItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
 
   // Fonction pour récupérer les produits favoris
   const fetchFavoriteProducts = async (isRefresh: boolean = false) => {
@@ -82,6 +87,12 @@ export default function FavoritesScreen() {
     }, [])
   );
 
+  // Helper formatage prix
+  const formatPrice = (price: number | undefined) => {
+    if (typeof price !== "number") return "N/A";
+    return new Intl.NumberFormat("fr-FR").format(price) + " FCFA";
+  };
+
   // Composant pour afficher un produit favori
   const FavoriteProductCard = ({ favoriteItem }: { favoriteItem: FavoriteItem }) => (
     <TouchableOpacity 
@@ -115,6 +126,20 @@ export default function FavoritesScreen() {
                 {favoriteItem.product.description}
               </Text>
             )}
+            {/* Prix + Rating */}
+            <View className="flex-row items-center justify-between mt-2">
+              <Text className="text-base font-quicksand-bold text-primary-600">
+                {formatPrice(favoriteItem.product.price as any)}
+              </Text>
+              {favoriteItem.product?.stats?.averageRating ? (
+                <View className="flex-row items-center">
+                  <Ionicons name="star" size={14} color="#FFD700" />
+                  <Text className="text-xs text-neutral-600 ml-1">
+                    {Number(favoriteItem.product.stats.averageRating).toFixed(1)}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
           </View>
           <Text className="text-xs font-quicksand text-gray-500 mt-2">
             Ajouté le {new Date(favoriteItem.createdAt).toLocaleDateString('fr-FR', {
@@ -135,6 +160,55 @@ export default function FavoritesScreen() {
         >
           <Ionicons name="heart" size={24} color="#EF4444" />
         </TouchableOpacity>
+      </View>
+    </TouchableOpacity>
+  );
+
+  // Carte produit en grille
+  const FavoriteProductGridCard = ({ favoriteItem }: { favoriteItem: FavoriteItem }) => (
+    <TouchableOpacity
+      className="w-[48%] bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 mx-[1%] mb-4"
+      onPress={() => router.push(`/(app)/(client)/product/${favoriteItem.product._id}`)}
+    >
+      <View className="relative w-full h-36">
+        {favoriteItem.product.images && favoriteItem.product.images.length > 0 ? (
+          <Image 
+            source={{ uri: favoriteItem.product.images[0] }} 
+            className="w-full h-full"
+            resizeMode="cover"
+          />
+        ) : (
+          <View className="w-full h-full bg-gray-100 justify-center items-center">
+            <Ionicons name="image-outline" size={28} color="#9CA3AF" />
+          </View>
+        )}
+        <TouchableOpacity
+          className="absolute top-2 right-2 bg-white/85 rounded-full p-2"
+          onPress={(e) => {
+            e.stopPropagation();
+            handleRemoveFavorite(favoriteItem.product._id);
+          }}
+        >
+          <Ionicons name="heart" size={18} color="#EF4444" />
+        </TouchableOpacity>
+      </View>
+      <View className="p-3">
+        <Text className="text-sm font-quicksand-semibold text-neutral-800" numberOfLines={2}>
+          {favoriteItem.product.name}
+        </Text>
+        <View className="flex-row items-center justify-between mt-1">
+          <Text className="text-base font-quicksand-bold text-primary-600">
+            {formatPrice(favoriteItem.product.price as any)}
+          </Text>
+          {favoriteItem.product?.stats?.averageRating ? (
+            <View className="flex-row items-center">
+              <Ionicons name="star" size={12} color="#FFD700" />
+              <Text className="text-xs text-neutral-600 ml-1">
+                {Number(favoriteItem.product.stats.averageRating).toFixed(1)}
+              </Text>
+            </View>
+          ) : null}
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -176,6 +250,7 @@ export default function FavoritesScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background-secondary">
+      <ExpoStatusBar style="light" backgroundColor="#FE8C00" />
       <ScrollView 
         className="flex-1"
         showsVerticalScrollIndicator={false}
@@ -185,23 +260,30 @@ export default function FavoritesScreen() {
         }
       >
         {/* Header */}
-        <View className="bg-white px-4 py-6 shadow-sm">
+        <LinearGradient
+          colors={['#FE8C00', '#FFAB38']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          className="px-4 pb-6 rounded-b-3xl shadow-sm"
+          style={{ paddingTop: insets.top + 12 }}
+        >
           <View className="flex-row items-center justify-between">
-            <Text className="text-2xl font-quicksand-bold text-neutral-800">
-              Mes favoris
-            </Text>
+            <View>
+              <Text className="text-2xl font-quicksand-bold text-white">
+                Mes favoris
+              </Text>
+              {favoriteItems.length > 0 && (
+                <Text className="text-sm font-quicksand text-white/90 mt-1">
+                  {favoriteItems.length} produit{favoriteItems.length > 1 ? 's' : ''} en favori{favoriteItems.length > 1 ? 's' : ''}
+                </Text>
+              )}
+            </View>
             <TouchableOpacity className="relative">
-              <Ionicons name="notifications-outline" size={24} color="#374151" />
+              <Ionicons name="notifications-outline" size={24} color="#FFFFFF" />
               <View className="absolute -top-1 -right-1 w-3 h-3 bg-error-500 rounded-full" />
             </TouchableOpacity>
           </View>
-          
-          {favoriteItems.length > 0 && (
-            <Text className="text-sm font-quicksand text-neutral-600 mt-1">
-              {favoriteItems.length} produit{favoriteItems.length > 1 ? 's' : ''} en favori{favoriteItems.length > 1 ? 's' : ''}
-            </Text>
-          )}
-        </View>
+        </LinearGradient>
 
         {/* Contenu principal */}
         {favoriteItems.length === 0 ? (
@@ -220,14 +302,27 @@ export default function FavoritesScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          <View className="pt-4">
-            {favoriteItems.map((favoriteItem) => (
-              <FavoriteProductCard 
-                key={favoriteItem._id} 
-                favoriteItem={favoriteItem} 
-              />
-            ))}
-          </View>
+          viewMode === 'grid' ? (
+            <View className="pt-4 px-4">
+              <View className="flex-row flex-wrap justify-between">
+                {favoriteItems.map((favoriteItem) => (
+                  <FavoriteProductGridCard
+                    key={favoriteItem._id}
+                    favoriteItem={favoriteItem}
+                  />
+                ))}
+              </View>
+            </View>
+          ) : (
+            <View className="pt-4">
+              {favoriteItems.map((favoriteItem) => (
+                <FavoriteProductCard 
+                  key={favoriteItem._id} 
+                  favoriteItem={favoriteItem} 
+                />
+              ))}
+            </View>
+          )
         )}
       </ScrollView>
     </SafeAreaView>
