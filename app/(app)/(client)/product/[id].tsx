@@ -29,6 +29,7 @@ export default function ProductDetails() {
   const [quantity, setQuantity] = useState(1);
   const [similarProducts, setSimilarProducts] = useState<Product[]>([]);
   const [loadingSimilar, setLoadingSimilar] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
     const loadProductDetails = async () => {
@@ -37,6 +38,10 @@ export default function ProductDetails() {
         const productData = await ProductService.getPublicProductById(id!);
         console.log("✅ Produit chargé:", JSON.stringify(productData, null, 2));
         setProduct(productData);
+
+        // Vérifier si le produit est en favori
+        const favoriteStatus = await ProductService.checkIfProductIsFavorite(id!);
+        setIsFavorite(favoriteStatus);
 
         // Charger les produits similaires après avoir chargé le produit principal
         loadSimilarProducts(id!);
@@ -63,6 +68,20 @@ export default function ProductDetails() {
       setSimilarProducts([]);
     } finally {
       setLoadingSimilar(false);
+    }
+  };
+
+  const toggleFavorite = async () => {
+    try {
+      if (isFavorite) {
+        await ProductService.removeProductFromFavorites(id!);
+      } else {
+        await ProductService.addProductToFavorites(id!);
+      }
+      setIsFavorite(!isFavorite);
+    } catch (error) {
+      console.error('❌ Erreur lors de la mise à jour des favoris:', error);
+      Alert.alert('Erreur', 'Impossible de mettre à jour les favoris');
     }
   };
 
@@ -268,8 +287,15 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         <Text className="text-lg font-quicksand-bold text-neutral-800">
           Détails du produit
         </Text>
-        <TouchableOpacity className="w-10 h-10 bg-neutral-100 rounded-full justify-center items-center">
-          <Ionicons name="heart-outline" size={20} color="#374151" />
+        <TouchableOpacity 
+          className="w-10 h-10 bg-neutral-100 rounded-full justify-center items-center"
+          onPress={toggleFavorite}
+        >
+          <Ionicons 
+            name={isFavorite ? "heart" : "heart-outline"} 
+            size={20} 
+            color={isFavorite ? "#EF4444" : "#374151"} 
+          />
         </TouchableOpacity>
       </View>
 
@@ -320,19 +346,19 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
           </View>
 
           {/* Enterprise Section */}
-          <View className="px-4 py-4 border-t border-neutral-100">
-            <Text className="text-xl font-quicksand-bold text-neutral-800 mb-4">
-              Vendeur
+          <View className="px-4 py-4 border border-neutral-100 rounded-2xl mb-6">
+            <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3">
+              Vendu par
             </Text>
-            <TouchableOpacity
-              className="flex-row items-center mb-6"
+            <TouchableOpacity 
+              className="flex-row items-center"
               onPress={() => {
-                if (typeof product.enterprise === "object") {
-                  router.push(`/(app)/(client)/(tabs)/enterprise/${product.enterprise._id}`);
+                if (typeof product.enterprise === 'object' && product.enterprise._id) {
+                  router.push(`/(app)/(client)/enterprise/${product.enterprise._id}`);
                 }
               }}
             >
-              {(typeof product.enterprise === "object" && product.enterprise.logo) ? (
+              {typeof product.enterprise === 'object' && product.enterprise.logo ? (
                 <Image
                   source={{ uri: product.enterprise.logo }}
                   className="w-14 h-14 rounded-2xl"

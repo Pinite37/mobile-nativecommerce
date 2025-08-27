@@ -20,6 +20,18 @@ export const CustomTabBar: React.FC<TabBarProps> = ({ state, descriptors, naviga
     return null;
   }
 
+  // Filter out routes that should not appear in the tab bar
+  const routes = state.routes.filter((route: any) => {
+    const options = descriptors[route.key]?.options || {};
+    // Expo Router: href: null means hidden from navigation UI
+    if (options.href === null) return false;
+    // React Navigation way to hide a tab
+    if (options.tabBarButton === null) return false;
+    // Another way: explicitly hide via item style
+    if (options.tabBarItemStyle?.display === 'none') return false;
+    return true;
+  });
+
   return (
     <View className="flex-row bg-white border-t-0 shadow-lg rounded-t-3xl" style={{
       shadowColor: '#000',
@@ -32,7 +44,7 @@ export const CustomTabBar: React.FC<TabBarProps> = ({ state, descriptors, naviga
       paddingHorizontal: 12,
       height: 85,
     }}>
-      {state.routes.map((route: any, index: number) => {
+      {routes.map((route: any) => {
         const { options } = descriptors[route.key];
         const label = options.tabBarLabel !== undefined 
           ? options.tabBarLabel 
@@ -40,7 +52,7 @@ export const CustomTabBar: React.FC<TabBarProps> = ({ state, descriptors, naviga
           ? options.title 
           : route.name;
 
-        const isFocused = state.index === index;
+        const isFocused = state.routes[state.index].key === route.key;
 
         const onPress = () => {
           const event = navigation.emit({
@@ -66,7 +78,7 @@ export const CustomTabBar: React.FC<TabBarProps> = ({ state, descriptors, naviga
         
         return (
           <TouchableOpacity
-            key={index}
+            key={route.key}
             accessibilityRole="button"
             accessibilityState={isFocused ? { selected: true } : {}}
             accessibilityLabel={options.tabBarAccessibilityLabel || `Onglet ${label}`}

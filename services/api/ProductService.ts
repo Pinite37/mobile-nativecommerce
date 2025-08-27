@@ -180,24 +180,42 @@ class ProductService {
 
   // Récupérer les produits favoris
   async getFavoriteProducts(): Promise<FavoriteItem[]> {
-  try {
-    console.log('🚀 ProductService - Récupération produits favoris');
-    const response = await ApiService.get(`${this.BASE_URL}/favorites/list`);
-    
-    console.log('📦 Response complète:', response); // Pour débugger
-    
-    if (response.success && response.data) {
-      console.log('✅ Produits favoris récupérés:', response.data.length);
-      return response.data; // Directement response.data car c'est un tableau
+    try {
+      console.log('🚀 ProductService - Récupération produits favoris');
+      const response = await ApiService.get(`${this.BASE_URL}/favorites/list`);
+      
+      console.log('📦 Response complète:', response); // Pour débugger
+      
+      if (response.success && response.data) {
+        console.log('✅ Produits favoris récupérés:', response.data.length);
+        return response.data; // Directement response.data car c'est un tableau
+      }
+      
+      throw new Error('Échec de la récupération des produits favoris');
+    } catch (error: any) {
+      console.error('❌ Erreur récupération produits favoris:', error);
+      console.error('❌ Response data:', error.response?.data); // Pour voir la structure exacte
+      throw new Error(error.response?.data?.message || error.message || 'Récupération des produits favoris échouée');
     }
-    
-    throw new Error('Échec de la récupération des produits favoris');
-  } catch (error: any) {
-    console.error('❌ Erreur récupération produits favoris:', error);
-    console.error('❌ Response data:', error.response?.data); // Pour voir la structure exacte
-    throw new Error(error.response?.data?.message || error.message || 'Récupération des produits favoris échouée');
   }
-}
+
+  async checkIfProductIsFavorite(productId: string): Promise<boolean> {
+    try {
+      console.log('🚀 ProductService - Vérification si produit est favori:', productId);
+      const response = await ApiService.get<{ isFavorite: boolean }>(`${this.BASE_URL}/${productId}/favorites/check`);
+      
+      
+      if (response.success && response.data) {
+        console.log('✅ Vérification terminée, est favori:', response.data.isFavorite);
+        return response.data.isFavorite;
+      }
+      
+      throw new Error('Échec de la vérification du statut favori');
+    } catch (error: any) {
+      console.error('❌ Erreur vérification produit favori:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Vérification du statut favori échouée');
+    }
+  }
 
   // Supprimer un produit
   async deleteProduct(productId: string): Promise<void> {

@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
     Dimensions,
@@ -188,8 +188,7 @@ export default function ClientHome() {
     useEffect(() => {
         loadFeaturedProducts();
         loadRecentSearches();
-        // Ici, on pourrait charger les favoris depuis une API ou stockage local
-        // Pour l'exemple, on initialise vide
+        loadFavorites();
     }, []);
 
     const loadFeaturedProducts = async () => {
@@ -204,10 +203,20 @@ export default function ClientHome() {
         }
     };
 
+    const loadFavorites = async () => {
+        try {
+            const favs = await ProductService.getFavoriteProducts();
+            setFavorites(new Set(favs.map(f => f.product._id)));
+        } catch (error) {
+            console.error('❌ Erreur chargement favoris:', error);
+        }
+    };
+
     const refreshData = async () => {
         try {
             setRefreshing(true);
             await loadFeaturedProducts();
+            await loadFavorites();
         } catch (error) {
             console.error('❌ Erreur refresh:', error);
         } finally {
@@ -420,24 +429,22 @@ export default function ClientHome() {
 
     // Fonction pour toggle favori
     const toggleFavorite = async (productId: string) => {
-        setFavorites(prev => {
-            const newFavorites = new Set(prev);
-            if (newFavorites.has(productId)) {
-                newFavorites.delete(productId);
-            } else {
-                newFavorites.add(productId);
-            }
-            return newFavorites;
-        });
-
+        const isFavorite = favorites.has(productId);
         try {
-            if (favorites.has(productId)) {
+            if (isFavorite) {
                 await ProductService.removeProductFromFavorites(productId);
-                console.log(`❤️ Produit ${productId} retiré des favoris`);
             } else {
                 await ProductService.addProductToFavorites(productId);
-                console.log(`❤️ Produit ${productId} ajouté aux favoris`);
             }
+            setFavorites(prev => {
+                const newFavorites = new Set(prev);
+                if (isFavorite) {
+                    newFavorites.delete(productId);
+                } else {
+                    newFavorites.add(productId);
+                }
+                return newFavorites;
+            });
         } catch (error) {
             console.error('❌ Erreur lors de la mise à jour des favoris:', error);
         }
@@ -462,14 +469,14 @@ export default function ClientHome() {
                         </Text>
                     </View>
                 )}
-                <TouchableOpacity
+                <TouchableOpacity 
                     className="absolute bottom-2 right-2 bg-white/80 rounded-full p-1"
                     onPress={() => toggleFavorite(item._id)}
                 >
-                    <Ionicons
-                        name={favorites.has(item._id) ? "heart" : "heart-outline"}
-                        size={20}
-                        color={favorites.has(item._id) ? "#EF4444" : "#6B7280"}
+                    <Ionicons 
+                        name={favorites.has(item._id) ? "heart" : "heart-outline"} 
+                        size={20} 
+                        color={favorites.has(item._id) ? "#EF4444" : "#6B7280"} 
                     />
                 </TouchableOpacity>
             </View>
@@ -493,7 +500,7 @@ export default function ClientHome() {
     );
 
     const renderStore = (item: any) => (
-        <TouchableOpacity
+        <TouchableOpacity 
             key={item.id}
             className="bg-white rounded-xl shadow-sm border border-neutral-100 p-2 mb-3 w-[48%]"
             onPress={() => router.push(`/(app)/(client)/enterprise/${item.id}`)}
@@ -522,7 +529,7 @@ export default function ClientHome() {
     );
 
     const renderAd = ({ item }: { item: any }) => (
-        <TouchableOpacity
+        <TouchableOpacity 
             className="rounded-2xl overflow-hidden mx-3 shadow-md"
             style={{ backgroundColor: item.bgColor, width: Dimensions.get('window').width - 48 }}
         >
@@ -532,20 +539,20 @@ export default function ClientHome() {
                 resizeMode="cover"
             />
             <View className="p-4 absolute bottom-0 left-0 right-0 bg-black/50">
-                <Text
+                <Text 
                     className="text-base font-quicksand-bold mb-1"
                     style={{ color: item.textColor }}
                 >
                     {item.title}
                 </Text>
-                <Text
+                <Text 
                     className="text-sm font-quicksand-medium mb-2"
                     style={{ color: item.textColor }}
                 >
                     {item.subtitle}
                 </Text>
                 {item.type === "main" ? (
-                    <Text
+                    <Text 
                         className="text-xs font-quicksand-medium"
                         style={{ color: item.textColor + '90' }}
                     >
@@ -553,7 +560,7 @@ export default function ClientHome() {
                     </Text>
                 ) : (
                     <>
-                        <Text
+                        <Text 
                             className="text-sm font-quicksand-bold mb-1"
                             style={{ color: item.textColor }}
                         >
@@ -572,8 +579,8 @@ export default function ClientHome() {
 
     return (
         <SafeAreaView className="flex-1 bg-background-secondary">
-            <ScrollView
-                className="flex-1"
+            <ScrollView 
+                className="flex-1" 
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: 90 }}
                 refreshControl={
@@ -588,7 +595,7 @@ export default function ClientHome() {
                 {/* Header with Location */}
                 <View className="bg-primary py-6 pt-16">
                     {/* Header avec salutation et icône notification */}
-                    <View className="px-6 pb-4">
+                    <View className="px-4 pb-4">
                         <View className="flex-row items-center justify-between">
                             <View>
                                 <Text className="text-sm font-quicksand-medium text-white opacity-90">
@@ -604,10 +611,10 @@ export default function ClientHome() {
                             </TouchableOpacity>
                         </View>
                     </View>
-
+                    
                     {/* Location Selection */}
-                    <View className="flex-row justify-between px-6 mb-4">
-                        <TouchableOpacity
+                    <View className="flex-row justify-between px-4 mb-4">
+                        <TouchableOpacity 
                             onPress={() => setCityModalVisible(true)}
                             className="bg-primary-700 flex-1 rounded-2xl py-3 px-4 mr-2"
                         >
@@ -618,8 +625,8 @@ export default function ClientHome() {
                                 <Ionicons name="chevron-down-outline" size={16} color="white" />
                             </View>
                         </TouchableOpacity>
-
-                        <TouchableOpacity
+                        
+                        <TouchableOpacity 
                             onPress={() => selectedCity && setNeighborhoodModalVisible(true)}
                             className="bg-primary-700 flex-1 rounded-2xl py-3 px-4 ml-2"
                             disabled={!selectedCity}
@@ -632,9 +639,9 @@ export default function ClientHome() {
                             </View>
                         </TouchableOpacity>
                     </View>
-
+                    
                     {/* Search Bar */}
-                    <View className="px-6">
+                    <View className="px-4">
                         <View className="bg-white rounded-xl shadow-md">
                             <View className="flex-row items-center px-4 py-3">
                                 <Ionicons name="search" size={20} color="#9CA3AF" />
@@ -661,7 +668,7 @@ export default function ClientHome() {
                                     </TouchableOpacity>
                                 )}
                             </View>
-
+                            
                             {/* Recherches récentes */}
                             {showRecentSearches && recentSearches.length > 0 && (
                                 <View className="border-t border-gray-100">
