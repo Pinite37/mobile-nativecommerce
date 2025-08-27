@@ -11,8 +11,7 @@ import {
   Alert,
   RefreshControl
 } from "react-native";
-import { useRouter } from "expo-router";
-import { useFocusEffect } from "@react-navigation/native";
+import { useRouter, useFocusEffect } from "expo-router";
 import ProductService from "@/services/api/ProductService";
 
 import { FavoriteItem } from "@/types/product";

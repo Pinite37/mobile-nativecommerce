@@ -13,7 +13,9 @@ export const CustomTabBar: React.FC<TabBarProps> = ({ state, descriptors, naviga
     // This is just a side effect to ensure fonts are applied
     console.log('TabBar mounted with Quicksand font family');
   }, []);
-  const focusedOptions = descriptors[state.routes[state.index].key].options;
+  const currentIndex = typeof state?.index === 'number' ? state.index : 0;
+  const currentRouteKey = state?.routes?.[currentIndex]?.key;
+  const focusedOptions = currentRouteKey ? (descriptors[currentRouteKey]?.options || {}) : {};
 
   // Modern Expo Router uses tabBarStyle: { display: 'none' } instead of tabBarVisible
   if (focusedOptions.tabBarStyle?.display === 'none') {
@@ -21,7 +23,7 @@ export const CustomTabBar: React.FC<TabBarProps> = ({ state, descriptors, naviga
   }
 
   // Filter out routes that should not appear in the tab bar
-  const routes = state.routes.filter((route: any) => {
+  const routes = (state?.routes ?? []).filter((route: any) => {
     const options = descriptors[route.key]?.options || {};
     // Expo Router: href: null means hidden from navigation UI
     if (options.href === null) return false;
@@ -52,7 +54,7 @@ export const CustomTabBar: React.FC<TabBarProps> = ({ state, descriptors, naviga
           ? options.title 
           : route.name;
 
-        const isFocused = state.routes[state.index].key === route.key;
+        const isFocused = currentRouteKey === route.key;
 
         const onPress = () => {
           const event = navigation.emit({
@@ -91,20 +93,17 @@ export const CustomTabBar: React.FC<TabBarProps> = ({ state, descriptors, naviga
             style={{
               minHeight: 50,
               transform: [{ scale: isFocused ? 1.05 : 1 }],
-              // Add a slight animation for better UX
-              transitionDuration: '150ms',
             }}
           >
             <View className="items-center justify-center">
-              {IconComponent && (
-                <IconComponent
-                  color={isFocused ? '#FE8C00' : '#6B7280'}
-                  size={isFocused ? 24 : 22}
-                  focused={isFocused}
-                  style={{
-                    marginBottom: 3, // Add some spacing between icon and text
-                  }}
-                />
+              {!!IconComponent && (
+                <View style={{ marginBottom: 3 }}>
+                  {IconComponent({
+                    color: isFocused ? '#FE8C00' : '#6B7280',
+                    size: isFocused ? 24 : 22,
+                    focused: isFocused,
+                  })}
+                </View>
               )}
               <Text
                 className={`mt-1 ${

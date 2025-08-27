@@ -150,13 +150,6 @@ export default function ClientTabsLayout() {
           ),
         }}
       />
-        <Tabs.Screen
-            name="enterprise/[id]"
-            options={{
-                href: null,
-                headerShown: false,
-            }}
-        />
     </Tabs>
   );
 }

@@ -20,6 +20,13 @@ export default function ClientLayout() {
           headerShown: false 
         }} 
       />
+      <Stack.Screen 
+        name="enterprise" 
+        options={{ 
+          headerShown: false,
+          presentation: 'card'
+        }} 
+      />
     </Stack>
   );
 }

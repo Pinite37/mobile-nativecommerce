@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import { useLocalSearchParams,useNavigation, useRouter } from "expo-router";
 import React, { useEffect, useLayoutEffect, useState } from "react";
 import {
     ActivityIndicator,
@@ -14,11 +14,10 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import EnterpriseService, { Enterprise } from "../../../../../services/api/EnterpriseService";
-import { Product } from "../../../../../types/product";
+import EnterpriseService, { Enterprise } from "../../../../services/api/EnterpriseService";
+import { Product } from "../../../../types/product";
 
 const { width: screenWidth } = Dimensions.get('window');
-
 export default function EnterpriseDetails() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
