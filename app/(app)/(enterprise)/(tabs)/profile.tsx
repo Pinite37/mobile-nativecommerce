@@ -1,10 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
+  Easing,
   Image,
   KeyboardAvoidingView,
   Modal,
@@ -12,11 +15,13 @@ import {
   RefreshControl,
   SafeAreaView,
   ScrollView,
+  StatusBar,
   Switch,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useToast } from '../../../../components/ui/ToastManager';
@@ -109,7 +114,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onClose, o
               <Text className="text-lg font-quicksand-bold">Modifier le profil</Text>
               <TouchableOpacity onPress={handleSave} disabled={loading}>
                 {loading ? (
-                  <ActivityIndicator size="small" color="#FE8C00" />
+                  <ActivityIndicator size="small" color="#10B981" />
                 ) : (
                   <Text className="text-primary-500 font-quicksand-medium">Sauvegarder</Text>
                 )}
@@ -277,7 +282,7 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({ visible, onCl
               <Text className="text-lg font-quicksand-bold">Modifier l&apos;entreprise</Text>
               <TouchableOpacity onPress={handleSave} disabled={loading}>
                 {loading ? (
-                  <ActivityIndicator size="small" color="#FE8C00" />
+                  <ActivityIndicator size="small" color="#10B981" />
                 ) : (
                   <Text className="text-primary-500 font-quicksand-medium">Sauvegarder</Text>
                 )}
@@ -404,7 +409,7 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({ visible, onCl
                 <View className="flex-row items-center justify-between mb-3">
                   <Text className="text-lg font-quicksand-bold text-neutral-800 pl-1">Réseaux sociaux</Text>
                   <TouchableOpacity onPress={addSocialLink} className="flex-row items-center">
-                    <Ionicons name="add-circle" size={20} color="#FE8C00" />
+                    <Ionicons name="add-circle" size={20} color="#10B981" />
                     <Text className="text-primary-500 font-quicksand-medium ml-1">Ajouter</Text>
                   </TouchableOpacity>
                 </View>
@@ -509,7 +514,7 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({ visible
             <View className="bg-neutral-50 rounded-xl p-4 space-y-3">
               {enterprise.contactInfo?.website && (
                 <View className="flex-row items-center">
-                  <Ionicons name="globe-outline" size={20} color="#FE8C00" />
+                  <Ionicons name="globe-outline" size={20} color="#10B981" />
                   <Text className="text-neutral-700 font-quicksand-medium ml-3">
                     {enterprise.contactInfo.website}
                   </Text>
@@ -518,7 +523,7 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({ visible
               
               {enterprise.contactInfo?.phone && (
                 <View className="flex-row items-center">
-                  <Ionicons name="call-outline" size={20} color="#FE8C00" />
+                  <Ionicons name="call-outline" size={20} color="#10B981" />
                   <Text className="text-neutral-700 font-quicksand-medium ml-3">
                     {enterprise.contactInfo.phone}
                   </Text>
@@ -633,7 +638,7 @@ const AddPartnerModal: React.FC<AddPartnerModalProps> = ({ visible, onClose, onA
             <Text className="text-lg font-quicksand-bold">Ajouter un partenaire</Text>
             <TouchableOpacity onPress={handleAdd} disabled={loading || !partnerId.trim()}>
               {loading ? (
-                <ActivityIndicator size="small" color="#FE8C00" />
+                <ActivityIndicator size="small" color="#10B981" />
               ) : (
                 <Text className="text-primary-500 font-quicksand-medium">Ajouter</Text>
               )}
@@ -676,6 +681,176 @@ function EnterpriseProfilePage() {
   const [showEnterpriseDetails, setShowEnterpriseDetails] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
 
+  // Responsive dimensions
+  const { width } = useWindowDimensions();
+  const isSmallPhone = width < 360;
+  const isTablet = width >= 768 && width < 1024;
+  const isLargeTablet = width >= 1024;
+
+  // Header paddings
+  const headerPaddingTop = isLargeTablet ? 80 : isTablet ? 72 : isSmallPhone ? 48 : 64;
+  const headerPaddingBottom = isLargeTablet ? 72 : isTablet ? 64 : isSmallPhone ? 48 : 80;
+
+  // Overlay lift
+  const overlayLift = isLargeTablet ? -72 : isTablet ? -64 : isSmallPhone ? -40 : -56;
+
+  // Logo size
+  const logoSize = isLargeTablet ? 104 : isTablet ? 88 : isSmallPhone ? 72 : 80;
+
+  // Marketing layout (row vs column)
+  const stackMarketing = width < 400;
+
+  // Chips overlay wrapping for small widths
+  const wrapOverlayChips = width < 420;
+
+  // Dashboard columns and card width
+  const dashboardColumns = isLargeTablet ? 4 : isTablet ? 3 : isSmallPhone ? 1 : 2;
+  const dashboardCardWidth =
+    dashboardColumns === 1 ? '100%' :
+    dashboardColumns === 2 ? '48%' :
+    dashboardColumns === 3 ? '31.5%' : '23%';
+
+  // Skeleton Loader Component
+  const ShimmerBlock = ({ style }: { style?: any }) => {
+    const shimmer = React.useRef(new Animated.Value(0)).current;
+    useEffect(() => {
+      const loop = Animated.loop(
+        Animated.timing(shimmer, {
+          toValue: 1,
+          duration: 1200,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      );
+      loop.start();
+      return () => loop.stop();
+    }, [shimmer]);
+    const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
+    return (
+      <View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
+        <Animated.View style={{
+          position: 'absolute', top: 0, bottom: 0, width: 120,
+          transform: [{ translateX }],
+          backgroundColor: 'rgba(255,255,255,0.35)',
+          opacity: 0.7,
+        }} />
+      </View>
+    );
+  };
+
+  const SkeletonCard = ({ style }: { style?: any }) => (
+    <View className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden" style={style}>
+      <ShimmerBlock style={{ height: 120, borderRadius: 16, width: '100%' }} />
+    </View>
+  );
+
+  const renderSkeletonProfile = () => (
+    <ScrollView
+      className="flex-1"
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Gradient Header Skeleton */}
+      <LinearGradient
+        colors={['#10B981', '#34D399']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        className="px-6"
+        style={{ paddingTop: headerPaddingTop, paddingBottom: headerPaddingBottom }}
+      >
+        <View className="flex-row items-start justify-between">
+          <View className="flex-1 pr-4">
+            <ShimmerBlock style={{ height: 28, borderRadius: 14, width: '70%', marginBottom: 12 }} />
+            <View className="flex-row items-center mt-3">
+              <ShimmerBlock style={{ width: 16, height: 16, borderRadius: 8, marginRight: 8 }} />
+              <ShimmerBlock style={{ height: 14, borderRadius: 7, width: '40%' }} />
+            </View>
+            <View className="flex-row items-center mt-2">
+              <ShimmerBlock style={{ width: 12, height: 12, borderRadius: 6, marginRight: 8 }} />
+              <ShimmerBlock style={{ height: 12, borderRadius: 6, width: '30%' }} />
+            </View>
+          </View>
+          <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
+        </View>
+      </LinearGradient>
+
+      {/* Overlay Card Skeleton */}
+      <View className="px-4" style={{ marginTop: overlayLift }}>
+        <View className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-5">
+          <View className="flex-row items-center">
+            <ShimmerBlock style={{ width: logoSize, height: logoSize, borderRadius: logoSize / 2 }} />
+            <View className="flex-1 ml-5">
+              <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '80%', marginBottom: 8 }} />
+              <ShimmerBlock style={{ height: 14, borderRadius: 7, width: '60%', marginBottom: 16 }} />
+              <View className="flex-row mt-4 space-x-3">
+                <ShimmerBlock style={{ width: 60, height: 28, borderRadius: 14 }} />
+                <ShimmerBlock style={{ width: 60, height: 28, borderRadius: 14 }} />
+                <ShimmerBlock style={{ width: 60, height: 28, borderRadius: 14 }} />
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      {/* Marketing Skeleton */}
+      <View className="px-4 pt-6">
+        <ShimmerBlock style={{ height: 20, borderRadius: 10, width: '50%', marginBottom: 16, marginLeft: 4 }} />
+        <View className="flex-row" style={{ flexDirection: stackMarketing ? 'column' : 'row' }}>
+          <View className="flex-1 rounded-2xl overflow-hidden" style={{ marginRight: stackMarketing ? 0 : 8, marginBottom: stackMarketing ? 8 : 0 }}>
+            <ShimmerBlock style={{ height: 120, borderRadius: 16, width: '100%' }} />
+          </View>
+          <View className="flex-1 rounded-2xl overflow-hidden" style={{ marginLeft: stackMarketing ? 0 : 8, marginTop: stackMarketing ? 8 : 0 }}>
+            <ShimmerBlock style={{ height: 120, borderRadius: 16, width: '100%' }} />
+          </View>
+        </View>
+      </View>
+
+      {/* Contact & Owner Cards Skeleton */}
+      <View className="px-4 pt-6 space-y-4">
+        <SkeletonCard />
+        <SkeletonCard />
+      </View>
+
+      {/* Dashboard Skeleton */}
+      <View className="px-4 py-4">
+        <ShimmerBlock style={{ height: 20, borderRadius: 10, width: '40%', marginBottom: 16, marginLeft: 4 }} />
+        <View className="flex-row flex-wrap justify-between">
+          {Array.from({ length: dashboardColumns }).map((_, index) => (
+            <View key={index} style={{ width: dashboardCardWidth, marginBottom: 12 }}>
+              <SkeletonCard />
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Actions rapides Skeleton */}
+      <View className="px-4 py-4">
+        <ShimmerBlock style={{ height: 20, borderRadius: 10, width: '45%', marginBottom: 16, marginLeft: 4 }} />
+        <SkeletonCard />
+        <SkeletonCard />
+        <SkeletonCard />
+      </View>
+
+      {/* Gestion Skeleton */}
+      <View className="px-4 py-4">
+        <ShimmerBlock style={{ height: 20, borderRadius: 10, width: '50%', marginBottom: 16, marginLeft: 4 }} />
+        <SkeletonCard />
+        <SkeletonCard />
+      </View>
+
+      {/* Paramètres Skeleton */}
+      <View className="px-4 py-4">
+        <SkeletonCard />
+        <SkeletonCard />
+        <SkeletonCard />
+      </View>
+
+      {/* Bouton de déconnexion Skeleton */}
+      <View className="px-4 py-6">
+        <ShimmerBlock style={{ height: 48, borderRadius: 16, width: '100%' }} />
+      </View>
+    </ScrollView>
+  );
+
   // Charger les données du profil
   const loadProfile = useCallback(async () => {
     try {
@@ -706,7 +881,8 @@ function EnterpriseProfilePage() {
   // Charger les données au montage
   useEffect(() => {
     loadProfile();
-  }, [loadProfile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // loadProfile retiré des dépendances pour éviter la boucle infinie
 
   // Gérer la mise à jour du profil utilisateur
   const handleUpdateProfile = async (userData: any, imageBase64?: string) => {
@@ -780,37 +956,7 @@ function EnterpriseProfilePage() {
     }
   };
 
-  // Gérer la suppression d'un partenaire
-  const handleRemovePartner = async (partnerId: string) => {
-    Alert.alert(
-      'Confirmer la suppression',
-      'Êtes-vous sûr de vouloir supprimer ce partenaire ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Supprimer', style: 'destructive', onPress: async () => {
-          try {
-            setLoading(true);
-            const updatedEnterprise = await EnterpriseService.removeDeliveryPartner(partnerId);
-            
-            // Mettre à jour les données locales
-            if (profileData) {
-              setProfileData({
-                ...profileData,
-                enterprise: updatedEnterprise
-              });
-            }
-            
-            toast.showSuccess('Succès', 'Partenaire supprimé avec succès');
-          } catch (error: any) {
-            console.error('❌ Erreur suppression partenaire:', error);
-            toast.showError('Erreur', error.message || 'Impossible de supprimer le partenaire');
-          } finally {
-            setLoading(false);
-          }
-        }}
-      ]
-    );
-  };
+  // NOTE: suppression partenaire gérée future (liste partenaires). Fonction retirée pour éviter code mort.
 
   // Gérer l'activation/désactivation de l'entreprise
   const handleToggleStatus = async () => {
@@ -913,22 +1059,13 @@ function EnterpriseProfilePage() {
     return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-  };
+  // formatDate supprimé (non utilisé)
 
   if (loading && !profileData) {
     return (
       <SafeAreaView className="flex-1 bg-background-secondary">
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#FE8C00" />
-          <Text className="mt-4 text-neutral-600 font-quicksand-medium">Chargement du profil...</Text>
-        </View>
+        <StatusBar backgroundColor="#10B981" barStyle="light-content" />
+        {renderSkeletonProfile()}
       </SafeAreaView>
     );
   }
@@ -957,175 +1094,267 @@ function EnterpriseProfilePage() {
 
   return (
     <SafeAreaView className="flex-1 bg-background-secondary">
-      <ScrollView 
-        className="flex-1" 
+      <ScrollView
+        className="flex-1"
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={refreshProfile}
-            colors={['#FE8C00']}
-            tintColor="#FE8C00"
+            colors={['#10B981']}
+            tintColor="#10B981"
           />
         }
       >
-        {/* Header avec profil utilisateur et entreprise */}
-        <View className="bg-white px-6 pt-20 py-8">
-          {/* Logo et nom de l'entreprise en premier */}
-          <View className="items-center mb-6">
-            {profileData.enterprise.logo ? (
-              <Image
-                source={{ uri: profileData.enterprise.logo }}
-                className="w-24 h-24 rounded-2xl"
-                resizeMode="cover"
-              />
-            ) : (
-              <View className="w-24 h-24 rounded-2xl bg-primary-500 items-center justify-center">
-                <Text className="text-white font-quicksand-bold text-3xl">
-                  {profileData.enterprise.companyName?.[0]?.toUpperCase() || 'E'}
+        {/* Gradient Header */}
+        <LinearGradient
+          colors={['#10B981', '#34D399']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          className="px-6"
+          style={{ paddingTop: headerPaddingTop, paddingBottom: headerPaddingBottom }}
+        >
+          <View className="flex-row items-start justify-between">
+            <View className="flex-1 pr-4">
+              <Text className="text-2xl font-quicksand-bold text-white" numberOfLines={2}>
+                {profileData.enterprise.companyName}
+              </Text>
+              <View className="flex-row items-center mt-3">
+                <Ionicons name="location" size={16} color="rgba(255,255,255,0.85)" />
+                <Text className="text-sm font-quicksand-medium text-white/90 ml-1" numberOfLines={1}>
+                  {profileData.enterprise.location.district}, {profileData.enterprise.location.city}
                 </Text>
               </View>
-            )}
-            <View className="absolute top-0 right-0 w-6 h-6 bg-success-500 rounded-full justify-center items-center">
-              <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+              <View className="flex-row items-center mt-2">
+                <View className={`w-3 h-3 rounded-full mr-2 ${profileData.enterprise.isActive ? 'bg-success-300' : 'bg-white/40'}`} />
+                <Text className="text-xs font-quicksand-semibold text-white/90">
+                  {profileData.enterprise.isActive ? 'Boutique ouverte' : 'Boutique fermée'}
+                </Text>
+                <TouchableOpacity onPress={handleToggleStatus} className="ml-3 px-3 py-1 rounded-full bg-white/20 flex-row items-center">
+                  <Ionicons name={profileData.enterprise.isActive ? 'pause' : 'play'} size={14} color="#FFFFFF" />
+                  <Text className="text-white text-xs font-quicksand-semibold ml-1">
+                    {profileData.enterprise.isActive ? 'Fermer' : 'Ouvrir'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <TouchableOpacity
+              onPress={() => setShowEditEnterprise(true)}
+              className="w-10 h-10 bg-white/20 rounded-full items-center justify-center"
+            >
+              <Ionicons name="create" size={18} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
+
+        {/* Overlay Card */}
+        <View className="px-4" style={{ marginTop: overlayLift }}>
+          <View className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-5 flex-row items-center">
+            <View className="relative">
+              {profileData.enterprise.logo ? (
+                <Image
+                  source={{ uri: profileData.enterprise.logo }}
+                  className="rounded-2xl"
+                  resizeMode="cover"
+                  style={{ width: logoSize, height: logoSize }}
+                />
+              ) : (
+                <View
+                  className="rounded-2xl bg-primary-500 items-center justify-center"
+                  style={{ width: logoSize, height: logoSize }}
+                >
+                  <Text className="text-white font-quicksand-bold text-2xl">
+                    {profileData.enterprise.companyName?.[0]?.toUpperCase() || 'E'}
+                  </Text>
+                </View>
+              )}
+              {profileData.enterprise.isActive && (
+                <View className="absolute -top-1 -right-1 w-6 h-6 bg-success-500 rounded-full justify-center items-center">
+                  <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                </View>
+              )}
+            </View>
+
+            <View className="flex-1" style={{ marginLeft: isSmallPhone ? 12 : 20 }}>
+              {profileData.enterprise.description ? (
+                <Text className="text-neutral-700 font-quicksand-medium text-sm" numberOfLines={3}>
+                  {profileData.enterprise.description}
+                </Text>
+              ) : (
+                <Text className="text-neutral-400 font-quicksand-regular text-sm italic">
+                  Ajoutez une description pour présenter votre entreprise
+                </Text>
+              )}
+              <View className="flex-row mt-4 space-x-3" style={{ flexWrap: wrapOverlayChips ? 'wrap' : 'nowrap' }}>
+                <TouchableOpacity
+                  onPress={() => setShowEditProfile(true)}
+                  className="px-3 py-2 bg-primary-50 rounded-xl flex-row items-center"
+                  style={{ marginBottom: wrapOverlayChips ? 8 : 0, flexShrink: 1 }}
+                >
+                  <Ionicons name="person" size={14} color="#10B981" />
+                  <Text className="text-primary-500 font-quicksand-semibold text-xs ml-1">Profil</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setShowAddPartner(true)}
+                  className="px-3 py-2 bg-secondary-50 rounded-xl flex-row items-center"
+                  style={{ marginBottom: wrapOverlayChips ? 8 : 0, flexShrink: 1 }}
+                >
+                  <Ionicons name="people" size={14} color="#8B5CF6" />
+                  <Text className="text-purple-600 font-quicksand-semibold text-xs ml-1">Partenaires</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setShowEnterpriseDetails(true)}
+                  className="px-3 py-2 bg-neutral-100 rounded-xl flex-row items-center"
+                  style={{ marginBottom: wrapOverlayChips ? 8 : 0, flexShrink: 1 }}
+                >
+                  <Ionicons name="information-circle" size={14} color="#4B5563" />
+                  <Text className="text-neutral-700 font-quicksand-semibold text-xs ml-1">Détails</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
+        </View>
 
-          {/* Informations entreprise */}
-          <View className="items-center mb-6">
-            <Text className="text-2xl font-quicksand-bold text-neutral-800 text-center">
-              {profileData.enterprise.companyName}
-            </Text>
-            <View className="flex-row items-center mt-2">
-              <Ionicons name="location" size={16} color="#6B7280" />
-              <Text className="text-sm text-neutral-600 ml-1">
-                {profileData.enterprise.location.district}, {profileData.enterprise.location.city}
-              </Text>
-            </View>
-            <View className="flex-row items-center justify-center mt-2">
-              <View className={`w-3 h-3 rounded-full mr-2 ${profileData.enterprise.isActive ? 'bg-success-500' : 'bg-neutral-400'}`} />
-              <Text className={`text-sm font-quicksand-medium ${profileData.enterprise.isActive ? 'text-success-500' : 'text-neutral-500'}`}>
-                {profileData.enterprise.isActive ? 'Entreprise Active' : 'Entreprise Inactive'}
-              </Text>
-            </View>
+        {/* Marketing & Abonnements (UI Only) */}
+        <View className="px-4 pt-6">
+          <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4 pl-1">Marketing & Abonnements</Text>
+          <View className="flex-row" style={{ flexDirection: stackMarketing ? 'column' : 'row' }}>
+            <TouchableOpacity
+              className="flex-1 rounded-2xl overflow-hidden shadow-sm"
+              style={{ marginRight: stackMarketing ? 0 : 8, marginBottom: stackMarketing ? 8 : 0 }}
+              activeOpacity={0.85}
+              onPress={() => router.push('/(app)/(enterprise)/advertisements' as any)}
+            >
+              <LinearGradient
+                colors={['#10B981', '#34D399']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className="p-4"
+              >
+                <View className="flex-row items-center justify-between">
+                  <View className="mr-3 flex-1">
+                    <Text className="text-white font-quicksand-semibold text-base" numberOfLines={1}>Publicités</Text>
+                    <Text className="text-white/80 font-quicksand-medium text-[12px] mt-1" numberOfLines={2}>Créer & gérer vos bannières</Text>
+                  </View>
+                  <View className="w-10 h-10 rounded-xl bg-white/25 items-center justify-center">
+                    <Ionicons name="megaphone" size={20} color="#FFFFFF" />
+                  </View>
+                </View>
+                <View className="mt-4 flex-row items-center">
+                  <Text className="text-white font-quicksand-medium text-xs">Configurer maintenant</Text>
+                  <Ionicons name="chevron-forward" size={14} color="#FFFFFF" style={{ marginLeft: 4 }} />
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="flex-1 bg-white border border-neutral-200 rounded-2xl p-4 shadow-sm"
+              style={{ marginLeft: stackMarketing ? 0 : 8, marginTop: stackMarketing ? 8 : 0 }}
+              activeOpacity={0.85}
+              onPress={() => router.push('/(app)/(enterprise)/subscriptions' as any)}
+            >
+              <View className="flex-row items-center justify-between">
+                <View className="mr-3 flex-1">
+                  <Text className="text-neutral-800 font-quicksand-semibold text-base" numberOfLines={1}>Abonnements</Text>
+                  <Text className="text-neutral-500 font-quicksand-medium text-[12px] mt-1" numberOfLines={2}>Akwaba • Cauris • Lissa</Text>
+                </View>
+                <View className="w-10 h-10 rounded-xl bg-primary-100 items-center justify-center">
+                  <Ionicons name="layers" size={20} color="#10B981" />
+                </View>
+              </View>
+              <View className="mt-4 flex-row items-center">
+                <Text className="text-primary-600 font-quicksand-semibold text-xs">Voir les offres</Text>
+                <Ionicons name="chevron-forward" size={14} color="#10B981" style={{ marginLeft: 4 }} />
+              </View>
+            </TouchableOpacity>
           </View>
+        </View>
 
-          {/* Description de l'entreprise */}
-          {profileData.enterprise.description && (
-            <View className="bg-neutral-50 rounded-xl p-4 mb-6">
-              <Text className="text-neutral-700 font-quicksand-medium text-center leading-5">
-                {profileData.enterprise.description}
-              </Text>
-            </View>
-          )}
-
-          {/* Informations de contact de l'entreprise */}
-          <View className="bg-neutral-50 rounded-xl p-4 mb-6">
+        {/* Contact & Owner Cards */}
+        <View className="px-4 pt-6 space-y-4">
+          <View className="bg-white rounded-2xl p-5 shadow-sm border border-neutral-100">
             <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-3">
               Contact Entreprise
             </Text>
             <View className="space-y-2">
               {profileData.enterprise.contactInfo?.email && (
                 <View className="flex-row items-center">
-                  <Ionicons name="mail" size={16} color="#FE8C00" />
-                  <Text className="text-sm text-neutral-700 ml-2 font-quicksand-medium">
+                  <View className="w-8 h-8 rounded-xl bg-primary-100 items-center justify-center">
+                    <Ionicons name="mail" size={16} color="#FE8C00" />
+                  </View>
+                  <Text className="text-sm text-neutral-700 ml-3 font-quicksand-medium flex-1" numberOfLines={1}>
                     {profileData.enterprise.contactInfo.email}
                   </Text>
                 </View>
               )}
               {profileData.enterprise.contactInfo?.phone && (
                 <View className="flex-row items-center">
-                  <Ionicons name="call" size={16} color="#FE8C00" />
-                  <Text className="text-sm text-neutral-700 ml-2 font-quicksand-medium">
+                  <View className="w-8 h-8 rounded-xl bg-primary-100 items-center justify-center">
+                    <Ionicons name="call" size={16} color="#FE8C00" />
+                  </View>
+                  <Text className="text-sm text-neutral-700 ml-3 font-quicksand-medium flex-1" numberOfLines={1}>
                     {profileData.enterprise.contactInfo.phone}
                   </Text>
                 </View>
               )}
               {profileData.enterprise.contactInfo?.whatsapp && (
                 <View className="flex-row items-center">
-                  <Ionicons name="logo-whatsapp" size={16} color="#10B981" />
-                  <Text className="text-sm text-neutral-700 ml-2 font-quicksand-medium">
+                  <View className="w-8 h-8 rounded-xl bg-success-100 items-center justify-center">
+                    <Ionicons name="logo-whatsapp" size={16} color="#10B981" />
+                  </View>
+                  <Text className="text-sm text-neutral-700 ml-3 font-quicksand-medium flex-1" numberOfLines={1}>
                     {profileData.enterprise.contactInfo.whatsapp}
                   </Text>
                 </View>
               )}
               {profileData.enterprise.contactInfo?.website && (
                 <View className="flex-row items-center">
-                  <Ionicons name="globe" size={16} color="#3B82F6" />
-                  <Text className="text-sm text-neutral-700 ml-2 font-quicksand-medium">
+                  <View className="w-8 h-8 rounded-xl bg-blue-100 items-center justify-center">
+                    <Ionicons name="globe" size={16} color="#2563EB" />
+                  </View>
+                  <Text className="text-sm text-neutral-700 ml-3 font-quicksand-medium flex-1" numberOfLines={1}>
                     {profileData.enterprise.contactInfo.website}
                   </Text>
                 </View>
               )}
+              {!profileData.enterprise.contactInfo?.email && !profileData.enterprise.contactInfo?.phone && !profileData.enterprise.contactInfo?.whatsapp && !profileData.enterprise.contactInfo?.website && (
+                <Text className="text-neutral-400 text-sm font-quicksand-regular italic">
+                  Aucune information de contact renseignée
+                </Text>
+              )}
             </View>
           </View>
 
-          {/* Informations du propriétaire (plus discrètes) */}
-          <View className="bg-neutral-50 rounded-xl p-4">
-            <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-2">
-              Propriétaire
-            </Text>
-            <View className="flex-row items-center">
-              <View className="relative mr-3">
-                {profileData.user.profileImage ? (
-                  <Image
-                    source={{ uri: profileData.user.profileImage }}
-                    className="w-12 h-12 rounded-full"
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <View className="w-12 h-12 rounded-full bg-neutral-300 items-center justify-center">
-                    <Text className="text-neutral-600 font-quicksand-bold text-sm">
-                      {`${profileData.user.firstName?.[0] || ''}${profileData.user.lastName?.[0] || ''}`.toUpperCase()}
-                    </Text>
-                  </View>
-                )}
-              </View>
-              <View className="flex-1">
-                <Text className="text-base font-quicksand-semibold text-neutral-800">
-                  {profileData.user.firstName} {profileData.user.lastName}
-                </Text>
-                <Text className="text-sm text-neutral-600">
-                  {profileData.user.email}
-                </Text>
-              </View>
-              <TouchableOpacity onPress={() => setShowEditProfile(true)}>
-                <Ionicons name="create-outline" size={20} color="#6B7280" />
+          <View className="bg-white rounded-2xl p-5 shadow-sm border border-neutral-100">
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-sm font-quicksand-semibold text-neutral-700">
+                Propriétaire
+              </Text>
+              <TouchableOpacity onPress={() => setShowEditProfile(true)} className="flex-row items-center">
+                <Ionicons name="create-outline" size={16} color="#6B7280" />
+                <Text className="text-neutral-600 text-xs font-quicksand-medium ml-1">Modifier</Text>
               </TouchableOpacity>
             </View>
+            <View className="flex-row items-center">
+              {profileData.user.profileImage ? (
+                <Image source={{ uri: profileData.user.profileImage }} className="w-12 h-12 rounded-full" />
+              ) : (
+                <View className="w-12 h-12 rounded-full bg-neutral-200 items-center justify-center">
+                  <Text className="text-neutral-600 font-quicksand-bold text-sm">
+                    {`${profileData.user.firstName?.[0] || ''}${profileData.user.lastName?.[0] || ''}`.toUpperCase()}
+                  </Text>
+                </View>
+              )}
+              <View className="ml-4 flex-1">
+                <Text className="text-base font-quicksand-semibold text-neutral-800" numberOfLines={1}>
+                  {profileData.user.firstName} {profileData.user.lastName}
+                </Text>
+                <Text className="text-sm text-neutral-600" numberOfLines={1}>{profileData.user.email}</Text>
+              </View>
+            </View>
           </View>
         </View>
 
-        {/* Statut de l'entreprise - Version simplifiée */}
-        <View className="px-4 py-4">
-          <TouchableOpacity
-            onPress={handleToggleStatus}
-            className={`${profileData.enterprise.isActive ? 'bg-success-500' : 'bg-neutral-500'} rounded-2xl p-4 shadow-sm`}
-          >
-            <View className="flex-row items-center justify-between">
-              <View className="flex-1">
-                <View className="flex-row items-center mb-1">
-                  <Ionicons 
-                    name={profileData.enterprise.isActive ? "checkmark-circle" : "pause-circle"} 
-                    size={20} 
-                    color="white" 
-                  />
-                  <Text className="text-white font-quicksand-bold text-lg ml-2">
-                    {profileData.enterprise.isActive ? 'Boutique Ouverte' : 'Boutique Fermée'}
-                  </Text>
-                </View>
-                <Text className="text-white opacity-90 text-sm ml-7">
-                  {profileData.enterprise.isActive ? 'Les clients peuvent vous voir et commander' : 'Votre boutique est invisible aux clients'}
-                </Text>
-              </View>
-              <View className={`${profileData.enterprise.isActive ? 'bg-white' : 'bg-primary-500'} rounded-xl px-4 py-2`}>
-                <Text className={`${profileData.enterprise.isActive ? 'text-success-500' : 'text-white'} font-quicksand-semibold text-sm`}>
-                  {profileData.enterprise.isActive ? 'Fermer' : 'Ouvrir'}
-                </Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-        </View>
+  {/* Statut séparé retiré – contrôle désormais dans le header */}
 
         {/* Tableau de bord de l'entreprise */}
         <View className="px-4 py-4">
@@ -1133,7 +1362,7 @@ function EnterpriseProfilePage() {
             Tableau de bord
           </Text>
           <View className="flex-row flex-wrap justify-between">
-            <View className="w-[48%] bg-white rounded-2xl p-4 mb-3 shadow-sm border border-neutral-100">
+            <View className="bg-white rounded-2xl p-4 mb-3 shadow-sm border border-neutral-100" style={{ width: dashboardCardWidth }}>
               <View className="flex-row items-center justify-between mb-2">
                 <Ionicons name="cash" size={20} color="#FE8C00" />
                 <Text className="text-xs text-neutral-500 font-quicksand-medium">VENTES</Text>
@@ -1146,7 +1375,7 @@ function EnterpriseProfilePage() {
               </Text>
             </View>
             
-            <View className="w-[48%] bg-white rounded-2xl p-4 mb-3 shadow-sm border border-neutral-100">
+            <View className="bg-white rounded-2xl p-4 mb-3 shadow-sm border border-neutral-100" style={{ width: dashboardCardWidth }}>
               <View className="flex-row items-center justify-between mb-2">
                 <Ionicons name="receipt" size={20} color="#10B981" />
                 <Text className="text-xs text-neutral-500 font-quicksand-medium">COMMANDES</Text>
@@ -1159,7 +1388,7 @@ function EnterpriseProfilePage() {
               </Text>
             </View>
             
-            <View className="w-[48%] bg-white rounded-2xl p-4 mb-3 shadow-sm border border-neutral-100">
+            <View className="bg-white rounded-2xl p-4 mb-3 shadow-sm border border-neutral-100" style={{ width: dashboardCardWidth }}>
               <View className="flex-row items-center justify-between mb-2">
                 <Ionicons name="star" size={20} color="#F59E0B" />
                 <Text className="text-xs text-neutral-500 font-quicksand-medium">NOTE</Text>
@@ -1175,7 +1404,7 @@ function EnterpriseProfilePage() {
               </Text>
             </View>
             
-            <View className="w-[48%] bg-white rounded-2xl p-4 mb-3 shadow-sm border border-neutral-100">
+            <View className="bg-white rounded-2xl p-4 mb-3 shadow-sm border border-neutral-100" style={{ width: dashboardCardWidth }}>
               <View className="flex-row items-center justify-between mb-2">
                 <Ionicons name="storefront" size={20} color="#8B5CF6" />
                 <Text className="text-xs text-neutral-500 font-quicksand-medium">PRODUITS</Text>
@@ -1330,7 +1559,7 @@ function EnterpriseProfilePage() {
                 value={notificationsEnabled}
                 onValueChange={setNotificationsEnabled}
                 thumbColor="#FFFFFF"
-                trackColor={{ false: "#D1D5DB", true: "#FE8C00" }}
+                trackColor={{ false: "#D1D5DB", true: "#10B981" }}
               />
             </View>
 

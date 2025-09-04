@@ -155,6 +155,13 @@ export interface FavoriteItem {
     name: string;
     description: string;
     images: string[];
+    price: number;
+    stats: {
+      totalSales: number;
+      views: number;
+      averageRating: number;
+      totalReviews: number;
+    };
   };
   enterprise: string | null;
   type: string;

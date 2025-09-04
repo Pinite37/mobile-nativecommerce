@@ -1,11 +1,33 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import React from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { TabBarIconWithBadge } from "../../../../components/ui/TabBarIconWithBadge";
+import { useUnreadNotifications } from "../../../../hooks/useUnreadNotifications";
 
 export default function TabsLayout() {
+  const { unreadCount } = useUnreadNotifications();
+  const insets = useSafeAreaInsets();
+
+  // Calcul dynamique pour tenir compte des barres de navigation Android / iOS
+  const baseHeight = 72; // hauteur visuelle de base du tab bar (sans inset)
+  const dynamicHeight = baseHeight + insets.bottom; // on ajoute l'inset réel
+  const dynamicPaddingBottom = 16 + Math.min(insets.bottom, 24); // conserver un bon touch area sans exagérer
+
+  const NotificationIcon = ({ color, size, focused }: { color: string; size: number; focused: boolean }) => (
+    <TabBarIconWithBadge
+      name="notifications"
+      color={color}
+      size={focused ? size + 2 : size}
+      focused={focused}
+      badgeCount={unreadCount}
+    />
+  );
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#FE8C00",
+        tabBarActiveTintColor: "#10B981",
         tabBarInactiveTintColor: "#9CA3AF",
         tabBarStyle: {
           backgroundColor: "#FFFFFF",
@@ -16,9 +38,9 @@ export default function TabsLayout() {
           shadowRadius: 10,
           elevation: 12,
           paddingTop: 16,
-          paddingBottom: 22,
+          paddingBottom: dynamicPaddingBottom,
           paddingHorizontal: 12,
-          height: 88,
+          height: dynamicHeight,
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
         },
@@ -81,13 +103,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="orders"
+        name="favorites"
         options={{
-          title: "Commandes",
+          title: "Favoris",
           headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons 
-              name={focused ? "receipt" : "receipt-outline"} 
+              name={focused ? "heart" : "heart-outline"} 
               size={focused ? 26 : 24} 
               color={color} 
             />
@@ -106,6 +128,14 @@ export default function TabsLayout() {
               color={color} 
             />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          title: "Notifications",
+          headerShown: false,
+          tabBarIcon: NotificationIcon,
         }}
       />
       <Tabs.Screen
@@ -152,51 +182,21 @@ export default function TabsLayout() {
         name="enterprise"
         options={{
           href: null, // Cache cet onglet
-          headerShown: false, // Assure que le header est caché
         }}
       />
       <Tabs.Screen
         name="enterprise/[id]"
         options={{
-          href: null, // Cache cet onglet
-          headerShown: false, // Assure que le header est caché
+          href: null, // Cache la route dynamique enterprise/[id]
         }}
       />
       <Tabs.Screen
-        name="products/index"
+        name="notifications/index"
         options={{
-          href: null, // Cache cet onglet
-          headerShown: false,
-        }}
-      />
-      <Tabs.Screen
-        name="products/create"
-        options={{
-          href: null, // Cache cet onglet
-          headerShown: false,
-        }}
-      />
-      <Tabs.Screen
-        name="products/[id]"
-        options={{
-          href: null, // Cache cet onglet
-          headerShown: false,
-        }}
-      />
-      <Tabs.Screen
-        name="product/[id]"
-        options={{
-          href: null, // Cache cet onglet
-          headerShown: false,
-        }}
-      />
-      <Tabs.Screen
-        name="messages/index"
-        options={{
-          href: null, // Cache cet onglet
-          headerShown: false,
+          href: null, // Cache cette route spécifique
         }}
       />
     </Tabs>
   );
 }
+     

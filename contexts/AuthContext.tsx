@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import CustomerService from '../services/api/CustomerService';
+import EnterpriseService from '../services/api/EnterpriseService';
 import PreCacheService from '../services/PreCacheService';
 import TokenStorageService from '../services/TokenStorageService';
 import { User } from '../types/auth';
@@ -116,12 +117,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (role === 'CLIENT') {
         userData = await CustomerService.getProfile();
       } else if (role === 'ENTERPRISE') {
-        // Pour les entreprises, récupérer les données utilisateur de base
-        // Les données spécifiques de l'entreprise seront chargées par les composants qui en ont besoin
+        // Utiliser l'endpoint entreprise (évite l'erreur 400 'Accès réservé aux clients')
         const tokens = await TokenStorageService.getTokens();
         if (tokens.accessToken) {
-          // Récupérer les données utilisateur de base
-          userData = await CustomerService.getProfile();
+          try {
+            const enterpriseProfile = await EnterpriseService.getProfile();
+            userData = enterpriseProfile.user; // Conserver seulement la partie user ici
+          } catch (e) {
+            console.warn('⚠️ Impossible de récupérer le profil entreprise en arrière-plan:', (e as any)?.message);
+          }
         }
       }
       
@@ -145,10 +149,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (role === 'CLIENT') {
         userData = await CustomerService.getProfile();
       } else if (role === 'ENTERPRISE') {
-        // Pour les entreprises, récupérer les données utilisateur de base
         const tokens = await TokenStorageService.getTokens();
         if (tokens.accessToken) {
-          userData = await CustomerService.getProfile();
+          try {
+            const enterpriseProfile = await EnterpriseService.getProfile();
+            userData = enterpriseProfile.user;
+          } catch (e) {
+            console.warn('⚠️ Échec chargement profil entreprise (loadFreshUserData):', (e as any)?.message);
+          }
         }
       }
       

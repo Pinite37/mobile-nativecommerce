@@ -1,21 +1,22 @@
+import ProductService from "@/services/api/ProductService";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useEffect, useState } from "react";
-import { 
-  SafeAreaView, 
-  ScrollView, 
-  Text, 
-  TouchableOpacity, 
-  View, 
-  Image, 
-  ActivityIndicator,
-  Alert,
-  RefreshControl
-} from "react-native";
-import { useRouter, useFocusEffect } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useFocusEffect, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
-import ProductService from "@/services/api/ProductService";
+import React, { useState } from "react";
+import {
+  Alert,
+  Animated,
+  Easing,
+  Image,
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { FavoriteItem } from "@/types/product";
 
@@ -26,7 +27,6 @@ export default function FavoritesScreen() {
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
 
   // Fonction pour récupérer les produits favoris
   const fetchFavoriteProducts = async (isRefresh: boolean = false) => {
@@ -87,11 +87,113 @@ export default function FavoritesScreen() {
     }, [])
   );
 
+  // Composant ShimmerBlock pour l'animation de chargement
+  const ShimmerBlock = ({ width, height, borderRadius = 8 }: { width: number | string; height: number; borderRadius?: number }) => {
+    const shimmerAnim = React.useRef(new Animated.Value(0)).current;
+
+    React.useEffect(() => {
+      const shimmerAnimation = Animated.loop(
+        Animated.timing(shimmerAnim, {
+          toValue: 1,
+          duration: 1500,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      );
+      shimmerAnimation.start();
+      return () => shimmerAnimation.stop();
+    }, [shimmerAnim]);
+
+    const translateX = shimmerAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: [-300, 300],
+    });
+
+    return (
+      <View className="bg-gray-200 overflow-hidden" style={{ width: width as any, height, borderRadius }}>
+        <Animated.View
+          className="bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 absolute inset-0"
+          style={{ transform: [{ translateX }] }}
+        />
+      </View>
+    );
+  };
+
+  // Composant SkeletonProduct pour simuler un produit en chargement
+  const SkeletonProduct = ({ isGrid = false }: { isGrid?: boolean }) => {
+    if (isGrid) {
+      return (
+        <View className="w-[48%] bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 mx-[1%] mb-4">
+          <ShimmerBlock width="100%" height={144} borderRadius={16} />
+          <View className="p-3">
+            <ShimmerBlock width="80%" height={16} borderRadius={4} />
+            <View className="flex-row items-center justify-between mt-2">
+              <ShimmerBlock width="60%" height={18} borderRadius={4} />
+              <ShimmerBlock width="40%" height={14} borderRadius={4} />
+            </View>
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      <View className="bg-white mx-4 mb-4 rounded-2xl shadow-md overflow-hidden border border-gray-100">
+        <View className="flex-row p-4">
+          <ShimmerBlock width={96} height={96} borderRadius={12} />
+          <View className="flex-1 ml-4 justify-between">
+            <View>
+              <ShimmerBlock width="70%" height={20} borderRadius={4} />
+              <ShimmerBlock width="90%" height={14} borderRadius={4} />
+              <View className="flex-row items-center justify-between mt-3">
+                <ShimmerBlock width="40%" height={18} borderRadius={4} />
+                <ShimmerBlock width="30%" height={14} borderRadius={4} />
+              </View>
+            </View>
+            <ShimmerBlock width="50%" height={12} borderRadius={4} />
+          </View>
+          <ShimmerBlock width={24} height={24} borderRadius={12} />
+        </View>
+      </View>
+    );
+  };
+
   // Helper formatage prix
   const formatPrice = (price: number | undefined) => {
     if (typeof price !== "number") return "N/A";
     return new Intl.NumberFormat("fr-FR").format(price) + " FCFA";
   };
+
+  // Fonction pour rendre les skeletons de favoris
+  const renderSkeletonFavorites = () => (
+    <SafeAreaView className="flex-1 bg-background-secondary">
+      <ExpoStatusBar style="light" backgroundColor="#10B981" />
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        {/* Header skeleton */}
+        <LinearGradient
+          colors={['#10B981', '#059669']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          className="px-4 pb-6 rounded-b-3xl shadow-sm"
+          style={{ paddingTop: insets.top + 12 }}
+        >
+          <View className="flex-row items-center justify-between">
+            <View>
+              <ShimmerBlock width={120} height={28} borderRadius={6} />
+              <ShimmerBlock width={100} height={14} borderRadius={4} />
+            </View>
+            <ShimmerBlock width={24} height={24} borderRadius={12} />
+          </View>
+        </LinearGradient>
+
+        {/* Products skeleton */}
+        <View className="pt-4">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <SkeletonProduct key={index} isGrid={false} />
+          ))}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
 
   // Composant pour afficher un produit favori
   const FavoriteProductCard = ({ favoriteItem }: { favoriteItem: FavoriteItem }) => (
@@ -164,65 +266,9 @@ export default function FavoritesScreen() {
     </TouchableOpacity>
   );
 
-  // Carte produit en grille
-  const FavoriteProductGridCard = ({ favoriteItem }: { favoriteItem: FavoriteItem }) => (
-    <TouchableOpacity
-      className="w-[48%] bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 mx-[1%] mb-4"
-      onPress={() => router.push(`/(app)/(client)/product/${favoriteItem.product._id}`)}
-    >
-      <View className="relative w-full h-36">
-        {favoriteItem.product.images && favoriteItem.product.images.length > 0 ? (
-          <Image 
-            source={{ uri: favoriteItem.product.images[0] }} 
-            className="w-full h-full"
-            resizeMode="cover"
-          />
-        ) : (
-          <View className="w-full h-full bg-gray-100 justify-center items-center">
-            <Ionicons name="image-outline" size={28} color="#9CA3AF" />
-          </View>
-        )}
-        <TouchableOpacity
-          className="absolute top-2 right-2 bg-white/85 rounded-full p-2"
-          onPress={(e) => {
-            e.stopPropagation();
-            handleRemoveFavorite(favoriteItem.product._id);
-          }}
-        >
-          <Ionicons name="heart" size={18} color="#EF4444" />
-        </TouchableOpacity>
-      </View>
-      <View className="p-3">
-        <Text className="text-sm font-quicksand-semibold text-neutral-800" numberOfLines={2}>
-          {favoriteItem.product.name}
-        </Text>
-        <View className="flex-row items-center justify-between mt-1">
-          <Text className="text-base font-quicksand-bold text-primary-600">
-            {formatPrice(favoriteItem.product.price as any)}
-          </Text>
-          {favoriteItem.product?.stats?.averageRating ? (
-            <View className="flex-row items-center">
-              <Ionicons name="star" size={12} color="#FFD700" />
-              <Text className="text-xs text-neutral-600 ml-1">
-                {Number(favoriteItem.product.stats.averageRating).toFixed(1)}
-              </Text>
-            </View>
-          ) : null}
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-
   // État de chargement
   if (loading) {
-    return (
-      <SafeAreaView className="flex-1 bg-background-secondary justify-center items-center">
-        <ActivityIndicator size="large" color="#FE8C00" />
-        <Text className="text-base font-quicksand text-neutral-600 mt-4">
-          Chargement de vos favoris...
-        </Text>
-      </SafeAreaView>
-    );
+    return renderSkeletonFavorites();
   }
 
   // État d'erreur
@@ -250,18 +296,18 @@ export default function FavoritesScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background-secondary">
-      <ExpoStatusBar style="light" backgroundColor="#FE8C00" />
+  <ExpoStatusBar style="light" backgroundColor="#10B981" />
       <ScrollView 
         className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 90 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#FE8C00']} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#10B981']} />
         }
       >
         {/* Header */}
         <LinearGradient
-          colors={['#FE8C00', '#FFAB38']}
+          colors={['#10B981', '#059669']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           className="px-4 pb-6 rounded-b-3xl shadow-sm"
@@ -302,27 +348,14 @@ export default function FavoritesScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          viewMode === 'grid' ? (
-            <View className="pt-4 px-4">
-              <View className="flex-row flex-wrap justify-between">
-                {favoriteItems.map((favoriteItem) => (
-                  <FavoriteProductGridCard
-                    key={favoriteItem._id}
-                    favoriteItem={favoriteItem}
-                  />
-                ))}
-              </View>
-            </View>
-          ) : (
-            <View className="pt-4">
-              {favoriteItems.map((favoriteItem) => (
-                <FavoriteProductCard 
-                  key={favoriteItem._id} 
-                  favoriteItem={favoriteItem} 
-                />
-              ))}
-            </View>
-          )
+          <View className="pt-4">
+            {favoriteItems.map((favoriteItem) => (
+              <FavoriteProductCard 
+                key={favoriteItem._id} 
+                favoriteItem={favoriteItem} 
+              />
+            ))}
+          </View>
         )}
       </ScrollView>
     </SafeAreaView>

@@ -1,22 +1,27 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useCallback, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
 import {
     ActivityIndicator,
+    Animated,
+    Easing,
     FlatList,
     Image,
     RefreshControl,
     SafeAreaView,
+    StatusBar,
     Text,
     TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
+import { useMQTT } from "../../../../../hooks/useMQTT";
 import MessagingService, { Conversation } from "../../../../../services/api/MessagingService";
 
 export default function ClientMessagesPage() {
     const router = useRouter();
+    const { onNewMessage, onMessagesRead, offNewMessage, offMessagesRead } = useMQTT();
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -78,11 +83,77 @@ export default function ClientMessagesPage() {
         }, [])
     );
 
+    // Abonnements MQTT pour mise à jour temps réel (aligné sur enterprise)
+    useEffect(() => {
+        const handleNewMessageNotification = (data: any) => {
+            try {
+                if (!data?.conversation || !data?.message) return;
+                setConversations(prev => prev.map(conv => {
+                    if (conv._id === data.conversation._id) {
+                        return {
+                            ...conv,
+                            unreadCount: (conv.unreadCount || 0) + 1,
+                            lastMessage: data.message,
+                            lastActivity: new Date().toISOString()
+                        } as any;
+                    }
+                    return conv;
+                }));
+                setSearchResults(prev => prev.map(conv => {
+                    if (conv._id === data.conversation._id) {
+                        return {
+                            ...conv,
+                            unreadCount: (conv.unreadCount || 0) + 1,
+                            lastMessage: data.message,
+                            lastActivity: new Date().toISOString()
+                        } as any;
+                    }
+                    return conv;
+                }));
+            } catch (e) {
+                console.warn('⚠️ MQTT client messages new_message handler error:', e);
+            }
+        };
+
+        const handleMessagesRead = (data: any) => {
+            try {
+                if (!data?.conversationId) return;
+                setConversations(prev => prev.map(conv => {
+                    if (conv._id === data.conversationId) {
+                        return {
+                            ...conv,
+                            unreadCount: Math.max(0, (conv.unreadCount || 0) - (data.readCount || 0))
+                        } as any;
+                    }
+                    return conv;
+                }));
+                setSearchResults(prev => prev.map(conv => {
+                    if (conv._id === data.conversationId) {
+                        return {
+                            ...conv,
+                            unreadCount: Math.max(0, (conv.unreadCount || 0) - (data.readCount || 0))
+                        } as any;
+                    }
+                    return conv;
+                }));
+            } catch (e) {
+                console.warn('⚠️ MQTT client messages messages_read handler error:', e);
+            }
+        };
+
+        onNewMessage(handleNewMessageNotification);
+        onMessagesRead(handleMessagesRead);
+        return () => {
+            offNewMessage(handleNewMessageNotification);
+            offMessagesRead(handleMessagesRead);
+        };
+    }, [onNewMessage, onMessagesRead, offNewMessage, offMessagesRead]);
+
     // Composant pour une conversation
     function ConversationCard({ conversation }: { conversation: Conversation }) {
         // Déterminer le participant non-utilisateur avec vérification
         const otherParticipant = conversation.otherParticipant ||
-            (conversation.participants?.find(p => p._id !== conversation.userId) || null);
+            (conversation.participants?.find(p => (p as any)?._id !== (conversation as any)?.userId) || null);
 
         // Formater l'heure du dernier message avec fallback
         let lastMessageTime: string = 'N/A';
@@ -194,7 +265,7 @@ export default function ClientMessagesPage() {
                         {isUnread ? (
                             <View className="absolute -top-1 -right-1 bg-primary-500 rounded-full min-w-6 h-6 justify-center items-center px-2">
                                 <Text className="text-white text-xs font-quicksand-bold">
-                                    {conversation.unreadCount > 99 ? '99+' : String(conversation.unreadCount)}
+                                    {(conversation.unreadCount || 0) > 99 ? '99+' : String(conversation.unreadCount || 0)}
                                 </Text>
                             </View>
                         ) : null}
@@ -252,14 +323,125 @@ export default function ClientMessagesPage() {
         ? baseConversations.filter(c => (c.unreadCount ?? 0) > 0)
         : baseConversations;
 
+    // Skeleton Loader Component
+    const ShimmerBlock = ({ style }: { style?: any }) => {
+        const shimmer = React.useRef(new Animated.Value(0)).current;
+        useEffect(() => {
+            const loop = Animated.loop(
+                Animated.timing(shimmer, {
+                    toValue: 1,
+                    duration: 1200,
+                    easing: Easing.linear,
+                    useNativeDriver: true,
+                })
+            );
+            loop.start();
+            return () => loop.stop();
+        }, [shimmer]);
+        const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
+        return (
+            <View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
+                <Animated.View style={{
+                    position: 'absolute', top: 0, bottom: 0, width: 120,
+                    transform: [{ translateX }],
+                    backgroundColor: 'rgba(255,255,255,0.35)',
+                    opacity: 0.7,
+                }} />
+            </View>
+        );
+    };
+
+    const SkeletonCard = () => (
+        <View className="rounded-xl mx-4 my-2 p-4 shadow-sm border border-neutral-100 bg-white">
+            <View className="flex-row items-center">
+                {/* Avatar skeleton */}
+                <ShimmerBlock style={{ width: 56, height: 56, borderRadius: 28 }} />
+
+                {/* Content skeleton */}
+                <View className="ml-4 flex-1">
+                    <View className="flex-row items-center justify-between mb-2">
+                        <ShimmerBlock style={{ height: 18, borderRadius: 8, width: '60%' }} />
+                        <ShimmerBlock style={{ height: 12, borderRadius: 6, width: '20%' }} />
+                    </View>
+
+                    {/* Product info skeleton */}
+                    <View className="flex-row items-center mb-2">
+                        <ShimmerBlock style={{ width: 24, height: 24, borderRadius: 6, marginRight: 8 }} />
+                        <ShimmerBlock style={{ height: 14, borderRadius: 6, width: '70%' }} />
+                    </View>
+
+                    {/* Message preview skeleton */}
+                    <ShimmerBlock style={{ height: 14, borderRadius: 6, width: '85%', marginBottom: 4 }} />
+                    <ShimmerBlock style={{ height: 14, borderRadius: 6, width: '60%' }} />
+                </View>
+
+                {/* Chevron skeleton */}
+                <View className="ml-2">
+                    <ShimmerBlock style={{ width: 18, height: 18, borderRadius: 2 }} />
+                </View>
+            </View>
+        </View>
+    );
+
+    const renderSkeletons = () => {
+        return (
+            <FlatList
+                data={Array.from({ length: 6 }).map((_, i) => i.toString())}
+                renderItem={() => <SkeletonCard />}
+                keyExtractor={(item) => item}
+                contentContainerStyle={{ paddingTop: 8, paddingBottom: 40 }}
+                showsVerticalScrollIndicator={false}
+            />
+        );
+    };
+
     if (loading) {
         return (
             <SafeAreaView className="flex-1 bg-white">
-                <View className="flex-1 justify-center items-center">
-                    <ActivityIndicator size="large" color="#FE8C00" />
-                    <Text className="mt-4 text-neutral-600 font-quicksand-medium">
-                        Chargement des conversations...
-                    </Text>
+                <StatusBar backgroundColor="#10B981" barStyle="light-content" />
+                {/* Header */}
+                <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="px-6 py-6 pt-20 rounded-b-3xl">
+                    <View className="flex-row items-center justify-between mb-4">
+                        <Text className="text-3xl font-quicksand-bold text-white">
+                            Messages
+                        </Text>
+                        <TouchableOpacity
+                            className="w-12 h-12 bg-white/90 rounded-full justify-center items-center shadow-sm"
+                            onPress={() => router.push('/')}
+                        >
+                            <Ionicons name="add" size={20} color="#10B981" />
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Barre de recherche skeleton */}
+                    <View className="relative mb-4">
+                        <View className="absolute left-3 top-3 z-10">
+                            <Ionicons name="search" size={20} color="rgba(255,255,255,0.7)" />
+                        </View>
+                        <View className="bg-white/20 rounded-2xl pl-10 pr-4 py-3">
+                            <ShimmerBlock style={{ height: 16, borderRadius: 6, width: '100%' }} />
+                        </View>
+                    </View>
+
+                    {/* Bouton de filtrage skeleton */}
+                    <View className="flex-row justify-between items-center">
+                        <View className="flex-row items-center px-4 py-2 rounded-full bg-white/20">
+                            <Ionicons
+                                name="mail-unread"
+                                size={16}
+                                color="white"
+                                style={{ marginRight: 8 }}
+                            />
+                            <ShimmerBlock style={{ height: 14, borderRadius: 6, width: 120 }} />
+                        </View>
+
+                        <ShimmerBlock style={{ height: 14, borderRadius: 6, width: 80 }} />
+                    </View>
+                </LinearGradient>
+
+                {/* Conteneur du contenu avec fond blanc */}
+                <View className="flex-1 bg-white">
+                    {renderSkeletons()}
                 </View>
             </SafeAreaView>
         );
@@ -268,14 +450,14 @@ export default function ClientMessagesPage() {
     return (
         <SafeAreaView className="flex-1 bg-white">
             {/* Header */}
-            <LinearGradient colors={['#FE8C00', '#FFAB38']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="px-6 py-6 pt-20 rounded-b-3xl">
+            <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="px-6 py-6 pt-20 rounded-b-3xl">
                 <View className="flex-row items-center justify-between mb-4">
                     <Text className="text-3xl font-quicksand-bold text-white">
                         Messages
                     </Text>
                     <TouchableOpacity
                         className="w-12 h-12 bg-white/90 rounded-full justify-center items-center shadow-sm"
-                        onPress={() => router.push('/(app)/(client)/(tabs)/')}
+                        onPress={() => router.push('/')}
                     >
                         <Ionicons name="add" size={24} color="#374151" />
                     </TouchableOpacity>
@@ -306,7 +488,7 @@ export default function ClientMessagesPage() {
                             </TouchableOpacity>
                         )}
                         {searching && (
-                            <ActivityIndicator size="small" color="#FE8C00" />
+                            <ActivityIndicator size="small" color="#10B981" />
                         )}
                     </View>
                 </View>
@@ -345,8 +527,8 @@ export default function ClientMessagesPage() {
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
-                        colors={['#FE8C00']}
-                        tintColor="#FE8C00"
+                        colors={['#10B981']}
+                        tintColor="#10B981"
                     />
                 }
                 ListEmptyComponent={
@@ -364,16 +546,16 @@ export default function ClientMessagesPage() {
                                 ? `Aucune conversation trouvée pour "${searchQuery}"`
                                 : 'Vos conversations avec les vendeurs apparaîtront ici'}
                         </Text>
-                        {(searchQuery.trim().length === 0) ? (
+            {searchQuery.trim().length === 0 ? (
                             <TouchableOpacity
                                 className="bg-primary-500 rounded-2xl px-8 py-4 shadow-sm active:opacity-70"
-                                onPress={() => router.push('/(app)/(client)/(tabs)/')}
+                onPress={() => router.push('/')}
                             >
                                 <Text className="text-white font-quicksand-semibold text-base">
                                     Explorer les produits
                                 </Text>
                             </TouchableOpacity>
-                        ) : null}
+            ) : null}
                     </View>
                 }
                 contentContainerStyle={{

@@ -1,12 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useEffect, useState } from "react";
 import * as Linking from "expo-linking";
+import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
+    Animated,
     Dimensions,
+    Easing,
     FlatList,
     Image,
+    Keyboard,
     Modal,
     RefreshControl,
     SafeAreaView,
@@ -14,8 +17,7 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    View,
-    Keyboard,
+    View
 } from "react-native";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useSearchCache } from "../../../../hooks/useSearchCache";
@@ -129,6 +131,7 @@ export default function ClientHome() {
     const [neighborhoodModalVisible, setNeighborhoodModalVisible] = useState(false);
     const [currentAdIndex, setCurrentAdIndex] = useState(0);
     const [refreshing, setRefreshing] = useState(false);
+    const [loading, setLoading] = useState(true); // État de chargement global
 
     // États pour les produits de l'API
     const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -160,9 +163,9 @@ export default function ClientHome() {
             subtitle: "est visible",
             description: "Augmentez votre visibilité avec nos services",
             type: "main",
-            bgColor: "#FE8C00",
+            bgColor: "#10B981",
             textColor: "#FFFFFF",
-            image: "https://via.placeholder.com/300x150/FE8C00/FFFFFF?text=Pub+1"
+            image: "https://via.placeholder.com/300x150/10B981/FFFFFF?text=Pub+1"
         },
         {
             id: 2,
@@ -231,6 +234,26 @@ export default function ClientHome() {
         }
     };
 
+    const loadInitialData = async () => {
+        try {
+            setLoading(true);
+            await Promise.all([
+                loadFeaturedProducts(),
+                loadFavorites(),
+                loadRecentSearches()
+            ]);
+        } catch (error) {
+            console.error('❌ Erreur chargement données initiales:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadInitialData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // loadInitialData retiré des dépendances pour éviter la boucle infinie
+
     const refreshData = async () => {
         try {
             setRefreshing(true);
@@ -243,6 +266,112 @@ export default function ClientHome() {
         }
     };
 
+    // Skeleton Loader Component
+    const ShimmerBlock = ({ style }: { style?: any }) => {
+        const shimmer = React.useRef(new Animated.Value(0)).current;
+        useEffect(() => {
+            const loop = Animated.loop(
+                Animated.timing(shimmer, {
+                    toValue: 1,
+                    duration: 1200,
+                    easing: Easing.linear,
+                    useNativeDriver: true,
+                })
+            );
+            loop.start();
+            return () => loop.stop();
+        }, [shimmer]);
+        const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
+        return (
+            <View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
+                <Animated.View style={{
+                    position: 'absolute', top: 0, bottom: 0, width: 120,
+                    transform: [{ translateX }],
+                    backgroundColor: 'rgba(255,255,255,0.35)',
+                    opacity: 0.7,
+                }} />
+            </View>
+        );
+    };
+
+    const SkeletonCard = ({ style }: { style?: any }) => (
+        <View className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden" style={style}>
+            <ShimmerBlock style={{ height: 120, borderRadius: 16, width: '100%' }} />
+        </View>
+    );
+
+    const SkeletonProduct = () => (
+        <View className="bg-white rounded-2xl shadow-md border border-neutral-100 p-2 mb-3 w-[48%] overflow-hidden">
+            <ShimmerBlock style={{ height: 128, borderRadius: 16, width: '100%' }} />
+            <View className="p-2">
+                <ShimmerBlock style={{ height: 14, borderRadius: 7, width: '80%', marginBottom: 8 }} />
+                <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '60%', marginBottom: 8 }} />
+                <ShimmerBlock style={{ height: 12, borderRadius: 6, width: '40%' }} />
+            </View>
+        </View>
+    );
+
+    const renderSkeletonHome = () => (
+        <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 90 }}
+        >
+            {/* Header Skeleton */}
+            <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="py-6 pt-16 rounded-b-3xl shadow-md">
+                <View className="px-6 pb-4">
+                    <View className="flex-row items-center justify-between">
+                        <ShimmerBlock style={{ height: 20, borderRadius: 10, width: '40%' }} />
+                        <ShimmerBlock style={{ width: 24, height: 24, borderRadius: 12 }} />
+                    </View>
+                </View>
+
+                <View className="flex-row justify-between px-6 mb-4">
+                    <ShimmerBlock style={{ width: '45%', height: 40, borderRadius: 16 }} />
+                    <ShimmerBlock style={{ width: '45%', height: 40, borderRadius: 16 }} />
+                </View>
+
+                <View className="px-6">
+                    <ShimmerBlock style={{ height: 44, borderRadius: 16, width: '100%' }} />
+                </View>
+            </LinearGradient>
+
+            {/* Categories Skeleton */}
+            <View className="py-4">
+                <View className="flex-row flex-wrap justify-center px-3">
+                    {Array.from({ length: 8 }).map((_, index) => (
+                        <View key={index} className="w-[22%] items-center mb-4">
+                            <ShimmerBlock style={{ width: 60, height: 60, borderRadius: 30, marginBottom: 8 }} />
+                            <ShimmerBlock style={{ height: 12, borderRadius: 6, width: 50 }} />
+                        </View>
+                    ))}
+                </View>
+            </View>
+
+            {/* Ads Skeleton */}
+            <View className="py-4">
+                <View className="px-6 mb-4">
+                    <ShimmerBlock style={{ height: 20, borderRadius: 10, width: '50%' }} />
+                </View>
+                <View className="px-4">
+                    <ShimmerBlock style={{ height: 150, borderRadius: 16, width: '100%' }} />
+                </View>
+            </View>
+
+            {/* Featured Products Skeleton */}
+            <View className="py-4 px-4">
+                <View className="mb-4 flex-row justify-between items-center">
+                    <ShimmerBlock style={{ height: 18, borderRadius: 9, width: '40%' }} />
+                    <ShimmerBlock style={{ width: 80, height: 32, borderRadius: 16 }} />
+                </View>
+                <View className="flex-row flex-wrap justify-between">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                        <SkeletonProduct key={index} />
+                    ))}
+                </View>
+            </View>
+        </ScrollView>
+    );
+
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
     };
@@ -252,7 +381,7 @@ export default function ClientHome() {
         if (hours < 12) {
             return "Bonjour";
         } else if (hours < 18) {
-            return "Bon après-midi";
+            return "Bon après-midii";
         } else {
             return "Bonsoirrrrrrrrrrrrrrrrrrrrrrrrrrrrr";
         }
@@ -262,7 +391,7 @@ export default function ClientHome() {
     const mapSelectedSortToApi = (
         uiSort: 'relevance' | 'priceLow' | 'priceHigh' | 'newest' | 'oldest' | 'rating' | 'popular' | string
     ):
-        'newest' | 'oldest' | 'price_asc' | 'price_desc' | 'rating' | 'popular' => {
+        'newest' | 'price_asc' | 'price_desc' | 'rating' | 'popular' => {
         switch (uiSort) {
             case 'priceLow':
                 return 'price_asc';
@@ -271,7 +400,7 @@ export default function ClientHome() {
             case 'newest':
                 return 'newest';
             case 'oldest':
-                return 'oldest';
+                return 'newest'; // Map oldest to newest as fallback
             case 'rating':
                 return 'rating';
             case 'popular':
@@ -709,22 +838,25 @@ export default function ClientHome() {
 
     return (
         <SafeAreaView className="flex-1 bg-background-secondary">
-            <ScrollView 
-                className="flex-1" 
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-                contentContainerStyle={{ paddingBottom: 90 }}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={refreshData}
-                        colors={['#FE8C00']}
-                        tintColor="#FE8C00"
-                    />
-                }
-            >
+            {loading ? (
+                renderSkeletonHome()
+            ) : (
+                <ScrollView 
+                    className="flex-1" 
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                    contentContainerStyle={{ paddingBottom: 90 }}
+                    refreshControl={
+                            <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={refreshData}
+                            colors={['#10B981']}
+                            tintColor="#10B981"
+                        />
+                    }
+                >
                 {/* Header with Location */}
-                <LinearGradient colors={['#FE8C00', '#FFAB38']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="py-6 pt-16 rounded-b-3xl shadow-md">
+                <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="py-6 pt-16 rounded-b-3xl shadow-md">
                     {/* Header avec salutation et icône notification */}
                     <View className="px-4 pb-4">
                         <View className="flex-row items-center justify-between">
@@ -795,7 +927,7 @@ export default function ClientHome() {
                                             performSearch();
                                         }
                                     }}>
-                                        <Ionicons name="search" size={20} color="#FE8C00" />
+                                        <Ionicons name="search" size={20} color="#10B981" />
                                     </TouchableOpacity>
                                 )}
                             </View>
@@ -886,20 +1018,20 @@ export default function ClientHome() {
                         {/* En-tête résultats + toggle vue */}
                         <View className="flex-row items-center justify-between">
                             <Text className="text-lg font-quicksand-bold text-neutral-800">
-                                Résultats pour "{searchQuery}"
+                                Résultats pour &quot;{searchQuery}&quot;
                             </Text>
                             <View className="flex-row items-center bg-neutral-100 rounded-full p-1">
                                 <TouchableOpacity
                                     onPress={() => setResultsView('grid')}
                                     className={`px-2 py-1 rounded-full ${resultsView === 'grid' ? 'bg-white' : ''}`}
                                 >
-                                    <Ionicons name="grid-outline" size={18} color={resultsView === 'grid' ? '#FE8C00' : '#6B7280'} />
+                                    <Ionicons name="grid-outline" size={18} color={resultsView === 'grid' ? '#10B981' : '#6B7280'} />
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     onPress={() => setResultsView('list')}
                                     className={`px-2 py-1 rounded-full ${resultsView === 'list' ? 'bg-white' : ''}`}
                                 >
-                                    <Ionicons name="list-outline" size={18} color={resultsView === 'list' ? '#FE8C00' : '#6B7280'} />
+                                    <Ionicons name="list-outline" size={18} color={resultsView === 'list' ? '#10B981' : '#6B7280'} />
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -1044,7 +1176,7 @@ export default function ClientHome() {
                                     className="w-16 h-16 rounded-full justify-center items-center mb-2 shadow-sm"
                                     style={{ backgroundColor: item.color + '20', borderWidth: 1, borderColor: item.color + '55' }}
                                 >
-                                    <Ionicons name={item.icon} size={26} color={item.color} />
+                                    <Ionicons name={item.icon as any} size={26} color={item.color} />
                                 </View>
                                 <Text className="text-xs font-quicksand-semibold text-neutral-800 text-center" numberOfLines={2}>
                                     {item.name}
@@ -1084,7 +1216,7 @@ export default function ClientHome() {
                                         width: active ? 16 : 8,
                                         height: 8,
                                         borderRadius: 9999,
-                                        backgroundColor: active ? '#FE8C00' : '#D1D5DB',
+                                        backgroundColor: active ? '#10B981' : '#D1D5DB',
                                         marginHorizontal: 4,
                                         opacity: active ? 1 : 0.7,
                                     }}
@@ -1108,7 +1240,7 @@ export default function ClientHome() {
                     </View>
                     {loadingProducts ? (
                         <View className="flex-1 justify-center items-center py-8">
-                            <ActivityIndicator size="large" color="#FE8C00" />
+                            <ActivityIndicator size="large" color="#10B981" />
                             <Text className="mt-2 text-neutral-600 font-quicksand-medium">
                                 Chargement des produits...
                             </Text>
@@ -1128,6 +1260,8 @@ export default function ClientHome() {
 
 
             </ScrollView>
+
+            )}
 
             {/* Modal de sélection de ville */}
             <Modal

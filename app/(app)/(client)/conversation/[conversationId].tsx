@@ -1,9 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import { StatusBar as ExpoStatusBar } from "expo-status-bar";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
+    Animated,
+    Easing,
     FlatList,
     Image,
     Keyboard,
@@ -15,10 +20,9 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import { useAuth } from "../../../../contexts/AuthContext";
+import { useMQTT } from "../../../../hooks/useMQTT";
 import MessagingService, { Conversation, Message } from "../../../../services/api/MessagingService";
 import ProductService from "../../../../services/api/ProductService";
 import { Product } from "../../../../types/product";
@@ -34,6 +38,9 @@ export default function ConversationDetails() {
   const { user } = useAuth(); // Récupérer l'utilisateur connecté
   const insets = useSafeAreaInsets();
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  
+  // Hook MQTT pour la communication temps réel
+  const { isConnected: mqttConnected, sendMessage: mqttSendMessage, sendMessageWithAttachment, joinConversation: mqttJoinConversation, markAsRead: mqttMarkAsRead, onNewMessage, onMessageDeleted, onMessagesRead, onMessageSent, offNewMessage, offMessageDeleted, offMessagesRead, offMessageSent } = useMQTT();
   
   // Récupération sécurisée des paramètres
   let conversationId: string | null = null;
@@ -54,11 +61,224 @@ export default function ConversationDetails() {
   const [inputHeight, setInputHeight] = useState(50);
   const [inputFocused, setInputFocused] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [attachment, setAttachment] = useState<{
+    type: 'IMAGE' | 'FILE';
+    data: string;
+    mimeType: string;
+    fileName?: string;
+    uri: string;
+  } | null>(null);
 
   // Récupérer l'ID de l'utilisateur connecté depuis le contexte d'auth
   const getCurrentUserId = () => {
     return user?._id || null; // Utiliser l'ID du contexte d'authentification
   };
+
+  // Composant ShimmerBlock pour l'animation de chargement
+  const ShimmerBlock = ({ width, height, borderRadius = 8 }: { width: number | string; height: number; borderRadius?: number }) => {
+    const shimmerAnim = React.useRef(new Animated.Value(0)).current;
+
+    React.useEffect(() => {
+      const shimmerAnimation = Animated.loop(
+        Animated.timing(shimmerAnim, {
+          toValue: 1,
+          duration: 1500,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      );
+      shimmerAnimation.start();
+      return () => shimmerAnimation.stop();
+    }, [shimmerAnim]);
+
+    const translateX = shimmerAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: [-300, 300],
+    });
+
+    return (
+      <View className="bg-gray-200 overflow-hidden" style={{ width: width as any, height, borderRadius }}>
+        <Animated.View
+          className="bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 absolute inset-0"
+          style={{ transform: [{ translateX }] }}
+        />
+      </View>
+    );
+  };
+
+  // Composant SkeletonMessage pour simuler un message en chargement
+  const SkeletonMessage = ({ isCurrentUser = false }: { isCurrentUser?: boolean }) => (
+    <View className={`mb-4 ${isCurrentUser ? 'items-end' : 'items-start'}`}>
+      <View className="flex-row items-end max-w-xs">
+        {!isCurrentUser && (
+          <ShimmerBlock width={32} height={32} borderRadius={16} />
+        )}
+        <View className="flex-1">
+          <ShimmerBlock width={isCurrentUser ? 120 : 150} height={16} borderRadius={8} />
+          <View className="mt-2">
+            <ShimmerBlock width={isCurrentUser ? 200 : 180} height={40} borderRadius={16} />
+          </View>
+          <View className={`flex-row items-center mt-1 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+            <ShimmerBlock width={40} height={12} borderRadius={6} />
+          </View>
+        </View>
+        {isCurrentUser && (
+          <ShimmerBlock width={32} height={32} borderRadius={16} />
+        )}
+      </View>
+    </View>
+  );
+
+  // Fonction pour rendre les skeletons de conversation
+  const renderSkeletonConversation = () => (
+    <SafeAreaView className="flex-1 bg-white">
+      <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
+      {/* Header skeleton */}
+      <LinearGradient
+        colors={['#10B981', '#059669']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        className="px-4 pb-3 rounded-b-3xl shadow-sm"
+        style={{ paddingTop: insets.top + 8 }}
+      >
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center">
+            <ShimmerBlock width={24} height={24} borderRadius={12} />
+            <ShimmerBlock width={120} height={20} borderRadius={4} />
+          </View>
+          <ShimmerBlock width={20} height={20} borderRadius={10} />
+        </View>
+      </LinearGradient>
+
+      {/* Product info skeleton */}
+      <View className="bg-neutral-50 px-4 py-3 border-b border-neutral-100 flex-row items-center">
+        <ShimmerBlock width={40} height={40} borderRadius={12} />
+        <View className="flex-1 ml-3">
+          <ShimmerBlock width="60%" height={14} borderRadius={4} />
+          <ShimmerBlock width="40%" height={12} borderRadius={4} />
+        </View>
+      </View>
+
+      {/* Messages skeleton */}
+      <View className="flex-1 px-4 py-4">
+        {Array.from({ length: 8 }).map((_, index) => (
+          <SkeletonMessage key={index} isCurrentUser={index % 3 === 0} />
+        ))}
+      </View>
+    </SafeAreaView>
+  );
+
+  // Gestionnaires d'événements MQTT avec useCallback pour stabilité
+  const handleNewMessage = useCallback((data: any) => {
+    if (data.conversation._id === conversationId) {
+      console.log('💬 Nouveau message reçu via MQTT');
+
+      // Vérifier si c'est un message que nous venons d'envoyer
+      const currentUserId = user?._id || null;
+      const isOurMessage = data.message.sender._id === currentUserId;
+
+      setMessages(prev => {
+        // Éviter les doublons
+        const exists = prev.some(msg => msg._id === data.message._id);
+        if (exists) return prev;
+        return [...prev, data.message];
+      });
+
+  // Si c'est notre message, mettre à jour le cache immédiatement
+      if (isOurMessage) {
+        console.log('📝 Notre message confirmé - mise à jour du cache');
+        const cached = conversationCache.get(conversationId!);
+        if (cached) {
+          const updatedCache = {
+            ...cached,
+            messages: [...cached.messages, data.message],
+            timestamp: Date.now()
+          };
+          conversationCache.set(conversationId!, updatedCache);
+        }
+      }
+
+      // Marquer comme lu si le message vient d'un autre participant
+      if (!isOurMessage) {
+        try {
+          mqttMarkAsRead(conversationId!);
+        } catch (e) {
+          console.warn('⚠️ markAsRead échoué côté client:', e);
+        }
+      }
+
+      // Faire défiler vers le bas
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 80);
+    }
+  }, [conversationId, user?._id, mqttMarkAsRead]);
+
+  const handleMessageDeleted = useCallback((data: any) => {
+    if (data.conversationId === conversationId) {
+      setMessages(prev => prev.filter(msg => msg._id !== data.messageId));
+    }
+  }, [conversationId]);
+
+  const handleMessagesRead = useCallback((data: any) => {
+    if (data.conversationId === conversationId) {
+      // Mettre à jour le statut des messages
+      setMessages(prev => prev.map(msg => ({
+        ...msg,
+        readBy: msg.readBy ? [...msg.readBy, {
+          user: data.userId,
+          readAt: data.readAt
+        }] : [{
+          user: data.userId,
+          readAt: data.readAt
+        }]
+      })));
+    }
+  }, [conversationId]);
+
+  const handleMessageSent = useCallback((data: any) => {
+    console.log('✅ Confirmation d\'envoi reçue:', data);
+    
+    // Mettre à jour le statut du message pour indiquer qu'il a été envoyé avec succès
+    setMessages(prev => prev.map(msg => {
+      if (msg._id === data.messageId) {
+        return {
+          ...msg,
+          deliveryStatus: 'SENT' as const,
+          // On peut aussi mettre à jour d'autres propriétés si nécessaire
+        };
+      }
+      return msg;
+    }));
+    
+    // Mettre à jour le cache aussi
+    const cached = conversationCache.get(conversationId!);
+    if (cached) {
+      const updatedMessages = cached.messages.map(msg => {
+        if (msg._id === data.messageId) {
+          return {
+            ...msg,
+            deliveryStatus: 'SENT' as const,
+          };
+        }
+        return msg;
+      });
+      
+      conversationCache.set(conversationId!, {
+        ...cached,
+        messages: updatedMessages
+      });
+    }
+  }, [conversationId]);
+
+  // S'assurer que le dernier message est toujours visible
+  useEffect(() => {
+    if (messages.length > 0) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messages.length]);
 
   // Gestion du clavier spécifique pour Android et iOS
   useEffect(() => {
@@ -68,17 +288,10 @@ export default function ConversationDetails() {
         const keyboardHeight = e.endCoordinates.height;
         setKeyboardHeight(keyboardHeight);
         
-        // Pour Android, on fait défiler immédiatement vers le bas
-        if (Platform.OS === 'android') {
-          setTimeout(() => {
-            flatListRef.current?.scrollToEnd({ animated: true });
-          }, 50);
-        } else {
-          // Pour iOS, on attend un peu plus
-          setTimeout(() => {
-            flatListRef.current?.scrollToEnd({ animated: true });
-          }, 100);
-        }
+        // Scroll vers le bas avec un délai optimisé
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }, Platform.OS === 'android' ? 100 : 150);
       }
     );
 
@@ -86,6 +299,10 @@ export default function ConversationDetails() {
       Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
       () => {
         setKeyboardHeight(0);
+        // Petit délai pour s'assurer que le layout est mis à jour
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }, 50);
       }
     );
 
@@ -141,7 +358,7 @@ export default function ConversationDetails() {
           const prod = await ProductService.getPublicProductById(conv.product);
           setEffectiveProduct(prod);
         } else {
-          setEffectiveProduct(conv.product);
+          setEffectiveProduct(conv.product as Product);
         }
       } catch (error) {
         console.error('❌ Erreur chargement produit:', error);
@@ -154,53 +371,189 @@ export default function ConversationDetails() {
     }
   }, [conversationId, user?._id]);
 
+  // === GESTION MQTT ===
+  useEffect(() => {
+  if (!conversationId || !mqttConnected) return;
+
+    console.log('🔌 Configuration MQTT pour conversation:', conversationId);
+
+    // Rejoindre la conversation MQTT
+  // Rejoindre / s'abonner explicitement à la conversation pour recevoir les événements
+  mqttJoinConversation(conversationId);
+
+    // S'abonner aux événements MQTT via le hook
+    onNewMessage(handleNewMessage);
+    onMessageDeleted(handleMessageDeleted);
+    onMessagesRead(handleMessagesRead);
+    onMessageSent(handleMessageSent);
+
+    // Cleanup function
+    return () => {
+    offNewMessage(handleNewMessage);
+      offMessageDeleted(handleMessageDeleted);
+      offMessagesRead(handleMessagesRead);
+      offMessageSent(handleMessageSent);
+    };
+
+  }, [conversationId, mqttConnected, user?._id, mqttJoinConversation, onNewMessage, onMessageDeleted, onMessagesRead, onMessageSent, offNewMessage, offMessageDeleted, offMessagesRead, offMessageSent, handleNewMessage, handleMessageDeleted, handleMessagesRead, handleMessageSent]);
+
   const sendMessage = async () => {
-    if (!newMessage.trim() || sending || !conversation) return;
-    
+    if ((!newMessage.trim() && !attachment) || sending || !conversation) {
+      console.log('⏸️ Envoi annulé: données insuffisantes ou envoi en cours', {
+        hasText: !!newMessage.trim(),
+        hasAttachment: !!attachment,
+        sending,
+        hasConversation: !!conversation
+      });
+      return;
+    }
+
     try {
       setSending(true);
-      const productId = typeof conversation.product === 'string' 
-        ? conversation.product 
+
+      const productId = typeof conversation.product === 'string'
+        ? conversation.product
         : conversation.product._id;
-      
-      const result = await MessagingService.sendMessage(
+
+      console.log('🚚 Envoi message - préparation', {
         productId,
-        newMessage.trim(),
-        replyingTo?._id
-      );
-      
-      // Ajouter le nouveau message à la liste
-      setMessages(prev => [...prev, result.message]);
+        conversationId,
+        hasAttachment: !!attachment,
+        textLength: newMessage.trim().length
+      });
+
+      // Émission directe du message via MQTT
+      if (attachment) {
+        sendMessageWithAttachment(
+          productId,
+          newMessage.trim(),
+          {
+            type: attachment.type,
+            data: attachment.data,
+            mimeType: attachment.mimeType,
+            fileName: attachment.fileName
+          },
+          replyingTo?._id,
+          conversationId || undefined
+        );
+      } else {
+        mqttSendMessage(
+          productId,
+          newMessage.trim(),
+          replyingTo?._id,
+          conversationId || undefined
+        );
+      }
+
+      console.log('📨 Message émis via MQTT', { conversationId });
+
+      // Réinitialiser les états immédiatement
       setNewMessage('');
       setReplyingTo(null);
-      
-      // Mettre à jour le cache
-      const cached = conversationCache.get(conversationId!);
-      if (cached) {
-        conversationCache.set(conversationId!, {
-          ...cached,
-          messages: [...cached.messages, result.message],
-          timestamp: Date.now()
-        });
-      }
-      
-      // Faire défiler vers le bas
+      setAttachment(null);
+      setSending(false);
+
+      // S'assurer que le dernier message est visible après l'envoi
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
-      
-      console.log("✅ Message envoyé");
+
     } catch (error) {
-      console.error('❌ Erreur envoi message:', error);
-      Alert.alert('Erreur', 'Impossible d\'envoyer le message');
-    } finally {
+      console.error('❌ Exception pendant l\'envoi:', error);
       setSending(false);
+      Alert.alert('Erreur', 'Impossible d\'envoyer le message');
     }
+  };
+
+  // Fonctions pour gérer les pièces jointes
+  const requestPermissions = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permission requise',
+        'Nous avons besoin de l\'autorisation pour accéder à vos photos.'
+      );
+      return false;
+    }
+    return true;
+  };
+
+  const requestCameraPermissions = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permission requise',
+        'Nous avons besoin de l\'autorisation pour utiliser votre caméra.'
+      );
+      return false;
+    }
+    return true;
+  };
+
+  const pickImageFromGallery = async () => {
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) return;
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+        base64: true,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        setAttachment({
+          type: 'IMAGE',
+          data: asset.base64 || '',
+          mimeType: asset.mimeType || 'image/jpeg',
+          fileName: asset.fileName || undefined,
+          uri: asset.uri
+        });
+      }
+    } catch (error) {
+      console.error('Erreur sélection image:', error);
+      Alert.alert('Erreur', 'Impossible de sélectionner l\'image');
+    }
+  };
+
+  const takePhoto = async () => {
+    const hasPermission = await requestCameraPermissions();
+    if (!hasPermission) return;
+
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+        base64: true,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        setAttachment({
+          type: 'IMAGE',
+          data: asset.base64 || '',
+          mimeType: asset.mimeType || 'image/jpeg',
+          fileName: asset.fileName || undefined,
+          uri: asset.uri
+        });
+      }
+    } catch (error) {
+      console.error('Erreur prise photo:', error);
+      Alert.alert('Erreur', 'Impossible de prendre la photo');
+    }
+  };
+
+  const removeAttachment = () => {
+    setAttachment(null);
   };
 
   // Fonction pour envoyer un message avec animation
   const handleSendPress = () => {
-    if (!newMessage.trim() || sending) return;
+    if (!newMessage.trim() && !attachment || sending) return;
     
     // Animation du bouton d'envoi
     textInputRef.current?.blur();
@@ -210,16 +563,10 @@ export default function ConversationDetails() {
   // Fonction pour gérer le focus de l'input
   const handleInputFocus = () => {
     setInputFocused(true);
-    // Pour Android, on scrolle plus rapidement
-    if (Platform.OS === 'android') {
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 150);
-    } else {
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    }
+    // Scroll vers le bas avec délai optimisé pour la plateforme
+    setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }, Platform.OS === 'android' ? 200 : 250);
   };
 
   const handleInputBlur = () => {
@@ -308,7 +655,7 @@ export default function ConversationDetails() {
     if (!currentUserId || message.sender._id !== currentUserId) {
       return null; // Pas de statut pour les messages reçus
     }
-    
+
     // Pour les messages envoyés par l'utilisateur actuel
     if (message.readBy && message.readBy.length > 1) {
       // Le message a été lu par d'autres personnes (plus que l'expéditeur)
@@ -325,22 +672,22 @@ export default function ConversationDetails() {
   // Composant pour l'indicateur de statut
   const MessageStatusIndicator = ({ status }: { status: 'sent' | 'delivered' | 'read' | null }) => {
     if (!status) return null;
-    
+
     switch (status) {
       case 'sent':
         return <Ionicons name="checkmark" size={12} color="#9CA3AF" />;
       case 'delivered':
         return (
           <View className="flex-row">
-            <Ionicons name="checkmark" size={12} color="#9CA3AF" style={{ marginLeft: -4 }} />
+            <Ionicons name="checkmark" size={12} color="#9CA3AF" />
             <Ionicons name="checkmark" size={12} color="#9CA3AF" style={{ marginLeft: -6 }} />
           </View>
         );
       case 'read':
         return (
           <View className="flex-row">
-            <Ionicons name="checkmark" size={12} color="#3B82F6" style={{ marginLeft: -4 }} />
-            <Ionicons name="checkmark" size={12} color="#3B82F6" style={{ marginLeft: -6 }} />
+            <Ionicons name="checkmark" size={12} color="#10B981" />
+            <Ionicons name="checkmark" size={12} color="#10B981" style={{ marginLeft: -6 }} />
           </View>
         );
       default:
@@ -351,8 +698,13 @@ export default function ConversationDetails() {
   // Composant pour un message
   const MessageBubble = ({ message }: { message: Message }) => {
     const currentUserId = getCurrentUserId();
-    const isCurrentUser = currentUserId ? message.sender._id === currentUserId : false;
-    const isDeleted = message.metadata.deleted;
+
+    // Logique améliorée pour déterminer si c'est un message de l'utilisateur actuel
+    // Vérifier plusieurs champs possibles pour l'ID de l'expéditeur
+    const senderId = message.sender?._id || (message as any).senderId;
+    const isCurrentUser = currentUserId && senderId && senderId === currentUserId;
+
+    const isDeleted = message.metadata?.deleted || false;
     const messageStatus = getMessageStatus(message, currentUserId || undefined);
 
     return (
@@ -425,30 +777,24 @@ export default function ConversationDetails() {
                 }
               }}
               activeOpacity={0.9}
-              className={`${isCurrentUser ? 'rounded-2xl rounded-br-none overflow-hidden' : 'rounded-2xl rounded-bl-none border border-neutral-100'} shadow-sm`}
+              className="rounded-2xl overflow-hidden"
             >
               {isCurrentUser && !isDeleted ? (
                 <LinearGradient
-                  colors={['#FE8C00', '#FFAB38']}
+                  colors={['#10B981', '#34D399']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   className="px-4 py-3"
                 >
-                  <Text className="text-sm font-quicksand-medium text-white">
+                  <Text className="font-quicksand-medium text-white">
                     {message.text}
                   </Text>
                 </LinearGradient>
               ) : (
-                <View className="bg-white px-4 py-3">
-                  {isDeleted ? (
-                    <Text className="italic text-xs text-neutral-400">
-                      [Message supprimé]
-                    </Text>
-                  ) : (
-                    <Text className="text-sm font-quicksand-medium text-neutral-800">
-                      {message.text}
-                    </Text>
-                  )}
+                <View className={`${isDeleted ? 'bg-neutral-100' : 'bg-neutral-100'} px-4 py-3`}>
+                  <Text className={`font-quicksand-medium ${isDeleted ? 'text-neutral-600 italic' : 'text-neutral-800'}`}>
+                    {isDeleted ? '[Message supprimé]' : message.text}
+                  </Text>
                 </View>
               )}
             </TouchableOpacity>
@@ -458,7 +804,7 @@ export default function ConversationDetails() {
               isCurrentUser ? 'justify-end' : 'justify-start'
             }`}>
               <Text className="text-xs text-neutral-400 font-quicksand-medium mr-1">
-                {formatMessageTime(message.createdAt)}
+                {formatMessageTime(message.createdAt || message.sentAt || '')}
               </Text>
               {isCurrentUser && <MessageStatusIndicator status={messageStatus} />}
             </View>
@@ -491,8 +837,7 @@ export default function ConversationDetails() {
   // Fonction pour supprimer un message
   const deleteMessage = async (messageId: string, forEveryone: boolean) => {
     try {
-      const result = await MessagingService.deleteMessage(conversationId!, messageId, forEveryone);
-      
+      await MessagingService.deleteMessage(messageId, forEveryone);
       // Mettre à jour les messages localement
       setMessages(prev => prev.map(msg => 
         msg._id === messageId 
@@ -570,14 +915,7 @@ export default function ConversationDetails() {
   };
 
   if (loading) {
-    return (
-      <SafeAreaView className="flex-1 bg-white justify-center items-center">
-        <ActivityIndicator size="large" color="#FE8C00" />
-        <Text className="mt-4 text-neutral-600 font-quicksand-medium">
-          Chargement de la conversation...
-        </Text>
-      </SafeAreaView>
-    );
+    return renderSkeletonConversation();
   }
 
   if (!conversation || !effectiveProduct) {
@@ -603,14 +941,16 @@ export default function ConversationDetails() {
   }
 
   // Déterminer le nom du correspondant (entreprise)
-  const correspondentName = effectiveProduct.enterprise.companyName || 'Vendeur inconnu';
+  const correspondentName = (typeof effectiveProduct.enterprise === 'object' && effectiveProduct.enterprise?.companyName)
+    ? effectiveProduct.enterprise.companyName
+    : 'Vendeur inconnu';
 
   return (
     <SafeAreaView className="flex-1 bg-white">
       <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
       {/* Header */}
       <LinearGradient
-        colors={['#FE8C00', '#FFAB38']}
+  colors={['#10B981', '#059669']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         className="px-4 pb-3 rounded-b-3xl shadow-sm"
@@ -650,10 +990,10 @@ export default function ConversationDetails() {
         </View>
       </View>
 
-      {/* Messages et input */}
-      {Platform.OS === 'android' ? (
-        // Layout pour Android sans KeyboardAvoidingView
-        <View className="flex-1">
+  {/* Messages et input */}
+  {Platform.OS === 'android' ? (
+    // Layout pour Android avec gestion des insets bas
+    <View className="flex-1" style={{ paddingBottom: keyboardHeight > 0 ? keyboardHeight : insets.bottom }}>
           {/* Messages */}
           <FlatList
             ref={flatListRef}
@@ -663,11 +1003,14 @@ export default function ConversationDetails() {
             className="flex-1 px-4"
             contentContainerStyle={{ 
               paddingVertical: 16,
-              paddingBottom: 20
+      paddingBottom: keyboardHeight > 0 ? keyboardHeight + 120 : 100 + insets.bottom
             }}
             showsVerticalScrollIndicator={false}
             onContentSizeChange={() => {
-              flatListRef.current?.scrollToEnd({ animated: false });
+              // Scroll automatique vers le bas quand le contenu change
+              setTimeout(() => {
+                flatListRef.current?.scrollToEnd({ animated: false });
+              }, 50);
             }}
             onScroll={(e) => {
               const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
@@ -698,7 +1041,7 @@ export default function ConversationDetails() {
               <View className="flex-row items-start justify-between">
                 <View className="flex-1">
                   <View className="flex-row items-center mb-2">
-                    <Ionicons name="return-up-forward" size={14} color="#FE8C00" />
+                    <Ionicons name="return-up-forward" size={14} color="#10B981" />
                     <Text className="text-xs text-primary-600 font-quicksand-semibold ml-1">
                       Réponse à {replyingTo.sender.firstName} {replyingTo.sender.lastName}
                     </Text>
@@ -719,18 +1062,57 @@ export default function ConversationDetails() {
 
           {/* Zone de saisie Android */}
           <View 
-            className="px-4 py-4 bg-white absolute bottom-0 left-0 right-0"
+            className="px-4 py-4 bg-white absolute left-0 right-0"
             style={{ 
               borderTopWidth: 1, 
               borderTopColor: '#F3F4F6',
-              bottom: keyboardHeight > 0 ? keyboardHeight : 0
+              bottom: keyboardHeight > 0 ? keyboardHeight : insets.bottom
             }}
           >
+            {/* Affichage de l'image sélectionnée */}
+            {attachment && (
+              <View className="mb-3 p-3 bg-neutral-50 rounded-xl border border-neutral-200">
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center flex-1">
+                    <Image
+                      source={{ uri: attachment.uri }}
+                      className="w-12 h-12 rounded-lg mr-3"
+                      resizeMode="cover"
+                    />
+                    <View className="flex-1">
+                      <Text className="text-sm font-quicksand-semibold text-neutral-800">
+                        Image sélectionnée
+                      </Text>
+                      <Text className="text-xs text-neutral-500 font-quicksand-medium">
+                        {attachment.fileName || 'image.jpg'}
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    onPress={removeAttachment}
+                    className="w-8 h-8 bg-red-100 rounded-full justify-center items-center ml-2"
+                  >
+                    <Ionicons name="close" size={16} color="#EF4444" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
             <View className={`flex-row items-end rounded-3xl p-2 shadow-sm ${
               inputFocused ? 'bg-primary-50 border-2 border-primary-200' : 'bg-neutral-50 border-2 border-transparent'
             }`}>
               {/* Bouton d'attachement */}
               <TouchableOpacity
+                onPress={() => {
+                  Alert.alert(
+                    'Ajouter une pièce jointe',
+                    'Choisissez une option',
+                    [
+                      { text: 'Annuler', style: 'cancel' },
+                      { text: 'Prendre une photo', onPress: takePhoto },
+                      { text: 'Choisir depuis la galerie', onPress: pickImageFromGallery },
+                    ]
+                  );
+                }}
                 className="w-10 h-10 bg-white rounded-full justify-center items-center mr-2 shadow-sm"
                 disabled={sending}
                 style={{ opacity: sending ? 0.6 : 1 }}
@@ -778,7 +1160,7 @@ export default function ConversationDetails() {
                 disabled={!newMessage.trim() || sending}
                 className="w-12 h-12 rounded-full justify-center items-center ml-2 overflow-hidden"
                 style={{
-                  shadowColor: newMessage.trim() && !sending ? '#FE8C00' : '#000',
+                  shadowColor: newMessage.trim() && !sending ? '#10B981' : '#000',
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: newMessage.trim() && !sending ? 0.3 : 0.1,
                   shadowRadius: 4,
@@ -789,7 +1171,7 @@ export default function ConversationDetails() {
               >
                 {newMessage.trim() && !sending ? (
                   <LinearGradient
-                    colors={['#FE8C00', '#FFAB38']}
+                    colors={['#10B981', '#059669']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     className="absolute inset-0"
@@ -826,7 +1208,7 @@ export default function ConversationDetails() {
             )}
           </View>
         </View>
-      ) : (
+  ) : (
         // Layout pour iOS avec KeyboardAvoidingView
         <KeyboardAvoidingView 
           className="flex-1"
@@ -835,7 +1217,7 @@ export default function ConversationDetails() {
           style={{ flex: 1 }}
         >
           {/* Messages */}
-          <FlatList
+      <FlatList
             ref={flatListRef}
             data={messages}
             renderItem={renderMessageItem}
@@ -843,11 +1225,14 @@ export default function ConversationDetails() {
             className="flex-1 px-4"
             contentContainerStyle={{ 
               paddingVertical: 16,
-              paddingBottom: 20
+        paddingBottom: 40 + insets.bottom
             }}
             showsVerticalScrollIndicator={false}
             onContentSizeChange={() => {
-              flatListRef.current?.scrollToEnd({ animated: false });
+              // Scroll automatique vers le bas quand le contenu change
+              setTimeout(() => {
+                flatListRef.current?.scrollToEnd({ animated: false });
+              }, 50);
             }}
             onScroll={(e) => {
               const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
@@ -878,7 +1263,7 @@ export default function ConversationDetails() {
               <View className="flex-row items-start justify-between">
                 <View className="flex-1">
                   <View className="flex-row items-center mb-2">
-                    <Ionicons name="return-up-forward" size={14} color="#FE8C00" />
+                    <Ionicons name="return-up-forward" size={14} color="#10B981" />
                     <Text className="text-xs text-primary-600 font-quicksand-semibold ml-1">
                       Réponse à {replyingTo.sender.firstName} {replyingTo.sender.lastName}
                     </Text>
@@ -902,14 +1287,54 @@ export default function ConversationDetails() {
             className="px-4 py-4 bg-white"
             style={{ 
               borderTopWidth: 1, 
-              borderTopColor: '#F3F4F6'
+              borderTopColor: '#F3F4F6',
+              paddingBottom: insets.bottom
             }}
           >
+            {/* Affichage de l'image sélectionnée */}
+            {attachment && (
+              <View className="mb-3 p-3 bg-neutral-50 rounded-xl border border-neutral-200">
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center flex-1">
+                    <Image
+                      source={{ uri: attachment.uri }}
+                      className="w-12 h-12 rounded-lg mr-3"
+                      resizeMode="cover"
+                    />
+                    <View className="flex-1">
+                      <Text className="text-sm font-quicksand-semibold text-neutral-800">
+                        Image sélectionnée
+                      </Text>
+                      <Text className="text-xs text-neutral-500 font-quicksand-medium">
+                        {attachment.fileName || 'image.jpg'}
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    onPress={removeAttachment}
+                    className="w-8 h-8 bg-red-100 rounded-full justify-center items-center ml-2"
+                  >
+                    <Ionicons name="close" size={16} color="#EF4444" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
             <View className={`flex-row items-end rounded-3xl p-2 shadow-sm ${
               inputFocused ? 'bg-primary-50 border-2 border-primary-200' : 'bg-neutral-50 border-2 border-transparent'
             }`}>
               {/* Bouton d'attachement */}
               <TouchableOpacity
+                onPress={() => {
+                  Alert.alert(
+                    'Ajouter une pièce jointe',
+                    'Choisissez une option',
+                    [
+                      { text: 'Annuler', style: 'cancel' },
+                      { text: 'Prendre une photo', onPress: takePhoto },
+                      { text: 'Choisir depuis la galerie', onPress: pickImageFromGallery },
+                    ]
+                  );
+                }}
                 className="w-10 h-10 bg-white rounded-full justify-center items-center mr-2 shadow-sm"
                 disabled={sending}
                 style={{ opacity: sending ? 0.6 : 1 }}
@@ -957,7 +1382,7 @@ export default function ConversationDetails() {
                 disabled={!newMessage.trim() || sending}
                 className="w-12 h-12 rounded-full justify-center items-center ml-2 overflow-hidden"
                 style={{
-                  shadowColor: newMessage.trim() && !sending ? '#FE8C00' : '#000',
+                  shadowColor: newMessage.trim() && !sending ? '#10B981' : '#000',
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: newMessage.trim() && !sending ? 0.3 : 0.1,
                   shadowRadius: 4,
@@ -968,7 +1393,7 @@ export default function ConversationDetails() {
               >
                 {newMessage.trim() && !sending ? (
                   <LinearGradient
-                    colors={['#FE8C00', '#FFAB38']}
+                    colors={['#10B981', '#059669']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     className="absolute inset-0"
@@ -1007,14 +1432,14 @@ export default function ConversationDetails() {
         </KeyboardAvoidingView>
       )}
       {/* Bouton flottant descendre en bas */}
-      {showScrollToBottom && (
+  {showScrollToBottom && (
         <TouchableOpacity
           onPress={() => flatListRef.current?.scrollToEnd({ animated: true })}
           className="absolute right-4 rounded-full w-12 h-12 justify-center items-center"
           style={{
-            bottom: 96,
-            backgroundColor: '#FE8C00',
-            shadowColor: '#FE8C00',
+    bottom: (keyboardHeight > 0 ? keyboardHeight + 96 : 96 + insets.bottom),
+            backgroundColor: '#10B981',
+            shadowColor: '#10B981',
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.3,
             shadowRadius: 4,

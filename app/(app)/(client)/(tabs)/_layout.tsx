@@ -10,7 +10,7 @@ export default function ClientTabsLayout() {
       tabBar={(props) => <CustomTabBar {...props} />}
       initialRouteName="favorites"
       screenOptions={{
-        tabBarActiveTintColor: "#FE8C00",
+  tabBarActiveTintColor: "#10B981",
         tabBarInactiveTintColor: "#9CA3AF",
         headerShown: false, // Ensure all headers are hidden by default
         tabBarLabelStyle: {
@@ -64,7 +64,7 @@ export default function ClientTabsLayout() {
           ),
         }}
       />
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="search"
         options={{
           title: "Rechercher",
@@ -81,7 +81,7 @@ export default function ClientTabsLayout() {
             />
           ),
         }}
-      />
+      /> */}
       <Tabs.Screen
         name="favorites"
         options={{

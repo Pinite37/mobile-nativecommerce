@@ -48,6 +48,7 @@ export interface Message {
   replyTo?: Message;
   sentAt?: string; // Optionnel car parfois c'est createdAt
   createdAt?: string; // Ajouté pour correspondre à l'API
+  deliveryStatus?: 'SENT' | 'DELIVERED' | 'READ'; // Statut de livraison du message
   readBy: {
     user: string;
     readAt: string;
@@ -133,8 +134,8 @@ class MessagingService {
   /**
    * Envoyer un message texte
    */
-  async sendMessage(productId: string, text: string, replyTo?: string): Promise<any> {
-    console.log('🔄 MESSAGING SERVICE - Envoi message:', { productId, textLength: text.length });
+  async sendMessage(productId: string, text: string, replyTo?: string, conversationId?: string): Promise<any> {
+    console.log('🔄 MESSAGING SERVICE - Envoi message:', { productId, textLength: text.length, conversationId });
     
     try {
       const response = await ApiService.post<any>(
@@ -142,7 +143,8 @@ class MessagingService {
         { 
           productId, 
           text: text.trim(),
-          replyTo 
+          replyTo,
+          conversationId 
         }
       );
       
@@ -155,6 +157,59 @@ class MessagingService {
       return result;
     } catch (error) {
       console.error('❌ MESSAGING SERVICE - Erreur envoi message:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Envoyer un message avec pièce jointe
+   */
+  async sendMessageWithAttachment(
+    productId: string,
+    text: string,
+    attachment: {
+      type: 'IMAGE' | 'FILE';
+      data: string; // base64
+      mimeType: string;
+      fileName?: string;
+    },
+    replyTo?: string,
+    conversationId?: string
+  ): Promise<any> {
+    console.log('🔄 MESSAGING SERVICE - Envoi message avec pièce jointe:', {
+      productId,
+      textLength: text.length,
+      attachmentType: attachment.type,
+      mimeType: attachment.mimeType,
+      conversationId
+    });
+
+    try {
+      const response = await ApiService.post<any>(
+        `${this.baseUrl}/messages`,
+        {
+          productId,
+          text: text.trim(),
+          messageType: attachment.type,
+          attachment: {
+            data: attachment.data,
+            mimeType: attachment.mimeType,
+            fileName: attachment.fileName
+          },
+          replyTo,
+          conversationId
+        }
+      );
+
+      if (!response || !response.data) {
+        throw new Error('Réponse invalide du serveur');
+      }
+
+      const result = response.data;
+      console.log('✅ MESSAGING SERVICE - Message avec pièce jointe envoyé:', result.message?._id);
+      return result;
+    } catch (error) {
+      console.error('❌ MESSAGING SERVICE - Erreur envoi message avec pièce jointe:', error);
       throw error;
     }
   }

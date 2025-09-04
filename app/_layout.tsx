@@ -4,6 +4,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { ToastManager } from "../components/ui/ToastManager";
 import { AuthProvider } from "../contexts/AuthContext";
+import { MQTTProvider } from "../contexts/MQTTContext";
 import "./globals.css";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -34,14 +35,16 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <ToastManager>
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          <Stack.Screen name="(app)" options={{ headerShown: false }} />
-        </Stack>
-      </ToastManager>
+      <MQTTProvider>
+        <ToastManager>
+          <Stack>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen name="(app)" options={{ headerShown: false }} />
+          </Stack>
+        </ToastManager>
+      </MQTTProvider>
     </AuthProvider>
   );
 }

@@ -1,3 +1,4 @@
+import NotificationService from '../services/api/NotificationService';
 import StartupPerformanceMonitor from './StartupPerformanceMonitor';
 
 /**
@@ -42,8 +43,10 @@ class AppBootstrap {
 
   private async prepareServices(): Promise<void> {
     // Préparer tous les services qui pourraient être lents
-    // Pour l'instant, on n'a que les services d'auth, mais on peut étendre
-    
+
+    // Initialiser le service de notifications
+    await NotificationService.initialize();
+
     // Marquer que les services sont prêts
     console.log('📦 Services préparés');
   }

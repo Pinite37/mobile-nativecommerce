@@ -96,10 +96,10 @@ export const CustomTabBar: React.FC<TabBarProps> = ({ state, descriptors, naviga
             }}
           >
             <View className="items-center justify-center">
-              {!!IconComponent && (
+                  {!!IconComponent && (
                 <View style={{ marginBottom: 3 }}>
                   {IconComponent({
-                    color: isFocused ? '#FE8C00' : '#6B7280',
+                    color: isFocused ? '#10B981' : '#6B7280',
                     size: isFocused ? 24 : 22,
                     focused: isFocused,
                   })}

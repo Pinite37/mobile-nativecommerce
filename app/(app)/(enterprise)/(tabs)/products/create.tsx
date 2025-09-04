@@ -40,13 +40,19 @@ interface ProductFormErrors {
   tags?: string;
 }
 
+interface ProductFormImage {
+  base64: string;
+  uri: string;
+  loading?: boolean;
+}
+
 interface ProductForm {
   name: string;
   description: string;
   price: string;
   stock: string;
   category: string;
-  images: { base64: string; uri: string }[];
+  images: ProductFormImage[];
   brand: string;
   model: string;
   sku: string;
@@ -145,6 +151,8 @@ export default function CreateProduct() {
   });
 
   const [errors, setErrors] = useState<ProductFormErrors>({});
+  const [maxReachedStep, setMaxReachedStep] = useState<number>(0); // index of farthest unlocked step
+  const [showErrorSummary, setShowErrorSummary] = useState(false);
 
   const steps: { id: Step; title: string; icon: string }[] = [
     { id: 'basic', title: 'Informations de base', icon: 'information-circle' },
@@ -153,6 +161,9 @@ export default function CreateProduct() {
     { id: 'advanced', title: 'Options avancées', icon: 'settings' },
     { id: 'seo', title: 'SEO & Marketing', icon: 'trending-up' },
   ];
+
+  const currentStepIndex = steps.findIndex(s => s.id === currentStep);
+  const progress = (currentStepIndex + 1) / steps.length;
 
   useEffect(() => {
     loadCategories();
@@ -194,7 +205,7 @@ export default function CreateProduct() {
         if (!form.category) {
           newErrors.category = "La catégorie est requise";
         }
-        if (form.images.length === 0) {
+  if (form.images.filter(img => !img.loading).length === 0) {
           newErrors.images = "Au moins une image est requise";
         }
         break;
@@ -221,14 +232,16 @@ export default function CreateProduct() {
         break;
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  // Merge with existing so we don't clear other step errors prematurely
+  setErrors(prev => ({ ...prev, ...newErrors }));
+  return Object.keys(newErrors).length === 0;
   };
 
   const validateForm = (): boolean => {
     return validateStep('basic') && validateStep('details') && validateStep('shipping') && validateStep('advanced');
   };
 
+  // Simple shimmer simulation for image processing
   const handleImagePicker = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -241,15 +254,18 @@ export default function CreateProduct() {
 
       if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
-        if (asset.base64) {
+        // add temporary loading image (simulate processing)
+        setForm(prev => ({
+          ...prev,
+          images: [...prev.images, { base64: asset.base64 || '', uri: asset.uri, loading: true }]
+        }));
+        // simulate async processing delay
+        setTimeout(() => {
           setForm(prev => ({
             ...prev,
-            images: [...prev.images, { 
-              base64: asset.base64!, 
-              uri: asset.uri 
-            }]
+            images: prev.images.map(img => img.uri === asset.uri ? { ...img, loading: false } : img)
           }));
-        }
+        }, 700);
       }
     } catch (err) {
       console.error('Error picking image:', err);
@@ -301,11 +317,15 @@ export default function CreateProduct() {
   };
 
   const nextStep = () => {
-    if (validateStep(currentStep)) {
-      const currentIndex = steps.findIndex(s => s.id === currentStep);
-      if (currentIndex < steps.length - 1) {
-        setCurrentStep(steps[currentIndex + 1].id);
-      }
+    const ok = validateStep(currentStep);
+    setShowErrorSummary(!ok);
+    if (!ok) return;
+    const currentIndex = steps.findIndex(s => s.id === currentStep);
+    if (currentIndex < steps.length - 1) {
+      const nextIndex = currentIndex + 1;
+      setCurrentStep(steps[nextIndex].id);
+      if (nextIndex > maxReachedStep) setMaxReachedStep(nextIndex);
+      setShowErrorSummary(false);
     }
   };
 
@@ -317,13 +337,35 @@ export default function CreateProduct() {
   };
 
   const goToStep = (step: Step) => {
-    setCurrentStep(step);
+    const targetIndex = steps.findIndex(s => s.id === step);
+    const currentIndex = steps.findIndex(s => s.id === currentStep);
+    // allow going back freely
+    if (targetIndex <= currentIndex) {
+      setCurrentStep(step);
+      setShowErrorSummary(false);
+      return;
+    }
+    // only allow forward if already unlocked
+    if (targetIndex <= maxReachedStep) {
+      setCurrentStep(step);
+      setShowErrorSummary(false);
+      return;
+    }
+    // need to validate current step first, and only allow the immediate next step
+    const ok = validateStep(currentStep);
+    setShowErrorSummary(!ok);
+    if (!ok) return;
+    if (targetIndex === currentIndex + 1) {
+      setCurrentStep(step);
+      if (targetIndex > maxReachedStep) setMaxReachedStep(targetIndex);
+      setShowErrorSummary(false);
+    }
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
-      return;
-    }
+    const ok = validateForm();
+    setShowErrorSummary(!ok);
+    if (!ok) return;
 
     setLoading(true);
 
@@ -418,10 +460,22 @@ export default function CreateProduct() {
           </View>
         </View>
 
-        {/* Step Indicator */}
-        <View className="bg-white px-6 py-4 border-b border-neutral-100">
+        {/* Step Indicator + Progress */}
+        <View className="bg-white px-6 pt-4 pb-5 border-b border-neutral-100">
+          <View className="h-1.5 w-full rounded-full bg-neutral-200 overflow-hidden mb-4">
+            <View style={{ width: `${progress * 100}%` }} className="h-full bg-primary-500 rounded-full" />
+          </View>
           <View className="flex-row items-center justify-between">
-            {steps.map((step, index) => (
+            {steps.map((step, index) => {
+              const stepErrors: Record<string,string> = {};
+              if (step.id === 'basic') {
+                if (errors.name || errors.description || errors.price || errors.stock || errors.category || errors.images) stepErrors.basic = '1';
+              }
+              if (step.id === 'details') {
+                if (errors.sku || errors.weight) stepErrors.details = '1';
+              }
+              const hasErr = Object.keys(stepErrors).length > 0;
+              return (
               <React.Fragment key={step.id}>
                 <TouchableOpacity
                   onPress={() => goToStep(step.id)}
@@ -433,7 +487,7 @@ export default function CreateProduct() {
                         ? "bg-primary-500"
                         : steps.findIndex(s => s.id === currentStep) > index
                         ? "bg-success-500"
-                        : "bg-neutral-200"
+                        : hasErr ? 'bg-red-200' : "bg-neutral-200"
                     }`}
                   >
                     <Ionicons
@@ -442,9 +496,14 @@ export default function CreateProduct() {
                       color={
                         currentStep === step.id || steps.findIndex(s => s.id === currentStep) > index
                           ? "white"
-                          : "#9CA3AF"
+                          : hasErr ? '#B91C1C' : "#9CA3AF"
                       }
                     />
+                    {hasErr && (
+                      <View className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 items-center justify-center">
+                        <Text className="text-[9px] text-white font-quicksand-bold">!</Text>
+                      </View>
+                    )}
                   </View>
                   <Text
                     className={`text-xs font-quicksand-medium mt-1 text-center ${
@@ -452,7 +511,7 @@ export default function CreateProduct() {
                         ? "text-primary-500"
                         : steps.findIndex(s => s.id === currentStep) > index
                         ? "text-success-500"
-                        : "text-neutral-500"
+                        : hasErr ? 'text-red-500' : "text-neutral-500"
                     }`}
                   >
                     {step.title}
@@ -468,19 +527,19 @@ export default function CreateProduct() {
                   />
                 )}
               </React.Fragment>
-            ))}
+            );})}
           </View>
         </View>
 
-        <ScrollView 
+  <ScrollView 
           className="flex-1"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          contentContainerStyle={{ paddingBottom: 48 }}
         >
           {currentStep === 'basic' && (
             <View className="px-6 py-6 space-y-6">
               {/* Images */}
-              <View className="bg-white rounded-3xl p-6 shadow-sm">
+              <View className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-100">
                 <View className="flex-row items-center mb-4">
                   <Ionicons name="camera" size={24} color="#6366F1" />
                   <Text className="text-xl font-quicksand-bold text-neutral-800 ml-3">
@@ -529,7 +588,7 @@ export default function CreateProduct() {
               </View>
 
               {/* Basic Information */}
-              <View className="bg-white rounded-3xl p-6 shadow-sm">
+              <View className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-100">
                 <View className="flex-row items-center mb-4">
                   <Ionicons name="information-circle" size={24} color="#6366F1" />
                   <Text className="text-xl font-quicksand-bold text-neutral-800 ml-3">
@@ -612,7 +671,7 @@ export default function CreateProduct() {
               </View>
 
               {/* Category Selection */}
-              <View className="bg-white rounded-3xl p-6 shadow-sm">
+              <View className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-100">
                 <View className="flex-row items-center mb-4">
                   <Ionicons name="grid" size={24} color="#6366F1" />
                   <Text className="text-xl font-quicksand-bold text-neutral-800 ml-3">
@@ -656,13 +715,37 @@ export default function CreateProduct() {
                   </View>
                 )}
               </View>
+              {/* Step Buttons - Basic */}
+              <View className="pt-2">
+                {showErrorSummary && (
+                  <View className="mb-4 bg-red-50 border border-red-200 rounded-2xl p-4">
+                    <Text className="text-red-600 font-quicksand-semibold mb-1 text-sm">Veuillez corriger:</Text>
+                    <View className="space-y-1">
+                      {errors.name && <Text className="text-red-500 text-xs">• {errors.name}</Text>}
+                      {errors.description && <Text className="text-red-500 text-xs">• {errors.description}</Text>}
+                      {errors.price && <Text className="text-red-500 text-xs">• {errors.price}</Text>}
+                      {errors.stock && <Text className="text-red-500 text-xs">• {errors.stock}</Text>}
+                      {errors.category && <Text className="text-red-500 text-xs">• {errors.category}</Text>}
+                      {errors.images && <Text className="text-red-500 text-xs">• {errors.images}</Text>}
+                    </View>
+                  </View>
+                )}
+                <TouchableOpacity
+                  className="bg-primary-500 rounded-2xl py-4"
+                  onPress={nextStep}
+                >
+                  <Text className="text-white text-center font-quicksand-semibold">
+                    Suivant
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
 
           {currentStep === 'details' && (
             <View className="px-6 py-6 space-y-6">
               {/* Product Details */}
-              <View className="bg-white rounded-3xl p-6 shadow-sm">
+              <View className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-100">
                 <View className="flex-row items-center mb-4">
                   <Ionicons name="document-text" size={24} color="#6366F1" />
                   <Text className="text-xl font-quicksand-bold text-neutral-800 ml-3">
@@ -798,7 +881,7 @@ export default function CreateProduct() {
               </View>
 
               {/* Specifications */}
-              <View className="bg-white rounded-3xl p-6 shadow-sm">
+              <View className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-100">
                 <View className="flex-row items-center justify-between mb-4">
                   <View className="flex-row items-center">
                     <Ionicons name="list" size={24} color="#6366F1" />
@@ -839,7 +922,7 @@ export default function CreateProduct() {
               </View>
 
               {/* Tags */}
-              <View className="bg-white rounded-3xl p-6 shadow-sm">
+              <View className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-100">
                 <View className="flex-row items-center justify-between mb-4">
                   <View className="flex-row items-center">
                     <Ionicons name="pricetag" size={24} color="#6366F1" />
@@ -890,57 +973,64 @@ export default function CreateProduct() {
                   Cette section sera disponible dans une prochaine mise à jour
                 </Text>
               </View>
+              <View className="mt-6 flex-row space-x-3">
+                <TouchableOpacity
+                  className="flex-1 bg-neutral-100 rounded-2xl py-4"
+                  onPress={prevStep}
+                >
+                  <Text className="text-neutral-700 text-center font-quicksand-semibold">
+                    Précédent
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className="flex-1 bg-primary-500 rounded-2xl py-4"
+                  onPress={nextStep}
+                >
+                  <Text className="text-white text-center font-quicksand-semibold">
+                    Suivant
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
         </ScrollView>
 
-        {/* Navigation Buttons */}
-        <View className="px-6 py-4 bg-white border-t border-neutral-200">
-          <View className="flex-row space-x-3">
-            {currentStep !== 'basic' && (
+        {/* Details Step Buttons injected after its content */}
+        {currentStep === 'details' && (
+          <View className="px-6 pb-8">
+            {showErrorSummary && (
+              <View className="mb-4 bg-red-50 border border-red-200 rounded-2xl p-4">
+                <Text className="text-red-600 font-quicksand-semibold mb-1 text-sm">Veuillez corriger:</Text>
+                <View className="space-y-1">
+                  {errors.sku && <Text className="text-red-500 text-xs">• {errors.sku}</Text>}
+                  {errors.weight && <Text className="text-red-500 text-xs">• {errors.weight}</Text>}
+                </View>
+              </View>
+            )}
+            <View className="flex-row space-x-3">
               <TouchableOpacity
                 className="flex-1 bg-neutral-100 rounded-2xl py-4"
                 onPress={prevStep}
               >
-                <Text className="text-neutral-700 text-center font-quicksand-semibold">
-                  Précédent
-                </Text>
+                <Text className="text-neutral-700 text-center font-quicksand-semibold">Précédent</Text>
               </TouchableOpacity>
-            )}
-            
-            {currentStep === 'details' ? (
               <TouchableOpacity
-                className={`flex-1 py-4 rounded-2xl ${
-                  loading ? 'bg-primary-300' : 'bg-primary-500'
-                }`}
+                className={`flex-1 py-4 rounded-2xl ${loading ? 'bg-primary-300' : 'bg-primary-500 shadow-sm'} ${!loading ? 'active:opacity-90' : ''}`}
                 onPress={handleSubmit}
                 disabled={loading}
               >
                 {loading ? (
                   <View className="flex-row items-center justify-center">
                     <ActivityIndicator size="small" color="white" />
-                    <Text className="text-white font-quicksand-semibold ml-2">
-                      Création...
-                    </Text>
+                    <Text className="text-white font-quicksand-semibold ml-2">Création...</Text>
                   </View>
                 ) : (
-                  <Text className="text-white text-center font-quicksand-semibold">
-                    Créer le produit
-                  </Text>
+                  <Text className="text-white text-center font-quicksand-semibold">Créer le produit</Text>
                 )}
               </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                className="flex-1 bg-primary-500 rounded-2xl py-4"
-                onPress={nextStep}
-              >
-                <Text className="text-white text-center font-quicksand-semibold">
-                  Suivant
-                </Text>
-              </TouchableOpacity>
-            )}
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Tag Modal */}
         <Modal
