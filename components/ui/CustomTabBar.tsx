@@ -87,6 +87,7 @@ export const CustomTabBar: React.FC<TabBarProps> = ({ state, descriptors, naviga
             testID={options.tabBarTestID || `tab-${label}`}
             onPress={onPress}
             onLongPress={onLongPress}
+            activeOpacity={1}
             className={`flex-1 items-center justify-center py-2 mx-1 rounded-2xl ${
               isFocused ? 'bg-primary/10' : 'bg-transparent'
             }`}

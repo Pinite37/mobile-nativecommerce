@@ -1,14 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Stack, router } from 'expo-router';
+import { router } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { FlatList, Image, RefreshControl, SafeAreaView, StatusBar, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Image, RefreshControl, SafeAreaView, StatusBar, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface DraftAd {
   id: string;
   title: string;
-  status: 'draft' | 'pending' | 'active' | 'rejected' | 'expired';
+  status: 'draft' | 'pending' | 'active' | 'rejected' | 'expired' | 'paused';
   preview?: string;
   createdAt: string;
 }
@@ -17,6 +17,7 @@ const mockAds: DraftAd[] = [
   { id: '1', title: 'Promo Rentrée -30%', status: 'active', preview: 'https://via.placeholder.com/300x140/10B981/FFFFFF?text=Rentrée', createdAt: new Date().toISOString() },
   { id: '2', title: 'Nouveau produit premium', status: 'pending', preview: 'https://via.placeholder.com/300x140/34D399/FFFFFF?text=Produit', createdAt: new Date().toISOString() },
   { id: '3', title: 'Stock limité - Dépêchez-vous', status: 'draft', createdAt: new Date().toISOString() },
+  { id: '4', title: 'Offre spéciale été', status: 'paused', preview: 'https://via.placeholder.com/300x140/F59E0B/FFFFFF?text=Été', createdAt: new Date().toISOString() },
 ];
 
 const statusStyles: Record<DraftAd['status'], { label: string; bg: string; text: string }> = {
@@ -25,12 +26,12 @@ const statusStyles: Record<DraftAd['status'], { label: string; bg: string; text:
   active: { label: 'Active', bg: '#D1FAE5', text: '#047857' },
   rejected: { label: 'Rejetée', bg: '#FEE2E2', text: '#B91C1C' },
   expired: { label: 'Expirée', bg: '#F3F4F6', text: '#6B7280' },
+  paused: { label: 'Coupée', bg: '#FEF3C7', text: '#B45309' },
 };
 
 export default function EnterpriseAdvertisements() {
   const insets = useSafeAreaInsets();
-  // Static mock for now; no setter required yet
-  const [ads] = useState<DraftAd[]>(mockAds);
+  const [ads, setAds] = useState<DraftAd[]>(mockAds);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | DraftAd['status']>('all');
@@ -47,6 +48,46 @@ export default function EnterpriseAdvertisements() {
   const onRefresh = async () => {
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 800);
+  };
+
+  const handlePauseAd = (adId: string) => {
+    Alert.alert(
+      'Couper la publicité',
+      'La publicité ne sera plus affichée chez les clients mais pourra être réactivée plus tard.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Couper',
+          style: 'destructive',
+          onPress: () => {
+            setAds(prev => prev.map(ad =>
+              ad.id === adId ? { ...ad, status: 'paused' as const } : ad
+            ));
+          }
+        }
+      ]
+    );
+  };
+
+  const handleDeleteAd = (adId: string) => {
+    Alert.alert(
+      'Supprimer la publicité',
+      'Cette action est irréversible. La publicité sera définitivement supprimée.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: () => {
+            setAds(prev => prev.filter(ad => ad.id !== adId));
+          }
+        }
+      ]
+    );
+  };
+
+  const handleCreateAd = () => {
+    router.push('/(app)/(enterprise)/advertisements/create');
   };
 
   const renderAd = ({ item }: { item: DraftAd }) => {
@@ -79,7 +120,35 @@ export default function EnterpriseAdvertisements() {
             <Text className="flex-1 text-base font-quicksand-semibold text-neutral-800 mr-3" numberOfLines={2}>
               {item.title}
             </Text>
-            <TouchableOpacity className="w-8 h-8 rounded-full bg-neutral-100 items-center justify-center">
+            <TouchableOpacity
+              onPress={() => {
+                Alert.alert(
+                  'Actions',
+                  '',
+                  [
+                    { text: 'Annuler', style: 'cancel' },
+                    {
+                      text: item.status === 'active' ? 'Couper' : 'Réactiver',
+                      onPress: () => item.status === 'active'
+                        ? handlePauseAd(item.id)
+                        : setAds(prev => prev.map(ad =>
+                            ad.id === item.id ? { ...ad, status: 'active' as const } : ad
+                          ))
+                    },
+                    {
+                      text: 'Modifier',
+                      onPress: () => router.push(`/(app)/(enterprise)/advertisements/create?id=${item.id}`)
+                    },
+                    {
+                      text: 'Supprimer',
+                      style: 'destructive',
+                      onPress: () => handleDeleteAd(item.id)
+                    }
+                  ]
+                );
+              }}
+              className="w-8 h-8 rounded-full bg-neutral-100 items-center justify-center"
+            >
               <Ionicons name="ellipsis-horizontal" size={16} color="#6B7280" />
             </TouchableOpacity>
           </View>
@@ -88,16 +157,6 @@ export default function EnterpriseAdvertisements() {
             <Text className="text-xs text-neutral-500 font-quicksand-medium">
               Créée le {new Date(item.createdAt).toLocaleDateString('fr-FR')}
             </Text>
-            <View className="flex-row items-center">
-              <TouchableOpacity className="px-3 py-1.5 bg-primary-50 rounded-xl flex-row items-center mr-2">
-                <Ionicons name="create-outline" size={16} color="#10B981" />
-                <Text className="text-primary-600 font-quicksand-semibold text-xs ml-1">Modifier</Text>
-              </TouchableOpacity>
-              <TouchableOpacity className="px-3 py-1.5 bg-red-50 rounded-xl flex-row items-center">
-                <Ionicons name="trash-outline" size={16} color="#EF4444" />
-                <Text className="text-red-600 font-quicksand-semibold text-xs ml-1">Supprimer</Text>
-              </TouchableOpacity>
-            </View>
           </View>
         </View>
       </TouchableOpacity>
@@ -105,9 +164,7 @@ export default function EnterpriseAdvertisements() {
   };
 
   return (
-    <>
-      <Stack.Screen options={{ headerShown: false }} />
-      <SafeAreaView className="flex-1 bg-background-secondary">
+    <SafeAreaView className="flex-1 bg-background-secondary">
       <StatusBar backgroundColor="#10B981" barStyle="light-content" />
       <LinearGradient colors={['#10B981', '#34D399']} start={{ x:0, y:0}} end={{x:1,y:0}} className="px-6 pt-14 pb-10">
         <View className="flex-row items-center justify-between">
@@ -123,7 +180,10 @@ export default function EnterpriseAdvertisements() {
             <Ionicons name="cloud-upload" size={18} color="#FFFFFF" />
             <Text className="text-white font-quicksand-semibold ml-2 text-sm">Importer</Text>
           </TouchableOpacity>
-          <TouchableOpacity className="flex-1 bg-white rounded-2xl py-3 flex-row items-center justify-center">
+          <TouchableOpacity
+            onPress={handleCreateAd}
+            className="flex-1 bg-white rounded-2xl py-3 flex-row items-center justify-center"
+          >
             <Ionicons name="add" size={20} color="#10B981" />
             <Text className="text-primary-500 font-quicksand-semibold ml-2 text-sm">Nouvelle</Text>
           </TouchableOpacity>
@@ -171,8 +231,8 @@ export default function EnterpriseAdvertisements() {
                   <Text className="text-xl font-quicksand-bold text-amber-500 mt-1">{ads.filter(a=>a.status==='pending').length}</Text>
                 </View>
                 <View className="flex-1 bg-white rounded-2xl p-4 border border-neutral-100">
-                  <Text className="text-[11px] text-neutral-500 font-quicksand-medium">Brouillons</Text>
-                  <Text className="text-xl font-quicksand-bold text-neutral-700 mt-1">{ads.filter(a=>a.status==='draft').length}</Text>
+                  <Text className="text-[11px] text-neutral-500 font-quicksand-medium">Coupées</Text>
+                  <Text className="text-xl font-quicksand-bold text-orange-500 mt-1">{ads.filter(a=>a.status==='paused').length}</Text>
                 </View>
               </View>
 
@@ -182,6 +242,7 @@ export default function EnterpriseAdvertisements() {
                   { key: 'all', label: 'Toutes' },
                   { key: 'active', label: 'Actives' },
                   { key: 'pending', label: 'En attente' },
+                  { key: 'paused', label: 'Coupées' },
                   { key: 'draft', label: 'Brouillons' },
                   { key: 'rejected', label: 'Rejetées' },
                   { key: 'expired', label: 'Expirées' },
@@ -226,6 +287,5 @@ export default function EnterpriseAdvertisements() {
         />
       </View>
       </SafeAreaView>
-    </>
   );
 }

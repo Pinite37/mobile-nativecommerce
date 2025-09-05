@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
+import { TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TabBarIconWithBadge } from "../../../../components/ui/TabBarIconWithBadge";
 import { useUnreadNotifications } from "../../../../hooks/useUnreadNotifications";
@@ -22,6 +23,10 @@ export default function TabsLayout() {
       focused={focused}
       badgeCount={unreadCount}
     />
+  );
+
+  const CustomTabBarButton = (props: any) => (
+    <TouchableOpacity {...props} activeOpacity={1} />
   );
 
   return (
@@ -72,6 +77,7 @@ export default function TabsLayout() {
           fontFamily: "Quicksand-SemiBold",
           color: "#1F2937",
         },
+        tabBarButton: CustomTabBarButton,
       }}
     >
       <Tabs.Screen
