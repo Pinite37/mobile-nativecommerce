@@ -1,16 +1,26 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Réimportons le CustomTabBar maintenant que le menu s'affiche correctement
 import { CustomTabBar } from "../../../../components/ui/CustomTabBar";
 
 export default function ClientTabsLayout() {
+  const insets = useSafeAreaInsets();
+
+  // Calcul dynamique pour tenir compte des barres de navigation Android / iOS
+  const baseHeight = 70; // hauteur visuelle de base du tab bar (sans inset)
+  const dynamicHeight = baseHeight + insets.bottom; // on ajoute l'inset réel
+  const dynamicPaddingBottom = 16 + Math.min(insets.bottom, 24); // conserver un bon touch area sans exagérer
+  const dynamicPaddingTop = 16; // padding top fixe pour cohérence
+  const dynamicPaddingHorizontal = Math.max(12, insets.left + insets.right + 8); // Adaptation aux écrans avec notches
+
   return (
     <Tabs
-      tabBar={(props) => <CustomTabBar {...props} />}
+      tabBar={(props) => <CustomTabBar {...props} insets={insets} />}
       initialRouteName="favorites"
       screenOptions={{
-  tabBarActiveTintColor: "#10B981",
+        tabBarActiveTintColor: "#10B981",
         tabBarInactiveTintColor: "#9CA3AF",
         headerShown: false, // Ensure all headers are hidden by default
         tabBarLabelStyle: {
@@ -31,9 +41,12 @@ export default function ClientTabsLayout() {
           shadowOpacity: 0.1,
           shadowRadius: 8,
           backgroundColor: '#FFFFFF',
-          height: 70,
+          height: dynamicHeight,
           borderTopRightRadius: 25,
           borderTopLeftRadius: 25,
+          paddingBottom: dynamicPaddingBottom,
+          paddingTop: dynamicPaddingTop,
+          paddingHorizontal: dynamicPaddingHorizontal,
         },
         headerStyle: {
           backgroundColor: "#FFFFFF",

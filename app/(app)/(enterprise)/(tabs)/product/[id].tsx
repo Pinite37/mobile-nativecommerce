@@ -6,7 +6,6 @@ import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Dimensions,
   FlatList,
   Image,
@@ -20,6 +19,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import NotificationModal, { useNotification } from "../../../../../components/ui/NotificationModal";
 import MessagingService from "../../../../../services/api/MessagingService";
 import ProductService from "../../../../../services/api/ProductService";
 import { Product } from "../../../../../types/product";
@@ -30,6 +30,7 @@ export default function ProductDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { notification, showNotification, hideNotification } = useNotification();
   const imagesListRef = useRef<FlatList<string>>(null);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -172,18 +173,12 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         if (supported) {
           return Linking.openURL(whatsappUrl);
         } else {
-          Alert.alert(
-            "WhatsApp non disponible",
-            "WhatsApp n'est pas installé sur votre appareil. Voulez-vous appeler directement ?",
-            [
-              { text: "Annuler", style: "cancel" },
-              { text: "Appeler", onPress: () => makePhoneCall(phone) },
-            ]
-          );
+          showNotification('warning', 'WhatsApp non disponible', "WhatsApp n'est pas installé sur votre appareil. Essayez d'appeler directement.");
+          makePhoneCall(phone);
         }
       })
       .catch(() => {
-        Alert.alert("Erreur", "Impossible d'ouvrir WhatsApp");
+        showNotification('error', 'Erreur', "Impossible d'ouvrir WhatsApp");
       });
   };
 
@@ -194,11 +189,11 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         if (supported) {
           return Linking.openURL(phoneUrl);
         } else {
-          Alert.alert("Erreur", "Impossible de passer l'appel");
+          showNotification('error', 'Erreur', "Impossible de passer l'appel");
         }
       })
       .catch(() => {
-        Alert.alert("Erreur", "Impossible de passer l'appel");
+        showNotification('error', 'Erreur', "Impossible de passer l'appel");
       });
   };
 
@@ -213,11 +208,11 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         if (supported) {
           return Linking.openURL(url);
         } else {
-          Alert.alert("Erreur", "Impossible d'ouvrir le site web");
+          showNotification('error', 'Erreur', "Impossible d'ouvrir le site web");
         }
       })
       .catch(() => {
-        Alert.alert("Erreur", "Impossible d'ouvrir le site web");
+        showNotification('error', 'Erreur', "Impossible d'ouvrir le site web");
       });
   };
 
@@ -499,7 +494,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                   router.push(`/(app)/(enterprise)/conversation/${conversation._id}`);
                 } catch (error) {
                   console.error("Erreur création conversation:", error);
-                  Alert.alert("Erreur", "Impossible de créer la conversation");
+                  showNotification('error', 'Erreur', "Impossible de créer la conversation");
                 }
               }}
               className="bg-amber-50 rounded-2xl py-4 flex-row items-center justify-center border border-amber-200 mt-6"
@@ -700,6 +695,13 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
           )}
         </View>
       </View>
+      <NotificationModal
+        visible={notification?.visible || false}
+        type={notification?.type || 'info'}
+        title={notification?.title || ''}
+        message={notification?.message || ''}
+        onClose={hideNotification}
+      />
     </SafeAreaView>
   );
 }

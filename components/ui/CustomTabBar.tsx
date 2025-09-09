@@ -1,18 +1,41 @@
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { EdgeInsets, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface TabBarProps {
   state: any;
   descriptors: any;
   navigation: any;
+  insets?: EdgeInsets;
 }
 
-export const CustomTabBar: React.FC<TabBarProps> = ({ state, descriptors, navigation }) => {
-  // Force apply default family for the entire tab bar if needed
+export const CustomTabBar: React.FC<TabBarProps> = ({ state, descriptors, navigation, insets }) => {
+  // Utiliser les insets passés en prop ou les récupérer si non fournis
+  const defaultInsets = useSafeAreaInsets();
+  const safeInsets = insets || defaultInsets;
+
+  // Responsivité basée sur la largeur de l'écran
+  const { width } = useWindowDimensions();
+  const isSmallPhone = width < 360;
+  const isTablet = width >= 768;
+
+  // Calculs dynamiques: padding et tailles adaptatives
+  const dynamicPaddingBottom = 14 + Math.min(safeInsets.bottom, 24);
+  const dynamicPaddingTop = isSmallPhone ? 8 : 12;
+  const dynamicPaddingHorizontal = Math.max(12, safeInsets.left + safeInsets.right + 8);
+  const barBaseHeight = isTablet ? 68 : isSmallPhone ? 58 : 62;
+  const dynamicHeight = barBaseHeight + safeInsets.bottom;
+
+  // Tailles d'icônes/typo adaptatives
+  const baseIcon = isTablet ? 26 : isSmallPhone ? 22 : 24;
+  const labelFontSize = isTablet ? 13 : isSmallPhone ? 11 : 12;
+  const labelLineHeight = Math.round(labelFontSize * 1.15);
+
   React.useEffect(() => {
-    // This is just a side effect to ensure fonts are applied
-    console.log('TabBar mounted with Quicksand font family');
+    // Indication minimale pour débogage
+    console.log('TabBar mounted with Quicksand font family (responsive)');
   }, []);
+
   const currentIndex = typeof state?.index === 'number' ? state.index : 0;
   const currentRouteKey = state?.routes?.[currentIndex]?.key;
   const focusedOptions = currentRouteKey ? (descriptors[currentRouteKey]?.options || {}) : {};
@@ -25,34 +48,44 @@ export const CustomTabBar: React.FC<TabBarProps> = ({ state, descriptors, naviga
   // Filter out routes that should not appear in the tab bar
   const routes = (state?.routes ?? []).filter((route: any) => {
     const options = descriptors[route.key]?.options || {};
-    // Expo Router: href: null means hidden from navigation UI
-    if (options.href === null) return false;
-    // React Navigation way to hide a tab
-    if (options.tabBarButton === null) return false;
-    // Another way: explicitly hide via item style
-    if (options.tabBarItemStyle?.display === 'none') return false;
+    if (options.href === null) return false; // Expo Router: cacher
+    if (options.tabBarButton === null) return false; // React Navigation: cacher
+    if (options.tabBarItemStyle?.display === 'none') return false; // Cacher explicitement
     return true;
   });
 
   return (
-    <View className="flex-row bg-white border-t-0 shadow-lg rounded-t-3xl" style={{
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: -4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 12,
-      elevation: 15,
-      paddingTop: 12,
-      paddingBottom: 28, // Plus de padding en bas pour les téléphones avec barre home
-      paddingHorizontal: 12,
-      height: 85,
-    }}>
+    <View
+      className="flex-row bg-white border-t-0 shadow-lg rounded-t-3xl"
+      style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        backgroundColor: '#FFFFFF',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        borderTopWidth: 0,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+        elevation: 15,
+        paddingTop: dynamicPaddingTop,
+        paddingBottom: dynamicPaddingBottom,
+        paddingHorizontal: dynamicPaddingHorizontal,
+        height: dynamicHeight,
+      }}
+    >
       {routes.map((route: any) => {
         const { options } = descriptors[route.key];
-        const label = options.tabBarLabel !== undefined 
-          ? options.tabBarLabel 
-          : options.title !== undefined 
-          ? options.title 
-          : route.name;
+        const label =
+          options.tabBarLabel !== undefined
+            ? options.tabBarLabel
+            : options.title !== undefined
+            ? options.title
+            : route.name;
 
         const isFocused = currentRouteKey === route.key;
 
@@ -75,9 +108,9 @@ export const CustomTabBar: React.FC<TabBarProps> = ({ state, descriptors, naviga
           });
         };
 
-        // Get the icon component
+        // Récupération du rendu d'icône fourni par les options
         const IconComponent = options.tabBarIcon;
-        
+
         return (
           <TouchableOpacity
             key={route.key}
@@ -88,33 +121,33 @@ export const CustomTabBar: React.FC<TabBarProps> = ({ state, descriptors, naviga
             onPress={onPress}
             onLongPress={onLongPress}
             activeOpacity={1}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             className={`flex-1 items-center justify-center py-2 mx-1 rounded-2xl ${
               isFocused ? 'bg-primary/10' : 'bg-transparent'
             }`}
             style={{
-              minHeight: 50,
-              transform: [{ scale: isFocused ? 1.05 : 1 }],
+              minHeight: 48,
+              transform: [{ scale: isFocused ? 1.04 : 1 }],
+              marginHorizontal: Math.max(2, safeInsets.left / 4),
             }}
           >
             <View className="items-center justify-center">
-                  {!!IconComponent && (
+              {!!IconComponent && (
                 <View style={{ marginBottom: 3 }}>
                   {IconComponent({
                     color: isFocused ? '#10B981' : '#6B7280',
-                    size: isFocused ? 24 : 22,
+                    size: isFocused ? baseIcon + 2 : baseIcon,
                     focused: isFocused,
                   })}
                 </View>
               )}
               <Text
-                className={`mt-1 ${
-                  isFocused ? 'text-primary' : 'text-gray-500'
-                }`}
+                className={`mt-1 ${isFocused ? 'text-primary' : 'text-gray-500'}`}
                 style={{
-                  fontSize: 12,
-                  lineHeight: 14,
+                  fontSize: labelFontSize,
+                  lineHeight: labelLineHeight,
                   textAlign: 'center',
-                  fontFamily: 'Quicksand-SemiBold', // Utilisation explicite de la police via style
+                  fontFamily: 'Quicksand-SemiBold',
                 }}
                 numberOfLines={1}
                 adjustsFontSizeToFit={true}

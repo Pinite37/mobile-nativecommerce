@@ -5,7 +5,6 @@ import { router } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Animated,
   Easing,
   Image,
@@ -24,6 +23,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import NotificationModal, { useNotification } from '../../../../components/ui/NotificationModal';
 import { useToast } from '../../../../components/ui/ToastManager';
 import { useAuth } from '../../../../contexts/AuthContext';
 import EnterpriseService, { Enterprise, EnterpriseProfile, SocialLink } from '../../../../services/api/EnterpriseService';
@@ -669,6 +669,7 @@ const AddPartnerModal: React.FC<AddPartnerModalProps> = ({ visible, onClose, onA
 function EnterpriseProfilePage() {
   const { logout } = useAuth();
   const toast = useToast();
+  const { notification, hideNotification } = useNotification();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [profileData, setProfileData] = useState<EnterpriseProfile | null>(null);
@@ -680,6 +681,15 @@ function EnterpriseProfilePage() {
   const [showAddPartner, setShowAddPartner] = useState(false);
   const [showEnterpriseDetails, setShowEnterpriseDetails] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+  const [confirmationVisible, setConfirmationVisible] = useState(false);
+  const [confirmationAction, setConfirmationAction] = useState<{
+    type: 'toggle_status' | 'logout';
+    title: string;
+    message: string;
+    confirmText: string;
+    confirmColor: string;
+    onConfirm: () => void;
+  } | null>(null);
 
   // Responsive dimensions
   const { width } = useWindowDimensions();
@@ -958,54 +968,77 @@ function EnterpriseProfilePage() {
 
   // NOTE: suppression partenaire gérée future (liste partenaires). Fonction retirée pour éviter code mort.
 
+  // Fonctions de confirmation modal
+  const showConfirmation = (type: 'toggle_status' | 'logout', onConfirm: () => void) => {
+    let title = '';
+    let message = '';
+    let confirmText = '';
+    let confirmColor = '';
+
+    switch (type) {
+      case 'toggle_status':
+        const newStatus = profileData?.enterprise.isActive ? 'désactiver' : 'activer';
+        title = 'Changer le statut';
+        message = `Voulez-vous vraiment ${newStatus} votre entreprise ?`;
+        confirmText = 'Confirmer';
+        confirmColor = profileData?.enterprise.isActive ? '#F59E0B' : '#10B981';
+        break;
+      case 'logout':
+        title = 'Déconnexion';
+        message = 'Êtes-vous sûr de vouloir vous déconnecter ?';
+        confirmText = 'Déconnexion';
+        confirmColor = '#EF4444';
+        break;
+    }
+
+    setConfirmationAction({ type, title, message, confirmText, confirmColor, onConfirm });
+    setConfirmationVisible(true);
+  };
+
+  const closeConfirmation = () => {
+    setConfirmationVisible(false);
+    setConfirmationAction(null);
+  };
+
+  const executeConfirmedAction = () => {
+    if (confirmationAction?.onConfirm) {
+      confirmationAction.onConfirm();
+    }
+    closeConfirmation();
+  };
+
   // Gérer l'activation/désactivation de l'entreprise
   const handleToggleStatus = async () => {
-    const newStatus = profileData?.enterprise.isActive ? 'désactiver' : 'activer';
-    
-    Alert.alert(
-      `Changer le statut`,
-      `Voulez-vous vraiment ${newStatus} votre entreprise ?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Confirmer', onPress: async () => {
-          try {
-            setLoading(true);
-            const updatedEnterprise = await EnterpriseService.toggleActiveStatus();
-            
-            // Mettre à jour les données locales
-            if (profileData) {
-              setProfileData({
-                ...profileData,
-                enterprise: updatedEnterprise
-              });
-            }
-            
-            toast.showSuccess('Succès', `Entreprise ${updatedEnterprise.isActive ? 'activée' : 'désactivée'} avec succès`);
-          } catch (error: any) {
-            console.error('❌ Erreur changement statut:', error);
-            toast.showError('Erreur', error.message || 'Impossible de changer le statut');
-          } finally {
-            setLoading(false);
-          }
-        }}
-      ]
-    );
+    showConfirmation('toggle_status', async () => {
+      try {
+        setLoading(true);
+        const updatedEnterprise = await EnterpriseService.toggleActiveStatus();
+        
+        // Mettre à jour les données locales
+        if (profileData) {
+          setProfileData({
+            ...profileData,
+            enterprise: updatedEnterprise
+          });
+        }
+        
+        toast.showSuccess('Succès', `Entreprise ${updatedEnterprise.isActive ? 'activée' : 'désactivée'} avec succès`);
+      } catch (error: any) {
+        console.error('❌ Erreur changement statut:', error);
+        toast.showError('Erreur', error.message || 'Impossible de changer le statut');
+      } finally {
+        setLoading(false);
+      }
+    });
   };
 
   // Gérer la déconnexion
   const handleLogout = () => {
-    Alert.alert(
-      'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Déconnecter', style: 'destructive', onPress: () => {
-          logout();
-          toast.showInfo('Déconnecté', 'Vous avez été déconnecté avec succès');
-          router.replace('/(auth)/welcome');
-        }}
-      ]
-    );
+    showConfirmation('logout', () => {
+      logout();
+      toast.showInfo('Déconnecté', 'Vous avez été déconnecté avec succès');
+      router.replace('/(auth)/welcome');
+    });
   };
 
   // Gérer la navigation vers les partenaires
@@ -1650,6 +1683,50 @@ function EnterpriseProfilePage() {
             visible={showEnterpriseDetails}
             onClose={() => setShowEnterpriseDetails(false)}
             enterprise={profileData.enterprise}
+          />
+
+          {/* Modal de confirmation */}
+          <Modal
+            visible={confirmationVisible}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={closeConfirmation}
+          >
+            <View className="flex-1 justify-center items-center bg-black/50 px-4">
+              <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
+                <Text className="text-xl font-quicksand-bold text-neutral-800 mb-2">
+                  {confirmationAction?.title}
+                </Text>
+                <Text className="text-base text-neutral-600 font-quicksand-medium mb-6">
+                  {confirmationAction?.message}
+                </Text>
+                <View className="flex-row space-x-3">
+                  <TouchableOpacity
+                    className="flex-1 bg-neutral-100 rounded-xl py-3"
+                    onPress={closeConfirmation}
+                  >
+                    <Text className="text-neutral-700 font-quicksand-semibold text-center">Annuler</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="flex-1 rounded-xl py-3"
+                    style={{ backgroundColor: confirmationAction?.confirmColor }}
+                    onPress={executeConfirmedAction}
+                  >
+                    <Text className="text-white font-quicksand-semibold text-center">
+                      {confirmationAction?.confirmText}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
+
+          <NotificationModal
+            visible={notification?.visible || false}
+            type={notification?.type || 'info'}
+            title={notification?.title || ''}
+            message={notification?.message || ''}
+            onClose={hideNotification}
           />
         </>
       )}

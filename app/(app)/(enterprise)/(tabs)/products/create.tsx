@@ -4,7 +4,6 @@ import { Link, router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   KeyboardAvoidingView,
   Modal,
@@ -17,6 +16,7 @@ import {
   View,
 } from "react-native";
 
+import NotificationModal, { useNotification } from "../../../../../components/ui/NotificationModal";
 import { useToast } from "../../../../../components/ui/ToastManager";
 
 import CategoryService from "../../../../../services/api/CategoryService";
@@ -106,6 +106,7 @@ export default function CreateProduct() {
   
   // Hook pour afficher des notifications toast
   const { showSuccess, showError } = useToast();
+  const { notification, showNotification, hideNotification } = useNotification();
 
   const [form, setForm] = useState<ProductForm>({
     name: "",
@@ -269,7 +270,7 @@ export default function CreateProduct() {
       }
     } catch (err) {
       console.error('Error picking image:', err);
-      Alert.alert("Erreur", "Impossible de sélectionner l'image");
+      showNotification('error', 'Erreur', "Impossible de sélectionner l'image");
     }
   };
 
@@ -1130,6 +1131,13 @@ export default function CreateProduct() {
           </TouchableOpacity>
         </Modal>
       </KeyboardAvoidingView>
+      <NotificationModal
+        visible={notification?.visible || false}
+        type={notification?.type || 'info'}
+        title={notification?.title || ''}
+        message={notification?.message || ''}
+        onClose={hideNotification}
+      />
     </SafeAreaView>
   );
 }

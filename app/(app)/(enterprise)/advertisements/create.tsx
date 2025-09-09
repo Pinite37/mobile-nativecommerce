@@ -1,10 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AdvertisementService, { CreateAdvertisementPayload } from '../../../../services/api/AdvertisementService';
 
 export default function CreateAdvertisement() {
   const insets = useSafeAreaInsets();
@@ -12,8 +15,22 @@ export default function CreateAdvertisement() {
   const isEditing = !!params.id;
 
   const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [type, setType] = useState<'PROMOTION' | 'EVENT' | 'ANNOUNCEMENT' | 'BANNER'>('PROMOTION');
+  const [audience, setAudience] = useState<'ALL' | 'CLIENTS' | 'ENTERPRISES' | 'DELIVERS'>('ALL');
+  const [startDate, setStartDate] = useState<Date>(new Date(Date.now() + 60*60*1000)); // +1h
+  const [endDate, setEndDate] = useState<Date>(new Date(Date.now() + 24*60*60*1000)); // +1 day
+  // iOS combined pickers
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
+  // Android two-phase (date -> time)
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [image, setImage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -30,7 +47,16 @@ export default function CreateAdvertisement() {
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      const uri = result.assets[0].uri;
+      setImage(uri);
+      try {
+        const b64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+        const ext = uri.split('.').pop()?.toLowerCase();
+        const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+        setImageBase64(`data:${mime};base64,${b64}`);
+      } catch (e: any) {
+        Alert.alert('Erreur', e?.message || 'Impossible de lire l\'image.');
+      }
     }
   };
 
@@ -48,65 +74,47 @@ export default function CreateAdvertisement() {
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      const uri = result.assets[0].uri;
+      setImage(uri);
+      try {
+        const b64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+        setImageBase64(`data:image/jpeg;base64,${b64}`);
+      } catch (e: any) {
+        Alert.alert('Erreur', e?.message || 'Impossible de lire la photo.');
+      }
     }
   };
 
-  const handleSave = async () => {
-    if (!title.trim()) {
-      Alert.alert('Erreur', 'Veuillez saisir un titre pour votre publicité.');
-      return;
-    }
+  const validate = () => {
+    if (!title.trim()) return 'Titre requis';
+    if (!description.trim()) return 'Description requise';
+    if (!imageBase64) return 'Image requise';
+    if (endDate <= startDate) return 'La date de fin doit être après la date de début';
+    if (startDate.getTime() < Date.now()) return 'La date de début doit être dans le futur';
+    return null;
+  };
 
-    if (!image) {
-      Alert.alert('Erreur', 'Veuillez sélectionner une image pour votre publicité.');
-      return;
-    }
-
-    setLoading(true);
-
+  const submit = async () => {
+    const error = validate();
+    if (error) { Alert.alert('Erreur', error); return; }
+    setSubmitting(true);
     try {
-      // Simulation de sauvegarde
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      Alert.alert(
-        'Succès',
-        isEditing ? 'Publicité modifiée avec succès !' : 'Publicité créée avec succès !',
-        [{ text: 'OK', onPress: () => router.back() }]
-      );
+      const payload: CreateAdvertisementPayload = {
+        title: title.trim(),
+        description: description.trim(),
+        imageBase64: imageBase64!,
+        type,
+        targetAudience: audience,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+      };
+      await AdvertisementService.create(payload);
+      Alert.alert('Succès', 'Publicité créée avec succès', [{ text: 'OK', onPress: () => router.back() }]);
+    } catch (e: any) {
+      Alert.alert('Erreur', e?.message || 'Échec de la création');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
-  };
-
-  const handlePublish = async () => {
-    if (!title.trim() || !image) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs avant de publier.');
-      return;
-    }
-
-    Alert.alert(
-      'Publier la publicité',
-      'Votre publicité sera soumise à validation avant d\'être publiée.',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Publier',
-          onPress: async () => {
-            setLoading(true);
-            try {
-              // Simulation de publication
-              await new Promise(resolve => setTimeout(resolve, 1500));
-              Alert.alert('Succès', 'Publicité publiée avec succès !', [
-                { text: 'OK', onPress: () => router.back() }
-              ]);
-            } finally {
-              setLoading(false);
-            }
-          }
-        }
-      ]
-    );
   };
 
   return (
@@ -209,6 +217,174 @@ export default function CreateAdvertisement() {
               </Text>
             </View>
 
+            {/* Description */}
+            <View className="mt-6">
+              <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">Description *</Text>
+              <TextInput
+                value={description}
+                onChangeText={setDescription}
+                placeholder="Décrivez votre publicité, les détails de l'offre, etc."
+                className="bg-white rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border border-neutral-200"
+                placeholderTextColor="#9CA3AF"
+                multiline
+                numberOfLines={4}
+                maxLength={500}
+              />
+              <Text className="text-xs text-neutral-500 font-quicksand-medium mt-2 text-right">{description.length}/500</Text>
+            </View>
+
+            {/* Type & Audience */}
+            <View className="mt-6 flex-row gap-3">
+              <View className="flex-1">
+                <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">Type *</Text>
+                <View className="flex-row flex-wrap gap-2">
+                  {['PROMOTION','EVENT','ANNOUNCEMENT','BANNER'].map(t => (
+                    <TouchableOpacity
+                      key={t}
+                      onPress={() => setType(t as any)}
+                      className={`px-3 py-2 rounded-xl border ${type===t? 'bg-primary-500 border-primary-500':'bg-white border-neutral-200'}`}
+                    >
+                      <Text className={`text-xs font-quicksand-semibold ${type===t?'text-white':'text-neutral-700'}`}>{t}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+              <View className="flex-1">
+                <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">Audience</Text>
+                <View className="flex-row flex-wrap gap-2">
+                  {['ALL','CLIENTS','ENTERPRISES','DELIVERS'].map(a => (
+                    <TouchableOpacity
+                      key={a}
+                      onPress={() => setAudience(a as any)}
+                      className={`px-3 py-2 rounded-xl border ${audience===a? 'bg-primary-500 border-primary-500':'bg-white border-neutral-200'}`}
+                    >
+                      <Text className={`text-xs font-quicksand-semibold ${audience===a?'text-white':'text-neutral-700'}`}>{a}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            </View>
+
+            {/* Dates */}
+            <View className="mt-6">
+              <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">Période *</Text>
+              <View className="flex-row gap-3">
+                <TouchableOpacity onPress={() => { if (Platform.OS === 'android') { setShowStartDatePicker(true); } else { setShowStartPicker(true); } }} className="flex-1 bg-white rounded-2xl px-4 py-4 border border-neutral-200">
+                  <Text className="text-xs text-neutral-500 font-quicksand-medium mb-1">Début</Text>
+                  <Text className="text-neutral-800 font-quicksand-semibold text-sm">{startDate.toLocaleString('fr-FR')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => { if (Platform.OS === 'android') { setShowEndDatePicker(true); } else { setShowEndPicker(true); } }} className="flex-1 bg-white rounded-2xl px-4 py-4 border border-neutral-200">
+                  <Text className="text-xs text-neutral-500 font-quicksand-medium mb-1">Fin</Text>
+                  <Text className="text-neutral-800 font-quicksand-semibold text-sm">{endDate.toLocaleString('fr-FR')}</Text>
+                </TouchableOpacity>
+              </View>
+              {/* iOS combined pickers */}
+              {Platform.OS === 'ios' && showStartPicker && (
+                <DateTimePicker
+                  value={startDate}
+                  minimumDate={new Date(Date.now() + 30 * 60 * 1000)}
+                  mode="datetime"
+                  onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
+                    setShowStartPicker(false);
+                    if (event.type === 'dismissed') return;
+                    if (selectedDate) {
+                      setStartDate(selectedDate);
+                      if (selectedDate >= endDate) {
+                        setEndDate(new Date(selectedDate.getTime() + 60 * 60 * 1000));
+                      }
+                    }
+                  }}
+                />
+              )}
+              {Platform.OS === 'ios' && showEndPicker && (
+                <DateTimePicker
+                  value={endDate}
+                  minimumDate={new Date(startDate.getTime() + 30 * 60 * 1000)}
+                  mode="datetime"
+                  onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
+                    setShowEndPicker(false);
+                    if (event.type === 'dismissed') return;
+                    if (selectedDate) setEndDate(selectedDate);
+                  }}
+                />
+              )}
+
+              {/* Android: date -> time sequence for start */}
+              {Platform.OS === 'android' && showStartDatePicker && (
+                <DateTimePicker
+                  value={startDate}
+                  minimumDate={new Date(Date.now() + 30 * 60 * 1000)}
+                  mode="date"
+                  onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
+                    if (event.type === 'dismissed') { setShowStartDatePicker(false); return; }
+                    if (selectedDate) {
+                      const updated = new Date(selectedDate);
+                      updated.setHours(startDate.getHours(), startDate.getMinutes(), 0, 0);
+                      setStartDate(updated);
+                      setShowStartDatePicker(false);
+                      setShowStartTimePicker(true);
+                    }
+                  }}
+                />
+              )}
+              {Platform.OS === 'android' && showStartTimePicker && (
+                <DateTimePicker
+                  value={startDate}
+                  mode="time"
+                  onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
+                    setShowStartTimePicker(false);
+                    if (event.type === 'dismissed') return;
+                    if (selectedDate) {
+                      const updated = new Date(startDate);
+                      updated.setHours(selectedDate.getHours(), selectedDate.getMinutes(), 0, 0);
+                      setStartDate(updated);
+                      if (updated >= endDate) {
+                        setEndDate(new Date(updated.getTime() + 60 * 60 * 1000));
+                      }
+                    }
+                  }}
+                />
+              )}
+
+              {/* Android: date -> time sequence for end */}
+              {Platform.OS === 'android' && showEndDatePicker && (
+                <DateTimePicker
+                  value={endDate}
+                  minimumDate={new Date(startDate.getTime() + 30 * 60 * 1000)}
+                  mode="date"
+                  onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
+                    if (event.type === 'dismissed') { setShowEndDatePicker(false); return; }
+                    if (selectedDate) {
+                      const updated = new Date(selectedDate);
+                      updated.setHours(endDate.getHours(), endDate.getMinutes(), 0, 0);
+                      setEndDate(updated);
+                      setShowEndDatePicker(false);
+                      setShowEndTimePicker(true);
+                    }
+                  }}
+                />
+              )}
+              {Platform.OS === 'android' && showEndTimePicker && (
+                <DateTimePicker
+                  value={endDate}
+                  mode="time"
+                  onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
+                    setShowEndTimePicker(false);
+                    if (event.type === 'dismissed') return;
+                    if (selectedDate) {
+                      const updated = new Date(endDate);
+                      updated.setHours(selectedDate.getHours(), selectedDate.getMinutes(), 0, 0);
+                      if (updated <= startDate) {
+                        Alert.alert('Attention', 'La fin doit être après le début.');
+                        return;
+                      }
+                      setEndDate(updated);
+                    }
+                  }}
+                />
+              )}
+            </View>
+
             {/* Preview Section */}
             {(title.trim() || image) && (
               <View className="mt-8">
@@ -254,27 +430,14 @@ export default function CreateAdvertisement() {
           >
             <View className="flex-row gap-3">
               <TouchableOpacity
-                onPress={handleSave}
-                disabled={loading}
-                className="flex-1 bg-neutral-100 rounded-2xl py-4 items-center justify-center"
-              >
-                <Text className="text-neutral-700 font-quicksand-semibold">
-                  {loading ? 'Sauvegarde...' : 'Sauvegarder'}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handlePublish}
-                disabled={loading || !title.trim() || !image}
+                onPress={submit}
+                disabled={submitting}
                 className={`flex-1 rounded-2xl py-4 items-center justify-center ${
-                  title.trim() && image && !loading
-                    ? 'bg-primary-500'
-                    : 'bg-neutral-300'
+                  validate() ? 'bg-neutral-300' : 'bg-primary-500'
                 }`}
               >
-                <Text className={`font-quicksand-semibold ${
-                  title.trim() && image && !loading ? 'text-white' : 'text-neutral-500'
-                }`}>
-                  {loading ? 'Publication...' : 'Publier'}
+                <Text className={`font-quicksand-semibold ${!validate() ? 'text-white' : 'text-neutral-500'}`}>
+                  {submitting ? 'Envoi...' : 'Créer'}
                 </Text>
               </TouchableOpacity>
             </View>

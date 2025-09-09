@@ -1,93 +1,107 @@
+import ApiService from './ApiService';
 
+// Backend schema mapping
 export interface Advertisement {
   _id: string;
   title: string;
-  subtitle?: string;
-  description?: string;
-  image?: string; // URL
-  imageBase64?: string; // For creation
-  ctaLabel?: string;
-  ctaUrl?: string;
-  status: 'ACTIVE' | 'PAUSED' | 'EXPIRED';
-  startDate?: string;
-  endDate?: string;
+  description: string;
+  image: string; // URL served by backend (Cloudinary)
+  type: 'PROMOTION' | 'EVENT' | 'ANNOUNCEMENT' | 'BANNER';
+  targetAudience: 'ALL' | 'CLIENTS' | 'ENTERPRISES' | 'DELIVERS';
+  startDate: string; // ISO
+  endDate: string;   // ISO
+  isActive: boolean;
+  views?: number;
+  clicks?: number;
+  createdBy?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
-export interface CreateAdRequest {
+export interface CreateAdvertisementPayload {
   title: string;
-  subtitle?: string;
-  description?: string;
-  imageBase64?: string; // base64 image
-  ctaLabel?: string;
-  ctaUrl?: string;
-  durationDays?: number; // desired duration
+  description: string;
+  imageBase64: string; // MUST include data:image/... prefix already
+  type: Advertisement['type'];
+  targetAudience?: Advertisement['targetAudience'];
+  startDate: string; // ISO
+  endDate: string;   // ISO
 }
 
-// NOTE: Backend endpoints guessed; adjust when real API available.
+export interface EnterpriseAdvertisementListResponse {
+  advertisements: Advertisement[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  }
+}
+
 class AdvertisementService {
-  private readonly BASE_URL = '/enterprise/ads';
-  private mockAds: Advertisement[] = [];
+  // All endpoints are under /api handled by ApiService baseURL
+  private readonly BASE = '/advertisements';
 
-  async list(): Promise<Advertisement[]> {
-    try {
-      // Temporary mock (remove when real API ready)
-      if (this.mockAds.length === 0) {
-        this.mockAds = [
-          {
-            _id: 'mock-1',
-            title: 'Boostez vos ventes',
-            subtitle: 'Plus de visibilité',
-            description: "Votre boutique devant des milliers de clients",
-            image: 'https://via.placeholder.com/600x250/10B981/FFFFFF?text=Publicite',
-            ctaLabel: 'En savoir plus',
-            ctaUrl: 'https://example.com',
-            status: 'ACTIVE',
-            startDate: new Date().toISOString(),
-            endDate: new Date(Date.now()+ 7*86400000).toISOString(),
-            createdAt: new Date().toISOString()
-          }
-        ];
-      }
-      return Promise.resolve(this.mockAds);
-      // const res = await ApiService.get<Advertisement[]>(`${this.BASE_URL}`);
-      // return res.data || [];
-    } catch (e:any) {
-      console.warn('Ads list fallback (mock):', e.message);
-      return this.mockAds;
-    }
+  /** Create an advertisement */
+  async create(data: CreateAdvertisementPayload): Promise<Advertisement> {
+    const payload = {
+      title: data.title.trim(),
+      description: data.description.trim(),
+      image: data.imageBase64, // backend expects image OR file
+      type: data.type,
+      targetAudience: data.targetAudience || 'ALL',
+      startDate: data.startDate,
+      endDate: data.endDate,
+    };
+
+    const res = await ApiService.post<Advertisement>(`${this.BASE}/create`, payload);
+    if ((res as any).success && (res as any).data) return (res as any).data;
+    // Some backends return directly data
+    return (res as any).data || (res as any);
   }
 
-  async create(ad: CreateAdRequest): Promise<Advertisement> {
-    try {
-      // const res = await ApiService.post<Advertisement>(`${this.BASE_URL}`, ad);
-      // if (res.success && res.data) return res.data;
-      const newAd: Advertisement = {
-        _id: 'ad-' + Date.now(),
-        title: ad.title,
-        subtitle: ad.subtitle,
-        description: ad.description,
-        image: ad.imageBase64 ? `https://via.placeholder.com/600x250/34D399/FFFFFF?text=${encodeURIComponent(ad.title)}` : undefined,
-        ctaLabel: ad.ctaLabel,
-        ctaUrl: ad.ctaUrl,
-        status: 'ACTIVE',
-        startDate: new Date().toISOString(),
-        endDate: new Date(Date.now() + (ad.durationDays || 7) * 86400000).toISOString(),
-        createdAt: new Date().toISOString(),
-      };
-      this.mockAds.unshift(newAd);
-      return newAd;
-    } catch (e:any) {
-      throw new Error(e.response?.data?.message || 'Echec création publicité');
-    }
+  /** List enterprise advertisements */
+  async listMine(page = 1, limit = 20): Promise<EnterpriseAdvertisementListResponse> {
+    const res = await ApiService.get<{ data: EnterpriseAdvertisementListResponse }>(`${this.BASE}/my-advertisements?page=${page}&limit=${limit}`);
+    if ((res as any).success && (res as any).data) return (res as any).data;
+    return (res as any).data || { advertisements: [], pagination: { page: 1, limit, total: 0, pages: 0 } };
   }
 
-  async pause(adId: string) {
-    this.mockAds = this.mockAds.map(a => a._id === adId ? { ...a, status: 'PAUSED'} : a);
+  async getById(id: string): Promise<Advertisement> {
+    const res = await ApiService.get<{ data: Advertisement }>(`${this.BASE}/${id}`);
+    if ((res as any).success && (res as any).data) return (res as any).data;
+    return (res as any).data || (res as any);
   }
 
-  async resume(adId: string) {
-    this.mockAds = this.mockAds.map(a => a._id === adId ? { ...a, status: 'ACTIVE'} : a);
+  async deactivate(id: string): Promise<Advertisement> {
+    const res = await ApiService.patch<any>(`${this.BASE}/${id}/deactivate`, {});
+    return (res as any).data?.data || (res as any).data || (res as any);
+  }
+
+  async activate(id: string): Promise<Advertisement> {
+    const res = await ApiService.patch<any>(`${this.BASE}/${id}/activate`, {});
+    return (res as any).data?.data || (res as any).data || (res as any);
+  }
+
+  async delete(id: string): Promise<boolean> {
+    const res = await ApiService.delete<any>(`${this.BASE}/${id}`);
+    return !!(res as any).success;
+  }
+
+  /** Get active advertisements for current user audience (public) */
+  async getActive(limit = 10): Promise<Advertisement[]> {
+    const res = await ApiService.get<any>(`${this.BASE}/public/active?limit=${limit}`);
+    console.log('AdvertisementService.getActive', res);
+    if ((res as any).success && (res as any).data) return (res as any).data;
+    return (res as any).data || (res as any).advertisements || [];
+  }
+
+  /** Increment click count for advertisement */
+  async incrementClick(id: string): Promise<number | undefined> {
+    const res = await ApiService.post<any>(`${this.BASE}/${id}/click`, {});
+    if ((res as any).success && (res as any).data?.data?.clicks != null) return (res as any).data.data.clicks;
+    if ((res as any).data?.clicks != null) return (res as any).data.clicks;
+    return (res as any).clicks;
   }
 }
 

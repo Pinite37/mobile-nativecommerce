@@ -26,18 +26,18 @@ export const useUnreadNotifications = () => {
     }
   }, []);
 
-  useEffect(() => {
-    loadUnreadCount();
+  // useEffect(() => {
+  //   loadUnreadCount();
 
-    // Recharger le compteur toutes les 30 secondes
-    const interval = setInterval(() => {
-      loadUnreadCount();
-    }, 30000);
+  //   // Recharger le compteur toutes les 30 secondes
+  //   const interval = setInterval(() => {
+  //     loadUnreadCount();
+  //   }, 30000);
 
-    return () => {
-      clearInterval(interval);
-    };
-  }, [loadUnreadCount]);
+  //   return () => {
+  //     clearInterval(interval);
+  //   };
+  // }, [loadUnreadCount]);
 
   return {
     unreadCount,

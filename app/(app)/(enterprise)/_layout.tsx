@@ -9,6 +9,13 @@ export default function EnterpriseLayout() {
           headerShown: false 
         }} 
       />
+      {/* Cache le header pour tout le segment advertisements */}
+      <Stack.Screen
+        name="advertisements"
+        options={{
+          headerShown: false,
+        }}
+      />
       <Stack.Screen
         name="profile/settings"
         options={{

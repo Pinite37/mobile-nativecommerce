@@ -1,7 +1,8 @@
+// Service publicités
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Linking from "expo-linking";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
     Animated,
@@ -20,7 +21,8 @@ import {
     View
 } from "react-native";
 import { useAuth } from "../../../../contexts/AuthContext";
-import { useSearchCache } from "../../../../hooks/useSearchCache";
+import AdvertisementService, { Advertisement } from '../../../../services/api/AdvertisementService';
+// import { useSearchCache } from "../../../../hooks/useSearchCache"; // retiré (non utilisé)
 import ProductService from "../../../../services/api/ProductService";
 import SearchService from "../../../../services/api/SearchService";
 import SearchCacheService, { RecentSearch } from "../../../../services/SearchCacheService";
@@ -85,36 +87,11 @@ const categories = [
     { id: 9, name: "Emplois", icon: "briefcase", color: "#0EA5E9" },
 ];
 
-const popularStores = [
-    {
-        id: 1,
-        name: "TechStore Cotonou",
-        category: "Électronique",
-        rating: 4.7,
-        image: "https://via.placeholder.com/80x80/3B82F6/FFFFFF?text=TS",
-        verified: true,
-    },
-    {
-        id: 2,
-        name: "Fashion Plus",
-        category: "Mode",
-        rating: 4.5,
-        image: "https://via.placeholder.com/80x80/EF4444/FFFFFF?text=FP",
-        verified: true,
-    },
-    {
-        id: 3,
-        name: "Home Decor",
-        category: "Maison",
-        rating: 4.8,
-        image: "https://via.placeholder.com/80x80/10B981/FFFFFF?text=HD",
-        verified: false,
-    },
-];
+// popularStores retiré (non utilisé)
 
 export default function ClientHome() {
     const { user } = useAuth();
-    const { getCacheStats } = useSearchCache();
+    // const { getCacheStats } = useSearchCache(); // (non utilisé pour l'instant)
 
     const navigateTo = (path: string) => {
         try {
@@ -155,116 +132,134 @@ export default function ClientHome() {
     // État pour les favoris
     const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
-    // Données pour le carrousel d'annonces boostées (amélioré avec images placeholders et styles plus attractifs)
-    const boostedAds = [
+    // ================= Publicités dynamiques =================
+    const [ads, setAds] = useState<Advertisement[]>([]);
+    const [loadingAds, setLoadingAds] = useState(false);
+    const viewedAdsRef = useRef<Set<string>>(new Set());
+    const lastAdsFetchRef = useRef<number>(0);
+
+    const fallbackAds: Advertisement[] = [
         {
-            id: 1,
-            title: "Votre entreprise",
-            subtitle: "est visible",
-            description: "Augmentez votre visibilité avec nos services",
-            type: "main",
-            bgColor: "#10B981",
-            textColor: "#FFFFFF",
-            image: "https://via.placeholder.com/300x150/10B981/FFFFFF?text=Pub+1"
-        },
-        {
-            id: 2,
-            title: "Correcteur de posture",
-            subtitle: "Soulage les douleurs dorsales",
-            price: "15.000 FCFA",
-            badge: "PROMO",
-            type: "product",
-            bgColor: "#FFFFFF",
-            textColor: "#374151",
-            image: "https://via.placeholder.com/300x150/FFFFFF/374151?text=Correcteur"
-        },
-        {
-            id: 3,
-            title: "Robe d'été",
-            subtitle: "Collection été 2025",
-            price: "25.000 FCFA",
-            badge: "FLASH",
-            type: "product",
-            bgColor: "#FFFFFF",
-            textColor: "#374151",
-            image: "https://via.placeholder.com/300x150/FFFFFF/374151?text=Robe"
-        },
-        {
-            id: 4,
-            title: "Smartphone Samsung",
-            subtitle: "Galaxy A54 - Neuf",
-            price: "320.000 FCFA",
-            badge: "NOUVEAU",
-            type: "product",
-            bgColor: "#FFFFFF",
-            textColor: "#374151",
-            image: "https://via.placeholder.com/300x150/FFFFFF/374151?text=Samsung"
+            _id: 'placeholder-1',
+            title: 'Votre entreprise',
+            description: 'Augmentez votre visibilité avec nos services',
+            image: 'https://via.placeholder.com/600x300/10B981/FFFFFF?text=Publicite',
+            type: 'BANNER' as any,
+            targetAudience: 'CLIENTS' as any,
+            startDate: new Date().toISOString(),
+            endDate: new Date(Date.now() + 86400000).toISOString(),
+            isActive: true,
+            views: 0,
+            clicks: 0,
+            createdAt: new Date().toISOString(),
         }
     ];
+
+    const loadAds = async () => {
+        const now = Date.now();
+        if (now - lastAdsFetchRef.current < 60_000 && ads.length) return; // throttle 60s
+        try {
+            setLoadingAds(true);
+            const data = await AdvertisementService.getActive(10);
+            setAds(Array.isArray(data) ? data : []);
+            lastAdsFetchRef.current = now;
+        } catch (e) {
+            console.warn('⚠️ Erreur récupération publicités (fallback) :', e);
+        } finally {
+            setLoadingAds(false);
+        }
+    };
+
+    const onAdViewableItemsChanged = useRef(({ viewableItems }: any) => {
+        viewableItems.forEach((vi: any) => {
+            const ad: Advertisement = vi.item;
+            if (!ad?._id) return;
+            if (!viewedAdsRef.current.has(ad._id)) {
+                viewedAdsRef.current.add(ad._id);
+                (AdvertisementService as any).incrementView?.(ad._id)
+                    ?.catch((err: any) => console.warn('view track fail', err));
+            }
+        });
+    }).current;
+    const adViewabilityConfig = { itemVisiblePercentThreshold: 60 };
+
+    const handleAdPress = async (ad: Advertisement) => {
+        try {
+            await AdvertisementService.incrementClick(ad._id).catch(() => { });
+            if ((ad as any).productId) {
+                navigateTo(`/(app)/(client)/product/${(ad as any).productId}`);
+            }
+        } catch (e) {
+            console.warn('⚠️ clic publicité échoué', e);
+        }
+    };
+
+    const adsToDisplay = ads.length ? ads : fallbackAds;
+
+    // ================= Fonctions produits & favoris (déclarations hoistées) =================
+    async function loadFeaturedProducts() {
+        try {
+            setLoadingProducts(true);
+            const response = await (ProductService as any).getPopularProducts?.(10);
+            const data = Array.isArray(response?.data)
+                ? response.data
+                : Array.isArray(response?.products)
+                    ? response.products
+                    : Array.isArray(response)
+                        ? response
+                        : [];
+            setFeaturedProducts(data);
+        } catch (e) {
+            console.error('❌ Erreur chargement produits populaires:', e);
+        } finally {
+            setLoadingProducts(false);
+        }
+    }
+
+    async function loadFavorites() {
+        try {
+            const favResponse = await (ProductService as any).getFavoriteProducts?.();
+            if (Array.isArray(favResponse)) {
+                setFavorites(new Set(favResponse.map((p: any) => p._id)));
+            } else if (Array.isArray(favResponse?.data)) {
+                setFavorites(new Set(favResponse.data.map((p: any) => p._id)));
+            }
+        } catch (e) {
+            // silencieux
+        }
+    }
+
+    async function refreshData() {
+        try {
+            setRefreshing(true);
+            await Promise.all([loadAds(), loadFeaturedProducts(), loadFavorites()]);
+        } catch (e) {
+            console.error('❌ Erreur refresh:', e);
+        } finally {
+            setRefreshing(false);
+        }
+    }
 
     useEffect(() => {
         // Réinitialiser le quartier si la ville change
         setSelectedNeighborhood("");
     }, [selectedCity]);
 
+    // ================= Chargement initial =================
     useEffect(() => {
-        loadFeaturedProducts();
-        loadRecentSearches();
-        loadFavorites();
-    }, []);
-
-    const loadFeaturedProducts = async () => {
-        try {
-            setLoadingProducts(true);
-            const response = await ProductService.getPopularProducts(6);
-            setFeaturedProducts(response.products);
-        } catch (error) {
-            console.error('❌ Erreur chargement produits populaires:', error);
-        } finally {
-            setLoadingProducts(false);
-        }
-    };
-
-    const loadFavorites = async () => {
-        try {
-            const favs = await ProductService.getFavoriteProducts();
-            setFavorites(new Set(favs.map(f => f.product._id)));
-        } catch (error) {
-            console.error('❌ Erreur chargement favoris:', error);
-        }
-    };
-
-    const loadInitialData = async () => {
-        try {
-            setLoading(true);
-            await Promise.all([
-                loadFeaturedProducts(),
-                loadFavorites(),
-                loadRecentSearches()
-            ]);
-        } catch (error) {
-            console.error('❌ Erreur chargement données initiales:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        loadInitialData();
+        (async () => {
+            try {
+                await Promise.all([loadAds(), loadFeaturedProducts()]);
+                await loadRecentSearches();
+                await loadFavorites();
+            } catch (e) {
+                console.warn('⚠️ Erreur chargement initial:', e);
+            } finally {
+                setLoading(false);
+            }
+        })();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // loadInitialData retiré des dépendances pour éviter la boucle infinie
-
-    const refreshData = async () => {
-        try {
-            setRefreshing(true);
-            await loadFeaturedProducts();
-            await loadFavorites();
-        } catch (error) {
-            console.error('❌ Erreur refresh:', error);
-        } finally {
-            setRefreshing(false);
-        }
-    };
+    }, []);
 
     // Skeleton Loader Component
     const ShimmerBlock = ({ style }: { style?: any }) => {
@@ -788,51 +783,27 @@ export default function ClientHome() {
     );
 
     const renderAd = ({ item }: { item: any }) => (
-        <TouchableOpacity 
-            className="rounded-2xl overflow-hidden mx-3 shadow-md"
-            style={{ backgroundColor: item.bgColor, width: Dimensions.get('window').width - 48 }}
+        <TouchableOpacity
+            onPress={() => handleAdPress(item)}
+            activeOpacity={0.9}
+            className="rounded-2xl overflow-hidden mx-3 shadow-md bg-white"
+            style={{ width: Dimensions.get('window').width - 48 }}
+            accessibilityRole="imagebutton"
+            accessibilityLabel={item.title || 'Publicité'}
         >
             <Image
                 source={{ uri: item.image }}
                 className="w-full h-40"
                 resizeMode="cover"
             />
-            <View className="p-4 absolute bottom-0 left-0 right-0 bg-black/50">
-                <Text 
-                    className="text-base font-quicksand-bold mb-1"
-                    style={{ color: item.textColor }}
-                >
-                    {item.title}
-                </Text>
-                <Text 
-                    className="text-sm font-quicksand-medium mb-2"
-                    style={{ color: item.textColor }}
-                >
-                    {item.subtitle}
-                </Text>
-                {item.type === "main" ? (
-                    <Text 
-                        className="text-xs font-quicksand-medium"
-                        style={{ color: item.textColor + '90' }}
-                    >
-                        {item.description}
-                    </Text>
-                ) : (
-                    <>
-                        <Text 
-                            className="text-sm font-quicksand-bold mb-1"
-                            style={{ color: item.textColor }}
-                        >
-                            {item.price}
-                        </Text>
-                        <View className="bg-primary-500 rounded-full px-2 py-1 self-start">
-                            <Text className="text-white text-xs font-quicksand-bold">
-                                {item.badge}
-                            </Text>
-                        </View>
-                    </>
-                )}
-            </View>
+            <LinearGradient
+                colors={['rgba(0,0,0,0.0)','rgba(0,0,0,0.55)']}
+                start={{ x:0, y:0 }} end={{ x:0, y:1 }}
+                className="absolute inset-0 justify-end p-4"
+            >
+                <Text numberOfLines={2} className="text-white font-quicksand-bold text-base mb-1">{item.title}</Text>
+                <Text numberOfLines={1} className="text-white/80 font-quicksand-medium text-xs">{new Date(item.endDate).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' })} • {item.type}</Text>
+            </LinearGradient>
         </TouchableOpacity>
     );
 
@@ -1193,12 +1164,14 @@ export default function ClientHome() {
                 {/* Boosted Ads Carousel (amélioré avec images et overlay) */}
                 <View className="py-4">
                     <FlatList
-                        data={boostedAds}
+                        data={adsToDisplay}
                         renderItem={renderAd}
-                        keyExtractor={(item) => item.id.toString()}
+                        keyExtractor={(_item: any, index) => (_item && _item._id ? String(_item._id) : `ad-${index}`)}
                         horizontal
                         pagingEnabled
                         showsHorizontalScrollIndicator={false}
+                        onViewableItemsChanged={onAdViewableItemsChanged}
+                        viewabilityConfig={adViewabilityConfig}
                         onMomentumScrollEnd={(event) => {
                             const newIndex = Math.round(event.nativeEvent.contentOffset.x / (Dimensions.get('window').width - 48));
                             setCurrentAdIndex(newIndex);
@@ -1207,7 +1180,7 @@ export default function ClientHome() {
                     />
                     {/* Indicators */}
                     <View className="flex-row justify-center mt-3">
-                        {boostedAds.map((_, index) => {
+                        {adsToDisplay.map((_, index) => {
                             const active = index === currentAdIndex;
                             return (
                                 <View

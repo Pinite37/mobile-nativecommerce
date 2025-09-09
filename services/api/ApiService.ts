@@ -11,8 +11,8 @@ class ApiService {
   constructor() {
     // Configure baseURL based on platform
     if (Platform.OS === 'android') {
-      this.baseURL = 'http://192.168.86.143:4000/api';
-      // this.baseURL = 'http://192.168.0.106:4000/api';
+      // this.baseURL = 'http://192.168.86.143:4000/api';
+      this.baseURL = 'http://192.168.0.107:4000/api';
     } else if (Platform.OS === 'ios') {
       this.baseURL = 'http://localhost:4000/api'; // iOS simulator
     } else {
@@ -220,6 +220,11 @@ class ApiService {
 
   async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
     const response = await this.axiosInstance.put(url, data, config);
+    return response.data;
+  }
+
+  async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    const response = await this.axiosInstance.patch(url, data, config);
     return response.data;
   }
 

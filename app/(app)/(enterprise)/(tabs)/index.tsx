@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -20,6 +20,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../../../contexts/AuthContext';
+import AdvertisementService, { Advertisement } from '../../../../services/api/AdvertisementService';
 import CategoryService from '../../../../services/api/CategoryService';
 import EnterpriseService from '../../../../services/api/EnterpriseService';
 import ProductService from '../../../../services/api/ProductService';
@@ -137,48 +138,21 @@ export default function EnterpriseDashboard() {
   const [resultsView, setResultsView] = useState<'grid' | 'list'>('grid');
   const [selectedSort, setSelectedSort] = useState<'relevance' | 'priceLow' | 'priceHigh' | 'newest'>('relevance');
   
-  // Données pour le carrousel d'annonces boostées orientées entreprise
-  const boostedAds = [
-    {
-      id: 1,
-      title: "Boostez vos ventes",
-      subtitle: "avec nos outils",
-      description: "Augmentez votre visibilité et vos revenus",
-      type: "main",
-      bgColor: "#10B981",
-      textColor: "#FFFFFF"
-    },
-    {
-      id: 2,
-      title: "Formation Marketing",
-      subtitle: "Digital & Réseaux sociaux",
-      price: "25.000 FCFA",
-      badge: "NOUVEAU",
-      type: "service",
-      bgColor: "#FFFFFF",
-      textColor: "#374151"
-    },
-    {
-      id: 3,
-      title: "Service Comptabilité",
-      subtitle: "Gestion financière pro",
-      price: "50.000 FCFA/mois",
-      badge: "POPULAIRE",
-      type: "service",
-      bgColor: "#FFFFFF",
-      textColor: "#374151"
-    },
-    {
-      id: 4,
-      title: "Publicité Premium",
-      subtitle: "Mise en avant produits",
-      price: "15.000 FCFA",
-      badge: "PROMO",
-      type: "service",
-      bgColor: "#FFFFFF",
-      textColor: "#374151"
+  // Publicités actives dynamiques
+  const [activeAds, setActiveAds] = useState<Advertisement[]>([]);
+  const [loadingAds, setLoadingAds] = useState(false);
+
+  const loadActiveAds = useCallback(async () => {
+    try {
+      setLoadingAds(true);
+      const ads = await AdvertisementService.getActive(10);
+      setActiveAds(ads || []);
+    } catch (e) {
+      console.warn('Erreur chargement publicités actives', e);
+    } finally {
+      setLoadingAds(false);
     }
-  ];
+  }, []);
 
   // Charger les données du profil au montage
   useEffect(() => {
@@ -196,7 +170,8 @@ export default function EnterpriseDashboard() {
     loadFeaturedProducts();
     loadCategories();
     loadPopularProducts();
-    loadRecentSearches();
+  loadRecentSearches();
+  loadActiveAds();
     loadFavorites();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -267,7 +242,8 @@ export default function EnterpriseDashboard() {
         loadCategories(),
         loadPopularProducts(),
         loadRecentSearches(),
-        loadFavorites()
+  loadFavorites(),
+  loadActiveAds()
       ]);
     } catch (error) {
       console.error('❌ Erreur chargement données initiales:', error);
@@ -288,7 +264,8 @@ export default function EnterpriseDashboard() {
         loadProfileData(),
         loadFeaturedProducts(),
         loadCategories(),
-        loadPopularProducts()
+  loadPopularProducts(),
+  loadActiveAds()
       ]);
     } catch (error) {
       console.error('❌ Erreur refresh dashboard:', error);
@@ -329,11 +306,6 @@ export default function EnterpriseDashboard() {
     );
   };
 
-  const SkeletonCard = ({ style }: { style?: any }) => (
-    <View className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden" style={style}>
-      <ShimmerBlock style={{ height: 120, borderRadius: 16, width: '100%' }} />
-    </View>
-  );
 
   const SkeletonProduct = () => (
     <View className="bg-white rounded-2xl shadow-md border border-neutral-100 p-2 mb-3 w-[48%] overflow-hidden">
@@ -1205,144 +1177,92 @@ export default function EnterpriseDashboard() {
           </View>
         )}
 
-        {/* Annonces Boostées / Services Pro - Carrousel */}
+        {/* Publicités actives */}
         <View className="py-4">
           <View className="flex-row items-center justify-between mb-6 px-6">
             <View>
-              <Text className="text-xl font-quicksand-bold text-neutral-800">
-                Services Pro
-              </Text>
-              <Text className="text-sm font-quicksand text-neutral-600 mt-1">
-                Boostez votre visibilité avec nos services premium
-              </Text>
+              <Text className="text-xl font-quicksand-bold text-neutral-800">Publicités</Text>
+              {/* <Text className="text-sm font-quicksand text-neutral-600 mt-1">Vos campagnes en cours</Text> */}
             </View>
-            <TouchableOpacity className="flex-row items-center bg-primary-50 rounded-xl px-3 py-2">
-              <Text className="text-primary-600 font-quicksand-semibold text-sm mr-1">
-                Voir tout
-              </Text>
+            <TouchableOpacity
+              onPress={() => router.push('/(app)/(enterprise)/advertisements')}
+              className="flex-row items-center bg-primary-50 rounded-xl px-3 py-2"
+            >
+              <Text className="text-primary-600 font-quicksand-semibold text-sm mr-1">Gérer</Text>
               <Ionicons name="chevron-forward" size={14} color="#10B981" />
             </TouchableOpacity>
           </View>
-          
-          <View className="relative">
-            <FlatList
-              ref={flatListRef}
-              data={boostedAds}
-              renderItem={({ item }) => {
-                const screenWidth = Dimensions.get('window').width;
-                const cardWidth = screenWidth - 32;
-                
-                if (item.type === "main") {
+          <View className="relative min-h-[160px]">
+            {loadingAds ? (
+              <View className="flex-row px-6 gap-4">
+                {Array.from({ length: 1 }).map((_, i) => (
+                  <View key={i} className="flex-1 bg-white rounded-2xl h-40 overflow-hidden border border-neutral-100">
+                    <View className="flex-1 bg-neutral-200" />
+                  </View>
+                ))}
+              </View>
+            ) : activeAds.length === 0 ? (
+              <View className="px-6">
+                <View className="bg-white rounded-2xl border border-dashed border-neutral-300 p-6 items-center">
+                  <Ionicons name="megaphone-outline" size={28} color="#9CA3AF" />
+                  <Text className="mt-3 text-neutral-600 font-quicksand-medium text-sm text-center">Aucune publicité active pour le moment.</Text>
+                  <TouchableOpacity
+                    onPress={() => router.push('/(app)/(enterprise)/advertisements/create')}
+                    className="mt-4 bg-primary-500 px-5 py-2 rounded-xl"
+                  >
+                    <Text className="text-white font-quicksand-semibold text-sm">Créer une publicité</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <FlatList
+                ref={flatListRef}
+                data={activeAds}
+                keyExtractor={(item) => item._id}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                renderItem={({ item }) => {
+                  const screenWidth = Dimensions.get('window').width;
                   return (
-                    <View style={{ width: screenWidth, paddingHorizontal: 16 }}>
-                      <TouchableOpacity 
-                        className="rounded-2xl p-6 shadow-md"
-                        style={{ 
-                          backgroundColor: item.bgColor,
-                          width: cardWidth,
-                          minHeight: 140
-                        }}
-                      >
-                        <View className="flex-row items-center justify-between">
-                          <View className="flex-1">
-                            <Text 
-                              className="font-quicksand-bold text-xl mb-2"
-                              style={{ color: item.textColor }}
-                            >
-                              {item.title}
-                            </Text>
-                            <Text 
-                              className="font-quicksand-bold text-2xl mb-1"
-                              style={{ color: item.textColor }}
-                            >
-                              {item.subtitle}
-                            </Text>
-                            <Text 
-                              className="font-quicksand-medium text-sm mb-4 opacity-90"
-                              style={{ color: item.textColor }}
-                            >
-                              {item.description}
-                            </Text>
-                            <View className="bg-white rounded-full px-4 py-2 self-start">
-                              <Text className="text-primary-500 font-quicksand-bold text-sm">
-                                Découvrir
-                              </Text>
-                            </View>
+                    <TouchableOpacity
+                      activeOpacity={0.9}
+                      onPress={async () => { try { await AdvertisementService.incrementClick(item._id); } catch {} }}
+                      style={{ width: screenWidth, paddingHorizontal: 16 }}
+                    >
+                      <View className="bg-white rounded-2xl overflow-hidden border border-neutral-100 h-40">
+                        {item.image ? (
+                          <Image source={{ uri: item.image }} className="w-full h-full" resizeMode="cover" />
+                        ) : (
+                          <View className="flex-1 bg-neutral-100 items-center justify-center">
+                            <Ionicons name="image" size={34} color="#9CA3AF" />
                           </View>
-                          <View className="ml-4 items-center">
-                            <View className="bg-white/20 rounded-full p-3 mb-2">
-                              <Ionicons name="trending-up" size={32} color="white" />
-                            </View>
-                            <View className="bg-success-500 rounded-full px-3 py-1">
-                              <Text className="text-white font-quicksand-bold text-xs">
-                                PRO
-                              </Text>
-                            </View>
-                          </View>
-                        </View>
-                      </TouchableOpacity>
-                    </View>
-                  );
-                } else {
-                  return (
-                    <View style={{ width: screenWidth, paddingHorizontal: 16 }}>
-                      <TouchableOpacity 
-                        className="rounded-2xl p-4 shadow-sm border border-neutral-100"
-                        style={{ 
-                          backgroundColor: item.bgColor,
-                          width: cardWidth,
-                          minHeight: 140
-                        }}
-                      >
-                        <View className="flex-row items-center justify-between mb-2">
-                          <View className="bg-primary-100 rounded-full px-2 py-1">
-                            <Text className="text-primary-600 font-quicksand-bold text-xs">
-                              {item.badge}
-                            </Text>
-                          </View>
-                          <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
-                        </View>
-                        <Text 
-                          className="font-quicksand-bold text-sm mb-1"
-                          style={{ color: item.textColor }}
+                        )}
+                        <LinearGradient
+                          colors={['rgba(0,0,0,0.0)','rgba(0,0,0,0.55)']}
+                          start={{ x:0, y:0 }} end={{ x:0, y:1 }}
+                          className="absolute inset-0 justify-end p-4"
                         >
-                          {item.title}
-                        </Text>
-                        <Text 
-                          className="font-quicksand-medium text-xs mb-2 opacity-75"
-                          style={{ color: item.textColor }}
-                        >
-                          {item.subtitle}
-                        </Text>
-                        <Text className="text-primary-500 font-quicksand-bold text-sm">
-                          {item.price}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
+                          <Text numberOfLines={2} className="text-white font-quicksand-bold text-base mb-1">{item.title}</Text>
+                          <Text numberOfLines={1} className="text-white/80 font-quicksand-medium text-xs">{new Date(item.endDate).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' })} • {item.type}</Text>
+                        </LinearGradient>
+                      </View>
+                    </TouchableOpacity>
                   );
-                }
-              }}
-              keyExtractor={(item) => item.id.toString()}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              onMomentumScrollEnd={(event) => {
-                const newIndex = Math.round(event.nativeEvent.contentOffset.x / Dimensions.get('window').width);
-                setCurrentAdIndex(newIndex);
-              }}
-            />
-            
-            {/* Indicateurs de pagination */}
-                  <View className="flex-row justify-center mt-4">
-              {boostedAds.map((ad) => (
-                <View
-                  key={ad.id}
-                  className={`w-2 h-2 rounded-full mx-1 ${
-                    ad.id - 1 === currentAdIndex ? 'bg-primary-500' : 'bg-neutral-300'
-                  }`}
-                />
-              ))}
-            </View>
+                }}
+                onMomentumScrollEnd={(event) => {
+                  const newIndex = Math.round(event.nativeEvent.contentOffset.x / Dimensions.get('window').width);
+                  setCurrentAdIndex(newIndex);
+                }}
+              />
+            )}
+            {activeAds.length > 0 && (
+              <View className="flex-row justify-center mt-3">
+                {activeAds.map((ad, idx) => (
+                  <View key={ad._id} className={`w-2 h-2 rounded-full mx-1 ${idx === currentAdIndex ? 'bg-primary-500' : 'bg-neutral-300'}`} />
+                ))}
+              </View>
+            )}
           </View>
         </View>
 

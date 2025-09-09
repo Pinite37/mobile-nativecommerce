@@ -6,7 +6,6 @@ import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Dimensions,
   FlatList,
   Image,
@@ -22,6 +21,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import NotificationModal, { useNotification } from "../../../../../components/ui/NotificationModal";
 import { useToast } from "../../../../../components/ui/ToastManager";
 import ProductService from "../../../../../services/api/ProductService";
 import { Product } from "../../../../../types/product";
@@ -30,6 +30,7 @@ const { width: screenWidth } = Dimensions.get('window');
 
 export default function ProductDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { notification, hideNotification } = useNotification();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -37,6 +38,15 @@ export default function ProductDetails() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [imageModalVisible, setImageModalVisible] = useState(false);
+  const [confirmationVisible, setConfirmationVisible] = useState(false);
+  const [confirmationAction, setConfirmationAction] = useState<{
+    type: 'toggle_status' | 'delete';
+    title: string;
+    message: string;
+    confirmText: string;
+    confirmColor: string;
+    onConfirm: () => void;
+  } | null>(null);
   const insets = useSafeAreaInsets();
   
   // Référence et variables pour le carrousel d'images
@@ -90,58 +100,73 @@ export default function ProductDetails() {
     }
   };
 
-  const handleToggleStatus = async () => {
+  // Fonctions de confirmation modal
+  const showConfirmation = (type: 'toggle_status' | 'delete', onConfirm: () => void) => {
     if (!product) return;
     
-    const action = product.isActive ? 'désactiver' : 'activer';
-    Alert.alert(
-      `${action.charAt(0).toUpperCase() + action.slice(1)} le produit`,
-      `Voulez-vous vraiment ${action} ce produit ?`,
-      [
-        { text: "Annuler", style: "cancel" },
-        {
-          text: action.charAt(0).toUpperCase() + action.slice(1),
-          onPress: async () => {
-            try {
-              console.log('🔄 Changement de statut:', product._id, !product.isActive);
-              await ProductService.toggleProductStatus(product._id, !product.isActive);
-              setProduct(prev => prev ? { ...prev, isActive: !prev.isActive } : null);
-              showSuccess(`Produit ${action}é avec succès`);
-            } catch (error: any) {
-              console.error('❌ Erreur changement statut:', error);
-              showError('Erreur', error.message || 'Une erreur est survenue');
-            }
-          }
-        }
-      ]
-    );
+    let title = '';
+    let message = '';
+    let confirmText = '';
+    let confirmColor = '';
+
+    switch (type) {
+      case 'toggle_status':
+        const action = product.isActive ? 'désactiver' : 'activer';
+        title = `${action.charAt(0).toUpperCase() + action.slice(1)} le produit`;
+        message = `Voulez-vous vraiment ${action} ce produit ?`;
+        confirmText = action.charAt(0).toUpperCase() + action.slice(1);
+        confirmColor = product.isActive ? '#F59E0B' : '#10B981';
+        break;
+      case 'delete':
+        title = 'Supprimer le produit';
+        message = 'Êtes-vous sûr de vouloir supprimer ce produit ? Cette action est irréversible.';
+        confirmText = 'Supprimer';
+        confirmColor = '#EF4444';
+        break;
+    }
+
+    setConfirmationAction({ type, title, message, confirmText, confirmColor, onConfirm });
+    setConfirmationVisible(true);
+  };
+
+  const closeConfirmation = () => {
+    setConfirmationVisible(false);
+    setConfirmationAction(null);
+  };
+
+  const executeConfirmedAction = () => {
+    if (confirmationAction?.onConfirm) {
+      confirmationAction.onConfirm();
+    }
+    closeConfirmation();
+  };
+
+  const handleToggleStatus = async () => {
+    showConfirmation('toggle_status', async () => {
+      try {
+        console.log('🔄 Changement de statut:', product!._id, !product!.isActive);
+        await ProductService.toggleProductStatus(product!._id, !product!.isActive);
+        setProduct(prev => prev ? { ...prev, isActive: !prev.isActive } : null);
+        showSuccess(`Produit ${product!.isActive ? 'désactivé' : 'activé'} avec succès`);
+      } catch (error: any) {
+        console.error('❌ Erreur changement statut:', error);
+        showError('Erreur', error.message || 'Une erreur est survenue');
+      }
+    });
   };
 
   const handleDeleteProduct = async () => {
-    if (!product) return;
-    
-    Alert.alert(
-      "Supprimer le produit",
-      "Êtes-vous sûr ? Cette action est irréversible.",
-      [
-        { text: "Annuler", style: "cancel" },
-        {
-          text: "Supprimer",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              console.log('🗑️ Suppression du produit:', product._id);
-              await ProductService.deleteProduct(product._id);
-              showSuccess("Produit supprimé avec succès");
-              router.back();
-            } catch (error: any) {
-              console.error('❌ Erreur suppression:', error);
-              showError('Erreur', error.message || 'Une erreur est survenue');
-            }
-          }
-        }
-      ]
-    );
+    showConfirmation('delete', async () => {
+      try {
+        console.log('🗑️ Suppression du produit:', product!._id);
+        await ProductService.deleteProduct(product!._id);
+        showSuccess("Produit supprimé avec succès");
+        router.back();
+      } catch (error: any) {
+        console.error('❌ Erreur suppression:', error);
+        showError('Erreur', error.message || 'Une erreur est survenue');
+      }
+    });
   };
 
   const handleEditProduct = () => {
@@ -690,6 +715,50 @@ export default function ProductDetails() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Modal de confirmation */}
+      <Modal
+        visible={confirmationVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={closeConfirmation}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50 px-4">
+          <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
+            <Text className="text-xl font-quicksand-bold text-neutral-800 mb-2">
+              {confirmationAction?.title}
+            </Text>
+            <Text className="text-base text-neutral-600 font-quicksand-medium mb-6">
+              {confirmationAction?.message}
+            </Text>
+            <View className="flex-row space-x-3">
+              <TouchableOpacity
+                className="flex-1 bg-neutral-100 rounded-xl py-3"
+                onPress={closeConfirmation}
+              >
+                <Text className="text-neutral-700 font-quicksand-semibold text-center">Annuler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="flex-1 rounded-xl py-3"
+                style={{ backgroundColor: confirmationAction?.confirmColor }}
+                onPress={executeConfirmedAction}
+              >
+                <Text className="text-white font-quicksand-semibold text-center">
+                  {confirmationAction?.confirmText}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <NotificationModal
+        visible={notification?.visible || false}
+        type={notification?.type || 'info'}
+        title={notification?.title || ''}
+        message={notification?.message || ''}
+        onClose={hideNotification}
+      />
     </SafeAreaView>
   );
 }

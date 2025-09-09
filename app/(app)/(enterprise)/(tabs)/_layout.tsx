@@ -1,19 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
-import { TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TabBarIconWithBadge } from "../../../../components/ui/TabBarIconWithBadge";
 import { useUnreadNotifications } from "../../../../hooks/useUnreadNotifications";
+import { CustomTabBar } from "../../../../components/ui/CustomTabBar";
 
 export default function TabsLayout() {
   const { unreadCount } = useUnreadNotifications();
   const insets = useSafeAreaInsets();
-
-  // Calcul dynamique pour tenir compte des barres de navigation Android / iOS
-  const baseHeight = 72; // hauteur visuelle de base du tab bar (sans inset)
-  const dynamicHeight = baseHeight + insets.bottom; // on ajoute l'inset réel
-  const dynamicPaddingBottom = 16 + Math.min(insets.bottom, 24); // conserver un bon touch area sans exagérer
 
   const NotificationIcon = ({ color, size, focused }: { color: string; size: number; focused: boolean }) => (
     <TabBarIconWithBadge
@@ -25,30 +20,13 @@ export default function TabsLayout() {
     />
   );
 
-  const CustomTabBarButton = (props: any) => (
-    <TouchableOpacity {...props} activeOpacity={1} />
-  );
-
   return (
     <Tabs
+      tabBar={(props) => <CustomTabBar {...props} insets={insets} />}
       screenOptions={{
         tabBarActiveTintColor: "#10B981",
         tabBarInactiveTintColor: "#9CA3AF",
-        tabBarStyle: {
-          backgroundColor: "#FFFFFF",
-          borderTopWidth: 0,
-          shadowColor: "#000000",
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.08,
-          shadowRadius: 10,
-          elevation: 12,
-          paddingTop: 16,
-          paddingBottom: dynamicPaddingBottom,
-          paddingHorizontal: 12,
-          height: dynamicHeight,
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
-        },
+        // Les styles ci-dessous sont moins critiques car la CustomTabBar gère désormais l'affichage
         tabBarLabelStyle: {
           fontSize: 11,
           fontFamily: "Quicksand-SemiBold",
@@ -56,17 +34,8 @@ export default function TabsLayout() {
           marginBottom: 2,
           lineHeight: 13,
         },
-        tabBarItemStyle: {
-          paddingTop: 10,
-          paddingBottom: 6,
-          marginHorizontal: 4,
-          borderRadius: 16,
-          height: 62,
-          alignItems: 'center',
-          justifyContent: 'center',
-        },
         tabBarIconStyle: {
-          marginBottom: 4,
+          marginBottom: 0,
         },
         headerStyle: {
           backgroundColor: "#FFFFFF",
@@ -77,7 +46,6 @@ export default function TabsLayout() {
           fontFamily: "Quicksand-SemiBold",
           color: "#1F2937",
         },
-        tabBarButton: CustomTabBarButton,
       }}
     >
       <Tabs.Screen
@@ -86,10 +54,10 @@ export default function TabsLayout() {
           title: "Board",
           headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons 
-              name={focused ? "analytics" : "analytics-outline"} 
-              size={focused ? 26 : 24} 
-              color={color} 
+            <Ionicons
+              name={focused ? "analytics" : "analytics-outline"}
+              size={focused ? 26 : 24}
+              color={color}
             />
           ),
         }}
@@ -100,10 +68,10 @@ export default function TabsLayout() {
           title: "Produits",
           headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons 
-              name={focused ? "cube" : "cube-outline"} 
-              size={focused ? 26 : 24} 
-              color={color} 
+            <Ionicons
+              name={focused ? "cube" : "cube-outline"}
+              size={focused ? 26 : 24}
+              color={color}
             />
           ),
         }}
@@ -114,10 +82,10 @@ export default function TabsLayout() {
           title: "Favoris",
           headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons 
-              name={focused ? "heart" : "heart-outline"} 
-              size={focused ? 26 : 24} 
-              color={color} 
+            <Ionicons
+              name={focused ? "heart" : "heart-outline"}
+              size={focused ? 26 : 24}
+              color={color}
             />
           ),
         }}
@@ -128,10 +96,10 @@ export default function TabsLayout() {
           title: "Messages",
           headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons 
-              name={focused ? "chatbubbles" : "chatbubbles-outline"} 
-              size={focused ? 26 : 24} 
-              color={color} 
+            <Ionicons
+              name={focused ? "chatbubbles" : "chatbubbles-outline"}
+              size={focused ? 26 : 24}
+              color={color}
             />
           ),
         }}
@@ -150,10 +118,10 @@ export default function TabsLayout() {
           title: "Profil",
           headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons 
-              name={focused ? "person" : "person-outline"} 
-              size={focused ? 26 : 24} 
-              color={color} 
+            <Ionicons
+              name={focused ? "person" : "person-outline"}
+              size={focused ? 26 : 24}
+              color={color}
             />
           ),
         }}

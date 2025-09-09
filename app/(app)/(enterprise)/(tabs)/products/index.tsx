@@ -4,7 +4,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Animated, Easing,
   FlatList,
   Image,
@@ -18,6 +17,7 @@ import {
   View,
 } from "react-native";
 
+import NotificationModal, { useNotification } from "../../../../../components/ui/NotificationModal";
 import CategoryService from "../../../../../services/api/CategoryService";
 import ProductService from "../../../../../services/api/ProductService";
 import { Category, Product, ProductsResponse } from "../../../../../types/product";
@@ -31,6 +31,7 @@ const sortOptions = [
 
 export default function EnterpriseProducts() {
   const params = useLocalSearchParams();
+  const { notification, showNotification, hideNotification } = useNotification();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedSort, setSelectedSort] = useState("createdAt");
@@ -52,6 +53,17 @@ export default function EnterpriseProducts() {
   
   // Errors
   const [error, setError] = useState<string | null>(null);
+
+  // Confirmation modal
+  const [confirmationVisible, setConfirmationVisible] = useState(false);
+  const [confirmationAction, setConfirmationAction] = useState<{
+    type: 'delete' | 'status_change';
+    product: Product;
+    title: string;
+    message: string;
+    confirmText: string;
+    confirmColor: string;
+  } | null>(null);
 
   // Load products function
   const loadProducts = useCallback(async (reset = false, pageToLoad?: number) => {
@@ -178,49 +190,12 @@ export default function EnterpriseProducts() {
     setLoadingMore(false);
   }, [loadingMore, hasMoreProducts, loadProducts]);
 
-  const handleDeleteProduct = async (productId: string) => {
-    Alert.alert(
-      "Supprimer le produit",
-      "Êtes-vous sûr de vouloir supprimer ce produit ?",
-      [
-        { text: "Annuler", style: "cancel" },
-        {
-          text: "Supprimer",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await ProductService.deleteProduct(productId);
-              setProducts(prev => prev.filter(p => p._id !== productId));
-            } catch (err: any) {
-              Alert.alert("Erreur", err.message || "Impossible de supprimer le produit");
-            }
-          }
-        }
-      ]
-    );
+  const handleStatusChange = (product: Product) => {
+    showConfirmation('status_change', product);
   };
 
-  const toggleProductStatus = async (productId: string, currentStatus: boolean) => {
-    try {
-      // Update the product status locally first for better UX
-      setProducts(prev => 
-        prev.map(p => 
-          p._id === productId ? { ...p, isActive: !currentStatus } : p
-        )
-      );
-      
-      // We'll need to implement this method in ProductService
-      // For now, we'll update the product with the new status
-      await ProductService.updateProduct(productId, { isActive: !currentStatus });
-    } catch (err: any) {
-      // Revert the change if the API call fails
-      setProducts(prev => 
-        prev.map(p => 
-          p._id === productId ? { ...p, isActive: currentStatus } : p
-        )
-      );
-      Alert.alert("Erreur", err.message || "Impossible de modifier le statut du produit");
-    }
+  const handleDeleteProduct = (product: Product) => {
+    showConfirmation('delete', product);
   };
 
   const formatPrice = (price: number) => {
@@ -235,11 +210,67 @@ export default function EnterpriseProducts() {
 
   const getStockStatus = (stock: number) => {
     if (stock === 0) return { color: '#EF4444', text: 'Rupture' };
-    if (stock <= 5) return { color: '#F59E0B', text: 'Stock faible' };
-    return { color: '#10B981', text: 'En stock' };
+    if (stock < 10) return { color: '#F59E0B', text: 'Faible' };
+    return { color: '#10B981', text: 'Disponible' };
   };
 
-  
+  const showConfirmation = (type: 'delete' | 'status_change', product: Product) => {
+    let title = '';
+    let message = '';
+    let confirmText = '';
+    let confirmColor = '';
+
+    switch (type) {
+      case 'delete':
+        title = 'Supprimer le produit';
+        message = 'Êtes-vous sûr de vouloir supprimer ce produit ?';
+        confirmText = 'Supprimer';
+        confirmColor = '#EF4444';
+        break;
+      case 'status_change':
+        title = product.isActive ? 'Désactiver le produit' : 'Activer le produit';
+        message = product.isActive
+          ? 'Le produit ne sera plus visible par les clients.'
+          : 'Le produit sera visible par les clients.';
+        confirmText = product.isActive ? 'Désactiver' : 'Activer';
+        confirmColor = product.isActive ? '#F59E0B' : '#10B981';
+        break;
+    }
+
+    setConfirmationAction({ type, product, title, message, confirmText, confirmColor });
+    setConfirmationVisible(true);
+  };
+
+  const closeConfirmation = () => {
+    setConfirmationVisible(false);
+    setConfirmationAction(null);
+  };
+
+  const executeConfirmedAction = async () => {
+    if (!confirmationAction) return;
+
+    const { type, product } = confirmationAction;
+    closeConfirmation();
+
+    try {
+      switch (type) {
+        case 'delete':
+          await ProductService.deleteProduct(product._id);
+          setProducts(prev => prev.filter(p => p._id !== product._id));
+          showNotification('success', 'Produit supprimé', 'Le produit a été supprimé avec succès.');
+          break;
+        case 'status_change':
+          await ProductService.updateProduct(product._id, { isActive: !product.isActive });
+          setProducts(prev => prev.map(p =>
+            p._id === product._id ? { ...p, isActive: !p.isActive } : p
+          ));
+          showNotification('success', 'Statut modifié', `Le produit a été ${!product.isActive ? 'activé' : 'désactivé'}.`);
+          break;
+      }
+    } catch (err: any) {
+      showNotification('error', 'Erreur', err.message || `Impossible de ${type === 'delete' ? 'supprimer' : 'modifier'} le produit`);
+    }
+  };  
 
   const renderProduct = ({ item }: { item: Product }) => {
     const statusStyle = getStatusColor(item.isActive);
@@ -314,15 +345,7 @@ export default function EnterpriseProducts() {
                 </View>
                 <TouchableOpacity
                   onPress={() => {
-                    Alert.alert(
-                      'Actions sur le produit',
-                      'Que souhaitez-vous faire ?',
-                      [
-                        { text: 'Annuler', style: 'cancel' },
-                        { text: item.isActive ? 'Désactiver' : 'Activer', onPress: () => toggleProductStatus(item._id, item.isActive) },
-                        { text: 'Supprimer', style: 'destructive', onPress: () => handleDeleteProduct(item._id) }
-                      ]
-                    );
+                    handleStatusChange(item);
                   }}
                 >
                   <Ionicons name="ellipsis-horizontal" size={20} color="#9CA3AF" />
@@ -355,16 +378,9 @@ export default function EnterpriseProducts() {
             <Text className="text-white font-quicksand-semibold text-center">Modifier</Text>
           </TouchableOpacity>
           <TouchableOpacity className="flex-1 bg-background-secondary rounded-xl py-3 ml-2" onPress={() => {
-            Alert.alert(
-              'Dupliquer le produit',
-              'Voulez-vous créer une copie de ce produit ?',
-              [
-                { text: 'Annuler', style: 'cancel' },
-                { text: 'Dupliquer', onPress: () => { console.log('Duplicate product:', item._id); } }
-              ]
-            );
+            handleDeleteProduct(item);
           }}>
-            <Text className="text-neutral-700 font-quicksand-semibold text-center">Dupliquer</Text>
+            <Text className="text-red-600 font-quicksand-semibold text-center">Supprimer</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -684,6 +700,87 @@ export default function EnterpriseProducts() {
         )}
       </View>
       {renderSortModal()}
+
+      {/* Modern Confirmation Modal */}
+      <Modal
+        visible={confirmationVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={closeConfirmation}
+      >
+        <TouchableOpacity
+          className="flex-1 bg-black/50"
+          activeOpacity={1}
+          onPress={closeConfirmation}
+        >
+          <View className="flex-1 justify-center items-center px-6">
+            <TouchableOpacity
+              className="bg-white rounded-3xl w-full max-w-sm"
+              activeOpacity={1}
+              onPress={() => {}}
+            >
+              {/* Icon */}
+              <View className="items-center pt-8 pb-4">
+                <View
+                  className="w-16 h-16 rounded-full items-center justify-center"
+                  style={{ backgroundColor: confirmationAction?.confirmColor + '20' }}
+                >
+                  <Ionicons
+                    name={
+                      confirmationAction?.type === 'delete' ? 'trash' :
+                      confirmationAction?.type === 'status_change' ? (confirmationAction.product.isActive ? 'pause' : 'play') : 'help'
+                    }
+                    size={28}
+                    color={confirmationAction?.confirmColor}
+                  />
+                </View>
+              </View>
+
+              {/* Content */}
+              <View className="px-6 pb-6">
+                <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+                  {confirmationAction?.title}
+                </Text>
+                <Text className="text-base text-neutral-600 font-quicksand-medium text-center leading-5">
+                  {confirmationAction?.message}
+                </Text>
+              </View>
+
+              {/* Actions */}
+              <View className="flex-row px-6 pb-6 gap-3">
+                <TouchableOpacity
+                  onPress={closeConfirmation}
+                  className="flex-1 bg-neutral-100 py-4 rounded-2xl items-center"
+                >
+                  <Text className="text-base font-quicksand-semibold text-neutral-700">
+                    Annuler
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={executeConfirmedAction}
+                  className="flex-1 py-4 rounded-2xl items-center"
+                  style={{ backgroundColor: confirmationAction?.confirmColor }}
+                >
+                  <Text className="text-base font-quicksand-semibold text-white">
+                    {confirmationAction?.confirmText}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Notification Modal */}
+      {notification && (
+        <NotificationModal
+          visible={notification.visible}
+          type={notification.type}
+          title={notification.title}
+          message={notification.message}
+          onClose={hideNotification}
+        />
+      )}
     </SafeAreaView>
   );
 }

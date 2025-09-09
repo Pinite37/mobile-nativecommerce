@@ -13,6 +13,7 @@ import {
   Image,
   Keyboard,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   SafeAreaView,
   Text,
@@ -21,6 +22,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import NotificationModal, { useNotification } from "../../../../components/ui/NotificationModal";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useMQTT } from "../../../../hooks/useMQTT";
 import MessagingService, { Conversation, Message } from "../../../../services/api/MessagingService";
@@ -41,6 +43,10 @@ export default function ConversationDetails() {
   
   // Hook MQTT pour la communication temps réel
   const { isConnected: mqttConnected, sendMessage: mqttSendMessage, sendMessageWithAttachment, joinConversation: mqttJoinConversation, markAsRead: mqttMarkAsRead, onNewMessage, onMessageDeleted, onMessagesRead, onMessageSent, offNewMessage, offMessageDeleted, offMessagesRead, offMessageSent } = useMQTT();
+  const { notification, showNotification, hideNotification } = useNotification();
+  // Garde-fous pour éviter les rechargements multiples
+  const initialLoadRef = useRef(false);
+  const productLoadRef = useRef(false);
   
   // Récupération sécurisée des paramètres
   let conversationId: string | null = null;
@@ -67,6 +73,16 @@ export default function ConversationDetails() {
     mimeType: string;
     fileName?: string;
     uri: string;
+  } | null>(null);
+
+  // États pour la gestion des confirmations de suppression
+  const [confirmationVisible, setConfirmationVisible] = useState(false);
+  const [confirmationAction, setConfirmationAction] = useState<{
+    messageId: string;
+    title: string;
+    message: string;
+    confirmText: string;
+    confirmColor: string;
   } | null>(null);
 
   // Récupérer l'ID de l'utilisateur connecté depuis le contexte d'auth
@@ -312,64 +328,84 @@ export default function ConversationDetails() {
     };
   }, []);
 
+  // Chargement initial de la conversation (une seule fois par conversationId)
   useEffect(() => {
-    const loadConversationData = async () => {
+    if (!conversationId) return;
+    if (initialLoadRef.current) return; // déjà chargé
+    initialLoadRef.current = true;
+
+    let cancelled = false;
+    const load = async () => {
       try {
         setLoading(true);
-        
-        // Vérifier le cache d'abord
         const cached = conversationCache.get(conversationId!);
         const now = Date.now();
-        
         if (cached && (now - cached.timestamp) < CACHE_DURATION) {
-          setConversation(cached.conversation);
-          setMessages(cached.messages);
-          await loadEffectiveProduct(cached.conversation);
-          setLoading(false);
+          if (cancelled) return;
+            setConversation(cached.conversation);
+            setMessages(cached.messages);
           return;
         }
-        
+
         const data = await MessagingService.getConversationMessages(conversationId!);
+        if (cancelled) return;
         setConversation(data.conversation);
         setMessages(data.messages);
-        
-        // Mettre en cache
+
         conversationCache.set(conversationId!, {
           conversation: data.conversation,
           messages: data.messages,
-          timestamp: now
+          timestamp: Date.now()
         });
-        
-        // Marquer comme lu
-        await MessagingService.markMessagesAsRead(conversationId!);
 
-        await loadEffectiveProduct(data.conversation);
+        // Marquer comme lu (fire & forget)
+        MessagingService.markMessagesAsRead(conversationId!).catch(e => console.warn('markMessagesAsRead échoué', e));
       } catch (error) {
-        console.error('❌ Erreur chargement conversation:', error);
-        Alert.alert('Erreur', 'Impossible de charger la conversation');
+        if (!cancelled) {
+          console.error('❌ Erreur chargement conversation:', error);
+          showNotification('error', 'Erreur', 'Impossible de charger la conversation');
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
+    load();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId]);
 
-    const loadEffectiveProduct = async (conv: Conversation) => {
+  // Chargement du produit associé (séparé pour éviter relances multiples)
+  useEffect(() => {
+    if (!conversation) return;
+    if (productLoadRef.current) return; // déjà chargé
+    productLoadRef.current = true;
+    let cancelled = false;
+    const loadProduct = async () => {
       try {
+        const conv = conversation;
         if (typeof conv.product === 'string') {
           const prod = await ProductService.getPublicProductById(conv.product);
-          setEffectiveProduct(prod);
+          if (!cancelled) setEffectiveProduct(prod);
         } else {
-          setEffectiveProduct(conv.product as Product);
+          if (!cancelled) setEffectiveProduct(conv.product as Product);
         }
       } catch (error) {
-        console.error('❌ Erreur chargement produit:', error);
-        setEffectiveProduct(null);
+        if (!cancelled) {
+          console.error('❌ Erreur chargement produit:', error);
+          setEffectiveProduct(null);
+        }
       }
     };
+    loadProduct();
+    return () => { cancelled = true; };
+  }, [conversation]);
 
-    if (conversationId) {
-      loadConversationData();
-    }
-  }, [conversationId, user?._id]);
+  // Reset flags si l'identifiant de conversation change
+  useEffect(() => {
+    initialLoadRef.current = false;
+    productLoadRef.current = false;
+    setEffectiveProduct(null);
+  }, [conversationId]);
 
   // === GESTION MQTT ===
   useEffect(() => {
@@ -461,7 +497,7 @@ export default function ConversationDetails() {
     } catch (error) {
       console.error('❌ Exception pendant l\'envoi:', error);
       setSending(false);
-      Alert.alert('Erreur', 'Impossible d\'envoyer le message');
+      showNotification('error', 'Erreur', 'Impossible d\'envoyer le message');
     }
   };
 
@@ -469,10 +505,7 @@ export default function ConversationDetails() {
   const requestPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert(
-        'Permission requise',
-        'Nous avons besoin de l\'autorisation pour accéder à vos photos.'
-      );
+      showNotification('warning', 'Permission requise', 'Nous avons besoin de l\'autorisation pour accéder à vos photos.');
       return false;
     }
     return true;
@@ -481,10 +514,7 @@ export default function ConversationDetails() {
   const requestCameraPermissions = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert(
-        'Permission requise',
-        'Nous avons besoin de l\'autorisation pour utiliser votre caméra.'
-      );
+      showNotification('warning', 'Permission requise', 'Nous avons besoin de l\'autorisation pour utiliser votre caméra.');
       return false;
     }
     return true;
@@ -760,17 +790,7 @@ export default function ConversationDetails() {
                       { text: 'Annuler', style: 'cancel' },
                       { text: 'Répondre', onPress: () => setReplyingTo(message) },
                       ...(isCurrentUser ? [
-                        { text: 'Supprimer', style: 'destructive' as const, onPress: () => {
-                          Alert.alert(
-                            'Supprimer le message',
-                            'Voulez-vous supprimer ce message ?',
-                            [
-                              { text: 'Annuler', style: 'cancel' },
-                              { text: 'Pour moi seulement', onPress: () => deleteMessage(message._id, false) },
-                              { text: 'Pour tout le monde', style: 'destructive', onPress: () => deleteMessage(message._id, true) },
-                            ]
-                          );
-                        }},
+                        { text: 'Supprimer', style: 'destructive' as const, onPress: () => showDeleteConfirmation(message._id) },
                       ] : []),
                     ]
                   );
@@ -862,7 +882,47 @@ export default function ConversationDetails() {
       console.log(`✅ Message supprimé ${forEveryone ? 'pour tout le monde' : 'pour moi seulement'}`);
     } catch (error) {
       console.error('❌ Erreur suppression message:', error);
-      Alert.alert('Erreur', 'Impossible de supprimer le message');
+      showNotification('error', 'Erreur', 'Impossible de supprimer le message');
+    }
+  };
+
+  // Fonctions pour gérer les confirmations de suppression
+  const showDeleteConfirmation = (messageId: string) => {
+    setConfirmationAction({
+      messageId,
+      title: 'Supprimer le message',
+      message: 'Voulez-vous supprimer ce message ?',
+      confirmText: 'Supprimer',
+      confirmColor: '#EF4444'
+    });
+    setConfirmationVisible(true);
+  };
+
+  const closeConfirmation = () => {
+    setConfirmationVisible(false);
+    setConfirmationAction(null);
+  };
+
+  const executeDeleteAction = async () => {
+    if (!confirmationAction) return;
+
+    const { messageId } = confirmationAction;
+    closeConfirmation();
+
+    try {
+      // Afficher les options de suppression
+      Alert.alert(
+        'Supprimer le message',
+        'Choisissez comment supprimer le message :',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          { text: 'Pour moi seulement', onPress: () => deleteMessage(messageId, false) },
+          { text: 'Pour tout le monde', style: 'destructive', onPress: () => deleteMessage(messageId, true) },
+        ]
+      );
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'affichage des options:', error);
+      showNotification('error', 'Erreur', 'Impossible d\'afficher les options de suppression');
     }
   };
 
@@ -1448,6 +1508,84 @@ export default function ConversationDetails() {
         >
           <Ionicons name="arrow-down" size={18} color="#FFFFFF" />
         </TouchableOpacity>
+      )}
+
+      {/* Modal de confirmation de suppression */}
+      <Modal
+        visible={confirmationVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={closeConfirmation}
+      >
+        <TouchableOpacity
+          className="flex-1 bg-black/50"
+          activeOpacity={1}
+          onPress={closeConfirmation}
+        >
+          <View className="flex-1 justify-center items-center px-6">
+            <TouchableOpacity
+              className="bg-white rounded-3xl w-full max-w-sm"
+              activeOpacity={1}
+              onPress={() => {}}
+            >
+              {/* Icon */}
+              <View className="items-center pt-8 pb-4">
+                <View
+                  className="w-16 h-16 rounded-full items-center justify-center"
+                  style={{ backgroundColor: confirmationAction?.confirmColor + '20' }}
+                >
+                  <Ionicons
+                    name="trash"
+                    size={28}
+                    color={confirmationAction?.confirmColor}
+                  />
+                </View>
+              </View>
+
+              {/* Content */}
+              <View className="px-6 pb-6">
+                <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+                  {confirmationAction?.title}
+                </Text>
+                <Text className="text-base text-neutral-600 font-quicksand-medium text-center leading-5">
+                  {confirmationAction?.message}
+                </Text>
+              </View>
+
+              {/* Actions */}
+              <View className="flex-row px-6 pb-6 gap-3">
+                <TouchableOpacity
+                  onPress={closeConfirmation}
+                  className="flex-1 bg-neutral-100 py-4 rounded-2xl items-center"
+                >
+                  <Text className="text-base font-quicksand-semibold text-neutral-700">
+                    Annuler
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={executeDeleteAction}
+                  className="flex-1 py-4 rounded-2xl items-center"
+                  style={{ backgroundColor: confirmationAction?.confirmColor }}
+                >
+                  <Text className="text-base font-quicksand-semibold text-white">
+                    {confirmationAction?.confirmText}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Notification Modal */}
+      {notification && (
+        <NotificationModal
+          visible={notification.visible}
+          type={notification.type}
+          title={notification.title}
+          message={notification.message}
+          onClose={hideNotification}
+        />
       )}
     </SafeAreaView>
   );
