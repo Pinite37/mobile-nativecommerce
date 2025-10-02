@@ -23,8 +23,8 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import NotificationModal, { useNotification } from '../../../../components/ui/NotificationModal';
-import { useToast } from '../../../../components/ui/ToastManager';
+// New Reanimated toast system only
+import { useToast as useReanimatedToast } from '../../../../components/ui/ReanimatedToast/context';
 import { useAuth } from '../../../../contexts/AuthContext';
 import EnterpriseService, { Enterprise, EnterpriseProfile, SocialLink } from '../../../../services/api/EnterpriseService';
 
@@ -59,7 +59,7 @@ interface EnterpriseDetailsModalProps {
 
 // Composant pour éditer le profil utilisateur
 const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onClose, onSave, initialData, loading }) => {
-  const toast = useToast();
+  const { showToast: showReToast } = useReanimatedToast();
   const [firstName, setFirstName] = useState(initialData.user.firstName || '');
   const [lastName, setLastName] = useState(initialData.user.lastName || '');
   const [phone, setPhone] = useState(initialData.user.phone || '');
@@ -71,7 +71,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onClose, o
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (permissionResult.granted === false) {
-      toast.showWarning("Permission requise", "Vous devez autoriser l'accès à la galerie pour sélectionner une image.");
+      showReToast({ title: 'Permission requise', subtitle: "Vous devez autoriser l'accès à la galerie pour sélectionner une image.", autodismiss: true });
       return;
     }
 
@@ -200,7 +200,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onClose, o
 
 // Composant pour éditer les informations entreprise
 const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({ visible, onClose, onSave, initialData, loading }) => {
-  const toast = useToast();
+  const { showToast: showReToast } = useReanimatedToast();
   const [companyName, setCompanyName] = useState(initialData.companyName || '');
   const [description, setDescription] = useState(initialData.description || '');
   const [website, setWebsite] = useState(initialData.contactInfo?.website || '');
@@ -215,7 +215,7 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({ visible, onCl
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (permissionResult.granted === false) {
-      toast.showWarning("Permission requise", "Vous devez autoriser l'accès à la galerie pour sélectionner un logo.");
+      showReToast({ title: 'Permission requise', subtitle: "Vous devez autoriser l'accès à la galerie pour sélectionner un logo.", autodismiss: true });
       return;
     }
 
@@ -249,7 +249,7 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({ visible, onCl
 
   const handleSave = () => {
     if (!companyName.trim()) {
-      toast.showWarning("Champ requis", "Le nom de l'entreprise est requis");
+      showReToast({ title: 'Champ requis', subtitle: "Le nom de l'entreprise est requis", autodismiss: true });
       return;
     }
     
@@ -613,9 +613,9 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({ visible
   );
 };
 
-// Composant pour ajouter un partenaire
+// Composant pour ajouter un partenaire (DEPRECATED: remplacé par la page /delivery-partners)
 const AddPartnerModal: React.FC<AddPartnerModalProps> = ({ visible, onClose, onAdd, loading }) => {
-  const toast = useToast();
+  const { showToast: showReToast } = useReanimatedToast();
   const [partnerId, setPartnerId] = useState('');
 
   const handleAdd = () => {
@@ -623,7 +623,7 @@ const AddPartnerModal: React.FC<AddPartnerModalProps> = ({ visible, onClose, onA
       onAdd(partnerId.trim());
       setPartnerId('');
     } else {
-      toast.showWarning('Attention', 'Veuillez entrer un ID de partenaire valide');
+      showReToast({ title: 'Attention', subtitle: 'Veuillez entrer un ID de partenaire valide', autodismiss: true });
     }
   };
 
@@ -668,8 +668,7 @@ const AddPartnerModal: React.FC<AddPartnerModalProps> = ({ visible, onClose, onA
 // Composant principal du profil entreprise
 function EnterpriseProfilePage() {
   const { logout } = useAuth();
-  const toast = useToast();
-  const { notification, hideNotification } = useNotification();
+  const { showToast: showReToast } = useReanimatedToast();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [profileData, setProfileData] = useState<EnterpriseProfile | null>(null);
@@ -678,7 +677,7 @@ function EnterpriseProfilePage() {
   // Modals
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showEditEnterprise, setShowEditEnterprise] = useState(false);
-  const [showAddPartner, setShowAddPartner] = useState(false);
+  // const [showAddPartner, setShowAddPartner] = useState(false); // supprimé (ancienne modal d'ajout partenaire)
   const [showEnterpriseDetails, setShowEnterpriseDetails] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [confirmationVisible, setConfirmationVisible] = useState(false);
@@ -861,6 +860,17 @@ function EnterpriseProfilePage() {
     </ScrollView>
   );
 
+  // Unified toast helpers (reanimated only)
+  const notifySuccess = React.useCallback((title: string, message?: string) => {
+    try { showReToast({ title, subtitle: message, autodismiss: true }); } catch {}
+  }, [showReToast]);
+  const notifyError = React.useCallback((title: string, message?: string) => {
+    try { showReToast({ title, subtitle: message, autodismiss: true }); } catch {}
+  }, [showReToast]);
+  const notifyInfo = React.useCallback((title: string, message?: string) => {
+    try { showReToast({ title, subtitle: message, autodismiss: true }); } catch {}
+  }, [showReToast]);
+
   // Charger les données du profil
   const loadProfile = useCallback(async () => {
     try {
@@ -869,11 +879,11 @@ function EnterpriseProfilePage() {
       setProfileData(data);
     } catch (error: any) {
       console.error('❌ Erreur chargement profil:', error);
-      toast.showError('Erreur', error.message || 'Impossible de charger le profil');
+      notifyError('Erreur', error.message || 'Impossible de charger le profil');
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [notifyError]);
 
   // Rafraîchir les données
   const refreshProfile = async () => {
@@ -909,10 +919,10 @@ function EnterpriseProfilePage() {
       }
       
       setShowEditProfile(false);
-      toast.showSuccess('Succès', 'Profil mis à jour avec succès');
+      notifySuccess('Succès', 'Profil mis à jour avec succès');
     } catch (error: any) {
       console.error('❌ Erreur mise à jour profil:', error);
-      toast.showError('Erreur', error.message || 'Impossible de mettre à jour le profil');
+      notifyError('Erreur', error.message || 'Impossible de mettre à jour le profil');
     } finally {
       setEditLoading(false);
     }
@@ -933,37 +943,19 @@ function EnterpriseProfilePage() {
       }
       
       setShowEditEnterprise(false);
-      toast.showSuccess('Succès', 'Informations entreprise mises à jour avec succès');
+      notifySuccess('Succès', 'Informations entreprise mises à jour avec succès');
     } catch (error: any) {
       console.error('❌ Erreur mise à jour entreprise:', error);
-      toast.showError('Erreur', error.message || 'Impossible de mettre à jour les informations entreprise');
+      notifyError('Erreur', error.message || 'Impossible de mettre à jour les informations entreprise');
     } finally {
       setEditLoading(false);
     }
   };
 
   // Gérer l'ajout d'un partenaire
-  const handleAddPartner = async (partnerId: string) => {
-    try {
-      setEditLoading(true);
-      const updatedEnterprise = await EnterpriseService.addDeliveryPartner(partnerId);
-      
-      // Mettre à jour les données locales
-      if (profileData) {
-        setProfileData({
-          ...profileData,
-          enterprise: updatedEnterprise
-        });
-      }
-      
-      setShowAddPartner(false);
-      toast.showSuccess('Succès', 'Partenaire ajouté avec succès');
-    } catch (error: any) {
-      console.error('❌ Erreur ajout partenaire:', error);
-      toast.showError('Erreur', error.message || 'Impossible d\'ajouter le partenaire');
-    } finally {
-      setEditLoading(false);
-    }
+  // Ancienne fonction d'ajout direct d'un partenaire (remplacée par le flux via la page dédiée)
+  const handleAddPartner = async (_partnerId: string) => {
+    notifyInfo('Redirection', 'Veuillez utiliser la page Partenaires pour associer un livreur.');
   };
 
   // NOTE: suppression partenaire gérée future (liste partenaires). Fonction retirée pour éviter code mort.
@@ -1022,10 +1014,10 @@ function EnterpriseProfilePage() {
           });
         }
         
-        toast.showSuccess('Succès', `Entreprise ${updatedEnterprise.isActive ? 'activée' : 'désactivée'} avec succès`);
+        notifySuccess('Succès', `Entreprise ${updatedEnterprise.isActive ? 'activée' : 'désactivée'} avec succès`);
       } catch (error: any) {
         console.error('❌ Erreur changement statut:', error);
-        toast.showError('Erreur', error.message || 'Impossible de changer le statut');
+        notifyError('Erreur', error.message || 'Impossible de changer le statut');
       } finally {
         setLoading(false);
       }
@@ -1036,51 +1028,46 @@ function EnterpriseProfilePage() {
   const handleLogout = () => {
     showConfirmation('logout', () => {
       logout();
-      toast.showInfo('Déconnecté', 'Vous avez été déconnecté avec succès');
+      notifyInfo('Déconnecté', 'Vous avez été déconnecté avec succès');
       router.replace('/(auth)/welcome');
     });
   };
 
   // Gérer la navigation vers les partenaires
   const handleNavigateToPartners = () => {
-    if (profileData?.enterprise.deliveryPartners?.length) {
-      // Si des partenaires existent, naviguer vers la liste
-      // router.push('/(app)/(enterprise)/partners');
-      setShowAddPartner(true); // Temporairement, juste ouvrir le modal d'ajout
-    } else {
-      // Sinon, ouvrir directement le modal d'ajout
-      setShowAddPartner(true);
-    }
+    // Navigation directe: le dossier (enterprise)/delivery-partners contient index.tsx
+    // On supprime le fallback modal obsolète.
+    router.push('/(app)/(enterprise)/delivery-partners');
   };
   
   // Navigation vers les produits
   const handleNavigateToProducts = () => {
     // Implémentation future: router.push('/(app)/(enterprise)/products');
-    toast.showInfo('Fonctionnalité à venir', 'La gestion des produits sera disponible prochainement');
+    notifyInfo('Fonctionnalité à venir', 'La gestion des produits sera disponible prochainement');
   };
 
   // Navigation vers les commandes
   const handleNavigateToOrders = () => {
     // Implémentation future: router.push('/(app)/(enterprise)/orders');
-    toast.showInfo('Fonctionnalité à venir', 'La gestion des commandes sera disponible prochainement');
+    notifyInfo('Fonctionnalité à venir', 'La gestion des commandes sera disponible prochainement');
   };
 
   // Navigation vers les statistiques
   const handleNavigateToStats = () => {
     // Implémentation future: router.push('/(app)/(enterprise)/statistics');
-    toast.showInfo('Fonctionnalité à venir', 'Les statistiques détaillées seront disponibles prochainement');
+    notifyInfo('Fonctionnalité à venir', 'Les statistiques détaillées seront disponibles prochainement');
   };
 
   // Navigation vers les paramètres
   const handleNavigateToSettings = () => {
     // Implémentation future: router.push('/(app)/(enterprise)/settings');
-    toast.showInfo('Fonctionnalité à venir', 'Les paramètres avancés seront disponibles prochainement');
+    notifyInfo('Fonctionnalité à venir', 'Les paramètres avancés seront disponibles prochainement');
   };
 
   // Navigation vers l'aide
   const handleNavigateToHelp = () => {
     // Implémentation future: router.push('/(app)/(enterprise)/help');
-    toast.showInfo('Fonctionnalité à venir', 'La section d\'aide sera disponible prochainement');
+    notifyInfo('Fonctionnalité à venir', 'La section d\'aide sera disponible prochainement');
   };
   
   // Ouvrir la modal d'édition des informations de l'entreprise
@@ -1228,7 +1215,8 @@ function EnterpriseProfilePage() {
                   <Text className="text-primary-500 font-quicksand-semibold text-xs ml-1">Profil</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={() => setShowAddPartner(true)}
+                  // Ancien bouton modal d'ajout partenaire retiré : redirection uniquement depuis la section gestion
+                  onPress={handleNavigateToPartners}
                   className="px-3 py-2 bg-secondary-50 rounded-xl flex-row items-center"
                   style={{ marginBottom: wrapOverlayChips ? 8 : 0, flexShrink: 1 }}
                 >
@@ -1673,8 +1661,9 @@ function EnterpriseProfilePage() {
           />
 
           <AddPartnerModal
-            visible={showAddPartner}
-            onClose={() => setShowAddPartner(false)}
+            // Modal AddPartner retirée : ne plus rendre (placeholder pour éviter rupture si import conservé)
+            visible={false}
+            onClose={() => {}}
             onAdd={handleAddPartner}
             loading={editLoading}
           />
@@ -1720,14 +1709,6 @@ function EnterpriseProfilePage() {
               </View>
             </View>
           </Modal>
-
-          <NotificationModal
-            visible={notification?.visible || false}
-            type={notification?.type || 'info'}
-            title={notification?.title || ''}
-            message={notification?.message || ''}
-            onClose={hideNotification}
-          />
         </>
       )}
     </SafeAreaView>

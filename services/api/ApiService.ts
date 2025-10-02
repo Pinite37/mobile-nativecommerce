@@ -11,8 +11,8 @@ class ApiService {
   constructor() {
     // Configure baseURL based on platform
     if (Platform.OS === 'android') {
-      // this.baseURL = 'http://192.168.86.143:4000/api';
-      this.baseURL = 'http://192.168.0.107:4000/api';
+      this.baseURL = 'http://192.168.86.143:4000/api';
+      // this.baseURL = 'http://192.168.0.107:4000/api';
     } else if (Platform.OS === 'ios') {
       this.baseURL = 'http://localhost:4000/api'; // iOS simulator
     } else {
@@ -53,7 +53,12 @@ class ApiService {
 
         console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`);
         console.log('📤 Request Headers:', config.headers);
-        console.log('📤 Request Data Type:', typeof config.data);
+        if (config.method?.toUpperCase() === 'GET') {
+          console.log('📤 Request Body: (none for GET)');
+        } else {
+          const dataType = config.data === undefined ? 'undefined' : Array.isArray(config.data) ? 'array' : typeof config.data;
+          console.log('📤 Request Data Type:', dataType);
+        }
         return config;
       },
       (error: any) => {
@@ -69,7 +74,13 @@ class ApiService {
         return response;
       },
       async (error: any) => {
-        console.error('❌ API Response Error:', error.response?.status, error.response?.data);
+        // Tame 404 noise: log as warning with minimal context; keep errors for other statuses
+        const status = error.response?.status;
+        if (status === 404) {
+          console.warn('⚠️ API 404 Not Found:', error.config?.url);
+        } else {
+          console.error('❌ API Response Error:', status, error.response?.data);
+        }
         
         // Handle 401 errors (unauthorized)
         if (error.response?.status === 401) {
@@ -196,7 +207,11 @@ class ApiService {
       const response = await this.axiosInstance.get(url, config);
       return response.data;
     } catch (error: any) {
-      console.error('❌ GET Error:', error);
+      if (error?.response?.status === 404) {
+        console.warn('⚠️ GET 404:', url);
+      } else {
+        console.error('❌ GET Error:', error);
+      }
       throw this.handleError(error);
     }
   }

@@ -189,7 +189,8 @@ export default function MessagesPage() {
 
     return (
       <TouchableOpacity
-        className={`rounded-xl mx-4 my-2 p-4 shadow-sm border border-neutral-100 active:opacity-70 ${isUnread ? 'bg-primary-50' : 'bg-white'}`}
+        className={`rounded-xl mx-4 my-2 p-4 shadow-sm border border-neutral-100 ${isUnread ? 'bg-primary-50' : 'bg-white'}`}
+        activeOpacity={0.7}
         onPress={() => {
           router.push(`/(app)/(enterprise)/conversation/${conversation._id}` as any);
         }}
@@ -512,7 +513,7 @@ export default function MessagesPage() {
           }
           contentContainerStyle={{ 
             flexGrow: 1,
-            paddingBottom: 20 }}
+            paddingBottom: 100 }}
           >
         </FlatList>
       </View>

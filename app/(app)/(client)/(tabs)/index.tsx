@@ -1,11 +1,13 @@
 // Service publicités
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Linking from "expo-linking";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
     Animated,
+    BackHandler,
     Dimensions,
     Easing,
     FlatList,
@@ -109,6 +111,7 @@ export default function ClientHome() {
     const [currentAdIndex, setCurrentAdIndex] = useState(0);
     const [refreshing, setRefreshing] = useState(false);
     const [loading, setLoading] = useState(true); // État de chargement global
+    const [imageRefreshKey, setImageRefreshKey] = useState(0); // Clé pour forcer le rechargement des images
 
     // États pour les produits de l'API
     const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -218,14 +221,23 @@ export default function ClientHome() {
 
     async function loadFavorites() {
         try {
-            const favResponse = await (ProductService as any).getFavoriteProducts?.();
+            console.log('🔥 Chargement des favoris...');
+            const favResponse = await ProductService.getFavoriteProducts();
+            console.log('📦 Réponse favoris:', favResponse);
+            
             if (Array.isArray(favResponse)) {
-                setFavorites(new Set(favResponse.map((p: any) => p._id)));
+                const favoriteIds = favResponse.map((f: any) => f.product?._id);
+                console.log('❤️ IDs favoris:', favoriteIds);
+                setFavorites(new Set(favoriteIds));
             } else if (Array.isArray(favResponse?.data)) {
-                setFavorites(new Set(favResponse.data.map((p: any) => p._id)));
+                const favoriteIds = favResponse.data.map((f: any) => f.product?._id);
+                console.log('❤️ IDs favoris (data):', favoriteIds);
+                setFavorites(new Set(favoriteIds));
+            } else {
+                console.warn('⚠️ Structure de réponse favoris inattendue:', favResponse);
             }
         } catch (e) {
-            // silencieux
+            console.error('❌ Erreur chargement favoris:', e);
         }
     }
 
@@ -245,21 +257,52 @@ export default function ClientHome() {
         setSelectedNeighborhood("");
     }, [selectedCity]);
 
-    // ================= Chargement initial =================
+    // Gestion du bouton retour pour masquer les résultats de recherche et suggestions
     useEffect(() => {
-        (async () => {
-            try {
-                await Promise.all([loadAds(), loadFeaturedProducts()]);
-                await loadRecentSearches();
-                await loadFavorites();
-            } catch (e) {
-                console.warn('⚠️ Erreur chargement initial:', e);
-            } finally {
-                setLoading(false);
+        const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+            if (showSearchResults) {
+                hideSearchResults();
+                return true; // Empêche la navigation arrière par défaut
             }
-        })();
+            if (showSuggestions) {
+                setShowSuggestions(false);
+                setSuggestions([]);
+                return true; // Empêche la navigation arrière par défaut
+            }
+            return false; // Laisse le comportement par défaut
+        });
+
+        return () => backHandler.remove();
+    }, [showSearchResults, showSuggestions]);
+
+    // ================= Chargement initial =================
+    const loadInitialData = async () => {
+        try {
+            await Promise.all([
+                loadAds(),
+                loadFeaturedProducts(),
+                loadRecentSearches(),
+                loadFavorites()
+            ]);
+        } catch (error) {
+            console.error('❌ Erreur chargement données initiales:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadInitialData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, []); // loadInitialData retiré des dépendances pour éviter la boucle infinie
+
+    // Forcer le rechargement des images quand on revient sur la page
+    useFocusEffect(
+        useCallback(() => {
+            // Incrémenter la clé pour forcer le rechargement des images
+            setImageRefreshKey(prev => prev + 1);
+        }, [])
+    );
 
     // Skeleton Loader Component
     const ShimmerBlock = ({ style }: { style?: any }) => {
@@ -484,6 +527,14 @@ export default function ClientHome() {
         }, 200);
     };
 
+    // Fonction pour masquer les résultats de recherche
+    const hideSearchResults = () => {
+        setShowSearchResults(false);
+        setSearchResults([]);
+        setSearchInfo(null);
+        Keyboard.dismiss();
+    };
+
     const getSuggestions = async (query: string) => {
         try {
             setLoadingSearch(true);
@@ -653,12 +704,13 @@ export default function ClientHome() {
 
     const renderProduct = (item: Product) => (
         <TouchableOpacity
-            key={item._id}
+            key={`product-${item._id}`}
             className="bg-white rounded-2xl shadow-md border border-neutral-100 p-2 mb-3 w-[48%] overflow-hidden"
             onPress={() => navigateTo(`/(app)/(client)/product/${item._id}`)}
         >
             <View className="relative">
                 <Image
+                    key={`image-${item._id}-${imageRefreshKey}`}
                     source={{ uri: item.images[0] || "https://via.placeholder.com/150x150/CCCCCC/FFFFFF?text=No+Image" }}
                     className="w-full h-32 rounded-t-2xl"
                     resizeMode="cover"
@@ -670,14 +722,14 @@ export default function ClientHome() {
                         </Text>
                     </View>
                 )}
-                <TouchableOpacity 
+                <TouchableOpacity
                     className="absolute bottom-2 right-2 bg-white/80 rounded-full p-1"
                     onPress={() => toggleFavorite(item._id)}
                 >
-                    <Ionicons 
-                        name={favorites.has(item._id) ? "heart" : "heart-outline"} 
-                        size={20} 
-                        color={favorites.has(item._id) ? "#EF4444" : "#6B7280"} 
+                    <Ionicons
+                        name={favorites.has(item._id) ? "heart" : "heart-outline"}
+                        size={20}
+                        color={favorites.has(item._id) ? "#EF4444" : "#6B7280"}
                     />
                 </TouchableOpacity>
             </View>
@@ -708,6 +760,7 @@ export default function ClientHome() {
         >
             <View className="relative mr-3">
                 <Image
+                    key={`image-list-${item._id}-${imageRefreshKey}`}
                     source={{ uri: item.images[0] || "https://via.placeholder.com/150x150/CCCCCC/FFFFFF?text=No+Image" }}
                     className="w-24 h-24 rounded-xl"
                     resizeMode="cover"
@@ -950,33 +1003,60 @@ export default function ClientHome() {
 
                             {/* Suggestions */}
                             {showSuggestions && searchSuggestions.length > 0 && (
-                                <View className="border-t border-gray-100">
-                                    <View className="px-4 py-2 bg-gray-50">
-                                        <Text className="text-xs font-quicksand-semibold text-neutral-600 uppercase">
+                                <View className="border-t border-gray-100 rounded-b-2xl overflow-hidden">
+                                    <View className="px-4 py-3 bg-gradient-to-r from-primary-50 to-primary-100">
+                                        <Text className="text-xs font-quicksand-bold text-primary-700 uppercase tracking-wide">
                                             Suggestions
                                         </Text>
                                     </View>
-                                    {searchSuggestions.map((suggestion, index) => (
-                                        <TouchableOpacity
-                                            key={index}
-                                            className="flex-row items-center px-4 py-3 border-b border-gray-50"
-                                            onPress={() => selectSuggestion(suggestion)}
-                                        >
-                                            <Ionicons
-                                                name={suggestion.type === 'product' ? 'cube-outline' :
-                                                    suggestion.type === 'category' ? 'folder-outline' : 'business-outline'}
-                                                size={16}
-                                                color="#9CA3AF"
-                                            />
-                                            <Text className="ml-3 flex-1 text-neutral-700 font-quicksand-medium">
-                                                {suggestion.text}
-                                            </Text>
-                                            <Text className="text-xs text-neutral-400 uppercase font-quicksand-medium">
-                                                {suggestion.type === 'product' ? 'Produit' :
-                                                    suggestion.type === 'category' ? 'Catégorie' : 'Entreprise'}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
+                                    {searchSuggestions.map((suggestion, index) => {
+                                        const isLast = index === searchSuggestions.length - 1;
+                                        const getIconColor = (type: string) => {
+                                            switch (type) {
+                                                case 'product': return '#10B981';
+                                                case 'category': return '#8B5CF6';
+                                                case 'enterprise': return '#F59E0B';
+                                                default: return '#6B7280';
+                                            }
+                                        };
+                                        const getTypeColor = (type: string) => {
+                                            switch (type) {
+                                                case 'product': return '#10B981';
+                                                case 'category': return '#8B5CF6';
+                                                case 'enterprise': return '#F59E0B';
+                                                default: return '#9CA3AF';
+                                            }
+                                        };
+
+                                        return (
+                                            <TouchableOpacity
+                                                key={index}
+                                                className={`flex-row items-center px-4 py-3.5 ${!isLast ? 'border-b border-gray-100' : ''}`}
+                                                onPress={() => selectSuggestion(suggestion)}
+                                                activeOpacity={0.7}
+                                            >
+                                                <View className="w-8 h-8 rounded-full items-center justify-center" style={{ backgroundColor: getIconColor(suggestion.type) + '15' }}>
+                                                    <Ionicons
+                                                        name={suggestion.type === 'product' ? 'cube-outline' :
+                                                            suggestion.type === 'category' ? 'folder-outline' : 'business-outline'}
+                                                        size={16}
+                                                        color={getIconColor(suggestion.type)}
+                                                    />
+                                                </View>
+                                                <View className="ml-3 flex-1">
+                                                    <Text className="text-sm text-neutral-800 font-quicksand-medium" numberOfLines={1}>
+                                                        {suggestion.text}
+                                                    </Text>
+                                                </View>
+                                                <View className="px-2 py-1 rounded-full bg-gray-100">
+                                                    <Text className="text-xs font-quicksand-semibold uppercase" style={{ color: getTypeColor(suggestion.type) }}>
+                                                        {suggestion.type === 'product' ? 'Produit' :
+                                                            suggestion.type === 'category' ? 'Catégorie' : 'Entreprise'}
+                                                    </Text>
+                                                </View>
+                                            </TouchableOpacity>
+                                        );
+                                    })}
                                 </View>
                             )}
                         </View>
@@ -988,21 +1068,29 @@ export default function ClientHome() {
                     <View className="bg-white px-4 py-4 border-b border-neutral-100">
                         {/* En-tête résultats + toggle vue */}
                         <View className="flex-row items-center justify-between">
-                            <Text className="text-lg font-quicksand-bold text-neutral-800">
+                            <Text className="text-lg font-quicksand-bold text-neutral-800 flex-1">
                                 Résultats pour &quot;{searchQuery}&quot;
                             </Text>
-                            <View className="flex-row items-center bg-neutral-100 rounded-full p-1">
+                            <View className="flex-row items-center">
+                                <View className="flex-row items-center bg-neutral-100 rounded-full p-1 mr-2">
+                                    <TouchableOpacity
+                                        onPress={() => setResultsView('grid')}
+                                        className={`px-2 py-1 rounded-full ${resultsView === 'grid' ? 'bg-white' : ''}`}
+                                    >
+                                        <Ionicons name="grid-outline" size={18} color={resultsView === 'grid' ? '#10B981' : '#6B7280'} />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => setResultsView('list')}
+                                        className={`px-2 py-1 rounded-full ${resultsView === 'list' ? 'bg-white' : ''}`}
+                                    >
+                                        <Ionicons name="list-outline" size={18} color={resultsView === 'list' ? '#10B981' : '#6B7280'} />
+                                    </TouchableOpacity>
+                                </View>
                                 <TouchableOpacity
-                                    onPress={() => setResultsView('grid')}
-                                    className={`px-2 py-1 rounded-full ${resultsView === 'grid' ? 'bg-white' : ''}`}
+                                    onPress={hideSearchResults}
+                                    className="p-2 bg-neutral-100 rounded-full"
                                 >
-                                    <Ionicons name="grid-outline" size={18} color={resultsView === 'grid' ? '#10B981' : '#6B7280'} />
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    onPress={() => setResultsView('list')}
-                                    className={`px-2 py-1 rounded-full ${resultsView === 'list' ? 'bg-white' : ''}`}
-                                >
-                                    <Ionicons name="list-outline" size={18} color={resultsView === 'list' ? '#10B981' : '#6B7280'} />
+                                    <Ionicons name="close" size={18} color="#6B7280" />
                                 </TouchableOpacity>
                             </View>
                         </View>

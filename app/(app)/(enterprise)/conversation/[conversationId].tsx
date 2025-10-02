@@ -7,7 +7,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Animated,
   Easing,
   FlatList,
   Image,
@@ -15,16 +14,21 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
+  Animated as RNAnimated,
   SafeAreaView,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View
 } from "react-native";
+// Removed reanimated Animated import since we are not using transition classes here
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import NotificationModal, { useNotification } from "../../../../components/ui/NotificationModal";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useMQTT } from "../../../../hooks/useMQTT";
+import DeliveryService, { CreateOfferPayload, UrgencyLevel } from "../../../../services/api/DeliveryService";
 import MessagingService, { Conversation, Message } from "../../../../services/api/MessagingService";
 
 // Cache simple pour les conversations et messages
@@ -67,6 +71,37 @@ export default function ConversationDetails() {
     uri: string;
   } | null>(null);
 
+  // Offre de livraison (création depuis la conversation)
+  const [offerModalVisible, setOfferModalVisible] = useState(false);
+  const [creatingOffer, setCreatingOffer] = useState(false);
+  const [offerForm, setOfferForm] = useState<{
+    deliveryZone: string;
+    deliveryFee: string; // string pour TextInput, converti en nombre à l'envoi
+    urgency: UrgencyLevel;
+    specialInstructions: string;
+    expiresAt: string; // ISO string
+  }>({
+    deliveryZone: "",
+    deliveryFee: "",
+    urgency: "MEDIUM",
+    specialInstructions: "",
+    expiresAt: "",
+  });
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [dateMode, setDateMode] = useState<'date' | 'time' | 'datetime'>('datetime');
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [tempExpiryDate, setTempExpiryDate] = useState<Date | null>(null);
+
+  const openOfferModal = () => {
+    // Pré-remplir l'expiration à +1h si vide
+    if (!offerForm.expiresAt) {
+      const defaultExpiry = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+      setOfferForm((prev) => ({ ...prev, expiresAt: defaultExpiry }));
+    }
+    setOfferModalVisible(true);
+  };
+  const closeOfferModal = () => setOfferModalVisible(false);
+
   // États pour la gestion des confirmations de suppression
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [confirmationAction, setConfirmationAction] = useState<{
@@ -77,20 +112,82 @@ export default function ConversationDetails() {
     confirmColor: string;
   } | null>(null);
 
-
+  // États pour la gestion des offres de livraison
+  // (déjà déclarés plus haut)
 
   // Récupérer l'ID de l'utilisateur connecté depuis le contexte d'auth
   const getCurrentUserId = () => {
     return user?._id || null; // Utiliser l'ID du contexte d'authentification
   };
 
+  // Helper: vérifier si l'utilisateur actuel est propriétaire du produit
+  const isCurrentUserProductOwner = (conv: any, currentUserId?: string | null): boolean => {
+    console.log('Vérification propriétaire produit:', { conv, currentUserId });
+    if (!conv?.participants || !currentUserId) return false;
+
+    // Dans les conversations CLIENT_ENTERPRISE, le vendeur est toujours le second participant
+    if (Array.isArray(conv.participants) && conv.participants.length >= 2) {
+      const sellerId = conv.participants[1]; // Second élément = vendeur
+      return sellerId === currentUserId;
+    }
+
+    // Fallback: vérifier via le produit si disponible
+    if (typeof conv.product === 'object' && conv.product?.enterprise) {
+      const enterpriseId = typeof conv.product.enterprise === 'string'
+        ? conv.product.enterprise
+        : conv.product.enterprise._id;
+      return enterpriseId === currentUserId;
+    }
+
+    return false;
+  };
+
+  // Helper: récupérer l'ID du client depuis la conversation
+  const getCustomerIdFromConversation = (conv: any, currentUserId?: string | null): string | undefined => {
+    try {
+      // 1) Préférence: otherParticipant explicit et role CLIENT
+      if (conv?.otherParticipant) {
+        if (conv.otherParticipant.role === 'CLIENT') return conv.otherParticipant._id;
+        // otherParticipant est l'entreprise → chercher le client dans participants si objets
+        if (Array.isArray(conv.participants) && conv.participants.length > 0 && typeof conv.participants[0] === 'object') {
+          const clientObj = (conv.participants as any[]).find(p => p.role === 'CLIENT');
+          if (clientObj) return clientObj._id;
+        }
+      }
+
+      // 2) Participants sous forme d'objets avec roles
+      if (Array.isArray(conv?.participants) && conv.participants.length > 0 && typeof conv.participants[0] === 'object') {
+        const clientObj = (conv.participants as any[]).find(p => p.role === 'CLIENT');
+        if (clientObj) return clientObj._id;
+        // Fallback: prendre l'autre participant différent de l'utilisateur courant
+        const otherObj = (conv.participants as any[]).find(p => p._id !== currentUserId);
+        if (otherObj) return otherObj._id;
+      }
+
+      // 3) Participants sous forme d'IDs (strings)
+      if (Array.isArray(conv?.participants) && conv.participants.length > 0 && typeof conv.participants[0] === 'string') {
+        const ids = (conv.participants as string[]).filter(Boolean);
+        if (ids.length) {
+          if (currentUserId && ids.includes(currentUserId)) {
+            return ids.find(id => id !== currentUserId);
+          }
+          // Dernier recours: retourner le premier si on ne connaît pas l'utilisateur courant
+          return ids[0];
+        }
+      }
+    } catch (e) {
+      console.warn('getCustomerIdFromConversation error:', e);
+    }
+    return undefined;
+  };
+
   // Composant ShimmerBlock pour l'animation de chargement
   const ShimmerBlock = ({ width, height, borderRadius = 8 }: { width: number | string; height: number; borderRadius?: number }) => {
-    const shimmerAnim = React.useRef(new Animated.Value(0)).current;
+    const shimmerAnim = React.useRef(new RNAnimated.Value(0)).current;
 
     React.useEffect(() => {
-      const shimmerAnimation = Animated.loop(
-        Animated.timing(shimmerAnim, {
+      const shimmerAnimation = RNAnimated.loop(
+        RNAnimated.timing(shimmerAnim, {
           toValue: 1,
           duration: 1500,
           easing: Easing.linear,
@@ -108,7 +205,7 @@ export default function ConversationDetails() {
 
     return (
       <View className="bg-gray-200 overflow-hidden" style={{ width: width as any, height, borderRadius }}>
-        <Animated.View
+        <RNAnimated.View
           className="bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 absolute inset-0"
           style={{ transform: [{ translateX }] }}
         />
@@ -470,6 +567,76 @@ export default function ConversationDetails() {
       console.error('❌ Exception pendant l\'envoi:', error);
       setSending(false);
       showNotification('error', 'Erreur', 'Impossible d\'envoyer le message');
+    }
+  };
+
+  // Création de l'offre de livraison
+  const submitOffer = async () => {
+    if (!conversation) return;
+    try {
+      // Déduire les IDs depuis la conversation
+      console.log('🚀 Soumission offre - début validation');
+      const productId = typeof conversation.product === 'string' ? conversation.product : conversation.product?._id;
+      console.log('🚀 Soumission offre - produit ID:', productId);
+      const customerId = getCustomerIdFromConversation(conversation, getCurrentUserId());
+      console.log('🚀 Soumission offre - client ID:', customerId);
+      if (!productId || !customerId) {
+        showNotification('error', 'Données manquantes', "Produit ou client introuvable pour créer l'offre");
+        return;
+      }
+      if (!offerForm.deliveryZone || !offerForm.deliveryFee || !offerForm.expiresAt) {
+        showNotification('warning', 'Champs requis', 'Zone, frais et expiration sont requis');
+        return;
+      }
+      const fee = Number(offerForm.deliveryFee);
+      if (isNaN(fee) || fee <= 0) {
+        showNotification('warning', 'Frais invalide', 'Le frais de livraison doit être un nombre positif');
+        return;
+      }
+      const expires = new Date(offerForm.expiresAt);
+      if (isNaN(expires.getTime()) || expires <= new Date()) {
+        showNotification('warning', 'Expiration invalide', "La date d'expiration doit être future");
+        return;
+      }
+
+      setCreatingOffer(true);
+      const payload: CreateOfferPayload = {
+        product: productId,
+        customer: customerId,
+        deliveryZone: offerForm.deliveryZone.trim(),
+        deliveryFee: fee,
+        urgency: offerForm.urgency,
+        specialInstructions: offerForm.specialInstructions.trim(),
+        expiresAt: expires.toISOString(),
+      };
+
+      await DeliveryService.createOffer(payload);
+      showNotification('success', 'Offre publiée', 'Votre offre de livraison a été créée');
+      setOfferModalVisible(false);
+      // Message système de confirmation dans la conversation (optionnel)
+
+      // Réinitialiser le formulaire
+  setOfferForm({ deliveryZone: '', deliveryFee: '', urgency: 'MEDIUM', specialInstructions: '', expiresAt: '' });
+    } catch (error: any) {
+      console.error('❌ Erreur création offre:', error);
+
+      // Gestion spécifique des erreurs métier
+      if (error.response?.status === 400) {
+        const errorMessage = error.response?.data?.message;
+        if (errorMessage?.includes("n'appartient pas à votre entreprise")) {
+          showNotification('error', 'Produit non autorisé', 'Vous ne pouvez créer une offre que pour vos propres produits');
+          return;
+        }
+        if (errorMessage?.includes('produit')) {
+          showNotification('error', 'Produit invalide', errorMessage);
+          return;
+        }
+      }
+
+      // Erreur générique
+      showNotification('error', 'Erreur', error.message || "Impossible de créer l'offre");
+    } finally {
+      setCreatingOffer(false);
     }
   };
 
@@ -948,10 +1115,14 @@ export default function ConversationDetails() {
     );
   };
 
+  
+
+  // Si la conversation est en cours de chargement, afficher le skeleton
   if (loading) {
     return renderSkeletonConversation();
   }
 
+  // Si pas d'ID de conversation, afficher un message d'erreur
   if (!conversationId) {
     return (
       <SafeAreaView className="flex-1 bg-white">
@@ -974,6 +1145,7 @@ export default function ConversationDetails() {
     );
   }
 
+  // Si la conversation n'a pas pu être chargée, afficher un message d'erreur
   if (!conversation) {
     return (
       <SafeAreaView className="flex-1 bg-white">
@@ -999,7 +1171,7 @@ export default function ConversationDetails() {
   // Gestion sécurisée de otherParticipant
   const otherParticipant = conversation.otherParticipant || 
     (Array.isArray(conversation.participants) && typeof conversation.participants[0] === 'object' 
-      ? conversation.participants.find(p => p.role !== 'CLIENT') 
+      ? (conversation.participants as any[]).find(p => p._id !== getCurrentUserId()) 
       : null);
 
   return (
@@ -1007,7 +1179,7 @@ export default function ConversationDetails() {
       <ExpoStatusBar style="light" translucent />
       {/* Header */}
       <LinearGradient
-  colors={['#10B981', '#34D399']}
+        colors={['#10B981', '#34D399']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         className="px-6 pb-4 rounded-b-3xl shadow-sm"
@@ -1052,17 +1224,27 @@ export default function ConversationDetails() {
             </View>
           </View>
 
-          <TouchableOpacity 
-            className="w-10 h-10 bg-white/20 rounded-full justify-center items-center"
-            onPress={() => {
-              const productId = typeof conversation.product === 'string' 
-                ? conversation.product 
-                : conversation.product._id;
-              router.push(`/(app)/(enterprise)/(tabs)/product/${productId}`);
-            }}
-          >
-            <Ionicons name="cube" size={18} color="#FFFFFF" />
-          </TouchableOpacity>
+          <View className="flex-row items-center">
+            {isCurrentUserProductOwner(conversation, user?._id) && (
+              <TouchableOpacity
+                className="w-10 h-10 bg-white/20 rounded-full justify-center items-center mr-2"
+                onPress={openOfferModal}
+              >
+                <Ionicons name="bicycle" size={18} color="#FFFFFF" />
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity 
+              className="w-10 h-10 bg-white/20 rounded-full justify-center items-center"
+              onPress={() => {
+                const productId = typeof conversation.product === 'string' 
+                  ? conversation.product 
+                  : conversation.product._id;
+                router.push(`/(app)/(enterprise)/(tabs)/product/${productId}`);
+              }}
+            >
+              <Ionicons name="cube" size={18} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
         </View>
       </LinearGradient>
 
@@ -1096,428 +1278,423 @@ export default function ConversationDetails() {
         </TouchableOpacity>
       )}
 
-  {Platform.OS === 'android' ? (
-        // Layout spécifique pour Android
+      {/* Zone de contenu principal */}
+      {Platform.OS !== 'ios' ? (
+      <View className="flex-1">
+        {/* Messages */}
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          renderItem={renderMessageItem}
+          keyExtractor={(item) => item._id}
+          className="flex-1 px-4"
+          contentContainerStyle={{ 
+            paddingVertical: 16,
+            // Ajout de l'inset bas + hauteur zone saisie estimée
+            paddingBottom: (keyboardHeight > 0 ? keyboardHeight + 100 : 100 + insets.bottom)
+          }}
+          showsVerticalScrollIndicator={false}
+          onContentSizeChange={() => {
+            // Scroll automatique vers le bas quand le contenu change
+            setTimeout(() => {
+              flatListRef.current?.scrollToEnd({ animated: false });
+            }, 50);
+          }}
+          onScroll={(e) => {
+            const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+            const distanceFromBottom = contentSize.height - (contentOffset.y + layoutMeasurement.height);
+            setShowScrollToBottom(distanceFromBottom > 200);
+          }}
+          scrollEventThrottle={16}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          ListEmptyComponent={
+            <View className="flex-1 justify-center items-center py-20">
+              <View className="bg-neutral-50 rounded-full w-16 h-16 justify-center items-center mb-4">
+                <Ionicons name="chatbubble-outline" size={24} color="#9CA3AF" />
+              </View>
+              <Text className="text-lg font-quicksand-bold text-neutral-600 mb-2">
+                Début de la conversation
+              </Text>
+              <Text className="text-neutral-500 font-quicksand-medium text-center px-6">
+                Commencez la discussion à propos de ce produit
+              </Text>
+            </View>
+          }
+        />
+
+        {/* Zone de réponse améliorée */}
+        {replyingTo && (
+          <View className="bg-gradient-to-r from-primary-50 to-blue-50 mx-4 mb-2 rounded-2xl p-4 border-l-4 border-primary-400 shadow-sm">
+            <View className="flex-row items-start justify-between">
+              <View className="flex-1">
+                <View className="flex-row items-center mb-2">
+                  <Ionicons name="return-up-forward" size={14} color="#10B981" />
+                  <Text className="text-xs text-primary-600 font-quicksand-semibold ml-1">
+                    Réponse à {replyingTo.sender.firstName} {replyingTo.sender.lastName}
+                  </Text>
+                </View>
+                <Text className="text-sm text-neutral-700 font-quicksand-medium" numberOfLines={2}>
+                  {replyingTo.text}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setReplyingTo(null)}
+                className="ml-3 w-8 h-8 bg-white rounded-full justify-center items-center shadow-sm"
+              >
+                <Ionicons name="close" size={16} color="#9CA3AF" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* Zone de saisie Android */}
         <View 
-          className="flex-1"
+          className="px-4 py-4 bg-white absolute left-0 right-0"
           style={{ 
-    // On réserve toujours l'inset bas (si clavier fermé) pour éviter chevauchement navigation bar
-    paddingBottom: keyboardHeight > 0 ? keyboardHeight : insets.bottom 
+            borderTopWidth: 1, 
+            borderTopColor: '#F3F4F6',
+            // Positionner juste au-dessus du clavier s'il est ouvert sinon sur l'inset
+            bottom: keyboardHeight > 0 ? keyboardHeight : insets.bottom
           }}
         >
-          {/* Messages */}
-          <FlatList
-            ref={flatListRef}
-            data={messages}
-            renderItem={renderMessageItem}
-            keyExtractor={(item) => item._id}
-            className="flex-1 px-4"
-            contentContainerStyle={{ 
-              paddingVertical: 16,
-      // Ajout de l'inset bas + hauteur zone saisie estimée
-      paddingBottom: (keyboardHeight > 0 ? keyboardHeight + 100 : 100 + insets.bottom)
-            }}
-            showsVerticalScrollIndicator={false}
-            onContentSizeChange={() => {
-              // Scroll automatique vers le bas quand le contenu change
-              setTimeout(() => {
-                flatListRef.current?.scrollToEnd({ animated: false });
-              }, 50);
-            }}
-            onScroll={(e) => {
-              const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
-              const distanceFromBottom = contentSize.height - (contentOffset.y + layoutMeasurement.height);
-              setShowScrollToBottom(distanceFromBottom > 200);
-            }}
-            scrollEventThrottle={16}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="interactive"
-            ListEmptyComponent={
-              <View className="flex-1 justify-center items-center py-20">
-                <View className="bg-neutral-50 rounded-full w-16 h-16 justify-center items-center mb-4">
-                  <Ionicons name="chatbubble-outline" size={24} color="#9CA3AF" />
-                </View>
-                <Text className="text-lg font-quicksand-bold text-neutral-600 mb-2">
-                  Début de la conversation
-                </Text>
-                <Text className="text-neutral-500 font-quicksand-medium text-center px-6">
-                  Commencez la discussion à propos de ce produit
-                </Text>
-              </View>
-            }
-          />
-
-          {/* Zone de réponse améliorée */}
-          {replyingTo && (
-            <View className="bg-gradient-to-r from-primary-50 to-blue-50 mx-4 mb-2 rounded-2xl p-4 border-l-4 border-primary-400 shadow-sm">
-              <View className="flex-row items-start justify-between">
-                <View className="flex-1">
-                  <View className="flex-row items-center mb-2">
-                    <Ionicons name="return-up-forward" size={14} color="#10B981" />
-                    <Text className="text-xs text-primary-600 font-quicksand-semibold ml-1">
-                      Réponse à {replyingTo.sender.firstName} {replyingTo.sender.lastName}
+          {/* Affichage de l'image sélectionnée */}
+          {attachment && (
+            <View className="mb-3 p-3 bg-neutral-50 rounded-xl border border-neutral-200">
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center flex-1">
+                  <Image
+                    source={{ uri: attachment.uri }}
+                    className="w-12 h-12 rounded-lg mr-3"
+                    resizeMode="cover"
+                  />
+                  <View className="flex-1">
+                    <Text className="text-sm font-quicksand-semibold text-neutral-800">
+                      Image sélectionnée
+                    </Text>
+                    <Text className="text-xs text-neutral-500 font-quicksand-medium">
+                      {attachment.fileName || 'image.jpg'}
                     </Text>
                   </View>
-                  <Text className="text-sm text-neutral-700 font-quicksand-medium" numberOfLines={2}>
-                    {replyingTo.text}
-                  </Text>
                 </View>
                 <TouchableOpacity
-                  onPress={() => setReplyingTo(null)}
-                  className="ml-3 w-8 h-8 bg-white rounded-full justify-center items-center shadow-sm"
+                  onPress={removeAttachment}
+                  className="w-8 h-8 bg-red-100 rounded-full justify-center items-center ml-2"
                 >
-                  <Ionicons name="close" size={16} color="#9CA3AF" />
+                  <Ionicons name="close" size={16} color="#EF4444" />
                 </TouchableOpacity>
               </View>
             </View>
           )}
-
-          {/* Zone de saisie Android */}
-          <View 
-            className="px-4 py-4 bg-white absolute left-0 right-0"
-            style={{ 
-              borderTopWidth: 1, 
-              borderTopColor: '#F3F4F6',
-              // Positionner juste au-dessus du clavier s'il est ouvert sinon sur l'inset
-              bottom: keyboardHeight > 0 ? keyboardHeight : insets.bottom
-            }}
-          >
-            {/* Affichage de l'image sélectionnée */}
-            {attachment && (
-              <View className="mb-3 p-3 bg-neutral-50 rounded-xl border border-neutral-200">
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center flex-1">
-                    <Image
-                      source={{ uri: attachment.uri }}
-                      className="w-12 h-12 rounded-lg mr-3"
-                      resizeMode="cover"
-                    />
-                    <View className="flex-1">
-                      <Text className="text-sm font-quicksand-semibold text-neutral-800">
-                        Image sélectionnée
-                      </Text>
-                      <Text className="text-xs text-neutral-500 font-quicksand-medium">
-                        {attachment.fileName || 'image.jpg'}
-                      </Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity
-                    onPress={removeAttachment}
-                    className="w-8 h-8 bg-red-100 rounded-full justify-center items-center ml-2"
-                  >
-                    <Ionicons name="close" size={16} color="#EF4444" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-            <View className={`flex-row items-end rounded-3xl p-2 ${
-              inputFocused ? 'bg-primary-50 border-2 border-primary-200' : 'bg-neutral-50 border-2 border-transparent'
-            } transition-all duration-200`}>
-              {/* Bouton d'attachement */}
-              <TouchableOpacity
-                onPress={() => {
-                  Alert.alert(
-                    'Ajouter une pièce jointe',
-                    'Choisissez une option',
-                    [
-                      { text: 'Annuler', style: 'cancel' },
-                      { text: 'Prendre une photo', onPress: takePhoto },
-                      { text: 'Choisir depuis la galerie', onPress: pickImageFromGallery },
-                    ]
-                  );
+          <View className={`flex-row items-end rounded-3xl p-2 ${
+            inputFocused ? 'bg-primary-50 border-2 border-primary-200' : 'bg-neutral-50 border-2 border-transparent'
+          }`}>
+            {/* Bouton d'attachement */}
+            <TouchableOpacity
+              onPress={() => {
+                Alert.alert(
+                  'Ajouter une pièce jointe',
+                  'Choisissez une option',
+                  [
+                    { text: 'Annuler', style: 'cancel' },
+                    { text: 'Prendre une photo', onPress: takePhoto },
+                    { text: 'Choisir depuis la galerie', onPress: pickImageFromGallery },
+                  ]
+                );
+              }}
+              className="w-10 h-10 bg-white rounded-full justify-center items-center mr-2 shadow-sm"
+            >
+              <Ionicons name="add" size={20} color="#9CA3AF" />
+            </TouchableOpacity>
+            
+            {/* Zone de texte */}
+            <View className="flex-1 min-h-[40px] max-h-32 justify-center">
+              <TextInput
+                ref={textInputRef}
+                value={newMessage}
+                onChangeText={setNewMessage}
+                placeholder="Tapez votre message..."
+                multiline
+                maxLength={2000}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
+                onContentSizeChange={(e) => {
+                  const height = Math.max(40, Math.min(128, e.nativeEvent.contentSize.height));
+                  setInputHeight(height);
                 }}
-                className="w-10 h-10 bg-white rounded-full justify-center items-center mr-2 shadow-sm"
-              >
-                <Ionicons name="add" size={20} color="#9CA3AF" />
-              </TouchableOpacity>
-              
-              {/* Zone de texte */}
-              <View className="flex-1 min-h-[40px] max-h-32 justify-center">
-                <TextInput
-                  ref={textInputRef}
-                  value={newMessage}
-                  onChangeText={setNewMessage}
-                  placeholder="Tapez votre message..."
-                  multiline
-                  maxLength={2000}
-                  onFocus={handleInputFocus}
-                  onBlur={handleInputBlur}
-                  onContentSizeChange={(e) => {
-                    const height = Math.max(40, Math.min(128, e.nativeEvent.contentSize.height));
-                    setInputHeight(height);
-                  }}
-                  className="text-neutral-800 font-quicksand-medium text-base px-4 py-2"
-                  placeholderTextColor="#9CA3AF"
-                  style={{ height: Math.max(40, inputHeight) }}
-                  textAlignVertical="center"
-                />
-              </View>
-              
-              {/* Compteur de caractères */}
-              {newMessage.length > 1800 && (
-                <View className="absolute top-1 right-20 bg-white rounded-full px-2 py-1">
-                  <Text className={`text-xs font-quicksand-medium ${
-                    newMessage.length > 1950 ? 'text-red-500' : 'text-orange-500'
-                  }`}>
-                    {2000 - newMessage.length}
-                  </Text>
-                </View>
-              )}
-              
-              {/* Bouton d'envoi amélioré */}
-              <TouchableOpacity
-                onPress={handleSendPress}
-                disabled={!newMessage.trim() || sending}
-                className={`w-12 h-12 rounded-full justify-center items-center ml-2 ${
-                  newMessage.trim() && !sending
-                    ? 'bg-primary-500'
-                    : 'bg-neutral-300'
-                }`}
-                style={{
-                  shadowColor: newMessage.trim() ? '#10B981' : '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: newMessage.trim() ? 0.3 : 0.1,
-                  shadowRadius: 4,
-                  elevation: newMessage.trim() ? 8 : 2,
-                  transform: [{ scale: newMessage.trim() && !sending ? 1 : 0.95 }],
-                }}
-              >
-                {sending ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <Ionicons 
-                    name={newMessage.trim() ? "send" : "send-outline"} 
-                    size={18} 
-                    color={newMessage.trim() ? "#FFFFFF" : "#9CA3AF"} 
-                  />
-                )}
-              </TouchableOpacity>
+                className="text-neutral-800 font-quicksand-medium text-base px-4 py-2"
+                placeholderTextColor="#9CA3AF"
+                style={{ height: Math.max(40, inputHeight) }}
+                textAlignVertical="center"
+              />
             </View>
             
-            {/* Indicateur de frappe */}
-            {inputFocused && (
-              <View className="flex-row items-center mt-2 px-4">
-                <View className="flex-row items-center">
-                  <View className="w-2 h-2 bg-primary-400 rounded-full mr-1" />
-                  <View className="w-2 h-2 bg-primary-400 rounded-full mr-1" />
-                  <View className="w-2 h-2 bg-primary-400 rounded-full" />
-                </View>
-                <Text className="text-xs text-primary-600 font-quicksand-medium ml-2">
-                  Vous tapez...
+            {/* Compteur de caractères */}
+            {newMessage.length > 1800 && (
+              <View className="absolute top-1 right-20 bg-white rounded-full px-2 py-1">
+                <Text className={`text-xs font-quicksand-medium ${
+                  newMessage.length > 1950 ? 'text-red-500' : 'text-orange-500'
+                }`}>
+                  {2000 - newMessage.length}
                 </Text>
               </View>
             )}
+            
+            {/* Bouton d'envoi amélioré */}
+            <TouchableOpacity
+              onPress={handleSendPress}
+              disabled={!newMessage.trim() || sending}
+              className={`w-12 h-12 rounded-full justify-center items-center ml-2 ${
+                newMessage.trim() && !sending
+                  ? 'bg-primary-500'
+                  : 'bg-neutral-300'
+              }`}
+              style={{
+                shadowColor: newMessage.trim() ? '#10B981' : '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: newMessage.trim() ? 0.3 : 0.1,
+                shadowRadius: 4,
+                elevation: newMessage.trim() ? 8 : 2,
+                transform: [{ scale: newMessage.trim() && !sending ? 1 : 0.95 }],
+              }}
+            >
+              {sending ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Ionicons 
+                  name={newMessage.trim() ? "send" : "send-outline"} 
+                  size={18} 
+                  color={newMessage.trim() ? "#FFFFFF" : "#9CA3AF"} 
+                />
+              )}
+            </TouchableOpacity>
           </View>
+          
+          {/* Indicateur de frappe */}
+          {inputFocused && (
+            <View className="flex-row items-center mt-2 px-4">
+              <View className="flex-row items-center">
+                <View className="w-2 h-2 bg-primary-400 rounded-full mr-1" />
+                <View className="w-2 h-2 bg-primary-400 rounded-full mr-1" />
+                <View className="w-2 h-2 bg-primary-400 rounded-full" />
+              </View>
+              <Text className="text-xs text-primary-600 font-quicksand-medium ml-2">
+                Vous tapez...
+              </Text>
+            </View>
+          )}
         </View>
-  ) : (
-        // Layout pour iOS avec KeyboardAvoidingView
-        <KeyboardAvoidingView 
-          className="flex-1"
-          behavior="padding"
-          keyboardVerticalOffset={100}
-          style={{ flex: 1 }}
-        >
-          {/* Messages */}
-          <FlatList
-            ref={flatListRef}
-            data={messages}
-            renderItem={renderMessageItem}
-            keyExtractor={(item) => item._id}
-            className="flex-1 px-4"
-            contentContainerStyle={{ 
-              paddingVertical: 16,
-      // On ajoute l'inset bas pour s'aligner avec la zone interactive
-      paddingBottom: 40 + insets.bottom
-            }}
-            showsVerticalScrollIndicator={false}
-            onContentSizeChange={() => {
-              flatListRef.current?.scrollToEnd({ animated: false });
-            }}
-            onScroll={(e) => {
-              const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
-              const distanceFromBottom = contentSize.height - (contentOffset.y + layoutMeasurement.height);
-              setShowScrollToBottom(distanceFromBottom > 200);
-            }}
-            scrollEventThrottle={16}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="interactive"
-            ListEmptyComponent={
-              <View className="flex-1 justify-center items-center py-20">
-                <View className="bg-neutral-50 rounded-full w-16 h-16 justify-center items-center mb-4">
-                  <Ionicons name="chatbubble-outline" size={24} color="#9CA3AF" />
-                </View>
-                <Text className="text-lg font-quicksand-bold text-neutral-600 mb-2">
-                  Début de la conversation
-                </Text>
-                <Text className="text-neutral-500 font-quicksand-medium text-center px-6">
-                  Commencez la discussion à propos de ce produit
-                </Text>
+      </View>
+      ) : (
+      /* Zone de saisie iOS */
+      <KeyboardAvoidingView 
+        className="flex-1"
+        behavior="padding"
+        keyboardVerticalOffset={100}
+        style={{ flex: 1 }}
+      >
+        {/* Messages */}
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          renderItem={renderMessageItem}
+          keyExtractor={(item) => item._id}
+          className="flex-1 px-4"
+          contentContainerStyle={{ 
+            paddingVertical: 16,
+            // On ajoute l'inset bas pour s'aligner avec la zone interactive
+            paddingBottom: 40 + insets.bottom
+          }}
+          showsVerticalScrollIndicator={false}
+          onContentSizeChange={() => {
+            flatListRef.current?.scrollToEnd({ animated: false });
+          }}
+          onScroll={(e) => {
+            const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+            const distanceFromBottom = contentSize.height - (contentOffset.y + layoutMeasurement.height);
+            setShowScrollToBottom(distanceFromBottom > 200);
+          }}
+          scrollEventThrottle={16}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          ListEmptyComponent={
+            <View className="flex-1 justify-center items-center py-20">
+              <View className="bg-neutral-50 rounded-full w-16 h-16 justify-center items-center mb-4">
+                <Ionicons name="chatbubble-outline" size={24} color="#9CA3AF" />
               </View>
-            }
-          />
+              <Text className="text-lg font-quicksand-bold text-neutral-600 mb-2">
+                Début de la conversation
+              </Text>
+              <Text className="text-neutral-500 font-quicksand-medium text-center px-6">
+                Commencez la discussion à propos de ce produit
+              </Text>
+            </View>
+          }
+        />
 
-          {/* Zone de réponse améliorée */}
-          {replyingTo && (
-            <View className="bg-gradient-to-r from-primary-50 to-blue-50 mx-4 mb-2 rounded-2xl p-4 border-l-4 border-primary-400 shadow-sm">
-              <View className="flex-row items-start justify-between">
-                <View className="flex-1">
-                  <View className="flex-row items-center mb-2">
-                    <Ionicons name="return-up-forward" size={14} color="#FE8C00" />
-                    <Text className="text-xs text-primary-600 font-quicksand-semibold ml-1">
-                      Réponse à {replyingTo.sender.firstName} {replyingTo.sender.lastName}
-                    </Text>
-                  </View>
-                  <Text className="text-sm text-neutral-700 font-quicksand-medium" numberOfLines={2}>
-                    {replyingTo.text}
+        {/* Zone de réponse améliorée */}
+        {replyingTo && (
+          <View className="bg-gradient-to-r from-primary-50 to-blue-50 mx-4 mb-2 rounded-2xl p-4 border-l-4 border-primary-400 shadow-sm">
+            <View className="flex-row items-start justify-between">
+              <View className="flex-1">
+                <View className="flex-row items-center mb-2">
+                  <Ionicons name="return-up-forward" size={14} color="#FE8C00" />
+                  <Text className="text-xs text-primary-600 font-quicksand-semibold ml-1">
+                    Réponse à {replyingTo.sender.firstName} {replyingTo.sender.lastName}
                   </Text>
                 </View>
+                <Text className="text-sm text-neutral-700 font-quicksand-medium" numberOfLines={2}>
+                  {replyingTo.text}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setReplyingTo(null)}
+                className="ml-3 w-8 h-8 bg-white rounded-full justify-center items-center shadow-sm"
+              >
+                <Ionicons name="close" size={16} color="#9CA3AF" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* Zone de saisie iOS */}
+        <View 
+          className="px-4 py-4 bg-white"
+          style={{ 
+            borderTopWidth: 1, 
+            borderTopColor: '#F3F4F6',
+            paddingBottom: insets.bottom
+          }}
+        >
+          {/* Affichage de l'image sélectionnée */}
+          {attachment && (
+            <View className="mb-3 p-3 bg-neutral-50 rounded-xl border border-neutral-200">
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center flex-1">
+                  <Image
+                    source={{ uri: attachment.uri }}
+                    className="w-12 h-12 rounded-lg mr-3"
+                    resizeMode="cover"
+                  />
+                  <View className="flex-1">
+                    <Text className="text-sm font-quicksand-semibold text-neutral-800">
+                      Image sélectionnée
+                    </Text>
+                    <Text className="text-xs text-neutral-500 font-quicksand-medium">
+                      {attachment.fileName || 'image.jpg'}
+                    </Text>
+                  </View>
+                </View>
                 <TouchableOpacity
-                  onPress={() => setReplyingTo(null)}
-                  className="ml-3 w-8 h-8 bg-white rounded-full justify-center items-center shadow-sm"
+                  onPress={removeAttachment}
+                  className="w-8 h-8 bg-red-100 rounded-full justify-center items-center ml-2"
                 >
-                  <Ionicons name="close" size={16} color="#9CA3AF" />
+                  <Ionicons name="close" size={16} color="#EF4444" />
                 </TouchableOpacity>
               </View>
             </View>
           )}
-
-          {/* Zone de saisie iOS */}
-          <View 
-            className="px-4 py-4 bg-white"
-            style={{ 
-              borderTopWidth: 1, 
-              borderTopColor: '#F3F4F6',
-              paddingBottom: insets.bottom
-            }}
-          >
-            {/* Affichage de l'image sélectionnée */}
-            {attachment && (
-              <View className="mb-3 p-3 bg-neutral-50 rounded-xl border border-neutral-200">
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center flex-1">
-                    <Image
-                      source={{ uri: attachment.uri }}
-                      className="w-12 h-12 rounded-lg mr-3"
-                      resizeMode="cover"
-                    />
-                    <View className="flex-1">
-                      <Text className="text-sm font-quicksand-semibold text-neutral-800">
-                        Image sélectionnée
-                      </Text>
-                      <Text className="text-xs text-neutral-500 font-quicksand-medium">
-                        {attachment.fileName || 'image.jpg'}
-                      </Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity
-                    onPress={removeAttachment}
-                    className="w-8 h-8 bg-red-100 rounded-full justify-center items-center ml-2"
-                  >
-                    <Ionicons name="close" size={16} color="#EF4444" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-            <View className={`flex-row items-end rounded-3xl p-2 ${
-              inputFocused ? 'bg-primary-50 border-2 border-primary-200' : 'bg-neutral-50 border-2 border-transparent'
-            } transition-all duration-200`}>
-              {/* Bouton d'attachement */}
-              <TouchableOpacity
-                onPress={() => {
-                  Alert.alert(
-                    'Ajouter une pièce jointe',
-                    'Choisissez une option',
-                    [
-                      { text: 'Annuler', style: 'cancel' },
-                      { text: 'Prendre une photo', onPress: takePhoto },
-                      { text: 'Choisir depuis la galerie', onPress: pickImageFromGallery },
-                    ]
-                  );
+          <View className={`flex-row items-end rounded-3xl p-2 ${
+            inputFocused ? 'bg-primary-50 border-2 border-primary-200' : 'bg-neutral-50 border-2 border-transparent'
+          }`}>
+            {/* Bouton d'attachement */}
+            <TouchableOpacity
+              onPress={() => {
+                Alert.alert(
+                  'Ajouter une pièce jointe',
+                  'Choisissez une option',
+                  [
+                    { text: 'Annuler', style: 'cancel' },
+                    { text: 'Prendre une photo', onPress: takePhoto },
+                    { text: 'Choisir depuis la galerie', onPress: pickImageFromGallery },
+                  ]
+                );
+              }}
+              className="w-10 h-10 bg-white rounded-full justify-center items-center mr-2 shadow-sm"
+            >
+              <Ionicons name="add" size={20} color="#9CA3AF" />
+            </TouchableOpacity>
+            
+            {/* Zone de texte */}
+            <View className="flex-1 min-h-[40px] max-h-32 justify-center">
+              <TextInput
+                ref={textInputRef}
+                value={newMessage}
+                onChangeText={setNewMessage}
+                placeholder="Tapez votre message..."
+                multiline
+                maxLength={2000}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
+                onContentSizeChange={(e) => {
+                  const height = Math.max(40, Math.min(128, e.nativeEvent.contentSize.height));
+                  setInputHeight(height);
                 }}
-                className="w-10 h-10 bg-white rounded-full justify-center items-center mr-2 shadow-sm"
-              >
-                <Ionicons name="add" size={20} color="#9CA3AF" />
-              </TouchableOpacity>
-              
-              {/* Zone de texte */}
-              <View className="flex-1 min-h-[40px] max-h-32 justify-center">
-                <TextInput
-                  ref={textInputRef}
-                  value={newMessage}
-                  onChangeText={setNewMessage}
-                  placeholder="Tapez votre message..."
-                  multiline
-                  maxLength={2000}
-                  onFocus={handleInputFocus}
-                  onBlur={handleInputBlur}
-                  onContentSizeChange={(e) => {
-                    const height = Math.max(40, Math.min(128, e.nativeEvent.contentSize.height));
-                    setInputHeight(height);
-                  }}
-                  className="text-neutral-800 font-quicksand-medium text-base px-4 py-2"
-                  placeholderTextColor="#9CA3AF"
-                  style={{ height: Math.max(40, inputHeight) }}
-                  textAlignVertical="center"
-                />
-              </View>
-              
-              {/* Compteur de caractères */}
-              {newMessage.length > 1800 && (
-                <View className="absolute top-1 right-20 bg-white rounded-full px-2 py-1">
-                  <Text className={`text-xs font-quicksand-medium ${
-                    newMessage.length > 1950 ? 'text-red-500' : 'text-orange-500'
-                  }`}>
-                    {2000 - newMessage.length}
-                  </Text>
-                </View>
-              )}
-              
-              {/* Bouton d'envoi amélioré */}
-              <TouchableOpacity
-                onPress={handleSendPress}
-                disabled={!newMessage.trim() || sending}
-                className={`w-12 h-12 rounded-full justify-center items-center ml-2 ${
-                  newMessage.trim() && !sending
-                    ? 'bg-primary-500'
-                    : 'bg-neutral-300'
-                }`}
-                style={{
-                  shadowColor: newMessage.trim() ? '#10B981' : '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: newMessage.trim() ? 0.3 : 0.1,
-                  shadowRadius: 4,
-                  elevation: newMessage.trim() ? 8 : 2,
-                  transform: [{ scale: newMessage.trim() && !sending ? 1 : 0.95 }],
-                }}
-              >
-                {sending ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <Ionicons 
-                    name={newMessage.trim() ? "send" : "send-outline"} 
-                    size={18} 
-                    color={newMessage.trim() ? "#FFFFFF" : "#9CA3AF"} 
-                  />
-                )}
-              </TouchableOpacity>
+                className="text-neutral-800 font-quicksand-medium text-base px-4 py-2"
+                placeholderTextColor="#9CA3AF"
+                style={{ height: Math.max(40, inputHeight) }}
+                textAlignVertical="center"
+              />
             </View>
             
-            {/* Indicateur de frappe */}
-            {inputFocused && (
-              <View className="flex-row items-center mt-2 px-4">
-                <View className="flex-row items-center">
-                  <View className="w-2 h-2 bg-primary-400 rounded-full mr-1" />
-                  <View className="w-2 h-2 bg-primary-400 rounded-full mr-1" />
-                  <View className="w-2 h-2 bg-primary-400 rounded-full" />
-                </View>
-                <Text className="text-xs text-primary-600 font-quicksand-medium ml-2">
-                  Vous tapez...
+            {/* Compteur de caractères */}
+            {newMessage.length > 1800 && (
+              <View className="absolute top-1 right-20 bg-white rounded-full px-2 py-1">
+                <Text className={`text-xs font-quicksand-medium ${
+                  newMessage.length > 1950 ? 'text-red-500' : 'text-orange-500'
+                }`}>
+                  {2000 - newMessage.length}
                 </Text>
               </View>
             )}
+            
+            {/* Bouton d'envoi amélioré */}
+            <TouchableOpacity
+              onPress={handleSendPress}
+              disabled={!newMessage.trim() || sending}
+              className={`w-12 h-12 rounded-full justify-center items-center ml-2 ${
+                newMessage.trim() && !sending
+                  ? 'bg-primary-500'
+                  : 'bg-neutral-300'
+              }`}
+              style={{
+                shadowColor: newMessage.trim() ? '#10B981' : '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: newMessage.trim() ? 0.3 : 0.1,
+                shadowRadius: 4,
+                elevation: newMessage.trim() ? 8 : 2,
+                transform: [{ scale: newMessage.trim() && !sending ? 1 : 0.95 }],
+              }}
+            >
+              {sending ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Ionicons 
+                  name={newMessage.trim() ? "send" : "send-outline"} 
+                  size={18} 
+                  color={newMessage.trim() ? "#FFFFFF" : "#9CA3AF"} 
+                />
+              )}
+            </TouchableOpacity>
           </View>
+          
+          {/* Indicateur de frappe */}
+          {inputFocused && (
+            <View className="flex-row items-center mt-2 px-4">
+              <View className="flex-row items-center">
+                <View className="w-2 h-2 bg-primary-400 rounded-full mr-1" />
+                <View className="w-2 h-2 bg-primary-400 rounded-full mr-1" />
+                <View className="w-2 h-2 bg-primary-400 rounded-full" />
+              </View>
+              <Text className="text-xs text-primary-600 font-quicksand-medium ml-2">
+                Vous tapez...
+              </Text>
+            </View>
+          )}
+        </View>
         </KeyboardAvoidingView>
       )}
+
       {/* Bouton flottant descendre en bas */}
   {showScrollToBottom && (
         <TouchableOpacity
@@ -1608,15 +1785,225 @@ export default function ConversationDetails() {
       </Modal>
 
       {/* Notification Modal */}
-      {notification && (
+      {notification ? (
         <NotificationModal
-          visible={notification.visible}
+          visible={!!notification.visible}
           type={notification.type}
           title={notification.title}
           message={notification.message}
           onClose={hideNotification}
         />
-      )}
+      ) : null}
+
+      {/* Modal pour la création d'offre de livraison */}
+      <Modal
+        visible={offerModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={closeOfferModal}
+      >
+        <TouchableOpacity
+          className="flex-1 bg-black/50"
+          activeOpacity={1}
+          onPress={closeOfferModal}
+        >
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+            <TouchableOpacity
+              className="flex-1 justify-end"
+              activeOpacity={1}
+              onPress={() => {}}
+            >
+              <View className="bg-white rounded-t-3xl p-6 max-h-[80%]">
+                {/* Header de la modal */}
+                <View className="flex-row items-center justify-between mb-4">
+                  <Text className="text-xl font-quicksand-bold text-neutral-800">
+                    Nouvelle offre de livraison
+                  </Text>
+                  <TouchableOpacity
+                    onPress={closeOfferModal}
+                    className="w-8 h-8 rounded-full justify-center items-center"
+                  >
+                    <Ionicons name="close" size={24} color="#9CA3AF" />
+                  </TouchableOpacity>
+                </View>
+
+                <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+
+                  {/* Zone de livraison */}
+                  <View className="mb-4">
+                    <Text className="text-sm text-neutral-600 font-quicksand-medium mb-2">
+                      Zone de livraison
+                    </Text>
+                    <TextInput
+                      value={offerForm.deliveryZone}
+                      onChangeText={(text) => setOfferForm({ ...offerForm, deliveryZone: text })}
+                      placeholder="Entrez la zone de livraison"
+                      className="border rounded-lg px-4 py-3 text-neutral-800 font-quicksand-medium"
+                      placeholderTextColor="#9CA3AF"
+                      returnKeyType="next"
+                    />
+                  </View>
+
+                  {/* Frais de livraison */}
+                  <View className="mb-4">
+                    <Text className="text-sm text-neutral-600 font-quicksand-medium mb-2">
+                      Frais de livraison (FCFA)
+                    </Text>
+                    <TextInput
+                      value={offerForm.deliveryFee}
+                      onChangeText={(text) => setOfferForm({ ...offerForm, deliveryFee: text })}
+                      placeholder="Entrez les frais de livraison"
+                      keyboardType="numeric"
+                      className="border rounded-lg px-4 py-3 text-neutral-800 font-quicksand-medium"
+                      placeholderTextColor="#9CA3AF"
+                      returnKeyType="next"
+                    />
+                  </View>
+
+                  {/* Urgence */}
+                  <View className="mb-4">
+                    <Text className="text-sm text-neutral-600 font-quicksand-medium mb-2">
+                      Urgence
+                    </Text>
+                    <View className="flex-row">
+                      <TouchableOpacity
+                        onPress={() => setOfferForm({ ...offerForm, urgency: 'LOW' })}
+                        className={`flex-1 rounded-lg px-4 py-3 mr-2 justify-center items-center ${
+                          offerForm.urgency === 'LOW' ? 'bg-primary-50' : 'bg-neutral-50'
+                        }`}
+                      >
+                        <Text className="text-neutral-800 font-quicksand-medium">
+                          Basse
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => setOfferForm({ ...offerForm, urgency: 'MEDIUM' })}
+                        className={`flex-1 rounded-lg px-4 py-3 mr-2 justify-center items-center ${
+                          offerForm.urgency === 'MEDIUM' ? 'bg-primary-50' : 'bg-neutral-50'
+                        }`}
+                      >
+                        <Text className="text-neutral-800 font-quicksand-medium">
+                          Moyenne
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => setOfferForm({ ...offerForm, urgency: 'HIGH' })}
+                        className={`flex-1 rounded-lg px-4 py-3 justify-center items-center ${
+                          offerForm.urgency === 'HIGH' ? 'bg-primary-50' : 'bg-neutral-50'
+                        }`}
+                      >
+                        <Text className="text-neutral-800 font-quicksand-medium">
+                          Haute
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  {/* Instructions spéciales */}
+                  <View className="mb-4">
+                    <Text className="text-sm text-neutral-600 font-quicksand-medium mb-2">
+                      Instructions spéciales
+                    </Text>
+                    <TextInput
+                      value={offerForm.specialInstructions}
+                      onChangeText={(text) => setOfferForm({ ...offerForm, specialInstructions: text })}
+                      placeholder="Instructions spéciales pour la livraison"
+                      className="border rounded-lg px-4 py-3 text-neutral-800 font-quicksand-medium"
+                      placeholderTextColor="#9CA3AF"
+                      multiline
+                      numberOfLines={3}
+                      textAlignVertical="top"
+                      returnKeyType="done"
+                    />
+                  </View>
+
+                  {/* Date d’expiration */}
+                  <View className="mb-6">
+                    <Text className="text-sm text-neutral-600 font-quicksand-medium mb-2">
+                      Date d&apos;expiration
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => { setDateMode('datetime'); setShowDatePicker(true); }}
+                      className="border rounded-lg px-4 py-3 bg-neutral-50"
+                    >
+                      <Text className="text-neutral-800 font-quicksand-medium">
+                        {offerForm.expiresAt ? new Date(offerForm.expiresAt).toLocaleString('fr-FR') : 'Choisir la date et l\'heure'}
+                      </Text>
+                    </TouchableOpacity>
+                    {showDatePicker && (
+                      <DateTimePicker
+                        value={offerForm.expiresAt ? new Date(offerForm.expiresAt) : new Date(Date.now() + 60 * 60 * 1000)}
+                        mode={Platform.OS === 'ios' ? dateMode : 'date'}
+                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                        minimumDate={new Date()}
+                        onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
+                          if (Platform.OS === 'ios') {
+                            if ((event as any).type === 'dismissed') return;
+                            const date = selectedDate || new Date();
+                            setOfferForm({ ...offerForm, expiresAt: date.toISOString() });
+                          } else {
+                            // ANDROID étape 1: choisir la date, puis ouvrir le time picker
+                            setShowDatePicker(false);
+                            if ((event as any).type === 'dismissed') return;
+                            const picked = selectedDate || new Date();
+                            // Conserver la date choisie, on choisira l'heure ensuite
+                            setTempExpiryDate(picked);
+                            setShowTimePicker(true);
+                          }
+                        }}
+                        style={{ backgroundColor: Platform.OS === 'ios' ? 'white' : undefined }}
+                      />
+                    )}
+                    {/* ANDROID: time picker après le date picker */}
+                    {Platform.OS === 'android' && showTimePicker && (
+                      <DateTimePicker
+                        value={tempExpiryDate || new Date()}
+                        mode={'time'}
+                        display={'default'}
+                        onChange={(event: DateTimePickerEvent, selectedTime?: Date) => {
+                          setShowTimePicker(false);
+                          if ((event as any).type === 'dismissed') return;
+                          const base = tempExpiryDate || new Date();
+                          const time = selectedTime || new Date();
+                          const final = new Date(base);
+                          final.setHours(time.getHours(), time.getMinutes(), 0, 0);
+                          setOfferForm({ ...offerForm, expiresAt: final.toISOString() });
+                          setTempExpiryDate(null);
+                        }}
+                      />
+                    )}
+                  </View>
+                </ScrollView>
+
+                {/* Actions */}
+                <View className="flex-row justify-end">
+                  <TouchableOpacity
+                    onPress={closeOfferModal}
+                    className="flex-1 bg-neutral-100 py-3 rounded-lg mr-2"
+                  >
+                    <Text className="text-center text-neutral-700 font-quicksand-semibold">
+                      Annuler
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={submitOffer}
+                    className="flex-1 bg-primary-600 py-3 rounded-lg"
+                    disabled={creatingOffer}
+                  >
+                    {creatingOffer ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <Text className="text-center text-white font-quicksand-semibold">
+                        Publier l&apos;offre
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </TouchableOpacity>
+          </KeyboardAvoidingView>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }

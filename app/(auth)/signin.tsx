@@ -15,7 +15,7 @@ export default function SignInScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
-  const { checkAuthStatus, redirectToRoleBasedHome } = useAuth();
+  const { checkAuthStatus, redirectToRoleBasedHome, logout } = useAuth();
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -28,12 +28,35 @@ export default function SignInScreen() {
       const response = await AuthService.login({ email, password });
       
       if (response.success) {
-        const successMessage = ErrorHandler.getSuccessMessage('login');
+        const userRole = response.data.user.role;
+        
+        // Check if role is supported
+        if ((userRole as string) === 'DELIVER') {
+          console.log('🚚 DELIVER role detected - showing error toast');
+          console.log('🚚 User role from response:', userRole);
+
+          // Show error toast with longer duration
+          console.log('🚚 About to call toast.showError');
+          toast.showError(
+            'Profil non supporté',
+            'Cette application ne gère que les profils clients et entreprises. Veuillez utiliser l\'application dédiée aux livreurs.'
+          );
+          console.log('🚚 toast.showError called successfully');
+
+          // Clear any stored session data
+          await logout();
+
+          // Add a longer delay to ensure toast is visible before any navigation
+          setTimeout(() => {
+            console.log('🚚 DELIVER role handled - toast should have been visible for 6 seconds');
+          }, 6500);
+
+          return;
+        }        const successMessage = ErrorHandler.getSuccessMessage('login');
         toast.showSuccess(successMessage.title, successMessage.message);
         
         // Refresh auth status and redirect
         await checkAuthStatus();
-        const userRole = response.data.user.role;
         
         setTimeout(() => {
           redirectToRoleBasedHome(userRole);

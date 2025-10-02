@@ -1,27 +1,29 @@
 import { Ionicons } from "@expo/vector-icons";
+import { Image as ExpoImage } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Dimensions,
+  Easing,
   FlatList,
   Image,
   Linking,
+  Modal,
   SafeAreaView,
   ScrollView,
+  Share,
   Text,
   TouchableOpacity,
   View,
-  Modal,
-  Share,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { Image as ExpoImage } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { StatusBar as ExpoStatusBar } from "expo-status-bar";
-import ProductService from "../../../../services/api/ProductService";
 import MessagingService from "../../../../services/api/MessagingService";
+import ProductService from "../../../../services/api/ProductService";
 import { Product } from "../../../../types/product";
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -33,7 +35,6 @@ export default function ProductDetails() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [quantity, setQuantity] = useState(1);
   const [similarProducts, setSimilarProducts] = useState<Product[]>([]);
   const [loadingSimilar, setLoadingSimilar] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -115,8 +116,8 @@ export default function ProductDetails() {
   // Composant pour une carte de produit similaire
   const SimilarProductCard = ({ product: similarProduct }: { product: Product }) => (
     <TouchableOpacity
-      className="bg-white rounded-xl mr-4 border border-neutral-100"
-      style={{ width: 140 }}
+      className="bg-white rounded-xl mr-4 border border-neutral-100 shadow-sm"
+      style={{ width: 160 }}
       onPress={() => {
         router.push(`/(app)/(client)/product/${similarProduct._id}`);
       }}
@@ -124,19 +125,11 @@ export default function ProductDetails() {
       <View className="relative">
         <Image
           source={{
-            uri: similarProduct.images[0] || "https://via.placeholder.com/140x100/CCCCCC/FFFFFF?text=No+Image",
+            uri: similarProduct.images[0] || "https://via.placeholder.com/160x120/CCCCCC/FFFFFF?text=No+Image",
           }}
-          className="w-full h-24 rounded-t-xl"
-          resizeMode="contain"
+          className="w-full h-32 rounded-t-xl"
+          resizeMode="cover"
         />
-        {/* Badge de score de similarité si disponible */}
-        {(similarProduct as any).similarityScore && (
-          <View className="absolute top-2 right-2 bg-primary-500 rounded-full px-2 py-1">
-            <Text className="text-white text-xs font-quicksand-bold">
-              {Math.round((similarProduct as any).similarityScore)}%
-            </Text>
-          </View>
-        )}
         {/* Badge stock si faible */}
         {similarProduct.stock <= 5 && similarProduct.stock > 0 && (
           <View className="absolute top-2 left-2 bg-warning-500 rounded-full px-2 py-1">
@@ -147,18 +140,18 @@ export default function ProductDetails() {
         )}
       </View>
 
-      <View className="p-2">
-        <Text numberOfLines={2} className="text-sm font-quicksand-semibold text-neutral-800 mb-1">
+      <View className="p-3">
+        <Text numberOfLines={2} className="text-sm font-quicksand-semibold text-neutral-800 mb-2">
           {similarProduct.name}
         </Text>
 
-        <Text className="text-base font-quicksand-bold text-primary-600">
+        <Text className="text-base font-quicksand-bold text-primary-600 mb-2">
           {formatPrice(similarProduct.price)}
         </Text>
 
         {/* Stats */}
         {similarProduct.stats && (
-          <View className="flex-row items-center mt-1">
+          <View className="flex-row items-center">
             <Ionicons name="star" size={12} color="#FFD700" />
             <Text className="text-xs text-neutral-600 ml-1">
               {similarProduct.stats.averageRating?.toFixed(1) || "0.0"}
@@ -168,14 +161,6 @@ export default function ProductDetails() {
       </View>
     </TouchableOpacity>
   );
-
-  const handleAddToCart = () => {
-    // TODO: Implémenter l'ajout au panier
-    console.log('Ajouter au panier:', {
-      productId: id,
-      quantity
-    });
-  };
 
   const openWhatsApp = (phone: string) => {
     const message = `Bonjour ! Je suis intéressé(e) par votre produit "${product?.name}" sur DealToo. 
@@ -240,29 +225,124 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
       });
   };
 
-  const showPhoneNumber = (phone: string) => {
-    Alert.alert(
-      'Numéro de téléphone',
-      phone,
-      [
-        { text: 'Fermer', style: 'cancel' },
-        { text: 'Appeler', onPress: () => makePhoneCall(phone) },
-        { text: 'WhatsApp', onPress: () => openWhatsApp(phone) }
-      ]
+  // Skeleton Loader Component
+  const ShimmerBlock = ({ style }: { style?: any }) => {
+    const shimmer = React.useRef(new Animated.Value(0)).current;
+    useEffect(() => {
+      const loop = Animated.loop(
+        Animated.timing(shimmer, {
+          toValue: 1,
+          duration: 1200,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      );
+      loop.start();
+      return () => loop.stop();
+    }, [shimmer]);
+    const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
+    return (
+      <View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
+        <Animated.View style={{
+          position: 'absolute', top: 0, bottom: 0, width: 120,
+          transform: [{ translateX }],
+          backgroundColor: 'rgba(255,255,255,0.35)',
+          opacity: 0.7,
+        }} />
+      </View>
     );
   };
 
-  if (loading) {
-    return (
-      <SafeAreaView className="flex-1 bg-white">
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#FE8C00" />
-          <Text className="mt-4 text-neutral-600 font-quicksand-medium">
-            Chargement du produit...
-          </Text>
+  const renderSkeletonProduct = () => (
+    <SafeAreaView className="flex-1 bg-white">
+      <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
+      {/* Header skeleton */}
+      <LinearGradient
+        colors={['rgba(0,0,0,0.6)', 'transparent']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        className="absolute top-0 left-0 right-0 z-10"
+        style={{ paddingTop: insets.top + 8 }}
+      >
+        <View className="flex-row items-center justify-between px-4 pb-3">
+          <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
+          <ShimmerBlock style={{ width: 120, height: 20, borderRadius: 10 }} />
+          <View className="flex-row">
+            <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20, marginRight: 8 }} />
+            <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
+          </View>
         </View>
-      </SafeAreaView>
-    );
+      </LinearGradient>
+
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        {/* Image skeleton */}
+        <View style={{ marginTop: insets.top }}>
+          <ShimmerBlock style={{ width: screenWidth, height: 350 }} />
+        </View>
+
+        {/* Content skeleton */}
+        <View className="px-6 py-6">
+          {/* Price and name skeleton */}
+          <View className="mb-4">
+            <ShimmerBlock style={{ width: 120, height: 32, borderRadius: 16, marginBottom: 12 }} />
+            <ShimmerBlock style={{ width: '80%', height: 28, borderRadius: 14, marginBottom: 8 }} />
+            <ShimmerBlock style={{ width: '60%', height: 16, borderRadius: 8 }} />
+          </View>
+
+          {/* Enterprise section skeleton */}
+          <View className="px-4 py-4 border border-neutral-100 rounded-2xl mb-6">
+            <ShimmerBlock style={{ width: 100, height: 20, borderRadius: 10, marginBottom: 16 }} />
+            <View className="flex-row items-center">
+              <ShimmerBlock style={{ width: 56, height: 56, borderRadius: 16 }} />
+              <View className="ml-4 flex-1">
+                <ShimmerBlock style={{ width: '70%', height: 20, borderRadius: 10, marginBottom: 8 }} />
+                <ShimmerBlock style={{ width: '50%', height: 14, borderRadius: 7, marginBottom: 4 }} />
+                <ShimmerBlock style={{ width: '40%', height: 12, borderRadius: 6 }} />
+              </View>
+              <ShimmerBlock style={{ width: 80, height: 32, borderRadius: 16 }} />
+            </View>
+          </View>
+
+          {/* Stats skeleton */}
+          <View className="flex-row justify-between mb-6">
+            <View className="flex-1 bg-neutral-50 rounded-2xl p-4 mr-2">
+              <ShimmerBlock style={{ width: 60, height: 20, borderRadius: 10, marginBottom: 8 }} />
+              <ShimmerBlock style={{ width: 40, height: 14, borderRadius: 7 }} />
+            </View>
+            <View className="flex-1 bg-neutral-50 rounded-2xl p-4 ml-2">
+              <ShimmerBlock style={{ width: 60, height: 20, borderRadius: 10, marginBottom: 8 }} />
+              <ShimmerBlock style={{ width: 40, height: 14, borderRadius: 7 }} />
+            </View>
+          </View>
+
+          {/* Stock status skeleton */}
+          <View className="mb-6">
+            <ShimmerBlock style={{ width: 150, height: 16, borderRadius: 8 }} />
+          </View>
+
+          {/* Similar products skeleton */}
+          <View className="px-4 py-4 border-t border-neutral-100">
+            <View className="flex-row justify-between items-center mb-4">
+              <ShimmerBlock style={{ width: 140, height: 24, borderRadius: 12 }} />
+              <ShimmerBlock style={{ width: 60, height: 18, borderRadius: 9 }} />
+            </View>
+            <View className="flex-row">
+              {[0, 1, 2].map((i) => (
+                <View key={i} className="mr-4">
+                  <ShimmerBlock style={{ width: 160, height: 120, borderRadius: 16, marginBottom: 8 }} />
+                  <ShimmerBlock style={{ width: 120, height: 16, borderRadius: 8, marginBottom: 4 }} />
+                  <ShimmerBlock style={{ width: 100, height: 18, borderRadius: 9 }} />
+                </View>
+              ))}
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+
+  if (loading) {
+    return renderSkeletonProduct();
   }
 
   if (!product) {
@@ -307,7 +387,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
           </TouchableOpacity>
           <View className="flex-1 items-center">
             <Text numberOfLines={1} className="text-white font-quicksand-semibold">
-              Détails du produit
+              Détails du produittt
             </Text>
           </View>
           <View className="flex-row">
@@ -490,7 +570,12 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                   {product.enterprise.contactInfo?.phone && (
                     <>
                       <TouchableOpacity
-                        onPress={() => openWhatsApp(product.enterprise.contactInfo.phone)}
+                        onPress={() => {
+                          const enterprise = product.enterprise;
+                          if (typeof enterprise === 'object' && enterprise.contactInfo?.phone) {
+                            openWhatsApp(enterprise.contactInfo.phone);
+                          }
+                        }}
                         className="flex-1 bg-success-50 rounded-2xl px-4 py-3 m-1 flex-row items-center justify-center border border-success-100"
                       >
                         <Ionicons name="logo-whatsapp" size={20} color="#10B981" />
@@ -499,7 +584,12 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                         </Text>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        onPress={() => makePhoneCall(product.enterprise.contactInfo.phone)}
+                        onPress={() => {
+                          const enterprise = product.enterprise;
+                          if (typeof enterprise === 'object' && enterprise.contactInfo?.phone) {
+                            makePhoneCall(enterprise.contactInfo.phone);
+                          }
+                        }}
                         className="flex-1 bg-primary-50 rounded-2xl px-4 py-3 m-1 flex-row items-center justify-center border border-primary-100"
                       >
                         <Ionicons name="call" size={20} color="#FE8C00" />
@@ -511,7 +601,12 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                   )}
                   {product.enterprise.contactInfo?.website && (
                     <TouchableOpacity
-                      onPress={() => openWebsite(product.enterprise.contactInfo.website)}
+                      onPress={() => {
+                        const enterprise = product.enterprise;
+                        if (typeof enterprise === 'object' && enterprise.contactInfo?.website) {
+                          openWebsite(enterprise.contactInfo.website);
+                        }
+                      }}
                       className="flex-1 bg-blue-50 rounded-2xl px-4 py-3 m-1 flex-row items-center justify-center border border-blue-100"
                     >
                       <Ionicons name="globe" size={20} color="#3B82F6" />
@@ -588,32 +683,6 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
               </Text>
             </View>
           </View>
-
-          {/* Quantity Selector */}
-          {product.stock > 0 && (
-            <View className="mb-6">
-              <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">
-                Quantité
-              </Text>
-              <View className="flex-row items-center">
-                <TouchableOpacity
-                  onPress={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-10 h-10 bg-neutral-100 rounded-full justify-center items-center"
-                >
-                  <Ionicons name="remove" size={16} color="#374151" />
-                </TouchableOpacity>
-                <Text className="mx-4 text-lg font-quicksand-bold text-neutral-800">
-                  {quantity}
-                </Text>
-                <TouchableOpacity
-                  onPress={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                  className="w-10 h-10 bg-neutral-100 rounded-full justify-center items-center"
-                >
-                  <Ionicons name="add" size={16} color="#374151" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
 
           {/* Related Items */}
           {(similarProducts.length > 0 || loadingSimilar) && (
@@ -697,46 +766,6 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
           />
         </View>
       </Modal>
-
-      {/* Bottom Actions */}
-      <View className="px-6 py-4 bg-white border-t border-neutral-200">
-        <View className="flex-row">
-          {typeof product.enterprise === 'object' && product.enterprise.contactInfo?.phone ? (
-            <TouchableOpacity 
-              onPress={() => {
-                const enterprise = product.enterprise;
-                if (typeof enterprise === 'object' && enterprise.contactInfo?.phone) {
-                  openWhatsApp(enterprise.contactInfo.phone);
-                }
-              }}
-              className="w-12 h-12 bg-success-100 rounded-2xl justify-center items-center mr-4"
-            >
-              <Ionicons name="logo-whatsapp" size={20} color="#10B981" />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity className="w-12 h-12 bg-neutral-100 rounded-2xl justify-center items-center mr-4">
-              <Ionicons name="chatbubble-outline" size={20} color="#374151" />
-            </TouchableOpacity>
-          )}
-          
-          {product.stock > 0 ? (
-            <TouchableOpacity
-              onPress={handleAddToCart}
-              className="flex-1 bg-primary-500 rounded-2xl py-4 justify-center items-center"
-            >
-              <Text className="text-white font-quicksand-bold text-base">
-                Ajouter au panier • {formatPrice(product.price * quantity)}
-              </Text>
-            </TouchableOpacity>
-          ) : (
-            <View className="flex-1 bg-neutral-300 rounded-2xl py-4 justify-center items-center">
-              <Text className="text-neutral-600 font-quicksand-bold text-base">
-                Produit indisponible
-              </Text>
-            </View>
-          )}
-        </View>
-      </View>
     </SafeAreaView>
   );
 }

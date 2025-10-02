@@ -1,8 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation, useRouter } from "expo-router";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
+  Easing,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -20,11 +23,18 @@ import CustomerService, { UpdateProfileRequest } from "../../../../services/api/
 
 export default function ProfileDetailsScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { user, refreshUserData } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Commencer avec loading = true
   const [saving, setSaving] = useState(false);
   const [imagePickerVisible, setImagePickerVisible] = useState(false);
   const toast = useToast();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+  }, [navigation]);
   
   // État local pour les informations du profil
   const [profile, setProfile] = useState({
@@ -106,36 +116,120 @@ export default function ProfileDetailsScreen() {
     refreshUserData();
   };
 
+  // Skeleton Loader Component
+  const ShimmerBlock = ({ style }: { style?: any }) => {
+    const shimmer = React.useRef(new Animated.Value(0)).current;
+    useEffect(() => {
+      const loop = Animated.loop(
+        Animated.timing(shimmer, {
+          toValue: 1,
+          duration: 1200,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      );
+      loop.start();
+      return () => loop.stop();
+    }, [shimmer]);
+    const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
+    return (
+      <View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
+        <Animated.View style={{
+          position: 'absolute', top: 0, bottom: 0, width: 120,
+          transform: [{ translateX }],
+          backgroundColor: 'rgba(255,255,255,0.35)',
+          opacity: 0.7,
+        }} />
+      </View>
+    );
+  };
+
+  const SkeletonForm = () => (
+    <ScrollView className="flex-1 px-4">
+      {/* Photo de profil skeleton */}
+      <View className="bg-white rounded-2xl mt-6 p-4 items-center">
+        <ShimmerBlock style={{ width: 96, height: 96, borderRadius: 48, marginBottom: 16 }} />
+        <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '40%' }} />
+      </View>
+
+      {/* Informations personnelles skeleton */}
+      <View className="bg-white rounded-2xl mt-6 p-4">
+        <ShimmerBlock style={{ height: 20, borderRadius: 10, width: '60%', marginBottom: 16 }} />
+
+        {/* Champs skeleton */}
+        {[1, 2, 3, 4].map((i) => (
+          <View key={i} className="mb-4">
+            <ShimmerBlock style={{ height: 14, borderRadius: 7, width: '25%', marginBottom: 8 }} />
+            <ShimmerBlock style={{ height: 48, borderRadius: 12, width: '100%' }} />
+          </View>
+        ))}
+      </View>
+
+      {/* Sécurité skeleton */}
+      <View className="bg-white rounded-2xl mt-6 p-4">
+        <ShimmerBlock style={{ height: 20, borderRadius: 10, width: '30%', marginBottom: 16 }} />
+
+        {[1, 2, 3].map((i) => (
+          <View key={i} className="py-3 border-b border-gray-100">
+            <View className="flex-row items-center">
+              <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 12, marginRight: 12 }} />
+              <View className="flex-1">
+                <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '70%', marginBottom: 4 }} />
+              </View>
+              <ShimmerBlock style={{ width: 40, height: 24, borderRadius: 12 }} />
+            </View>
+          </View>
+        ))}
+      </View>
+
+      {/* Bouton skeleton */}
+      <View className="my-8">
+        <ShimmerBlock style={{ height: 48, borderRadius: 16, width: '100%' }} />
+      </View>
+    </ScrollView>
+  );
+
   return (
     <SafeAreaView className="flex-1 bg-background-secondary">
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1"
-      >
-        {/* Header avec bouton retour */}
-        <View className="bg-white px-4 pt-16 pb-4 flex-row items-center">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="w-10 h-10 rounded-full bg-gray-100 justify-center items-center mr-4"
-          >
-            <Ionicons name="arrow-back" size={20} color="#374151" />
-          </TouchableOpacity>
-          <Text className="text-xl font-quicksand-bold text-neutral-800">
-            Mes informations
-          </Text>
-          {loading && (
-            <ActivityIndicator size="small" color="#FE8C00" style={{ marginLeft: 10 }} />
-          )}
+      {/* Header vert */}
+      <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="pt-16 pb-6 rounded-b-3xl shadow-md">
+        <View className="px-6">
+          <View className="flex-row items-center justify-between">
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="w-10 h-10 bg-white/20 rounded-full justify-center items-center"
+            >
+              <Ionicons name="chevron-back" size={20} color="white" />
+            </TouchableOpacity>
+            <View className="flex-1 mx-4">
+              <Text className="text-lg font-quicksand-bold text-white text-center">
+                Mes informations
+              </Text>
+            </View>
+            <View className="w-10 h-10">
+              {loading && (
+                <ActivityIndicator size="small" color="white" />
+              )}
+            </View>
+          </View>
         </View>
-        
-        {/* Modal de sélection d'image */}
-        <ImagePickerModal 
-          visible={imagePickerVisible} 
-          onClose={() => setImagePickerVisible(false)}
-          onImageUpdated={handleImageUpdated}
-        />
+      </LinearGradient>
 
-        <ScrollView className="flex-1 px-4">
+      {loading ? (
+        <SkeletonForm />
+      ) : (
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          className="flex-1"
+        >
+          {/* Modal de sélection d'image */}
+          <ImagePickerModal
+            visible={imagePickerVisible}
+            onClose={() => setImagePickerVisible(false)}
+            onImageUpdated={handleImageUpdated}
+          />
+
+          <ScrollView className="flex-1 px-4">
           {/* Photo de profil */}
           <View className="bg-white rounded-2xl mt-6 p-4 items-center">
             <TouchableOpacity 
@@ -293,6 +387,7 @@ export default function ProfileDetailsScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+    )}
     </SafeAreaView>
   );
 }

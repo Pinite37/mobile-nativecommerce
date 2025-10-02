@@ -46,6 +46,37 @@ export default function EnterpriseLayout() {
           headerShown: false,
         }}
       />
+      {/* Cache le header pour les pages delivery-partners */}
+      <Stack.Screen
+        name="delivery-partners"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="delivery-partners/[partnerId]"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="delivery-partners/index"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="(tabs)/offers"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="(tabs)/offers/index"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation, useRouter } from "expo-router";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -16,8 +17,15 @@ import { useAuth } from "../../../../contexts/AuthContext";
 import CustomerService, { UpdatePreferencesRequest } from "../../../../services/api/CustomerService";
 
 export default function SettingsScreen() {
-  const router = useRouter();
   const { user, refreshUserData } = useAuth();
+  const navigation = useNavigation();
+  const router = useRouter();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+  }, [navigation]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const toast = useToast();
@@ -137,21 +145,29 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background-secondary">
-      {/* Header avec bouton retour */}
-      <View className="bg-white px-4 pt-16 pb-4 flex-row items-center">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="w-10 h-10 rounded-full bg-gray-100 justify-center items-center mr-4"
-        >
-          <Ionicons name="arrow-back" size={20} color="#374151" />
-        </TouchableOpacity>
-        <Text className="text-xl font-quicksand-bold text-neutral-800">
-          Paramètres
-        </Text>
-        {loading && (
-          <ActivityIndicator size="small" color="#FE8C00" style={{ marginLeft: 10 }} />
-        )}
-      </View>
+      {/* Header vert */}
+      <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="pt-16 pb-6 rounded-b-3xl shadow-md">
+        <View className="px-6">
+          <View className="flex-row items-center justify-between">
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="w-10 h-10 bg-white/20 rounded-full justify-center items-center"
+            >
+              <Ionicons name="chevron-back" size={20} color="white" />
+            </TouchableOpacity>
+            <View className="flex-1 mx-4">
+              <Text className="text-lg font-quicksand-bold text-white text-center">
+                Paramètres
+              </Text>
+            </View>
+            <View className="w-10 h-10">
+              {loading && (
+                <ActivityIndicator size="small" color="white" />
+              )}
+            </View>
+          </View>
+        </View>
+      </LinearGradient>
 
       <ScrollView className="flex-1">
         {/* Paramètres des notifications */}

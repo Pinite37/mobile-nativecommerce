@@ -17,10 +17,13 @@ interface ToastProps {
 }
 
 const Toast: React.FC<ToastProps> = ({ config }) => {
+  console.log('🍞 Toast: Rendering toast', { id: config.id, type: config.type, title: config.title });
+
   const translateY = useMemo(() => new Animated.Value(-100), []);
   const opacity = useMemo(() => new Animated.Value(0), []);
 
   const dismissToast = useCallback(() => {
+    console.log('🍞 Toast: Dismissing toast', config.id);
     Animated.parallel([
       Animated.timing(translateY, {
         toValue: -100,
@@ -33,11 +36,13 @@ const Toast: React.FC<ToastProps> = ({ config }) => {
         useNativeDriver: true,
       }),
     ]).start(() => {
+      console.log('🍞 Toast: Dismiss animation completed for', config.id);
       config.onDismiss?.();
     });
   }, [translateY, opacity, config]);
 
   useEffect(() => {
+    console.log('🍞 Toast: Starting animation for', config.id);
     // Animate in
     Animated.parallel([
       Animated.timing(translateY, {
@@ -50,15 +55,18 @@ const Toast: React.FC<ToastProps> = ({ config }) => {
         duration: 300,
         useNativeDriver: true,
       }),
-    ]).start();
+    ]).start(() => {
+      console.log('🍞 Toast: Animation completed for', config.id);
+    });
 
     // Auto dismiss
     const timer = setTimeout(() => {
+      console.log('🍞 Toast: Auto-dismissing', config.id);
       dismissToast();
     }, config.duration || 4000);
 
     return () => clearTimeout(timer);
-  }, [translateY, opacity, dismissToast, config.duration]);
+  }, [translateY, opacity, dismissToast, config.duration, config.id]);
 
   const getToastStyles = () => {
     switch (config.type) {
@@ -100,12 +108,15 @@ const Toast: React.FC<ToastProps> = ({ config }) => {
     <Animated.View
       style={{
         position: 'absolute',
-        top: 50,
+        top: 100, // Changed from 50 to 100 to be more visible
         left: 16,
         right: 16,
-        zIndex: 9999,
+        zIndex: 10000, // Increased zIndex
         transform: [{ translateY }],
         opacity,
+        backgroundColor: 'red', // Temporary background to make it visible
+        borderRadius: 12,
+        padding: 16,
       }}
     >
       <TouchableOpacity
@@ -122,6 +133,8 @@ const Toast: React.FC<ToastProps> = ({ config }) => {
           shadowOpacity: 0.25,
           shadowRadius: 8,
           elevation: 5,
+          borderWidth: 2,
+          borderColor: 'yellow', // Temporary border to make it more visible
         }}
       >
         <Ionicons

@@ -36,6 +36,11 @@ export default function FavoritesScreen() {
       
       const response = await ProductService.getFavoriteProducts();
       setFavoriteItems(response || []);
+      
+      // Debug: Afficher le premier produit pour voir la structure
+      if (response && response.length > 0) {
+        console.log('🔍 Premier produit favori:', JSON.stringify(response[0], null, 2));
+      }
     } catch (err: any) {
       console.error('Erreur lors de la récupération des favoris:', err);
       setError(err.message || 'Erreur lors du chargement des favoris');
@@ -231,7 +236,7 @@ export default function FavoritesScreen() {
             {/* Prix + Rating */}
             <View className="flex-row items-center justify-between mt-2">
               <Text className="text-base font-quicksand-bold text-primary-600">
-                {formatPrice(favoriteItem.product.price as any)}
+                {favoriteItem.product.price ? formatPrice(favoriteItem.product.price) : 'Prix non disponible'}
               </Text>
               {favoriteItem.product?.stats?.averageRating ? (
                 <View className="flex-row items-center">

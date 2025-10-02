@@ -2,16 +2,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Alert, Animated, Easing, Image, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native";
+import { Animated, Easing, Image, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useToast } from "../../../../components/ui/ToastManager";
+import ConfirmationModal from "../../../../components/ui/ConfirmationModal";
 import { useAuth } from "../../../../contexts/AuthContext";
 
 export default function ProfileScreen() {
   const { user, logout, refreshUserData } = useAuth();
-  const toast = useToast();
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   
   // Rafraîchir les données utilisateur au chargement de la page
   useEffect(() => {
@@ -121,22 +121,33 @@ export default function ProfileScreen() {
   );
 
   const handleLogout = () => {
-    Alert.alert(
-      "Déconnexion",
-      "Êtes-vous sûr de vouloir vous déconnecter ?",
-      [
-        { text: "Annuler", style: "cancel" },
-        { 
-          text: "Déconnexion", 
-          style: "destructive",
-          onPress: () => {
-            logout();
-            toast.showInfo("Déconnexion", "Vous avez été déconnecté avec succès");
-            router.replace("/(auth)/signin");
-          }
-        }
-      ]
-    );
+    setLogoutModalVisible(true);
+  };
+
+  const handleConfirmLogout = async () => {
+    try {
+      // Fermer le modal immédiatement
+      setLogoutModalVisible(false);
+
+      // Attendre un court instant pour que le modal se ferme
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Effectuer la déconnexion (logout() gère déjà la navigation vers /auth/welcome)
+      await logout();
+
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+      // En cas d'erreur, rouvrir le modal avec un message d'erreur
+      setLogoutModalVisible(false);
+      // Afficher une alerte d'erreur
+      setTimeout(() => {
+        alert('Une erreur s\'est produite lors de la déconnexion. Veuillez réessayer.');
+      }, 500);
+    }
+  };
+
+  const handleCancelLogout = () => {
+    setLogoutModalVisible(false);
   };
 
   const menuItems = [
@@ -260,6 +271,19 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Modal de confirmation de déconnexion */}
+      <ConfirmationModal
+        visible={logoutModalVisible}
+        title="Déconnexion"
+        message="Êtes-vous sûr de vouloir vous déconnecter ?"
+        confirmText="Déconnexion"
+        cancelText="Annuler"
+        confirmColor="#EF4444"
+        onConfirm={handleConfirmLogout}
+        onCancel={handleCancelLogout}
+        isDestructive={true}
+      />
     </SafeAreaView>
   );
 }

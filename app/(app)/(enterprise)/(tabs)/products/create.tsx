@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
-import { Link, router } from "expo-router";
+import { Link, router, useFocusEffect } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -92,9 +93,10 @@ interface ProductForm {
   };
 }
 
-type Step = 'basic' | 'details' | 'shipping' | 'advanced' | 'seo';
+type Step = 'basic' | 'details';
 
 export default function CreateProduct() {
+  const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -158,9 +160,6 @@ export default function CreateProduct() {
   const steps: { id: Step; title: string; icon: string }[] = [
     { id: 'basic', title: 'Informations de base', icon: 'information-circle' },
     { id: 'details', title: 'Détails produit', icon: 'list' },
-    { id: 'shipping', title: 'Expédition', icon: 'car' },
-    { id: 'advanced', title: 'Options avancées', icon: 'settings' },
-    { id: 'seo', title: 'SEO & Marketing', icon: 'trending-up' },
   ];
 
   const currentStepIndex = steps.findIndex(s => s.id === currentStep);
@@ -169,6 +168,17 @@ export default function CreateProduct() {
   useEffect(() => {
     loadCategories();
   }, []);
+
+  // Hide the TabBar on this screen to ensure bottom action buttons are always visible
+  useFocusEffect(
+    React.useCallback(() => {
+      const parent = (navigation as any)?.getParent?.();
+      parent?.setOptions?.({ tabBarStyle: { display: 'none' } });
+      return () => {
+        parent?.setOptions?.({ tabBarStyle: undefined });
+      };
+    }, [navigation])
+  );
 
   const loadCategories = async () => {
     try {
@@ -206,7 +216,7 @@ export default function CreateProduct() {
         if (!form.category) {
           newErrors.category = "La catégorie est requise";
         }
-  if (form.images.filter(img => !img.loading).length === 0) {
+        if (form.images.filter(img => !img.loading).length === 0) {
           newErrors.images = "Au moins une image est requise";
         }
         break;
@@ -218,33 +228,26 @@ export default function CreateProduct() {
           newErrors.weight = "Le poids doit être un nombre positif";
         }
         break;
-      case 'shipping':
-        if (form.shippingWeight.trim() && (isNaN(Number(form.shippingWeight)) || Number(form.shippingWeight) <= 0)) {
-          newErrors.weight = "Le poids d'expédition doit être un nombre positif";
-        }
-        break;
-      case 'advanced':
-        if (form.minOrderQuantity.trim() && (isNaN(Number(form.minOrderQuantity)) || Number(form.minOrderQuantity) <= 0)) {
-          newErrors.stock = "La quantité minimum doit être un nombre positif";
-        }
-        if (form.maxOrderQuantity.trim() && (isNaN(Number(form.maxOrderQuantity)) || Number(form.maxOrderQuantity) <= 0)) {
-          newErrors.stock = "La quantité maximum doit être un nombre positif";
-        }
-        break;
     }
 
-  // Merge with existing so we don't clear other step errors prematurely
-  setErrors(prev => ({ ...prev, ...newErrors }));
-  return Object.keys(newErrors).length === 0;
+    // Merge with existing so we don't clear other step errors prematurely
+    setErrors(prev => ({ ...prev, ...newErrors }));
+    return Object.keys(newErrors).length === 0;
   };
 
   const validateForm = (): boolean => {
-    return validateStep('basic') && validateStep('details') && validateStep('shipping') && validateStep('advanced');
+    return validateStep('basic') && validateStep('details');
   };
 
-  // Simple shimmer simulation for image processing
   const handleImagePicker = async () => {
     try {
+      // Vérifier les permissions
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        showNotification('error', 'Permission refusée', 'Nous avons besoin de votre permission pour accéder à la galerie');
+        return;
+      }
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -255,18 +258,32 @@ export default function CreateProduct() {
 
       if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
-        // add temporary loading image (simulate processing)
+        
+        // Vérifier la taille du fichier (max 5MB)
+        const fileSizeInMB = (asset.fileSize || 0) / (1024 * 1024);
+        if (fileSizeInMB > 5) {
+          showNotification('error', 'Image trop grande', 'Veuillez choisir une image de moins de 5MB');
+          return;
+        }
+
+        // Ajouter l'image avec état de chargement
         setForm(prev => ({
           ...prev,
           images: [...prev.images, { base64: asset.base64 || '', uri: asset.uri, loading: true }]
         }));
-        // simulate async processing delay
+        
+        // Simuler le traitement de l'image
         setTimeout(() => {
           setForm(prev => ({
             ...prev,
             images: prev.images.map(img => img.uri === asset.uri ? { ...img, loading: false } : img)
           }));
         }, 700);
+        
+        // Effacer l'erreur d'images s'il y en avait une
+        if (errors.images) {
+          setErrors(prev => ({ ...prev, images: undefined }));
+        }
       }
     } catch (err) {
       console.error('Error picking image:', err);
@@ -320,7 +337,11 @@ export default function CreateProduct() {
   const nextStep = () => {
     const ok = validateStep(currentStep);
     setShowErrorSummary(!ok);
-    if (!ok) return;
+    if (!ok) {
+      // Scroll to top pour voir les erreurs
+      return;
+    }
+    
     const currentIndex = steps.findIndex(s => s.id === currentStep);
     if (currentIndex < steps.length - 1) {
       const nextIndex = currentIndex + 1;
@@ -366,7 +387,10 @@ export default function CreateProduct() {
   const handleSubmit = async () => {
     const ok = validateForm();
     setShowErrorSummary(!ok);
-    if (!ok) return;
+    if (!ok) {
+      showNotification('error', 'Erreur', 'Veuillez corriger les erreurs avant de continuer');
+      return;
+    }
 
     setLoading(true);
 
@@ -419,17 +443,55 @@ export default function CreateProduct() {
       console.log('Creating product with data:', JSON.stringify(productData, null, 2));
 
       // Création du produit
-      await ProductService.createProduct(productData);
+      const createdProduct = await ProductService.createProduct(productData);
       
       // Affichage du toast de succès
-      showSuccess("Produit créé avec succès !", "Le produit a été ajouté à votre catalogue");
+      showSuccess("Produit créé avec succès !", `${createdProduct.name} a été ajouté à votre catalogue`);
+      
+      // Réinitialiser le formulaire
+      setForm({
+        name: "",
+        description: "",
+        price: "",
+        stock: "",
+        category: "",
+        images: [],
+        brand: "",
+        model: "",
+        sku: "",
+        barcode: "",
+        specifications: [],
+        weight: "",
+        dimensions: { length: "", width: "", height: "" },
+        tags: [],
+        minOrderQuantity: "",
+        maxOrderQuantity: "",
+        bulkPricing: [],
+        shippingWeight: "",
+        shippingDimensions: { length: "", width: "", height: "" },
+        origin: "",
+        warranty: "",
+        returnPolicy: "",
+        isActive: true,
+        isFeatured: false,
+        isDigital: false,
+        hasVariants: false,
+        variants: [],
+        seo: { metaTitle: "", metaDescription: "", keywords: [] },
+      });
+      
+      setCurrentStep('basic');
+      setMaxReachedStep(0);
+      setErrors({});
+      setShowErrorSummary(false);
       
       // Redirection vers la liste des produits après un court délai
       setTimeout(() => {
         router.replace("/(app)/(enterprise)/(tabs)/products");
-      }, 1000);
+      }, 1500);
     } catch (error: any) {
       showError("Erreur", error.message || "Impossible de créer le produit");
+      console.error('Erreur création produit:', error);
     } finally {
       setLoading(false);
     }
@@ -442,7 +504,7 @@ export default function CreateProduct() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         {/* Header */}
-        <View className="bg-white px-6 py-4 pt-16 shadow-sm">
+        <View className="bg-white px-4 py-4 pt-12 shadow-sm border-b border-neutral-100">
           <View className="flex-row items-center justify-between">
             <Link 
               href="/(app)/(enterprise)/(tabs)/products"
@@ -462,9 +524,21 @@ export default function CreateProduct() {
         </View>
 
         {/* Step Indicator + Progress */}
-        <View className="bg-white px-6 pt-4 pb-5 border-b border-neutral-100">
-          <View className="h-1.5 w-full rounded-full bg-neutral-200 overflow-hidden mb-4">
-            <View style={{ width: `${progress * 100}%` }} className="h-full bg-primary-500 rounded-full" />
+        <View className="bg-white px-4 pt-4 pb-5 border-b border-neutral-100">
+          <View className="h-2 w-full rounded-full bg-neutral-200 overflow-hidden mb-4">
+            <View 
+              style={{ 
+                width: `${progress * 100}%`,
+                backgroundColor: '#10B981',
+                borderRadius: 4
+              }} 
+              className="h-full"
+            />
+          </View>
+          <View className="flex-row items-center justify-center mb-2">
+            <Text className="text-sm text-neutral-600 font-quicksand-medium">
+              Étape {currentStepIndex + 1} sur {steps.length} • {Math.round(progress * 100)}% terminé
+            </Text>
           </View>
           <View className="flex-row items-center justify-between">
             {steps.map((step, index) => {
@@ -480,7 +554,7 @@ export default function CreateProduct() {
               <React.Fragment key={step.id}>
                 <TouchableOpacity
                   onPress={() => goToStep(step.id)}
-                  className="items-center"
+                  className="items-center flex-1"
                 >
                   <View
                     className={`w-10 h-10 rounded-full items-center justify-center ${
@@ -514,6 +588,7 @@ export default function CreateProduct() {
                         ? "text-success-500"
                         : hasErr ? 'text-red-500' : "text-neutral-500"
                     }`}
+                    numberOfLines={1}
                   >
                     {step.title}
                   </Text>
@@ -535,10 +610,11 @@ export default function CreateProduct() {
   <ScrollView 
           className="flex-1"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 48 }}
+          contentContainerStyle={{ paddingBottom: 120 }}
+          keyboardShouldPersistTaps="handled"
         >
           {currentStep === 'basic' && (
-            <View className="px-6 py-6 space-y-6">
+            <View className="px-4 py-6 space-y-6">
               {/* Images */}
               <View className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-100">
                 <View className="flex-row items-center mb-4">
@@ -550,23 +626,25 @@ export default function CreateProduct() {
                 
                 <View className="space-y-4">
                   {form.images.length > 0 && (
-                    <View className="flex-row flex-wrap gap-3">
-                      {form.images.map((image, index) => (
-                        <View key={index} className="relative">
-                          <Image
-                            source={{ uri: image.uri }}
-                            className="w-24 h-24 rounded-2xl"
-                            resizeMode="cover"
-                          />
-                          <TouchableOpacity
-                            onPress={() => removeImage(index)}
-                            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full items-center justify-center"
-                          >
-                            <Ionicons name="close" size={14} color="white" />
-                          </TouchableOpacity>
-                        </View>
-                      ))}
-                    </View>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} className="pb-2">
+                      <View className="flex-row gap-3">
+                        {form.images.map((image, index) => (
+                          <View key={index} className="relative">
+                            <Image
+                              source={{ uri: image.uri }}
+                              className="w-24 h-24 rounded-2xl"
+                              resizeMode="cover"
+                            />
+                            <TouchableOpacity
+                              onPress={() => removeImage(index)}
+                              className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full items-center justify-center"
+                            >
+                              <Ionicons name="close" size={14} color="white" />
+                            </TouchableOpacity>
+                          </View>
+                        ))}
+                      </View>
+                    </ScrollView>
                   )}
                   
                   <TouchableOpacity
@@ -689,62 +767,40 @@ export default function CreateProduct() {
                   </View>
                 ) : (
                   <View>
-                    <View className="flex-row flex-wrap gap-3">
-                      {categories.map((category) => (
-                        <TouchableOpacity
-                          key={category._id}
-                          className={`px-6 py-4 rounded-2xl border-2 ${
-                            form.category === category._id
-                              ? "bg-primary-500 border-primary-500"
-                              : "bg-neutral-50 border-neutral-200"
-                          }`}
-                          onPress={() => setForm(prev => ({ ...prev, category: category._id }))}
-                        >
-                          <Text
-                            className={`font-quicksand-semibold ${
-                              form.category === category._id ? "text-white" : "text-neutral-700"
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} className="pb-2">
+                      <View className="flex-row flex-wrap gap-3">
+                        {categories.map((category) => (
+                          <TouchableOpacity
+                            key={category._id}
+                            className={`px-6 py-4 rounded-2xl border-2 ${
+                              form.category === category._id
+                                ? "bg-primary-500 border-primary-500"
+                                : "bg-neutral-50 border-neutral-200"
                             }`}
+                            onPress={() => setForm(prev => ({ ...prev, category: category._id }))}
                           >
-                            {category.name}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
+                            <Text
+                              className={`font-quicksand-semibold ${
+                                form.category === category._id ? "text-white" : "text-neutral-700"
+                              }`}
+                            >
+                              {category.name}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </ScrollView>
                     {errors.category && (
                       <Text className="text-red-500 text-sm mt-3 font-quicksand">{errors.category}</Text>
                     )}
                   </View>
                 )}
               </View>
-              {/* Step Buttons - Basic */}
-              <View className="pt-2">
-                {showErrorSummary && (
-                  <View className="mb-4 bg-red-50 border border-red-200 rounded-2xl p-4">
-                    <Text className="text-red-600 font-quicksand-semibold mb-1 text-sm">Veuillez corriger:</Text>
-                    <View className="space-y-1">
-                      {errors.name && <Text className="text-red-500 text-xs">• {errors.name}</Text>}
-                      {errors.description && <Text className="text-red-500 text-xs">• {errors.description}</Text>}
-                      {errors.price && <Text className="text-red-500 text-xs">• {errors.price}</Text>}
-                      {errors.stock && <Text className="text-red-500 text-xs">• {errors.stock}</Text>}
-                      {errors.category && <Text className="text-red-500 text-xs">• {errors.category}</Text>}
-                      {errors.images && <Text className="text-red-500 text-xs">• {errors.images}</Text>}
-                    </View>
-                  </View>
-                )}
-                <TouchableOpacity
-                  className="bg-primary-500 rounded-2xl py-4"
-                  onPress={nextStep}
-                >
-                  <Text className="text-white text-center font-quicksand-semibold">
-                    Suivant
-                  </Text>
-                </TouchableOpacity>
-              </View>
             </View>
           )}
 
           {currentStep === 'details' && (
-            <View className="px-6 py-6 space-y-6">
+            <View className="px-4 py-6 space-y-6">
               {/* Product Details */}
               <View className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-100">
                 <View className="flex-row items-center mb-4">
@@ -761,7 +817,7 @@ export default function CreateProduct() {
                         Marque
                       </Text>
                       <TextInput
-                        className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200"
+                        className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200 focus:border-primary-500"
                         placeholder="Apple, Samsung..."
                         placeholderTextColor="#9CA3AF"
                         value={form.brand}
@@ -774,7 +830,7 @@ export default function CreateProduct() {
                         Modèle
                       </Text>
                       <TextInput
-                        className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200"
+                        className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200 focus:border-primary-500"
                         placeholder="iPhone 15 Pro"
                         placeholderTextColor="#9CA3AF"
                         value={form.model}
@@ -789,7 +845,7 @@ export default function CreateProduct() {
                         SKU (Référence)
                       </Text>
                       <TextInput
-                        className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200"
+                        className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200 focus:border-primary-500"
                         placeholder="IPH15P-256-BLK"
                         placeholderTextColor="#9CA3AF"
                         value={form.sku}
@@ -805,7 +861,7 @@ export default function CreateProduct() {
                         Code-barres
                       </Text>
                       <TextInput
-                        className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200"
+                        className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200 focus:border-primary-500"
                         placeholder="123456789012"
                         placeholderTextColor="#9CA3AF"
                         value={form.barcode}
@@ -820,7 +876,7 @@ export default function CreateProduct() {
                       Poids (kg)
                     </Text>
                     <TextInput
-                      className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200"
+                      className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200 focus:border-primary-500"
                       placeholder="0.5"
                       placeholderTextColor="#9CA3AF"
                       value={form.weight}
@@ -839,7 +895,7 @@ export default function CreateProduct() {
                     <View className="flex-row space-x-3">
                       <View className="flex-1">
                         <TextInput
-                          className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200"
+                          className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200 focus:border-primary-500"
                           placeholder="Longueur"
                           placeholderTextColor="#9CA3AF"
                           value={form.dimensions.length}
@@ -852,7 +908,7 @@ export default function CreateProduct() {
                       </View>
                       <View className="flex-1">
                         <TextInput
-                          className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200"
+                          className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200 focus:border-primary-500"
                           placeholder="Largeur"
                           placeholderTextColor="#9CA3AF"
                           value={form.dimensions.width}
@@ -865,7 +921,7 @@ export default function CreateProduct() {
                       </View>
                       <View className="flex-1">
                         <TextInput
-                          className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200"
+                          className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200 focus:border-primary-500"
                           placeholder="Hauteur"
                           placeholderTextColor="#9CA3AF"
                           value={form.dimensions.height}
@@ -940,19 +996,21 @@ export default function CreateProduct() {
                 </View>
 
                 {form.tags.length > 0 ? (
-                  <View className="flex-row flex-wrap gap-2">
-                    {form.tags.map((tag, index) => (
-                      <View key={index} className="flex-row items-center bg-primary-100 rounded-full px-3 py-2">
-                        <Text className="font-quicksand-medium text-primary-700">{tag}</Text>
-                        <TouchableOpacity
-                          onPress={() => removeTag(index)}
-                          className="ml-2"
-                        >
-                          <Ionicons name="close" size={16} color="#6366F1" />
-                        </TouchableOpacity>
-                      </View>
-                    ))}
-                  </View>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} className="pb-2">
+                    <View className="flex-row flex-wrap gap-2">
+                      {form.tags.map((tag, index) => (
+                        <View key={index} className="flex-row items-center bg-primary-100 rounded-full px-3 py-2">
+                          <Text className="font-quicksand-medium text-primary-700">{tag}</Text>
+                          <TouchableOpacity
+                            onPress={() => removeTag(index)}
+                            className="ml-2"
+                          >
+                            <Ionicons name="close" size={16} color="#6366F1" />
+                          </TouchableOpacity>
+                        </View>
+                      ))}
+                    </View>
+                  </ScrollView>
                 ) : (
                   <Text className="text-neutral-500 font-quicksand text-center py-8">
                     Aucun tag ajouté
@@ -961,64 +1019,76 @@ export default function CreateProduct() {
               </View>
             </View>
           )}
+        </ScrollView>
 
-          {/* Autres étapes simplifiées pour maintenir la lisibilité */}
-          {(currentStep === 'shipping' || currentStep === 'advanced' || currentStep === 'seo') && (
-            <View className="px-6 py-6">
-              <View className="bg-white rounded-3xl p-6 shadow-sm items-center">
-                <Ionicons name="construct" size={60} color="#9CA3AF" />
-                <Text className="text-lg font-quicksand-bold text-neutral-800 mt-4 mb-2">
-                  Section en développement
-                </Text>
-                <Text className="text-neutral-600 font-quicksand text-center">
-                  Cette section sera disponible dans une prochaine mise à jour
-                </Text>
+        {/* Fixed Bottom Buttons */}
+        <View className="bg-white border-t border-neutral-100 px-4 py-4" style={{ paddingBottom: Platform.OS === 'ios' ? 34 : 16 }}>
+          {/* Error Summary */}
+          {showErrorSummary && (
+            <View className="mb-4 bg-red-50 border border-red-200 rounded-2xl p-4">
+              <View className="flex-row items-center mb-2">
+                <Ionicons name="alert-circle" size={16} color="#DC2626" />
+                <Text className="text-red-600 font-quicksand-semibold ml-2 text-sm">Veuillez corriger les erreurs :</Text>
               </View>
-              <View className="mt-6 flex-row space-x-3">
-                <TouchableOpacity
-                  className="flex-1 bg-neutral-100 rounded-2xl py-4"
-                  onPress={prevStep}
-                >
-                  <Text className="text-neutral-700 text-center font-quicksand-semibold">
-                    Précédent
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  className="flex-1 bg-primary-500 rounded-2xl py-4"
-                  onPress={nextStep}
-                >
-                  <Text className="text-white text-center font-quicksand-semibold">
-                    Suivant
-                  </Text>
-                </TouchableOpacity>
+              <View className="space-y-1">
+                {currentStep === 'basic' && (
+                  <>
+                    {errors.name && <Text className="text-red-500 text-xs">• {errors.name}</Text>}
+                    {errors.description && <Text className="text-red-500 text-xs">• {errors.description}</Text>}
+                    {errors.price && <Text className="text-red-500 text-xs">• {errors.price}</Text>}
+                    {errors.stock && <Text className="text-red-500 text-xs">• {errors.stock}</Text>}
+                    {errors.category && <Text className="text-red-500 text-xs">• {errors.category}</Text>}
+                    {errors.images && <Text className="text-red-500 text-xs">• {errors.images}</Text>}
+                  </>
+                )}
+                {currentStep === 'details' && (
+                  <>
+                    {errors.sku && <Text className="text-red-500 text-xs">• {errors.sku}</Text>}
+                    {errors.weight && <Text className="text-red-500 text-xs">• {errors.weight}</Text>}
+                  </>
+                )}
               </View>
             </View>
           )}
-        </ScrollView>
 
-        {/* Details Step Buttons injected after its content */}
-        {currentStep === 'details' && (
-          <View className="px-6 pb-8">
-            {showErrorSummary && (
-              <View className="mb-4 bg-red-50 border border-red-200 rounded-2xl p-4">
-                <Text className="text-red-600 font-quicksand-semibold mb-1 text-sm">Veuillez corriger:</Text>
-                <View className="space-y-1">
-                  {errors.sku && <Text className="text-red-500 text-xs">• {errors.sku}</Text>}
-                  {errors.weight && <Text className="text-red-500 text-xs">• {errors.weight}</Text>}
-                </View>
+          {/* Buttons for Basic Step */}
+          {currentStep === 'basic' && (
+            <TouchableOpacity
+              className="bg-primary-500 rounded-2xl py-4 shadow-sm active:bg-primary-600"
+              onPress={nextStep}
+              activeOpacity={0.8}
+            >
+              <View className="flex-row items-center justify-center">
+                <Text className="text-white text-center font-quicksand-semibold mr-2">
+                  Suivant : Détails du produit
+                </Text>
+                <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
               </View>
-            )}
+            </TouchableOpacity>
+          )}
+
+          {/* Buttons for Details Step */}
+          {currentStep === 'details' && (
             <View className="flex-row space-x-3">
               <TouchableOpacity
-                className="flex-1 bg-neutral-100 rounded-2xl py-4"
+                className="flex-1 bg-neutral-100 rounded-2xl py-4 active:bg-neutral-200"
                 onPress={prevStep}
+                activeOpacity={0.8}
               >
-                <Text className="text-neutral-700 text-center font-quicksand-semibold">Précédent</Text>
+                <View className="flex-row items-center justify-center">
+                  <Ionicons name="chevron-back" size={18} color="#374151" />
+                  <Text className="text-neutral-700 text-center font-quicksand-semibold ml-2">Précédent</Text>
+                </View>
               </TouchableOpacity>
               <TouchableOpacity
-                className={`flex-1 py-4 rounded-2xl ${loading ? 'bg-primary-300' : 'bg-primary-500 shadow-sm'} ${!loading ? 'active:opacity-90' : ''}`}
+                className={`flex-1 py-4 rounded-2xl ${
+                  loading 
+                    ? 'bg-primary-300' 
+                    : 'bg-primary-500 shadow-sm active:bg-primary-600'
+                }`}
                 onPress={handleSubmit}
                 disabled={loading}
+                activeOpacity={loading ? 1 : 0.8}
               >
                 {loading ? (
                   <View className="flex-row items-center justify-center">
@@ -1026,12 +1096,15 @@ export default function CreateProduct() {
                     <Text className="text-white font-quicksand-semibold ml-2">Création...</Text>
                   </View>
                 ) : (
-                  <Text className="text-white text-center font-quicksand-semibold">Créer le produit</Text>
+                  <View className="flex-row items-center justify-center">
+                    <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
+                    <Text className="text-white text-center font-quicksand-semibold ml-2">Créer le produit</Text>
+                  </View>
                 )}
               </TouchableOpacity>
             </View>
-          </View>
-        )}
+          )}
+        </View>
 
         {/* Tag Modal */}
         <Modal
@@ -1050,7 +1123,7 @@ export default function CreateProduct() {
                 Ajouter un tag
               </Text>
               <TextInput
-                className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200 mb-4"
+                className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200 mb-4 focus:border-primary-500"
                 placeholder="Ex: Nouveau, Populaire, Promo..."
                 placeholderTextColor="#9CA3AF"
                 value={newTag}
@@ -1067,7 +1140,7 @@ export default function CreateProduct() {
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className="flex-1 bg-primary-500 rounded-2xl py-3"
+                  className="flex-1 bg-primary-500 rounded-2xl py-3 shadow-sm"
                   onPress={addTag}
                 >
                   <Text className="text-white text-center font-quicksand-semibold">
@@ -1096,14 +1169,14 @@ export default function CreateProduct() {
                 Ajouter une spécification
               </Text>
               <TextInput
-                className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200 mb-3"
+                className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200 mb-3 focus:border-primary-500"
                 placeholder="Nom (ex: Couleur, Taille...)"
                 placeholderTextColor="#9CA3AF"
                 value={newSpec.key}
                 onChangeText={(text) => setNewSpec(prev => ({ ...prev, key: text }))}
               />
               <TextInput
-                className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200 mb-4"
+                className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200 mb-4 focus:border-primary-500"
                 placeholder="Valeur (ex: Noir, XL...)"
                 placeholderTextColor="#9CA3AF"
                 value={newSpec.value}
@@ -1119,7 +1192,7 @@ export default function CreateProduct() {
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className="flex-1 bg-primary-500 rounded-2xl py-3"
+                  className="flex-1 bg-primary-500 rounded-2xl py-3 shadow-sm"
                   onPress={addSpecification}
                 >
                   <Text className="text-white text-center font-quicksand-semibold">

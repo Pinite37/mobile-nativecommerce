@@ -1,8 +1,29 @@
 import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
 import { AppState, Platform } from 'react-native';
 import ApiService from './ApiService';
 import mqttClient from './MQTTClient';
+
+// Check if notifications are available (not in Expo Go)
+const notificationsAvailable = (() => {
+  try {
+    // Check if expo-notifications is available
+    return !!require.resolve('expo-notifications');
+  } catch {
+    return false;
+  }
+})();
+
+// Conditionally import expo-notifications
+let Notifications: any = null;
+if (notificationsAvailable) {
+  try {
+    // Use dynamic import to avoid require issues
+    const notificationModule = eval('require')('expo-notifications');
+    Notifications = notificationModule.default || notificationModule;
+  } catch {
+    // Fallback if import fails
+  }
+}
 
 export interface NotificationData {
   _id: string;
@@ -55,31 +76,40 @@ class NotificationService {
 
   // === CONFIGURATION DES NOTIFICATIONS ===
 
-  private setupNotificationHandler(): void {
-    // Configurer le gestionnaire de notifications
-    Notifications.setNotificationHandler({
-      handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-        shouldShowBanner: true,
-        shouldShowList: true,
-      }),
-    });
+  async initializeNotifications(): Promise<void> {
+    if (!notificationsAvailable || !Notifications) {
+      console.warn('🔔 Notifications not available (likely running in Expo Go)');
+      return;
+    }
 
-    // Écouter les interactions avec les notifications
-    Notifications.addNotificationReceivedListener(this.handleNotificationReceived.bind(this));
-    Notifications.addNotificationResponseReceivedListener(this.handleNotificationResponse.bind(this));
+    try {
+      // Configurer le gestionnaire de notifications
+      Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: true,
+          shouldShowBanner: true,
+          shouldShowList: true,
+        }),
+      });
+
+      // Écouter les interactions avec les notifications
+      Notifications.addNotificationReceivedListener(this.handleNotificationReceived.bind(this));
+      Notifications.addNotificationResponseReceivedListener(this.handleNotificationResponse.bind(this));
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'initialisation des notifications:', error);
+    }
   }
 
-  private async handleNotificationReceived(notification: Notifications.Notification): Promise<void> {
+  private async handleNotificationReceived(notification: any): Promise<void> {
     console.log('🔔 Notification reçue:', notification);
 
     // Ici vous pouvez ajouter une logique personnalisée
     // Par exemple, mettre à jour l'état local, jouer un son spécifique, etc.
   }
 
-  private async handleNotificationResponse(response: Notifications.NotificationResponse): Promise<void> {
+  private async handleNotificationResponse(response: any): Promise<void> {
     console.log('👆 Interaction notification:', response);
 
     const data = response.notification.request.content.data;
@@ -95,6 +125,11 @@ class NotificationService {
   // === GESTION DU TOKEN DE NOTIFICATION ===
 
   async registerForPushNotificationsAsync(): Promise<string | null> {
+    if (!notificationsAvailable || !Notifications) {
+      console.warn('🔔 Push notifications not available (likely running in Expo Go)');
+      return null;
+    }
+
     try {
       console.log('🔧 Enregistrement pour les notifications push');
 
@@ -284,8 +319,13 @@ class NotificationService {
   // === NOTIFICATIONS LOCALES ===
 
   async scheduleLocalNotification(title: string, body: string, data?: any, delaySeconds: number = 0): Promise<string> {
+    if (!notificationsAvailable || !Notifications) {
+      console.warn('🔔 Cannot schedule local notification (not available)');
+      return '';
+    }
+
     try {
-      const trigger = delaySeconds > 0 ? { seconds: delaySeconds, type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL } as Notifications.TimeIntervalTriggerInput : null;
+      const trigger = delaySeconds > 0 ? { seconds: delaySeconds, type: 'TIME_INTERVAL' } as any : null;
 
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
@@ -307,6 +347,11 @@ class NotificationService {
   }
 
   async cancelNotification(notificationId: string): Promise<void> {
+    if (!notificationsAvailable || !Notifications) {
+      console.warn('🔔 Cannot cancel notification (not available)');
+      return;
+    }
+
     try {
       await Notifications.cancelScheduledNotificationAsync(notificationId);
       console.log('✅ Notification annulée:', notificationId);
@@ -316,6 +361,11 @@ class NotificationService {
   }
 
   async cancelAllNotifications(): Promise<void> {
+    if (!notificationsAvailable || !Notifications) {
+      console.warn('🔔 Cannot cancel notifications (not available)');
+      return;
+    }
+
     try {
       await Notifications.cancelAllScheduledNotificationsAsync();
       console.log('✅ Toutes les notifications annulées');

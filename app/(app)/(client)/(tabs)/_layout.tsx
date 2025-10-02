@@ -113,24 +113,7 @@ export default function ClientTabsLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="cart"
-        options={{
-          title: "Panier",
-          headerShown: false,
-          tabBarLabelStyle: {
-            fontFamily: 'Quicksand-SemiBold',
-            fontSize: 12,
-          },
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons 
-              name={focused ? "cart" : "cart-outline"} 
-              size={focused ? 26 : 24} 
-              color={color} 
-            />
-          ),
-        }}
-      />
+      
       <Tabs.Screen
         name="messages"
         options={{

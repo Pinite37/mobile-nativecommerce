@@ -1,10 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import React, { useEffect, useLayoutEffect, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
+    Animated,
     Dimensions,
+    Easing,
     FlatList,
     Image,
     Linking,
@@ -33,6 +37,7 @@ export default function EnterpriseDetails() {
         total: 0,
         pages: 0
     });
+    const [imageRefreshKey, setImageRefreshKey] = useState(0); // Clé pour forcer le rechargement des images
 
     useLayoutEffect(() => {
         navigation.setOptions({
@@ -46,6 +51,14 @@ export default function EnterpriseDetails() {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
+
+    // Forcer le rechargement des images quand on revient sur la page
+    useFocusEffect(
+        useCallback(() => {
+            // Incrémenter la clé pour forcer le rechargement des images
+            setImageRefreshKey(prev => prev + 1);
+        }, [])
+    );
 
     const loadEnterpriseData = async () => {
         try {
@@ -169,6 +182,7 @@ export default function EnterpriseDetails() {
         >
             <View className="relative">
                 <Image
+                    key={`product-image-${product._id}-${imageRefreshKey}`}
                     source={{
                         uri: product.images[0] || "https://via.placeholder.com/160x120/CCCCCC/FFFFFF?text=No+Image"
                     }}
@@ -210,17 +224,123 @@ export default function EnterpriseDetails() {
         </TouchableOpacity>
     );
 
-    if (loading) {
+    // Skeleton Loader Components
+    const ShimmerBlock = ({ style }: { style?: any }) => {
+        const shimmer = React.useRef(new Animated.Value(0)).current;
+        React.useEffect(() => {
+            const loop = Animated.loop(
+                Animated.timing(shimmer, {
+                    toValue: 1,
+                    duration: 1200,
+                    easing: Easing.linear,
+                    useNativeDriver: true,
+                })
+            );
+            loop.start();
+            return () => loop.stop();
+        }, [shimmer]);
+        const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
         return (
-            <SafeAreaView className="flex-1 bg-white">
-                <View className="flex-1 justify-center items-center">
-                    <ActivityIndicator size="large" color="#FE8C00" />
-                    <Text className="mt-4 text-neutral-600 font-quicksand-medium">
-                        Chargement de l&apos;entreprise...
-                    </Text>
-                </View>
-            </SafeAreaView>
+            <View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
+                <Animated.View style={{
+                    position: 'absolute', top: 0, bottom: 0, width: 120,
+                    transform: [{ translateX }],
+                    backgroundColor: 'rgba(255,255,255,0.35)',
+                    opacity: 0.7,
+                }} />
+            </View>
         );
+    };
+
+    const SkeletonProductCard = () => (
+        <View className="bg-white rounded-2xl shadow-sm border border-neutral-100 mb-3 overflow-hidden" style={{ width: (screenWidth - 48) / 2 }}>
+            <ShimmerBlock style={{ height: 112, borderRadius: 16, width: '100%' }} />
+            <View className="p-3">
+                <ShimmerBlock style={{ height: 14, borderRadius: 7, width: '85%', marginBottom: 8 }} />
+                <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '60%', marginBottom: 8 }} />
+                <View className="flex-row items-center justify-between">
+                    <ShimmerBlock style={{ height: 12, borderRadius: 6, width: '30%' }} />
+                    <ShimmerBlock style={{ height: 12, borderRadius: 6, width: '25%' }} />
+                </View>
+            </View>
+        </View>
+    );
+
+    const SkeletonEnterpriseInfo = () => (
+        <View className="bg-white mx-4 rounded-2xl shadow-sm border border-neutral-100 mb-6">
+            <View className="p-6">
+                <View className="flex-row items-center mb-4">
+                    <ShimmerBlock style={{ width: 80, height: 80, borderRadius: 16 }} />
+                    <View className="ml-4 flex-1">
+                        <ShimmerBlock style={{ height: 20, borderRadius: 10, width: '70%', marginBottom: 8 }} />
+                        <ShimmerBlock style={{ height: 14, borderRadius: 7, width: '50%', marginBottom: 4 }} />
+                        <ShimmerBlock style={{ height: 12, borderRadius: 6, width: '40%' }} />
+                    </View>
+                </View>
+                <ShimmerBlock style={{ height: 14, borderRadius: 7, width: '90%', marginBottom: 6 }} />
+                <ShimmerBlock style={{ height: 14, borderRadius: 7, width: '75%', marginBottom: 16 }} />
+                <View className="flex-row justify-between mb-4">
+                    <View className="flex-1 bg-neutral-50 rounded-xl p-3 mr-2">
+                        <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '60%', marginBottom: 4 }} />
+                        <ShimmerBlock style={{ height: 12, borderRadius: 6, width: '40%' }} />
+                    </View>
+                    <View className="flex-1 bg-neutral-50 rounded-xl p-3 mx-1">
+                        <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '50%', marginBottom: 4 }} />
+                        <ShimmerBlock style={{ height: 12, borderRadius: 6, width: '35%' }} />
+                    </View>
+                    <View className="flex-1 bg-neutral-50 rounded-xl p-3 ml-2">
+                        <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '55%', marginBottom: 4 }} />
+                        <ShimmerBlock style={{ height: 12, borderRadius: 6, width: '45%' }} />
+                    </View>
+                </View>
+                <ShimmerBlock style={{ height: 14, borderRadius: 7, width: '50%', marginBottom: 12 }} />
+                <View className="flex-row flex-wrap">
+                    <ShimmerBlock style={{ height: 32, borderRadius: 16, width: 80, marginRight: 8, marginBottom: 8 }} />
+                    <ShimmerBlock style={{ height: 32, borderRadius: 16, width: 90, marginRight: 8, marginBottom: 8 }} />
+                    <ShimmerBlock style={{ height: 32, borderRadius: 16, width: 70, marginRight: 8, marginBottom: 8 }} />
+                </View>
+            </View>
+        </View>
+    );
+
+    const renderSkeletonEnterprise = () => (
+        <SafeAreaView className="flex-1 bg-background-secondary">
+            {/* Header Skeleton */}
+            <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="pt-16 pb-6 rounded-b-3xl shadow-md">
+                <View className="px-6">
+                    <View className="flex-row items-center justify-between">
+                        <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
+                        <ShimmerBlock style={{ height: 20, borderRadius: 10, width: '50%' }} />
+                        <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
+                    </View>
+                </View>
+            </LinearGradient>
+
+            <FlatList
+                data={[1, 2, 3, 4, 5, 6]} // 6 éléments de skeleton
+                renderItem={() => <SkeletonProductCard />}
+                keyExtractor={(item) => `skeleton-${item}`}
+                numColumns={2}
+                columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 16 }}
+                showsVerticalScrollIndicator={false}
+                ListHeaderComponent={
+                    <View>
+                        <SkeletonEnterpriseInfo />
+                        <View className="px-4 mb-4">
+                            <View className="flex-row items-center justify-between">
+                                <ShimmerBlock style={{ height: 18, borderRadius: 9, width: '50%' }} />
+                                <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '20%' }} />
+                            </View>
+                        </View>
+                    </View>
+                }
+                contentContainerStyle={{ paddingBottom: 20, paddingTop: 20 }}
+            />
+        </SafeAreaView>
+    );
+
+    if (loading) {
+        return renderSkeletonEnterprise();
     }
 
     if (!enterprise) {
@@ -246,22 +366,28 @@ export default function EnterpriseDetails() {
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-neutral-50">
-            {/* Header */}
-            <View className="flex-row items-center justify-between px-6 py-4 pt-16 bg-white">
-                <TouchableOpacity
-                    onPress={() => router.back()}
-                    className="w-10 h-10 bg-neutral-100 rounded-full justify-center items-center"
-                >
-                    <Ionicons name="chevron-back" size={20} color="#374151" />
-                </TouchableOpacity>
-                <Text className="text-lg font-quicksand-bold text-neutral-800">
-                    {enterprise.companyName}
-                </Text>
-                <TouchableOpacity className="w-10 h-10 bg-neutral-100 rounded-full justify-center items-center">
-                    <Ionicons name="heart-outline" size={20} color="#374151" />
-                </TouchableOpacity>
-            </View>
+        <SafeAreaView className="flex-1 bg-background-secondary">
+            {/* Header vert */}
+            <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="pt-16 pb-6 rounded-b-3xl shadow-md">
+                <View className="px-6">
+                    <View className="flex-row items-center justify-between">
+                        <TouchableOpacity
+                            onPress={() => router.back()}
+                            className="w-10 h-10 bg-white/20 rounded-full justify-center items-center"
+                        >
+                            <Ionicons name="chevron-back" size={20} color="white" />
+                        </TouchableOpacity>
+                        <View className="flex-1 mx-4">
+                            <Text className="text-lg font-quicksand-bold text-white text-center">
+                                {enterprise.companyName}
+                            </Text>
+                        </View>
+                        <TouchableOpacity className="w-10 h-10 bg-white/20 rounded-full justify-center items-center">
+                            <Ionicons name="heart-outline" size={20} color="white" />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </LinearGradient>
 
             <FlatList
                 data={products}
@@ -328,68 +454,80 @@ export default function EnterpriseDetails() {
                                 )}
 
                                 {/* Statistiques */}
-                                <View className="flex-row justify-between mb-4">
-                                    <View className="flex-1 bg-neutral-50 rounded-xl p-3 mr-2">
-                                        <View className="flex-row items-center mb-1">
-                                            <Ionicons name="star" size={16} color="#FE8C00" />
-                                            <Text className="text-base font-quicksand-bold text-neutral-800 ml-1">
+                                <View className="flex-row justify-between mb-6">
+                                    <View className="flex-1 bg-gradient-to-br from-neutral-50 to-neutral-100 rounded-xl p-4 mr-2 border border-neutral-200/50">
+                                        <View className="flex-row items-center mb-2">
+                                            <View className="w-8 h-8 bg-amber-100 rounded-full justify-center items-center mr-2">
+                                                <Ionicons name="star" size={14} color="#F59E0B" />
+                                            </View>
+                                            <Text className="text-lg font-quicksand-bold text-neutral-800">
                                                 {enterprise.stats.averageRating?.toFixed(1) || '0.0'}
                                             </Text>
                                         </View>
-                                        <Text className="text-xs text-neutral-600">
+                                        <Text className="text-xs text-neutral-600 font-quicksand-medium">
                                             {enterprise.stats.totalReviews || 0} avis
                                         </Text>
                                     </View>
 
-                                    <View className="flex-1 bg-neutral-50 rounded-xl p-3 mx-1">
-                                        <View className="flex-row items-center mb-1">
-                                            <Ionicons name="cube" size={16} color="#10B981" />
-                                            <Text className="text-base font-quicksand-bold text-neutral-800 ml-1">
+                                    <View className="flex-1 bg-gradient-to-br from-neutral-50 to-neutral-100 rounded-xl p-4 mx-1 border border-neutral-200/50">
+                                        <View className="flex-row items-center mb-2">
+                                            <View className="w-8 h-8 bg-emerald-100 rounded-full justify-center items-center mr-2">
+                                                <Ionicons name="cube" size={14} color="#10B981" />
+                                            </View>
+                                            <Text className="text-lg font-quicksand-bold text-neutral-800">
                                                 {(enterprise as any).totalActiveProducts || products.length}
                                             </Text>
                                         </View>
-                                        <Text className="text-xs text-neutral-600">
+                                        <Text className="text-xs text-neutral-600 font-quicksand-medium">
                                             produits
                                         </Text>
                                     </View>
 
-                                    <View className="flex-1 bg-neutral-50 rounded-xl p-3 ml-2">
-                                        <View className="flex-row items-center mb-1">
-                                            <Ionicons name="people" size={16} color="#8B5CF6" />
-                                            <Text className="text-base font-quicksand-bold text-neutral-800 ml-1">
+                                    <View className="flex-1 bg-gradient-to-br from-neutral-50 to-neutral-100 rounded-xl p-4 ml-2 border border-neutral-200/50">
+                                        <View className="flex-row items-center mb-2">
+                                            <View className="w-8 h-8 bg-purple-100 rounded-full justify-center items-center mr-2">
+                                                <Ionicons name="people" size={14} color="#8B5CF6" />
+                                            </View>
+                                            <Text className="text-lg font-quicksand-bold text-neutral-800">
                                                 {enterprise.stats.totalOrders || 0}
                                             </Text>
                                         </View>
-                                        <Text className="text-xs text-neutral-600">
+                                        <Text className="text-xs text-neutral-600 font-quicksand-medium">
                                             commandes
                                         </Text>
                                     </View>
                                 </View>
 
                                 {/* Actions de contact */}
-                                <View>
-                                    <Text className="text-sm font-quicksand-semibold text-neutral-800 mb-3">
+                                <View className="mt-2">
+                                    <Text className="text-sm font-quicksand-semibold text-neutral-800 mb-4">
                                         Contacter l&apos;entreprise
                                     </Text>
-                                    <View className="flex-row flex-wrap">
+                                    <View className="flex-row flex-wrap gap-3">
                                         {enterprise.contactInfo.phone && (
                                             <>
                                                 <TouchableOpacity
                                                     onPress={() => openWhatsApp(enterprise.contactInfo.phone)}
-                                                    className="flex-row items-center bg-success-100 rounded-xl px-3 py-2 mr-2 mb-2"
+                                                    className="flex-row items-center bg-gradient-to-r from-green-50 to-green-100 rounded-2xl px-4 py-3 border border-green-200 shadow-sm"
+                                                    activeOpacity={0.8}
                                                 >
-                                                    <Ionicons name="logo-whatsapp" size={16} color="#10B981" />
-                                                    <Text className="ml-2 text-success-700 font-quicksand-medium text-sm">
+                                                    <View className="w-8 h-8 bg-green-500 rounded-full justify-center items-center mr-3">
+                                                        <Ionicons name="logo-whatsapp" size={16} color="white" />
+                                                    </View>
+                                                    <Text className="text-green-700 font-quicksand-semibold text-sm">
                                                         WhatsApp
                                                     </Text>
                                                 </TouchableOpacity>
 
                                                 <TouchableOpacity
                                                     onPress={() => makePhoneCall(enterprise.contactInfo.phone)}
-                                                    className="flex-row items-center bg-primary-100 rounded-xl px-3 py-2 mr-2 mb-2"
+                                                    className="flex-row items-center bg-gradient-to-r from-orange-50 to-orange-100 rounded-2xl px-4 py-3 border border-orange-200 shadow-sm"
+                                                    activeOpacity={0.8}
                                                 >
-                                                    <Ionicons name="call" size={16} color="#FE8C00" />
-                                                    <Text className="ml-2 text-primary-700 font-quicksand-medium text-sm">
+                                                    <View className="w-8 h-8 bg-orange-500 rounded-full justify-center items-center mr-3">
+                                                        <Ionicons name="call" size={16} color="white" />
+                                                    </View>
+                                                    <Text className="text-orange-700 font-quicksand-semibold text-sm">
                                                         Appeler
                                                     </Text>
                                                 </TouchableOpacity>
@@ -399,10 +537,13 @@ export default function EnterpriseDetails() {
                                         {enterprise.contactInfo.website && (
                                             <TouchableOpacity
                                                 onPress={() => openWebsite(enterprise.contactInfo.website!)}
-                                                className="flex-row items-center bg-blue-100 rounded-xl px-3 py-2 mr-2 mb-2"
+                                                className="flex-row items-center bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl px-4 py-3 border border-blue-200 shadow-sm"
+                                                activeOpacity={0.8}
                                             >
-                                                <Ionicons name="globe" size={16} color="#3B82F6" />
-                                                <Text className="ml-2 text-blue-700 font-quicksand-medium text-sm">
+                                                <View className="w-8 h-8 bg-blue-500 rounded-full justify-center items-center mr-3">
+                                                    <Ionicons name="globe" size={16} color="white" />
+                                                </View>
+                                                <Text className="text-blue-700 font-quicksand-semibold text-sm">
                                                     Site web
                                                 </Text>
                                             </TouchableOpacity>
@@ -412,17 +553,8 @@ export default function EnterpriseDetails() {
                             </View>
                         </View>
 
-                        {/* Header produits */}
-                        <View className="px-4 mb-4">
-                            <View className="flex-row items-center justify-between">
-                                <Text className="text-lg font-quicksand-bold text-neutral-800">
-                                    Produits de l&apos;entreprise
-                                </Text>
-                                <Text className="text-sm text-neutral-500 bg-neutral-100 px-3 py-1 rounded-full">
-                                    {pagination.total} produits
-                                </Text>
-                            </View>
-                        </View>
+                        
+                        
                     </View>
                 }
                 ListFooterComponent={

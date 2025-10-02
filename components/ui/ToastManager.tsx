@@ -33,7 +33,12 @@ export const ToastManager: React.FC<ToastManagerProps> = ({ children }) => {
       duration: config.type === 'error' ? 6000 : (config.duration || 4000),
       onDismiss: () => hideToast(id),
     };
-    setToasts(prev => [...prev, newToast]);
+    console.log('🍞 ToastManager: Adding toast', { id, type: config.type, title: config.title });
+    setToasts(prev => {
+      const newToasts = [...prev, newToast];
+      console.log('🍞 ToastManager: Total toasts now:', newToasts.length);
+      return newToasts;
+    });
   }, [hideToast]);
 
   const showSuccess = useCallback((title: string, message?: string) => {
@@ -65,11 +70,14 @@ export const ToastManager: React.FC<ToastManagerProps> = ({ children }) => {
     <ToastManagerContext.Provider value={contextValue}>
       {children}
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 9999 }}>
-        {toasts.map((toast, index) => (
-          <View key={toast.id} style={{ marginTop: index * 80 }}>
-            <Toast config={toast} />
-          </View>
-        ))}
+        {toasts.map((toast, index) => {
+          console.log('🍞 ToastManager: Rendering toast', { id: toast.id, index, type: toast.type });
+          return (
+            <View key={toast.id} style={{ marginTop: index * 80 }}>
+              <Toast config={toast} />
+            </View>
+          );
+        })}
       </View>
     </ToastManagerContext.Provider>
   );

@@ -2,6 +2,7 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+import { ToastProvider as ReanimatedToastProvider } from "../components/ui/ReanimatedToast/toast-provider";
 import { ToastManager } from "../components/ui/ToastManager";
 import { AuthProvider } from "../contexts/AuthContext";
 import { MQTTProvider } from "../contexts/MQTTContext";
@@ -36,14 +37,16 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <MQTTProvider>
-        <ToastManager>
+        <ReanimatedToastProvider>
+          <ToastManager>
           <Stack>
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
             <Stack.Screen name="(app)" options={{ headerShown: false }} />
           </Stack>
-        </ToastManager>
+          </ToastManager>
+        </ReanimatedToastProvider>
       </MQTTProvider>
     </AuthProvider>
   );

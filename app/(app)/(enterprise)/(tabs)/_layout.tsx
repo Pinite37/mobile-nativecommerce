@@ -2,9 +2,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { CustomTabBar } from "../../../../components/ui/CustomTabBar";
 import { TabBarIconWithBadge } from "../../../../components/ui/TabBarIconWithBadge";
 import { useUnreadNotifications } from "../../../../hooks/useUnreadNotifications";
-import { CustomTabBar } from "../../../../components/ui/CustomTabBar";
 
 export default function TabsLayout() {
   const { unreadCount } = useUnreadNotifications();
@@ -26,6 +26,8 @@ export default function TabsLayout() {
       screenOptions={{
         tabBarActiveTintColor: "#10B981",
         tabBarInactiveTintColor: "#9CA3AF",
+        headerShown: false,
+        headerTitle: "",
         // Les styles ci-dessous sont moins critiques car la CustomTabBar gère désormais l'affichage
         tabBarLabelStyle: {
           fontSize: 11,
@@ -84,6 +86,21 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "heart" : "heart-outline"}
+              size={focused ? 26 : 24}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="offers/index"
+        options={{
+          title: "Offres",
+          tabBarLabel: "Offres",
+          headerShown: false,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "bicycle" : "bicycle-outline"}
               size={focused ? 26 : 24}
               color={color}
             />

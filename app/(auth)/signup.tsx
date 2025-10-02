@@ -23,7 +23,7 @@ export default function SignUpScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
-  const { redirectToRoleBasedHome, handlePostRegistration } = useAuth();
+  const { redirectToRoleBasedHome, handlePostRegistration, logout } = useAuth();
 
   const handleSignUp = async () => {
     if (!firstName || !lastName || !email || !phone || !address || !password || !confirmPassword) {
@@ -60,6 +60,19 @@ export default function SignUpScreen() {
       
       if (response.success && response.data) {
         console.log('✅ Inscription réussie, traitement de l\'état...');
+        
+        // Check if role is supported
+        const userRole = response.data.user.role;
+        if ((userRole as string) === 'DELIVER') {
+          toast.showError(
+            'Profil non supporté', 
+            'Cette application ne gère que les profils clients et entreprises. Veuillez utiliser l\'application dédiée aux livreurs.'
+          );
+          
+          // Clear any stored session data
+          await logout();
+          return;
+        }
         
         // Afficher l'état d'authentification pour debug
         await RegistrationHelper.logAuthenticationState();

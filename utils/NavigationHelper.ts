@@ -7,7 +7,13 @@ export const NavigationHelper = {
       router.replace('/(app)/(client)' as any);
     } else if (role === 'ENTERPRISE') {
       router.replace('/(app)/(enterprise)' as any);
+    } else if (role === 'DELIVER') {
+      // Show message that delivery role is not supported in this app
+      console.log('🚚 DELIVER role detected - this app only supports CLIENT and ENTERPRISE roles');
+      // Stay on auth page - don't redirect
+      return;
     } else {
+      console.warn('Unknown role:', role, '- redirecting to auth');
       router.replace('/(auth)/welcome');
     }
   },

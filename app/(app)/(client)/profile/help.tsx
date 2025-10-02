@@ -1,18 +1,26 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation, useRouter } from "expo-router";
+import React, { useLayoutEffect, useState } from "react";
 import {
-    Linking,
-    SafeAreaView,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Linking,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function HelpScreen() {
+  const navigation = useNavigation();
   const router = useRouter();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+  }, [navigation]);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Données fictives pour les FAQ
@@ -63,18 +71,27 @@ export default function HelpScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background-secondary">
-      {/* Header avec bouton retour */}
-      <View className="bg-white px-4 pt-16 pb-4 flex-row items-center">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="w-10 h-10 rounded-full bg-gray-100 justify-center items-center mr-4"
-        >
-          <Ionicons name="arrow-back" size={20} color="#374151" />
-        </TouchableOpacity>
-        <Text className="text-xl font-quicksand-bold text-neutral-800">
-          Aide et support
-        </Text>
-      </View>
+      {/* Header vert */}
+      <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="pt-16 pb-6 rounded-b-3xl shadow-md">
+        <View className="px-6">
+          <View className="flex-row items-center justify-between">
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="w-10 h-10 bg-white/20 rounded-full justify-center items-center"
+            >
+              <Ionicons name="chevron-back" size={20} color="white" />
+            </TouchableOpacity>
+            <View className="flex-1 mx-4">
+              <Text className="text-lg font-quicksand-bold text-white text-center">
+                Aide et support
+              </Text>
+            </View>
+            <View className="w-10 h-10">
+              {/* Espace pour équilibrer le layout */}
+            </View>
+          </View>
+        </View>
+      </LinearGradient>
 
       <ScrollView className="flex-1">
         {/* Barre de recherche */}
