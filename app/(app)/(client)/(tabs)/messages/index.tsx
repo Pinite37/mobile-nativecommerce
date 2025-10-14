@@ -16,12 +16,14 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { useMQTT } from "../../../../../hooks/useMQTT";
+import { useToast } from "../../../../../components/ui/ReanimatedToast/context";
+import { useSocket } from "../../../../../hooks/useSocket";
 import MessagingService, { Conversation } from "../../../../../services/api/MessagingService";
 
 export default function ClientMessagesPage() {
     const router = useRouter();
-    const { onNewMessage, onMessagesRead, offNewMessage, offMessagesRead } = useMQTT();
+    const { onNewMessage, onMessagesRead } = useSocket();
+    const { showToast } = useToast();
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -30,22 +32,112 @@ export default function ClientMessagesPage() {
     const [searching, setSearching] = useState(false);
     const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
-    const loadConversations = async () => {
+    // États pour le menu contextuel
+    const [contextMenuVisible, setContextMenuVisible] = useState(false);
+    const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+    const [contextMenuLoading, setContextMenuLoading] = useState(false);
+
+    // Fonctions helper pour les notifications
+    const notifySuccess = React.useCallback((title: string, message?: string) => {
+        try { showToast({ title, subtitle: message, autodismiss: true }); } catch {}
+    }, [showToast]);
+
+    const notifyError = React.useCallback((title: string, message?: string) => {
+        try { showToast({ title, subtitle: message, autodismiss: true }); } catch {}
+    }, [showToast]);
+
+    const notifyInfo = React.useCallback((title: string, message?: string) => {
+        try { showToast({ title, subtitle: message, autodismiss: true }); } catch {}
+    }, [showToast]);
+
+    // Fonction utilitaire pour classifier les erreurs
+    const classifyError = (error: any) => {
+        // Erreurs réseau
+        if (error.message?.includes('Network') || error.message?.includes('fetch') || error.code === 'NETWORK_ERROR') {
+            return {
+                type: 'network',
+                title: 'Problème de connexion',
+                message: 'Vérifiez votre connexion internet et réessayez.',
+                userMessage: 'Problème de connexion réseau. Vérifiez votre connexion internet.'
+            };
+        }
+
+        // Erreurs de serveur (5xx)
+        if (error.status >= 500 || error.message?.includes('Server') || error.message?.includes('500')) {
+            return {
+                type: 'server',
+                title: 'Erreur serveur',
+                message: 'Le serveur rencontre des difficultés. Veuillez réessayer plus tard.',
+                userMessage: 'Service temporairement indisponible. Réessayez dans quelques instants.'
+            };
+        }
+
+        // Erreurs d'authentification (401, 403)
+        if (error.status === 401 || error.status === 403 || error.message?.includes('Unauthorized') || error.message?.includes('Forbidden')) {
+            return {
+                type: 'auth',
+                title: 'Authentification requise',
+                message: 'Votre session a expiré. Veuillez vous reconnecter.',
+                userMessage: 'Session expirée. Veuillez vous reconnecter.'
+            };
+        }
+
+        // Erreurs de validation (400)
+        if (error.status === 400 || error.message?.includes('Validation') || error.message?.includes('Bad Request')) {
+            return {
+                type: 'validation',
+                title: 'Données invalides',
+                message: 'Les informations fournies ne sont pas valides.',
+                userMessage: 'Informations invalides. Vérifiez vos données.'
+            };
+        }
+
+        // Erreurs de ressource non trouvée (404)
+        if (error.status === 404 || error.message?.includes('Not Found')) {
+            return {
+                type: 'not_found',
+                title: 'Ressource introuvable',
+                message: 'L\'élément demandé n\'existe pas ou a été supprimé.',
+                userMessage: 'Élément introuvable ou supprimé.'
+            };
+        }
+
+        // Erreur par défaut
+        return {
+            type: 'unknown',
+            title: 'Erreur',
+            message: error.message || 'Une erreur inattendue s\'est produite.',
+            userMessage: 'Une erreur inattendue s\'est produite. Veuillez réessayer.'
+        };
+    };
+
+    const loadConversations = useCallback(async () => {
         try {
             setLoading(true);
             const conversationsData = await MessagingService.getUserConversations();
             console.log('Raw conversationsData:', JSON.stringify(conversationsData, null, 2)); // Debug API response
             setConversations(conversationsData || []);
             console.log("✅ Conversations chargées:", (conversationsData || []).length);
-        } catch (error) {
+        } catch (error: any) {
             console.error('❌ Erreur chargement conversations:', error);
             setConversations([]);
+            
+            // Classifier l'erreur et notifier l'utilisateur
+            const errorInfo = classifyError(error);
+            notifyError(errorInfo.title, errorInfo.message);
+            
+            // Pour les erreurs d'authentification, rediriger vers la connexion
+            if (errorInfo.type === 'auth') {
+                setTimeout(() => {
+                    router.replace('/(auth)/welcome');
+                }, 2000);
+            }
         } finally {
             setLoading(false);
         }
-    };
+    }, [notifyError, router]);
 
-    const handleSearch = async (query: string) => {
+    const handleSearch = useCallback(async (query: string) => {
         setSearchQuery(query);
 
         if (query.trim().length < 2) {
@@ -56,20 +148,96 @@ export default function ClientMessagesPage() {
 
         try {
             setSearching(true);
-            const results = await MessagingService.searchConversations(query.trim());
-            setSearchResults(results || []);
+            // Rechercher dans les conversations locales (déjà filtrées)
+            const lowerQuery = query.trim().toLowerCase();
+            const filtered = conversations.filter(conv => {
+                // Rechercher dans le nom du participant
+                const otherParticipant = conv.otherParticipant || 
+                    conv.participants?.find(p => (p as any)?._id !== (conv as any)?.userId);
+                const participantName = otherParticipant 
+                    ? `${otherParticipant.firstName} ${otherParticipant.lastName}`.toLowerCase()
+                    : '';
+                
+                // Rechercher dans le nom du produit
+                const productName = (conv.product?.name || '').toLowerCase();
+                
+                // Rechercher dans le dernier message
+                const lastMessageText = (conv.lastMessage?.text || '').toLowerCase();
+                
+                return participantName.includes(lowerQuery) || 
+                       productName.includes(lowerQuery) || 
+                       lastMessageText.includes(lowerQuery);
+            });
+            setSearchResults(filtered);
         } catch (error) {
             console.error('❌ Erreur recherche conversations:', error);
             setSearchResults([]);
+            // Pour les erreurs de recherche, on affiche un message discret
+            notifyInfo('Erreur de recherche', 'Impossible de filtrer les conversations pour le moment.');
         } finally {
             setSearching(false);
         }
-    };
+    }, [conversations, notifyInfo]);
 
     const onRefresh = async () => {
         setRefreshing(true);
         await loadConversations();
         setRefreshing(false);
+    };
+
+    // Gestion du menu contextuel
+    const handleLongPress = (conversation: Conversation) => {
+        console.log('🔵 Long press sur conversation:', conversation._id);
+        setSelectedConversation(conversation);
+        setContextMenuVisible(true);
+    };
+
+    const handleArchiveConversation = () => {
+        console.log('📁 Archive conversation (pas encore implémenté):', selectedConversation?._id);
+        setContextMenuVisible(false);
+        setSelectedConversation(null);
+        // TODO: Implémenter l'archivage plus tard
+    };
+
+    const handleDeleteConversation = useCallback(async () => {
+        if (!selectedConversation) return;
+
+        console.log('🗑️ Suppression conversation:', selectedConversation._id);
+        setContextMenuLoading(true);
+
+        try {
+            await MessagingService.deleteConversation(selectedConversation._id);
+
+            // Retirer la conversation de la liste localement
+            setConversations(prev => prev.filter(conv => conv._id !== selectedConversation._id));
+            setSearchResults(prev => prev.filter(conv => conv._id !== selectedConversation._id));
+
+            console.log('✅ Conversation supprimée avec succès');
+            notifySuccess('Conversation supprimée', 'La conversation a été supprimée avec succès.');
+            setContextMenuVisible(false);
+            setSelectedConversation(null);
+
+        } catch (error: any) {
+            console.error('❌ Erreur suppression conversation:', error);
+            
+            // Classifier l'erreur et notifier l'utilisateur
+            const errorInfo = classifyError(error);
+            notifyError(errorInfo.title, errorInfo.message);
+            
+            // Pour les erreurs d'authentification, rediriger vers la connexion
+            if (errorInfo.type === 'auth') {
+                setTimeout(() => {
+                    router.replace('/(auth)/welcome');
+                }, 2000);
+            }
+        } finally {
+            setContextMenuLoading(false);
+        }
+    }, [selectedConversation, notifySuccess, notifyError, router]);
+
+    const closeContextMenu = () => {
+        setContextMenuVisible(false);
+        setSelectedConversation(null);
     };
 
     const formatPrice = (price: number) => {
@@ -80,14 +248,17 @@ export default function ClientMessagesPage() {
     useFocusEffect(
         useCallback(() => {
             loadConversations();
-        }, [])
+        }, [loadConversations])
     );
 
-    // Abonnements MQTT pour mise à jour temps réel (aligné sur enterprise)
+    // Abonnements Socket.IO pour mise à jour temps réel
     useEffect(() => {
-        const handleNewMessageNotification = (data: any) => {
+        const cleanupNewMessage = onNewMessage((data: any) => {
             try {
-                if (!data?.conversation || !data?.message) return;
+                if (!data?.conversation || !data?.message) {
+                    console.warn('⚠️ Socket.IO new_message: données invalides', data);
+                    return;
+                }
                 setConversations(prev => prev.map(conv => {
                     if (conv._id === data.conversation._id) {
                         return {
@@ -111,13 +282,17 @@ export default function ClientMessagesPage() {
                     return conv;
                 }));
             } catch (e) {
-                console.warn('⚠️ MQTT client messages new_message handler error:', e);
+                console.error('❌ Erreur critique Socket.IO new_message:', e);
+                notifyError('Erreur de synchronisation', 'Impossible de mettre à jour les messages. Rechargez la page.');
             }
-        };
+        });
 
-        const handleMessagesRead = (data: any) => {
+        const cleanupMessagesRead = onMessagesRead((data: any) => {
             try {
-                if (!data?.conversationId) return;
+                if (!data?.conversationId) {
+                    console.warn('⚠️ Socket.IO messages_read: conversationId manquant', data);
+                    return;
+                }
                 setConversations(prev => prev.map(conv => {
                     if (conv._id === data.conversationId) {
                         return {
@@ -137,17 +312,16 @@ export default function ClientMessagesPage() {
                     return conv;
                 }));
             } catch (e) {
-                console.warn('⚠️ MQTT client messages messages_read handler error:', e);
+                console.error('❌ Erreur critique Socket.IO messages_read:', e);
+                notifyError('Erreur de synchronisation', 'Impossible de mettre à jour le statut de lecture.');
             }
-        };
+        });
 
-        onNewMessage(handleNewMessageNotification);
-        onMessagesRead(handleMessagesRead);
         return () => {
-            offNewMessage(handleNewMessageNotification);
-            offMessagesRead(handleMessagesRead);
+            cleanupNewMessage();
+            cleanupMessagesRead();
         };
-    }, [onNewMessage, onMessagesRead, offNewMessage, offMessagesRead]);
+    }, [onNewMessage, onMessagesRead, notifyError]);
 
     // Composant pour une conversation
     function ConversationCard({ conversation }: { conversation: Conversation }) {
@@ -241,6 +415,8 @@ export default function ClientMessagesPage() {
                     console.log('Navigating to conversation:', conversation._id); // Debug navigation
                     router.push(`/(app)/(client)/conversation/${conversation._id}`);
                 }}
+                onLongPress={() => handleLongPress(conversation)}
+                delayLongPress={500}
             >
                 <View className="flex-row items-center">
                     {/* Photo de profil */}
@@ -564,6 +740,93 @@ export default function ClientMessagesPage() {
                     paddingBottom: 32,
                 }}
             />
+
+            {/* Menu contextuel pour les conversations */}
+            {contextMenuVisible && selectedConversation && (
+                <View 
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 9999,
+                    }}
+                >
+                    <TouchableOpacity 
+                        activeOpacity={1}
+                        onPress={closeContextMenu}
+                        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                    />
+
+                    <View 
+                        style={{
+                            backgroundColor: 'white',
+                            borderRadius: 16,
+                            padding: 8,
+                            margin: 20,
+                            minWidth: 200,
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.25,
+                            shadowRadius: 4,
+                            elevation: 5,
+                        }}
+                    >
+                        {/* Titre */}
+                        <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
+                            <Text className="text-base font-quicksand-semibold text-neutral-800">
+                                Actions
+                            </Text>
+                        </View>
+
+                        <View style={{ height: 1, backgroundColor: '#E5E7EB' }} />
+
+                        {/* Option Archiver */}
+                        <TouchableOpacity
+                            onPress={handleArchiveConversation}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                paddingHorizontal: 16,
+                                paddingVertical: 14,
+                            }}
+                            disabled={contextMenuLoading}
+                        >
+                            <Ionicons name="archive-outline" size={20} color="#6B7280" style={{ marginRight: 12 }} />
+                            <Text className="text-base font-quicksand-medium text-neutral-600">
+                                Archiver
+                            </Text>
+                        </TouchableOpacity>
+
+                        <View style={{ height: 1, backgroundColor: '#E5E7EB' }} />
+
+                        {/* Option Supprimer */}
+                        <TouchableOpacity
+                            onPress={handleDeleteConversation}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                paddingHorizontal: 16,
+                                paddingVertical: 14,
+                            }}
+                            disabled={contextMenuLoading}
+                        >
+                            {contextMenuLoading ? (
+                                <ActivityIndicator size="small" color="#EF4444" style={{ marginRight: 12 }} />
+                            ) : (
+                                <Ionicons name="trash-outline" size={20} color="#EF4444" style={{ marginRight: 12 }} />
+                            )}
+                            <Text className={`text-base font-quicksand-medium ${contextMenuLoading ? 'text-neutral-400' : 'text-red-500'}`}>
+                                {contextMenuLoading ? 'Suppression...' : 'Supprimer'}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            )}
         </SafeAreaView>
     );
 }

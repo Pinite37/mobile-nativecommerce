@@ -5,8 +5,9 @@ import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
+  Animated,
   Dimensions,
+  Easing,
   FlatList,
   Image,
   Modal,
@@ -17,7 +18,7 @@ import {
   Share,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -27,6 +28,195 @@ import ProductService from "../../../../../services/api/ProductService";
 import { Product } from "../../../../../types/product";
 
 const { width: screenWidth } = Dimensions.get('window');
+
+// Skeleton Loader Component
+const ShimmerBlock = ({ style }: { style?: any }) => {
+  const shimmer = React.useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.timing(shimmer, {
+        toValue: 1,
+        duration: 1200,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [shimmer]);
+  const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
+  return (
+    <View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
+      <Animated.View style={{
+        position: 'absolute', top: 0, bottom: 0, width: 120,
+        transform: [{ translateX }],
+        backgroundColor: 'rgba(255,255,255,0.35)',
+        opacity: 0.7,
+      }} />
+    </View>
+  );
+};
+
+const SkeletonProduct = () => (
+  <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+    <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
+    
+    {/* Header Skeleton */}
+    <LinearGradient
+      colors={['rgba(0,0,0,0.6)', 'transparent']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      className="absolute top-0 left-0 right-0 z-10"
+      style={{ paddingTop: Platform.OS === 'ios' ? 50 : 30 }}
+    >
+      <View className="flex-row items-center justify-between px-4 pb-3">
+        <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
+        <ShimmerBlock style={{ width: 120, height: 16, borderRadius: 8 }} />
+        <View className="flex-row">
+          <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20, marginRight: 8 }} />
+          <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
+        </View>
+      </View>
+    </LinearGradient>
+
+    <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      {/* Image Skeleton */}
+      <View style={{ marginTop: Platform.OS === 'ios' ? 100 : 80 }}>
+        <ShimmerBlock style={{ width: '100%', height: 350 }} />
+        
+        {/* Indicators Skeleton */}
+        <View className="absolute bottom-4 left-0 right-0 flex-row justify-center">
+          {[1, 2, 3].map((i) => (
+            <ShimmerBlock key={i} style={{ width: 8, height: 8, borderRadius: 4, marginHorizontal: 4 }} />
+          ))}
+        </View>
+        
+        {/* Counter Skeleton */}
+        <View className="absolute top-3 right-3">
+          <ShimmerBlock style={{ width: 60, height: 24, borderRadius: 12 }} />
+        </View>
+      </View>
+
+      {/* Thumbnails Skeleton */}
+      <View className="px-6 mt-3">
+        <View className="flex-row">
+          {[1, 2, 3, 4].map((i) => (
+            <ShimmerBlock key={i} style={{ width: 64, height: 64, borderRadius: 12, marginRight: 12 }} />
+          ))}
+        </View>
+      </View>
+
+      {/* Product Info Skeleton */}
+      <View className="px-6 py-6">
+        {/* Price and Name */}
+        <View className="mb-4">
+          <ShimmerBlock style={{ width: '30%', height: 32, borderRadius: 16, marginBottom: 12 }} />
+          <ShimmerBlock style={{ width: '80%', height: 28, borderRadius: 14, marginBottom: 8 }} />
+          <ShimmerBlock style={{ width: '100%', height: 16, borderRadius: 8, marginBottom: 4 }} />
+          <ShimmerBlock style={{ width: '60%', height: 16, borderRadius: 8 }} />
+        </View>
+
+        {/* Status Button Skeleton */}
+        <View className="mb-6">
+          <ShimmerBlock style={{ width: 80, height: 32, borderRadius: 16, alignSelf: 'flex-start' }} />
+        </View>
+
+        {/* Informations Section Skeleton */}
+        <View className="mb-6">
+          <View className="flex-row items-center mb-4">
+            <ShimmerBlock style={{ width: 6, height: 24, borderRadius: 3, marginRight: 12 }} />
+            <ShimmerBlock style={{ width: '30%', height: 24, borderRadius: 12 }} />
+          </View>
+          
+          <View className="bg-gradient-to-br from-primary-50 to-white border border-primary-100 rounded-3xl p-5 mb-4">
+            <View className="flex-row items-center mb-4">
+              <ShimmerBlock style={{ width: 48, height: 48, borderRadius: 24, marginRight: 16 }} />
+              <View className="flex-1">
+                <ShimmerBlock style={{ width: '60%', height: 20, borderRadius: 10, marginBottom: 8 }} />
+                <ShimmerBlock style={{ width: '40%', height: 16, borderRadius: 8 }} />
+              </View>
+              <ShimmerBlock style={{ width: 60, height: 24, borderRadius: 12 }} />
+            </View>
+            
+            <View className="border-t border-primary-100 pt-4">
+              <View className="flex-row flex-wrap -mx-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <View key={i} className="w-1/2 px-2 mb-3">
+                    <View className="flex-row items-center">
+                      <ShimmerBlock style={{ width: 16, height: 16, borderRadius: 8, marginRight: 8 }} />
+                      <ShimmerBlock style={{ width: '60%', height: 12, borderRadius: 6 }} />
+                    </View>
+                    <ShimmerBlock style={{ width: '80%', height: 14, borderRadius: 7, marginTop: 4 }} />
+                  </View>
+                ))}
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Specifications Skeleton */}
+        <View className="mb-6">
+          <View className="flex-row items-center mb-4">
+            <ShimmerBlock style={{ width: 6, height: 24, borderRadius: 3, marginRight: 12 }} />
+            <ShimmerBlock style={{ width: '35%', height: 24, borderRadius: 12 }} />
+          </View>
+          
+          <View className="bg-white border border-neutral-200 rounded-3xl overflow-hidden">
+            {[1, 2, 3].map((i) => (
+              <View 
+                key={i} 
+                className={`flex-row items-center py-4 px-5 ${i !== 3 ? 'border-b border-neutral-100' : ''}`}
+              >
+                <ShimmerBlock style={{ width: 8, height: 8, borderRadius: 4, marginRight: 12 }} />
+                <ShimmerBlock style={{ width: '40%', height: 16, borderRadius: 8, marginRight: 16 }} />
+                <ShimmerBlock style={{ width: '30%', height: 16, borderRadius: 8 }} />
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Enterprise Section Skeleton */}
+        <View className="px-6 mb-6">
+          <View className="flex-row items-center mb-4">
+            <ShimmerBlock style={{ width: 6, height: 24, borderRadius: 3, marginRight: 12 }} />
+            <ShimmerBlock style={{ width: '40%', height: 24, borderRadius: 12 }} />
+          </View>
+          
+          <View className="bg-gradient-to-br from-amber-50 to-white border border-amber-100 rounded-3xl p-5">
+            <View className="flex-row items-center mb-5">
+              <ShimmerBlock style={{ width: 64, height: 64, borderRadius: 16, marginRight: 16 }} />
+              <View className="flex-1">
+                <ShimmerBlock style={{ width: '70%', height: 20, borderRadius: 10, marginBottom: 8 }} />
+                <ShimmerBlock style={{ width: '50%', height: 16, borderRadius: 8 }} />
+              </View>
+            </View>
+
+            <View className="space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <View key={i} className="flex-row items-center py-3">
+                  <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 12, marginRight: 12 }} />
+                  <View className="flex-1">
+                    <ShimmerBlock style={{ width: '30%', height: 12, borderRadius: 6, marginBottom: 6 }} />
+                    <ShimmerBlock style={{ width: '60%', height: 14, borderRadius: 7 }} />
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        </View>
+      </View>
+    </ScrollView>
+
+    {/* Bottom Actions Skeleton */}
+    <View className="bg-white px-6 py-4 border-t border-neutral-100">
+      <View className="flex-row space-x-3">
+        <ShimmerBlock style={{ width: '40%', height: 56, borderRadius: 16 }} />
+        <ShimmerBlock style={{ width: '40%', height: 56, borderRadius: 16 }} />
+        <ShimmerBlock style={{ width: 56, height: 56, borderRadius: 16 }} />
+      </View>
+    </View>
+  </SafeAreaView>
+);
 
 export default function ProductDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -207,16 +397,7 @@ export default function ProductDetails() {
 
   // États d'affichage
   if (loading) {
-    return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF', paddingTop: Platform.OS === 'android' ? 30 : 0 }}>
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#FE8C00" />
-          <Text className="mt-4 text-neutral-600 font-quicksand-medium">
-            Chargement du produit...
-          </Text>
-        </View>
-      </SafeAreaView>
-    );
+    return <SkeletonProduct />;
   }
 
   if (error || !product) {
@@ -436,183 +617,196 @@ export default function ProductDetails() {
             )}
           </View>
 
-          {/* Performance */}
-          <View className="mb-6">
-            <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3">Performance</Text>
-            <View className="flex-row flex-wrap -mx-1">
-              <View className="w-1/2 px-1 mb-2">
-                <View className="bg-neutral-50 rounded-2xl p-4">
-                  <Text className="text-xs text-neutral-500 font-quicksand-regular mb-1">Vues</Text>
-                  <Text className="text-lg font-quicksand-bold text-neutral-800">
-                    {product.stats?.views?.toLocaleString('fr-FR') || '0'}
+          {/* Informations du produit - Temporairement commenté pour debug */}
+          {/* <View className="mb-6">
+            <View className="flex-row items-center mb-4">
+              <View className="w-1 h-6 bg-primary-500 rounded-full mr-3" />
+              <Text className="text-xl font-quicksand-bold text-neutral-800">Informations</Text>
+            </View>
+            
+            <View className="bg-gradient-to-br from-primary-50 to-white border border-primary-100 rounded-3xl p-5 mb-4">
+              <View className="flex-row items-center mb-4">
+                <View className="w-12 h-12 bg-primary-500 rounded-2xl items-center justify-center mr-4">
+                  <Ionicons name="cube-outline" size={24} color="#FFFFFF" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-xs font-quicksand-medium text-neutral-500 mb-1">Stock disponible</Text>
+                  <Text className="text-2xl font-quicksand-bold text-neutral-800">
+                    {String(product.stock || 0)} <Text className="text-base font-quicksand-semibold text-neutral-500">unités</Text>
+                  </Text>
+                </View>
+                <View className={`px-3 py-1 rounded-full ${product.stock > 10 ? 'bg-success-100' : product.stock > 0 ? 'bg-warning-100' : 'bg-error-100'}`}>
+                  <Text className={`text-xs font-quicksand-bold ${product.stock > 10 ? 'text-success-700' : product.stock > 0 ? 'text-warning-700' : 'text-error-700'}`}>
+                    {product.stock > 10 ? 'En stock' : product.stock > 0 ? 'Stock faible' : 'Épuisé'}
                   </Text>
                 </View>
               </View>
-              <View className="w-1/2 px-1 mb-2">
-                <View className="bg-neutral-50 rounded-2xl p-4">
-                  <Text className="text-xs text-neutral-500 font-quicksand-regular mb-1">Chiffre d&apos;affaires</Text>
-                  <Text className="text-lg font-quicksand-bold text-primary-600">
-                    {product.stats?.totalSales ? formatPrice(product.stats.totalSales) : '0 FCFA'}
-                  </Text>
-                </View>
-              </View>
-              <View className="w-1/2 px-1 mb-2">
-                <View className="bg-neutral-50 rounded-2xl p-4">
-                  <Text className="text-xs text-neutral-500 font-quicksand-regular mb-1">Note moyenne</Text>
-                  <View className="flex-row items-center">
-                    <Ionicons name="star" size={14} color="#F59E0B" />
-                    <Text className="ml-1 font-quicksand-bold text-neutral-800">
-                      {product.stats?.averageRating?.toFixed(1) || '0.0'}
-                    </Text>
+              
+              <View className="border-t border-primary-100 pt-4">
+                <View className="flex-row flex-wrap -mx-2">
+                  {typeof product.category === 'object' && product.category?.name && (
+                    <View className="w-1/2 px-2 mb-3">
+                      <View className="flex-row items-center">
+                        <Ionicons name="pricetag" size={16} color="#FE8C00" />
+                        <Text className="ml-2 text-xs font-quicksand-medium text-neutral-500">Catégorie</Text>
+                      </View>
+                      <Text className="mt-1 text-sm font-quicksand-semibold text-neutral-800">{String(product.category.name)}</Text>
+                    </View>
+                  )}
+                  
+                  {product.weight && (
+                    <View className="w-1/2 px-2 mb-3">
+                      <View className="flex-row items-center">
+                        <Ionicons name="barbell" size={16} color="#FE8C00" />
+                        <Text className="ml-2 text-xs font-quicksand-medium text-neutral-500">Poids</Text>
+                      </View>
+                      <Text className="mt-1 text-sm font-quicksand-semibold text-neutral-800">{`${product.weight} kg`}</Text>
+                    </View>
+                  )}
+                  
+                  <View className="w-1/2 px-2 mb-3">
+                    <View className="flex-row items-center">
+                      <Ionicons name="calendar" size={16} color="#FE8C00" />
+                      <Text className="ml-2 text-xs font-quicksand-medium text-neutral-500">Créé le</Text>
+                    </View>
+                    <Text className="mt-1 text-sm font-quicksand-semibold text-neutral-800">{formatDate(product.createdAt)}</Text>
+                  </View>
+                  
+                  <View className="w-1/2 px-2 mb-3">
+                    <View className="flex-row items-center">
+                      <Ionicons name="sync" size={16} color="#FE8C00" />
+                      <Text className="ml-2 text-xs font-quicksand-medium text-neutral-500">Mis à jour</Text>
+                    </View>
+                    <Text className="mt-1 text-sm font-quicksand-semibold text-neutral-800">{formatDate(product.updatedAt)}</Text>
                   </View>
                 </View>
               </View>
-              <View className="w-1/2 px-1 mb-2">
-                <View className="bg-neutral-50 rounded-2xl p-4">
-                  <Text className="text-xs text-neutral-500 font-quicksand-regular mb-1">Avis</Text>
-                  <Text className="text-lg font-quicksand-bold text-neutral-800">
-                    {product.stats?.totalReviews || '0'}
-                  </Text>
-                </View>
-              </View>
             </View>
-          </View>
+          </View> */}
 
-          {/* Détails techniques */}
+          {/* Spécifications techniques */}
+          {product.specifications && product.specifications.length > 0 && (
             <View className="mb-6">
-              <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3">Détails</Text>
-              <View className="flex-row flex-wrap -mx-1">
-                <View className="w-1/2 px-1 mb-3">
-                  <View className="bg-neutral-50 rounded-2xl p-4">
-                    <Text className="text-xs text-neutral-500 font-quicksand-regular mb-1">Stock</Text>
-                    <Text className="text-base font-quicksand-bold text-neutral-800">{product.stock} unités</Text>
-                  </View>
-                </View>
-                {typeof product.category === 'object' && (
-                  <View className="w-1/2 px-1 mb-3">
-                    <View className="bg-neutral-50 rounded-2xl p-4">
-                      <Text className="text-xs text-neutral-500 font-quicksand-regular mb-1">Catégorie</Text>
-                      <Text className="text-base font-quicksand-bold text-neutral-800">{product.category.name}</Text>
-                    </View>
-                  </View>
-                )}
-                {product.weight && (
-                  <View className="w-1/2 px-1 mb-3">
-                    <View className="bg-neutral-50 rounded-2xl p-4">
-                      <Text className="text-xs text-neutral-500 font-quicksand-regular mb-1">Poids</Text>
-                      <Text className="text-base font-quicksand-bold text-neutral-800">{product.weight} kg</Text>
-                    </View>
-                  </View>
-                )}
-                <View className="w-1/2 px-1 mb-3">
-                  <View className="bg-neutral-50 rounded-2xl p-4">
-                    <Text className="text-xs text-neutral-500 font-quicksand-regular mb-1">Créé le</Text>
-                    <Text className="text-base font-quicksand-bold text-neutral-800">{formatDate(product.createdAt)}</Text>
-                  </View>
-                </View>
-                <View className="w-1/2 px-1 mb-3">
-                  <View className="bg-neutral-50 rounded-2xl p-4">
-                    <Text className="text-xs text-neutral-500 font-quicksand-regular mb-1">Mise à jour</Text>
-                    <Text className="text-base font-quicksand-bold text-neutral-800">{formatDate(product.updatedAt)}</Text>
-                  </View>
-                </View>
+              <View className="flex-row items-center mb-4">
+                <View className="w-1 h-6 bg-primary-500 rounded-full mr-3" />
+                <Text className="text-xl font-quicksand-bold text-neutral-800">Spécifications</Text>
               </View>
-            </View>
-
-            {/* Spécifications techniques */}
-            {product.specifications && product.specifications.length > 0 && (
-              <View className="mb-6">
-                <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3">Spécifications</Text>
+              
+              <View className="bg-white border border-neutral-200 rounded-3xl overflow-hidden">
                 {product.specifications.map((spec: any, index: number) => (
-                  <View key={index} className="flex-row justify-between py-3 border-b border-neutral-100">
-                    <Text className="text-neutral-500 font-quicksand-regular flex-1 mr-4">{spec.key}</Text>
-                    <Text className="text-neutral-700 font-quicksand-medium flex-1 text-right">{spec.value}</Text>
+                  <View 
+                    key={index} 
+                    className={`flex-row items-center py-4 px-5 ${index !== product.specifications.length - 1 ? 'border-b border-neutral-100' : ''}`}
+                  >
+                    <View className="w-2 h-2 bg-primary-500 rounded-full mr-3" />
+                    <Text className="flex-1 font-quicksand-semibold text-neutral-600">{String(spec.key)}</Text>
+                    <Text className="font-quicksand-bold text-neutral-800">{String(spec.value)}</Text>
                   </View>
                 ))}
               </View>
-            )}
+            </View>
+          )}
         </View>
 
         {/* Informations sur l'entreprise */}
-        <View className="bg-white mt-2 p-4 shadow-sm">
-          <Text className="text-neutral-800 text-lg font-quicksand-bold mb-3">
-            Informations sur votre entreprise
-          </Text>
+        <View className="px-6 mb-6">
+          <View className="flex-row items-center mb-4">
+            <View className="w-1 h-6 bg-primary-500 rounded-full mr-3" />
+            <Text className="text-xl font-quicksand-bold text-neutral-800">Votre Entreprise</Text>
+          </View>
           
-          <View className="bg-neutral-50 rounded-lg p-4">
-            <View className="flex-row items-center mb-3">
+          <View className="bg-gradient-to-br from-amber-50 to-white border border-amber-100 rounded-3xl p-5">
+            <View className="flex-row items-center mb-5">
               {typeof product.enterprise === 'object' && product.enterprise.logo ? (
                 <Image 
                   source={{ uri: product.enterprise.logo }}
-                  className="w-14 h-14 rounded-full mr-3"
+                  className="w-16 h-16 rounded-2xl mr-4"
+                  style={{ borderWidth: 2, borderColor: '#FE8C00' }}
                 />
               ) : (
-                <View className="w-14 h-14 rounded-full bg-primary-500 items-center justify-center mr-3">
-                  <Text className="text-white font-quicksand-bold text-lg">
+                <View className="w-16 h-16 rounded-2xl bg-primary-500 items-center justify-center mr-4" style={{ borderWidth: 2, borderColor: '#FE8C00' }}>
+                  <Text className="text-white font-quicksand-bold text-2xl">
                     {typeof product.enterprise === 'object' && product.enterprise.companyName
                       ? product.enterprise.companyName.charAt(0)
                       : "E"}
                   </Text>
                 </View>
               )}
-              <View>
-                <Text className="text-neutral-800 font-quicksand-bold text-base">
+              <View className="flex-1">
+                <Text className="text-neutral-800 font-quicksand-bold text-lg mb-1">
                   {typeof product.enterprise === 'object' && product.enterprise.companyName 
                     ? product.enterprise.companyName 
                     : "Votre Entreprise"}
                 </Text>
-                <View className="flex-row items-center mt-1">
-                  <Ionicons name="shield-checkmark-outline" size={14} color="#64748B" />
-                  <Text className="text-neutral-600 font-quicksand-medium ml-1 text-sm">
-                    {typeof product.enterprise === 'object' && product.enterprise.isActive ? 'Active' : 'Inactive'}
+                <View className={`flex-row items-center px-3 py-1 rounded-full self-start ${typeof product.enterprise === 'object' && product.enterprise.isActive ? 'bg-success-100' : 'bg-neutral-100'}`}>
+                  <Ionicons name="shield-checkmark" size={14} color={typeof product.enterprise === 'object' && product.enterprise.isActive ? '#10B981' : '#64748B'} />
+                  <Text className={`font-quicksand-bold ml-1 text-xs ${typeof product.enterprise === 'object' && product.enterprise.isActive ? 'text-success-700' : 'text-neutral-600'}`}>
+                    {typeof product.enterprise === 'object' && product.enterprise.isActive ? 'Entreprise active' : 'Inactive'}
                   </Text>
                 </View>
               </View>
             </View>
 
             {/* Statistiques de l'entreprise */}
-            <View className="mt-3 mb-3">
-              <View className="flex-row justify-between py-2 border-b border-neutral-100">
-                <Text className="text-neutral-500 font-quicksand-regular">Localisation</Text>
-                <Text className="text-neutral-700 font-quicksand-medium">
-                  {typeof product.enterprise === 'object' && product.enterprise.location 
-                    ? `${product.enterprise.location.district}, ${product.enterprise.location.city}` 
-                    : "Non spécifiée"}
-                </Text>
+            <View className="space-y-3">
+              <View className="flex-row items-center py-3">
+                <View className="w-10 h-10 bg-amber-100 rounded-xl items-center justify-center mr-3">
+                  <Ionicons name="location" size={18} color="#F59E0B" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-xs font-quicksand-medium text-neutral-500 mb-1">Localisation</Text>
+                  <Text className="text-sm font-quicksand-bold text-neutral-800">
+                    {typeof product.enterprise === 'object' && product.enterprise.location 
+                      ? `${product.enterprise.location.district}, ${product.enterprise.location.city}` 
+                      : "Non spécifiée"}
+                  </Text>
+                </View>
               </View>
 
-              <View className="flex-row justify-between py-2 border-b border-neutral-100">
-                <Text className="text-neutral-500 font-quicksand-regular">Date d&apos;inscription</Text>
-                <Text className="text-neutral-700 font-quicksand-medium">
-                  {(() => {
-                    if (typeof product.enterprise === 'object') {
-                      const dateToFormat = product.enterprise.createdAt || product.enterprise.lastActiveDate;
-                      if (dateToFormat) {
-                        const dateString = typeof dateToFormat === 'string' ? dateToFormat : dateToFormat.toISOString();
-                        return formatDate(dateString);
+              <View className="flex-row items-center py-3">
+                <View className="w-10 h-10 bg-blue-100 rounded-xl items-center justify-center mr-3">
+                  <Ionicons name="calendar" size={18} color="#3B82F6" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-xs font-quicksand-medium text-neutral-500 mb-1">Membre depuis</Text>
+                  <Text className="text-sm font-quicksand-bold text-neutral-800">
+                    {(() => {
+                      if (typeof product.enterprise === 'object') {
+                        const dateToFormat = product.enterprise.createdAt || product.enterprise.lastActiveDate;
+                        if (dateToFormat) {
+                          const dateString = typeof dateToFormat === 'string' ? dateToFormat : dateToFormat.toISOString();
+                          return formatDate(dateString);
+                        }
                       }
-                    }
-                    return "Non disponible";
-                  })()}
-                </Text>
+                      return "Non disponible";
+                    })()}
+                  </Text>
+                </View>
               </View>
               
-              <View className="flex-row justify-between py-2 border-b border-neutral-100">
-                <Text className="text-neutral-500 font-quicksand-regular">Commandes totales</Text>
-                <Text className="text-neutral-700 font-quicksand-medium">
-                  {typeof product.enterprise === 'object' && product.enterprise.stats?.totalOrders 
-                    ? product.enterprise.stats.totalOrders 
-                    : "0"}
-                </Text>
+              <View className="flex-row items-center py-3">
+                <View className="w-10 h-10 bg-green-100 rounded-xl items-center justify-center mr-3">
+                  <Ionicons name="cart" size={18} color="#10B981" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-xs font-quicksand-medium text-neutral-500 mb-1">Commandes traitées</Text>
+                  <Text className="text-sm font-quicksand-bold text-neutral-800">
+                    {typeof product.enterprise === 'object' && product.enterprise.stats?.totalOrders 
+                      ? `${String(product.enterprise.stats.totalOrders)} commandes` 
+                      : "Aucune commande"}
+                  </Text>
+                </View>
               </View>
 
-              <View className="flex-row justify-between py-2">
-                <Text className="text-neutral-500 font-quicksand-regular">Note entreprise</Text>
-                <View className="flex-row items-center">
-                  <Ionicons name="star" size={16} color="#F59E0B" />
-                  <Text className="text-neutral-700 font-quicksand-medium ml-1">
+              <View className="flex-row items-center py-3">
+                <View className="w-10 h-10 bg-yellow-100 rounded-xl items-center justify-center mr-3">
+                  <Ionicons name="star" size={18} color="#F59E0B" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-xs font-quicksand-medium text-neutral-500 mb-1">Note moyenne</Text>
+                  <Text className="text-sm font-quicksand-bold text-neutral-800">
                     {typeof product.enterprise === 'object' && product.enterprise.stats?.averageRating 
-                      ? `${product.enterprise.stats?.averageRating?.toFixed(1)} (${product.enterprise.stats?.totalReviews || 0} avis)` 
+                      ? `${product.enterprise.stats?.averageRating?.toFixed(1)} ⭐ (${product.enterprise.stats?.totalReviews ? String(product.enterprise.stats.totalReviews) : '0'} avis)` 
                       : "Non évalué"}
                   </Text>
                 </View>
@@ -641,7 +835,7 @@ export default function ProductDetails() {
                 <Ionicons name="close" size={20} color="#FFFFFF" />
               </TouchableOpacity>
               <Text className="text-white font-quicksand-medium">
-                {currentImageIndex + 1}/{product.images.length}
+                {`${currentImageIndex + 1}/${product.images.length}`}
               </Text>
               <View className="w-10" />
             </View>
@@ -676,42 +870,58 @@ export default function ProductDetails() {
       </Modal>
 
       {/* Boutons d'action fixes en bas */}
-      <View className="bg-white p-4 border-t border-neutral-200 shadow-lg">
-        <View className="flex-row">
-          <View className="flex-1 mr-2">
-            <TouchableOpacity
-              onPress={handleToggleStatus}
-              className={`${product.isActive ? 'bg-warning-500' : 'bg-success-500'} py-3 rounded-2xl flex-row items-center justify-center`}
-            >
-              <Ionicons 
-                name={product.isActive ? "power" : "checkmark-circle"} 
-                size={20} 
-                color="white"
-                style={{ marginRight: 8 }} 
-              />
-              <Text className="text-white font-quicksand-semibold">
-                {product.isActive ? 'Désactiver' : 'Activer'}
-              </Text>
-            </TouchableOpacity>
-          </View>
+      <View className="bg-white px-6 py-4 border-t border-neutral-100">
+        <View className="flex-row space-x-3">
+          <TouchableOpacity
+            onPress={handleToggleStatus}
+            className={`flex-1 py-4 rounded-2xl flex-row items-center justify-center ${product.isActive ? 'bg-warning-500' : 'bg-success-500'}`}
+            style={{ 
+              shadowColor: product.isActive ? '#F59E0B' : '#10B981',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 5
+            }}
+          >
+            <Ionicons 
+              name={product.isActive ? "power" : "checkmark-circle"} 
+              size={22} 
+              color="white"
+            />
+            <Text className="text-white font-quicksand-bold ml-2 text-base">
+              {product.isActive ? 'Désactiver' : 'Activer'}
+            </Text>
+          </TouchableOpacity>
           
-          <View className="flex-1 mr-2">
-            <TouchableOpacity
-              onPress={handleEditProduct}
-              className="bg-primary-500 py-3 rounded-2xl flex-row items-center justify-center"
-            >
-              <Ionicons name="pencil" size={18} color="white" style={{ marginRight: 8 }} />
-              <Text className="text-white font-quicksand-semibold">
-                Modifier
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            onPress={handleEditProduct}
+            className="flex-1 bg-primary-500 py-4 rounded-2xl flex-row items-center justify-center"
+            style={{ 
+              shadowColor: '#FE8C00',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 5
+            }}
+          >
+            <Ionicons name="pencil" size={20} color="white" />
+            <Text className="text-white font-quicksand-bold ml-2 text-base">
+              Modifier
+            </Text>
+          </TouchableOpacity>
           
           <TouchableOpacity
             onPress={handleDeleteProduct}
-            className="bg-error-500 py-3 px-3 rounded-2xl items-center justify-center"
+            className="bg-error-500 w-14 h-14 rounded-2xl items-center justify-center"
+            style={{ 
+              shadowColor: '#EF4444',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 5
+            }}
           >
-            <Ionicons name="trash" size={20} color="white" />
+            <Ionicons name="trash" size={22} color="white" />
           </TouchableOpacity>
         </View>
       </View>
@@ -723,27 +933,41 @@ export default function ProductDetails() {
         animationType="fade"
         onRequestClose={closeConfirmation}
       >
-        <View className="flex-1 justify-center items-center bg-black/50 px-4">
-          <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
-            <Text className="text-xl font-quicksand-bold text-neutral-800 mb-2">
-              {confirmationAction?.title}
-            </Text>
-            <Text className="text-base text-neutral-600 font-quicksand-medium mb-6">
+        <View className="flex-1 justify-center items-center bg-black/60 px-6">
+          <View className="bg-white rounded-3xl p-6 w-full max-w-sm">
+            <View className="items-center mb-4">
+              <View 
+                className="w-16 h-16 rounded-full items-center justify-center mb-3"
+                style={{ backgroundColor: confirmationAction?.confirmColor + '20' }}
+              >
+                <Ionicons 
+                  name={confirmationAction?.type === 'delete' ? 'trash' : 'power'} 
+                  size={28} 
+                  color={confirmationAction?.confirmColor} 
+                />
+              </View>
+              <Text className="text-xl font-quicksand-bold text-neutral-800 text-center">
+                {confirmationAction?.title}
+              </Text>
+            </View>
+            
+            <Text className="text-base text-neutral-600 font-quicksand-medium mb-6 text-center">
               {confirmationAction?.message}
             </Text>
+            
             <View className="flex-row space-x-3">
               <TouchableOpacity
-                className="flex-1 bg-neutral-100 rounded-xl py-3"
+                className="flex-1 bg-neutral-100 rounded-2xl py-4"
                 onPress={closeConfirmation}
               >
-                <Text className="text-neutral-700 font-quicksand-semibold text-center">Annuler</Text>
+                <Text className="text-neutral-700 font-quicksand-bold text-center text-base">Annuler</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                className="flex-1 rounded-xl py-3"
+                className="flex-1 rounded-2xl py-4"
                 style={{ backgroundColor: confirmationAction?.confirmColor }}
                 onPress={executeConfirmedAction}
               >
-                <Text className="text-white font-quicksand-semibold text-center">
+                <Text className="text-white font-quicksand-bold text-center text-base">
                   {confirmationAction?.confirmText}
                 </Text>
               </TouchableOpacity>

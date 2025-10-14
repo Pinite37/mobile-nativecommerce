@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Linking from "expo-linking";
+import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
@@ -93,6 +94,7 @@ const categories = [
 
 export default function ClientHome() {
     const { user } = useAuth();
+    const router = useRouter();
     // const { getCacheStats } = useSearchCache(); // (non utilisé pour l'instant)
 
     const navigateTo = (path: string) => {
@@ -146,7 +148,7 @@ export default function ClientHome() {
             _id: 'placeholder-1',
             title: 'Votre entreprise',
             description: 'Augmentez votre visibilité avec nos services',
-            image: 'https://via.placeholder.com/600x300/10B981/FFFFFF?text=Publicite',
+            images: ['https://via.placeholder.com/600x300/10B981/FFFFFF?text=Publicite'],
             type: 'BANNER' as any,
             targetAudience: 'CLIENTS' as any,
             startDate: new Date().toISOString(),
@@ -188,12 +190,19 @@ export default function ClientHome() {
 
     const handleAdPress = async (ad: Advertisement) => {
         try {
-            await AdvertisementService.incrementClick(ad._id).catch(() => { });
-            if ((ad as any).productId) {
-                navigateTo(`/(app)/(client)/product/${(ad as any).productId}`);
-            }
+            console.log("🖱️ Clic sur publicité:", ad._id);
+            
+            // Incrémenter le clic en arrière-plan
+            AdvertisementService.incrementClick(ad._id).catch(() => { });
+
+            console.log("🧭 Navigation vers la page de la pub...");
+            
+            // Naviguer vers la page de détails de la publicité
+            router.push(`/(app)/(client)/advertisement/${ad._id}` as any);
+            
+            console.log("✅ Navigation lancée");
         } catch (e) {
-            console.warn('⚠️ clic publicité échoué', e);
+            console.error('⚠️ Erreur clic publicité:', e);
         }
     };
 
@@ -419,9 +428,9 @@ export default function ClientHome() {
         if (hours < 12) {
             return "Bonjour";
         } else if (hours < 18) {
-            return "Bon après-midii";
+            return "Bon après-midi";
         } else {
-            return "Bonsoirrrrrrrrrrrrrrrrrrrrrrrrrrrrr";
+            return "Bonsoir";
         }
     };
 
@@ -813,7 +822,7 @@ export default function ClientHome() {
             onPress={() => navigateTo(`/(app)/(client)/enterprise/${item.id}`)}
         >
             <Image
-                source={{ uri: item.image }}
+                source={{ uri: item.images && item.images.length > 0 ? item.images[0] : "https://via.placeholder.com/150x150/CCCCCC/FFFFFF?text=No+Image" }}
                 className="w-full h-32 rounded-t-xl mb-2"
                 resizeMode="cover"
             />
@@ -835,30 +844,37 @@ export default function ClientHome() {
         </TouchableOpacity>
     );
 
-    const renderAd = ({ item }: { item: any }) => (
-        <TouchableOpacity
-            onPress={() => handleAdPress(item)}
-            activeOpacity={0.9}
-            className="rounded-2xl overflow-hidden mx-3 shadow-md bg-white"
-            style={{ width: Dimensions.get('window').width - 48 }}
-            accessibilityRole="imagebutton"
-            accessibilityLabel={item.title || 'Publicité'}
-        >
-            <Image
-                source={{ uri: item.image }}
-                className="w-full h-40"
-                resizeMode="cover"
-            />
+    const renderAd = ({ item }: { item: any }) => {
+        console.log("🎨 renderAd appelé pour:", item._id);
+        return (
+            <TouchableOpacity
+                onPress={() => {
+                    console.log("👆 TouchableOpacity onPress déclenché !");
+                    handleAdPress(item);
+                }}
+                activeOpacity={0.9}
+                className="rounded-2xl overflow-hidden mx-3 shadow-md bg-white"
+                style={{ width: Dimensions.get('window').width - 48 }}
+                accessibilityRole="imagebutton"
+                accessibilityLabel={item.title || 'Publicité'}
+            >
+                <Image
+                    source={{ uri: item.images && item.images.length > 0 ? item.images[0] : "https://via.placeholder.com/150x150/CCCCCC/FFFFFF?text=No+Image" }}
+                    className="w-full h-40"
+                    resizeMode="cover"
+                />
             <LinearGradient
                 colors={['rgba(0,0,0,0.0)','rgba(0,0,0,0.55)']}
                 start={{ x:0, y:0 }} end={{ x:0, y:1 }}
                 className="absolute inset-0 justify-end p-4"
+                pointerEvents="none"
             >
                 <Text numberOfLines={2} className="text-white font-quicksand-bold text-base mb-1">{item.title}</Text>
                 <Text numberOfLines={1} className="text-white/80 font-quicksand-medium text-xs">{new Date(item.endDate).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' })} • {item.type}</Text>
             </LinearGradient>
         </TouchableOpacity>
-    );
+        );
+    };
 
     return (
         <SafeAreaView className="flex-1 bg-background-secondary">
@@ -1293,7 +1309,10 @@ export default function ClientHome() {
                         <Text className="text-base font-quicksand-bold text-neutral-800">
                             Produits populaires
                         </Text>
-                        <TouchableOpacity className="px-3 py-1.5 rounded-full border border-primary-200 bg-white/60">
+                        <TouchableOpacity
+                          onPress={() => navigateTo('/(app)/(client)/marketplace')}
+                          className="px-3 py-1.5 rounded-full border border-primary-200 bg-white/60"
+                        >
                             <Text className="text-primary-500 text-sm font-quicksand-semibold">
                                 Voir tout
                             </Text>

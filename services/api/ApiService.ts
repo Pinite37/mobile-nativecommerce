@@ -295,6 +295,22 @@ class ApiService {
       throw this.handleError(error);
     }
   }
+
+  // Enregistrer le token Expo Push pour les notifications
+  async registerExpoPushToken(expoPushToken: string): Promise<ApiResponse<any>> {
+    try {
+      console.log('📱 Enregistrement du token Expo Push sur le backend...');
+      console.log('🔑 Token:', expoPushToken);
+
+      const response = await this.post('/push-notifications/expo-token', { expoPushToken });
+      
+      console.log('✅ Token Expo Push enregistré avec succès sur le backend');
+      return response;
+    } catch (error: any) {
+      console.error('❌ Erreur enregistrement token Expo Push:', error);
+      throw this.handleError(error);
+    }
+  }
 }
 
 export default new ApiService();

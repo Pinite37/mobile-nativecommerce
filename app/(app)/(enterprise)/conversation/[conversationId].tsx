@@ -27,7 +27,7 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import NotificationModal, { useNotification } from "../../../../components/ui/NotificationModal";
 import { useAuth } from "../../../../contexts/AuthContext";
-import { useMQTT } from "../../../../hooks/useMQTT";
+import { useSocket } from "../../../../hooks/useSocket";
 import DeliveryService, { CreateOfferPayload, UrgencyLevel } from "../../../../services/api/DeliveryService";
 import MessagingService, { Conversation, Message } from "../../../../services/api/MessagingService";
 
@@ -41,7 +41,7 @@ export default function ConversationDetails() {
   const flatListRef = useRef<FlatList>(null);
   const textInputRef = useRef<TextInput>(null);
   const { user } = useAuth(); // Récupérer l'utilisateur connecté
-  const { isConnected: mqttConnected, sendMessage: mqttSendMessage, sendMessageWithAttachment, joinConversation: mqttJoinConversation, onNewMessage, onMessageDeleted, onMessagesRead, onMessageSent, offNewMessage, offMessageDeleted, offMessagesRead, offMessageSent } = useMQTT();
+  const { isConnected, joinConversation, onNewMessage, onMessageDeleted, onMessagesRead } = useSocket();
   const { notification, showNotification, hideNotification } = useNotification();
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   
@@ -122,7 +122,7 @@ export default function ConversationDetails() {
 
   // Helper: vérifier si l'utilisateur actuel est propriétaire du produit
   const isCurrentUserProductOwner = (conv: any, currentUserId?: string | null): boolean => {
-    console.log('Vérification propriétaire produit:', { conv, currentUserId });
+    
     if (!conv?.participants || !currentUserId) return false;
 
     // Dans les conversations CLIENT_ENTERPRISE, le vendeur est toujours le second participant
@@ -280,44 +280,72 @@ export default function ConversationDetails() {
     </SafeAreaView>
   );
 
-  // Gestionnaires d'événements MQTT avec useCallback pour stabilité
+  // Gestionnaires d'événements Socket.IO avec useCallback pour stabilité
   const handleNewMessage = useCallback((data: any) => {
-    if (data.conversation._id === conversationId) {
-      console.log('💬 Nouveau message reçu via MQTT');
+    // Extraire l'ID de conversation de manière robuste (peut être un objet ou un string)
+    const receivedConvId = typeof data.conversation === 'string' ? data.conversation : data.conversation?._id;
+    
+    console.log('� ENTERPRISE WebSocket - Message reçu:', {
+      conversationId: receivedConvId,
+      currentConvId: conversationId,
+      messageId: data.message?._id,
+      sender: data.message?.sender?._id,
+      text: data.message?.text?.substring(0, 30)
+    });
+    
+    if (receivedConvId !== conversationId) {
+      console.log('⏭️ ENTERPRISE - Message ignoré (autre conversation)');
+      return;
+    }
 
-      // Vérifier si c'est un message que nous venons d'envoyer
-      const currentUserId = user?._id || null;
-      const isOurMessage = data.message.sender._id === currentUserId;
+    // Vérifier si c'est un message que nous venons d'envoyer
+    const currentUserId = user?._id || null;
+    const isOurMessage = data.message.sender._id === currentUserId;
 
+    // IMPORTANT: Ignorer nos propres messages via Socket.IO
+    // Ils sont déjà ajoutés via la réponse HTTP de sendMessage
+    if (isOurMessage) {
+      console.log('⏭️ ENTERPRISE - Message ignoré (notre propre message)');
+      return;
+    }
+
+    console.log('✅ ENTERPRISE - Ajout du message reçu');
+
+    // Ne traiter QUE les messages des AUTRES participants
+    try {
       setMessages(prev => {
-        // Éviter les doublons
-        const exists = prev.some(msg => msg._id === data.message._id);
-        if (exists) return prev;
-        return [...prev, data.message];
+        // Vérifier si le message existe déjà
+        const existingIndex = prev.findIndex(msg => msg._id === data.message._id);
+        
+        if (existingIndex !== -1) {
+          console.log('⚠️ ENTERPRISE - Message existe déjà, mise à jour');
+          const updated = [...prev];
+          updated[existingIndex] = data.message;
+          return updated;
+        }
+        
+        // Nouveau message d'un autre participant, l'ajouter
+        const newList = [...prev, data.message];
+        console.log(`📊 ENTERPRISE - Messages avant: ${prev.length}, après: ${newList.length}`);
+        return newList;
       });
 
-      // Si c'est notre message, mettre à jour le cache immédiatement
-      if (isOurMessage) {
-        console.log('📝 Notre message confirmé - mise à jour du cache');
-        const cached = conversationCache.get(conversationId!);
-        if (cached) {
-          const updatedCache = {
-            ...cached,
-            messages: [...cached.messages, data.message],
-            timestamp: Date.now()
-          };
-          conversationCache.set(conversationId!, updatedCache);
-        }
+      // Marquer comme lu puisque c'est un message d'un autre participant
+      try {
+        MessagingService.markMessagesAsRead(conversationId!);
+      } catch (e) {
+        console.warn('⚠️ markAsRead échoué:', e);
       }
 
       // Faire défiler vers le bas
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
-    }
-  }, [conversationId, user?._id]);
 
-  const handleMessageDeleted = useCallback((data: any) => {
+    } catch (error) {
+      console.error('❌ ENTERPRISE - Erreur ajout message:', error);
+    }
+  }, [conversationId, user?._id]);  const handleMessageDeleted = useCallback((data: any) => {
     if (data.conversationId === conversationId) {
       setMessages(prev => prev.filter(msg => msg._id !== data.messageId));
     }
@@ -326,56 +354,34 @@ export default function ConversationDetails() {
   const handleMessagesRead = useCallback((data: any) => {
     if (data.conversationId === conversationId) {
       // Mettre à jour le statut des messages
-      setMessages(prev => prev.map(msg => ({
-        ...msg,
-        readBy: msg.readBy ? [...msg.readBy, {
-          user: data.userId,
-          readAt: data.readAt
-        }] : [{
-          user: data.userId,
-          readAt: data.readAt
-        }]
-      })));
+      setMessages(prev => {
+        console.log(`👁️ ENTERPRISE - Mise à jour readBy, messages: ${prev.length}`);
+        return prev.map(msg => {
+          // Vérifier si ce userId est déjà dans readBy pour éviter les doublons
+          const alreadyRead = msg.readBy?.some(r => r.user === data.userId);
+          if (alreadyRead) {
+            return msg;
+          }
+          
+          return {
+            ...msg,
+            readBy: msg.readBy ? [...msg.readBy, {
+              user: data.userId,
+              readAt: data.readAt
+            }] : [{
+              user: data.userId,
+              readAt: data.readAt
+            }]
+          };
+        });
+      });
     }
   }, [conversationId]);
 
-  const handleMessageSent = useCallback((data: any) => {
-    console.log('✅ Confirmation d\'envoi reçue:', data);
-    
-    // Mettre à jour le statut du message pour indiquer qu'il a été envoyé avec succès
-    setMessages(prev => prev.map(msg => {
-      if (msg._id === data.messageId) {
-        return {
-          ...msg,
-          deliveryStatus: 'SENT' as const,
-          // On peut aussi mettre à jour d'autres propriétés si nécessaire
-        };
-      }
-      return msg;
-    }));
-    
-    // Mettre à jour le cache aussi
-    const cached = conversationCache.get(conversationId!);
-    if (cached) {
-      const updatedMessages = cached.messages.map(msg => {
-        if (msg._id === data.messageId) {
-          return {
-            ...msg,
-            deliveryStatus: 'SENT' as const,
-          };
-        }
-        return msg;
-      });
-      
-      conversationCache.set(conversationId!, {
-        ...cached,
-        messages: updatedMessages
-      });
-    }
-  }, [conversationId]);
 
   // S'assurer que le dernier message est toujours visible
   useEffect(() => {
+    console.log(`📋 ENTERPRISE - Liste messages mise à jour: ${messages.length} messages`);
     if (messages.length > 0) {
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
@@ -415,7 +421,16 @@ export default function ConversationDetails() {
     };
   }, []);
 
+  // Ref pour éviter les rechargements multiples
+  const loadedConversationRef = useRef<string | null>(null);
+
   useEffect(() => {
+    // Éviter de recharger si déjà chargé
+    if (loadedConversationRef.current === conversationId) {
+      console.log('⏭️ ENTERPRISE - Conversation déjà chargée, skip');
+      return;
+    }
+
     const loadConversationData = async () => {
       try {
         setLoading(true);
@@ -425,16 +440,20 @@ export default function ConversationDetails() {
         const now = Date.now();
         
         if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+          console.log('💾 ENTERPRISE - Utilisation du cache');
           setConversation(cached.conversation);
           setMessages(cached.messages);
           setLoading(false);
+          loadedConversationRef.current = conversationId;
           return;
         }
         
+        console.log('🔄 ENTERPRISE - Chargement depuis API');
         const data = await MessagingService.getConversationMessages(conversationId!);
-        console.log('📬 Messages rechargés:', data.messages);
+
         setConversation(data.conversation);
         setMessages(data.messages);
+        loadedConversationRef.current = conversationId;
         
         // Mettre en cache
         conversationCache.set(conversationId!, {
@@ -456,7 +475,14 @@ export default function ConversationDetails() {
     if (conversationId) {
       loadConversationData();
     }
-  }, [conversationId, user?._id, showNotification]);
+
+    // Cleanup: reset le ref si la conversation change
+    return () => {
+      if (loadedConversationRef.current !== conversationId) {
+        loadedConversationRef.current = null;
+      }
+    };
+  }, [conversationId]);
 
   // Assurer visibilité du dernier message pendant la saisie et les changements de clavier
   useEffect(() => {
@@ -474,30 +500,32 @@ export default function ConversationDetails() {
     }
   }, [inputHeight, keyboardHeight, inputFocused, newMessage]);
 
-  // === GESTION MQTT ===
+  // === GESTION SOCKET.IO ===
   useEffect(() => {
-    if (!conversationId || !mqttConnected) return;
+    if (!conversationId || !isConnected) {
+      return;
+    }
 
-    console.log('🔌 Configuration MQTT pour conversation:', conversationId);
+    console.log('🔌 ENTERPRISE - Socket.IO setup pour conversation:', conversationId);
 
-    // Rejoindre la conversation MQTT
-    mqttJoinConversation(conversationId);
+    // Rejoindre la conversation Socket.IO
+    joinConversation(conversationId);
 
-    // S'abonner aux événements MQTT via le hook
-    onNewMessage(handleNewMessage);
-    onMessageDeleted(handleMessageDeleted);
-    onMessagesRead(handleMessagesRead);
-    onMessageSent(handleMessageSent);
+    // S'abonner aux événements Socket.IO via le hook
+    const cleanupNewMessage = onNewMessage(handleNewMessage);
+    const cleanupMessageDeleted = onMessageDeleted(handleMessageDeleted);
+    const cleanupMessagesRead = onMessagesRead(handleMessagesRead);
+
+    console.log('✅ ENTERPRISE - Listeners Socket.IO configurés');
 
     // Cleanup function
     return () => {
-      offNewMessage(handleNewMessage);
-      offMessageDeleted(handleMessageDeleted);
-      offMessagesRead(handleMessagesRead);
-      offMessageSent(handleMessageSent);
+      cleanupNewMessage?.();
+      cleanupMessageDeleted?.();
+      cleanupMessagesRead?.();
     };
 
-  }, [conversationId, mqttConnected, user?._id, mqttJoinConversation, onNewMessage, onMessageDeleted, onMessagesRead, onMessageSent, offNewMessage, offMessageDeleted, offMessagesRead, offMessageSent, handleNewMessage, handleMessageDeleted, handleMessagesRead, handleMessageSent]);
+  }, [conversationId, isConnected, user?._id, joinConversation, onNewMessage, onMessageDeleted, onMessagesRead, handleNewMessage, handleMessageDeleted, handleMessagesRead]);
 
   const sendMessage = async () => {
     if ((!newMessage.trim() && !attachment) || sending || !conversation) {
@@ -510,6 +538,51 @@ export default function ConversationDetails() {
       return;
     }
 
+    // Créer un ID temporaire pour le message optimiste
+    const localId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const messageText = newMessage.trim();
+    const messageAttachment = attachment;
+    const messageReplyTo = replyingTo;
+
+    // Créer un message optimiste
+    const optimisticMessage: Message = {
+      _id: localId,
+      _localId: localId,
+      _sendingStatus: 'pending',
+      conversation: conversationId!,
+      sender: {
+        _id: user!._id,
+        firstName: user!.firstName || '',
+        lastName: user!.lastName || '',
+        profileImage: user!.profileImage,
+        role: user!.role
+      },
+      text: messageText,
+      messageType: messageAttachment ? 'IMAGE' : 'TEXT',
+      replyTo: messageReplyTo || undefined,
+      sentAt: new Date().toISOString(),
+      readBy: [{
+        user: user!._id,
+        readAt: new Date().toISOString()
+      }],
+      metadata: {
+        deleted: false
+      }
+    };
+
+    // Ajouter immédiatement le message optimiste à la liste
+    setMessages(prev => [...prev, optimisticMessage]);
+
+    // Réinitialiser les états immédiatement pour meilleure UX
+    setNewMessage('');
+    setReplyingTo(null);
+    setAttachment(null);
+    
+    // Scroll vers le bas
+    setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+
     try {
       setSending(true);
 
@@ -520,53 +593,115 @@ export default function ConversationDetails() {
       console.log('🚚 Envoi message - préparation', {
         productId,
         conversationId,
-        hasAttachment: !!attachment,
-        textLength: newMessage.trim().length
+        hasAttachment: !!messageAttachment,
+        textLength: messageText.length
       });
 
-      // Créer un identifiant temporaire pour suivre ce message
-      // Note: Nous n'utilisons plus cette logique, nous identifions nos messages par l'ID utilisateur
-
-      // Émission directe du message via MQTT
-      if (attachment) {
-        sendMessageWithAttachment(
+      // Émission du message via MessagingService
+      let sentMessage: any;
+      if (messageAttachment) {
+        sentMessage = await MessagingService.sendMessageWithAttachment(
           productId,
-          newMessage.trim(),
+          messageText,
           {
-            type: attachment.type,
-            data: attachment.data,
-            mimeType: attachment.mimeType,
-            fileName: attachment.fileName
+            type: messageAttachment.type,
+            data: messageAttachment.data,
+            mimeType: messageAttachment.mimeType,
+            fileName: messageAttachment.fileName
           },
-          replyingTo?._id,
+          messageReplyTo?._id,
           conversationId || undefined
         );
       } else {
-        mqttSendMessage(
+        sentMessage = await MessagingService.sendMessage(
           productId,
-          newMessage.trim(),
-          replyingTo?._id,
+          messageText,
+          messageReplyTo?._id,
           conversationId || undefined
         );
       }
 
-      console.log('📨 Message émis via MQTT', { conversationId });
+      console.log('📨 ENTERPRISE - Message envoyé avec succès', { messageId: sentMessage?.message?._id });
 
-      // Réinitialiser les états immédiatement
-      setNewMessage('');
-      setReplyingTo(null);
-      setAttachment(null);
+      // Remplacer le message optimiste par le vrai message du serveur
+      if (sentMessage?.message) {
+        setMessages(prev => prev.map(msg => 
+          msg._localId === localId 
+            ? { ...sentMessage.message, _sendingStatus: 'sent' as const }
+            : msg
+        ));
+      }
+
       setSending(false);
 
-      // S'assurer que le dernier message est visible après l'envoi
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-
-    } catch (error) {
-      console.error('❌ Exception pendant l\'envoi:', error);
+    } catch (error: any) {
+      console.error('❌ Erreur envoi message:', error);
+      
+      // Marquer le message comme échoué au lieu de le supprimer
+      setMessages(prev => prev.map(msg => 
+        msg._localId === localId 
+          ? { 
+              ...msg, 
+              _sendingStatus: 'failed' as const,
+              _sendError: error?.message || 'Erreur inconnue'
+            }
+          : msg
+      ));
+      
       setSending(false);
-      showNotification('error', 'Erreur', 'Impossible d\'envoyer le message');
+    }
+  };
+
+  // Fonction pour renvoyer un message échoué
+  const retryFailedMessage = async (failedMessage: Message) => {
+    if (!failedMessage._localId || !conversation) return;
+
+    const localId = failedMessage._localId;
+
+    // Marquer le message comme en cours de renvoi
+    setMessages(prev => prev.map(msg => 
+      msg._localId === localId 
+        ? { ...msg, _sendingStatus: 'pending' as const, _sendError: undefined }
+        : msg
+    ));
+
+    try {
+      const productId = typeof conversation.product === 'string'
+        ? conversation.product
+        : conversation.product._id;
+
+      // Renvoyer le message
+      const sentMessage = await MessagingService.sendMessage(
+        productId,
+        failedMessage.text,
+        failedMessage.replyTo?._id,
+        conversationId || undefined
+      );
+
+      console.log('✅ ENTERPRISE - Message renvoyé avec succès', { messageId: sentMessage?.message?._id });
+
+      // Remplacer le message par la version du serveur
+      if (sentMessage?.message) {
+        setMessages(prev => prev.map(msg => 
+          msg._localId === localId 
+            ? { ...sentMessage.message, _sendingStatus: 'sent' as const }
+            : msg
+        ));
+      }
+
+    } catch (error: any) {
+      console.error('❌ Erreur renvoi message:', error);
+      
+      // Remettre en état échoué
+      setMessages(prev => prev.map(msg => 
+        msg._localId === localId 
+          ? { 
+              ...msg, 
+              _sendingStatus: 'failed' as const,
+              _sendError: error?.message || 'Erreur inconnue'
+            }
+          : msg
+      ));
     }
   };
 
@@ -846,7 +981,38 @@ export default function ConversationDetails() {
   };
 
   // Composant pour l'indicateur de statut
-  const MessageStatusIndicator = ({ status }: { status: 'sent' | 'delivered' | 'read' | null }) => {
+  const MessageStatusIndicator = ({ message }: { message: Message }) => {
+    // Vérifier d'abord l'état d'envoi local
+    if (message._sendingStatus === 'pending') {
+      return <Ionicons name="time-outline" size={12} color="#9CA3AF" />;
+    }
+    
+    if (message._sendingStatus === 'failed') {
+      return (
+        <TouchableOpacity 
+          onPress={() => {
+            Alert.alert(
+              'Échec d\'envoi',
+              message._sendError || 'Le message n\'a pas pu être envoyé',
+              [
+                { text: 'Annuler', style: 'cancel' },
+                { 
+                  text: 'Renvoyer', 
+                  onPress: () => retryFailedMessage(message) 
+                }
+              ]
+            );
+          }}
+          className="ml-1"
+        >
+          <Ionicons name="information-circle" size={14} color="#EF4444" />
+        </TouchableOpacity>
+      );
+    }
+    
+    // Si envoyé avec succès, afficher le statut classique
+    const status = getMessageStatus(message, getCurrentUserId() || undefined);
+    
     if (!status) return null;
     
     switch (status) {
@@ -881,10 +1047,6 @@ export default function ConversationDetails() {
     const isCurrentUser = currentUserId && senderId && senderId === currentUserId;
 
     const isDeleted = message.metadata?.deleted || false;
-    const messageStatus = getMessageStatus(message, currentUserId || undefined);
-
-    // Debug logs pour comprendre le problème d'affichage
-    
 
     return (
       <View className={`mb-4 ${isCurrentUser ? 'items-end' : 'items-start'}`}>
@@ -977,7 +1139,7 @@ export default function ConversationDetails() {
               </Text>
               {isCurrentUser && !isDeleted && (
                 <View className="ml-1">
-                  <MessageStatusIndicator status={messageStatus} />
+                  <MessageStatusIndicator message={message} />
                 </View>
               )}
             </View>
@@ -1443,9 +1605,9 @@ export default function ConversationDetails() {
             {/* Bouton d'envoi amélioré */}
             <TouchableOpacity
               onPress={handleSendPress}
-              disabled={!newMessage.trim() || sending}
+              disabled={!newMessage.trim()}
               className={`w-12 h-12 rounded-full justify-center items-center ml-2 ${
-                newMessage.trim() && !sending
+                newMessage.trim()
                   ? 'bg-primary-500'
                   : 'bg-neutral-300'
               }`}
@@ -1455,18 +1617,14 @@ export default function ConversationDetails() {
                 shadowOpacity: newMessage.trim() ? 0.3 : 0.1,
                 shadowRadius: 4,
                 elevation: newMessage.trim() ? 8 : 2,
-                transform: [{ scale: newMessage.trim() && !sending ? 1 : 0.95 }],
+                transform: [{ scale: newMessage.trim() ? 1 : 0.95 }],
               }}
             >
-              {sending ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Ionicons 
-                  name={newMessage.trim() ? "send" : "send-outline"} 
-                  size={18} 
-                  color={newMessage.trim() ? "#FFFFFF" : "#9CA3AF"} 
-                />
-              )}
+              <Ionicons 
+                name={newMessage.trim() ? "send" : "send-outline"} 
+                size={18} 
+                color={newMessage.trim() ? "#FFFFFF" : "#9CA3AF"} 
+              />
             </TouchableOpacity>
           </View>
           
@@ -1651,9 +1809,9 @@ export default function ConversationDetails() {
             {/* Bouton d'envoi amélioré */}
             <TouchableOpacity
               onPress={handleSendPress}
-              disabled={!newMessage.trim() || sending}
+              disabled={!newMessage.trim()}
               className={`w-12 h-12 rounded-full justify-center items-center ml-2 ${
-                newMessage.trim() && !sending
+                newMessage.trim()
                   ? 'bg-primary-500'
                   : 'bg-neutral-300'
               }`}
@@ -1663,18 +1821,14 @@ export default function ConversationDetails() {
                 shadowOpacity: newMessage.trim() ? 0.3 : 0.1,
                 shadowRadius: 4,
                 elevation: newMessage.trim() ? 8 : 2,
-                transform: [{ scale: newMessage.trim() && !sending ? 1 : 0.95 }],
+                transform: [{ scale: newMessage.trim() ? 1 : 0.95 }],
               }}
             >
-              {sending ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Ionicons 
-                  name={newMessage.trim() ? "send" : "send-outline"} 
-                  size={18} 
-                  color={newMessage.trim() ? "#FFFFFF" : "#9CA3AF"} 
-                />
-              )}
+              <Ionicons 
+                name={newMessage.trim() ? "send" : "send-outline"} 
+                size={18} 
+                color={newMessage.trim() ? "#FFFFFF" : "#9CA3AF"} 
+              />
             </TouchableOpacity>
           </View>
           

@@ -1,13 +1,226 @@
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Modal, Platform, SafeAreaView, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AdvertisementService, { CreateAdvertisementPayload } from '../../../../services/api/AdvertisementService';
+
+// Notification Modal Component
+interface NotificationModalProps {
+  visible: boolean;
+  type: 'success' | 'error' | 'info';
+  title: string;
+  message: string;
+  onClose: () => void;
+  onConfirm?: () => void;
+  confirmText?: string;
+}
+
+function NotificationModal({ visible, type, title, message, onClose, onConfirm, confirmText }: NotificationModalProps) {
+  const getIconAndColor = () => {
+    switch (type) {
+      case 'success':
+        return { icon: 'checkmark-circle', color: '#10B981' };
+      case 'error':
+        return { icon: 'close-circle', color: '#EF4444' };
+      case 'info':
+        return { icon: 'information-circle', color: '#3B82F6' };
+      default:
+        return { icon: 'information-circle', color: '#6B7280' };
+    }
+  };
+
+  const { icon, color } = getIconAndColor();
+
+  return (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <TouchableOpacity
+        className="flex-1 bg-black/50"
+        activeOpacity={1}
+        onPress={onClose}
+      >
+        <View className="flex-1 justify-center items-center px-6">
+          <TouchableOpacity
+            className="bg-white rounded-3xl w-full max-w-sm"
+            activeOpacity={1}
+            onPress={() => {}}
+          >
+            {/* Icon */}
+            <View className="items-center pt-8 pb-4">
+              <View
+                className="w-16 h-16 rounded-full items-center justify-center"
+                style={{ backgroundColor: color + '20' }}
+              >
+                <Ionicons name={icon as any} size={32} color={color} />
+              </View>
+            </View>
+
+            {/* Content */}
+            <View className="px-6 pb-6">
+              <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+                {title}
+              </Text>
+              <Text className="text-base text-neutral-600 font-quicksand-medium text-center leading-5">
+                {message}
+              </Text>
+            </View>
+
+            {/* Actions */}
+            <View className="flex-row px-6 pb-6 gap-3">
+              {onConfirm ? (
+                <>
+                  <TouchableOpacity
+                    onPress={onClose}
+                    className="flex-1 bg-neutral-100 py-4 rounded-2xl items-center"
+                  >
+                    <Text className="text-base font-quicksand-semibold text-neutral-700">
+                      Annuler
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      onConfirm();
+                      onClose();
+                    }}
+                    className="flex-1 py-4 rounded-2xl items-center"
+                    style={{ backgroundColor: color }}
+                  >
+                    <Text className="text-base font-quicksand-semibold text-white">
+                      {confirmText || 'Confirmer'}
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <TouchableOpacity
+                  onPress={onClose}
+                  className="w-full bg-neutral-100 py-4 rounded-2xl items-center"
+                >
+                  <Text className="text-base font-quicksand-semibold text-neutral-700">
+                    OK
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  );
+}
+
+// Image Picker Modal Component
+interface ImagePickerModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onTakePhoto: () => void;
+  onPickImage: () => void;
+}
+
+function ImagePickerModal({ visible, onClose, onTakePhoto, onPickImage }: ImagePickerModalProps) {
+  return (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <TouchableOpacity
+        className="flex-1 bg-black/50"
+        activeOpacity={1}
+        onPress={onClose}
+      >
+        <View className="flex-1 justify-end">
+          <TouchableOpacity
+            className="bg-white rounded-t-3xl"
+            activeOpacity={1}
+            onPress={() => {}}
+          >
+            {/* Handle bar */}
+            <View className="w-full items-center pt-3 pb-2">
+              <View className="w-12 h-1 bg-neutral-300 rounded-full" />
+            </View>
+
+            {/* Header */}
+            <View className="px-6 pb-4 border-b border-neutral-100">
+              <Text className="text-lg font-quicksand-bold text-neutral-800">
+                Ajouter une image
+              </Text>
+              <Text className="text-sm text-neutral-500 font-quicksand-medium mt-1">
+                Choisissez une option
+              </Text>
+            </View>
+
+            {/* Options */}
+            <View className="px-6 py-2">
+              <TouchableOpacity
+                onPress={() => {
+                  onTakePhoto();
+                  onClose();
+                }}
+                className="flex-row items-center py-4 border-b border-neutral-50"
+              >
+                <View className="w-10 h-10 rounded-full bg-blue-50 items-center justify-center mr-4">
+                  <Ionicons name="camera" size={20} color="#3B82F6" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-base font-quicksand-semibold text-neutral-800">
+                    Prendre une photo
+                  </Text>
+                  <Text className="text-sm text-neutral-500 font-quicksand-medium">
+                    Utiliser l&apos;appareil photo
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  onPickImage();
+                  onClose();
+                }}
+                className="flex-row items-center py-4"
+              >
+                <View className="w-10 h-10 rounded-full bg-green-50 items-center justify-center mr-4">
+                  <Ionicons name="images" size={20} color="#10B981" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-base font-quicksand-semibold text-neutral-800">
+                    Choisir depuis la galerie
+                  </Text>
+                  <Text className="text-sm text-neutral-500 font-quicksand-medium">
+                    Sélectionner depuis vos photos
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Cancel Button */}
+            <View className="px-6 pb-6 pt-2">
+              <TouchableOpacity
+                onPress={onClose}
+                className="w-full bg-neutral-100 py-4 rounded-2xl items-center"
+              >
+                <Text className="text-base font-quicksand-semibold text-neutral-700">
+                  Annuler
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  );
+}
 
 export default function CreateAdvertisement() {
   const insets = useSafeAreaInsets();
@@ -28,19 +241,45 @@ export default function CreateAdvertisement() {
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
-  const [image, setImage] = useState<string | null>(null);
-  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [images, setImages] = useState<string[]>([]);
+  const [imagesBase64, setImagesBase64] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
+  // Modal state
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalConfig, setModalConfig] = useState<{
+    type: 'success' | 'error' | 'info';
+    title: string;
+    message: string;
+    onConfirm?: () => void;
+    confirmText?: string;
+  } | null>(null);
+  const [imagePickerVisible, setImagePickerVisible] = useState(false);
+
+  // Helper function to show modal
+  const showModal = (type: 'success' | 'error' | 'info', title: string, message: string, onConfirm?: () => void, confirmText?: string) => {
+    setModalConfig({ type, title, message, onConfirm, confirmText });
+    setModalVisible(true);
+  };
+
+  const hideModal = () => {
+    setModalVisible(false);
+    setModalConfig(null);
+  };
+
   const pickImage = async () => {
+    if (images.length >= 4) {
+      showModal('info', 'Limite atteinte', 'Vous ne pouvez ajouter que 4 images maximum.');
+      return;
+    }
+
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission refusée', 'Nous avons besoin de l\'accès à votre galerie pour sélectionner une image.');
+      showModal('error', 'Permission refusée', 'Nous avons besoin de l\'accès à votre galerie pour sélectionner une image.');
       return;
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [3, 1], // Ratio pour bannière
       quality: 0.8,
@@ -48,22 +287,27 @@ export default function CreateAdvertisement() {
 
     if (!result.canceled) {
       const uri = result.assets[0].uri;
-      setImage(uri);
+      setImages(prev => [...prev, uri]);
       try {
-        const b64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+        const b64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
         const ext = uri.split('.').pop()?.toLowerCase();
         const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
-        setImageBase64(`data:${mime};base64,${b64}`);
+        setImagesBase64(prev => [...prev, `data:${mime};base64,${b64}`]);
       } catch (e: any) {
-        Alert.alert('Erreur', e?.message || 'Impossible de lire l\'image.');
+        showModal('error', 'Erreur', e?.message || 'Impossible de lire l\'image.');
       }
     }
   };
 
-  const takePhoto = async () => {
+    const takePhoto = async () => {
+    if (images.length >= 4) {
+      showModal('info', 'Limite atteinte', 'Vous ne pouvez ajouter que 4 images maximum.');
+      return;
+    }
+
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission refusée', 'Nous avons besoin de l\'accès à votre caméra pour prendre une photo.');
+      showModal('error', 'Permission refusée', 'Nous avons besoin de l\'accès à votre caméra pour prendre une photo.');
       return;
     }
 
@@ -75,12 +319,12 @@ export default function CreateAdvertisement() {
 
     if (!result.canceled) {
       const uri = result.assets[0].uri;
-      setImage(uri);
+      setImages(prev => [...prev, uri]);
       try {
-        const b64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
-        setImageBase64(`data:image/jpeg;base64,${b64}`);
+        const b64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
+        setImagesBase64(prev => [...prev, `data:image/jpeg;base64,${b64}`]);
       } catch (e: any) {
-        Alert.alert('Erreur', e?.message || 'Impossible de lire la photo.');
+        showModal('error', 'Erreur', e?.message || 'Impossible de lire la photo.');
       }
     }
   };
@@ -88,7 +332,7 @@ export default function CreateAdvertisement() {
   const validate = () => {
     if (!title.trim()) return 'Titre requis';
     if (!description.trim()) return 'Description requise';
-    if (!imageBase64) return 'Image requise';
+    if (imagesBase64.length === 0) return 'Au moins une image requise';
     if (endDate <= startDate) return 'La date de fin doit être après la date de début';
     if (startDate.getTime() < Date.now()) return 'La date de début doit être dans le futur';
     return null;
@@ -96,22 +340,25 @@ export default function CreateAdvertisement() {
 
   const submit = async () => {
     const error = validate();
-    if (error) { Alert.alert('Erreur', error); return; }
+    if (error) {
+      showModal('error', 'Erreur', error);
+      return;
+    }
     setSubmitting(true);
     try {
       const payload: CreateAdvertisementPayload = {
         title: title.trim(),
         description: description.trim(),
-        imageBase64: imageBase64!,
+        imagesBase64: imagesBase64,
         type,
         targetAudience: audience,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
       };
       await AdvertisementService.create(payload);
-      Alert.alert('Succès', 'Publicité créée avec succès', [{ text: 'OK', onPress: () => router.back() }]);
+      showModal('success', 'Succès', 'Publicité créée avec succès', () => router.back(), 'OK');
     } catch (e: any) {
-      Alert.alert('Erreur', e?.message || 'Échec de la création');
+      showModal('error', 'Erreur', e?.message || 'Échec de la création');
     } finally {
       setSubmitting(false);
     }
@@ -154,46 +401,57 @@ export default function CreateAdvertisement() {
             {/* Image Section */}
             <View className="mt-6">
               <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">
-                Image de la bannière *
+                Images de la bannière * (1-4 images)
               </Text>
 
-              {image ? (
-                <View className="relative">
-                  <Image
-                    source={{ uri: image }}
-                    className="w-full h-32 rounded-2xl"
-                    resizeMode="cover"
-                  />
-                  <TouchableOpacity
-                    onPress={() => setImage(null)}
-                    className="absolute top-2 right-2 w-8 h-8 bg-red-500 rounded-full items-center justify-center"
-                  >
-                    <Ionicons name="close" size={16} color="#FFFFFF" />
-                  </TouchableOpacity>
+              {/* Display selected images */}
+              {images.length > 0 && (
+                <View className="mb-4">
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} className="gap-3">
+                    {images.map((imgUri, index) => (
+                      <View key={index} className="relative mr-3">
+                        <Image
+                          source={{ uri: imgUri }}
+                          className="w-24 h-24 rounded-2xl"
+                          resizeMode="cover"
+                        />
+                        <TouchableOpacity
+                          onPress={() => {
+                            setImages(prev => prev.filter((_, i) => i !== index));
+                            setImagesBase64(prev => prev.filter((_, i) => i !== index));
+                          }}
+                          className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full items-center justify-center"
+                        >
+                          <Ionicons name="close" size={14} color="#FFFFFF" />
+                        </TouchableOpacity>
+                        {index === 0 && (
+                          <View className="absolute bottom-1 left-1 bg-primary-500 px-1.5 py-0.5 rounded">
+                            <Text className="text-xs font-quicksand-bold text-white">Principal</Text>
+                          </View>
+                        )}
+                      </View>
+                    ))}
+                  </ScrollView>
                 </View>
-              ) : (
+              )}
+
+              {/* Add image button */}
+              {images.length < 4 && (
                 <TouchableOpacity
-                  onPress={() => {
-                    Alert.alert(
-                      'Ajouter une image',
-                      'Choisissez une option',
-                      [
-                        { text: 'Annuler', style: 'cancel' },
-                        { text: 'Prendre une photo', onPress: takePhoto },
-                        { text: 'Choisir depuis la galerie', onPress: pickImage },
-                      ]
-                    );
-                  }}
-                  className="w-full h-32 bg-neutral-100 rounded-2xl items-center justify-center border-2 border-dashed border-neutral-300"
+                  onPress={() => setImagePickerVisible(true)}
+                  className="w-full h-24 bg-neutral-100 rounded-2xl items-center justify-center border-2 border-dashed border-neutral-300"
                 >
-                  <Ionicons name="image-outline" size={32} color="#9CA3AF" />
+                  <Ionicons name="add" size={32} color="#9CA3AF" />
                   <Text className="text-neutral-500 font-quicksand-medium mt-2 text-sm">
-                    Appuyez pour ajouter une image
-                  </Text>
-                  <Text className="text-neutral-400 font-quicksand-medium text-xs mt-1">
-                    Ratio recommandé: 3:1
+                    Ajouter une image ({images.length}/4)
                   </Text>
                 </TouchableOpacity>
+              )}
+
+              {images.length === 0 && (
+                <Text className="text-neutral-400 font-quicksand-medium text-xs mt-2 text-center">
+                  Au moins une image est requise
+                </Text>
               )}
             </View>
 
@@ -375,7 +633,7 @@ export default function CreateAdvertisement() {
                       const updated = new Date(endDate);
                       updated.setHours(selectedDate.getHours(), selectedDate.getMinutes(), 0, 0);
                       if (updated <= startDate) {
-                        Alert.alert('Attention', 'La fin doit être après le début.');
+                        showModal('info', 'Attention', 'La fin doit être après le début.');
                         return;
                       }
                       setEndDate(updated);
@@ -386,16 +644,16 @@ export default function CreateAdvertisement() {
             </View>
 
             {/* Preview Section */}
-            {(title.trim() || image) && (
+            {(title.trim() || images.length > 0) && (
               <View className="mt-8">
                 <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">
                   Aperçu
                 </Text>
                 <View className="bg-white rounded-2xl overflow-hidden border border-neutral-100">
-                  {image ? (
+                  {images.length > 0 ? (
                     <View className="relative">
                       <Image
-                        source={{ uri: image }}
+                        source={{ uri: images[0] }}
                         className="w-full h-32"
                         resizeMode="cover"
                       />
@@ -443,6 +701,27 @@ export default function CreateAdvertisement() {
             </View>
           </View>
         </KeyboardAvoidingView>
+
+        {/* Notification Modal */}
+        {modalConfig && (
+          <NotificationModal
+            visible={modalVisible}
+            type={modalConfig.type}
+            title={modalConfig.title}
+            message={modalConfig.message}
+            onClose={hideModal}
+            onConfirm={modalConfig.onConfirm}
+            confirmText={modalConfig.confirmText}
+          />
+        )}
+
+        {/* Image Picker Modal */}
+        <ImagePickerModal
+          visible={imagePickerVisible}
+          onClose={() => setImagePickerVisible(false)}
+          onTakePhoto={takePhoto}
+          onPickImage={pickImage}
+        />
       </SafeAreaView>
   );
 }

@@ -1,7 +1,6 @@
 import * as Device from 'expo-device';
 import { AppState, Platform } from 'react-native';
 import ApiService from './ApiService';
-import mqttClient from './MQTTClient';
 
 // Check if notifications are available (not in Expo Go)
 const notificationsAvailable = (() => {
@@ -374,25 +373,7 @@ class NotificationService {
     }
   }
 
-  // === INTÉGRATION AVEC MQTT ===
 
-  setupSocketListeners(): void {
-    console.log('🔌 Configuration listeners MQTT pour notifications');
-
-    // Écouter les nouvelles notifications
-    mqttClient.on('notification', (data: any) => {
-      console.log('🔔 Nouvelle notification via MQTT:', data);
-
-      // Afficher une notification push si l'app n'est pas au premier plan
-      this.showPushNotification(data);
-    });
-
-    // Écouter les notifications marquées comme lues
-    mqttClient.on('messages_read', (data: any) => {
-      console.log('👁️ Messages marqués comme lus:', data);
-      // Mettre à jour l'état local si nécessaire
-    });
-  }
 
   private async showPushNotification(notification: NotificationData): Promise<void> {
     try {

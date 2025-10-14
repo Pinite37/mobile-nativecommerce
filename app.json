@@ -1,24 +1,29 @@
 {
   "expo": {
-    "name": "mobile",
+    "name": "AXI",
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "mobile",
+    "icon": "./assets/images/axi_notif.png",
+    "scheme": "axiapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.mobile"
+      "bundleIdentifier": "com.axi.axiapp",
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/axi_notif.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.mobile"
+      "package": "com.axi.axiapp",
+      "googleServicesFile": "./google-services.json",
+      "runtimeVersion": "1.0.0"
     },
     "web": {
       "bundler": "metro",
@@ -30,10 +35,18 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/axi_screen.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#121010"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/axi_notif.png",
+          "color": "#121010",
+          "sounds": []
         }
       ],
       "expo-secure-store",
@@ -48,6 +61,10 @@
       "eas": {
         "projectId": "f5333952-d25c-444e-a7bc-11b81a5ac526"
       }
-    }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/f5333952-d25c-444e-a7bc-11b81a5ac526"
+    },
+    "owner": "theophas"
   }
 }

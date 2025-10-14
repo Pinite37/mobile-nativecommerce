@@ -2,16 +2,23 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Animated, Easing, Image, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native";
+import { Animated, Easing, Image, Modal, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import ConfirmationModal from "../../../../components/ui/ConfirmationModal";
 import { useAuth } from "../../../../contexts/AuthContext";
 
 export default function ProfileScreen() {
   const { user, logout, refreshUserData } = useAuth();
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
-  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+  const [confirmationVisible, setConfirmationVisible] = useState(false);
+  const [confirmationAction, setConfirmationAction] = useState<{
+    type: 'logout';
+    title: string;
+    message: string;
+    confirmText: string;
+    confirmColor: string;
+    onConfirm: () => void;
+  } | null>(null);
   
   // Rafraîchir les données utilisateur au chargement de la page
   useEffect(() => {
@@ -70,6 +77,38 @@ export default function ProfileScreen() {
     </View>
   );
 
+  // Fonctions de confirmation modal
+  const showConfirmation = (type: 'logout', onConfirm: () => void) => {
+    let title = '';
+    let message = '';
+    let confirmText = '';
+    let confirmColor = '';
+
+    switch (type) {
+      case 'logout':
+        title = 'Déconnexion';
+        message = 'Êtes-vous sûr de vouloir vous déconnecter ?';
+        confirmText = 'Déconnexion';
+        confirmColor = '#EF4444';
+        break;
+    }
+
+    setConfirmationAction({ type, title, message, confirmText, confirmColor, onConfirm });
+    setConfirmationVisible(true);
+  };
+
+  const closeConfirmation = () => {
+    setConfirmationVisible(false);
+    setConfirmationAction(null);
+  };
+
+  const executeConfirmedAction = () => {
+    if (confirmationAction?.onConfirm) {
+      confirmationAction.onConfirm();
+    }
+    closeConfirmation();
+  };
+
   const renderSkeletonProfile = () => (
     <ScrollView
       showsVerticalScrollIndicator={false}
@@ -121,33 +160,26 @@ export default function ProfileScreen() {
   );
 
   const handleLogout = () => {
-    setLogoutModalVisible(true);
+    showConfirmation('logout', handleConfirmLogout);
   };
 
   const handleConfirmLogout = async () => {
     try {
-      // Fermer le modal immédiatement
-      setLogoutModalVisible(false);
+      console.log('🚪 Début de la déconnexion...');
 
-      // Attendre un court instant pour que le modal se ferme
-      await new Promise(resolve => setTimeout(resolve, 300));
+      console.log('🚪 Déconnexion en cours...');
 
-      // Effectuer la déconnexion (logout() gère déjà la navigation vers /auth/welcome)
+      // Effectuer la déconnexion
       await logout();
 
-    } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
-      // En cas d'erreur, rouvrir le modal avec un message d'erreur
-      setLogoutModalVisible(false);
-      // Afficher une alerte d'erreur
-      setTimeout(() => {
-        alert('Une erreur s\'est produite lors de la déconnexion. Veuillez réessayer.');
-      }, 500);
-    }
-  };
+      console.log('🚪 Déconnexion terminée avec succès');
 
-  const handleCancelLogout = () => {
-    setLogoutModalVisible(false);
+    } catch (error) {
+      console.error('❌ Erreur lors de la déconnexion:', error);
+
+      // En cas d'erreur, afficher une alerte simple
+      alert('Une erreur s\'est produite lors de la déconnexion. Veuillez réessayer.');
+    }
   };
 
   const menuItems = [
@@ -272,18 +304,41 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
 
-      {/* Modal de confirmation de déconnexion */}
-      <ConfirmationModal
-        visible={logoutModalVisible}
-        title="Déconnexion"
-        message="Êtes-vous sûr de vouloir vous déconnecter ?"
-        confirmText="Déconnexion"
-        cancelText="Annuler"
-        confirmColor="#EF4444"
-        onConfirm={handleConfirmLogout}
-        onCancel={handleCancelLogout}
-        isDestructive={true}
-      />
+      {/* Modal de confirmation */}
+      <Modal
+        visible={confirmationVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={closeConfirmation}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50 px-4">
+          <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
+            <Text className="text-xl font-quicksand-bold text-neutral-800 mb-2">
+              {confirmationAction?.title}
+            </Text>
+            <Text className="text-base text-neutral-600 font-quicksand-medium mb-6">
+              {confirmationAction?.message}
+            </Text>
+            <View className="flex-row space-x-3">
+              <TouchableOpacity
+                className="flex-1 bg-neutral-100 rounded-xl py-3"
+                onPress={closeConfirmation}
+              >
+                <Text className="text-neutral-700 font-quicksand-semibold text-center">Annuler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="flex-1 rounded-xl py-3"
+                style={{ backgroundColor: confirmationAction?.confirmColor }}
+                onPress={executeConfirmedAction}
+              >
+                <Text className="text-white font-quicksand-semibold text-center">
+                  {confirmationAction?.confirmText}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

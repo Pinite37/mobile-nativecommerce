@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { NotificationPermissionModal } from '../components/NotificationPermissionModal';
 import CustomerService from '../services/api/CustomerService';
 import EnterpriseService from '../services/api/EnterpriseService';
+import NotificationPermissionService from '../services/NotificationPermissionService';
 import PreCacheService from '../services/PreCacheService';
 import TokenStorageService from '../services/TokenStorageService';
 import { User } from '../types/auth';
@@ -39,6 +41,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
 
   const checkAuthStatus = async () => {
     try {
@@ -88,6 +91,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           refreshUserDataInBackground(storedRole);
         }, 10); // Réduit de 100ms à 10ms
         
+        // Vérifier les permissions de notifications après la connexion
+        console.log('⏰ Planification vérification permissions dans 2 secondes...');
+        setTimeout(() => {
+          console.log('⏰ Exécution de checkNotificationPermissions maintenant...');
+          checkNotificationPermissions();
+        }, 2000); // Délai de 2 secondes pour laisser l'UI se charger complètement
+        
       } else {
         // Pas de session valide complète
         console.log('❌ Session incomplète, nettoyage...');
@@ -105,6 +115,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUserRole(null);
       setIsLoading(false);
       StartupPerformanceMonitor.mark('AuthContext - Erreur de vérification');
+    }
+  };
+
+  // Fonction pour vérifier les permissions de notifications
+  const checkNotificationPermissions = async () => {
+    try {
+      console.log('� ========================================');
+      console.log('🔔 DÉBUT VÉRIFICATION PERMISSIONS NOTIFICATIONS');
+      console.log('🔔 ========================================');
+      
+      const shouldShow = await NotificationPermissionService.shouldShowPermissionModal();
+      
+      console.log('🔔 Résultat shouldShowPermissionModal:', shouldShow);
+      
+      if (shouldShow) {
+        console.log('✅ AFFICHAGE DU MODAL DE PERMISSIONS');
+        setShowNotificationModal(true);
+      } else {
+        console.log('❌ Modal de permissions NON nécessaire');
+      }
+      
+      console.log('🔔 ========================================');
+      console.log('🔔 FIN VÉRIFICATION PERMISSIONS NOTIFICATIONS');
+      console.log('🔔 ========================================');
+    } catch (error) {
+      console.error('❌ Erreur vérification permissions notifications:', error);
     }
   };
 
@@ -270,6 +306,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         refreshUserDataInBackground(role);
       }, 1000);
       
+      // Vérifier les permissions de notifications après l'inscription
+      setTimeout(() => {
+        checkNotificationPermissions();
+      }, 2000); // Délai de 2 secondes pour laisser l'utilisateur voir l'écran d'accueil d'abord
+      
     } catch (error) {
       console.error('❌ Erreur lors du traitement post-inscription:', error);
       // En cas d'erreur, forcer une re-vérification complète
@@ -320,6 +361,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   return (
     <AuthContext.Provider value={value}>
       {children}
+      <NotificationPermissionModal
+        visible={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+        onPermissionGranted={() => {
+          console.log('✅ Permissions de notifications accordées');
+          setShowNotificationModal(false);
+        }}
+      />
     </AuthContext.Provider>
   );
 };

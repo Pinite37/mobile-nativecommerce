@@ -3,5 +3,9 @@
     "source.fixAll": "explicit",
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
+  },
+  "sonarlint.connectedMode.project": {
+    "connectionId": "https-sonarqube-right-com-com",
+    "projectKey": "eagri-maep_mobile_0b3478a0-a37b-4d97-b137-c0d360ca86c8"
   }
 }

@@ -5,7 +5,7 @@ export interface Advertisement {
   _id: string;
   title: string;
   description: string;
-  image: string; // URL served by backend (Cloudinary)
+  images: string[]; // Array of URLs served by backend (Cloudinary)
   type: 'PROMOTION' | 'EVENT' | 'ANNOUNCEMENT' | 'BANNER';
   targetAudience: 'ALL' | 'CLIENTS' | 'ENTERPRISES' | 'DELIVERS';
   startDate: string; // ISO
@@ -21,7 +21,7 @@ export interface Advertisement {
 export interface CreateAdvertisementPayload {
   title: string;
   description: string;
-  imageBase64: string; // MUST include data:image/... prefix already
+  imagesBase64: string[]; // Array of base64 images with data:image/... prefix
   type: Advertisement['type'];
   targetAudience?: Advertisement['targetAudience'];
   startDate: string; // ISO
@@ -47,7 +47,7 @@ class AdvertisementService {
     const payload = {
       title: data.title.trim(),
       description: data.description.trim(),
-      image: data.imageBase64, // backend expects image OR file
+      images: data.imagesBase64, // backend expects images array
       type: data.type,
       targetAudience: data.targetAudience || 'ALL',
       startDate: data.startDate,
@@ -63,6 +63,7 @@ class AdvertisementService {
   /** List enterprise advertisements */
   async listMine(page = 1, limit = 20): Promise<EnterpriseAdvertisementListResponse> {
     const res = await ApiService.get<{ data: EnterpriseAdvertisementListResponse }>(`${this.BASE}/my-advertisements?page=${page}&limit=${limit}`);
+    console.log('AdvertisementService.listMine', res.data.advertisements);
     if ((res as any).success && (res as any).data) return (res as any).data;
     return (res as any).data || { advertisements: [], pagination: { page: 1, limit, total: 0, pages: 0 } };
   }
@@ -94,6 +95,13 @@ class AdvertisementService {
     console.log('AdvertisementService.getActive', res);
     if ((res as any).success && (res as any).data) return (res as any).data;
     return (res as any).data || (res as any).advertisements || [];
+  }
+
+  /** Get active advertisement by ID (public endpoint) */
+  async getActiveAdvertisementById(id: string): Promise<Advertisement> {
+    const res = await ApiService.get<{ data: Advertisement }>(`${this.BASE}/public/${id}`);
+    if ((res as any).success && (res as any).data) return (res as any).data;
+    return (res as any).data || (res as any);
   }
 
   /** Increment click count for advertisement */

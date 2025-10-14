@@ -77,6 +77,24 @@ export default function EnterpriseLayout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="marketplace/index"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="my-products/index"
+        options={{
+          headerShown: false,
+        }}
+      />
+       <Stack.Screen
+        name="advertisement/[id]"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

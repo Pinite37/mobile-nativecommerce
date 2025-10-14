@@ -306,105 +306,107 @@ export default function DeliveryPartnersScreen() {
 		<SafeAreaView className="flex-1 bg-background-secondary">
 			<StatusBar backgroundColor="#10B981" barStyle="light-content" />
 
-			{/* Header avec gradient moderne */}
-			<LinearGradient
-				colors={['#10B981', '#34D399']}
-				start={{ x: 0, y: 0 }}
-				end={{ x: 1, y: 0 }}
-				className="px-6 pt-12 pb-8"
-			>
-				<View className="flex-row items-center justify-between mb-6">
-					<TouchableOpacity
-						onPress={() => router.back()}
-						className="w-10 h-10 rounded-full bg-white/20 items-center justify-center"
+			{loading ? (
+				renderSkeletonPartners()
+			) : (
+				<>
+					{/* Header avec gradient moderne */}
+					<LinearGradient
+						colors={['#10B981', '#34D399']}
+						start={{ x: 0, y: 0 }}
+						end={{ x: 1, y: 0 }}
+						className="px-6 pt-12 pb-8"
 					>
-						<Ionicons name="arrow-back" size={20} color="#FFFFFF" />
-					</TouchableOpacity>
-					<Text className="text-xl font-quicksand-bold text-white flex-1 text-center mr-10">
-						Partenaires de livraison
-					</Text>
-				</View>
-
-				{/* Statistiques dans le header */}
-				<View className="bg-white/10 rounded-2xl p-4 mb-6">
-					<View className="flex-row justify-between">
-						<View className="items-center flex-1">
-							<Text className="text-white/80 font-quicksand-medium text-sm">Total</Text>
-							<Text className="text-white font-quicksand-bold text-2xl">{totals.total}</Text>
-						</View>
-						<View className="items-center flex-1">
-							<Text className="text-white/80 font-quicksand-medium text-sm">Associés</Text>
-							<Text className="text-white font-quicksand-bold text-2xl">{totals.associatedCount}</Text>
-						</View>
-						<View className="items-center flex-1">
-							<Text className="text-white/80 font-quicksand-medium text-sm">Disponibles</Text>
-							<Text className="text-white font-quicksand-bold text-2xl">
-								{partners.filter(p => p.availability).length}
+						<View className="flex-row items-center justify-between mb-6">
+							<TouchableOpacity
+								onPress={() => router.back()}
+								className="w-10 h-10 rounded-full bg-white/20 items-center justify-center"
+							>
+								<Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+							</TouchableOpacity>
+							<Text className="text-xl font-quicksand-bold text-white flex-1 text-center mr-10">
+								Partenaires de livraison
 							</Text>
 						</View>
-					</View>
-				</View>
 
-				{/* Barre de recherche dans le header */}
-				<View className="relative">
-					<View className="bg-white/20 rounded-2xl pl-12 pr-12 py-3">
-						<TextInput
-							value={search}
-							onChangeText={setSearch}
-							placeholder="Rechercher un livreur..."
-							placeholderTextColor="#FFFFFF80"
-							className="text-white font-quicksand-medium"
-							autoCapitalize="none"
+						{/* Statistiques dans le header */}
+						<View className="bg-white/10 rounded-2xl p-4 mb-6">
+							<View className="flex-row justify-between">
+								<View className="items-center flex-1">
+									<Text className="text-white/80 font-quicksand-medium text-sm">Total</Text>
+									<Text className="text-white font-quicksand-bold text-2xl">{totals.total}</Text>
+								</View>
+								<View className="items-center flex-1">
+									<Text className="text-white/80 font-quicksand-medium text-sm">Associés</Text>
+									<Text className="text-white font-quicksand-bold text-2xl">{totals.associatedCount}</Text>
+								</View>
+								<View className="items-center flex-1">
+									<Text className="text-white/80 font-quicksand-medium text-sm">Disponibles</Text>
+									<Text className="text-white font-quicksand-bold text-2xl">
+										{partners.filter(p => p.availability).length}
+									</Text>
+								</View>
+							</View>
+						</View>
+
+						{/* Barre de recherche dans le header */}
+						<View className="relative">
+							<View className="bg-white/20 rounded-2xl pl-12 pr-12 py-3">
+								<TextInput
+									value={search}
+									onChangeText={setSearch}
+									placeholder="Rechercher un livreur..."
+									placeholderTextColor="#FFFFFF80"
+									className="text-white font-quicksand-medium"
+									autoCapitalize="none"
+								/>
+							</View>
+							<Ionicons name="search" size={20} color="#FFFFFF" style={{ position: 'absolute', left: 16, top: 12 }} />
+							{search.length > 0 && (
+								<TouchableOpacity
+									onPress={() => setSearch('')}
+									style={{ position: 'absolute', right: 16, top: 12 }}
+								>
+									<Ionicons name="close-circle" size={20} color="#FFFFFF" />
+								</TouchableOpacity>
+							)}
+						</View>
+					</LinearGradient>
+
+					{/* Contenu principal */}
+					<View className="flex-1 -mt-6 rounded-t-[32px] bg-background-secondary">
+						<FlatList
+							data={filtered}
+							keyExtractor={(item) => item._id}
+							contentContainerStyle={{ paddingTop: 20, paddingBottom: Math.max(insets.bottom, 20) + 60 }}
+							renderItem={renderItem}
+							ListEmptyComponent={
+								<View className="items-center pt-20 px-6">
+									<View className="w-20 h-20 rounded-full bg-neutral-100 items-center justify-center mb-4">
+										<Ionicons name="people" size={32} color="#9CA3AF" />
+									</View>
+									<Text className="text-neutral-700 font-quicksand-semibold text-lg text-center mb-2">
+										Aucun partenaire trouvé
+									</Text>
+									<Text className="text-neutral-500 font-quicksand-regular text-center">
+										Aucun livreur disponible ne correspond à votre recherche.
+									</Text>
+								</View>
+							}
+							refreshControl={
+								<RefreshControl
+									refreshing={refreshing}
+									onRefresh={onRefresh}
+									colors={['#10B981']}
+									tintColor="#10B981"
+									progressBackgroundColor="#FFFFFF"
+								/>
+							}
+							showsVerticalScrollIndicator={false}
 						/>
 					</View>
-					<Ionicons name="search" size={20} color="#FFFFFF" style={{ position: 'absolute', left: 16, top: 12 }} />
-					{search.length > 0 && (
-						<TouchableOpacity
-							onPress={() => setSearch('')}
-							style={{ position: 'absolute', right: 16, top: 12 }}
-						>
-							<Ionicons name="close-circle" size={20} color="#FFFFFF" />
-						</TouchableOpacity>
-					)}
-				</View>
-			</LinearGradient>
-
-			{/* Contenu principal */}
-			<View className="flex-1 -mt-6 rounded-t-[32px] bg-background-secondary">
-				{loading ? (
-					renderSkeletonPartners()
-				) : (
-					<FlatList
-						data={filtered}
-						keyExtractor={(item) => item._id}
-						contentContainerStyle={{ paddingTop: 20, paddingBottom: Math.max(insets.bottom, 20) + 60 }}
-						renderItem={renderItem}
-						ListEmptyComponent={
-							<View className="items-center pt-20 px-6">
-								<View className="w-20 h-20 rounded-full bg-neutral-100 items-center justify-center mb-4">
-									<Ionicons name="people" size={32} color="#9CA3AF" />
-								</View>
-								<Text className="text-neutral-700 font-quicksand-semibold text-lg text-center mb-2">
-									Aucun partenaire trouvé
-								</Text>
-								<Text className="text-neutral-500 font-quicksand-regular text-center">
-									Aucun livreur disponible ne correspond à votre recherche.
-								</Text>
-							</View>
-						}
-						refreshControl={
-							<RefreshControl
-								refreshing={refreshing}
-								onRefresh={onRefresh}
-								colors={['#10B981']}
-								tintColor="#10B981"
-								progressBackgroundColor="#FFFFFF"
-							/>
-						}
-						showsVerticalScrollIndicator={false}
-					/>
-				)}
-			</View>
+				</>
+			)}
 		</SafeAreaView>
 	);
 }

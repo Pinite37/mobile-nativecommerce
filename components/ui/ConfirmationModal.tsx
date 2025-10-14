@@ -77,19 +77,28 @@ export default function ConfirmationModal({
       visible={visible}
       transparent={true}
       animationType="none"
-      onRequestClose={onCancel}
+      onRequestClose={loading ? undefined : onCancel}
     >
-      <Animated.View 
-        className="flex-1 bg-black/50 justify-center items-center px-6"
-        style={{ opacity: overlayAnimation }}
+      <TouchableOpacity 
+        activeOpacity={1}
+        onPress={loading ? undefined : onCancel}
+        className="flex-1"
       >
-        <Animated.View
-          className="bg-white rounded-3xl w-full max-w-sm shadow-2xl"
-          style={{
-            transform: [{ scale }],
-            opacity: animation,
-          }}
+        <Animated.View 
+          className="flex-1 bg-black/50 justify-center items-center px-6"
+          style={{ opacity: overlayAnimation }}
         >
+          <TouchableOpacity 
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <Animated.View
+              className="bg-white rounded-3xl w-full max-w-sm shadow-2xl"
+              style={{
+                transform: [{ scale }],
+                opacity: animation,
+              }}
+            >
           <View className="p-6">
             {/* Icône et titre */}
             <View className="items-center mb-4">
@@ -150,7 +159,9 @@ export default function ConfirmationModal({
             </View>
           </View>
         </Animated.View>
-      </Animated.View>
+          </TouchableOpacity>
+        </Animated.View>
+      </TouchableOpacity>
     </Modal>
   );
 }

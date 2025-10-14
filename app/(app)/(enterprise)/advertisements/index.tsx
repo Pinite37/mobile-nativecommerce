@@ -2,7 +2,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Easing, FlatList, Image, Modal, RefreshControl, SafeAreaView, StatusBar, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Animated,
+  Easing,
+  FlatList,
+  Image,
+  Modal,
+  RefreshControl,
+  SafeAreaView,
+  StatusBar,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import NotificationModal, { useNotification } from '../../../../components/ui/NotificationModal';
 import AdvertisementService, { Advertisement } from '../../../../services/api/AdvertisementService';
@@ -28,7 +42,7 @@ function mapToUI(ad: Advertisement): UIAd {
     id: ad._id,
     title: ad.title,
     status: expired ? 'expired' : (ad.isActive ? 'active' : 'paused'),
-    preview: ad.image,
+    preview: ad.images && ad.images.length > 0 ? ad.images[0] : undefined,
     createdAt: ad.createdAt,
     raw: ad,
   };
@@ -191,8 +205,9 @@ export default function EnterpriseAdvertisements() {
     const style = statusStyles[item.status];
     return (
       <TouchableOpacity
-  onPress={() => router.push({ pathname: '/(app)/(enterprise)/advertisements/[id]', params: { id: item.id } } as any)}
-        className="bg-white rounded-2xl overflow-hidden mb-4 border border-neutral-100 active:opacity-90"
+        onPress={() => router.push({ pathname: '/(app)/(enterprise)/advertisements/[id]', params: { id: item.id } } as any)}
+        className="bg-white rounded-2xl overflow-hidden mb-4 border border-neutral-100"
+        activeOpacity={1}
         accessibilityRole="button"
         accessibilityLabel={`Ouvrir la publicité ${item.title}`}
       >
@@ -206,7 +221,7 @@ export default function EnterpriseAdvertisements() {
               className="absolute inset-0"
             />
             <View className="absolute top-3 left-3 px-2 py-1 rounded-full" style={{ backgroundColor: style.bg }}>
-              <Text className="text-[11px] font-quicksand-semibold" style={{ color: style.text }}>
+              <Text style={{ fontFamily: 'Quicksand-Bold', fontSize: 11, color: style.text }}>
                 {style.label}
               </Text>
             </View>
@@ -219,7 +234,7 @@ export default function EnterpriseAdvertisements() {
 
         <View className="p-4">
           <View className="flex-row items-start justify-between">
-            <Text className="flex-1 text-base font-quicksand-semibold text-neutral-800 mr-3" numberOfLines={2}>
+            <Text style={{ fontFamily: 'Quicksand-SemiBold' }} className="flex-1 text-base text-neutral-800 mr-3" numberOfLines={2}>
               {item.title}
             </Text>
             <TouchableOpacity
@@ -231,7 +246,7 @@ export default function EnterpriseAdvertisements() {
           </View>
 
           <View className="flex-row items-center mt-3 justify-between">
-            <Text className="text-xs text-neutral-500 font-quicksand-medium">
+            <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-xs text-neutral-500">
               Créée le {new Date(item.createdAt).toLocaleDateString('fr-FR')}
             </Text>
           </View>
@@ -291,21 +306,21 @@ export default function EnterpriseAdvertisements() {
           <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
             <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text className="text-xl font-quicksand-bold text-white">Publicités</Text>
+          <Text style={{ fontFamily: 'Quicksand-Bold' }} className="text-xl text-white">Publicités</Text>
           <View className="w-10 h-10" />
         </View>
 
         <View className="mt-6 flex-row">
           <TouchableOpacity className="flex-1 bg-white/20 rounded-2xl py-3 flex-row items-center justify-center mr-3">
             <Ionicons name="cloud-upload" size={18} color="#FFFFFF" />
-            <Text className="text-white font-quicksand-semibold ml-2 text-sm">Importer</Text>
+            <Text style={{ fontFamily: 'Quicksand-SemiBold' }} className="text-white ml-2 text-sm">Importer</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleCreateAd}
             className="flex-1 bg-white rounded-2xl py-3 flex-row items-center justify-center"
           >
             <Ionicons name="add" size={20} color="#10B981" />
-            <Text className="text-primary-500 font-quicksand-semibold ml-2 text-sm">Nouvelle</Text>
+            <Text style={{ fontFamily: 'Quicksand-SemiBold' }} className="text-primary-500 ml-2 text-sm">Nouvelle</Text>
           </TouchableOpacity>
         </View>
 
@@ -318,7 +333,8 @@ export default function EnterpriseAdvertisements() {
               value={searchQuery}
               onChangeText={setSearchQuery}
               placeholder="Rechercher une publicité..."
-              className="bg-white rounded-2xl pl-10 pr-10 py-3 text-neutral-800 font-quicksand-medium border border-neutral-200"
+              style={{ fontFamily: 'Quicksand-Regular' }}
+              className="bg-white rounded-2xl pl-10 pr-10 py-3 text-neutral-800 border border-neutral-200"
               placeholderTextColor="#9CA3AF"
             />
             {searchQuery.length > 0 && (
@@ -379,9 +395,10 @@ export default function EnterpriseAdvertisements() {
                     <TouchableOpacity
                       key={s.key}
                       onPress={() => setFilterStatus(s.key)}
-                      className={`px-3 py-1.5 rounded-full border ${filterStatus === s.key ? 'bg-primary-500 border-primary-500' : 'bg-white border-neutral-200'}`}
+                      className={`px-3 py-1.5 rounded-full border ${filterStatus === s.key ? 'bg-neutral-800 border-neutral-800' : 'bg-white border-neutral-200'}`}
+                      activeOpacity={1}
                     >
-                      <Text className={`text-xs font-quicksand-semibold ${filterStatus === s.key ? 'text-white' : 'text-neutral-700'}`}>
+                      <Text style={{ fontFamily: 'Quicksand-SemiBold' }} className={`text-xs ${filterStatus === s.key ? 'text-white' : 'text-neutral-700'}`}>
                         {s.label}
                       </Text>
                     </TouchableOpacity>
@@ -389,7 +406,7 @@ export default function EnterpriseAdvertisements() {
                 </View>
 
                 <View className="mt-2">
-                  <Text className="text-xs text-neutral-500 font-quicksand-medium">
+                  <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-xs text-neutral-500">
                     {filteredAds.length} élément{filteredAds.length > 1 ? 's' : ''} affiché{filteredAds.length > 1 ? 's' : ''}{searchQuery ? ` • Filtre: "${searchQuery}"` : ''}
                   </Text>
                 </View>
@@ -397,22 +414,22 @@ export default function EnterpriseAdvertisements() {
             }
             ListFooterComponent={page < pages ? (
               <View className="py-6 items-center">
-                {fetchingMore ? <ActivityIndicator color="#10B981" /> : <Text className="text-neutral-400 text-xs font-quicksand-medium">Faites défiler pour charger plus…</Text>}
+                {fetchingMore ? <ActivityIndicator color="#10B981" /> : <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-neutral-400 text-xs">Faites défiler pour charger plus…</Text>}
               </View>
             ) : <View className="py-6" />}
             ListEmptyComponent={
               <View className="items-center mt-20 px-8">
                 <Ionicons name="image-outline" size={46} color="#9CA3AF" />
-                <Text className="mt-4 text-neutral-700 font-quicksand-semibold">
+                <Text style={{ fontFamily: 'Quicksand-SemiBold' }} className="mt-4 text-neutral-700">
                   {searchQuery || filterStatus !== 'all' ? 'Aucun élément trouvé' : 'Aucune publicité'}
                 </Text>
-                <Text className="mt-2 text-neutral-500 font-quicksand-medium text-center text-sm">
+                <Text style={{ fontFamily: 'Quicksand-Regular' }} className="mt-2 text-neutral-500 text-center text-sm">
                   {searchQuery || filterStatus !== 'all'
                     ? 'Aucune publicité ne correspond à vos critères. Essayez d’ajuster votre recherche ou vos filtres.'
                     : 'Créez votre première bannière pour booster votre visibilité sur l’accueil.'}
                 </Text>
                 <TouchableOpacity onPress={handleCreateAd} className="mt-6 bg-primary-500 px-6 py-3 rounded-xl">
-                  <Text className="text-white font-quicksand-semibold">Créer une publicité</Text>
+                  <Text style={{ fontFamily: 'Quicksand-SemiBold' }} className="text-white">Créer une publicité</Text>
                 </TouchableOpacity>
               </View>
             }
@@ -491,10 +508,10 @@ export default function EnterpriseAdvertisements() {
                       <Ionicons name="play" size={20} color="#10B981" />
                     </View>
                     <View className="flex-1">
-                      <Text className="text-base font-quicksand-semibold text-neutral-800">
+                      <Text style={{ fontFamily: 'Quicksand-SemiBold' }} className="text-base text-neutral-800">
                         Réactiver
                       </Text>
-                      <Text className="text-sm text-neutral-500 font-quicksand-medium">
+                      <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-sm text-neutral-500">
                         Remettre en ligne
                       </Text>
                     </View>
@@ -513,10 +530,10 @@ export default function EnterpriseAdvertisements() {
                     <Ionicons name="trash" size={20} color="#EF4444" />
                   </View>
                   <View className="flex-1">
-                    <Text className="text-base font-quicksand-semibold text-red-600">
+                    <Text style={{ fontFamily: 'Quicksand-SemiBold' }} className="text-base text-red-600">
                       Supprimer
                     </Text>
-                    <Text className="text-sm text-neutral-500 font-quicksand-medium">
+                    <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-sm text-neutral-500">
                       Action irréversible
                     </Text>
                   </View>
@@ -530,7 +547,7 @@ export default function EnterpriseAdvertisements() {
                   onPress={closeMenu}
                   className="w-full bg-neutral-100 py-4 rounded-2xl items-center"
                 >
-                  <Text className="text-base font-quicksand-semibold text-neutral-700">
+                  <Text style={{ fontFamily: 'Quicksand-SemiBold' }} className="text-base text-neutral-700">
                     Annuler
                   </Text>
                 </TouchableOpacity>

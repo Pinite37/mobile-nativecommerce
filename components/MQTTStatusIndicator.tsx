@@ -1,15 +1,16 @@
 import React from 'react';
 import { Text, View } from 'react-native';
-import { useMQTTContext } from '../contexts/MQTTContext';
+import { useSocketContext } from '../contexts/SocketContext';
 
-interface MQTTStatusIndicatorProps {
+interface SocketStatusIndicatorProps {
   showDetails?: boolean;
 }
 
-export const MQTTStatusIndicator: React.FC<MQTTStatusIndicatorProps> = ({
+export const SocketStatusIndicator: React.FC<SocketStatusIndicatorProps> = ({
   showDetails = false
 }) => {
-  const { isConnected, isConnecting, error } = useMQTTContext();
+  const { isConnected, error, connectionStatus } = useSocketContext();
+  const isConnecting = connectionStatus.reconnectAttempts > 0 && !isConnected;
 
   if (!showDetails) {
     // Indicateur simple (juste un point coloré)
@@ -40,11 +41,13 @@ export const MQTTStatusIndicator: React.FC<MQTTStatusIndicatorProps> = ({
       />
       <Text style={{ fontSize: 12, color: '#666' }}>
         {isConnecting ? 'Connexion...' :
-         isConnected ? 'MQTT connecté' :
-         error ? 'Erreur MQTT' : 'MQTT déconnecté'}
+         isConnected ? 'Socket connecté' :
+         error ? `Erreur: ${error}` : 'Socket déconnecté'}
       </Text>
     </View>
   );
 };
 
-export default MQTTStatusIndicator;
+// Export par défaut et alias pour compatibilité
+export const MQTTStatusIndicator = SocketStatusIndicator;
+export default SocketStatusIndicator;

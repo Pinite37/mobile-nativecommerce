@@ -6,7 +6,9 @@ import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
   Dimensions,
+  Easing,
   FlatList,
   Image,
   Linking,
@@ -35,7 +37,6 @@ export default function ProductDetails() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [quantity, setQuantity] = useState(1);
   const [similarProducts, setSimilarProducts] = useState<Product[]>([]);
   const [loadingSimilar, setLoadingSimilar] = useState(false);
   const [imageModalVisible, setImageModalVisible] = useState(false);
@@ -97,28 +98,23 @@ export default function ProductDetails() {
   // Composant pour une carte de produit similaire
   const SimilarProductCard = ({ product: similarProduct }: { product: Product }) => (
     <TouchableOpacity
-      className="bg-white rounded-xl mr-4 border border-neutral-100"
+      className="bg-white rounded-xl mr-4 border border-neutral-100 shadow-sm"
       style={{ width: 140 }}
       onPress={() => {
         router.push(`/(app)/(enterprise)/(tabs)/product/${similarProduct._id}`);
       }}
     >
       <View className="relative">
-        <Image
+        <ExpoImage
           source={{
             uri: similarProduct.images[0] || "https://via.placeholder.com/140x100/CCCCCC/FFFFFF?text=No+Image",
           }}
-          className="w-full h-24 rounded-t-xl"
-          resizeMode="contain"
+          style={{ width: 140, height: 100 }}
+          contentFit="cover"
+          transition={200}
+          cachePolicy="memory-disk"
+          className="rounded-t-xl"
         />
-        {/* Badge de score de similarité si disponible */}
-        {(similarProduct as any).similarityScore && (
-          <View className="absolute top-2 right-2 bg-primary-500 rounded-full px-2 py-1">
-            <Text className="text-white text-xs font-quicksand-bold">
-              {Math.round((similarProduct as any).similarityScore)}%
-            </Text>
-          </View>
-        )}
         {/* Badge stock si faible */}
         {similarProduct.stock <= 5 && similarProduct.stock > 0 && (
           <View className="absolute top-2 left-2 bg-warning-500 rounded-full px-2 py-1">
@@ -129,24 +125,14 @@ export default function ProductDetails() {
         )}
       </View>
 
-      <View className="p-2">
-        <Text numberOfLines={2} className="text-sm font-quicksand-semibold text-neutral-800 mb-1">
+      <View className="p-3">
+        <Text numberOfLines={2} className="text-sm font-quicksand-semibold text-neutral-800 mb-2 leading-5">
           {similarProduct.name}
         </Text>
 
         <Text className="text-base font-quicksand-bold text-primary-600">
           {formatPrice(similarProduct.price)}
         </Text>
-
-        {/* Stats */}
-        {similarProduct.stats && (
-          <View className="flex-row items-center mt-1">
-            <Ionicons name="star" size={12} color="#FFD700" />
-            <Text className="text-xs text-neutral-600 ml-1">
-              {similarProduct.stats.averageRating?.toFixed(1) || "0.0"}
-            </Text>
-          </View>
-        )}
       </View>
     </TouchableOpacity>
   );
@@ -155,7 +141,6 @@ export default function ProductDetails() {
     // TODO: Implémenter l'ajout au panier
     console.log("Ajouter au panier:", {
       productId: id,
-      quantity,
     });
   };
 
@@ -218,17 +203,151 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
 
   // showPhoneNumber retiré (non utilisé après refonte UI)
 
-  if (loading) {
+  // Skeleton Loader Component
+  const ShimmerBlock = ({ style }: { style?: any }) => {
+    const shimmer = React.useRef(new Animated.Value(0)).current;
+    useEffect(() => {
+      const loop = Animated.loop(
+        Animated.timing(shimmer, {
+          toValue: 1,
+          duration: 1200,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      );
+      loop.start();
+      return () => loop.stop();
+    }, [shimmer]);
+    const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
     return (
-      <SafeAreaView className="flex-1 bg-white">
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#FE8C00" />
-          <Text className="mt-4 text-neutral-600 font-quicksand-medium">
-            Chargement du produit...
-          </Text>
-        </View>
-      </SafeAreaView>
+      <View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
+        <Animated.View style={{
+          position: 'absolute', top: 0, bottom: 0, width: 120,
+          transform: [{ translateX }],
+          backgroundColor: 'rgba(255,255,255,0.35)',
+          opacity: 0.7,
+        }} />
+      </View>
     );
+  };
+
+  const SkeletonProduct = () => (
+    <SafeAreaView className="flex-1 bg-white">
+      <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
+
+      {/* Header Skeleton */}
+      <LinearGradient
+        colors={['rgba(0,0,0,0.6)', 'transparent']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        className="absolute top-0 left-0 right-0 z-10"
+        style={{ paddingTop: insets.top + 8 }}
+      >
+        <View className="flex-row items-center justify-between px-4 pb-3">
+          <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
+          <ShimmerBlock style={{ width: 120, height: 16, borderRadius: 8 }} />
+          <View className="flex-row">
+            <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20, marginRight: 8 }} />
+            <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
+          </View>
+        </View>
+      </LinearGradient>
+
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        {/* Image Skeleton */}
+        <View style={{ marginTop: insets.top }}>
+          <ShimmerBlock style={{ width: '100%', height: 350 }} />
+
+          {/* Indicators Skeleton */}
+          <View className="absolute bottom-4 left-0 right-0 flex-row justify-center">
+            {[1, 2, 3].map((i) => (
+              <ShimmerBlock key={i} style={{ width: 8, height: 8, borderRadius: 4, marginHorizontal: 4 }} />
+            ))}
+          </View>
+        </View>
+
+        {/* Thumbnails Skeleton */}
+        <View className="px-6 mt-3">
+          <View className="flex-row">
+            {[1, 2, 3, 4].map((i) => (
+              <ShimmerBlock key={i} style={{ width: 64, height: 64, borderRadius: 12, marginRight: 12 }} />
+            ))}
+          </View>
+        </View>
+
+        {/* Content Skeleton */}
+        <View className="px-6 py-6">
+          {/* Price and Name */}
+          <View className="mb-4">
+            <ShimmerBlock style={{ width: '30%', height: 32, borderRadius: 16, marginBottom: 12 }} />
+            <ShimmerBlock style={{ width: '80%', height: 28, borderRadius: 14, marginBottom: 8 }} />
+            <ShimmerBlock style={{ width: '100%', height: 16, borderRadius: 8, marginBottom: 4 }} />
+            <ShimmerBlock style={{ width: '60%', height: 16, borderRadius: 8 }} />
+          </View>
+
+          {/* Enterprise Section */}
+          <View className="px-4 py-4 border border-neutral-100 rounded-2xl mb-6">
+            <ShimmerBlock style={{ width: '25%', height: 20, borderRadius: 10, marginBottom: 16 }} />
+            <View className="flex-row items-center">
+              <ShimmerBlock style={{ width: 56, height: 56, borderRadius: 16 }} />
+              <View className="ml-4 flex-1">
+                <ShimmerBlock style={{ width: '60%', height: 20, borderRadius: 10, marginBottom: 8 }} />
+                <ShimmerBlock style={{ width: '40%', height: 14, borderRadius: 7 }} />
+              </View>
+              <ShimmerBlock style={{ width: 60, height: 32, borderRadius: 16 }} />
+            </View>
+
+            {/* Contact Options */}
+            <View className="mt-4">
+              <ShimmerBlock style={{ width: '30%', height: 20, borderRadius: 10, marginBottom: 16 }} />
+              <View className="flex-row flex-wrap -mx-1">
+                <ShimmerBlock style={{ width: '48%', height: 48, borderRadius: 16, margin: 4 }} />
+                <ShimmerBlock style={{ width: '48%', height: 48, borderRadius: 16, margin: 4 }} />
+              </View>
+            </View>
+
+            {/* Offer Button */}
+            <ShimmerBlock style={{ width: '100%', height: 56, borderRadius: 16, marginTop: 24 }} />
+          </View>
+
+          {/* Stock Status */}
+          <View className="mb-6">
+            <ShimmerBlock style={{ width: '40%', height: 16, borderRadius: 8 }} />
+          </View>
+
+          {/* Similar Products */}
+          <View className="px-4 py-4 border-t border-neutral-100">
+            <View className="flex-row justify-between items-center mb-4">
+              <ShimmerBlock style={{ width: '35%', height: 24, borderRadius: 12 }} />
+              <ShimmerBlock style={{ width: 60, height: 16, borderRadius: 8 }} />
+            </View>
+            <View className="flex-row">
+              {[1, 2, 3].map((i) => (
+                <View key={i} className="mr-4" style={{ width: 140 }}>
+                  <ShimmerBlock style={{ width: '100%', height: 100, borderRadius: 12, marginBottom: 12 }} />
+                  <View className="p-3">
+                    <ShimmerBlock style={{ width: '80%', height: 14, borderRadius: 7, marginBottom: 8 }} />
+                    <ShimmerBlock style={{ width: '60%', height: 16, borderRadius: 8 }} />
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Bottom Actions Skeleton */}
+      <View className="px-6 py-4 bg-white border-t border-neutral-200">
+        <View className="flex-row">
+          <ShimmerBlock style={{ width: 48, height: 48, borderRadius: 16, marginRight: 16 }} />
+          <ShimmerBlock style={{ width: '100%', height: 56, borderRadius: 16 }} />
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+
+  if (loading) {
+    return <SkeletonProduct />;
   }
 
   if (!product) {
@@ -506,75 +625,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
             </TouchableOpacity>
           </View>
 
-          {/* Stats */}
-          {product.stats && (
-            <View className="flex-row justify-between mb-6">
-              <View className="flex-1 bg-neutral-50 rounded-2xl p-4 mr-2">
-                <View className="flex-row items-center mb-1">
-                  <Ionicons name="star" size={16} color="#FE8C00" />
-                  <Text className="text-base font-quicksand-bold text-neutral-800 ml-1">
-                    {product.stats.averageRating?.toFixed(1) || '0.0'}
-                  </Text>
-                </View>
-                <Text className="text-sm text-neutral-600">
-                  {product.stats.totalReviews || 0} avis
-                </Text>
-              </View>
-              <View className="flex-1 bg-neutral-50 rounded-2xl p-4 ml-2">
-                <View className="flex-row items-center mb-1">
-                  <Ionicons name="people" size={16} color="#10B981" />
-                  <Text className="text-base font-quicksand-bold text-neutral-800 ml-1">
-                    {product.stats.totalSales || 0}
-                  </Text>
-                </View>
-                <Text className="text-sm text-neutral-600">vendus</Text>
-              </View>
-            </View>
-          )}
-
-          {/* Stock Status */}
-          <View className="mb-6">
-            <View className="flex-row items-center">
-              <View
-                className={`w-3 h-3 rounded-full mr-2 ${
-                  product.stock > 0 ? 'bg-success-500' : 'bg-error-500'
-                }`}
-              />
-              <Text
-                className={`font-quicksand-semibold ${
-                  product.stock > 0 ? 'text-success-600' : 'text-error-600'
-                }`}
-              >
-                {product.stock > 0 ? `En stock (${product.stock} disponibles)` : 'Rupture de stock'}
-              </Text>
-            </View>
-          </View>
-
-          {/* Quantity Selector */}
-          {product.stock > 0 && (
-            <View className="mb-6">
-              <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">
-                Quantité
-              </Text>
-              <View className="flex-row items-center">
-                <TouchableOpacity
-                  onPress={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-10 h-10 bg-neutral-100 rounded-full justify-center items-center"
-                >
-                  <Ionicons name="remove" size={16} color="#374151" />
-                </TouchableOpacity>
-                <Text className="mx-4 text-lg font-quicksand-bold text-neutral-800">
-                  {quantity}
-                </Text>
-                <TouchableOpacity
-                  onPress={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                  className="w-10 h-10 bg-neutral-100 rounded-full justify-center items-center"
-                >
-                  <Ionicons name="add" size={16} color="#374151" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
+          
 
           {/* Related Items */}
           {(similarProducts.length > 0 || loadingSimilar) && (
@@ -683,7 +734,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
               className="flex-1 bg-primary-500 rounded-2xl py-4 justify-center items-center"
             >
               <Text className="text-white font-quicksand-bold text-base">
-                Ajouter • {formatPrice(product.price * quantity)}
+                Ajouter au panier
               </Text>
             </TouchableOpacity>
           ) : (

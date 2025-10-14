@@ -5,10 +5,12 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
+  BackHandler,
   Dimensions,
   Easing,
   FlatList,
   Image,
+  Keyboard,
   Modal,
   RefreshControl,
   SafeAreaView,
@@ -180,6 +182,24 @@ export default function EnterpriseDashboard() {
     // Réinitialiser le quartier si la ville change
     setSelectedNeighborhood("");
   }, [selectedCity]);
+
+  // Gestion du bouton retour matériel pour fermer résultats/suggestions (parité client)
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (showSearchResults) {
+        hideSearchResults();
+        return true; // Empêche la navigation arrière par défaut
+      }
+      if (showSuggestions) {
+        setShowSuggestions(false);
+        setSuggestions([]);
+        return true; // Empêche la navigation arrière par défaut
+      }
+      return false; // Comportement par défaut
+    });
+
+    return () => backHandler.remove();
+  }, [showSearchResults, showSuggestions]);
 
   const loadProfileData = async () => {
     try {
@@ -415,6 +435,7 @@ export default function EnterpriseDashboard() {
   const loadFavorites = async () => {
     try {
       const favs = await ProductService.getFavoriteProducts();
+      console.log(`❤️ ${favs.length} favoris chargés`);
       setFavorites(new Set(favs.map(f => f.product._id)));
     } catch (error) {
       console.error('❌ Erreur chargement favoris:', error);
@@ -512,10 +533,19 @@ export default function EnterpriseDashboard() {
     }, 200);
   };
 
+  // Fonction pour masquer les résultats de recherche (parité client)
+  const hideSearchResults = () => {
+    setShowSearchResults(false);
+    setSearchResults([]);
+    setSearchInfo(null);
+    Keyboard.dismiss();
+  };
+
   const getSuggestions = async (query: string) => {
     try {
       setLoadingSearch(true);
       const suggestions = await SearchService.getSuggestions(query, 6);
+      console.log('🔍 Suggestions reçues:', suggestions);
       setSuggestions(suggestions);
       setShowSuggestions(suggestions.length > 0);
     } catch (error) {
@@ -625,7 +655,7 @@ export default function EnterpriseDashboard() {
     setShowRecentSearches(false);
 
     // Fermer le clavier pour éviter les conflits de tap
-    // Keyboard.dismiss();
+    Keyboard.dismiss();
 
     // Si c'est un produit identifiable, on navigue directement
     if (suggestion?.type === 'product') {
@@ -670,7 +700,7 @@ export default function EnterpriseDashboard() {
     setNeighborhoodModalVisible(false);
   };
 
-  const renderProduct = ({ item }: { item: Product }) => (
+  const renderProduct = (item: Product) => (
     <TouchableOpacity
       key={item._id}
       className="bg-white rounded-2xl shadow-md border border-neutral-100 p-2 mb-3 w-[48%] overflow-hidden"
@@ -722,6 +752,65 @@ export default function EnterpriseDashboard() {
             </Text>
           </View>
         )}
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderProductListItem = (item: Product) => (
+    <TouchableOpacity
+      key={item._id}
+      className="bg-white rounded-2xl shadow-md border border-neutral-100 p-2 mb-3 w-full overflow-hidden flex-row"
+      onPress={() => {
+        try {
+          router.push(`/(app)/(enterprise)/(tabs)/product/${item._id}`);
+        } catch (error) {
+          console.warn('Erreur navigation produit liste:', error);
+        }
+      }}
+    >
+      <View className="relative mr-3">
+        <Image
+          source={{ uri: item.images[0] || "https://via.placeholder.com/150x150/CCCCCC/FFFFFF?text=No+Image" }}
+          className="w-24 h-24 rounded-xl"
+          resizeMode="cover"
+        />
+        {item.stats?.totalSales > 10 && (
+          <View className="absolute top-1 left-1 bg-success-500 rounded-full px-2 py-0.5">
+            <Text className="text-white text-[10px] font-quicksand-bold">
+              Populaire
+            </Text>
+          </View>
+        )}
+      </View>
+      <View className="flex-1 justify-between">
+        <View>
+          <Text numberOfLines={2} className="text-sm font-quicksand-semibold text-neutral-800">
+            {item.name}
+          </Text>
+          {item.stats && (
+            <View className="flex-row items-center mt-1">
+              <Ionicons name="star" size={12} color="#FFD700" />
+              <Text className="text-xs text-neutral-600 ml-1">
+                {item.stats.averageRating?.toFixed(1) || '0.0'}
+              </Text>
+            </View>
+          )}
+        </View>
+        <View className="flex-row items-center justify-between mt-2">
+          <Text className="text-base font-quicksand-bold text-primary-600">
+            {formatPrice(item.price)}
+          </Text>
+          <TouchableOpacity
+            className="bg-neutral-100 rounded-full p-2"
+            onPress={() => toggleFavorite(item._id)}
+          >
+            <Ionicons
+              name={favorites.has(item._id) ? "heart" : "heart-outline"}
+              size={18}
+              color={favorites.has(item._id) ? "#EF4444" : "#6B7280"}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -801,13 +890,13 @@ export default function EnterpriseDashboard() {
           </View>
 
           {/* Search Bar */}
-          <View className="px-6">
+          <View className="px-4">
             <View className="bg-white rounded-2xl shadow-lg border border-white/20">
               <View className="flex-row items-center px-4 py-3">
                 <Ionicons name="search" size={20} color="#9CA3AF" />
                 <TextInput
                   className="ml-3 flex-1 text-neutral-700 font-quicksand-medium"
-                  placeholder="Rechercher des services, produits..."
+                  placeholder="Rechercher des produits..."
                   placeholderTextColor="#9CA3AF"
                   value={searchQuery}
                   onChangeText={handleSearchChange}
@@ -822,8 +911,6 @@ export default function EnterpriseDashboard() {
                   <TouchableOpacity onPress={() => {
                     if (searchQuery.trim()) {
                       performSearch();
-                    } else {
-                      router.push('/(app)/(enterprise)/(tabs)/products');
                     }
                   }}>
                     <Ionicons name="search" size={20} color="#10B981" />
@@ -844,9 +931,9 @@ export default function EnterpriseDashboard() {
                       </Text>
                     </TouchableOpacity>
                   </View>
-                  {recentSearches.slice(0, 5).map((recentSearch) => (
+                  {recentSearches.slice(0, 5).map((recentSearch, index) => (
                     <TouchableOpacity
-                      key={recentSearch.query}
+                      key={index}
                       className="flex-row items-center justify-between px-4 py-3 border-b border-gray-50"
                       onPress={() => {
                         setSearchQuery(recentSearch.query);
@@ -878,33 +965,64 @@ export default function EnterpriseDashboard() {
 
               {/* Suggestions */}
               {showSuggestions && searchSuggestions.length > 0 && (
-                <View className="border-t border-gray-100">
-                  <View className="px-4 py-2 bg-gray-50">
-                    <Text className="text-xs font-quicksand-semibold text-neutral-600 uppercase">
-                      Suggestions
+                <View className="border-t border-gray-100 rounded-b-2xl overflow-hidden">
+                  <View className="px-4 py-3 bg-gradient-to-r from-primary-50 to-primary-100">
+                    <Text className="text-xs font-quicksand-bold text-primary-700 uppercase tracking-wide">
+                      Suggestions ({searchSuggestions.length})
                     </Text>
                   </View>
-                  {searchSuggestions.map((suggestion, index) => (
-                    <TouchableOpacity
-                      key={suggestion.id ?? suggestion.text ?? index}
-                      className="flex-row items-center px-4 py-3 border-b border-gray-50"
-                      onPress={() => selectSuggestion(suggestion)}
-                    >
-                      <Ionicons
-                        name={suggestion.type === 'product' ? 'cube-outline' :
+                  {searchSuggestions.map((suggestion, index) => {
+                    console.log('🎨 Rendering suggestion:', index, suggestion);
+                    const isLast = index === searchSuggestions.length - 1;
+                    const getIconColor = (type: string) => {
+                      switch (type) {
+                        case 'product': return '#10B981';
+                        case 'category': return '#8B5CF6';
+                        case 'enterprise': return '#F59E0B';
+                        default: return '#6B7280';
+                      }
+                    };
+                    const getTypeColor = (type: string) => {
+                      switch (type) {
+                        case 'product': return '#10B981';
+                        case 'category': return '#8B5CF6';
+                        case 'enterprise': return '#F59E0B';
+                        default: return '#9CA3AF';
+                      }
+                    };
+
+                    return (
+                      <TouchableOpacity
+                        key={index}
+                        className={`flex-row items-center px-4 py-3.5 ${!isLast ? 'border-b border-gray-100' : ''}`}
+                        onPress={() => {
+                          console.log('🖱️ Suggestion clicked:', suggestion);
+                          selectSuggestion(suggestion);
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <View className="w-8 h-8 rounded-full items-center justify-center" style={{ backgroundColor: getIconColor(suggestion.type) + '15' }}>
+                          <Ionicons
+                            name={suggestion.type === 'product' ? 'cube-outline' :
                               suggestion.type === 'category' ? 'folder-outline' : 'business-outline'}
-                        size={16}
-                        color="#9CA3AF"
-                      />
-                      <Text className="ml-3 flex-1 text-neutral-700 font-quicksand-medium">
-                        {suggestion.text}
-                      </Text>
-                      <Text className="text-xs text-neutral-400 uppercase font-quicksand-medium">
-                        {suggestion.type === 'product' ? 'Produit' :
-                         suggestion.type === 'category' ? 'Catégorie' : 'Entreprise'}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                            size={16}
+                            color={getIconColor(suggestion.type)}
+                          />
+                        </View>
+                        <View className="ml-3 flex-1">
+                          <Text className="text-sm text-neutral-800 font-quicksand-medium" numberOfLines={1}>
+                            {suggestion.text}
+                          </Text>
+                        </View>
+                        <View className="px-2 py-1 rounded-full bg-gray-100">
+                          <Text className="text-xs font-quicksand-semibold uppercase" style={{ color: getTypeColor(suggestion.type) }}>
+                            {suggestion.type === 'product' ? 'Produit' :
+                              suggestion.type === 'category' ? 'Catégorie' : 'Entreprise'}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               )}
             </View>
@@ -913,73 +1031,57 @@ export default function EnterpriseDashboard() {
 
         {/* Résultats de recherche */}
         {showSearchResults && (
-          <View className="bg-white mx-4 rounded-2xl shadow-sm border border-neutral-100 mb-4">
-            {/* Header des résultats */}
-            <View className="flex-row items-center justify-between p-4 border-b border-gray-100">
-              <View className="flex-1">
-                <View className="flex-row items-center">
-                  <Text className="text-lg font-quicksand-bold text-neutral-800">
-                    Résultats de recherche
-                  </Text>
-                  {searchInfo?.fromCache && (
-                    <View className="ml-2 bg-green-100 rounded-full px-2 py-1">
-                      <Text className="text-xs font-quicksand-bold text-green-600">
-                        ⚡ Cache
-                      </Text>
-                    </View>
-                  )}
+          <View className="bg-white px-4 py-4 border-b border-neutral-100">
+            {/* En-tête résultats + toggle vue */}
+            <View className="flex-row items-center justify-between">
+              <Text className="text-lg font-quicksand-bold text-neutral-800 flex-1">
+                Résultats pour &quot;{searchQuery}&quot;
+              </Text>
+              <View className="flex-row items-center">
+                <View className="flex-row items-center bg-neutral-100 rounded-full p-1 mr-2">
+                  <TouchableOpacity
+                    onPress={() => setResultsView('grid')}
+                    className={`px-2 py-1 rounded-full ${resultsView === 'grid' ? 'bg-white' : ''}`}
+                  >
+                    <Ionicons name="grid-outline" size={18} color={resultsView === 'grid' ? '#10B981' : '#6B7280'} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setResultsView('list')}
+                    className={`px-2 py-1 rounded-full ${resultsView === 'list' ? 'bg-white' : ''}`}
+                  >
+                    <Ionicons name="list-outline" size={18} color={resultsView === 'list' ? '#10B981' : '#6B7280'} />
+                  </TouchableOpacity>
                 </View>
-                {searchInfo && (
-                  <View className="flex-row items-center mt-1">
-                    <Text className="text-sm text-neutral-600 font-quicksand-medium">
-                      {searchInfo.totalResults} résultat{searchInfo.totalResults > 1 ? 's' : ''} pour &quot;{searchInfo.query}&quot;
-                    </Text>
-                    {searchInfo.searchTime && (
-                      <Text className="text-xs text-neutral-400 font-quicksand-medium ml-2">
-                        • {searchInfo.searchTime}ms
-                      </Text>
-                    )}
-                  </View>
-                )}
-              </View>
-              <TouchableOpacity 
-                onPress={() => {
-                  setShowSearchResults(false);
-                  setSearchQuery('');
-                  setSearchResults([]);
-                }}
-                className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center"
-              >
-                <Ionicons name="close" size={16} color="#666" />
-              </TouchableOpacity>
-            </View>
-            
-            {/* Toggle vue et tri */}
-            <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100">
-              <View className="flex-row items-center bg-neutral-100 rounded-full p-1">
                 <TouchableOpacity
-                  onPress={() => setResultsView('grid')}
-                  className={`px-3 py-1.5 rounded-full ${resultsView === 'grid' ? 'bg-white' : ''}`}
+                  onPress={hideSearchResults}
+                  className="p-2 bg-neutral-100 rounded-full"
                 >
-                  <Ionicons name="grid-outline" size={16} color={resultsView === 'grid' ? '#10B981' : '#6B7280'} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setResultsView('list')}
-                  className={`px-3 py-1.5 rounded-full ${resultsView === 'list' ? 'bg-white' : ''}`}
-                >
-                    <Ionicons name="list-outline" size={16} color={resultsView === 'list' ? '#10B981' : '#6B7280'} />
+                  <Ionicons name="close" size={18} color="#6B7280" />
                 </TouchableOpacity>
               </View>
-              <TouchableOpacity className="flex-row items-center">
-                <Ionicons name="funnel-outline" size={16} color="#6B7280" />
-                <Text className="ml-1 text-sm font-quicksand-medium text-neutral-600">
-                  Trier
-                </Text>
-              </TouchableOpacity>
             </View>
 
-            {/* Chips de localisation */}
-            <View className="flex-row px-4 py-2">
+            {/* Infos supplémentaires */}
+            {searchInfo && (
+              <View className="flex-row items-center mt-1">
+                <Text className="text-xs text-neutral-400 font-quicksand-medium">
+                  {searchInfo.totalResults || searchResults.length} résultat{searchInfo.totalResults > 1 ? 's' : ''}
+                </Text>
+                {searchInfo.searchTime && (
+                  <Text className="text-xs text-neutral-400 font-quicksand-medium ml-2">
+                    • {searchInfo.searchTime}ms
+                  </Text>
+                )}
+                {searchInfo.fromCache && (
+                  <Text className="text-xs text-green-600 font-quicksand-medium ml-2">
+                    • En cache
+                  </Text>
+                )}
+              </View>
+            )}
+
+            {/* Chips localisation */}
+            <View className="flex-row mt-3">
               <TouchableOpacity
                 onPress={() => setCityModalVisible(true)}
                 className="flex-row items-center px-3 py-1.5 rounded-full border mr-2"
@@ -1005,7 +1107,7 @@ export default function EnterpriseDashboard() {
             </View>
 
             {/* Chips de tri */}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 8 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 8 }}>
               <TouchableOpacity
                 onPress={() => setSelectedSort('relevance')}
                 className="px-3 py-1.5 rounded-full border mr-2"
@@ -1043,137 +1145,49 @@ export default function EnterpriseDashboard() {
                 </Text>
               </TouchableOpacity>
             </ScrollView>
-            
-            {/* Liste des résultats */}
-            <View className="p-4">
-              {searchResults.length > 0 ? (
-                resultsView === 'grid' ? (
-                  <View className="flex-row flex-wrap justify-between">
-                    {searchResults.map((item) => renderProduct({ item }))}
-                  </View>
-                ) : (
-                  <FlatList
-                    data={searchResults}
-                    renderItem={({ item }: { item: Product }) => (
-                      <TouchableOpacity 
-                        className="flex-row bg-gray-50 rounded-xl p-3 mb-3"
-                        onPress={() => {
-                          try {
-                            router.push(`/(app)/(enterprise)/(tabs)/product/${item._id}`);
-                          } catch (error) {
-                            console.warn('Erreur navigation produit recherche:', error);
-                          }
-                        }}
-                      >
-                        {/* Image du produit */}
-                        <View className="w-16 h-16 rounded-xl overflow-hidden mr-3">
-                          {item.images && item.images.length > 0 ? (
-                            <Image
-                              source={{ uri: item.images[0] }}
-                              className="w-full h-full"
-                              resizeMode="cover"
-                            />
-                          ) : (
-                            <View className="w-full h-full bg-gray-200 items-center justify-center">
-                              <Ionicons name="image-outline" size={24} color="#ccc" />
-                            </View>
-                          )}
-                        </View>
-                        
-                        {/* Informations du produit */}
-                        <View className="flex-1">
-                          <Text className="text-sm font-quicksand-semibold text-neutral-800 mb-1" numberOfLines={2}>
-                            {item.name}
-                          </Text>
-                          
-                          <Text className="text-lg font-quicksand-bold text-primary-600 mb-1">
-                            {formatPrice(item.price)}
-                          </Text>
-                          
-                          {/* Entreprise */}
-                          {(item as any).enterpriseInfo && (
-                            <Text className="text-xs text-neutral-500 mb-1" numberOfLines={1}>
-                              {(item as any).enterpriseInfo.companyName}
-                            </Text>
-                          )}
-                          
-                          {/* Catégorie */}
-                          {(item as any).categoryInfo && (
-                            <Text className="text-xs text-neutral-400" numberOfLines={1}>
-                              {(item as any).categoryInfo.name}
-                            </Text>
-                          )}
-                          
-                          {/* Stats */}
-                          {item.stats && (
-                            <View className="flex-row items-center mt-1">
-                              <Ionicons name="star" size={12} color="#FFD700" />
-                              <Text className="text-xs text-neutral-600 ml-1">
-                                {item.stats.averageRating?.toFixed(1) || '0.0'}
-                              </Text>
-                              <Text className="text-xs text-neutral-400 ml-2">
-                                • {item.stats.totalSales || 0} ventes
-                              </Text>
-                            </View>
-                          )}
-                        </View>
-                        
-                        {/* Flèche */}
-                        <View className="justify-center">
-                          <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
-                        </View>
-                      </TouchableOpacity>
-                    )}
-                    keyExtractor={(item) => item._id}
-                    showsVerticalScrollIndicator={false}
-                    scrollEnabled={false}
-                  />
-                )
+
+            {/* Contenu */}
+            {loadingSearch ? (
+              resultsView === 'grid' ? (
+                <View className="flex-row flex-wrap justify-between mt-2">
+                  {[0, 1, 2, 3].map((i) => (
+                    <View key={i} className="w-[48%] h-40 bg-neutral-100 rounded-2xl mb-3" />
+                  ))}
+                </View>
               ) : (
-                <View className="items-center py-8">
-                  <Ionicons name="search" size={48} color="#ccc" />
-                  <Text className="text-neutral-500 font-quicksand-medium mt-2">
-                    Aucun résultat trouvé
+                <View className="mt-2">
+                  {[0, 1, 2, 3].map((i) => (
+                    <View key={i} className="w-full h-28 bg-neutral-100 rounded-2xl mb-3" />
+                  ))}
+                </View>
+              )
+            ) : searchResults.length > 0 ? (
+              resultsView === 'grid' ? (
+                <View className="flex-row flex-wrap justify-between">
+                  {searchResults.map(renderProduct)}
+                </View>
+              ) : (
+                <View>
+                  {searchResults.map(renderProductListItem)}
+                </View>
+              )
+            ) : (
+              <View className="items-center justify-center py-8">
+                <Ionicons name="search-outline" size={36} color="#9CA3AF" />
+                <Text className="mt-2 text-neutral-600 font-quicksand-medium">
+                  Aucun produit trouvé
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setCityModalVisible(true)}
+                  className="mt-3 px-4 py-2 rounded-full border"
+                  style={{ borderColor: '#FED7AA' }}
+                >
+                  <Text className="text-primary-600 font-quicksand-semibold">
+                    Ajuster les filtres
                   </Text>
-                </View>
-              )}
-              
-              {/* Voir tous les résultats */}
-              {searchResults.length > 0 && (
-                <View className="border-t border-gray-100 p-4">
-                  <TouchableOpacity 
-                    className="bg-primary-500 rounded-xl py-3 items-center"
-                    onPress={() => {
-                      // Ici on peut naviguer vers une page de résultats dédiée
-                      // ou garder cette interface inline
-                      router.push('/(app)/(enterprise)/(tabs)/products');
-                    }}
-                  >
-                    <Text className="text-white font-quicksand-semibold">
-                      Voir tous les résultats ({searchInfo?.totalResults || searchResults.length})
-                    </Text>
-                  </TouchableOpacity>
-                  
-                  {/* Statistiques de performance */}
-                  {searchInfo && (
-                    <View className="flex-row items-center justify-center mt-3 opacity-60">
-                      <Ionicons name="flash" size={12} color="#9CA3AF" />
-                      <Text className="text-xs text-neutral-500 font-quicksand-medium ml-1">
-                        Recherche en {searchInfo.searchTime || 0}ms
-                      </Text>
-                      {searchInfo.fromCache && (
-                        <>
-                          <Text className="text-xs text-neutral-400 mx-1">•</Text>
-                          <Text className="text-xs text-green-600 font-quicksand-medium">
-                            Résultats en cache
-                          </Text>
-                        </>
-                      )}
-                    </View>
-                  )}
-                </View>
-              )}
-            </View>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         )}
 
@@ -1227,12 +1241,19 @@ export default function EnterpriseDashboard() {
                   return (
                     <TouchableOpacity
                       activeOpacity={0.9}
-                      onPress={async () => { try { await AdvertisementService.incrementClick(item._id); } catch {} }}
+                      onPress={async () => { 
+                        try { 
+                          await AdvertisementService.incrementClick(item._id);
+                          router.push(`/(app)/(enterprise)/advertisement/${item._id}`);
+                        } catch (error) {
+                          console.warn('Erreur lors du clic sur annonce:', error);
+                        }
+                      }}
                       style={{ width: screenWidth, paddingHorizontal: 16 }}
                     >
                       <View className="bg-white rounded-2xl overflow-hidden border border-neutral-100 h-40">
-                        {item.image ? (
-                          <Image source={{ uri: item.image }} className="w-full h-full" resizeMode="cover" />
+                        {item.images && item.images.length > 0 ? (
+                          <Image source={{ uri: item.images[0] }} className="w-full h-full" resizeMode="cover" />
                         ) : (
                           <View className="flex-1 bg-neutral-100 items-center justify-center">
                             <Ionicons name="image" size={34} color="#9CA3AF" />
@@ -1294,6 +1315,12 @@ export default function EnterpriseDashboard() {
                 const categoryIcon = category.icon || icons[index % icons.length];
                 const categoryId = category._id || category.id || index;
 
+                // Fonction helper pour déterminer si c'est un emoji ou une icône Ionicons
+                const isEmoji = (str: string) => {
+                  const emojiRegex = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u;
+                  return emojiRegex.test(str);
+                };
+
                 return (
                   <View key={categoryId} style={{ width: '25%', paddingHorizontal: 5, marginBottom: 16 }}>
                     <TouchableOpacity className="items-center">
@@ -1305,7 +1332,11 @@ export default function EnterpriseDashboard() {
                           borderColor: categoryColor + '30'
                         }}
                       >
-                        <Ionicons name={categoryIcon as any} size={24} color={categoryColor} />
+                        {isEmoji(categoryIcon) ? (
+                          <Text style={{ fontSize: 24 }}>{categoryIcon}</Text>
+                        ) : (
+                          <Ionicons name={categoryIcon as any} size={24} color={categoryColor} />
+                        )}
                       </View>
                       <Text className="text-xs font-quicksand-semibold text-neutral-700 text-center leading-4">
                         {category.name}
@@ -1333,9 +1364,9 @@ export default function EnterpriseDashboard() {
               <TouchableOpacity
                 onPress={() => {
                   try {
-                    router.push('/(app)/(enterprise)/(tabs)/products');
+                    router.push('/(app)/(enterprise)/my-products');
                   } catch (error) {
-                    console.warn('Erreur navigation produits:', error);
+                    console.warn('Erreur navigation mes produits:', error);
                   }
                 }}
                 className="flex-row items-center bg-primary-50 rounded-xl px-3 py-2"
@@ -1356,7 +1387,7 @@ export default function EnterpriseDashboard() {
             </View>
           ) : featuredProducts.length > 0 ? (
             <View className="flex-row flex-wrap justify-between px-4">
-              {featuredProducts.map((item) => renderProduct({ item }))}
+              {featuredProducts.map((item) => renderProduct(item))}
             </View>
           ) : (
             <View className="flex-1 justify-center items-center py-8">
@@ -1382,7 +1413,7 @@ export default function EnterpriseDashboard() {
               <TouchableOpacity
                 onPress={() => {
                   try {
-                    router.push('/(app)/(enterprise)/(tabs)/products');
+                    router.push('/(app)/(enterprise)/marketplace');
                   } catch (error) {
                     console.warn('Erreur navigation marketplace:', error);
                   }
@@ -1405,7 +1436,7 @@ export default function EnterpriseDashboard() {
             </View>
           ) : popularProducts.length > 0 ? (
             <View className="flex-row flex-wrap justify-between px-4">
-              {popularProducts.map((item) => renderProduct({ item }))}
+              {popularProducts.map((item) => renderProduct(item))}
             </View>
           ) : (
             <View className="flex-1 justify-center items-center py-8">

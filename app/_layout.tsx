@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { ToastProvider as ReanimatedToastProvider } from "../components/ui/ReanimatedToast/toast-provider";
 import { ToastManager } from "../components/ui/ToastManager";
 import { AuthProvider } from "../contexts/AuthContext";
-import { MQTTProvider } from "../contexts/MQTTContext";
+import { SocketProvider } from "../contexts/SocketContext";
 import "./globals.css";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -36,7 +36,7 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <MQTTProvider>
+      <SocketProvider>
         <ReanimatedToastProvider>
           <ToastManager>
           <Stack>
@@ -47,7 +47,7 @@ export default function RootLayout() {
           </Stack>
           </ToastManager>
         </ReanimatedToastProvider>
-      </MQTTProvider>
+      </SocketProvider>
     </AuthProvider>
   );
 }

@@ -1,18 +1,22 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Dimensions,
-    FlatList,
-    Image,
-    Linking,
-    RefreshControl,
-    SafeAreaView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Dimensions,
+  Easing,
+  FlatList,
+  Image,
+  Linking,
+  RefreshControl,
+  SafeAreaView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import EnterpriseService, { Enterprise } from "../../../../../services/api/EnterpriseService";
 import { Product } from "../../../../../types/product";
@@ -101,6 +105,116 @@ export default function EnterpriseDetails() {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
   };
+
+  // Skeleton Loader Component
+  const ShimmerBlock = ({ style }: { style?: any }) => {
+    const shimmer = React.useRef(new Animated.Value(0)).current;
+    useEffect(() => {
+      const loop = Animated.loop(
+        Animated.timing(shimmer, {
+          toValue: 1,
+          duration: 1200,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      );
+      loop.start();
+      return () => loop.stop();
+    }, [shimmer]);
+    const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
+    return (
+      <View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
+        <Animated.View style={{
+          position: 'absolute', top: 0, bottom: 0, width: 120,
+          transform: [{ translateX }],
+          backgroundColor: 'rgba(255,255,255,0.35)',
+          opacity: 0.7,
+        }} />
+      </View>
+    );
+  };
+
+  const SkeletonEnterprise = () => (
+    <SafeAreaView className="flex-1 bg-neutral-50">
+      <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
+
+      {/* Header Skeleton */}
+      <LinearGradient
+        colors={['#10B981', '#34D399']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        className="px-6 py-4 pt-16"
+      >
+        <View className="flex-row items-center justify-between">
+          <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
+          <ShimmerBlock style={{ width: 150, height: 20, borderRadius: 10 }} />
+          <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
+        </View>
+      </LinearGradient>
+
+      <View className="flex-1">
+        {/* Enterprise Info Skeleton */}
+        <View className="bg-white mx-4 rounded-2xl shadow-sm border border-neutral-100 mt-6 mb-6">
+          <View className="p-6">
+            <View className="flex-row items-center mb-4">
+              <ShimmerBlock style={{ width: 80, height: 80, borderRadius: 16 }} />
+              <View className="ml-4 flex-1">
+                <ShimmerBlock style={{ width: '70%', height: 20, borderRadius: 10, marginBottom: 8 }} />
+                <ShimmerBlock style={{ width: '50%', height: 14, borderRadius: 7, marginBottom: 8 }} />
+                <ShimmerBlock style={{ width: '40%', height: 14, borderRadius: 7 }} />
+              </View>
+            </View>
+
+            <ShimmerBlock style={{ width: '100%', height: 16, borderRadius: 8, marginBottom: 4 }} />
+            <ShimmerBlock style={{ width: '80%', height: 16, borderRadius: 8, marginBottom: 20 }} />
+
+            <View className="flex-row justify-between mb-4">
+              <ShimmerBlock style={{ width: '30%', height: 60, borderRadius: 12 }} />
+              <ShimmerBlock style={{ width: '30%', height: 60, borderRadius: 12 }} />
+              <ShimmerBlock style={{ width: '30%', height: 60, borderRadius: 12 }} />
+            </View>
+
+            <ShimmerBlock style={{ width: '35%', height: 16, borderRadius: 8, marginBottom: 12 }} />
+            <View className="flex-row">
+              <ShimmerBlock style={{ width: 80, height: 32, borderRadius: 16, marginRight: 8 }} />
+              <ShimmerBlock style={{ width: 80, height: 32, borderRadius: 16, marginRight: 8 }} />
+              <ShimmerBlock style={{ width: 80, height: 32, borderRadius: 16 }} />
+            </View>
+          </View>
+        </View>
+
+        {/* Products Header Skeleton */}
+        <View className="px-4 mb-4">
+          <View className="flex-row items-center justify-between">
+            <ShimmerBlock style={{ width: '40%', height: 20, borderRadius: 10 }} />
+            <ShimmerBlock style={{ width: 80, height: 24, borderRadius: 12 }} />
+          </View>
+        </View>
+
+        {/* Products Grid Skeleton */}
+        <View className="px-4">
+          <View className="flex-row justify-between mb-3">
+            <View style={{ width: (screenWidth - 48) / 2 }}>
+              <ShimmerBlock style={{ width: '100%', height: 120, borderRadius: 16, marginBottom: 12 }} />
+              <View className="p-3">
+                <ShimmerBlock style={{ width: '80%', height: 14, borderRadius: 7, marginBottom: 8 }} />
+                <ShimmerBlock style={{ width: '60%', height: 16, borderRadius: 8, marginBottom: 8 }} />
+                <ShimmerBlock style={{ width: '40%', height: 12, borderRadius: 6 }} />
+              </View>
+            </View>
+            <View style={{ width: (screenWidth - 48) / 2 }}>
+              <ShimmerBlock style={{ width: '100%', height: 120, borderRadius: 16, marginBottom: 12 }} />
+              <View className="p-3">
+                <ShimmerBlock style={{ width: '80%', height: 14, borderRadius: 7, marginBottom: 8 }} />
+                <ShimmerBlock style={{ width: '60%', height: 16, borderRadius: 8, marginBottom: 8 }} />
+                <ShimmerBlock style={{ width: '40%', height: 12, borderRadius: 6 }} />
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
 
   const openWhatsApp = (phone: string) => {
     const message = `Bonjour ! Je découvre votre entreprise "${enterprise?.companyName}" sur NativeCommerce. Pouvez-vous me donner plus d'informations sur vos produits ? Merci !`;
@@ -206,16 +320,7 @@ export default function EnterpriseDetails() {
   );
 
   if (loading) {
-    return (
-      <SafeAreaView className="flex-1 bg-white">
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#FE8C00" />
-          <Text className="mt-4 text-neutral-600 font-quicksand-medium">
-            Chargement de l&apos;entreprise...
-          </Text>
-        </View>
-      </SafeAreaView>
-    );
+    return <SkeletonEnterprise />;
   }
 
   if (!enterprise) {
@@ -242,21 +347,30 @@ export default function EnterpriseDetails() {
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-50">
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-6 py-4 pt-16 bg-white">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="w-10 h-10 bg-neutral-100 rounded-full justify-center items-center"
-        >
-          <Ionicons name="chevron-back" size={20} color="#374151" />
-        </TouchableOpacity>
-        <Text className="text-lg font-quicksand-bold text-neutral-800">
-          {enterprise.companyName}
-        </Text>
-        <TouchableOpacity className="w-10 h-10 bg-neutral-100 rounded-full justify-center items-center">
-          <Ionicons name="heart-outline" size={20} color="#374151" />
-        </TouchableOpacity>
-      </View>
+      <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
+
+      {/* Header vert commun */}
+      <LinearGradient
+        colors={['#10B981', '#34D399']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        className="px-6 py-4 pt-16"
+      >
+        <View className="flex-row items-center justify-between">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="w-10 h-10 bg-white/20 rounded-full items-center justify-center"
+          >
+            <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+          <Text className="text-xl font-quicksand-bold text-white flex-1 text-center">
+            {enterprise.companyName}
+          </Text>
+          <TouchableOpacity className="w-10 h-10 bg-white/20 rounded-full items-center justify-center">
+            <Ionicons name="heart-outline" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
 
       <FlatList
         data={products}

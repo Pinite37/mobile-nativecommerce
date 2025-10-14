@@ -3,7 +3,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, Easing, FlatList, Image, RefreshControl, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import ConfirmationModal from "../../../../../components/ui/ConfirmationModal";
 import NotificationModal, { useNotification } from "../../../../../components/ui/NotificationModal";
 import DeliveryService, { DeliveryOffer } from "../../../../../services/api/DeliveryService";
 
@@ -51,6 +50,7 @@ export default function EnterpriseOffersScreen() {
       setError(null);
       const status = filter === 'ALL' ? undefined : filter;
       const list = await DeliveryService.listEnterpriseOffers(status as any);
+      console.log(`📦 ${list} offres chargées (filtre: ${filter})`);
       setOffers(list);
     } catch (e: any) {
       setError(e.message || 'Erreur de chargement');
@@ -147,8 +147,9 @@ export default function EnterpriseOffersScreen() {
   };
 
   const renderItem = ({ item }: { item: DeliveryOffer }) => {
-    const product = typeof item.product === 'string' ? { _id: item.product } : (item.product || {});
-    const customer = typeof item.customer === 'string' ? { _id: item.customer } : (item.customer || {});
+    // Utiliser productData qui contient les infos du produit
+    const productData = (item as any).productData || {};
+    const customer = (item as any).customer || {};
     const status = item.status;
 
     const statusPill = (() => {
@@ -162,16 +163,19 @@ export default function EnterpriseOffersScreen() {
     })();
 
     return (
-      <TouchableOpacity className="bg-white rounded-2xl p-4 mx-4 mb-4 shadow-sm border border-neutral-100">
+      <View className="bg-white rounded-2xl p-4 mx-4 mb-4 shadow-sm border border-neutral-100">
         {/* Header */}
         <View className="flex-row items-center justify-between mb-3">
           <View className="flex-row items-center">
-            <Image source={{ uri: (product as any).images?.[0] || 'https://via.placeholder.com/40x40/CCCCCC/FFFFFF?text=PD' }} className="w-10 h-10 rounded-lg" />
+            <Image 
+              source={{ uri: productData.images?.[0] || 'https://via.placeholder.com/40x40/CCCCCC/FFFFFF?text=PD' }} 
+              className="w-10 h-10 rounded-lg" 
+            />
             <View className="ml-3">
               <Text className="text-sm font-quicksand-semibold text-neutral-800" numberOfLines={1}>
-                {(product as any).name || 'Produit'}
+                {productData.name || 'Produit'}
               </Text>
-              <Text className="text-xs text-neutral-600">{formatPrice((product as any).price)}</Text>
+              <Text className="text-xs text-neutral-600">{formatPrice(productData.price)}</Text>
             </View>
           </View>
           <View className="flex-row items-center px-3 py-1 rounded-full" style={{ backgroundColor: statusPill.bg }}>
@@ -185,7 +189,7 @@ export default function EnterpriseOffersScreen() {
           <View className="flex-1 mr-3">
             <Text className="text-xs text-neutral-500">Client</Text>
             <Text className="text-sm font-quicksand-medium text-neutral-800" numberOfLines={1}>
-              {customer.firstName || customer.lastName ? `${customer.firstName || ''} ${customer.lastName || ''}`.trim() : customer._id}
+              {customer.firstName || customer.lastName ? `${customer.firstName || ''} ${customer.lastName || ''}`.trim() : (customer._id || 'Client')}
             </Text>
           </View>
           <View className="items-end">
@@ -207,8 +211,11 @@ export default function EnterpriseOffersScreen() {
                   className="bg-red-50 rounded-lg px-3 py-2 mb-2"
                   activeOpacity={0.8}
                   onPress={() => {
+                    console.log('🔴 Bouton Supprimer cliqué pour offre:', item._id);
+                    console.log('🔴 Offer details:', item);
                     setSelectedOffer(item);
                     setConfirmVisible(true);
+                    console.log('🔴 Modal should be visible now');
                   }}
                 >
                   <Text className="text-sm font-quicksand-semibold" style={{ color: '#EF4444' }}>Supprimer</Text>
@@ -217,7 +224,7 @@ export default function EnterpriseOffersScreen() {
             )}
           </View>
         </View>
-      </TouchableOpacity>
+      </View>
     );
   };
 
@@ -356,36 +363,130 @@ export default function EnterpriseOffersScreen() {
         />
       </View>
 
-      {/* Confirmation Modal */}
-      <ConfirmationModal
-        visible={confirmVisible}
-        title="Supprimer l'offre ?"
-        message="Cette action est irréversible. Seules les offres ouvertes peuvent être supprimées."
-        confirmText="Supprimer"
-        confirmColor="#EF4444"
-        isDestructive
-        loading={confirmLoading}
-        onCancel={() => {
-          setConfirmVisible(false);
-          setSelectedOffer(null);
-        }}
-        onConfirm={async () => {
-          if (!selectedOffer) return;
-          setConfirmLoading(true);
-          try {
-            await DeliveryService.deleteOffer(selectedOffer._id);
-            // Retirer localement sans recharger toute la liste
-            setOffers(prev => prev.filter(o => o._id !== selectedOffer._id));
-            setConfirmVisible(false);
-            setSelectedOffer(null);
-            showNotification('success', 'Offre supprimée', 'Votre offre a été supprimée avec succès.');
-          } catch (e: any) {
-            showNotification('error', 'Échec de la suppression', e.message || "Impossible de supprimer l'offre");
-          } finally {
-            setConfirmLoading(false);
-          }
-        }}
-      />
+      {/* Confirmation Modal - VERSION SIMPLE */}
+      {confirmVisible && (
+        <View 
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 9999,
+          }}
+        >
+          <View 
+            style={{
+              backgroundColor: 'white',
+              borderRadius: 20,
+              padding: 24,
+              margin: 20,
+              maxWidth: 400,
+              width: '90%',
+            }}
+          >
+            {/* Icône */}
+            <View style={{ alignItems: 'center', marginBottom: 16 }}>
+              <View 
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: 30,
+                  backgroundColor: '#FEE2E2',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <Ionicons name="warning" size={32} color="#EF4444" />
+              </View>
+            </View>
+
+            {/* Titre */}
+            <Text 
+              className="font-quicksand-bold text-neutral-800"
+              style={{
+                fontSize: 20,
+                textAlign: 'center',
+                marginBottom: 8,
+              }}
+            >
+              Supprimer l&apos;offre ?
+            </Text>
+
+            {/* Message */}
+            <Text 
+              className="font-quicksand-medium text-neutral-600"
+              style={{
+                fontSize: 14,
+                textAlign: 'center',
+                marginBottom: 24,
+              }}
+            >
+              Cette action est irréversible. L&apos;offre sera définitivement supprimée.
+            </Text>
+
+            {/* Boutons */}
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity
+                onPress={() => {
+                  console.log('🟡 Annulation');
+                  setConfirmVisible(false);
+                  setTimeout(() => setSelectedOffer(null), 300);
+                }}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#F3F4F6',
+                  paddingVertical: 14,
+                  borderRadius: 12,
+                  alignItems: 'center',
+                }}
+                disabled={confirmLoading}
+              >
+                <Text className="font-quicksand-semibold text-neutral-700">Annuler</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={async () => {
+                  console.log('🟢 Confirmation suppression');
+                  if (!selectedOffer || confirmLoading) return;
+                  setConfirmLoading(true);
+                  try {
+                    console.log('🔵 Appel API deleteOffer pour:', selectedOffer._id);
+                    await DeliveryService.deleteOffer(selectedOffer._id);
+                    console.log('✅ Offre supprimée avec succès');
+                    setOffers(prev => prev.filter(o => o._id !== selectedOffer._id));
+                    showNotification('success', 'Offre supprimée', 'Votre offre a été supprimée avec succès.');
+                    setConfirmVisible(false);
+                    setTimeout(() => setSelectedOffer(null), 300);
+                  } catch (e: any) {
+                    console.error('❌ Erreur suppression offre:', e);
+                    showNotification('error', 'Échec de la suppression', e.message || "Impossible de supprimer l'offre");
+                  } finally {
+                    setConfirmLoading(false);
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  backgroundColor: confirmLoading ? '#FCA5A5' : '#EF4444',
+                  paddingVertical: 14,
+                  borderRadius: 12,
+                  alignItems: 'center',
+                }}
+                disabled={confirmLoading}
+              >
+                {confirmLoading ? (
+                  <Text className="font-quicksand-semibold text-white">Suppression...</Text>
+                ) : (
+                  <Text className="font-quicksand-semibold text-white">Supprimer</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
 
       {/* Notification toast/modal */}
       <NotificationModal

@@ -230,9 +230,9 @@ export default function AdvertisementDetail() {
         >
           {/* Hero Image */}
           <View className="mx-4 mt-8 bg-white rounded-3xl overflow-hidden border border-neutral-100">
-            {ad.image ? (
+            {ad.images && ad.images.length > 0 ? (
               <View className="relative">
-                <Image source={{ uri: ad.image }} className="w-full h-48" resizeMode="cover" />
+                <Image source={{ uri: ad.images[0] }} className="w-full h-48" resizeMode="cover" />
                 {statusInfo && (
                   <View className="absolute top-3 left-3 px-3 py-1 rounded-full" style={{ backgroundColor: statusInfo.color + '22' }}>
                     <Text className="text-xs font-quicksand-semibold" style={{ color: statusInfo.color }}>{statusInfo.label}</Text>

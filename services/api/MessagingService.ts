@@ -44,7 +44,7 @@ export interface Message {
     role: string;
   };
   text: string;
-  messageType: 'TEXT' | 'IMAGE' | 'FILE';
+  messageType: 'TEXT' | 'IMAGE' | 'FILE' | 'SYSTEM';
   replyTo?: Message;
   sentAt?: string; // Optionnel car parfois c'est createdAt
   createdAt?: string; // Ajouté pour correspondre à l'API
@@ -58,6 +58,10 @@ export interface Message {
     deletedAt?: string;
     deletedBy?: string[];
   };
+  // Champs locaux pour gestion optimiste de l'envoi
+  _localId?: string; // ID temporaire pour les messages en cours d'envoi
+  _sendingStatus?: 'pending' | 'sent' | 'failed'; // Statut d'envoi local
+  _sendError?: string; // Message d'erreur en cas d'échec
 }
 
 export interface ConversationCreationResponse {
@@ -345,26 +349,26 @@ class MessagingService {
   }
 
   /**
-   * Rechercher des conversations
+   * Supprimer une conversation (retirer l'utilisateur)
    */
-  async searchConversations(query: string, page: number = 1, limit: number = 20): Promise<Conversation[]> {
-    console.log('🔄 MESSAGING SERVICE - Recherche conversations:', query);
-    
+  async deleteConversation(conversationId: string): Promise<any> {
+    console.log('🔄 MESSAGING SERVICE - Suppression conversation:', conversationId);
+
     try {
-      const response = await ApiService.get<any>(
-        `${this.baseUrl}/conversations/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`
+      const response = await ApiService.delete<any>(
+        `${this.baseUrl}/conversations/${conversationId}`
       );
-      
+
       if (!response || !response.data) {
         throw new Error('Réponse invalide du serveur');
       }
-      
-      const conversations = response.data;
-      console.log('✅ MESSAGING SERVICE - Recherche terminée:', conversations?.length || 0);
-      return conversations || [];
+
+      const result = response.data;
+      console.log('✅ MESSAGING SERVICE - Conversation supprimée');
+      return result;
     } catch (error) {
-      console.error('❌ MESSAGING SERVICE - Erreur recherche:', error);
-      return []; // Retourner un tableau vide en cas d'erreur
+      console.error('❌ MESSAGING SERVICE - Erreur suppression conversation:', error);
+      throw error;
     }
   }
 
@@ -420,6 +424,8 @@ class MessagingService {
         return '📷 Image';
       case 'FILE':
         return '📎 Fichier';
+      case 'SYSTEM':
+        return message.text; // Pour les messages système, afficher le texte complet
       default:
         return 'Message';
     }

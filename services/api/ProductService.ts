@@ -1,11 +1,11 @@
 import {
   CreateProductRequest,
+  FavoriteItem,
   Product,
   ProductFilters,
   ProductsResponse,
   RemoveImageRequest,
-  UpdateProductRequest,
-  FavoriteItem
+  UpdateProductRequest
 } from '../../types/product';
 import ApiService from './ApiService';
 
@@ -187,8 +187,9 @@ class ProductService {
       console.log('📦 Response complète:', response); // Pour débugger
       
       if (response.success && response.data) {
-        console.log('✅ Produits favoris récupérés:', response.data.length);
-        return response.data; // Directement response.data car c'est un tableau
+        const favorites = Array.isArray(response.data) ? response.data : [];
+        console.log('✅ Produits favoris récupérés:', favorites.length);
+        return favorites; // Retourner un tableau typé
       }
       
       throw new Error('Échec de la récupération des produits favoris');

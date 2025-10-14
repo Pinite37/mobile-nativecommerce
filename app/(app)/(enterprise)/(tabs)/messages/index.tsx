@@ -3,25 +3,24 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Animated,
-  Easing,
-  FlatList,
-  Image,
-  RefreshControl,
-  SafeAreaView,
-  StatusBar,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Animated,
+    Easing,
+    FlatList,
+    Image,
+    RefreshControl,
+    SafeAreaView,
+    StatusBar,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { useMQTT } from "../../../../../hooks/useMQTT";
+import { useSocket } from "../../../../../hooks/useSocket";
 import MessagingService, { Conversation } from "../../../../../services/api/MessagingService";
-
 export default function MessagesPage() {
   const router = useRouter();
-  const { onNewMessage, onMessagesRead, offNewMessage, offMessagesRead } = useMQTT();
+  const { onNewMessage, onMessagesRead } = useSocket();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -29,6 +28,11 @@ export default function MessagesPage() {
   const [searchResults, setSearchResults] = useState<Conversation[]>([]);
   const [searching, setSearching] = useState(false);
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+
+  // États pour le menu contextuel
+  const [contextMenuVisible, setContextMenuVisible] = useState(false);
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [contextMenuLoading, setContextMenuLoading] = useState(false);
 
   const loadConversations = async () => {
     try {
@@ -55,8 +59,16 @@ export default function MessagesPage() {
     
     try {
       setSearching(true);
-      const results = await MessagingService.searchConversations(query.trim());
-      setSearchResults(results || []);
+      // Pour le moment, filtrer localement car searchConversations n'est pas implémentée
+      const results = conversations.filter(conv => {
+        const participant = conv.otherParticipant || conv.participants?.[0];
+        const participantName = participant ? MessagingService.formatParticipantName(participant) : '';
+        const productName = conv.product?.name || '';
+        const searchLower = query.toLowerCase();
+        return participantName.toLowerCase().includes(searchLower) || 
+               productName.toLowerCase().includes(searchLower);
+      });
+      setSearchResults(results);
     } catch (error) {
       console.error('❌ Erreur recherche conversations:', error);
       setSearchResults([]);
@@ -71,6 +83,52 @@ export default function MessagesPage() {
     setRefreshing(false);
   };
 
+  // Gestion du menu contextuel
+  const handleLongPress = (conversation: Conversation) => {
+    console.log('🔵 Long press sur conversation:', conversation._id);
+    setSelectedConversation(conversation);
+    setContextMenuVisible(true);
+  };
+
+  const handleArchiveConversation = () => {
+    console.log('📁 Archive conversation (pas encore implémenté):', selectedConversation?._id);
+    setContextMenuVisible(false);
+    setSelectedConversation(null);
+    // TODO: Implémenter l'archivage plus tard
+  };
+
+  const handleDeleteConversation = async () => {
+    if (!selectedConversation) return;
+
+    console.log('🗑️ Suppression conversation:', selectedConversation._id);
+    setContextMenuLoading(true);
+
+    try {
+      await MessagingService.deleteConversation(selectedConversation._id);
+
+      // Retirer la conversation de la liste localement
+      setConversations(prev => prev.filter(conv => conv._id !== selectedConversation._id));
+      setSearchResults(prev => prev.filter(conv => conv._id !== selectedConversation._id));
+
+      console.log('✅ Conversation supprimée avec succès');
+      setContextMenuVisible(false);
+      setSelectedConversation(null);
+
+      // TODO: Afficher une notification de succès si nécessaire
+
+    } catch (error: any) {
+      console.error('❌ Erreur suppression conversation:', error);
+      // TODO: Afficher une notification d'erreur
+    } finally {
+      setContextMenuLoading(false);
+    }
+  };
+
+  const closeContextMenu = () => {
+    setContextMenuVisible(false);
+    setSelectedConversation(null);
+  };
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
   };
@@ -82,11 +140,11 @@ export default function MessagesPage() {
     }, [])
   );
 
-  // === GESTION MQTT ===
-  React.useEffect(() => {
-    const setupMQTTConnection = async () => {
+  // === GESTION SOCKET.IO ===
+  useEffect(() => {
+    const setupSocketConnection = async () => {
       try {
-        // Le client MQTT est géré par le hook useMQTT dans les composants de conversation
+        // Le client Socket.IO est géré par le hook useSocket dans les composants de conversation
         // Ici on configure juste les listeners pour les notifications de messages
 
         // Écouter les nouveaux messages (notifications)
@@ -146,30 +204,23 @@ export default function MessagesPage() {
           }));
         };
 
-        // S'abonner aux événements MQTT via le hook
-        onNewMessage(handleNewMessageNotification);
-        onMessagesRead(handleMessagesRead);
+        // S'abonner aux événements Socket.IO via le hook
+        const cleanupNewMessage = onNewMessage(handleNewMessageNotification);
+        const cleanupMessagesRead = onMessagesRead(handleMessagesRead);
 
         // Cleanup function
         return () => {
-          offNewMessage(handleNewMessageNotification);
-          offMessagesRead(handleMessagesRead);
+          cleanupNewMessage?.();
+          cleanupMessagesRead?.();
         };
 
       } catch (error) {
-        console.error('❌ Erreur setup MQTT dans messages:', error);
+        console.error('❌ Erreur setup Socket.IO dans messages:', error);
       }
     };
 
-    const cleanup = setupMQTTConnection();
-
-    // Cleanup lors du démontage du composant
-    return () => {
-      cleanup.then(cleanupFn => {
-        if (cleanupFn) cleanupFn();
-      });
-    };
-  }, [onNewMessage, onMessagesRead, offNewMessage, offMessagesRead]);
+    setupSocketConnection();
+  }, [onNewMessage, onMessagesRead]);
 
   // Composant pour une conversation
   const ConversationCard = ({ conversation }: { conversation: Conversation }) => {
@@ -194,6 +245,8 @@ export default function MessagesPage() {
         onPress={() => {
           router.push(`/(app)/(enterprise)/conversation/${conversation._id}` as any);
         }}
+        onLongPress={() => handleLongPress(conversation)}
+        delayLongPress={500}
       >
         <View className="flex-row items-center">
           {/* Photo de profil */}
@@ -517,6 +570,99 @@ export default function MessagesPage() {
           >
         </FlatList>
       </View>
+
+      {/* Menu contextuel pour les conversations */}
+      {contextMenuVisible && selectedConversation && (
+        <View 
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 9999,
+          }}
+        >
+          <TouchableOpacity 
+            activeOpacity={1}
+            onPress={closeContextMenu}
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+          />
+
+          <View 
+            style={{
+              backgroundColor: 'white',
+              borderRadius: 16,
+              padding: 8,
+              margin: 20,
+              minWidth: 200,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 4,
+              elevation: 5,
+            }}
+          >
+            {/* Titre */}
+            <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
+              <Text className="font-quicksand-semibold text-neutral-800 text-base">
+                Conversation
+              </Text>
+            </View>
+
+            <View style={{ height: 1, backgroundColor: '#E5E7EB' }} />
+
+            {/* Options */}
+            <TouchableOpacity
+              onPress={() => {
+                handleArchiveConversation();
+              }}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: 16,
+                paddingVertical: 14,
+              }}
+              disabled={contextMenuLoading}
+            >
+              <Ionicons name="archive-outline" size={20} color="#6B7280" style={{ marginRight: 12 }} />
+              <Text className="font-quicksand-medium text-neutral-700 text-base">
+                Archiver
+              </Text>
+            </TouchableOpacity>
+
+            <View style={{ height: 1, backgroundColor: '#E5E7EB' }} />
+
+            <TouchableOpacity
+              onPress={() => {
+                handleDeleteConversation();
+              }}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: 16,
+                paddingVertical: 14,
+              }}
+              disabled={contextMenuLoading}
+            >
+              {contextMenuLoading ? (
+                <View style={{ width: 20, height: 20, marginRight: 12, justifyContent: 'center', alignItems: 'center' }}>
+                  <ActivityIndicator size="small" color="#EF4444" />
+                </View>
+              ) : (
+                <Ionicons name="trash-outline" size={20} color="#EF4444" style={{ marginRight: 12 }} />
+              )}
+              <Text className={`font-quicksand-medium text-base ${contextMenuLoading ? 'text-neutral-400' : 'text-red-600'}`}>
+                {contextMenuLoading ? 'Suppression...' : 'Supprimer'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
     </SafeAreaView>
   );
 }

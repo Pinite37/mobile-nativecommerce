@@ -65,6 +65,10 @@ export default function EnterpriseProducts() {
     confirmColor: string;
   } | null>(null);
 
+  // Menu modal pour les actions produit en mode grid
+  const [menuModalVisible, setMenuModalVisible] = useState(false);
+  const [selectedProductForMenu, setSelectedProductForMenu] = useState<Product | null>(null);
+
   // Load products function
   const loadProducts = useCallback(async (reset = false, pageToLoad?: number) => {
     try {
@@ -279,35 +283,47 @@ export default function EnterpriseProducts() {
 
     if (isGrid) {
       return (
-        <TouchableOpacity
-          className="bg-white rounded-2xl p-3 mb-4 mx-2 flex-1 border border-neutral-100"
-          onPress={() => {
-            (global as any).__CURRENT_PRODUCT_ID__ = item._id;
-            router.push(`/(app)/(enterprise)/(tabs)/products/${item._id}`);
-          }}
-        >
-          <Image
-            source={{ uri: item.images[0] || 'https://via.placeholder.com/160x160/E5E7EB/9CA3AF?text=No+Image' }}
-            className="w-full h-32 rounded-xl"
-            resizeMode="cover"
-          />
-          <View className="mt-3">
-            <Text className="text-sm font-quicksand-semibold text-neutral-800" numberOfLines={1}>{item.name}</Text>
-            <Text className="text-xs font-quicksand-medium text-primary-500 mt-1">{formatPrice(item.price)}</Text>
-            <View className="flex-row items-center mt-1">
-              <Ionicons name="star" size={12} color="#10B981" />
-              <Text className="text-[10px] text-neutral-600 ml-1">
-                {item.stats.averageRating.toFixed(1)} ({item.stats.totalReviews})
-              </Text>
-            </View>
-            <View className="flex-row items-center mt-1 justify-between">
-              <Text className="text-[10px] font-quicksand-medium" style={{ color: stockStatus.color }}>{stockStatus.text}</Text>
-              <View className="px-2 py-0.5 rounded-full" style={{ backgroundColor: statusStyle.bg }}>
-                <Text className="text-[10px] font-quicksand-semibold" style={{ color: statusStyle.color }}>{item.isActive ? 'Actif' : 'Inactif'}</Text>
+        <View className="bg-white rounded-2xl p-3 mb-4 mx-2 flex-1 border border-neutral-100 relative">
+          <TouchableOpacity
+            className="absolute top-2 right-2 z-10 bg-white/90 rounded-full w-7 h-7 items-center justify-center shadow-sm"
+            style={{ elevation: 2 }}
+            onPress={() => {
+              setSelectedProductForMenu(item);
+              setMenuModalVisible(true);
+            }}
+          >
+            <Ionicons name="ellipsis-horizontal" size={16} color="#6B7280" />
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            onPress={() => {
+              (global as any).__CURRENT_PRODUCT_ID__ = item._id;
+              router.push(`/(app)/(enterprise)/(tabs)/products/${item._id}`);
+            }}
+          >
+            <Image
+              source={{ uri: item.images[0] || 'https://via.placeholder.com/160x160/E5E7EB/9CA3AF?text=No+Image' }}
+              className="w-full h-32 rounded-xl"
+              resizeMode="cover"
+            />
+            <View className="mt-3">
+              <Text className="text-sm font-quicksand-semibold text-neutral-800" numberOfLines={1}>{item.name}</Text>
+              <Text className="text-xs font-quicksand-medium text-primary-500 mt-1">{formatPrice(item.price)}</Text>
+              <View className="flex-row items-center mt-1">
+                <Ionicons name="star" size={12} color="#10B981" />
+                <Text className="text-[10px] text-neutral-600 ml-1">
+                  {item.stats.averageRating.toFixed(1)} ({item.stats.totalReviews})
+                </Text>
+              </View>
+              <View className="flex-row items-center mt-1 justify-between">
+                <Text className="text-[10px] font-quicksand-medium" style={{ color: stockStatus.color }}>{stockStatus.text}</Text>
+                <View className="px-2 py-0.5 rounded-full" style={{ backgroundColor: statusStyle.bg }}>
+                  <Text className="text-[10px] font-quicksand-semibold" style={{ color: statusStyle.color }}>{item.isActive ? 'Actif' : 'Inactif'}</Text>
+                </View>
               </View>
             </View>
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        </View>
       );
     }
 
@@ -327,7 +343,7 @@ export default function EnterpriseProducts() {
           />
           <View className="ml-4 flex-1">
             <View className="flex-row items-start justify-between mb-2">
-              <View className="flex-1">
+              <View className="flex-1 pr-2">
                 <Text className="text-base font-quicksand-semibold text-neutral-800">
                   {item.name}
                 </Text>
@@ -337,8 +353,8 @@ export default function EnterpriseProducts() {
                   </Text>
                 )}
               </View>
-              <View className="flex-row items-center space-x-2">
-                <View className="px-2 py-1 rounded-full" style={{ backgroundColor: statusStyle.bg }}>
+              <View className="flex-row items-center gap-3">
+                <View className="px-3 py-1 rounded-full" style={{ backgroundColor: statusStyle.bg }}>
                   <Text className="text-xs font-quicksand-semibold" style={{ color: statusStyle.color }}>
                     {item.isActive ? 'Actif' : 'Inactif'}
                   </Text>
@@ -347,12 +363,13 @@ export default function EnterpriseProducts() {
                   onPress={() => {
                     handleStatusChange(item);
                   }}
+                  className="p-1"
                 >
                   <Ionicons name="ellipsis-horizontal" size={20} color="#9CA3AF" />
                 </TouchableOpacity>
               </View>
             </View>
-            <View className="flex-row items-center mb-2">
+            <View className="flex-row items-center mb-3">
               <Ionicons name="star" size={14} color="#10B981" />
               <Text className="text-xs text-neutral-600 ml-1">
                 {item.stats.averageRating.toFixed(1)} ({item.stats.totalReviews} avis)
@@ -360,27 +377,23 @@ export default function EnterpriseProducts() {
             </View>
             <View className="flex-row items-center justify-between">
               <Text className="text-lg font-quicksand-bold text-primary-500">{formatPrice(item.price)}</Text>
-              <View className="flex-row items-center space-x-4">
-                <View className="items-center">
-                  <Text className="text-sm font-quicksand-bold text-neutral-800">{item.stock}</Text>
-                  <Text className="text-xs font-quicksand-medium" style={{ color: stockStatus.color }}>{stockStatus.text}</Text>
-                </View>
-                <View className="items-center">
-                  <Text className="text-sm font-quicksand-bold text-neutral-800">{item.stats.totalSales}</Text>
-                  <Text className="text-xs font-quicksand-medium text-neutral-600">Vendus</Text>
-                </View>
+              <View className="px-3 py-1.5 rounded-full" style={{ backgroundColor: stockStatus.color + '15' }}>
+                <Text className="text-xs font-quicksand-semibold" style={{ color: stockStatus.color }}>
+                  {stockStatus.text}
+                </Text>
               </View>
             </View>
           </View>
         </View>
-        <View className="flex-row items-center justify-between mt-4 pt-4 border-t border-neutral-100">
-          <TouchableOpacity className="flex-1 bg-primary-500 rounded-xl py-3 mr-2" onPress={() => { console.log('Navigate to edit product:', item._id); }}>
-            <Text className="text-white font-quicksand-semibold text-center">Modifier</Text>
-          </TouchableOpacity>
-          <TouchableOpacity className="flex-1 bg-background-secondary rounded-xl py-3 ml-2" onPress={() => {
-            handleDeleteProduct(item);
-          }}>
-            <Text className="text-red-600 font-quicksand-semibold text-center">Supprimer</Text>
+        <View className="mt-4 pt-4 border-t border-neutral-100">
+          <TouchableOpacity 
+            className="bg-red-50 rounded-xl py-3.5 flex-row items-center justify-center" 
+            onPress={() => {
+              handleDeleteProduct(item);
+            }}
+          >
+            <Ionicons name="trash-outline" size={18} color="#EF4444" />
+            <Text className="text-red-600 font-quicksand-semibold ml-2">Supprimer</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -561,87 +574,107 @@ export default function EnterpriseProducts() {
       colors={['#10B981', '#34D399']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
-      className="px-6 pt-16 pb-4 rounded-b-[32px]"
+      className="pt-16 pb-6 rounded-b-[32px] shadow-lg"
     >
-      <View className="flex-row items-center justify-between">
-        <View className="flex-1 pr-4">
-          <Text className="text-2xl font-quicksand-bold text-white">Produits</Text>
-          <Text className="text-white/80 font-quicksand-medium mt-1 text-sm">
-            {products.length} produit{products.length !== 1 ? 's' : ''} au catalogue
-          </Text>
+      {/* Title and Actions Row */}
+      <View className="px-6 mb-4">
+        <View className="flex-row items-center justify-between mb-3">
+          <View className="flex-1">
+            <Text className="text-2xl font-quicksand-bold text-white">Mes Produits</Text>
+            <Text className="text-white/80 font-quicksand-medium mt-1 text-sm">
+              {products.length} produit{products.length !== 1 ? 's' : ''} au catalogue
+            </Text>
+          </View>
+          <View className="flex-row items-center gap-2">
+            <TouchableOpacity
+              onPress={() => setViewMode(prev => prev === 'list' ? 'grid' : 'list')}
+              className="bg-white/20 backdrop-blur-sm rounded-2xl p-3 border border-white/30"
+            >
+              <Ionicons name={viewMode === 'list' ? 'grid' : 'list'} size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => router.push('/(app)/(enterprise)/(tabs)/products/create')}
+              className="bg-white rounded-2xl px-5 py-3 flex-row items-center shadow-md"
+              style={{ elevation: 3 }}
+            >
+              <Ionicons name="add-circle" size={20} color="#10B981" />
+              <Text className="text-primary-600 font-quicksand-bold ml-2 text-sm">Ajouter</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        <View className="flex-row items-center space-x-2">
-          <TouchableOpacity
-            onPress={() => setViewMode(prev => prev === 'list' ? 'grid' : 'list')}
-            className="bg-white/20 rounded-2xl px-3 py-2 flex-row items-center"
-          >
-            <Ionicons name={viewMode === 'list' ? 'grid' : 'list'} size={18} color="#FFFFFF" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => router.push('/(app)/(enterprise)/(tabs)/products/create')}
-            className="bg-white/20 rounded-2xl px-4 py-2 flex-row items-center"
-          >
-            <Ionicons name="add" size={18} color="#FFFFFF" />
-            <Text className="text-white font-quicksand-semibold ml-1 text-sm">Ajouter</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
 
-      <View className="px-6 pt-4">
+        {/* Search Bar */}
         <View className="relative">
-          <View className="absolute left-3 top-3 z-10">
+          <View className="absolute left-4 top-1/2 -translate-y-1/2 z-10" style={{ transform: [{ translateY: -10 }] }}>
             <Ionicons name="search" size={20} color="#9CA3AF" />
           </View>
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholder="Rechercher un produit..."
-            className="bg-white rounded-2xl pl-10 pr-4 py-3 text-neutral-800 font-quicksand-medium border border-neutral-200"
+            className="bg-white rounded-2xl pl-12 pr-12 py-3.5 text-neutral-800 font-quicksand-medium shadow-sm"
             placeholderTextColor="#9CA3AF"
+            style={{ elevation: 2 }}
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity
-              className="absolute right-3 top-3"
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-neutral-100 rounded-full p-1"
+              style={{ transform: [{ translateY: -10 }] }}
               onPress={() => setSearchQuery('')}
             >
-              <Ionicons name="close" size={18} color="#9CA3AF" />
+              <Ionicons name="close" size={16} color="#6B7280" />
             </TouchableOpacity>
           )}
         </View>
       </View>
+
       {/* Category Pills */}
-      <View className="mt-3 px-6">
+      <View className="mb-4">
         <FlatList
           data={[{ _id: 'all', name: 'Tous' }, ...categories] as any}
           horizontal
-            keyExtractor={(item: any) => item._id}
-            showsHorizontalScrollIndicator={false}
-            renderItem={({ item }: any) => (
-              <TouchableOpacity
-                className={`px-4 py-2 mr-2 rounded-full ${selectedCategory === item._id ? 'bg-primary-500' : 'bg-white border border-neutral-200'}`}
-                onPress={() => setSelectedCategory(item._id)}
-              >
-                <Text className={`text-xs font-quicksand-semibold ${selectedCategory === item._id ? 'text-white' : 'text-neutral-700'}`}>{item.name}</Text>
-              </TouchableOpacity>
-            )}
+          keyExtractor={(item: any) => item._id}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 24 }}
+          renderItem={({ item }: any) => (
+            <TouchableOpacity
+              className={`px-5 py-2.5 mr-2 rounded-full ${
+                selectedCategory === item._id 
+                  ? 'bg-white shadow-md' 
+                  : 'bg-white/20 backdrop-blur-sm border border-white/30'
+              }`}
+              style={selectedCategory === item._id ? { elevation: 3 } : {}}
+              onPress={() => setSelectedCategory(item._id)}
+            >
+              <Text className={`text-sm font-quicksand-bold ${
+                selectedCategory === item._id ? 'text-primary-600' : 'text-white'
+              }`}>
+                {item.name}
+              </Text>
+            </TouchableOpacity>
+          )}
         />
       </View>
-      {/* Sort selector + results count */}
-      <View className="flex-row items-center justify-between px-6 mt-3">
+
+      {/* Sort and Filter Row */}
+      <View className="flex-row items-center justify-between px-6 pt-2">
         <TouchableOpacity
           onPress={() => setShowSortModal(true)}
-          className="flex-row items-center bg-white rounded-full px-4 py-2 border border-neutral-200"
+          className="flex-row items-center bg-white/95 backdrop-blur-sm rounded-full px-4 py-2.5 shadow-sm"
+          style={{ elevation: 2 }}
         >
-          <Ionicons name="filter" size={16} color="#374151" />
-          <Text className="text-neutral-700 font-quicksand-medium ml-2 text-xs">
-            Trier: {sortOptions.find(o => o.id === selectedSort)?.name}
+          <Ionicons name="swap-vertical" size={16} color="#10B981" />
+          <Text className="text-neutral-700 font-quicksand-semibold ml-2 text-sm">
+            {sortOptions.find(o => o.id === selectedSort)?.name}
           </Text>
-          <Ionicons name="chevron-down" size={14} color="#374151" style={{ marginLeft: 4 }} />
+          <Ionicons name="chevron-down" size={14} color="#6B7280" style={{ marginLeft: 4 }} />
         </TouchableOpacity>
         {searchQuery.trim().length > 0 && (
-          <Text className="text-neutral-500 font-quicksand-medium text-xs">
-            {products.length} résultat{products.length !== 1 ? 's' : ''}
-          </Text>
+          <View className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
+            <Text className="text-white font-quicksand-semibold text-sm">
+              {products.length} résultat{products.length !== 1 ? 's' : ''}
+            </Text>
+          </View>
         )}
       </View>
     </LinearGradient>
@@ -763,6 +796,140 @@ export default function EnterpriseProducts() {
                 >
                   <Text className="text-base font-quicksand-semibold text-white">
                     {confirmationAction?.confirmText}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Menu Modal pour les actions en mode grid */}
+      <Modal
+        visible={menuModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => {
+          setMenuModalVisible(false);
+          setSelectedProductForMenu(null);
+        }}
+      >
+        <TouchableOpacity
+          className="flex-1 bg-black/50"
+          activeOpacity={1}
+          onPress={() => {
+            setMenuModalVisible(false);
+            setSelectedProductForMenu(null);
+          }}
+        >
+          <View className="flex-1 justify-center items-center px-6">
+            <TouchableOpacity
+              className="bg-white rounded-3xl w-full max-w-sm overflow-hidden"
+              activeOpacity={1}
+              onPress={() => {}}
+            >
+              {/* Header du produit */}
+              {selectedProductForMenu && (
+                <View className="p-5 border-b border-neutral-100">
+                  <View className="flex-row items-center">
+                    <Image
+                      source={{ uri: selectedProductForMenu.images[0] || 'https://via.placeholder.com/60x60/E5E7EB/9CA3AF?text=No+Image' }}
+                      className="w-14 h-14 rounded-xl mr-3"
+                      resizeMode="cover"
+                    />
+                    <View className="flex-1">
+                      <Text className="text-base font-quicksand-bold text-neutral-800" numberOfLines={2}>
+                        {selectedProductForMenu.name}
+                      </Text>
+                      <Text className="text-sm font-quicksand-medium text-primary-500 mt-1">
+                        {formatPrice(selectedProductForMenu.price)}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {/* Options */}
+              <View className="p-3">
+                {/* Voir les détails */}
+                <TouchableOpacity
+                  className="flex-row items-center py-4 px-4 rounded-2xl mb-2 bg-neutral-50"
+                  onPress={() => {
+                    setMenuModalVisible(false);
+                    if (selectedProductForMenu) {
+                      (global as any).__CURRENT_PRODUCT_ID__ = selectedProductForMenu._id;
+                      router.push(`/(app)/(enterprise)/(tabs)/products/${selectedProductForMenu._id}`);
+                    }
+                    setSelectedProductForMenu(null);
+                  }}
+                >
+                  <View className="w-10 h-10 bg-primary-100 rounded-full items-center justify-center mr-3">
+                    <Ionicons name="eye" size={20} color="#10B981" />
+                  </View>
+                  <Text className="text-base font-quicksand-semibold text-neutral-800 flex-1">
+                    Voir les détails
+                  </Text>
+                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                </TouchableOpacity>
+
+                {/* Changer le statut */}
+                {selectedProductForMenu && (
+                  <TouchableOpacity
+                    className="flex-row items-center py-4 px-4 rounded-2xl mb-2 bg-neutral-50"
+                    onPress={() => {
+                      setMenuModalVisible(false);
+                      if (selectedProductForMenu) {
+                        handleStatusChange(selectedProductForMenu);
+                      }
+                      setSelectedProductForMenu(null);
+                    }}
+                  >
+                    <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${selectedProductForMenu.isActive ? 'bg-warning-100' : 'bg-success-100'}`}>
+                      <Ionicons 
+                        name={selectedProductForMenu.isActive ? "pause" : "play"} 
+                        size={20} 
+                        color={selectedProductForMenu.isActive ? "#F59E0B" : "#10B981"} 
+                      />
+                    </View>
+                    <Text className="text-base font-quicksand-semibold text-neutral-800 flex-1">
+                      {selectedProductForMenu.isActive ? 'Désactiver' : 'Activer'}
+                    </Text>
+                    <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                  </TouchableOpacity>
+                )}
+
+                {/* Supprimer */}
+                <TouchableOpacity
+                  className="flex-row items-center py-4 px-4 rounded-2xl bg-red-50"
+                  onPress={() => {
+                    setMenuModalVisible(false);
+                    if (selectedProductForMenu) {
+                      handleDeleteProduct(selectedProductForMenu);
+                    }
+                    setSelectedProductForMenu(null);
+                  }}
+                >
+                  <View className="w-10 h-10 bg-red-100 rounded-full items-center justify-center mr-3">
+                    <Ionicons name="trash" size={20} color="#EF4444" />
+                  </View>
+                  <Text className="text-base font-quicksand-semibold text-red-600 flex-1">
+                    Supprimer
+                  </Text>
+                  <Ionicons name="chevron-forward" size={20} color="#EF4444" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Bouton Annuler */}
+              <View className="p-3 pt-0">
+                <TouchableOpacity
+                  className="bg-neutral-100 py-4 rounded-2xl items-center"
+                  onPress={() => {
+                    setMenuModalVisible(false);
+                    setSelectedProductForMenu(null);
+                  }}
+                >
+                  <Text className="text-base font-quicksand-semibold text-neutral-700">
+                    Annuler
                   </Text>
                 </TouchableOpacity>
               </View>

@@ -1145,18 +1145,6 @@ function EnterpriseProfilePage() {
                   {profileData.enterprise.location.district}, {profileData.enterprise.location.city}
                 </Text>
               </View>
-              <View className="flex-row items-center mt-2">
-                <View className={`w-3 h-3 rounded-full mr-2 ${profileData.enterprise.isActive ? 'bg-success-300' : 'bg-white/40'}`} />
-                <Text className="text-xs font-quicksand-semibold text-white/90">
-                  {profileData.enterprise.isActive ? 'Boutique ouverte' : 'Boutique fermée'}
-                </Text>
-                <TouchableOpacity onPress={handleToggleStatus} className="ml-3 px-3 py-1 rounded-full bg-white/20 flex-row items-center">
-                  <Ionicons name={profileData.enterprise.isActive ? 'pause' : 'play'} size={14} color="#FFFFFF" />
-                  <Text className="text-white text-xs font-quicksand-semibold ml-1">
-                    {profileData.enterprise.isActive ? 'Fermer' : 'Ouvrir'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
             </View>
             <TouchableOpacity
               onPress={() => setShowEditEnterprise(true)}
@@ -1375,142 +1363,6 @@ function EnterpriseProfilePage() {
           </View>
         </View>
 
-  {/* Statut séparé retiré – contrôle désormais dans le header */}
-
-        {/* Tableau de bord de l'entreprise */}
-        <View className="px-4 py-4">
-          <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4 pl-1">
-            Tableau de bord
-          </Text>
-          <View className="flex-row flex-wrap justify-between">
-            <View className="bg-white rounded-2xl p-4 mb-3 shadow-sm border border-neutral-100" style={{ width: dashboardCardWidth }}>
-              <View className="flex-row items-center justify-between mb-2">
-                <Ionicons name="cash" size={20} color="#FE8C00" />
-                <Text className="text-xs text-neutral-500 font-quicksand-medium">VENTES</Text>
-              </View>
-              <Text className="text-xl font-quicksand-bold text-primary-500">
-                {profileData.enterprise.stats.totalSales ? formatPrice(profileData.enterprise.stats.totalSales) : '0 FCFA'}
-              </Text>
-              <Text className="text-xs font-quicksand-medium text-neutral-600 mt-1">
-                Chiffre d&apos;affaires total
-              </Text>
-            </View>
-            
-            <View className="bg-white rounded-2xl p-4 mb-3 shadow-sm border border-neutral-100" style={{ width: dashboardCardWidth }}>
-              <View className="flex-row items-center justify-between mb-2">
-                <Ionicons name="receipt" size={20} color="#10B981" />
-                <Text className="text-xs text-neutral-500 font-quicksand-medium">COMMANDES</Text>
-              </View>
-              <Text className="text-xl font-quicksand-bold text-success-500">
-                {profileData.enterprise.stats.totalOrders || 0}
-              </Text>
-              <Text className="text-xs font-quicksand-medium text-neutral-600 mt-1">
-                Total des commandes
-              </Text>
-            </View>
-            
-            <View className="bg-white rounded-2xl p-4 mb-3 shadow-sm border border-neutral-100" style={{ width: dashboardCardWidth }}>
-              <View className="flex-row items-center justify-between mb-2">
-                <Ionicons name="star" size={20} color="#F59E0B" />
-                <Text className="text-xs text-neutral-500 font-quicksand-medium">NOTE</Text>
-              </View>
-              <View className="flex-row items-center">
-                <Text className="text-xl font-quicksand-bold text-warning-500">
-                  {profileData.enterprise.stats.averageRating ? profileData.enterprise.stats.averageRating.toFixed(1) : '0.0'}
-                </Text>
-                <Text className="text-sm text-neutral-500 ml-1">/5</Text>
-              </View>
-              <Text className="text-xs font-quicksand-medium text-neutral-600 mt-1">
-                Note moyenne
-              </Text>
-            </View>
-            
-            <View className="bg-white rounded-2xl p-4 mb-3 shadow-sm border border-neutral-100" style={{ width: dashboardCardWidth }}>
-              <View className="flex-row items-center justify-between mb-2">
-                <Ionicons name="storefront" size={20} color="#8B5CF6" />
-                <Text className="text-xs text-neutral-500 font-quicksand-medium">PRODUITS</Text>
-              </View>
-              <Text className="text-xl font-quicksand-bold text-purple-500">
-                {profileData.enterprise.products?.length || 0}
-              </Text>
-              <Text className="text-xs font-quicksand-medium text-neutral-600 mt-1">
-                Produits en ligne
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Actions rapides pour l'entreprise */}
-        <View className="px-4 py-4">
-          <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4 pl-1">
-            Actions rapides
-          </Text>
-          <View className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden">
-            {/* Gestion des produits */}
-            <TouchableOpacity 
-              onPress={handleNavigateToProducts}
-              className="flex-row items-center justify-between px-4 py-5 border-b border-neutral-100"
-            >
-              <View className="flex-row items-center">
-                <View className="w-12 h-12 bg-primary-100 rounded-2xl justify-center items-center">
-                  <Ionicons name="storefront" size={24} color="#FE8C00" />
-                </View>
-                <View className="ml-4">
-                  <Text className="text-base font-quicksand-semibold text-neutral-800">
-                    Mes Produits
-                  </Text>
-                  <Text className="text-sm text-neutral-600">
-                    {profileData.enterprise.products?.length || 0} produit(s) en ligne
-                  </Text>
-                </View>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-            </TouchableOpacity>
-
-            {/* Gestion des commandes */}
-            <TouchableOpacity 
-              onPress={handleNavigateToOrders}
-              className="flex-row items-center justify-between px-4 py-5 border-b border-neutral-100"
-            >
-              <View className="flex-row items-center">
-                <View className="w-12 h-12 bg-success-100 rounded-2xl justify-center items-center">
-                  <Ionicons name="receipt" size={24} color="#10B981" />
-                </View>
-                <View className="ml-4">
-                  <Text className="text-base font-quicksand-semibold text-neutral-800">
-                    Mes Commandes
-                  </Text>
-                  <Text className="text-sm text-neutral-600">
-                    {profileData.enterprise.stats.totalOrders || 0} commande(s) total
-                  </Text>
-                </View>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-            </TouchableOpacity>
-
-            {/* Modifier les informations entreprise */}
-            <TouchableOpacity 
-              onPress={handleNavigateToEnterpriseInfo}
-              className="flex-row items-center justify-between px-4 py-5"
-            >
-              <View className="flex-row items-center">
-                <View className="w-12 h-12 bg-blue-100 rounded-2xl justify-center items-center">
-                  <Ionicons name="create" size={24} color="#3B82F6" />
-                </View>
-                <View className="ml-4">
-                  <Text className="text-base font-quicksand-semibold text-neutral-800">
-                    Modifier mon Entreprise
-                  </Text>
-                  <Text className="text-sm text-neutral-600">
-                    Informations, contact, description
-                  </Text>
-                </View>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
         {/* Menu de gestion */}
         <View className="px-4 py-4">
           <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4 pl-1">
@@ -1542,8 +1394,8 @@ function EnterpriseProfilePage() {
                 <View className="w-10 h-10 bg-indigo-100 rounded-full justify-center items-center">
                   <Ionicons name="people-outline" size={20} color="#6366F1" />
                 </View>
-                <View className="flex-1 ml-3">
-                  <Text className="text-base font-quicksand-medium text-neutral-800">
+                <View className="ml-4">
+                  <Text className="text-base font-quicksand-medium text-neutral-800 ">
                     Partenaires de Livraison
                   </Text>
                   {profileData.enterprise.deliveryPartners && profileData.enterprise.deliveryPartners.length > 0 && (
@@ -1552,13 +1404,10 @@ function EnterpriseProfilePage() {
                     </Text>
                   )}
                 </View>
-                <View className="bg-primary-500 rounded-full px-2 py-1 mr-2">
-                  <Text className="text-xs text-white font-quicksand-bold">
-                    {profileData.enterprise.deliveryPartners?.length || 0}
-                  </Text>
-                </View>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+
+              <Ionicons name="chevron-forward"  size={20} color="#9CA3AF" />
+
             </TouchableOpacity>
           </View>
         </View>
@@ -1639,6 +1488,9 @@ function EnterpriseProfilePage() {
             NativeCommerce Business v1.0.0
           </Text>
         </View>
+
+        {/* Espace supplémentaire pour la navbar */}
+        <View style={{ height: 100 }} />
       </ScrollView>
 
       {/* Modals */}
