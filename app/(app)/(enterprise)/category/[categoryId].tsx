@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import {
@@ -17,17 +17,20 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import ProductService from '../../../../services/api/ProductService';
-import { Product } from '../../../../types/product';
+import CategoryService from '../../../../services/api/CategoryService';
+import { Category, Product } from '../../../../types/product';
 
 // Types pour les filtres et le tri
 type SortOption = 'newest' | 'price_asc' | 'price_desc' | 'name' | 'popular';
 type ViewMode = 'grid' | 'list';
 
-export default function MarketplacePage() {
+export default function CategoryProductsScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
 
   // États principaux
+  const [category, setCategory] = useState<Category | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -44,7 +47,7 @@ export default function MarketplacePage() {
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [inStockOnly, setInStockOnly] = useState(false);
-  const [sortBy, setSortBy] = useState<SortOption>('popular');
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showFilters, setShowFilters] = useState(false);
 
@@ -53,9 +56,9 @@ export default function MarketplacePage() {
 
   // Charger les données initiales
   useEffect(() => {
-    loadMarketplaceProducts();
+    loadCategoryProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortBy, inStockOnly]);
+  }, [categoryId, sortBy, inStockOnly]);
 
   // Gérer le bouton retour Android
   useEffect(() => {
@@ -70,7 +73,7 @@ export default function MarketplacePage() {
     return () => backHandler.remove();
   }, [showFilters]);
 
-  const loadMarketplaceProducts = async (page: number = 1, append: boolean = false) => {
+  const loadCategoryProducts = async (page: number = 1, append: boolean = false) => {
     try {
       if (!append) {
         setLoading(true);
@@ -78,12 +81,13 @@ export default function MarketplacePage() {
         setLoadingMore(true);
       }
 
-      // Construction des filtres
-      const filters: any = {
-        page,
-        limit: 20,
-        sort: sortBy
-      };
+      // Construction des filtres selon l'API
+      const filters: any = {};
+
+      // Tri (toujours inclus)
+      if (sortBy) {
+        filters.sortBy = sortBy;
+      }
 
       // Recherche
       if (searchQuery.trim()) {
@@ -96,6 +100,7 @@ export default function MarketplacePage() {
         const parsedMin = parseFloat(minPrice);
         if (!isNaN(parsedMin) && parsedMin > 0) {
           filters.minPrice = parsedMin;
+          console.log('💰 Prix min:', filters.minPrice);
         }
       }
 
@@ -103,32 +108,41 @@ export default function MarketplacePage() {
         const parsedMax = parseFloat(maxPrice);
         if (!isNaN(parsedMax) && parsedMax > 0) {
           filters.maxPrice = parsedMax;
+          console.log('💰 Prix max:', filters.maxPrice);
         }
       }
 
       // Filtre de disponibilité
       if (inStockOnly) {
         filters.inStock = true;
+        console.log('📦 En stock uniquement');
       }
 
-      console.log('🚀 Chargement marketplace - Page:', page, 'Filtres:', filters);
+      console.log('🚀 Chargement produits - Page:', page, 'Filtres:', filters);
 
-      const response = await ProductService.getAllPublicProducts(filters);
+      const response = await CategoryService.getCategoryProducts(
+        categoryId!,
+        page,
+        20,
+        filters
+      );
 
+      setCategory(response.category);
+      
       if (append) {
         setProducts(prev => [...prev, ...response.products]);
       } else {
         setProducts(response.products);
       }
 
-      setCurrentPage(response.pagination?.page || page);
-      setTotalPages(response.pagination?.pages || 1);
-      setTotalProducts(response.pagination?.total || response.products.length);
-      setHasNextPage((response.products || []).length === 20);
+      setCurrentPage(response.pagination.currentPage);
+      setTotalPages(response.pagination.totalPages);
+      setTotalProducts(response.pagination.totalProducts);
+      setHasNextPage(response.pagination.hasNextPage);
 
-      console.log('✅ Produits marketplace chargés:', response.products.length);
+      console.log('✅ Produits chargés:', response.products.length, '/', response.pagination.totalProducts);
     } catch (error) {
-      console.error('❌ Erreur chargement marketplace:', error);
+      console.error('❌ Erreur chargement produits:', error);
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -139,12 +153,12 @@ export default function MarketplacePage() {
   const handleRefresh = () => {
     setRefreshing(true);
     setCurrentPage(1);
-    loadMarketplaceProducts(1, false);
+    loadCategoryProducts(1, false);
   };
 
   const handleLoadMore = () => {
     if (hasNextPage && !loadingMore) {
-      loadMarketplaceProducts(currentPage + 1, true);
+      loadCategoryProducts(currentPage + 1, true);
     }
   };
 
@@ -152,7 +166,7 @@ export default function MarketplacePage() {
     console.log('🔍 Déclenchement recherche:', searchQuery);
     Keyboard.dismiss();
     setCurrentPage(1);
-    loadMarketplaceProducts(1, false);
+    loadCategoryProducts(1, false);
   };
 
   const handleApplyFilters = () => {
@@ -165,7 +179,7 @@ export default function MarketplacePage() {
     Keyboard.dismiss();
     setShowFilters(false);
     setCurrentPage(1);
-    loadMarketplaceProducts(1, false);
+    loadCategoryProducts(1, false);
   };
 
   const handleResetFilters = () => {
@@ -175,10 +189,10 @@ export default function MarketplacePage() {
     setMinPrice('');
     setMaxPrice('');
     setInStockOnly(false);
-    setSortBy('popular');
+    setSortBy('newest');
     setShowFilters(false);
     setCurrentPage(1);
-    loadMarketplaceProducts(1, false);
+    loadCategoryProducts(1, false);
   };
 
   const toggleFavorite = (productId: string) => {
@@ -269,7 +283,7 @@ export default function MarketplacePage() {
           </TouchableOpacity>
           {item.stock === 0 && (
             <View className="absolute top-2 left-2 bg-red-500 px-2 py-1 rounded-lg">
-              <Text className="text-white text-xs font-quicksand-bold">Rupture</Text>
+              <Text className="text-white text-xs font-quicksand-bold">Épuisé</Text>
             </View>
           )}
         </View>
@@ -288,7 +302,7 @@ export default function MarketplacePage() {
           <View className="flex-row items-center mt-1">
             <Ionicons name="star" size={14} color="#FBBF24" />
             <Text className="text-xs font-quicksand-medium text-neutral-600 ml-1">
-              {item.stats?.averageRating?.toFixed(1) || '0.0'}
+              {item.stats?.averageRating?.toFixed(1) || '0.0'} ({item.stats?.totalReviews || 0})
             </Text>
           </View>
         </View>
@@ -315,7 +329,7 @@ export default function MarketplacePage() {
           />
           {item.stock === 0 && (
             <View className="absolute inset-0 bg-black/50 rounded-xl items-center justify-center">
-              <Text className="text-white text-xs font-quicksand-bold">Rupture</Text>
+              <Text className="text-white text-xs font-quicksand-bold">Épuisé</Text>
             </View>
           )}
         </View>
@@ -343,7 +357,7 @@ export default function MarketplacePage() {
           <View className="flex-row items-center mt-1">
             <Ionicons name="star" size={14} color="#FBBF24" />
             <Text className="text-xs font-quicksand-medium text-neutral-600 ml-1">
-              {item.stats?.averageRating?.toFixed(1) || '0.0'}
+              {item.stats?.averageRating?.toFixed(1) || '0.0'} ({item.stats?.totalReviews || 0})
             </Text>
           </View>
         </View>
@@ -372,11 +386,11 @@ export default function MarketplacePage() {
           </TouchableOpacity>
           <View className="flex-1">
             <Text className="text-white text-lg font-quicksand-bold" numberOfLines={1}>
-              Marketplace
+              {loading && !category ? 'Chargement...' : category?.name || 'Catégorie'}
             </Text>
             {!loading && (
-              <Text className="text-white/80 text-sm font-quicksand-medium">
-                {totalProducts} produit{totalProducts > 1 ? 's' : ''} disponible{totalProducts > 1 ? 's' : ''}
+              <Text className="text-white/80 text-xs font-quicksand-medium">
+                {totalProducts} produit{totalProducts > 1 ? 's' : ''}
               </Text>
             )}
           </View>
@@ -392,7 +406,12 @@ export default function MarketplacePage() {
               />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setShowFilters(true)}>
-              <Ionicons name="options" size={22} color="white" />
+              <View className="relative">
+                <Ionicons name="options" size={22} color="white" />
+                {(minPrice || maxPrice || inStockOnly || searchQuery) && (
+                  <View className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+                )}
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -402,7 +421,7 @@ export default function MarketplacePage() {
           <Ionicons name="search" size={20} color="#6B7280" />
           <TextInput
             className="flex-1 ml-2 text-neutral-800 font-quicksand-medium"
-            placeholder="Rechercher des produits..."
+            placeholder="Rechercher dans cette catégorie..."
             placeholderTextColor="#9CA3AF"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -415,12 +434,14 @@ export default function MarketplacePage() {
                 onPress={handleSearch}
                 className="mr-2 bg-[#10b981] rounded-lg px-3 py-1"
               >
-                <Ionicons name="search" size={16} color="white" />
+                <Text className="text-white text-xs font-quicksand-semibold">OK</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => {
                 setSearchQuery('');
-                setCurrentPage(1);
-                loadMarketplaceProducts(1, false);
+                // Recharger les produits sans recherche
+                setTimeout(() => {
+                  loadCategoryProducts(1, false);
+                }, 0);
               }}>
                 <Ionicons name="close-circle" size={20} color="#6B7280" />
               </TouchableOpacity>
@@ -435,8 +456,8 @@ export default function MarketplacePage() {
           contentContainerStyle={{ gap: 8 }}
         >
           {[
-            { value: 'popular', label: 'Populaires', icon: 'trending-up' },
             { value: 'newest', label: 'Plus récents', icon: 'time' },
+            { value: 'popular', label: 'Populaires', icon: 'trending-up' },
             { value: 'price_asc', label: 'Prix croissant', icon: 'arrow-up' },
             { value: 'price_desc', label: 'Prix décroissant', icon: 'arrow-down' },
           ].map((sort) => (
@@ -557,7 +578,7 @@ export default function MarketplacePage() {
                     value={minPrice}
                     onChangeText={setMinPrice}
                   />
-                  <Text className="mx-2 text-neutral-600">-</Text>
+                  <Text className="mx-3 text-neutral-600 font-quicksand-medium">-</Text>
                   <TextInput
                     className="flex-1 bg-neutral-100 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-medium"
                     placeholder="Max"
@@ -593,20 +614,16 @@ export default function MarketplacePage() {
               {/* Boutons d'action */}
               <View className="flex-row mt-4 gap-3">
                 <TouchableOpacity
-                  className="flex-1 bg-neutral-200 py-3 rounded-xl"
                   onPress={handleResetFilters}
+                  className="flex-1 bg-neutral-200 py-3 rounded-xl items-center"
                 >
-                  <Text className="text-neutral-700 font-quicksand-semibold text-center">
-                    Réinitialiser
-                  </Text>
+                  <Text className="text-neutral-700 font-quicksand-semibold">Réinitialiser</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className="flex-1 bg-[#10b981] py-3 rounded-xl"
                   onPress={handleApplyFilters}
+                  className="flex-1 bg-[#10b981] py-3 rounded-xl items-center"
                 >
-                  <Text className="text-white font-quicksand-semibold text-center">
-                    Appliquer
-                  </Text>
+                  <Text className="text-white font-quicksand-semibold">Appliquer</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>

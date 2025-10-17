@@ -25,11 +25,12 @@ import {
 } from "react-native";
 import { useAuth } from "../../../../contexts/AuthContext";
 import AdvertisementService, { Advertisement } from '../../../../services/api/AdvertisementService';
+import CategoryService from "../../../../services/api/CategoryService";
 // import { useSearchCache } from "../../../../hooks/useSearchCache"; // retiré (non utilisé)
 import ProductService from "../../../../services/api/ProductService";
 import SearchService from "../../../../services/api/SearchService";
 import SearchCacheService, { RecentSearch } from "../../../../services/SearchCacheService";
-import { Product } from "../../../../types/product";
+import { Category, Product } from "../../../../types/product";
 
 // Polyfill Buffer pour React Native (utilisé par le cache)
 import { Buffer } from "buffer";
@@ -118,6 +119,10 @@ export default function ClientHome() {
     // États pour les produits de l'API
     const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
     const [loadingProducts, setLoadingProducts] = useState(false);
+
+    // États pour les catégories
+    const [categoriesData, setCategoriesData] = useState<Category[]>([]);
+    const [loadingCategories, setLoadingCategories] = useState(false);
 
     // États pour la recherche
     const [searchQuery, setSearchQuery] = useState('');
@@ -238,8 +243,8 @@ export default function ClientHome() {
                 const favoriteIds = favResponse.map((f: any) => f.product?._id);
                 console.log('❤️ IDs favoris:', favoriteIds);
                 setFavorites(new Set(favoriteIds));
-            } else if (Array.isArray(favResponse?.data)) {
-                const favoriteIds = favResponse.data.map((f: any) => f.product?._id);
+            } else if (Array.isArray((favResponse as any)?.data)) {
+                const favoriteIds = (favResponse as any).data.map((f: any) => f.product?._id);
                 console.log('❤️ IDs favoris (data):', favoriteIds);
                 setFavorites(new Set(favoriteIds));
             } else {
@@ -250,10 +255,24 @@ export default function ClientHome() {
         }
     }
 
+    async function loadCategories() {
+        try {
+            setLoadingCategories(true);
+            const categoriesResponse = await CategoryService.getActiveCategories();
+            setCategoriesData(categoriesResponse.slice(0, 9)); // Prendre les 9 premières catégories
+        } catch (error) {
+            console.error('❌ Erreur chargement catégories:', error);
+            // En cas d'erreur, on garde les catégories statiques vides
+            setCategoriesData([]);
+        } finally {
+            setLoadingCategories(false);
+        }
+    }
+
     async function refreshData() {
         try {
             setRefreshing(true);
-            await Promise.all([loadAds(), loadFeaturedProducts(), loadFavorites()]);
+            await Promise.all([loadAds(), loadFeaturedProducts(), loadFavorites(), loadCategories()]);
         } catch (e) {
             console.error('❌ Erreur refresh:', e);
         } finally {
@@ -291,7 +310,8 @@ export default function ClientHome() {
                 loadAds(),
                 loadFeaturedProducts(),
                 loadRecentSearches(),
-                loadFavorites()
+                loadFavorites(),
+                loadCategories()
             ]);
         } catch (error) {
             console.error('❌ Erreur chargement données initiales:', error);
@@ -383,12 +403,18 @@ export default function ClientHome() {
             </LinearGradient>
 
             {/* Categories Skeleton */}
-            <View className="py-4">
+            <View className="py-6">
+                <View className="px-6 mb-4">
+                    <ShimmerBlock style={{ height: 20, borderRadius: 10, width: '50%', marginBottom: 8 }} />
+                    <ShimmerBlock style={{ height: 14, borderRadius: 7, width: '70%' }} />
+                </View>
                 <View className="flex-row flex-wrap justify-center px-3">
                     {Array.from({ length: 8 }).map((_, index) => (
-                        <View key={index} className="w-[22%] items-center mb-4">
-                            <ShimmerBlock style={{ width: 60, height: 60, borderRadius: 30, marginBottom: 8 }} />
-                            <ShimmerBlock style={{ height: 12, borderRadius: 6, width: 50 }} />
+                        <View key={index} style={{ width: '25%', paddingHorizontal: 5, marginBottom: 16 }}>
+                            <View className="items-center">
+                                <ShimmerBlock style={{ width: 64, height: 64, borderRadius: 16, marginBottom: 12 }} />
+                                <ShimmerBlock style={{ width: 48, height: 12, borderRadius: 6 }} />
+                            </View>
                         </View>
                     ))}
                 </View>
@@ -1242,27 +1268,73 @@ export default function ClientHome() {
                 )}
 
                 {/* Categories */}
-                <View className="py-4">
-                    <FlatList
-                        data={categories}
-                        renderItem={({ item }) => (
-                            <TouchableOpacity className="items-center mx-2">
-                                <View
-                                    className="w-16 h-16 rounded-full justify-center items-center mb-2 shadow-sm"
-                                    style={{ backgroundColor: item.color + '20', borderWidth: 1, borderColor: item.color + '55' }}
-                                >
-                                    <Ionicons name={item.icon as any} size={26} color={item.color} />
-                                </View>
-                                <Text className="text-xs font-quicksand-semibold text-neutral-800 text-center" numberOfLines={2}>
-                                    {item.name}
-                                </Text>
-                            </TouchableOpacity>
-                        )}
-                        keyExtractor={(item) => item.id.toString()}
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ paddingHorizontal: 16 }}
-                    />
+                <View className="py-6 bg-background-secondary">
+                    <View className="px-6 mb-6">
+                        <Text className="text-xl font-quicksand-bold text-neutral-800">
+                            Catégories
+                        </Text>
+                        <Text className="text-sm font-quicksand text-neutral-600 mt-1">
+                            Découvrez nos catégories de produits
+                        </Text>
+                    </View>
+                    {loadingCategories ? (
+                        <View className="flex-1 justify-center items-center py-8">
+                            <ActivityIndicator size="large" color="#10B981" />
+                            <Text className="mt-2 text-neutral-600 font-quicksand-medium">
+                                Chargement des catégories...
+                            </Text>
+                        </View>
+                    ) : (
+                        <View className="flex-row flex-wrap justify-center px-3">
+                            {(categoriesData.length > 0 ? categoriesData : categories).slice(0, 8).map((category: any, index: number) => {
+                                // Couleurs par défaut pour les vraies catégories
+                                const colors = ["#FF6B35", "#3B82F6", "#8B5CF6", "#EC4899", "#10B981", "#6366F1", "#EF4444", "#F59E0B"];
+                                const icons = ["flame", "car-sport", "home", "phone-portrait", "laptop", "bed", "shirt", "construct"];
+
+                                const categoryColor = category.color || colors[index % colors.length];
+                                const categoryIcon = category.icon || icons[index % icons.length];
+                                const categoryId = category._id || category.id || index;
+
+                                // Fonction helper pour déterminer si c'est un emoji ou une icône Ionicons
+                                const isEmoji = (str: string) => {
+                                    const emojiRegex = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u;
+                                    return emojiRegex.test(str);
+                                };
+
+                                return (
+                                    <View key={categoryId} style={{ width: '25%', paddingHorizontal: 5, marginBottom: 16 }}>
+                                        <TouchableOpacity 
+                                            className="items-center"
+                                            onPress={() => {
+                                                // Navigation vers la page de produits de la catégorie
+                                                if (category._id) {
+                                                    navigateTo(`/(app)/(client)/category/${category._id}`);
+                                                }
+                                            }}
+                                        >
+                                            <View
+                                                className="w-16 h-16 rounded-2xl justify-center items-center mb-3 shadow-md"
+                                                style={{
+                                                    backgroundColor: categoryColor + '15',
+                                                    borderWidth: 1,
+                                                    borderColor: categoryColor + '30'
+                                                }}
+                                            >
+                                                {isEmoji(categoryIcon) ? (
+                                                    <Text style={{ fontSize: 24 }}>{categoryIcon}</Text>
+                                                ) : (
+                                                    <Ionicons name={categoryIcon as any} size={24} color={categoryColor} />
+                                                )}
+                                            </View>
+                                            <Text className="text-xs font-quicksand-semibold text-neutral-700 text-center leading-4">
+                                                {category.name}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                );
+                            })}
+                        </View>
+                    )}
                 </View>
 
                 {/* Boosted Ads Carousel (amélioré avec images et overlay) */}

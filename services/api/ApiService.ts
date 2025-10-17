@@ -7,6 +7,8 @@ import TokenStorageService from '../TokenStorageService';
 class ApiService {
   private axiosInstance: AxiosInstance;
   private baseURL: string;
+  private isRefreshing: boolean = false;
+  private refreshSubscribers: ((token: string) => void)[] = [];
 
   constructor() {
     // Configure baseURL based on platform
@@ -27,6 +29,15 @@ class ApiService {
     });
 
     this.setupInterceptors();
+  }
+
+  private onRefreshed(token: string) {
+    this.refreshSubscribers.forEach((callback) => callback(token));
+    this.refreshSubscribers = [];
+  }
+
+  private addRefreshSubscriber(callback: (token: string) => void) {
+    this.refreshSubscribers.push(callback);
   }
 
   private setupInterceptors() {
@@ -82,67 +93,109 @@ class ApiService {
           console.error('❌ API Response Error:', status, error.response?.data);
         }
         
-        // Handle 401 errors (unauthorized)
+        // Handle 401 errors (unauthorized) - Token expiré
         if (error.response?.status === 401) {
           const originalRequest = error.config;
           
           // Éviter les boucles infinies
-          if (!originalRequest._retry) {
-            originalRequest._retry = true;
+          if (originalRequest._retry) {
+            console.warn('⚠️ Requête déjà retentée, abandon');
+            return Promise.reject(error);
+          }
+          
+          originalRequest._retry = true;
+          
+          // Si un refresh est déjà en cours, attendre qu'il se termine
+          if (this.isRefreshing) {
+            console.log('⏳ Refresh en cours, mise en file d\'attente...');
+            return new Promise((resolve) => {
+              this.addRefreshSubscriber((token: string) => {
+                originalRequest.headers.Authorization = `Bearer ${token}`;
+                resolve(this.axiosInstance(originalRequest));
+              });
+            });
+          }
+          
+          this.isRefreshing = true;
+          console.log('🔄 Access token expiré, tentative de refresh...');
+          
+          try {
+            const refreshToken = await TokenStorageService.getRefreshToken();
             
-            console.log('🔄 Tentative de refresh du token...');
-            
-            try {
-              const refreshToken = await TokenStorageService.getRefreshToken();
-              
-              if (!refreshToken) {
-                console.log('❌ Pas de refresh token disponible');
-                await TokenStorageService.clearAll();
-                // Notifier que les tokens ont été invalidés
-                AuthEventEmitter.emitTokenInvalidated();
-                return Promise.reject(error);
-              }
-              
-              console.log('🔄 Refresh token trouvé, tentative de rafraîchissement...');
-              const newTokens = await this.refreshAccessToken(refreshToken);
-              
-              if (!newTokens || !newTokens.accessToken) {
-                console.log('❌ Refresh token invalide ou expiré');
-                await TokenStorageService.clearAll();
-                // Notifier que les tokens ont été invalidés
-                AuthEventEmitter.emitTokenInvalidated();
-                return Promise.reject(error);
-              }
-              
-              console.log('✅ Nouveaux tokens obtenus, mise à jour...');
-              await TokenStorageService.setTokens(newTokens.accessToken, newTokens.refreshToken);
-              
-              // Retry original request with new token
-              originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
-              console.log('🔄 Nouvelle tentative de la requête originale...');
-              
-              return this.axiosInstance(originalRequest);
-              
-            } catch (refreshError) {
-              console.error('❌ Échec du refresh token:', refreshError);
-              await TokenStorageService.clearAll();
-              
-              // Notifier que les tokens ont été invalidés
-              AuthEventEmitter.emitTokenInvalidated();
-              
-              return Promise.reject(refreshError);
+            if (!refreshToken) {
+              console.error('❌ Pas de refresh token disponible - Session expirée');
+              this.isRefreshing = false;
+              await this.handleSessionExpired();
+              return Promise.reject(error);
             }
-          } else {
-            console.log('❌ Requête déjà retentée, échec final');
-            await TokenStorageService.clearAll();
-            // Notifier que les tokens ont été invalidés
-            AuthEventEmitter.emitTokenInvalidated();
+            
+            console.log('🔄 Refresh token trouvé, appel au serveur...');
+            const newTokens = await this.refreshAccessToken(refreshToken);
+            
+            if (!newTokens || !newTokens.accessToken) {
+              console.error('❌ Impossible d\'obtenir de nouveaux tokens');
+              this.isRefreshing = false;
+              await this.handleSessionExpired();
+              return Promise.reject(error);
+            }
+            
+            console.log('✅ Nouveaux tokens obtenus avec succès');
+            await TokenStorageService.setTokens(newTokens.accessToken, newTokens.refreshToken);
+            
+            // Notifier tous les subscribers en attente
+            this.onRefreshed(newTokens.accessToken);
+            this.isRefreshing = false;
+            
+            // Retry la requête originale avec le nouveau token
+            originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
+            console.log('🔄 Nouvelle tentative de la requête originale...');
+            
+            return this.axiosInstance(originalRequest);
+            
+          } catch (refreshError: any) {
+            this.isRefreshing = false;
+            console.error('❌ Erreur lors du refresh:', refreshError);
+            
+            // Vérifier si c'est une erreur réseau temporaire ou token vraiment expiré
+            if (this.isNetworkError(refreshError)) {
+              console.warn('⚠️ Erreur réseau lors du refresh - Session conservée');
+              // NE PAS déconnecter l'utilisateur en cas d'erreur réseau
+              return Promise.reject(error);
+            }
+            
+            // Si c'est une erreur 401/403 du refresh, alors le refresh token est expiré
+            if (refreshError.response?.status === 401 || refreshError.response?.status === 403) {
+              console.error('❌ Refresh token expiré - Déconnexion nécessaire');
+              await this.handleSessionExpired();
+            } else {
+              console.warn('⚠️ Erreur inconnue lors du refresh - Session conservée');
+            }
+            
+            return Promise.reject(refreshError);
           }
         }
         
         return Promise.reject(error);
       }
     );
+  }
+
+  // Vérifie si l'erreur est due au réseau (temporaire)
+  private isNetworkError(error: any): boolean {
+    return (
+      !error.response || // Pas de réponse du serveur
+      error.code === 'ECONNABORTED' || // Timeout
+      error.code === 'ERR_NETWORK' || // Erreur réseau
+      error.message?.includes('Network Error') ||
+      error.message?.includes('timeout')
+    );
+  }
+
+  // Gère l'expiration de la session (déconnexion propre)
+  private async handleSessionExpired(): Promise<void> {
+    console.log('🔒 Session expirée - Nettoyage et déconnexion');
+    await TokenStorageService.clearAll();
+    AuthEventEmitter.emitTokenInvalidated();
   }
 
   private getDeviceInfo(): object | null {
@@ -153,8 +206,10 @@ class ApiService {
     };
   }
 
-  private async refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
-    console.log('🔄 Appel API refresh token...');
+  private async refreshAccessToken(refreshToken: string, retryCount: number = 0): Promise<{ accessToken: string; refreshToken: string }> {
+    const maxRetries = 2; // Réessayer 2 fois en cas d'erreur réseau
+    
+    console.log(`🔄 Appel API refresh token... (tentative ${retryCount + 1}/${maxRetries + 1})`);
     
     try {
       // Utiliser axios directement pour éviter l'intercepteur
@@ -176,7 +231,15 @@ class ApiService {
       return response.data.data;
       
     } catch (error: any) {
-      console.error('❌ Erreur refresh token:', error.response?.data || error.message);
+      console.error(`❌ Erreur refresh token (tentative ${retryCount + 1}):`, error.response?.data || error.message);
+      
+      // Si c'est une erreur réseau et qu'on peut réessayer
+      if (this.isNetworkError(error) && retryCount < maxRetries) {
+        console.log(`⏳ Réessai dans 1 seconde...`);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Attendre 1 seconde
+        return this.refreshAccessToken(refreshToken, retryCount + 1);
+      }
+      
       throw error;
     }
   }

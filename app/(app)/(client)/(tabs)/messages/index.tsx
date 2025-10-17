@@ -410,7 +410,7 @@ export default function ClientMessagesPage() {
 
         return (
             <TouchableOpacity
-                className={`rounded-xl mx-4 my-2 p-4 shadow-sm border border-neutral-100 active:opacity-70 ${isUnread ? 'bg-primary-50' : 'bg-white'}`}
+                className={`rounded-xl mx-4 my-2 p-4 shadow-sm border border-neutral-100 ${isUnread ? 'bg-primary-50' : 'bg-white'}`}
                 onPress={() => {
                     console.log('Navigating to conversation:', conversation._id); // Debug navigation
                     router.push(`/(app)/(client)/conversation/${conversation._id}`);
@@ -565,7 +565,7 @@ export default function ClientMessagesPage() {
                 data={Array.from({ length: 6 }).map((_, i) => i.toString())}
                 renderItem={() => <SkeletonCard />}
                 keyExtractor={(item) => item}
-                contentContainerStyle={{ paddingTop: 8, paddingBottom: 40 }}
+                contentContainerStyle={{ paddingTop: 8, paddingBottom: 80 }}
                 showsVerticalScrollIndicator={false}
             />
         );
@@ -724,7 +724,7 @@ export default function ClientMessagesPage() {
                         </Text>
             {searchQuery.trim().length === 0 ? (
                             <TouchableOpacity
-                                className="bg-primary-500 rounded-2xl px-8 py-4 shadow-sm active:opacity-70"
+                                className="bg-primary-500 rounded-2xl px-8 py-4 shadow-sm"
                 onPress={() => router.push('/')}
                             >
                                 <Text className="text-white font-quicksand-semibold text-base">
@@ -737,7 +737,7 @@ export default function ClientMessagesPage() {
                 contentContainerStyle={{
                     flexGrow: 1,
                     paddingTop: 16,
-                    paddingBottom: 32,
+                    paddingBottom: 80,
                 }}
             />
 

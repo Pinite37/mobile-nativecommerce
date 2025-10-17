@@ -8,15 +8,15 @@ const userRoles = [
   {
     id: 'CLIENT',
     title: 'Client',
-    description: 'Shop from verified businesses and track your orders',
+    description: 'Achetez auprès d\' entreprises vérifiées et suivez vos commandes',
     icon: 'person-outline',
     color: 'bg-blue-50',
     iconColor: '#1E40AF',
   },
   {
     id: 'ENTERPRISE',
-    title: 'Business',
-    description: 'Sell your products and manage your business',
+    title: 'Entreprise',
+    description: 'Vendez vos produits et gérez votre entreprise',
     icon: 'business-outline',
     color: 'bg-green-50',
     iconColor: '#059669',
@@ -28,7 +28,7 @@ export default function RoleSelectionScreen() {
 
   const handleContinue = () => {
     if (!selectedRole) {
-      Alert.alert('Error', 'Please select a role to continue');
+      Alert.alert('Erreur', 'Veuillez sélectionner un rôle pour continuer');
       return;
     }
 
@@ -61,10 +61,10 @@ export default function RoleSelectionScreen() {
           </TouchableOpacity>
           
           <Text className="text-3xl font-quicksand-bold text-neutral-900 mb-2">
-            Choose Your Role
+            Choisissez votre rôle
           </Text>
           <Text className="text-base font-quicksand text-neutral-600">
-            Select how you want to use our platform
+            Sélectionnez comment vous souhaitez utiliser notre plateforme
           </Text>
         </View>
 
@@ -79,6 +79,7 @@ export default function RoleSelectionScreen() {
                   ? 'border-primary bg-primary/5'
                   : 'border-neutral-200 bg-white'
               }`}
+              activeOpacity={0.8}
             >
               <View className="flex-row items-center">
                 <View className={`w-12 h-12 rounded-xl ${role.color} items-center justify-center mr-4`}>
@@ -118,7 +119,7 @@ export default function RoleSelectionScreen() {
             <Text className={`font-quicksand-semibold text-base text-center ${
               selectedRole ? 'text-white' : 'text-neutral-500'
             }`}>
-              Continue
+              Continuer
             </Text>
           </TouchableOpacity>
         </View>

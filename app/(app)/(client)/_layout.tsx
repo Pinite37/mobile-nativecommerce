@@ -21,6 +21,12 @@ export default function ClientLayout() {
         }} 
       />
       <Stack.Screen 
+        name="category/[categoryId]" 
+        options={{ 
+          headerShown: false 
+        }} 
+      />
+      <Stack.Screen 
         name="enterprise" 
         options={{ 
           headerShown: false,

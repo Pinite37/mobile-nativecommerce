@@ -61,6 +61,8 @@ export interface RegisterRequest {
 
 export interface EnterpriseRegisterRequest extends RegisterRequest {
   companyName: string;
+  ifuNumber: string;
+  agreedToTerms: boolean;
   description: string;
   city: string;
   district: string;

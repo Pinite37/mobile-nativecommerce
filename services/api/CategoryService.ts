@@ -79,6 +79,67 @@ class CategoryService {
       throw new Error(error.response?.data?.message || error.message || 'Récupération de la catégorie échouée');
     }
   }
+
+  // Récupérer les produits d'une catégorie avec filtres et pagination
+  async getCategoryProducts(
+    categoryId: string,
+    page: number = 1,
+    limit: number = 20,
+    filters?: {
+      minPrice?: number;
+      maxPrice?: number;
+      inStock?: boolean;
+      enterprise?: string;
+      search?: string;
+      sortBy?: 'price_asc' | 'price_desc' | 'name' | 'popular' | 'newest';
+    }
+  ): Promise<{
+    category: Category;
+    products: any[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalProducts: number;
+      productsPerPage: number;
+      hasNextPage: boolean;
+      hasPrevPage: boolean;
+    };
+  }> {
+    try {
+      console.log('🚀 CategoryService - Récupération produits catégorie:', categoryId);
+      console.log('📄 Pagination:', { page, limit });
+      console.log('🔍 Filtres:', filters);
+
+      // Construction des paramètres de requête
+      const params: any = {
+        page,
+        limit,
+      };
+
+      if (filters?.minPrice) params.minPrice = filters.minPrice;
+      if (filters?.maxPrice) params.maxPrice = filters.maxPrice;
+      if (filters?.inStock !== undefined) params.inStock = filters.inStock;
+      if (filters?.enterprise) params.enterprise = filters.enterprise;
+      if (filters?.search) params.search = filters.search;
+      if (filters?.sortBy) params.sortBy = filters.sortBy;
+
+      const response = await ApiService.get<{
+        category: Category;
+        products: any[];
+        pagination: any;
+      }>(`${this.BASE_URL}/${categoryId}/products`, { params });
+
+      if (response.success && response.data) {
+        console.log('✅ Produits de catégorie récupérés:', response.data.products.length);
+        return response.data;
+      }
+
+      throw new Error('Échec de la récupération des produits');
+    } catch (error: any) {
+      console.error('❌ Erreur récupération produits catégorie:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Récupération des produits échouée');
+    }
+  }
 }
 
 export default new CategoryService();

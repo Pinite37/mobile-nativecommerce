@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { useToast } from '../../components/ui/ToastManager';
+import { useToast } from '../../components/ui/ReanimatedToast/context';
 import { useAuth } from '../../contexts/AuthContext';
 import AuthService from '../../services/api/AuthService';
 import { ErrorHandler } from '../../utils/ErrorHandler';
@@ -19,7 +19,7 @@ export default function SignInScreen() {
 
   const handleSignIn = async () => {
     if (!email || !password) {
-      toast.showError('Erreur', 'Veuillez remplir tous les champs');
+      toast.showToast({ title: 'Erreur', subtitle: 'Veuillez remplir tous les champs' });
       return;
     }
 
@@ -37,10 +37,10 @@ export default function SignInScreen() {
 
           // Show error toast with longer duration
           console.log('🚚 About to call toast.showError');
-          toast.showError(
-            'Profil non supporté',
-            'Cette application ne gère que les profils clients et entreprises. Veuillez utiliser l\'application dédiée aux livreurs.'
-          );
+          toast.showToast({
+            title: 'Profil non supporté',
+            subtitle: 'Cette application ne gère que les profils clients et entreprises. Veuillez utiliser l\'application dédiée aux livreurs.'
+          });
           console.log('🚚 toast.showError called successfully');
 
           // Clear any stored session data
@@ -53,7 +53,7 @@ export default function SignInScreen() {
 
           return;
         }        const successMessage = ErrorHandler.getSuccessMessage('login');
-        toast.showSuccess(successMessage.title, successMessage.message);
+        toast.showToast({ title: successMessage.title, subtitle: successMessage.message });
         
         // Refresh auth status and redirect
         await checkAuthStatus();
@@ -64,7 +64,7 @@ export default function SignInScreen() {
       }
     } catch (error: any) {
       const errorMessage = ErrorHandler.parseApiError(error);
-      toast.showError(errorMessage.title, errorMessage.message);
+      toast.showToast({ title: errorMessage.title, subtitle: errorMessage.message });
     } finally {
       setIsLoading(false);
     }
@@ -75,7 +75,7 @@ export default function SignInScreen() {
   };
 
   const handleForgotPassword = () => {
-    toast.showInfo('Info', 'Fonctionnalité de mot de passe oublié sera bientôt disponible');
+    toast.showToast({ title: 'Info', subtitle: 'Fonctionnalité de mot de passe oublié sera bientôt disponible' });
   };
 
   return (
@@ -107,10 +107,10 @@ export default function SignInScreen() {
         {/* Header */}
         <View className="px-6 pb-8">
           <Text className="text-3xl font-quicksand-bold text-neutral-900 mb-2">
-            Welcome Back
+            Bienvenue
           </Text>
           <Text className="text-base font-quicksand text-neutral-600">
-            Sign in to your account
+            Connectez-vous à votre compte
           </Text>
         </View>
 
@@ -124,7 +124,7 @@ export default function SignInScreen() {
             <TextInput
               value={email}
               onChangeText={setEmail}
-              placeholder="Enter your email"
+              placeholder="Entrez votre email"
               keyboardType="email-address"
               autoCapitalize="none"
               className="border border-neutral-200 rounded-xl px-4 py-4 text-base font-quicksand"
@@ -134,13 +134,13 @@ export default function SignInScreen() {
           {/* Password Input */}
           <View className="mb-6">
             <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-              Password
+              Mot de passe
             </Text>
             <View className="relative">
               <TextInput
                 value={password}
                 onChangeText={setPassword}
-                placeholder="Enter your password"
+                placeholder="Entrez votre mot de passe"
                 secureTextEntry={!showPassword}
                 className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 text-base font-quicksand"
               />
@@ -163,7 +163,7 @@ export default function SignInScreen() {
             className="self-end mb-8"
           >
             <Text className="text-primary font-quicksand-medium text-sm">
-              Forgot Password?
+              Mot de passe oublié ?
             </Text>
           </TouchableOpacity>
 
@@ -176,18 +176,18 @@ export default function SignInScreen() {
             }`}
           >
             <Text className="text-white font-quicksand-semibold text-base text-center">
-              {isLoading ? 'Signing In...' : 'Sign In'}
+              {isLoading ? 'Connexion...' : 'Se connecter'}
             </Text>
           </TouchableOpacity>
 
           {/* Sign Up Link */}
           <View className="flex-row justify-center items-center">
             <Text className="text-neutral-600 font-quicksand text-sm">
-              Don&apos;t have an account?{' '}
+              Vous n&apos;avez pas de compte ?{' '}
             </Text>
             <TouchableOpacity onPress={handleSignUp}>
               <Text className="text-primary font-quicksand-semibold text-sm">
-                Sign Up
+                S&apos;inscrire
               </Text>
             </TouchableOpacity>
           </View>

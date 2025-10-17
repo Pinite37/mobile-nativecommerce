@@ -1956,207 +1956,299 @@ export default function ConversationDetails() {
         animationType="slide"
         onRequestClose={closeOfferModal}
       >
-        <TouchableOpacity
-          className="flex-1 bg-black/50"
-          activeOpacity={1}
-          onPress={closeOfferModal}
-        >
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-            <TouchableOpacity
-              className="flex-1 justify-end"
-              activeOpacity={1}
-              onPress={() => {}}
-            >
-              <View className="bg-white rounded-t-3xl p-6 max-h-[80%]">
-                {/* Header de la modal */}
-                <View className="flex-row items-center justify-between mb-4">
-                  <Text className="text-xl font-quicksand-bold text-neutral-800">
-                    Nouvelle offre de livraison
-                  </Text>
+        <View className="flex-1 bg-black/60 justify-end">
+          <TouchableOpacity
+            className="flex-1"
+            activeOpacity={1}
+            onPress={closeOfferModal}
+          />
+          <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+            style={{ maxHeight: '85%' }}
+          >
+            <View className="bg-white rounded-t-[32px] shadow-2xl" style={{ height: '100%' }}>
+              {/* Header avec dégradé - FIXE */}
+              <LinearGradient
+                colors={['#10B981', '#34D399']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                className="px-6 pt-6 pb-4 rounded-t-[32px]"
+              >
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center flex-1">
+                    <View className="w-10 h-10 bg-white/20 rounded-full justify-center items-center mr-3">
+                      <Ionicons name="bicycle" size={20} color="#FFFFFF" />
+                    </View>
+                    <Text className="text-xl font-quicksand-bold text-white flex-1">
+                      Nouvelle offre de livraison
+                    </Text>
+                  </View>
                   <TouchableOpacity
                     onPress={closeOfferModal}
-                    className="w-8 h-8 rounded-full justify-center items-center"
+                    className="w-10 h-10 bg-white/20 rounded-full justify-center items-center"
                   >
-                    <Ionicons name="close" size={24} color="#9CA3AF" />
+                    <Ionicons name="close" size={22} color="#FFFFFF" />
                   </TouchableOpacity>
                 </View>
+              </LinearGradient>
 
-                <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-
-                  {/* Zone de livraison */}
-                  <View className="mb-4">
-                    <Text className="text-sm text-neutral-600 font-quicksand-medium mb-2">
+              {/* Contenu scrollable - flex-1 pour prendre tout l'espace disponible */}
+              <ScrollView 
+                keyboardShouldPersistTaps="handled" 
+                showsVerticalScrollIndicator={true}
+                className="flex-1 px-6"
+                contentContainerStyle={{ paddingTop: 20, paddingBottom: 290 }}
+                nestedScrollEnabled={true}
+              >
+                {/* Zone de livraison */}
+                <View className="mb-5">
+                  <View className="flex-row items-center mb-2">
+                    <Ionicons name="location" size={16} color="#10B981" />
+                    <Text className="text-sm text-neutral-700 font-quicksand-semibold ml-2">
                       Zone de livraison
                     </Text>
+                  </View>
+                  <View className="bg-neutral-50 rounded-2xl border-2 border-neutral-200 overflow-hidden">
                     <TextInput
                       value={offerForm.deliveryZone}
                       onChangeText={(text) => setOfferForm({ ...offerForm, deliveryZone: text })}
-                      placeholder="Entrez la zone de livraison"
-                      className="border rounded-lg px-4 py-3 text-neutral-800 font-quicksand-medium"
+                      placeholder="Ex: Cocody, Angré 8ème tranche"
+                      className="px-4 py-3 text-neutral-800 font-quicksand-medium text-base"
                       placeholderTextColor="#9CA3AF"
                       returnKeyType="next"
                     />
                   </View>
+                </View>
 
-                  {/* Frais de livraison */}
-                  <View className="mb-4">
-                    <Text className="text-sm text-neutral-600 font-quicksand-medium mb-2">
-                      Frais de livraison (FCFA)
+                {/* Frais de livraison */}
+                <View className="mb-5">
+                  <View className="flex-row items-center mb-2">
+                    <Ionicons name="cash" size={16} color="#10B981" />
+                    <Text className="text-sm text-neutral-700 font-quicksand-semibold ml-2">
+                      Frais de livraison
                     </Text>
+                  </View>
+                  <View className="bg-neutral-50 rounded-2xl border-2 border-neutral-200 overflow-hidden flex-row items-center">
                     <TextInput
                       value={offerForm.deliveryFee}
                       onChangeText={(text) => setOfferForm({ ...offerForm, deliveryFee: text })}
-                      placeholder="Entrez les frais de livraison"
+                      placeholder="0"
                       keyboardType="numeric"
-                      className="border rounded-lg px-4 py-3 text-neutral-800 font-quicksand-medium"
+                      className="flex-1 px-4 py-3 text-neutral-800 font-quicksand-semibold text-base"
                       placeholderTextColor="#9CA3AF"
                       returnKeyType="next"
                     />
-                  </View>
-
-                  {/* Urgence */}
-                  <View className="mb-4">
-                    <Text className="text-sm text-neutral-600 font-quicksand-medium mb-2">
-                      Urgence
+                    <Text className="text-neutral-500 font-quicksand-medium text-sm pr-4">
+                      FCFA
                     </Text>
-                    <View className="flex-row">
-                      <TouchableOpacity
-                        onPress={() => setOfferForm({ ...offerForm, urgency: 'LOW' })}
-                        className={`flex-1 rounded-lg px-4 py-3 mr-2 justify-center items-center ${
-                          offerForm.urgency === 'LOW' ? 'bg-primary-50' : 'bg-neutral-50'
-                        }`}
-                      >
-                        <Text className="text-neutral-800 font-quicksand-medium">
-                          Basse
-                        </Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => setOfferForm({ ...offerForm, urgency: 'MEDIUM' })}
-                        className={`flex-1 rounded-lg px-4 py-3 mr-2 justify-center items-center ${
-                          offerForm.urgency === 'MEDIUM' ? 'bg-primary-50' : 'bg-neutral-50'
-                        }`}
-                      >
-                        <Text className="text-neutral-800 font-quicksand-medium">
-                          Moyenne
-                        </Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => setOfferForm({ ...offerForm, urgency: 'HIGH' })}
-                        className={`flex-1 rounded-lg px-4 py-3 justify-center items-center ${
-                          offerForm.urgency === 'HIGH' ? 'bg-primary-50' : 'bg-neutral-50'
-                        }`}
-                      >
-                        <Text className="text-neutral-800 font-quicksand-medium">
-                          Haute
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
                   </View>
+                </View>
 
-                  {/* Instructions spéciales */}
-                  <View className="mb-4">
-                    <Text className="text-sm text-neutral-600 font-quicksand-medium mb-2">
-                      Instructions spéciales
+                {/* Urgence */}
+                <View className="mb-5">
+                  <View className="flex-row items-center mb-2">
+                    <Ionicons name="speedometer" size={16} color="#10B981" />
+                    <Text className="text-sm text-neutral-700 font-quicksand-semibold ml-2">
+                      Niveau d&apos;urgence
                     </Text>
+                  </View>
+                  <View className="flex-row gap-2">
+                    <TouchableOpacity
+                      onPress={() => setOfferForm({ ...offerForm, urgency: 'LOW' })}
+                      className={`flex-1 rounded-2xl px-4 py-4 justify-center items-center border-2 ${
+                        offerForm.urgency === 'LOW' 
+                          ? 'bg-green-50 border-green-400' 
+                          : 'bg-neutral-50 border-neutral-200'
+                      }`}
+                    >
+                      <Ionicons 
+                        name="walk" 
+                        size={20} 
+                        color={offerForm.urgency === 'LOW' ? '#10B981' : '#9CA3AF'} 
+                      />
+                      <Text className={`font-quicksand-semibold text-xs mt-1 ${
+                        offerForm.urgency === 'LOW' ? 'text-green-700' : 'text-neutral-600'
+                      }`}>
+                        Basse
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => setOfferForm({ ...offerForm, urgency: 'MEDIUM' })}
+                      className={`flex-1 rounded-2xl px-4 py-4 justify-center items-center border-2 ${
+                        offerForm.urgency === 'MEDIUM' 
+                          ? 'bg-orange-50 border-orange-400' 
+                          : 'bg-neutral-50 border-neutral-200'
+                      }`}
+                    >
+                      <Ionicons 
+                        name="bicycle" 
+                        size={20} 
+                        color={offerForm.urgency === 'MEDIUM' ? '#F97316' : '#9CA3AF'} 
+                      />
+                      <Text className={`font-quicksand-semibold text-xs mt-1 ${
+                        offerForm.urgency === 'MEDIUM' ? 'text-orange-700' : 'text-neutral-600'
+                      }`}>
+                        Moyenne
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => setOfferForm({ ...offerForm, urgency: 'HIGH' })}
+                      className={`flex-1 rounded-2xl px-4 py-4 justify-center items-center border-2 ${
+                        offerForm.urgency === 'HIGH' 
+                          ? 'bg-red-50 border-red-400' 
+                          : 'bg-neutral-50 border-neutral-200'
+                      }`}
+                    >
+                      <Ionicons 
+                        name="rocket" 
+                        size={20} 
+                        color={offerForm.urgency === 'HIGH' ? '#EF4444' : '#9CA3AF'} 
+                      />
+                      <Text className={`font-quicksand-semibold text-xs mt-1 ${
+                        offerForm.urgency === 'HIGH' ? 'text-red-700' : 'text-neutral-600'
+                      }`}>
+                        Haute
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Date d'expiration */}
+                <View className="mb-5">
+                  <View className="flex-row items-center mb-2">
+                    <Ionicons name="time" size={16} color="#10B981" />
+                    <Text className="text-sm text-neutral-700 font-quicksand-semibold ml-2">
+                      Date d&apos;expiration
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => { setDateMode('datetime'); setShowDatePicker(true); }}
+                    className="bg-neutral-50 rounded-2xl border-2 border-neutral-200 px-4 py-3 flex-row items-center justify-between"
+                  >
+                    <Text className={`font-quicksand-medium text-base ${
+                      offerForm.expiresAt ? 'text-neutral-800' : 'text-neutral-400'
+                    }`}>
+                      {offerForm.expiresAt 
+                        ? new Date(offerForm.expiresAt).toLocaleString('fr-FR', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })
+                        : 'Choisir la date et l\'heure'}
+                    </Text>
+                    <Ionicons name="calendar" size={18} color="#10B981" />
+                  </TouchableOpacity>
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={offerForm.expiresAt ? new Date(offerForm.expiresAt) : new Date(Date.now() + 60 * 60 * 1000)}
+                      mode={Platform.OS === 'ios' ? dateMode : 'date'}
+                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                      minimumDate={new Date()}
+                      onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
+                        if (Platform.OS === 'ios') {
+                          if ((event as any).type === 'dismissed') return;
+                          const date = selectedDate || new Date();
+                          setOfferForm({ ...offerForm, expiresAt: date.toISOString() });
+                        } else {
+                          setShowDatePicker(false);
+                          if ((event as any).type === 'dismissed') return;
+                          const picked = selectedDate || new Date();
+                          setTempExpiryDate(picked);
+                          setShowTimePicker(true);
+                        }
+                      }}
+                      style={{ backgroundColor: Platform.OS === 'ios' ? 'white' : undefined }}
+                    />
+                  )}
+                  {Platform.OS === 'android' && showTimePicker && (
+                    <DateTimePicker
+                      value={tempExpiryDate || new Date()}
+                      mode={'time'}
+                      display={'default'}
+                      onChange={(event: DateTimePickerEvent, selectedTime?: Date) => {
+                        setShowTimePicker(false);
+                        if ((event as any).type === 'dismissed') return;
+                        const base = tempExpiryDate || new Date();
+                        const time = selectedTime || new Date();
+                        const final = new Date(base);
+                        final.setHours(time.getHours(), time.getMinutes(), 0, 0);
+                        setOfferForm({ ...offerForm, expiresAt: final.toISOString() });
+                        setTempExpiryDate(null);
+                      }}
+                    />
+                  )}
+                </View>
+
+                {/* Instructions spéciales */}
+                <View className="mb-5">
+                  <View className="flex-row items-center mb-2">
+                    <Ionicons name="document-text" size={16} color="#10B981" />
+                    <Text className="text-sm text-neutral-700 font-quicksand-semibold ml-2">
+                      Instructions spéciales (optionnel)
+                    </Text>
+                  </View>
+                  <View className="bg-neutral-50 rounded-2xl border-2 border-neutral-200 overflow-hidden">
                     <TextInput
                       value={offerForm.specialInstructions}
                       onChangeText={(text) => setOfferForm({ ...offerForm, specialInstructions: text })}
-                      placeholder="Instructions spéciales pour la livraison"
-                      className="border rounded-lg px-4 py-3 text-neutral-800 font-quicksand-medium"
+                      placeholder="Ex: Livraison en mains propres uniquement, Appeler 30 min avant..."
+                      className="px-4 py-3 text-neutral-800 font-quicksand-medium text-base min-h-[100px]"
                       placeholderTextColor="#9CA3AF"
                       multiline
-                      numberOfLines={3}
                       textAlignVertical="top"
                       returnKeyType="done"
                     />
                   </View>
+                </View>
+              </ScrollView>
 
-                  {/* Date d’expiration */}
-                  <View className="mb-6">
-                    <Text className="text-sm text-neutral-600 font-quicksand-medium mb-2">
-                      Date d&apos;expiration
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() => { setDateMode('datetime'); setShowDatePicker(true); }}
-                      className="border rounded-lg px-4 py-3 bg-neutral-50"
-                    >
-                      <Text className="text-neutral-800 font-quicksand-medium">
-                        {offerForm.expiresAt ? new Date(offerForm.expiresAt).toLocaleString('fr-FR') : 'Choisir la date et l\'heure'}
-                      </Text>
-                    </TouchableOpacity>
-                    {showDatePicker && (
-                      <DateTimePicker
-                        value={offerForm.expiresAt ? new Date(offerForm.expiresAt) : new Date(Date.now() + 60 * 60 * 1000)}
-                        mode={Platform.OS === 'ios' ? dateMode : 'date'}
-                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                        minimumDate={new Date()}
-                        onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
-                          if (Platform.OS === 'ios') {
-                            if ((event as any).type === 'dismissed') return;
-                            const date = selectedDate || new Date();
-                            setOfferForm({ ...offerForm, expiresAt: date.toISOString() });
-                          } else {
-                            // ANDROID étape 1: choisir la date, puis ouvrir le time picker
-                            setShowDatePicker(false);
-                            if ((event as any).type === 'dismissed') return;
-                            const picked = selectedDate || new Date();
-                            // Conserver la date choisie, on choisira l'heure ensuite
-                            setTempExpiryDate(picked);
-                            setShowTimePicker(true);
-                          }
-                        }}
-                        style={{ backgroundColor: Platform.OS === 'ios' ? 'white' : undefined }}
-                      />
-                    )}
-                    {/* ANDROID: time picker après le date picker */}
-                    {Platform.OS === 'android' && showTimePicker && (
-                      <DateTimePicker
-                        value={tempExpiryDate || new Date()}
-                        mode={'time'}
-                        display={'default'}
-                        onChange={(event: DateTimePickerEvent, selectedTime?: Date) => {
-                          setShowTimePicker(false);
-                          if ((event as any).type === 'dismissed') return;
-                          const base = tempExpiryDate || new Date();
-                          const time = selectedTime || new Date();
-                          const final = new Date(base);
-                          final.setHours(time.getHours(), time.getMinutes(), 0, 0);
-                          setOfferForm({ ...offerForm, expiresAt: final.toISOString() });
-                          setTempExpiryDate(null);
-                        }}
-                      />
-                    )}
-                  </View>
-                </ScrollView>
-
-                {/* Actions */}
-                <View className="flex-row justify-end">
-                  <TouchableOpacity
-                    onPress={closeOfferModal}
-                    className="flex-1 bg-neutral-100 py-3 rounded-lg mr-2"
-                  >
-                    <Text className="text-center text-neutral-700 font-quicksand-semibold">
-                      Annuler
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={submitOffer}
-                    className="flex-1 bg-primary-600 py-3 rounded-lg"
-                    disabled={creatingOffer}
+              {/* Actions - Fixés en bas avec safe area */}
+              <View 
+                className="px-6 py-4 border-t border-neutral-100 flex-row gap-3 bg-white"
+                style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+              >
+                <TouchableOpacity
+                  onPress={closeOfferModal}
+                  className="flex-1 bg-neutral-100 py-4 rounded-2xl justify-center items-center"
+                  disabled={creatingOffer}
+                >
+                  <Text className="text-neutral-700 font-quicksand-bold text-base">
+                    Annuler
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={submitOffer}
+                  disabled={creatingOffer}
+                  className="flex-1 rounded-2xl justify-center items-center overflow-hidden"
+                  style={{
+                    opacity: creatingOffer ? 0.7 : 1
+                  }}
+                >
+                  <LinearGradient
+                    colors={['#10B981', '#059669']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    className="w-full py-4 justify-center items-center"
                   >
                     {creatingOffer ? (
                       <ActivityIndicator size="small" color="#FFFFFF" />
                     ) : (
-                      <Text className="text-center text-white font-quicksand-semibold">
-                        Publier l&apos;offre
-                      </Text>
+                      <View className="flex-row items-center">
+                        <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+                        <Text className="text-white font-quicksand-bold text-base ml-2">
+                          Publier l&apos;offre
+                        </Text>
+                      </View>
                     )}
-                  </TouchableOpacity>
-                </View>
+                  </LinearGradient>
+                </TouchableOpacity>
               </View>
-            </TouchableOpacity>
+            </View>
           </KeyboardAvoidingView>
-        </TouchableOpacity>
+        </View>
       </Modal>
     </SafeAreaView>
   );

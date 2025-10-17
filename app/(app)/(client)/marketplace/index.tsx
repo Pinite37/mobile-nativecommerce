@@ -1,356 +1,618 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import { router } from 'expo-router';
+import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
+import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Animated,
-    Easing,
-    Image,
-    RefreshControl,
-    SafeAreaView,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Animated,
+  BackHandler,
+  Image,
+  Keyboard,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ProductService from '../../../../services/api/ProductService';
 import { Product } from '../../../../types/product';
 
+// Types pour les filtres et le tri
+type SortOption = 'newest' | 'price_asc' | 'price_desc' | 'name' | 'popular';
+type ViewMode = 'grid' | 'list';
+
 export default function ClientMarketplacePage() {
-  const router = useRouter();
+  const insets = useSafeAreaInsets();
+
+  // États principaux
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
 
-  // Charger les produits populaires du marketplace
-  const loadProducts = useCallback(async (pageNum = 1, isRefresh = false) => {
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [hasNextPage, setHasNextPage] = useState(false);
+
+  // Filtres et recherche
+  const [searchQuery, setSearchQuery] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>('popular');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Favoris (simulé)
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+
+  // Charger les données initiales
+  useEffect(() => {
+    loadMarketplaceProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortBy, inStockOnly]);
+
+  // Gérer le bouton retour Android
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (showFilters) {
+        setShowFilters(false);
+        return true;
+      }
+      return false;
+    });
+
+    return () => backHandler.remove();
+  }, [showFilters]);
+
+  const loadMarketplaceProducts = async (page: number = 1, append: boolean = false) => {
     try {
-      if (pageNum === 1) {
+      if (!append) {
         setLoading(true);
       } else {
         setLoadingMore(true);
       }
 
-      const response = await ProductService.getAllPublicProducts({
+      // Construction des filtres
+      const filters: any = {
+        page,
         limit: 20,
-        sort: 'popular',
-        page: pageNum
-      });
+        sort: sortBy
+      };
 
-      if (isRefresh) {
-        setProducts(response.products || []);
-      } else {
-        setProducts(prev => pageNum === 1 ? (response.products || []) : [...prev, ...(response.products || [])]);
+      // Recherche
+      if (searchQuery.trim()) {
+        filters.search = searchQuery.trim();
+        console.log('🔍 Recherche:', filters.search);
       }
 
-      setHasMore((response.products || []).length === 20);
-      setPage(pageNum);
-    } catch (error: any) {
-      console.error('❌ Erreur chargement produits marketplace:', error);
-      Alert.alert('Erreur', error.message || 'Impossible de charger les produits');
+      // Filtres de prix
+      if (minPrice && minPrice.trim()) {
+        const parsedMin = parseFloat(minPrice);
+        if (!isNaN(parsedMin) && parsedMin > 0) {
+          filters.minPrice = parsedMin;
+        }
+      }
+
+      if (maxPrice && maxPrice.trim()) {
+        const parsedMax = parseFloat(maxPrice);
+        if (!isNaN(parsedMax) && parsedMax > 0) {
+          filters.maxPrice = parsedMax;
+        }
+      }
+
+      // Filtre de disponibilité
+      if (inStockOnly) {
+        filters.inStock = true;
+      }
+
+      console.log('🚀 Chargement marketplace - Page:', page, 'Filtres:', filters);
+
+      const response = await ProductService.getAllPublicProducts(filters);
+
+      if (append) {
+        setProducts(prev => [...prev, ...response.products]);
+      } else {
+        setProducts(response.products);
+      }
+
+      setCurrentPage(response.pagination?.page || page);
+      setTotalPages(response.pagination?.pages || 1);
+      setTotalProducts(response.pagination?.total || response.products.length);
+      setHasNextPage((response.products || []).length === 20);
+
+      console.log('✅ Produits marketplace chargés:', response.products.length);
+    } catch (error) {
+      console.error('❌ Erreur chargement marketplace:', error);
     } finally {
       setLoading(false);
       setLoadingMore(false);
       setRefreshing(false);
     }
-  }, []);
-
-  // Rafraîchir les données
-  const refreshProducts = async () => {
-    setRefreshing(true);
-    await loadProducts(1, true);
   };
 
-  // Charger plus de produits
-  const loadMoreProducts = async () => {
-    if (!loadingMore && hasMore) {
-      await loadProducts(page + 1);
+  const handleRefresh = () => {
+    setRefreshing(true);
+    setCurrentPage(1);
+    loadMarketplaceProducts(1, false);
+  };
+
+  const handleLoadMore = () => {
+    if (hasNextPage && !loadingMore) {
+      loadMarketplaceProducts(currentPage + 1, true);
     }
   };
 
-  // Charger les données au montage
-  useEffect(() => {
-    loadProducts();
-  }, [loadProducts]);
+  const handleSearch = () => {
+    console.log('🔍 Déclenchement recherche:', searchQuery);
+    Keyboard.dismiss();
+    setCurrentPage(1);
+    loadMarketplaceProducts(1, false);
+  };
 
-  // Formater le prix
+  const handleApplyFilters = () => {
+    console.log('✅ Application des filtres', {
+      minPrice,
+      maxPrice,
+      inStockOnly,
+      sortBy
+    });
+    Keyboard.dismiss();
+    setShowFilters(false);
+    setCurrentPage(1);
+    loadMarketplaceProducts(1, false);
+  };
+
+  const handleResetFilters = () => {
+    console.log('🔄 Réinitialisation des filtres');
+    Keyboard.dismiss();
+    setSearchQuery('');
+    setMinPrice('');
+    setMaxPrice('');
+    setInStockOnly(false);
+    setSortBy('popular');
+    setShowFilters(false);
+    setCurrentPage(1);
+    loadMarketplaceProducts(1, false);
+  };
+
+  const toggleFavorite = (productId: string) => {
+    setFavorites(prev => {
+      const newFavorites = new Set(prev);
+      if (newFavorites.has(productId)) {
+        newFavorites.delete(productId);
+      } else {
+        newFavorites.add(productId);
+      }
+      return newFavorites;
+    });
+  };
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
   };
 
-  // Rendu d'un produit
-  const renderProduct = (item: Product) => (
-    <TouchableOpacity
-      key={item._id}
-      className="bg-white rounded-2xl shadow-md border border-neutral-100 p-3 mb-4 overflow-hidden"
-      onPress={() => {
-        try {
-          router.push(`/(app)/(client)/product/${item._id}`);
-        } catch (error) {
-          console.warn('Erreur navigation produit:', error);
-        }
-      }}
-    >
-      <View className="relative">
-        <Image
-          source={{ uri: item.images[0] || "https://via.placeholder.com/150x150/CCCCCC/FFFFFF?text=No+Image" }}
-          className="w-full h-40 rounded-xl"
-          resizeMode="cover"
-        />
-        {/* Badge pour les produits populaires */}
-        {item.stats?.totalSales > 20 && (
-          <View className="absolute top-2 left-2 bg-success-500 rounded-full px-2 py-1">
-            <Text style={{ fontFamily: 'Quicksand-Bold' }} className="text-white text-xs">
-              🔥 Tendance
-            </Text>
-          </View>
-        )}
-        {/* Badge pour les nouveaux produits */}
-        {new Date(item.createdAt).getTime() > Date.now() - (7 * 24 * 60 * 60 * 1000) && (
-          <View className="absolute top-2 right-2 bg-primary-500 rounded-full px-2 py-1">
-            <Text style={{ fontFamily: 'Quicksand-Bold' }} className="text-white text-xs">
-              Nouveau
-            </Text>
-          </View>
-        )}
-      </View>
-      <View className="p-3">
-        <Text numberOfLines={2} style={{ fontFamily: 'Quicksand-SemiBold' }} className="text-base text-neutral-800 mb-2">
-          {item.name}
-        </Text>
-        <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-sm text-neutral-600 mb-2" numberOfLines={2}>
-          {item.description}
-        </Text>
-        <View className="flex-row items-center justify-between">
-          <Text style={{ fontFamily: 'Quicksand-Bold' }} className="text-lg text-primary-600">
-            {formatPrice(item.price)}
-          </Text>
-          <View className="flex-row items-center">
-            <Ionicons name="star" size={14} color="#FFD700" />
-            <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-sm text-neutral-600 ml-1">
-              {item.stats?.averageRating?.toFixed(1) || '0.0'}
-            </Text>
-          </View>
-        </View>
-        <View className="flex-row items-center justify-between mt-2">
-          <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-xs text-neutral-500">
-            {item.stats?.totalSales || 0} vente{(item.stats?.totalSales || 0) > 1 ? 's' : ''}
-          </Text>
-          <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-xs text-neutral-500">
-            {typeof item.category === 'object' ? item.category.name : item.category || 'Sans catégorie'}
-          </Text>
-        </View>
-        {/* Nom de l'entreprise */}
-        {typeof item.enterprise === 'object' && (
-          <View className="flex-row items-center mt-2 pt-2 border-t border-neutral-100">
-            <Ionicons name="business" size={12} color="#6B7280" />
-            <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-xs text-neutral-500 ml-1" numberOfLines={1}>
-              {item.enterprise.companyName}
-            </Text>
-          </View>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
-
-  // Skeleton Loader Component
+  // Composant Skeleton pour le chargement
   const ShimmerBlock = ({ style }: { style?: any }) => {
     const shimmer = React.useRef(new Animated.Value(0)).current;
+    
     useEffect(() => {
-      const loop = Animated.loop(
-        Animated.timing(shimmer, {
-          toValue: 1,
-          duration: 1200,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        })
-      );
-      loop.start();
-      return () => loop.stop();
-    }, [shimmer]);
-    const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(shimmer, { toValue: 1, duration: 1000, useNativeDriver: true }),
+          Animated.timing(shimmer, { toValue: 0, duration: 1000, useNativeDriver: true }),
+        ])
+      ).start();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const translateX = shimmer.interpolate({
+      inputRange: [0, 1],
+      outputRange: [-150, 150],
+    });
+
     return (
       <View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
-        <Animated.View style={{
-          position: 'absolute', top: 0, bottom: 0, width: 120,
-          transform: [{ translateX }],
-          backgroundColor: 'rgba(255,255,255,0.35)',
-          opacity: 0.7,
-        }} />
+        <Animated.View
+          style={{
+            width: 150,
+            height: '100%',
+            backgroundColor: 'rgba(255, 255, 255, 0.5)',
+            transform: [{ translateX }],
+          }}
+        />
       </View>
     );
   };
 
   const SkeletonProduct = () => (
-    <View className="bg-white rounded-2xl shadow-md border border-neutral-100 p-3 mb-4 overflow-hidden">
-      <ShimmerBlock style={{ height: 160, borderRadius: 12, width: '100%' }} />
-      <View className="p-3">
+    <View className="bg-white rounded-2xl shadow-md border border-neutral-100 p-2 mb-3 w-[48%]">
+      <ShimmerBlock style={{ height: 128, borderRadius: 16, width: '100%' }} />
+      <View className="mt-2">
         <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '80%', marginBottom: 8 }} />
-        <ShimmerBlock style={{ height: 12, borderRadius: 6, width: '60%', marginBottom: 8 }} />
-        <ShimmerBlock style={{ height: 18, borderRadius: 9, width: '40%' }} />
+        <ShimmerBlock style={{ height: 14, borderRadius: 8, width: '60%' }} />
       </View>
     </View>
   );
 
-  const renderSkeleton = () => (
-    <ScrollView showsVerticalScrollIndicator={false}>
-      <View className="px-4 py-4">
-        {Array.from({ length: 6 }).map((_, index) => (
-          <SkeletonProduct key={index} />
-        ))}
-      </View>
-    </ScrollView>
-  );
+  // Rendu d'un produit en mode grille
+  const renderProductGrid = (item: Product) => {
+    const isFavorite = favorites.has(item._id);
+    const enterprise = typeof item.enterprise === 'object' ? item.enterprise : null;
 
-  if (loading && products.length === 0) {
     return (
-      <SafeAreaView className="flex-1 bg-background-secondary">
-        {/* Header */}
-        <LinearGradient
-          colors={['#10B981', '#34D399']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          className="px-6 py-4 pt-16"
-        >
-          <View className="flex-row items-center justify-between">
-            <TouchableOpacity
-              onPress={() => router.back()}
-              className="w-10 h-10 bg-white/20 rounded-full items-center justify-center"
-            >
-              <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
-            </TouchableOpacity>
-            <Text style={{ fontFamily: 'Quicksand-Bold' }} className="text-xl text-white flex-1 text-center">
-              Marketplace
-            </Text>
-            <View style={{ width: 40 }} />
-          </View>
-        </LinearGradient>
-        {renderSkeleton()}
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView className="flex-1 bg-background-secondary">
-      {/* Header */}
-      <LinearGradient
-        colors={['#10B981', '#34D399']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        className="px-6 py-4 pt-16"
+      <TouchableOpacity
+        key={item._id}
+        className="bg-white rounded-2xl shadow-md border border-neutral-100 p-2 mb-3 w-[48%]"
+        onPress={() => router.push(`/(app)/(client)/product/${item._id}`)}
       >
-        <View className="flex-row items-center justify-between">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="w-10 h-10 bg-white/20 rounded-full items-center justify-center"
-          >
-            <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
-          <View className="flex-1 items-center">
-            <Text style={{ fontFamily: 'Quicksand-Bold' }} className="text-xl text-white">
-              Marketplace
-            </Text>
-            <Text style={{ fontFamily: 'Quicksand-Medium' }} className="text-sm text-white/80">
-              Découvrez les produits tendance
-            </Text>
-          </View>
-          <TouchableOpacity
-            onPress={() => {
-              // TODO: Navigate to search page
-              Alert.alert('Recherche', 'Utilisez la barre de recherche du dashboard pour filtrer les produits');
-            }}
-            className="w-10 h-10 bg-white/20 rounded-full items-center justify-center"
-          >
-            <Ionicons name="search" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
-
-      {/* Contenu */}
-      <ScrollView
-        className="flex-1"
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={refreshProducts}
-            colors={['#10B981']}
-            tintColor="#10B981"
+        <View className="relative">
+          <Image
+            source={{ uri: item.images?.[0] || 'https://via.placeholder.com/150' }}
+            className="w-full h-32 rounded-xl"
+            resizeMode="cover"
           />
-        }
-        onMomentumScrollEnd={({ nativeEvent }) => {
-          const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
-          const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - 50;
-          if (isCloseToBottom) {
-            loadMoreProducts();
-          }
-        }}
-      >
-        {/* Statistiques du marketplace */}
-        {/* <View className="px-4 py-4">
-          <View className="bg-white rounded-2xl p-4 shadow-sm border border-neutral-100">
-            <View className="flex-row items-center justify-between mb-3">
-              <Text style={{ fontFamily: 'Quicksand-SemiBold' }} className="text-sm text-neutral-700">
-                Aperçu du marché
-              </Text>
-              <Ionicons name="trending-up" size={16} color="#10B981" />
-            </View>
-            <View className="flex-row justify-between">
-              <View className="items-center flex-1">
-                <Text style={{ fontFamily: 'Quicksand-Bold' }} className="text-lg text-primary-600">
-                  {products.length}
-                </Text>
-                <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-xs text-neutral-600">Produits actifs</Text>
-              </View>
-              <View className="items-center flex-1">
-                <Text style={{ fontFamily: 'Quicksand-Bold' }} className="text-lg text-success-600">
-                  {products.reduce((sum, p) => sum + (p.stats?.totalSales || 0), 0)}
-                </Text>
-                <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-xs text-neutral-600">Ventes totales</Text>
-              </View>
-              <View className="items-center flex-1">
-                <Text style={{ fontFamily: 'Quicksand-Bold' }} className="text-lg text-warning-600">
-                  {(products.reduce((sum, p) => sum + (p.stats?.averageRating || 0), 0) / Math.max(products.length, 1)).toFixed(1)}
-                </Text>
-                <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-xs text-neutral-600">Note moyenne</Text>
-              </View>
-            </View>
-          </View>
-        </View> */}
-
-        {/* Liste des produits */}
-        <View className="px-4 py-7 pb-4">
-          {products.length > 0 ? (
-            <>
-              {products.map(renderProduct)}
-              {loadingMore && (
-                <View className="items-center py-4">
-                  <ActivityIndicator size="small" color="#10B981" />
-                  <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-sm text-neutral-600 mt-2">Chargement...</Text>
-                </View>
-              )}
-            </>
-          ) : (
-            <View className="items-center justify-center py-12">
-              <Ionicons name="storefront-outline" size={48} color="#9CA3AF" />
-              <Text style={{ fontFamily: 'Quicksand-Bold' }} className="text-lg text-neutral-800 mt-4">
-                Aucun produit disponible
-              </Text>
-              <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-sm text-neutral-600 text-center mt-2">
-                Il n&apos;y a pas encore de produits tendance sur le marketplace.
-              </Text>
+          <TouchableOpacity
+            className="absolute top-2 right-2 bg-white/90 rounded-full p-1.5"
+            onPress={() => toggleFavorite(item._id)}
+          >
+            <Ionicons
+              name={isFavorite ? 'heart' : 'heart-outline'}
+              size={20}
+              color={isFavorite ? '#EF4444' : '#6B7280'}
+            />
+          </TouchableOpacity>
+          {item.stock === 0 && (
+            <View className="absolute top-2 left-2 bg-red-500 px-2 py-1 rounded-lg">
+              <Text className="text-white text-xs font-quicksand-bold">Rupture</Text>
             </View>
           )}
         </View>
+        <View className="mt-2">
+          <Text className="text-sm font-quicksand-semibold text-neutral-800" numberOfLines={2}>
+            {item.name}
+          </Text>
+          <Text className="text-lg font-quicksand-bold text-[#10b981] mt-1">
+            {formatPrice(item.price)}
+          </Text>
+          {enterprise && (
+            <Text className="text-xs font-quicksand-medium text-neutral-500 mt-1" numberOfLines={1}>
+              {enterprise.companyName}
+            </Text>
+          )}
+          <View className="flex-row items-center mt-1">
+            <Ionicons name="star" size={14} color="#FBBF24" />
+            <Text className="text-xs font-quicksand-medium text-neutral-600 ml-1">
+              {item.stats?.averageRating?.toFixed(1) || '0.0'}
+            </Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
-        {/* Espace pour la navbar */}
-        <View style={{ height: 100 }} />
-      </ScrollView>
-    </SafeAreaView>
+  // Rendu d'un produit en mode liste
+  const renderProductList = (item: Product) => {
+    const isFavorite = favorites.has(item._id);
+    const enterprise = typeof item.enterprise === 'object' ? item.enterprise : null;
+
+    return (
+      <TouchableOpacity
+        key={item._id}
+        className="bg-white rounded-2xl shadow-md border border-neutral-100 p-3 mb-3 flex-row"
+        onPress={() => router.push(`/(app)/(client)/product/${item._id}`)}
+      >
+        <View className="relative mr-3">
+          <Image
+            source={{ uri: item.images?.[0] || 'https://via.placeholder.com/150' }}
+            className="w-24 h-24 rounded-xl"
+            resizeMode="cover"
+          />
+          {item.stock === 0 && (
+            <View className="absolute inset-0 bg-black/50 rounded-xl items-center justify-center">
+              <Text className="text-white text-xs font-quicksand-bold">Rupture</Text>
+            </View>
+          )}
+        </View>
+        <View className="flex-1">
+          <View className="flex-row justify-between items-start">
+            <Text className="text-sm font-quicksand-semibold text-neutral-800 flex-1" numberOfLines={2}>
+              {item.name}
+            </Text>
+            <TouchableOpacity onPress={() => toggleFavorite(item._id)} className="ml-2">
+              <Ionicons
+                name={isFavorite ? 'heart' : 'heart-outline'}
+                size={20}
+                color={isFavorite ? '#EF4444' : '#6B7280'}
+              />
+            </TouchableOpacity>
+          </View>
+          <Text className="text-lg font-quicksand-bold text-[#10b981] mt-1">
+            {formatPrice(item.price)}
+          </Text>
+          {enterprise && (
+            <Text className="text-xs font-quicksand-medium text-neutral-500 mt-1" numberOfLines={1}>
+              {enterprise.companyName}
+            </Text>
+          )}
+          <View className="flex-row items-center mt-1">
+            <Ionicons name="star" size={14} color="#FBBF24" />
+            <Text className="text-xs font-quicksand-medium text-neutral-600 ml-1">
+              {item.stats?.averageRating?.toFixed(1) || '0.0'}
+            </Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  return (
+    <View className="flex-1 bg-neutral-50">
+      <ExpoStatusBar style="light" translucent />
+      
+      {/* Header vert conventionnel avec gradient */}
+      <LinearGradient
+        colors={['#10B981', '#34D399']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        className="px-6 pb-4 rounded-b-3xl shadow-md"
+        style={{ paddingTop: insets.top + 16 }}
+      >
+        <View className="flex-row items-center justify-between mb-4">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="mr-3"
+          >
+            <Ionicons name="arrow-back" size={24} color="white" />
+          </TouchableOpacity>
+          <View className="flex-1">
+            <Text className="text-white text-lg font-quicksand-bold" numberOfLines={1}>
+              Marketplace
+            </Text>
+            {!loading && (
+              <Text className="text-white/80 text-sm font-quicksand-medium">
+                {totalProducts} produit{totalProducts > 1 ? 's' : ''} disponible{totalProducts > 1 ? 's' : ''}
+              </Text>
+            )}
+          </View>
+          <View className="flex-row items-center">
+            <TouchableOpacity
+              onPress={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+              className="mr-3"
+            >
+              <Ionicons
+                name={viewMode === 'grid' ? 'list' : 'grid'}
+                size={22}
+                color="white"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setShowFilters(true)}>
+              <Ionicons name="options" size={22} color="white" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Barre de recherche */}
+        <View className="flex-row items-center bg-white rounded-xl px-3 py-2 mb-3">
+          <Ionicons name="search" size={20} color="#6B7280" />
+          <TextInput
+            className="flex-1 ml-2 text-neutral-800 font-quicksand-medium"
+            placeholder="Rechercher des produits..."
+            placeholderTextColor="#9CA3AF"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onSubmitEditing={handleSearch}
+            returnKeyType="search"
+          />
+          {searchQuery.length > 0 ? (
+            <>
+              <TouchableOpacity 
+                onPress={handleSearch}
+                className="mr-2 bg-[#10b981] rounded-lg px-3 py-1"
+              >
+                <Ionicons name="search" size={16} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => {
+                setSearchQuery('');
+                setCurrentPage(1);
+                loadMarketplaceProducts(1, false);
+              }}>
+                <Ionicons name="close-circle" size={20} color="#6B7280" />
+              </TouchableOpacity>
+            </>
+          ) : null}
+        </View>
+
+        {/* Tri rapide */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 8 }}
+        >
+          {[
+            { value: 'popular', label: 'Populaires', icon: 'trending-up' },
+            { value: 'newest', label: 'Plus récents', icon: 'time' },
+            { value: 'price_asc', label: 'Prix croissant', icon: 'arrow-up' },
+            { value: 'price_desc', label: 'Prix décroissant', icon: 'arrow-down' },
+          ].map((sort) => (
+            <TouchableOpacity
+              key={sort.value}
+              onPress={() => setSortBy(sort.value as SortOption)}
+              className={`flex-row items-center px-3 py-1.5 rounded-lg ${
+                sortBy === sort.value ? 'bg-white' : 'bg-white/20'
+              }`}
+            >
+              <Ionicons
+                name={sort.icon as any}
+                size={14}
+                color={sortBy === sort.value ? '#10b981' : 'white'}
+              />
+              <Text
+                className={`ml-1 text-xs font-quicksand-semibold ${
+                  sortBy === sort.value ? 'text-[#10b981]' : 'text-white'
+                }`}
+              >
+                {sort.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </LinearGradient>
+
+      {/* Contenu */}
+      {loading ? (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ padding: 16 }}
+        >
+          <View className="flex-row flex-wrap justify-between">
+            {[...Array(6)].map((_, index) => (
+              <SkeletonProduct key={index} />
+            ))}
+          </View>
+        </ScrollView>
+      ) : products.length === 0 ? (
+        <View className="flex-1 items-center justify-center px-6">
+          <Ionicons name="cube-outline" size={64} color="#D1D5DB" />
+          <Text className="text-neutral-600 text-lg font-quicksand-bold mt-4">
+            Aucun produit trouvé
+          </Text>
+          <Text className="text-neutral-500 font-quicksand-medium text-center mt-2">
+            Essayez de modifier vos filtres ou votre recherche
+          </Text>
+          {(minPrice || maxPrice || inStockOnly || searchQuery) && (
+            <TouchableOpacity
+              onPress={handleResetFilters}
+              className="mt-4 bg-[#10b981] px-6 py-3 rounded-xl"
+            >
+              <Text className="text-white font-quicksand-semibold">Réinitialiser les filtres</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      ) : (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ padding: 16, paddingBottom: 90 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          }
+          onScroll={({ nativeEvent }) => {
+            const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+            const isCloseToBottom =
+              layoutMeasurement.height + contentOffset.y >= contentSize.height - 50;
+            if (isCloseToBottom) {
+              handleLoadMore();
+            }
+          }}
+          scrollEventThrottle={400}
+        >
+          <View className={viewMode === 'grid' ? 'flex-row flex-wrap justify-between' : ''}>
+            {products.map((product) =>
+              viewMode === 'grid' ? renderProductGrid(product) : renderProductList(product)
+            )}
+          </View>
+
+          {/* Indicateur de chargement supplémentaire */}
+          {loadingMore && (
+            <View className="py-4 items-center">
+              <ActivityIndicator size="small" color="#10b981" />
+            </View>
+          )}
+
+          {/* Pagination info */}
+          {!loadingMore && products.length > 0 && (
+            <Text className="text-center text-neutral-500 font-quicksand-medium text-sm mt-4">
+              Page {currentPage} sur {totalPages}
+            </Text>
+          )}
+        </ScrollView>
+      )}
+
+      {/* Modal de filtres */}
+      {showFilters && (
+        <View className="absolute inset-0 bg-black/50" style={{ paddingTop: insets.top }}>
+          <View className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 max-h-[80%]">
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className="text-xl font-quicksand-bold text-neutral-800">Filtres</Text>
+              <TouchableOpacity onPress={() => setShowFilters(false)}>
+                <Ionicons name="close" size={24} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Filtre de prix */}
+              <View className="mb-4">
+                <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-2">Prix (FCFA)</Text>
+                <View className="flex-row items-center">
+                  <TextInput
+                    className="flex-1 bg-neutral-100 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-medium"
+                    placeholder="Min"
+                    placeholderTextColor="#9CA3AF"
+                    keyboardType="numeric"
+                    value={minPrice}
+                    onChangeText={setMinPrice}
+                  />
+                  <Text className="mx-2 text-neutral-600">-</Text>
+                  <TextInput
+                    className="flex-1 bg-neutral-100 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-medium"
+                    placeholder="Max"
+                    placeholderTextColor="#9CA3AF"
+                    keyboardType="numeric"
+                    value={maxPrice}
+                    onChangeText={setMaxPrice}
+                  />
+                </View>
+              </View>
+
+              {/* Disponibilité */}
+              <TouchableOpacity
+                onPress={() => setInStockOnly(!inStockOnly)}
+                className="flex-row items-center justify-between py-3 mb-4"
+              >
+                <Text className="text-sm font-quicksand-semibold text-neutral-700">
+                  Produits en stock uniquement
+                </Text>
+                <View
+                  className={`w-12 h-6 rounded-full ${
+                    inStockOnly ? 'bg-[#10b981]' : 'bg-neutral-300'
+                  } justify-center`}
+                >
+                  <View
+                    className={`w-5 h-5 bg-white rounded-full ${
+                      inStockOnly ? 'ml-6' : 'ml-1'
+                    }`}
+                  />
+                </View>
+              </TouchableOpacity>
+
+              {/* Boutons d'action */}
+              <View className="flex-row mt-4 gap-3">
+                <TouchableOpacity
+                  className="flex-1 bg-neutral-200 py-3 rounded-xl"
+                  onPress={handleResetFilters}
+                >
+                  <Text className="text-neutral-700 font-quicksand-semibold text-center">
+                    Réinitialiser
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className="flex-1 bg-[#10b981] py-3 rounded-xl"
+                  onPress={handleApplyFilters}
+                >
+                  <Text className="text-white font-quicksand-semibold text-center">
+                    Appliquer
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      )}
+    </View>
   );
 }

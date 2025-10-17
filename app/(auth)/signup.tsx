@@ -2,9 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Linking, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { useToast } from '../../components/ui/ToastManager';
+import { useToast } from '../../components/ui/ReanimatedToast/context';
 import { useAuth } from '../../contexts/AuthContext';
 import { ErrorHandler } from '../../utils/ErrorHandler';
 import { RegistrationHelper } from '../../utils/RegistrationHelper';
@@ -22,22 +22,28 @@ export default function SignUpScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const toast = useToast();
   const { redirectToRoleBasedHome, handlePostRegistration, logout } = useAuth();
 
   const handleSignUp = async () => {
     if (!firstName || !lastName || !email || !phone || !address || !password || !confirmPassword) {
-      toast.showError('Erreur', 'Veuillez remplir tous les champs');
+      toast.showToast({ title: 'Erreur', subtitle: 'Veuillez remplir tous les champs' });
       return;
     }
 
     if (password !== confirmPassword) {
-      toast.showError('Erreur', 'Les mots de passe ne correspondent pas');
+      toast.showToast({ title: 'Erreur', subtitle: 'Les mots de passe ne correspondent pas' });
       return;
     }
 
     if (password.length < 6) {
-      toast.showError('Erreur', 'Le mot de passe doit contenir au moins 6 caractères');
+      toast.showToast({ title: 'Erreur', subtitle: 'Le mot de passe doit contenir au moins 6 caractères' });
+      return;
+    }
+
+    if (!agreedToTerms) {
+      toast.showToast({ title: 'Erreur', subtitle: 'Veuillez accepter les termes et conditions' });
       return;
     }
 
@@ -64,10 +70,10 @@ export default function SignUpScreen() {
         // Check if role is supported
         const userRole = response.data.user.role;
         if ((userRole as string) === 'DELIVER') {
-          toast.showError(
-            'Profil non supporté', 
-            'Cette application ne gère que les profils clients et entreprises. Veuillez utiliser l\'application dédiée aux livreurs.'
-          );
+          toast.showToast({
+            title: 'Profil non supporté',
+            subtitle: 'Cette application ne gère que les profils clients et entreprises. Veuillez utiliser l\'application dédiée aux livreurs.'
+          });
           
           // Clear any stored session data
           await logout();
@@ -81,7 +87,7 @@ export default function SignUpScreen() {
         await handlePostRegistration(response.data.user, response.data.user.role);
         
         const successMessage = ErrorHandler.getSuccessMessage('register');
-        toast.showSuccess(successMessage.title, successMessage.message);
+        toast.showToast({ title: successMessage.title, subtitle: successMessage.message });
         
         console.log('🎯 Redirection vers l\'interface utilisateur...');
         
@@ -93,7 +99,7 @@ export default function SignUpScreen() {
     } catch (error: any) {
       console.error('❌ Erreur inscription:', error);
       const errorMessage = ErrorHandler.parseApiError(error);
-      toast.showError(errorMessage.title, errorMessage.message);
+      toast.showToast({ title: errorMessage.title, subtitle: errorMessage.message });
     } finally {
       setIsLoading(false);
     }
@@ -127,15 +133,15 @@ export default function SignUpScreen() {
         extraHeight={150}
         resetScrollToCoords={{ x: 0, y: 0 }}
         scrollEnabled={true}
-        contentContainerStyle={{ paddingBottom: 60 }}
+        contentContainerStyle={{ paddingBottom: 120 }}
       >
         {/* Header */}
         <View className="px-6 pb-8">
           <Text className="text-3xl font-quicksand-bold text-neutral-900 mb-2">
-            Create Account
+            Créer un compte
           </Text>
           <Text className="text-base font-quicksand text-neutral-600">
-            Sign up to get started
+            Inscrivez-vous pour commencer
           </Text>
         </View>
 
@@ -145,23 +151,23 @@ export default function SignUpScreen() {
           <View className="flex-row mb-4">
             <View className="flex-1 mr-2">
               <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-                First Name
+                Prénom
               </Text>
               <TextInput
                 value={firstName}
                 onChangeText={setFirstName}
-                placeholder="First name"
+                placeholder="Prénom"
                 className="border border-neutral-200 rounded-xl px-4 py-4 text-base font-quicksand"
               />
             </View>
             <View className="flex-1 ml-2">
               <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-                Last Name
+                Nom
               </Text>
               <TextInput
                 value={lastName}
                 onChangeText={setLastName}
-                placeholder="Last name"
+                placeholder="Nom"
                 className="border border-neutral-200 rounded-xl px-4 py-4 text-base font-quicksand"
               />
             </View>
@@ -175,7 +181,7 @@ export default function SignUpScreen() {
             <TextInput
               value={email}
               onChangeText={setEmail}
-              placeholder="Enter your email"
+              placeholder="Entrez votre email"
               keyboardType="email-address"
               autoCapitalize="none"
               className="border border-neutral-200 rounded-xl px-4 py-4 text-base font-quicksand"
@@ -185,12 +191,12 @@ export default function SignUpScreen() {
           {/* Phone Input */}
           <View className="mb-4">
             <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-              Phone Number
+              Numéro de téléphone
             </Text>
             <TextInput
               value={phone}
               onChangeText={setPhone}
-              placeholder="Enter your phone number"
+              placeholder="Entrez votre numéro de téléphone"
               keyboardType="phone-pad"
               className="border border-neutral-200 rounded-xl px-4 py-4 text-base font-quicksand"
             />
@@ -199,12 +205,12 @@ export default function SignUpScreen() {
           {/* Address Input */}
           <View className="mb-4">
             <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-              Address
+              Adresse
             </Text>
             <TextInput
               value={address}
               onChangeText={setAddress}
-              placeholder="Enter your address"
+              placeholder="Entrez votre adresse"
               className="border border-neutral-200 rounded-xl px-4 py-4 text-base font-quicksand"
             />
           </View>
@@ -212,13 +218,13 @@ export default function SignUpScreen() {
           {/* Password Input */}
           <View className="mb-4">
             <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-              Password
+              Mot de passe
             </Text>
             <View className="relative">
               <TextInput
                 value={password}
                 onChangeText={setPassword}
-                placeholder="Enter your password"
+                placeholder="Entrez votre mot de passe"
                 secureTextEntry={!showPassword}
                 className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 text-base font-quicksand"
               />
@@ -238,13 +244,13 @@ export default function SignUpScreen() {
           {/* Confirm Password Input */}
           <View className="mb-6">
             <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-              Confirm Password
+              Confirmer le mot de passe
             </Text>
             <View className="relative">
               <TextInput
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
-                placeholder="Confirm your password"
+                placeholder="Confirmez votre mot de passe"
                 secureTextEntry={!showConfirmPassword}
                 className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 text-base font-quicksand"
               />
@@ -261,6 +267,37 @@ export default function SignUpScreen() {
             </View>
           </View>
 
+          {/* Terms and Conditions Checkbox */}
+          <View className="mb-6">
+            <TouchableOpacity
+              onPress={() => setAgreedToTerms(!agreedToTerms)}
+              className="flex-row items-start"
+              activeOpacity={1}
+            >
+              <View className="w-5 h-5 border-2 border-neutral-300 rounded mr-3 mt-0.5 justify-center items-center">
+                {agreedToTerms && (
+                  <Ionicons name="checkmark" size={14} color="#3B82F6" />
+                )}
+              </View>
+              <Text className="text-sm font-quicksand text-neutral-600 flex-1">
+                J&#39;accepte les{' '}
+                <Text
+                  className="text-primary font-quicksand-medium"
+                  onPress={() => Linking.openURL('https://nativecommerce.com/terms')}
+                >
+                  « termes et conditions »
+                </Text>
+                {' '}et la{' '}
+                <Text
+                  className="text-primary font-quicksand-medium"
+                  onPress={() => Linking.openURL('https://nativecommerce.com/privacy')}
+                >
+                  « politique de confidentialité »
+                </Text>
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           {/* Sign Up Button */}
           <TouchableOpacity
             onPress={handleSignUp}
@@ -270,18 +307,18 @@ export default function SignUpScreen() {
             }`}
           >
             <Text className="text-white font-quicksand-semibold text-base text-center">
-              {isLoading ? 'Creating Account...' : 'Create Account'}
+              {isLoading ? 'Création du compte...' : 'Créer le compte'}
             </Text>
           </TouchableOpacity>
 
           {/* Sign In Link */}
           <View className="flex-row justify-center items-center pb-6">
             <Text className="text-neutral-600 font-quicksand text-sm">
-              Already have an account?{' '}
+              Vous avez déjà un compte ?{' '}
             </Text>
             <TouchableOpacity onPress={handleSignIn}>
               <Text className="text-primary font-quicksand-semibold text-sm">
-                Sign In
+                Se connecter
               </Text>
             </TouchableOpacity>
           </View>

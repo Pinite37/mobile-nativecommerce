@@ -95,6 +95,12 @@ export default function EnterpriseLayout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="category/[categoryId]"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

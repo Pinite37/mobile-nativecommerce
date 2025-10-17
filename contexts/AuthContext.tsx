@@ -192,6 +192,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             userData = enterpriseProfile.user;
           } catch (e) {
             console.warn('⚠️ Échec chargement profil entreprise (loadFreshUserData):', (e as any)?.message);
+            // Ne pas throw, on garde les données en cache
           }
         }
       }
@@ -202,19 +203,44 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUserRole(role);
         await TokenStorageService.setUserData(userData);
       } else {
-        // Clear invalid session
+        // Si on n'a pas de données utilisateur MAIS qu'on a des tokens valides
+        // On garde la session active (les données sont peut-être déjà en cache)
+        const tokens = await TokenStorageService.getTokens();
+        const cachedUser = await TokenStorageService.getUserData();
+        
+        if (tokens.accessToken && tokens.refreshToken && cachedUser) {
+          console.log('⚠️ Pas de nouvelles données, mais session en cache valide - conservation');
+          setIsAuthenticated(true);
+          setUser(cachedUser);
+          setUserRole(role);
+        } else {
+          console.error('❌ Aucune donnée utilisateur disponible - Session invalide');
+          await TokenStorageService.clearAll();
+          setIsAuthenticated(false);
+          setUser(null);
+          setUserRole(null);
+        }
+      }
+    } catch (apiError: any) {
+      console.warn('⚠️ Erreur API lors du chargement des données:', apiError?.message);
+      
+      // NE PAS DÉCONNECTER en cas d'erreur réseau !
+      // Vérifier si on a des données en cache
+      const tokens = await TokenStorageService.getTokens();
+      const cachedUser = await TokenStorageService.getUserData();
+      
+      if (tokens.accessToken && tokens.refreshToken && cachedUser) {
+        console.log('✅ Erreur API mais session en cache valide - conservation de la session');
+        setIsAuthenticated(true);
+        setUser(cachedUser);
+        setUserRole(role);
+      } else {
+        console.error('❌ Erreur API et aucune session en cache - Déconnexion');
         await TokenStorageService.clearAll();
         setIsAuthenticated(false);
         setUser(null);
         setUserRole(null);
       }
-    } catch (apiError) {
-      console.warn('API error during fresh load:', apiError);
-      // Clear session on API error
-      await TokenStorageService.clearAll();
-      setIsAuthenticated(false);
-      setUser(null);
-      setUserRole(null);
     }
   };
 

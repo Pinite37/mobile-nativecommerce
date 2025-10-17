@@ -3,22 +3,22 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Animated,
-  BackHandler,
-  Dimensions,
-  Easing,
-  FlatList,
-  Image,
-  Keyboard,
-  Modal,
-  RefreshControl,
-  SafeAreaView,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Animated,
+    BackHandler,
+    Dimensions,
+    Easing,
+    FlatList,
+    Image,
+    Keyboard,
+    Modal,
+    RefreshControl,
+    SafeAreaView,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../../../contexts/AuthContext';
@@ -1323,7 +1323,15 @@ export default function EnterpriseDashboard() {
 
                 return (
                   <View key={categoryId} style={{ width: '25%', paddingHorizontal: 5, marginBottom: 16 }}>
-                    <TouchableOpacity className="items-center">
+                    <TouchableOpacity 
+                      className="items-center"
+                      onPress={() => {
+                        // Navigation vers la page de produits de la catégorie
+                        if (category._id) {
+                          router.push(`/(app)/(enterprise)/category/${category._id}`);
+                        }
+                      }}
+                    >
                       <View
                         className="w-16 h-16 rounded-2xl justify-center items-center mb-3 shadow-md"
                         style={{
