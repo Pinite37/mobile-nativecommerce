@@ -34,7 +34,7 @@ export default function WelcomeScreen() {
       {/* Top Section with Illustration */}
       <View className="flex-1 justify-center items-center px-6">
         <Image
-          source={require('../../assets/images/react-logo.png')} // Replace with your auth illustration
+          source={require('../../assets/images/axiLogo.png')} // Replace with your auth illustration
           className="w-80 h-64 mb-8"
           resizeMode="contain"
         />

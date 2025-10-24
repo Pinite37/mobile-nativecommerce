@@ -1,94 +1,107 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router } from 'expo-router';
-import React, { useState } from 'react';
-import { SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Animated, Easing, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-interface Plan {
-  id: string;
-  name: string;
-  key: string;
-  price: string; // display only for now
-  period: string; // /mois etc.
-  color: string;
-  features: string[];
-  popular?: boolean;
-}
-
-const plans: Plan[] = [
-  {
-    id: 'akwaba',
-    name: 'Akwaba',
-    key: 'AKWABA',
-    price: 'Gratuit',
-    period: '',
-    color: '#10B981',
-    features: [
-      '1 mois d\'essai',
-      '10 annonces',
-      '3 images par annonce',
-      'Contact : désactivé',
-      'Messagerie : désactivée',
-      'Visibilité : activée',
-    ],
-  },
-  {
-    id: 'cauris',
-    name: 'Cauris',
-    key: 'CAURIS',
-    price: '2 000 F',
-    period: '',
-    color: '#059669',
-    popular: true,
-    features: [
-      '20 annonces',
-      '5 images par annonce',
-      'Contact : activé',
-      'Messagerie : activée',
-      'Visibilité : activée',
-    ],
-  },
-  {
-    id: 'kwe',
-    name: 'Kwe',
-    key: 'KWE',
-    price: '5 000 F',
-    period: '',
-    color: '#047857',
-    features: [
-      '35 annonces',
-      '7 images par annonce',
-      'Contact : activé',
-      'Messagerie : activée',
-      'Visibilité : activée',
-      '10/40 annonces produit/an',
-      '15 jours E/S recommandés',
-    ],
-  },
-  {
-    id: 'lissa',
-    name: 'Lissa',
-    key: 'LISSA',
-    price: '8 000 F',
-    period: '',
-    color: '#065F46',
-    features: [
-      '45 annonces',
-      '7 images par annonce',
-      'Contact : activé',
-      'Messagerie : activée',
-      'Visibilité : activée',
-      '20 annonces produit/an',
-      '30 jours E/S recommandés',
-    ],
-  },
-];
+import SubscriptionService, { Plan } from '../../../../services/api/SubscriptionService';
 
 export default function EnterpriseSubscriptions() {
   const insets = useSafeAreaInsets();
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   // For now mock an active plan state (null = no subscription)
   const [activePlan, setActivePlan] = useState<Plan | null>(null);
+
+  useEffect(() => {
+    loadPlans();
+  }, []);
+
+  const loadPlans = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('🔄 Chargement des plans entreprise...');
+      const enterprisePlans = await SubscriptionService.getEnterprisePlans();
+      setPlans(enterprisePlans);
+      console.log(`✅ ${enterprisePlans.length} plans chargés`);
+    } catch (err: any) {
+      console.error('❌ Erreur chargement plans:', err);
+      setError('Impossible de charger les plans. Veuillez réessayer.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Skeleton Loader Component
+  const ShimmerBlock = ({ style }: { style?: any }) => {
+    const shimmer = React.useRef(new Animated.Value(0)).current;
+    useEffect(() => {
+      const loop = Animated.loop(
+        Animated.timing(shimmer, {
+          toValue: 1,
+          duration: 1200,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      );
+      loop.start();
+      return () => loop.stop();
+    }, [shimmer]);
+    const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
+    return (
+      <View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
+        <Animated.View style={{
+          position: 'absolute', top: 0, bottom: 0, width: 120,
+          transform: [{ translateX }],
+          backgroundColor: 'rgba(255,255,255,0.35)',
+          opacity: 0.7,
+        }} />
+      </View>
+    );
+  };
+
+  const SkeletonCard = () => (
+    <View className="bg-white rounded-3xl p-5 mb-5 border border-neutral-100 shadow-sm">
+      <View className="flex-row items-start justify-between mb-3">
+        <View className="flex-1 mr-3">
+          <ShimmerBlock style={{ height: 20, borderRadius: 8, width: '40%', marginBottom: 8 }} />
+          <ShimmerBlock style={{ height: 24, borderRadius: 8, width: '60%' }} />
+        </View>
+        <ShimmerBlock style={{ height: 24, borderRadius: 12, width: 80 }} />
+      </View>
+      <View className="mb-4">
+        {[1, 2, 3, 4].map(i => (
+          <View key={i} className="flex-row items-start mb-2">
+            <ShimmerBlock style={{ width: 18, height: 18, borderRadius: 9, marginRight: 8, marginTop: 1 }} />
+            <ShimmerBlock style={{ height: 14, borderRadius: 6, width: '80%' }} />
+          </View>
+        ))}
+      </View>
+      <ShimmerBlock style={{ height: 44, borderRadius: 22, width: '100%' }} />
+    </View>
+  );
+
+  const renderSkeletons = () => {
+    return (
+      <ScrollView
+        className="flex-1 -mt-6 rounded-t-[32px] bg-background-secondary px-5 pt-8"
+        contentContainerStyle={{ paddingBottom: 48 + insets.bottom }}
+        showsVerticalScrollIndicator={false}
+      >
+        {!activePlan && (
+          <View className="mb-6">
+            <ShimmerBlock style={{ height: 12, borderRadius: 6, width: '30%', marginBottom: 4 }} />
+            <ShimmerBlock style={{ height: 20, borderRadius: 8, width: '50%' }} />
+          </View>
+        )}
+        {Array.from({ length: 3 }).map((_, i) => (
+          <SkeletonCard key={i} />
+        ))}
+      </ScrollView>
+    );
+  };
 
   const renderPlan = (plan: Plan) => {
     const isActive = activePlan?.id === plan.id;
@@ -132,64 +145,110 @@ export default function EnterpriseSubscriptions() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <SafeAreaView className="flex-1 bg-background-secondary">
-      <StatusBar backgroundColor="#10B981" barStyle="light-content" />
-      <LinearGradient colors={['#10B981', '#34D399']} start={{ x:0, y:0}} end={{x:1,y:0}} className="px-6 pt-14 pb-10">
-        <View className="flex-row items-center justify-between">
-          <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
-            <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
-          <Text className="text-xl font-quicksand-bold text-white">Abonnements</Text>
-          <View className="w-10 h-10" />
-        </View>
-        {activePlan && (
-          <View className="mt-6 bg-white/20 rounded-2xl p-4">
-            <Text className="text-white font-quicksand-semibold text-xs mb-1">Plan actif</Text>
-            <Text className="text-white font-quicksand-bold text-lg">{activePlan.name}</Text>
-            <Text className="text-white/90 font-quicksand-medium text-[12px] mt-1">Renouvellement automatique le 12 Oct 2024</Text>
-            <View className="flex-row mt-4">
-              <TouchableOpacity className="flex-1 bg-white rounded-xl py-3 items-center mr-3">
-                <Text className="text-primary-500 font-quicksand-semibold text-[13px]">Mettre à niveau</Text>
+      {loading ? (
+        <SafeAreaView className="flex-1 bg-background-secondary">
+          <StatusBar backgroundColor="#10B981" barStyle="light-content" />
+          <LinearGradient colors={['#10B981', '#34D399']} start={{ x:0, y:0}} end={{x:1,y:0}} className="px-6 pt-14 pb-10">
+            <View className="flex-row items-center justify-between">
+              <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
+                <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
               </TouchableOpacity>
-              <TouchableOpacity className="flex-1 bg-white/30 rounded-xl py-3 items-center">
-                <Text className="text-white font-quicksand-semibold text-[13px]">Annuler</Text>
-              </TouchableOpacity>
+              <Text className="text-xl font-quicksand-bold text-white">Abonnements</Text>
+              <View className="w-10 h-10" />
             </View>
-          </View>
-        )}
-      </LinearGradient>
-
-  <ScrollView
-        className="flex-1 -mt-6 rounded-t-[32px] bg-background-secondary px-5 pt-8"
-        contentContainerStyle={{ paddingBottom: 48 + insets.bottom }}
-      >
-        {!activePlan && (
-          <View className="mb-6">
-            <Text className="text-neutral-500 font-quicksand-medium text-xs mb-1">Choisissez un plan</Text>
-            <Text className="text-neutral-800 font-quicksand-bold text-lg">Boostez votre visibilité</Text>
-          </View>
-        )}
-        {plans.map(renderPlan)}
-        {activePlan && (
-          <View className="bg-white rounded-3xl p-5 border border-neutral-100">
-            <Text className="text-neutral-800 font-quicksand-bold text-base mb-4">Historique facturation (démo)</Text>
-            {[1,2,3].map(i => (
-              <View key={i} className="flex-row items-center justify-between py-3 border-b border-neutral-100 last:border-b-0">
-                <View className="flex-1 mr-4">
-                  <Text className="text-[13px] font-quicksand-semibold text-neutral-700">{activePlan.name} - Sept {2024 - i}</Text>
-                  <Text className="text-[11px] font-quicksand-medium text-neutral-400 mt-0.5">Facturé le 12 Sept {2024 - i}</Text>
+            {activePlan && (
+              <View className="mt-6 bg-white/20 rounded-2xl p-4">
+                <Text className="text-white font-quicksand-semibold text-xs mb-1">Plan actif</Text>
+                <Text className="text-white font-quicksand-bold text-lg">{activePlan.name}</Text>
+                <Text className="text-white/90 font-quicksand-medium text-[12px] mt-1">Renouvellement automatique le 12 Oct 2024</Text>
+                <View className="flex-row mt-4">
+                  <TouchableOpacity className="flex-1 bg-white rounded-xl py-3 items-center mr-3">
+                    <Text className="text-primary-500 font-quicksand-semibold text-[13px]">Mettre à niveau</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity className="flex-1 bg-white/30 rounded-xl py-3 items-center">
+                    <Text className="text-white font-quicksand-semibold text-[13px]">Annuler</Text>
+                  </TouchableOpacity>
                 </View>
-                <Text className="text-[13px] font-quicksand-semibold text-neutral-800">{activePlan.price}</Text>
               </View>
-            ))}
-            <TouchableOpacity className="mt-5 bg-primary-50 border border-primary-100 px-5 py-3 rounded-2xl flex-row items-center justify-center">
-              <Ionicons name="download-outline" size={18} color="#10B981" />
-              <Text className="ml-2 text-primary-500 font-quicksand-semibold text-sm">Exporter les factures</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </ScrollView>
-      </SafeAreaView>
+            )}
+          </LinearGradient>
+          {renderSkeletons()}
+        </SafeAreaView>
+      ) : (
+        <SafeAreaView className="flex-1 bg-background-secondary">
+          <StatusBar backgroundColor="#10B981" barStyle="light-content" />
+          <LinearGradient colors={['#10B981', '#34D399']} start={{ x:0, y:0}} end={{x:1,y:0}} className="px-6 pt-14 pb-10">
+            <View className="flex-row items-center justify-between">
+              <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
+                <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+              <Text className="text-xl font-quicksand-bold text-white">Abonnements</Text>
+              <View className="w-10 h-10" />
+            </View>
+            {activePlan && (
+              <View className="mt-6 bg-white/20 rounded-2xl p-4">
+                <Text className="text-white font-quicksand-semibold text-xs mb-1">Plan actif</Text>
+                <Text className="text-white font-quicksand-bold text-lg">{activePlan.name}</Text>
+                <Text className="text-white/90 font-quicksand-medium text-[12px] mt-1">Renouvellement automatique le 12 Oct 2024</Text>
+                <View className="flex-row mt-4">
+                  <TouchableOpacity className="flex-1 bg-white rounded-xl py-3 items-center mr-3">
+                    <Text className="text-primary-500 font-quicksand-semibold text-[13px]">Mettre à niveau</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity className="flex-1 bg-white/30 rounded-xl py-3 items-center">
+                    <Text className="text-white font-quicksand-semibold text-[13px]">Annuler</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          </LinearGradient>
+
+          <ScrollView
+            className="flex-1 -mt-6 rounded-t-[32px] bg-background-secondary px-5 pt-8"
+            contentContainerStyle={{ paddingBottom: 48 + insets.bottom }}
+          >
+            {!activePlan && (
+              <View className="mb-6">
+                <Text className="text-neutral-500 font-quicksand-medium text-xs mb-1">Choisissez un plan</Text>
+                <Text className="text-neutral-800 font-quicksand-bold text-lg">Boostez votre visibilité</Text>
+              </View>
+            )}
+
+            {error ? (
+              <View className="flex-1 justify-center items-center py-12">
+                <Ionicons name="alert-circle" size={48} color="#EF4444" />
+                <Text className="text-red-500 font-quicksand-medium text-center mt-4 px-4">{error}</Text>
+                <TouchableOpacity
+                  onPress={loadPlans}
+                  className="bg-primary-500 px-6 py-3 rounded-xl mt-4"
+                >
+                  <Text className="text-white font-quicksand-semibold">Réessayer</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              plans.map(renderPlan)
+            )}
+
+            {activePlan && (
+              <View className="bg-white rounded-3xl p-5 border border-neutral-100 mt-6">
+                <Text className="text-neutral-800 font-quicksand-bold text-base mb-4">Historique facturation (démo)</Text>
+                {[1,2,3].map(i => (
+                  <View key={i} className="flex-row items-center justify-between py-3 border-b border-neutral-100 last:border-b-0">
+                    <View className="flex-1 mr-4">
+                      <Text className="text-[13px] font-quicksand-semibold text-neutral-700">{activePlan.name} - Sept {2024 - i}</Text>
+                      <Text className="text-[11px] font-quicksand-medium text-neutral-400 mt-0.5">Facturé le 12 Sept {2024 - i}</Text>
+                    </View>
+                    <Text className="text-[13px] font-quicksand-semibold text-neutral-800">{activePlan.price}</Text>
+                  </View>
+                ))}
+                <TouchableOpacity className="mt-5 bg-primary-50 border border-primary-100 px-5 py-3 rounded-2xl flex-row items-center justify-center">
+                  <Ionicons name="download-outline" size={18} color="#10B981" />
+                  <Text className="ml-2 text-primary-500 font-quicksand-semibold text-sm">Exporter les factures</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </ScrollView>
+        </SafeAreaView>
+      )}
     </>
   );
 }

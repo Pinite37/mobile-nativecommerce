@@ -2,8 +2,8 @@ import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
+  useAnimatedStyle,
+  useSharedValue,
 } from 'react-native-reanimated';
 
 interface OnboardingSlideProps {
@@ -52,9 +52,10 @@ export default function OnboardingSlide({
           <TouchableOpacity
             onPress={onSkip}
             className="px-4 py-2"
+            activeOpacity={1}
           >
             <Text className="text-neutral-500 font-quicksand-medium text-sm">
-              Skip
+              Passer
             </Text>
           </TouchableOpacity>
         )}
@@ -104,9 +105,10 @@ export default function OnboardingSlide({
             <TouchableOpacity
               onPress={onPrevious}
               className="border border-neutral-300 rounded-full py-4 px-8 mr-4"
+              activeOpacity={1}
             >
               <Text className="text-neutral-700 font-quicksand-semibold text-base">
-                Previous
+                Précédent
               </Text>
             </TouchableOpacity>
           )}
@@ -114,9 +116,10 @@ export default function OnboardingSlide({
           <TouchableOpacity
             onPress={onNext}
             className={`bg-primary rounded-full py-4 px-8 ${!isFirst ? 'flex-1' : 'min-w-32'}`}
+            activeOpacity={1}
           >
             <Text className="text-white font-quicksand-semibold text-base text-center">
-              {isLast ? 'Get Started' : 'Next'}
+              {isLast ? 'Commencer' : 'Suivant'}
             </Text>
           </TouchableOpacity>
         </View>

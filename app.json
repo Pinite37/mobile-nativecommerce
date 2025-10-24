@@ -4,7 +4,7 @@
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/axi_notif.png",
+    "icon": "./assets/images/axinotif.png",
     "scheme": "axiapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/axi_notif.png",
+        "foregroundImage": "./assets/images/axiscreen.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -35,7 +35,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/axi_screen.png",
+          "image": "./assets/images/axiscreen.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#121010"
@@ -44,7 +44,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/axi_notif.png",
+          "icon": "./assets/images/axinotif.png",
           "color": "#121010",
           "sounds": []
         }
