@@ -56,6 +56,7 @@ export default function SignUpScreen() {
         phone,
         address,
         password,
+        agreedToTerms,
         role: (role || 'CLIENT') as 'CLIENT' | 'ENTERPRISE',
       };
 

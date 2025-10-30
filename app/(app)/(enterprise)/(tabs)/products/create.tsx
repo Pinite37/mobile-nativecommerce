@@ -21,6 +21,7 @@ import {
 import NotificationModal, { useNotification } from "../../../../../components/ui/NotificationModal";
 import { useToast } from "../../../../../components/ui/ToastManager";
 
+import { useSubscription } from "../../../../../contexts/SubscriptionContext";
 import CategoryService from "../../../../../services/api/CategoryService";
 import ProductService from "../../../../../services/api/ProductService";
 import { Category, CreateProductRequest } from "../../../../../types/product";
@@ -106,10 +107,14 @@ export default function CreateProduct() {
   const [newTag, setNewTag] = useState('');
   const [showSpecModal, setShowSpecModal] = useState(false);
   const [newSpec, setNewSpec] = useState({ key: '', value: '' });
+  const [totalProducts, setTotalProducts] = useState(0);
   
   // Hook pour afficher des notifications toast
   const { showSuccess, showError } = useToast();
   const { notification, showNotification, hideNotification } = useNotification();
+  
+  // Hook pour gérer les restrictions d'abonnement
+  const { subscription, hasReachedLimit } = useSubscription();
 
   const [form, setForm] = useState<ProductForm>({
     name: "",
@@ -168,6 +173,7 @@ export default function CreateProduct() {
 
   useEffect(() => {
     loadCategories();
+    loadProductsCount();
   }, []);
 
   // Hide the TabBar on this screen to ensure bottom action buttons are always visible
@@ -190,6 +196,15 @@ export default function CreateProduct() {
       console.error('Error loading categories:', err);
     } finally {
       setLoadingCategories(false);
+    }
+  };
+
+  const loadProductsCount = async () => {
+    try {
+      const response = await ProductService.getEnterpriseProducts();
+      setTotalProducts(response.products.length);
+    } catch (err) {
+      console.error('Error loading products count:', err);
     }
   };
 
@@ -242,6 +257,18 @@ export default function CreateProduct() {
 
   const handleImagePicker = async () => {
     try {
+      // Vérifier la limite d'images par produit selon le plan
+      const maxImagesPerProduct = subscription?.plan?.features?.maxImagesPerProduct || 1;
+      
+      if (form.images.filter(img => !img.loading).length >= maxImagesPerProduct) {
+        showNotification(
+          'warning', 
+          'Limite atteinte', 
+          `Votre plan "${subscription?.plan?.name}" autorise maximum ${maxImagesPerProduct} image${maxImagesPerProduct > 1 ? 's' : ''} par produit. Passez à un plan supérieur pour ajouter plus d'images.`
+        );
+        return;
+      }
+      
       // Vérifier les permissions
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
@@ -386,6 +413,19 @@ export default function CreateProduct() {
   };
 
   const handleSubmit = async () => {
+    // Vérifier la limite de produits selon le plan
+    const maxProducts = subscription?.plan?.features?.maxProducts || 0;
+    const productLimitReached = hasReachedLimit('maxProducts', totalProducts);
+    
+    if (productLimitReached) {
+      showNotification(
+        'error', 
+        'Limite de produits atteinte', 
+        `Vous avez atteint la limite de ${maxProducts} produit${maxProducts > 1 ? 's' : ''} de votre plan "${subscription?.plan?.name}". Passez à un plan supérieur pour ajouter plus de produits.`
+      );
+      return;
+    }
+    
     const ok = validateForm();
     setShowErrorSummary(!ok);
     if (!ok) {
@@ -628,6 +668,45 @@ export default function CreateProduct() {
         >
           {currentStep === 'basic' && (
             <View className="px-5 py-6 space-y-6">
+              {/* Subscription Limits Info */}
+              {subscription && (
+                <View className="bg-gradient-to-r from-primary-50 to-emerald-50 rounded-2xl p-4 border border-primary-100">
+                  <View className="flex-row items-center mb-3">
+                    <View className="w-8 h-8 rounded-full bg-primary-500 items-center justify-center mr-3">
+                      <Ionicons name="information" size={16} color="#FFFFFF" />
+                    </View>
+                    <Text className="text-primary-700 font-quicksand-bold text-sm">
+                      Limites de votre plan {subscription.plan.name}
+                    </Text>
+                  </View>
+                  <View className="space-y-2">
+                    <View className="flex-row items-center justify-between">
+                      <Text className="text-neutral-600 font-quicksand-medium text-xs">
+                        Produits
+                      </Text>
+                      <Text className="text-neutral-800 font-quicksand-bold text-sm">
+                        {totalProducts} / {subscription.plan.features.maxProducts}
+                      </Text>
+                    </View>
+                    <View className="flex-row items-center justify-between">
+                      <Text className="text-neutral-600 font-quicksand-medium text-xs">
+                        Images par produit
+                      </Text>
+                      <Text className="text-neutral-800 font-quicksand-bold text-sm">
+                        {subscription.plan.features.maxImagesPerProduct}
+                      </Text>
+                    </View>
+                  </View>
+                  {hasReachedLimit('maxProducts', totalProducts) && (
+                    <View className="mt-3 pt-3 border-t border-primary-200">
+                      <Text className="text-amber-700 font-quicksand-semibold text-xs">
+                        ⚠️ Vous avez atteint la limite de produits. Passez à un plan supérieur pour continuer.
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              )}
+              
               {/* Images */}
               <View className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-100">
                 <View className="flex-row items-center mb-5">
@@ -635,11 +714,21 @@ export default function CreateProduct() {
                     <Ionicons name="camera" size={24} color="#6366F1" />
                   </View>
                   <View className="flex-1 ml-4">
-                    <Text className="text-lg font-quicksand-bold text-neutral-800">
-                      Photos du produit *
-                    </Text>
+                    <View className="flex-row items-center justify-between">
+                      <Text className="text-lg font-quicksand-bold text-neutral-800">
+                        Photos du produit *
+                      </Text>
+                      {subscription && (
+                        <Text className="text-xs font-quicksand-semibold text-primary-600">
+                          {form.images.filter(img => !img.loading).length}/{subscription.plan.features.maxImagesPerProduct}
+                        </Text>
+                      )}
+                    </View>
                     <Text className="text-xs text-neutral-500 font-quicksand-medium mt-0.5">
-                      Ajoutez jusqu&apos;à 5 images
+                      {subscription 
+                        ? `Maximum ${subscription.plan.features.maxImagesPerProduct} image${subscription.plan.features.maxImagesPerProduct > 1 ? 's' : ''} selon votre plan`
+                        : 'Ajoutez des images de votre produit'
+                      }
                     </Text>
                   </View>
                 </View>
@@ -678,21 +767,36 @@ export default function CreateProduct() {
                     </ScrollView>
                   )}
                   
-                  <TouchableOpacity
-                    onPress={handleImagePicker}
-                    className="border-2 border-dashed border-primary-300 rounded-2xl py-10 items-center justify-center bg-primary-50/50"
-                    activeOpacity={0.7}
-                  >
-                    <View className="w-16 h-16 rounded-full bg-primary-100 items-center justify-center mb-3">
-                      <Ionicons name="add" size={32} color="#6366F1" />
+                  {/* Add Image Button */}
+                  {subscription && form.images.filter(img => !img.loading).length >= subscription.plan.features.maxImagesPerProduct ? (
+                    <View className="border-2 border-dashed border-neutral-300 rounded-2xl py-10 items-center justify-center bg-neutral-50">
+                      <View className="w-16 h-16 rounded-full bg-neutral-200 items-center justify-center mb-3">
+                        <Ionicons name="lock-closed" size={32} color="#9CA3AF" />
+                      </View>
+                      <Text className="text-neutral-500 font-quicksand-bold text-base mb-1">
+                        Limite atteinte
+                      </Text>
+                      <Text className="text-neutral-400 font-quicksand-medium text-xs text-center px-8">
+                        Maximum {subscription.plan.features.maxImagesPerProduct} image{subscription.plan.features.maxImagesPerProduct > 1 ? 's' : ''} pour votre plan
+                      </Text>
                     </View>
-                    <Text className="text-primary-600 font-quicksand-bold text-base">
-                      Ajouter une photo
-                    </Text>
-                    <Text className="text-primary-400 font-quicksand-medium text-sm mt-1">
-                      PNG, JPG jusqu&apos;à 5MB
-                    </Text>
-                  </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      onPress={handleImagePicker}
+                      className="border-2 border-dashed border-primary-300 rounded-2xl py-10 items-center justify-center bg-primary-50/50"
+                      activeOpacity={0.7}
+                    >
+                      <View className="w-16 h-16 rounded-full bg-primary-100 items-center justify-center mb-3">
+                        <Ionicons name="add" size={32} color="#6366F1" />
+                      </View>
+                      <Text className="text-primary-600 font-quicksand-bold text-base">
+                        Ajouter une photo
+                      </Text>
+                      <Text className="text-primary-400 font-quicksand-medium text-sm mt-1">
+                        PNG, JPG jusqu&apos;à 5MB
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                   
                   {errors.images && (
                     <View className="flex-row items-center bg-red-50 rounded-xl p-3 mt-2">

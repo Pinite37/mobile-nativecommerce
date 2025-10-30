@@ -4,21 +4,6 @@ import React from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 
 export default function WelcomeScreen() {
-  const handleGoogleAuth = () => {
-    // TODO: Implement Google authentication
-    console.log('Google authentication');
-  };
-
-  const handleFacebookAuth = () => {
-    // TODO: Implement Facebook authentication
-    console.log('Facebook authentication');
-  };
-
-  const handleAppleAuth = () => {
-    // TODO: Implement Apple authentication
-    console.log('Apple authentication');
-  };
-
   const handleEmailAuth = () => {
     router.push('/(auth)/signin');
   };
@@ -31,87 +16,47 @@ export default function WelcomeScreen() {
     <View className="flex-1 bg-white">
       <StatusBar style="dark" />
       
-      {/* Top Section with Illustration */}
-      <View className="flex-1 justify-center items-center px-6">
-        <Image
-          source={require('../../assets/images/axiLogo.png')} // Replace with your auth illustration
-          className="w-80 h-64 mb-8"
-          resizeMode="contain"
-        />
-        
-        <Text className="text-2xl font-quicksand-bold text-center text-neutral-900 mb-4">
-          Let&apos;s you in
-        </Text>
-      </View>
-
-      {/* Auth Options */}
-      <View className="px-6 pb-12">
-        {/* Social Login Buttons */}
-        <TouchableOpacity
-          onPress={handleGoogleAuth}
-          className="flex-row items-center justify-center bg-white border border-neutral-200 rounded-2xl py-4 mb-4 shadow-sm"
-        >
+      {/* Main Content */}
+      <View className="flex-1 justify-between px-6 py-12">
+        {/* Top Section with Illustration */}
+        <View className="items-center pt-8">
           <Image
-            source={require('../../assets/images/react-logo.png')} // Replace with Google icon
-            className="w-6 h-6 mr-3"
+            source={require('../../assets/images/axiLogoo.png')}
+            className="w-64 h-48"
+            resizeMode="contain"
           />
-          <Text className="font-quicksand-medium text-base text-neutral-900">
-            Continue with Google
+          
+          <Text className="text-3xl font-quicksand-bold text-center text-neutral-900 mb-3 mt-4">
+            Let&apos;s you in
           </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={handleFacebookAuth}
-          className="flex-row items-center justify-center bg-white border border-neutral-200 rounded-2xl py-4 mb-4 shadow-sm"
-        >
-          <Image
-            source={require('../../assets/images/react-logo.png')} // Replace with Facebook icon
-            className="w-6 h-6 mr-3"
-          />
-          <Text className="font-quicksand-medium text-base text-neutral-900">
-            Continue with Facebook
+          
+          <Text className="text-sm font-quicksand text-center text-neutral-600 px-8">
+            Welcome back! Please sign in to your account
           </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={handleAppleAuth}
-          className="flex-row items-center justify-center bg-white border border-neutral-200 rounded-2xl py-4 mb-6 shadow-sm"
-        >
-          <Image
-            source={require('../../assets/images/react-logo.png')} // Replace with Apple icon
-            className="w-6 h-6 mr-3"
-          />
-          <Text className="font-quicksand-medium text-base text-neutral-900">
-            Continue with Apple
-          </Text>
-        </TouchableOpacity>
-
-        {/* Divider */}
-        <View className="flex-row items-center mb-6">
-          <View className="flex-1 h-px bg-neutral-200" />
-          <Text className="px-4 text-neutral-500 font-quicksand-medium">or</Text>
-          <View className="flex-1 h-px bg-neutral-200" />
         </View>
 
-        {/* Email/Password Button */}
-        <TouchableOpacity
-          onPress={handleEmailAuth}
-          className="bg-primary rounded-2xl py-4 mb-4"
-        >
-          <Text className="text-white font-quicksand-semibold text-base text-center">
-            Sign in with password
-          </Text>
-        </TouchableOpacity>
+        {/* Auth Options */}
+        <View>
+          {/* Email/Password Button */}
+          <TouchableOpacity
+            onPress={handleEmailAuth}
+            className="bg-primary rounded-2xl py-4 mb-4 shadow-sm"
+          >
+            <Text className="text-white font-quicksand-semibold text-base text-center">
+              Sign in with password
+            </Text>
+          </TouchableOpacity>
 
-        {/* Create Account Button */}
-        <TouchableOpacity
-          onPress={handleCreateAccount}
-          className="bg-white border-2 border-primary rounded-2xl py-4 mb-4"
-        >
-          <Text className="text-primary font-quicksand-semibold text-base text-center">
-            Create Account
-          </Text>
-        </TouchableOpacity>
+          {/* Create Account Button */}
+          <TouchableOpacity
+            onPress={handleCreateAccount}
+            className="bg-white border-2 border-primary rounded-2xl py-4 shadow-sm"
+          >
+            <Text className="text-primary font-quicksand-semibold text-base text-center">
+              Create Account
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );

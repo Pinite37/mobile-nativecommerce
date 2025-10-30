@@ -114,6 +114,41 @@ export default function DeliveryPartnersScreen() {
 		</View>
 	);
 
+	// Avatar avec fallback aux initiales si l'image est absente ou invalide
+	const Avatar = ({ uri, firstName, lastName }: { uri?: string | null; firstName?: string; lastName?: string }) => {
+		const [error, setError] = React.useState(false);
+
+		const initials = React.useMemo(() => {
+			const f = (firstName?.trim()?.[0] || '').toUpperCase();
+			const l = (lastName?.trim()?.[0] || '').toUpperCase();
+			const init = `${f}${l}`.trim();
+			return init || '?';
+		}, [firstName, lastName]);
+
+		if (uri && !error) {
+			return (
+				<Image
+					source={{ uri }}
+					style={{ width: 50, height: 50, borderRadius: 25 }}
+					onError={() => setError(true)}
+				/>
+			);
+		}
+
+		return (
+			<LinearGradient
+				colors={['#34D399', '#10B981']}
+				start={{ x: 0, y: 0 }}
+				end={{ x: 1, y: 1 }}
+				style={{ width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center' }}
+			>
+				<Text className="text-white font-quicksand-bold text-base">
+					{initials}
+				</Text>
+			</LinearGradient>
+		);
+	};
+
 	const loadPartners = useCallback(async () => {
 		try {
 			setLoading(true);
@@ -184,15 +219,7 @@ export default function DeliveryPartnersScreen() {
 					{/* Header avec photo et nom */}
 					<View className="flex-row items-center mb-3">
 						<View className="relative mr-3">
-							{item.profileImage ? (
-								<Image source={{ uri: item.profileImage }} style={{ width: 50, height: 50, borderRadius: 25 }} />
-							) : (
-								<View className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 items-center justify-center">
-									<Text className="text-white font-quicksand-bold text-base">
-										{(item.firstName?.[0] || '').toUpperCase()}{(item.lastName?.[0] || '').toUpperCase()}
-									</Text>
-								</View>
-							)}
+							<Avatar uri={item.profileImage} firstName={item.firstName} lastName={item.lastName} />
 							<View className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${item.availability ? 'bg-success-500' : 'bg-neutral-400'}`} />
 						</View>
 

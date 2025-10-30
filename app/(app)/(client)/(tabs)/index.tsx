@@ -148,23 +148,6 @@ export default function ClientHome() {
     const viewedAdsRef = useRef<Set<string>>(new Set());
     const lastAdsFetchRef = useRef<number>(0);
 
-    const fallbackAds: Advertisement[] = [
-        {
-            _id: 'placeholder-1',
-            title: 'Votre entreprise',
-            description: 'Augmentez votre visibilité avec nos services',
-            images: ['https://via.placeholder.com/600x300/10B981/FFFFFF?text=Publicite'],
-            type: 'BANNER' as any,
-            targetAudience: 'CLIENTS' as any,
-            startDate: new Date().toISOString(),
-            endDate: new Date(Date.now() + 86400000).toISOString(),
-            isActive: true,
-            views: 0,
-            clicks: 0,
-            createdAt: new Date().toISOString(),
-        }
-    ];
-
     const loadAds = async () => {
         const now = Date.now();
         if (now - lastAdsFetchRef.current < 60_000 && ads.length) return; // throttle 60s
@@ -211,7 +194,8 @@ export default function ClientHome() {
         }
     };
 
-    const adsToDisplay = ads.length ? ads : fallbackAds;
+    // Ne pas utiliser de fallback - afficher un message si pas de publicités
+    const adsToDisplay = ads;
 
     // ================= Fonctions produits & favoris (déclarations hoistées) =================
     async function loadFeaturedProducts() {
@@ -1267,6 +1251,60 @@ export default function ClientHome() {
                     </View>
                 )}
 
+                {/* Boosted Ads Carousel (amélioré avec images et overlay) */}
+                <View className="py-4">
+                    {adsToDisplay.length > 0 ? (
+                        <>
+                            <FlatList
+                                data={adsToDisplay}
+                                renderItem={renderAd}
+                                keyExtractor={(_item: any, index) => (_item && _item._id ? String(_item._id) : `ad-${index}`)}
+                                horizontal
+                                pagingEnabled
+                                showsHorizontalScrollIndicator={false}
+                                onViewableItemsChanged={onAdViewableItemsChanged}
+                                viewabilityConfig={adViewabilityConfig}
+                                onMomentumScrollEnd={(event) => {
+                                    const newIndex = Math.round(event.nativeEvent.contentOffset.x / (Dimensions.get('window').width - 48));
+                                    setCurrentAdIndex(newIndex);
+                                }}
+                                contentContainerStyle={{ paddingHorizontal: 16 }}
+                            />
+                            {/* Indicators */}
+                            <View className="flex-row justify-center mt-3">
+                                {adsToDisplay.map((_, index) => {
+                                    const active = index === currentAdIndex;
+                                    return (
+                                        <View
+                                            key={index}
+                                            style={{
+                                                width: active ? 16 : 8,
+                                                height: 8,
+                                                borderRadius: 9999,
+                                                backgroundColor: active ? '#10B981' : '#D1D5DB',
+                                                marginHorizontal: 4,
+                                                opacity: active ? 1 : 0.7,
+                                            }}
+                                        />
+                                    );
+                                })}
+                            </View>
+                        </>
+                    ) : (
+                        <View className="mx-4 bg-white rounded-2xl p-6 items-center border border-neutral-100">
+                            <View className="w-16 h-16 rounded-full bg-neutral-100 items-center justify-center mb-4">
+                                <Ionicons name="megaphone-outline" size={32} color="#9CA3AF" />
+                            </View>
+                            <Text className="text-base font-quicksand-bold text-neutral-800 text-center mb-2">
+                                Aucune publicité disponible
+                            </Text>
+                            <Text className="text-sm font-quicksand text-neutral-600 text-center">
+                                Revenez bientôt pour découvrir nos dernières offres
+                            </Text>
+                        </View>
+                    )}
+                </View>
+
                 {/* Categories */}
                 <View className="py-6 bg-background-secondary">
                     <View className="px-6 mb-6">
@@ -1335,44 +1373,6 @@ export default function ClientHome() {
                             })}
                         </View>
                     )}
-                </View>
-
-                {/* Boosted Ads Carousel (amélioré avec images et overlay) */}
-                <View className="py-4">
-                    <FlatList
-                        data={adsToDisplay}
-                        renderItem={renderAd}
-                        keyExtractor={(_item: any, index) => (_item && _item._id ? String(_item._id) : `ad-${index}`)}
-                        horizontal
-                        pagingEnabled
-                        showsHorizontalScrollIndicator={false}
-                        onViewableItemsChanged={onAdViewableItemsChanged}
-                        viewabilityConfig={adViewabilityConfig}
-                        onMomentumScrollEnd={(event) => {
-                            const newIndex = Math.round(event.nativeEvent.contentOffset.x / (Dimensions.get('window').width - 48));
-                            setCurrentAdIndex(newIndex);
-                        }}
-                        contentContainerStyle={{ paddingHorizontal: 16 }}
-                    />
-                    {/* Indicators */}
-                    <View className="flex-row justify-center mt-3">
-                        {adsToDisplay.map((_, index) => {
-                            const active = index === currentAdIndex;
-                            return (
-                                <View
-                                    key={index}
-                                    style={{
-                                        width: active ? 16 : 8,
-                                        height: 8,
-                                        borderRadius: 9999,
-                                        backgroundColor: active ? '#10B981' : '#D1D5DB',
-                                        marginHorizontal: 4,
-                                        opacity: active ? 1 : 0.7,
-                                    }}
-                                />
-                            );
-                        })}
-                    </View>
                 </View>
 
                 {/* Featured Products (changé en vertical avec 2 colonnes) */}

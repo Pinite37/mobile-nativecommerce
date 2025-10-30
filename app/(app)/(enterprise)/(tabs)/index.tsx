@@ -3,25 +3,26 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    Animated,
-    BackHandler,
-    Dimensions,
-    Easing,
-    FlatList,
-    Image,
-    Keyboard,
-    Modal,
-    RefreshControl,
-    SafeAreaView,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Animated,
+  BackHandler,
+  Dimensions,
+  Easing,
+  FlatList,
+  Image,
+  Keyboard,
+  Modal,
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../../../contexts/AuthContext';
+import { useSubscription } from '../../../../contexts/SubscriptionContext';
 import AdvertisementService, { Advertisement } from '../../../../services/api/AdvertisementService';
 import CategoryService from '../../../../services/api/CategoryService';
 import EnterpriseService from '../../../../services/api/EnterpriseService';
@@ -92,6 +93,7 @@ const staticCategories = [
 export default function EnterpriseDashboard() {
   const insets = useSafeAreaInsets();
   const { user, isAuthenticated, userRole } = useAuth();
+  const { canUseFeature } = useSubscription();
   const router = useRouter();
   // const { getCacheStats } = useSearchCache(); // Hook pour gérer le cache automatiquement (usage futur)
   
@@ -1198,13 +1200,15 @@ export default function EnterpriseDashboard() {
               <Text className="text-xl font-quicksand-bold text-neutral-800">Publicités</Text>
               {/* <Text className="text-sm font-quicksand text-neutral-600 mt-1">Vos campagnes en cours</Text> */}
             </View>
-            <TouchableOpacity
-              onPress={() => router.push('/(app)/(enterprise)/advertisements')}
-              className="flex-row items-center bg-primary-50 rounded-xl px-3 py-2"
-            >
-              <Text className="text-primary-600 font-quicksand-semibold text-sm mr-1">Gérer</Text>
-              <Ionicons name="chevron-forward" size={14} color="#10B981" />
-            </TouchableOpacity>
+            {canUseFeature('advertisements') && (
+              <TouchableOpacity
+                onPress={() => router.push('/(app)/(enterprise)/advertisements')}
+                className="flex-row items-center bg-primary-50 rounded-xl px-3 py-2"
+              >
+                <Text className="text-primary-600 font-quicksand-semibold text-sm mr-1">Gérer</Text>
+                <Ionicons name="chevron-forward" size={14} color="#10B981" />
+              </TouchableOpacity>
+            )}
           </View>
           <View className="relative min-h-[160px]">
             {loadingAds ? (
@@ -1214,6 +1218,18 @@ export default function EnterpriseDashboard() {
                     <View className="flex-1 bg-neutral-200" />
                   </View>
                 ))}
+              </View>
+            ) : !canUseFeature('advertisements') ? (
+              <View className="px-6">
+                <View className="bg-white rounded-2xl border border-dashed border-neutral-300 p-6 items-center">
+                  <Ionicons name="lock-closed-outline" size={28} color="#9CA3AF" />
+                  <Text className="mt-3 text-neutral-600 font-quicksand-medium text-sm text-center">
+                    Aucune publicité publiée pour le moment
+                  </Text>
+                  <Text className="mt-2 text-neutral-500 font-quicksand text-xs text-center px-4">
+                    Les publicités ne sont pas disponibles dans votre plan actuel
+                  </Text>
+                </View>
               </View>
             ) : activeAds.length === 0 ? (
               <View className="px-6">

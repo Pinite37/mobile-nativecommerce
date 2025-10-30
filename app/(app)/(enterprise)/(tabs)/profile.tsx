@@ -26,6 +26,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 // New Reanimated toast system only
 import { useToast as useReanimatedToast } from '../../../../components/ui/ReanimatedToast/context';
 import { useAuth } from '../../../../contexts/AuthContext';
+import { useSubscription } from '../../../../contexts/SubscriptionContext';
 import EnterpriseService, { Enterprise, EnterpriseProfile, SocialLink } from '../../../../services/api/EnterpriseService';
 
 interface EditProfileModalProps {
@@ -106,7 +107,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onClose, o
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           className="flex-1"
         >
-          <View className="px-6 py-4 border-b border-neutral-200">
+          <View className="px-6 pt-14 pb-4 border-b border-neutral-200">
             <View className="flex-row items-center justify-between">
               <TouchableOpacity onPress={onClose}>
                 <Text className="text-primary-500 font-quicksand-medium">Annuler</Text>
@@ -274,7 +275,7 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({ visible, onCl
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           className="flex-1"
         >
-          <View className="px-6 py-4 border-b border-neutral-200">
+          <View className="px-6 pt-14 pb-4 border-b border-neutral-200">
             <View className="flex-row items-center justify-between">
               <TouchableOpacity onPress={onClose}>
                 <Text className="text-primary-500 font-quicksand-medium">Annuler</Text>
@@ -457,7 +458,7 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({ visible
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
       <SafeAreaView className="flex-1 bg-white">
-        <View className="px-6 py-4 border-b border-neutral-200">
+        <View className="px-6 pt-14 pb-4 border-b border-neutral-200">
           <View className="flex-row items-center justify-between">
             <TouchableOpacity onPress={onClose}>
               <Text className="text-primary-500 font-quicksand-medium">Fermer</Text>
@@ -630,7 +631,7 @@ const AddPartnerModal: React.FC<AddPartnerModalProps> = ({ visible, onClose, onA
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
       <SafeAreaView className="flex-1 bg-white">
-        <View className="px-6 py-4 border-b border-neutral-200">
+        <View className="px-6 pt-6 pb-4 border-b border-neutral-200">
           <View className="flex-row items-center justify-between">
             <TouchableOpacity onPress={onClose}>
               <Text className="text-primary-500 font-quicksand-medium">Annuler</Text>
@@ -689,6 +690,9 @@ function EnterpriseProfilePage() {
     confirmColor: string;
     onConfirm: () => void;
   } | null>(null);
+
+  // Abonnement et restrictions
+  const { subscription, canUseFeature } = useSubscription();
 
   // Responsive dimensions
   const { width } = useWindowDimensions();
@@ -1228,33 +1232,69 @@ function EnterpriseProfilePage() {
         <View className="px-4 pt-6">
           <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4 pl-1">Marketing & Abonnements</Text>
           <View className="flex-row" style={{ flexDirection: stackMarketing ? 'column' : 'row' }}>
-            <TouchableOpacity
-              className="flex-1 rounded-2xl overflow-hidden shadow-sm"
-              style={{ marginRight: stackMarketing ? 0 : 8, marginBottom: stackMarketing ? 8 : 0 }}
-              activeOpacity={0.85}
-              onPress={() => router.push('/(app)/(enterprise)/advertisements' as any)}
-            >
-              <LinearGradient
-                colors={['#10B981', '#34D399']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                className="p-4"
+            {/* Card Publicités avec restriction */}
+            {canUseFeature('advertisements') ? (
+              <TouchableOpacity
+                className="flex-1 rounded-2xl overflow-hidden shadow-sm"
+                style={{ marginRight: stackMarketing ? 0 : 8, marginBottom: stackMarketing ? 8 : 0 }}
+                activeOpacity={0.85}
+                onPress={() => router.push('/(app)/(enterprise)/advertisements' as any)}
               >
-                <View className="flex-row items-center justify-between">
-                  <View className="mr-3 flex-1">
-                    <Text className="text-white font-quicksand-semibold text-base" numberOfLines={1}>Publicités</Text>
-                    <Text className="text-white/80 font-quicksand-medium text-[12px] mt-1" numberOfLines={2}>Créer & gérer vos bannières</Text>
+                <LinearGradient
+                  colors={['#10B981', '#34D399']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  className="p-4"
+                >
+                  <View className="flex-row items-center justify-between">
+                    <View className="mr-3 flex-1">
+                      <Text className="text-white font-quicksand-semibold text-base" numberOfLines={1}>Publicités</Text>
+                      <Text className="text-white/80 font-quicksand-medium text-[12px] mt-1" numberOfLines={2}>Créer & gérer vos bannières</Text>
+                    </View>
+                    <View className="w-10 h-10 rounded-xl bg-white/25 items-center justify-center">
+                      <Ionicons name="megaphone" size={20} color="#FFFFFF" />
+                    </View>
                   </View>
-                  <View className="w-10 h-10 rounded-xl bg-white/25 items-center justify-center">
-                    <Ionicons name="megaphone" size={20} color="#FFFFFF" />
+                  <View className="mt-4 flex-row items-center">
+                    <Text className="text-white font-quicksand-medium text-xs">Configurer maintenant</Text>
+                    <Ionicons name="chevron-forward" size={14} color="#FFFFFF" style={{ marginLeft: 4 }} />
                   </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            ) : (
+              <View
+                className="flex-1 rounded-2xl overflow-hidden shadow-sm"
+                style={{ marginRight: stackMarketing ? 0 : 8, marginBottom: stackMarketing ? 8 : 0 }}
+              >
+                <View className="p-4 bg-neutral-100 border-2 border-dashed border-neutral-300 rounded-2xl">
+                  <View className="flex-row items-center justify-between mb-3">
+                    <View className="mr-3 flex-1">
+                      <View className="flex-row items-center">
+                        <Text className="text-neutral-800 font-quicksand-semibold text-base" numberOfLines={1}>Publicités</Text>
+                        <View className="ml-2 bg-amber-100 px-2 py-0.5 rounded-full">
+                          <Text className="text-amber-700 font-quicksand-bold text-[9px]">PREMIUM</Text>
+                        </View>
+                      </View>
+                      <Text className="text-neutral-500 font-quicksand-medium text-[12px] mt-1" numberOfLines={2}>Fonctionnalité non disponible</Text>
+                    </View>
+                    <View className="w-10 h-10 rounded-xl bg-neutral-200 items-center justify-center">
+                      <Ionicons name="lock-closed" size={20} color="#9CA3AF" />
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => router.push('/(app)/(enterprise)/subscriptions' as any)}
+                    className="bg-white border border-neutral-200 rounded-xl py-2 px-3"
+                  >
+                    <View className="flex-row items-center justify-center">
+                      <Ionicons name="arrow-up-circle" size={14} color="#10B981" />
+                      <Text className="text-primary-600 font-quicksand-bold text-xs ml-1.5">Passer à un plan supérieur</Text>
+                    </View>
+                  </TouchableOpacity>
                 </View>
-                <View className="mt-4 flex-row items-center">
-                  <Text className="text-white font-quicksand-medium text-xs">Configurer maintenant</Text>
-                  <Ionicons name="chevron-forward" size={14} color="#FFFFFF" style={{ marginLeft: 4 }} />
-                </View>
-              </LinearGradient>
-            </TouchableOpacity>
+              </View>
+            )}
+            
+            {/* Card Abonnements */}
             <TouchableOpacity
               className="flex-1 bg-white border border-neutral-200 rounded-2xl p-4 shadow-sm"
               style={{ marginLeft: stackMarketing ? 0 : 8, marginTop: stackMarketing ? 8 : 0 }}
@@ -1264,14 +1304,18 @@ function EnterpriseProfilePage() {
               <View className="flex-row items-center justify-between">
                 <View className="mr-3 flex-1">
                   <Text className="text-neutral-800 font-quicksand-semibold text-base" numberOfLines={1}>Abonnements</Text>
-                  <Text className="text-neutral-500 font-quicksand-medium text-[12px] mt-1" numberOfLines={2}>Akwaba • Cauris • Lissa</Text>
+                  <Text className="text-neutral-500 font-quicksand-medium text-[12px] mt-1" numberOfLines={2}>
+                    {subscription ? subscription.plan.name : 'Akwaba • Cauris • Lissa'}
+                  </Text>
                 </View>
                 <View className="w-10 h-10 rounded-xl bg-primary-100 items-center justify-center">
                   <Ionicons name="layers" size={20} color="#10B981" />
                 </View>
               </View>
               <View className="mt-4 flex-row items-center">
-                <Text className="text-primary-600 font-quicksand-semibold text-xs">Voir les offres</Text>
+                <Text className="text-primary-600 font-quicksand-semibold text-xs">
+                  {subscription ? 'Gérer mon plan' : 'Voir les offres'}
+                </Text>
                 <Ionicons name="chevron-forward" size={14} color="#10B981" style={{ marginLeft: 4 }} />
               </View>
             </TouchableOpacity>
@@ -1485,7 +1529,7 @@ function EnterpriseProfilePage() {
         {/* App Info */}
         <View className="px-6 py-4">
           <Text className="text-center text-xs text-neutral-500 font-quicksand-medium">
-            NativeCommerce Business v1.0.0
+            Axi Market v1.0.0
           </Text>
         </View>
 

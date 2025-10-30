@@ -4,6 +4,9 @@ import { Stack, router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Animated, Easing, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import StatusModal from '../../../../components/subscription/StatusModal';
+import UpgradeConfirmationModal from '../../../../components/subscription/UpgradeConfirmationModal';
+import { useSubscription } from '../../../../contexts/SubscriptionContext';
 import SubscriptionService, { Plan } from '../../../../services/api/SubscriptionService';
 
 export default function EnterpriseSubscriptions() {
@@ -11,26 +14,116 @@ export default function EnterpriseSubscriptions() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // For now mock an active plan state (null = no subscription)
-  const [activePlan, setActivePlan] = useState<Plan | null>(null);
+  const { subscription, loadSubscription } = useSubscription();
+  
+  // Modal state
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [upgradeLoading, setUpgradeLoading] = useState(false);
+  
+  // Status modal state
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [statusType, setStatusType] = useState<'success' | 'error'>('success');
+  const [statusTitle, setStatusTitle] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
 
   useEffect(() => {
-    loadPlans();
+    loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadPlans = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('🔄 Chargement des plans entreprise...');
-      const enterprisePlans = await SubscriptionService.getEnterprisePlans();
-      setPlans(enterprisePlans);
-      console.log(`✅ ${enterprisePlans.length} plans chargés`);
+      console.log('🔄 Chargement des plans et souscription...');
+      
+      // Charger les plans disponibles et la souscription active en parallèle
+      await Promise.all([
+        loadPlans(),
+        loadSubscription()
+      ]);
+      
+      console.log('✅ Données chargées');
     } catch (err: any) {
-      console.error('❌ Erreur chargement plans:', err);
-      setError('Impossible de charger les plans. Veuillez réessayer.');
+      console.error('❌ Erreur chargement:', err);
+      setError('Impossible de charger les données. Veuillez réessayer.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadPlans = async () => {
+    try {
+      const enterprisePlans = await SubscriptionService.getEnterprisePlans();
+      setPlans(enterprisePlans);
+    } catch (err: any) {
+      console.error('❌ Erreur chargement plans:', err);
+      throw err;
+    }
+  };
+
+  // Handle plan selection
+  const handleSelectPlan = (plan: Plan) => {
+    setSelectedPlan(plan);
+    setShowUpgradeModal(true);
+  };
+
+  // Handle upgrade confirmation
+  const handleConfirmUpgrade = async () => {
+    if (!selectedPlan) return;
+
+    try {
+      setUpgradeLoading(true);
+      console.log('🔄 Upgrade vers le plan:', selectedPlan.name);
+
+      const isFree = selectedPlan.price === 'Gratuit';
+
+      if (isFree) {
+        // Plan gratuit - Activer le trial
+        await SubscriptionService.activateTrialPlan();
+        console.log('✅ Plan d\'essai activé');
+      } else {
+        // Plan payant - Souscrire avec KKIAPAY
+        const paymentData = {
+          method: 'KKIAPAY',
+          amount: parseFloat(selectedPlan.price.replace(/[^0-9]/g, '')),
+          currency: 'XOF',
+        };
+
+        await SubscriptionService.subscribeToPlan(selectedPlan.id, paymentData);
+        console.log('✅ Abonnement activé avec KKIAPAY');
+      }
+
+      // Recharger les données
+      await loadSubscription();
+      await loadData();
+
+      // Fermer le modal et afficher le succès
+      setShowUpgradeModal(false);
+      setSelectedPlan(null);
+      
+      setStatusType('success');
+      setStatusTitle('🎉 Succès !');
+      setStatusMessage(`Votre abonnement ${selectedPlan.name} a été activé avec succès.`);
+      setShowStatusModal(true);
+    } catch (err: any) {
+      console.error('❌ Erreur upgrade:', err);
+      
+      setStatusType('error');
+      setStatusTitle('❌ Erreur');
+      setStatusMessage(err.response?.data?.message || 'Impossible d\'activer l\'abonnement. Veuillez réessayer.');
+      setShowStatusModal(true);
+    } finally {
+      setUpgradeLoading(false);
+    }
+  };
+
+  // Handle modal cancel
+  const handleCancelUpgrade = () => {
+    if (!upgradeLoading) {
+      setShowUpgradeModal(false);
+      setSelectedPlan(null);
     }
   };
 
@@ -83,172 +176,416 @@ export default function EnterpriseSubscriptions() {
     </View>
   );
 
-  const renderSkeletons = () => {
-    return (
-      <ScrollView
-        className="flex-1 -mt-6 rounded-t-[32px] bg-background-secondary px-5 pt-8"
-        contentContainerStyle={{ paddingBottom: 48 + insets.bottom }}
-        showsVerticalScrollIndicator={false}
-      >
-        {!activePlan && (
-          <View className="mb-6">
-            <ShimmerBlock style={{ height: 12, borderRadius: 6, width: '30%', marginBottom: 4 }} />
-            <ShimmerBlock style={{ height: 20, borderRadius: 8, width: '50%' }} />
-          </View>
-        )}
-        {Array.from({ length: 3 }).map((_, i) => (
-          <SkeletonCard key={i} />
-        ))}
-      </ScrollView>
-    );
-  };
-
   const renderPlan = (plan: Plan) => {
-    const isActive = activePlan?.id === plan.id;
+    const isCurrentPlan = subscription?.plan?._id === plan.id || subscription?.plan?.name === plan.name;
+    const isTrialExpired = subscription && subscription.endDate && new Date(subscription.endDate) < new Date();
+    
     return (
-      <View key={plan.id} className="bg-white rounded-3xl p-5 mb-5 border border-neutral-100 shadow-sm">
-        <View className="flex-row items-start justify-between mb-3">
-          <View className="flex-1 mr-3">
-            <Text className="text-lg font-quicksand-bold" style={{ color: plan.color }}>{plan.name}</Text>
-            <View className="flex-row items-baseline mt-1 flex-wrap">
-              <Text className="text-xl font-quicksand-bold" style={{ color: plan.color }}>{plan.price}</Text>
-              {plan.period ? <Text className="text-xs font-quicksand-semibold ml-1 text-neutral-500">{plan.period}</Text> : null}
+      <View key={plan.id} className="bg-white rounded-2xl mb-4 overflow-hidden border border-neutral-100 shadow-lg">
+        {/* Plan Header */}
+        <View className="p-5 pb-4 border-b border-neutral-100">
+          <View className="flex-row items-center justify-between mb-2">
+            <View className="flex-row items-center flex-1">
+              <View 
+                className="w-12 h-12 rounded-full items-center justify-center mr-3" 
+                style={{ backgroundColor: `${plan.color}15` }}
+              >
+                <Ionicons 
+                  name={isCurrentPlan ? "checkmark-circle" : "diamond-outline"} 
+                  size={24} 
+                  color={plan.color} 
+                />
+              </View>
+              <View className="flex-1">
+                <View className="flex-row items-center">
+                  <Text className="text-lg font-quicksand-bold text-neutral-800">{plan.name}</Text>
+                  {isCurrentPlan && (
+                    <View className="bg-green-100 px-2 py-0.5 rounded-full ml-2">
+                      <Text className="text-[10px] font-quicksand-bold text-green-700">ACTIF</Text>
+                    </View>
+                  )}
+                </View>
+                <View className="flex-row items-baseline mt-0.5">
+                  <Text className="text-2xl font-quicksand-bold" style={{ color: plan.color }}>
+                    {plan.price}
+                  </Text>
+                  {plan.period && (
+                    <Text className="text-xs font-quicksand-semibold ml-1 text-neutral-500">
+                      {plan.period}
+                    </Text>
+                  )}
+                </View>
+              </View>
             </View>
+            {plan.popular && !isCurrentPlan && (
+              <View className="absolute -top-2 -right-2">
+                <View className="bg-gradient-to-r from-amber-400 to-orange-500 px-3 py-1 rounded-full">
+                  <Text className="text-[10px] font-quicksand-bold text-white tracking-wider">
+                    POPULAIRE
+                  </Text>
+                </View>
+              </View>
+            )}
           </View>
-          {plan.popular && (
-            <View className="bg-amber-400 px-3 py-1 rounded-full">
-              <Text className="text-[11px] font-quicksand-bold text-white tracking-wide">POPULAIRE</Text>
-            </View>
-          )}
         </View>
-        <View className="mb-4">
-          {plan.features.map(f => (
-            <View key={f} className="flex-row items-start mb-2">
-              <Ionicons name="checkmark-circle" size={18} color={plan.color} style={{ marginTop: 1 }} />
-              <Text className="ml-2 text-[13px] font-quicksand-medium text-neutral-600 flex-1">{f}</Text>
+
+        {/* Features List */}
+        <View className="p-5 pt-4 pb-4">
+          {plan.features.map((f, idx) => (
+            <View key={idx} className="flex-row items-start mb-3 last:mb-0">
+              <View 
+                className="w-5 h-5 rounded-full items-center justify-center mt-0.5 mr-3" 
+                style={{ backgroundColor: `${plan.color}20` }}
+              >
+                <Ionicons name="checkmark" size={14} color={plan.color} style={{ fontWeight: 'bold' }} />
+              </View>
+              <Text className="flex-1 text-[13px] font-quicksand-medium text-neutral-700 leading-5">
+                {f}
+              </Text>
             </View>
           ))}
         </View>
-        <TouchableOpacity
-          className={`${isActive ? 'bg-neutral-800' : 'bg-primary-500'} rounded-2xl py-3 items-center flex-row justify-center`}
-          onPress={() => {
-            if (!isActive) setActivePlan(plan); else setActivePlan(null); // toggle for demo
-          }}
-        >
-          <Text className="text-white font-quicksand-semibold text-sm">{isActive ? 'Gérer mon abonnement' : 'Choisir ce plan'}</Text>
-          {!isActive && plan.popular && <Ionicons name="trending-up" size={16} color="#FFFFFF" style={{ marginLeft: 6 }} />}
-        </TouchableOpacity>
+
+                  {/* Action Button */}
+        <View className="px-5 pb-5">
+          <TouchableOpacity
+            className={`rounded-xl py-3.5 items-center flex-row justify-center shadow-sm ${
+              isCurrentPlan ? 'bg-neutral-100 border border-neutral-200' : ''
+            }`}
+            style={!isCurrentPlan ? { backgroundColor: plan.color } : {}}
+            onPress={() => {
+              if (isCurrentPlan) {
+                console.log('Gérer l\'abonnement');
+              } else {
+                handleSelectPlan(plan);
+              }
+            }}
+            disabled={isCurrentPlan && !isTrialExpired}
+          >
+            {isCurrentPlan ? (
+              <>
+                <Ionicons name="settings-outline" size={18} color="#525252" />
+                <Text className="text-neutral-700 font-quicksand-bold text-sm ml-2">
+                  {isTrialExpired ? 'Renouveler' : 'Gérer mon plan'}
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text className="text-white font-quicksand-bold text-sm">
+                  Passer à {plan.name}
+                </Text>
+                <Ionicons name="arrow-forward" size={16} color="#FFFFFF" style={{ marginLeft: 6 }} />
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
     );
+  };
+
+  // Format date helper
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'short', year: 'numeric' };
+    return date.toLocaleDateString('fr-FR', options);
+  };
+
+  // Calculate days remaining
+  const getDaysRemaining = () => {
+    if (!subscription?.endDate) return null;
+    const endDate = new Date(subscription.endDate);
+    const today = new Date();
+    const diffTime = endDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  // Check if trial is expiring soon (less than 7 days)
+  const isExpiringSoon = () => {
+    const daysRemaining = getDaysRemaining();
+    return daysRemaining !== null && daysRemaining > 0 && daysRemaining <= 7;
+  };
+
+  // Check if subscription is expired
+  const isExpired = () => {
+    const daysRemaining = getDaysRemaining();
+    return daysRemaining !== null && daysRemaining < 0;
   };
 
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      {loading ? (
-        <SafeAreaView className="flex-1 bg-background-secondary">
-          <StatusBar backgroundColor="#10B981" barStyle="light-content" />
-          <LinearGradient colors={['#10B981', '#34D399']} start={{ x:0, y:0}} end={{x:1,y:0}} className="px-6 pt-14 pb-10">
+      <SafeAreaView className="flex-1 bg-neutral-50">
+        <StatusBar backgroundColor={subscription ? "#10B981" : "#0D9488"} barStyle="light-content" />
+        
+        {/* Dynamic Header */}
+        <LinearGradient 
+          colors={subscription ? ['#10B981', '#059669'] : ['#0D9488', '#0F766E']} 
+          start={{ x: 0, y: 0 }} 
+          end={{ x: 1, y: 1 }}
+          className="pb-6"
+        >
+          {/* Header Bar */}
+          <View className="px-6 pt-3 pb-4" style={{ paddingTop: insets.top + 12 }}>
             <View className="flex-row items-center justify-between">
-              <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
-                <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+              <TouchableOpacity 
+                onPress={() => router.back()} 
+                className="w-10 h-10 rounded-full bg-white/20 items-center justify-center"
+              >
+                <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
               </TouchableOpacity>
               <Text className="text-xl font-quicksand-bold text-white">Abonnements</Text>
-              <View className="w-10 h-10" />
-            </View>
-            {activePlan && (
-              <View className="mt-6 bg-white/20 rounded-2xl p-4">
-                <Text className="text-white font-quicksand-semibold text-xs mb-1">Plan actif</Text>
-                <Text className="text-white font-quicksand-bold text-lg">{activePlan.name}</Text>
-                <Text className="text-white/90 font-quicksand-medium text-[12px] mt-1">Renouvellement automatique le 12 Oct 2024</Text>
-                <View className="flex-row mt-4">
-                  <TouchableOpacity className="flex-1 bg-white rounded-xl py-3 items-center mr-3">
-                    <Text className="text-primary-500 font-quicksand-semibold text-[13px]">Mettre à niveau</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity className="flex-1 bg-white/30 rounded-xl py-3 items-center">
-                    <Text className="text-white font-quicksand-semibold text-[13px]">Annuler</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-          </LinearGradient>
-          {renderSkeletons()}
-        </SafeAreaView>
-      ) : (
-        <SafeAreaView className="flex-1 bg-background-secondary">
-          <StatusBar backgroundColor="#10B981" barStyle="light-content" />
-          <LinearGradient colors={['#10B981', '#34D399']} start={{ x:0, y:0}} end={{x:1,y:0}} className="px-6 pt-14 pb-10">
-            <View className="flex-row items-center justify-between">
-              <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
-                <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+              <TouchableOpacity className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
+                <Ionicons name="help-circle-outline" size={22} color="#FFFFFF" />
               </TouchableOpacity>
-              <Text className="text-xl font-quicksand-bold text-white">Abonnements</Text>
-              <View className="w-10 h-10" />
             </View>
-            {activePlan && (
-              <View className="mt-6 bg-white/20 rounded-2xl p-4">
-                <Text className="text-white font-quicksand-semibold text-xs mb-1">Plan actif</Text>
-                <Text className="text-white font-quicksand-bold text-lg">{activePlan.name}</Text>
-                <Text className="text-white/90 font-quicksand-medium text-[12px] mt-1">Renouvellement automatique le 12 Oct 2024</Text>
-                <View className="flex-row mt-4">
-                  <TouchableOpacity className="flex-1 bg-white rounded-xl py-3 items-center mr-3">
-                    <Text className="text-primary-500 font-quicksand-semibold text-[13px]">Mettre à niveau</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity className="flex-1 bg-white/30 rounded-xl py-3 items-center">
-                    <Text className="text-white font-quicksand-semibold text-[13px]">Annuler</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-          </LinearGradient>
+          </View>
+        </LinearGradient>
 
-          <ScrollView
-            className="flex-1 -mt-6 rounded-t-[32px] bg-background-secondary px-5 pt-8"
-            contentContainerStyle={{ paddingBottom: 48 + insets.bottom }}
-          >
-            {!activePlan && (
+        {/* Content Section */}
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ paddingBottom: 24 + insets.bottom }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View className="bg-neutral-50 pt-6 px-5">
+            {/* Active Subscription Card - Moved to content */}
+            {subscription && subscription.isActive && (
               <View className="mb-6">
-                <Text className="text-neutral-500 font-quicksand-medium text-xs mb-1">Choisissez un plan</Text>
-                <Text className="text-neutral-800 font-quicksand-bold text-lg">Boostez votre visibilité</Text>
+                <View className="bg-white rounded-2xl p-5 border border-neutral-100 shadow-sm">
+                  {/* Status Badge */}
+                  <View className="flex-row items-center justify-between mb-3">
+                    <View className="flex-row items-center">
+                      <View className={`w-2 h-2 rounded-full mr-2 ${isExpired() ? 'bg-red-400' : isExpiringSoon() ? 'bg-amber-400' : 'bg-green-400'}`} />
+                      <Text className="text-neutral-700 font-quicksand-semibold text-xs uppercase tracking-wide">
+                        {isExpired() ? 'Expiré' : isExpiringSoon() ? 'Expire bientôt' : 'Plan actif'}
+                      </Text>
+                    </View>
+                    {isExpiringSoon() && (
+                      <View className="bg-amber-100 px-3 py-1 rounded-full border border-amber-200">
+                        <Text className="text-amber-700 font-quicksand-bold text-[10px]">
+                          {getDaysRemaining()} jours restants
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Plan Name */}
+                  <Text className="text-neutral-800 font-quicksand-bold text-2xl mb-2">
+                    {subscription.plan.name}
+                  </Text>
+                  <Text className="text-neutral-600 font-quicksand-medium text-sm mb-4 leading-5">
+                    {subscription.plan.description}
+                  </Text>
+
+                  {/* Stats Grid */}
+                  <View className="flex-row mb-4">
+                    <View className="flex-1 bg-primary-50 rounded-xl p-3 mr-2 border border-primary-100">
+                      <View className="flex-row items-center justify-between mb-1">
+                        <Text className="text-primary-700 font-quicksand-medium text-[11px]">Produits</Text>
+                        <Ionicons name="cube-outline" size={14} color="#059669" />
+                      </View>
+                      <Text className="text-neutral-800 font-quicksand-bold text-lg">
+                        {subscription.usage.currentProducts}
+                      </Text>
+                      <Text className="text-neutral-500 font-quicksand-medium text-[10px]">
+                        sur {subscription.plan.features.maxProducts}
+                      </Text>
+                    </View>
+
+                    <View className="flex-1 bg-blue-50 rounded-xl p-3 ml-2 border border-blue-100">
+                      <View className="flex-row items-center justify-between mb-1">
+                        <Text className="text-blue-700 font-quicksand-medium text-[11px]">Expiration</Text>
+                        <Ionicons name="calendar-outline" size={14} color="#3B82F6" />
+                      </View>
+                      <Text className="text-neutral-800 font-quicksand-bold text-sm">
+                        {formatDate(subscription.endDate).split(' ').slice(0, 2).join(' ')}
+                      </Text>
+                      <Text className="text-neutral-500 font-quicksand-medium text-[10px]">
+                        {getDaysRemaining()! > 0 ? `${getDaysRemaining()} jours` : 'Expiré'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Quick Actions */}
+                  {!isExpired() ? (
+                    <View className="flex-row">
+                      <TouchableOpacity className="flex-1 bg-primary-500 rounded-xl py-3 items-center mr-2 shadow-sm">
+                        <Text className="text-white font-quicksand-bold text-sm">Améliorer</Text>
+                      </TouchableOpacity>
+                      {subscription.autoRenew && (
+                        <TouchableOpacity className="flex-1 bg-neutral-100 rounded-xl py-3 items-center ml-2 border border-neutral-200">
+                          <Text className="text-neutral-700 font-quicksand-semibold text-sm">Gérer</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  ) : (
+                    <TouchableOpacity className="bg-red-500 rounded-xl py-3.5 items-center shadow-sm">
+                      <Text className="text-white font-quicksand-bold text-sm">Renouveler maintenant</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
             )}
 
-            {error ? (
-              <View className="flex-1 justify-center items-center py-12">
-                <Ionicons name="alert-circle" size={48} color="#EF4444" />
-                <Text className="text-red-500 font-quicksand-medium text-center mt-4 px-4">{error}</Text>
+            {/* Section Title */}
+            <View className="mb-5">
+              <Text className="text-neutral-400 font-quicksand-semibold text-xs uppercase tracking-wider mb-1">
+                {subscription ? 'Autres plans disponibles' : 'Nos plans'}
+              </Text>
+              <Text className="text-neutral-800 font-quicksand-bold text-2xl">
+                {subscription && isExpired() ? 'Renouvelez votre abonnement' : 'Choisissez votre plan'}
+              </Text>
+            </View>
+
+            {/* Plans List */}
+            {loading ? (
+              // Afficher les skeletons pendant le chargement
+              <>
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </>
+            ) : error ? (
+              <View className="flex-1 justify-center items-center py-16 bg-white rounded-2xl">
+                <View className="w-20 h-20 rounded-full bg-red-50 items-center justify-center mb-4">
+                  <Ionicons name="alert-circle" size={40} color="#EF4444" />
+                </View>
+                <Text className="text-red-600 font-quicksand-bold text-base mb-2">Erreur de chargement</Text>
+                <Text className="text-neutral-500 font-quicksand-medium text-sm text-center px-8 mb-6">
+                  {error}
+                </Text>
                 <TouchableOpacity
-                  onPress={loadPlans}
-                  className="bg-primary-500 px-6 py-3 rounded-xl mt-4"
+                  onPress={loadData}
+                  className="bg-primary-500 px-8 py-3 rounded-xl shadow-sm"
                 >
-                  <Text className="text-white font-quicksand-semibold">Réessayer</Text>
+                  <Text className="text-white font-quicksand-bold text-sm">Réessayer</Text>
                 </TouchableOpacity>
               </View>
             ) : (
               plans.map(renderPlan)
             )}
 
-            {activePlan && (
-              <View className="bg-white rounded-3xl p-5 border border-neutral-100 mt-6">
-                <Text className="text-neutral-800 font-quicksand-bold text-base mb-4">Historique facturation (démo)</Text>
-                {[1,2,3].map(i => (
-                  <View key={i} className="flex-row items-center justify-between py-3 border-b border-neutral-100 last:border-b-0">
-                    <View className="flex-1 mr-4">
-                      <Text className="text-[13px] font-quicksand-semibold text-neutral-700">{activePlan.name} - Sept {2024 - i}</Text>
-                      <Text className="text-[11px] font-quicksand-medium text-neutral-400 mt-0.5">Facturé le 12 Sept {2024 - i}</Text>
+            {/* Subscription Details Section */}
+            {subscription && (
+              <View className="mt-2 mb-4">
+                <View className="bg-white rounded-2xl p-5 border border-neutral-100 shadow-sm">
+                  <View className="flex-row items-center mb-4">
+                    <View className="w-10 h-10 rounded-full bg-primary-50 items-center justify-center mr-3">
+                      <Ionicons name="information-circle" size={24} color="#10B981" />
                     </View>
-                    <Text className="text-[13px] font-quicksand-semibold text-neutral-800">{activePlan.price}</Text>
+                    <Text className="text-neutral-800 font-quicksand-bold text-lg">
+                      Détails de l&apos;abonnement
+                    </Text>
                   </View>
-                ))}
-                <TouchableOpacity className="mt-5 bg-primary-50 border border-primary-100 px-5 py-3 rounded-2xl flex-row items-center justify-center">
-                  <Ionicons name="download-outline" size={18} color="#10B981" />
-                  <Text className="ml-2 text-primary-500 font-quicksand-semibold text-sm">Exporter les factures</Text>
-                </TouchableOpacity>
+
+                  {/* Payment Info */}
+                  <View className="bg-gradient-to-br from-neutral-50 to-neutral-100 rounded-xl p-4 mb-4">
+                    <Text className="text-neutral-700 font-quicksand-bold text-sm mb-3">
+                      Informations de paiement
+                    </Text>
+                    <View className="flex-row items-center justify-between mb-2.5">
+                      <Text className="text-neutral-600 font-quicksand-medium text-xs">Montant</Text>
+                      <Text className="text-neutral-900 font-quicksand-bold text-base">
+                        {subscription.payment.amount.toLocaleString()} {subscription.plan.price.currency}
+                      </Text>
+                    </View>
+                    <View className="flex-row items-center justify-between mb-2.5">
+                      <Text className="text-neutral-600 font-quicksand-medium text-xs">Méthode</Text>
+                      <View className="bg-white px-3 py-1 rounded-lg">
+                        <Text className="text-neutral-800 font-quicksand-semibold text-xs">
+                          {subscription.payment.method === 'TRIAL' ? 'Essai gratuit' : subscription.payment.method}
+                        </Text>
+                      </View>
+                    </View>
+                    {subscription.payment.reference && (
+                      <View className="flex-row items-center justify-between">
+                        <Text className="text-neutral-600 font-quicksand-medium text-xs">Référence</Text>
+                        <Text className="text-neutral-700 font-quicksand-medium text-xs font-mono">
+                          {subscription.payment.reference}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Features Grid */}
+                  <View className="bg-gradient-to-br from-primary-50 to-emerald-50 rounded-xl p-4">
+                    <Text className="text-neutral-700 font-quicksand-bold text-sm mb-3">
+                      Fonctionnalités activées
+                    </Text>
+                    <View className="flex-row flex-wrap">
+                      {[
+                        { key: 'phone', label: 'Appels', icon: 'call' },
+                        { key: 'sms', label: 'SMS', icon: 'chatbox' },
+                        { key: 'whatsapp', label: 'WhatsApp', icon: 'logo-whatsapp' },
+                        { key: 'messaging', label: 'Messages', icon: 'mail' },
+                        { key: 'advertisements', label: 'Publicités', icon: 'megaphone' },
+                      ].map(({ key, label, icon }) => (
+                        <View 
+                          key={key} 
+                          className={`flex-row items-center px-3 py-2 rounded-lg mr-2 mb-2 ${
+                            subscription.plan.features[key] ? 'bg-green-100' : 'bg-neutral-100'
+                          }`}
+                        >
+                          <Ionicons 
+                            name={subscription.plan.features[key] ? "checkmark-circle" : "close-circle"} 
+                            size={14} 
+                            color={subscription.plan.features[key] ? "#059669" : "#737373"}
+                          />
+                          <Text className={`ml-1.5 font-quicksand-semibold text-xs ${
+                            subscription.plan.features[key] ? 'text-green-800' : 'text-neutral-500'
+                          }`}>
+                            {label}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                </View>
               </View>
             )}
-          </ScrollView>
-        </SafeAreaView>
-      )}
+
+            {/* Help Section */}
+            <View className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-5 mb-4 border border-blue-100">
+              <View className="flex-row items-start">
+                <View className="w-10 h-10 rounded-full bg-blue-100 items-center justify-center mr-3">
+                  <Ionicons name="help-circle" size={24} color="#3B82F6" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-neutral-800 font-quicksand-bold text-base mb-1">
+                    Besoin d&apos;aide ?
+                  </Text>
+                  <Text className="text-neutral-600 font-quicksand-medium text-xs mb-3 leading-5">
+                    Notre équipe est là pour vous accompagner dans le choix de votre plan
+                  </Text>
+                  <TouchableOpacity className="bg-blue-500 self-start px-4 py-2 rounded-lg shadow-sm">
+                    <Text className="text-white font-quicksand-semibold text-xs">Contacter le support</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+
+      {/* Upgrade Confirmation Modal */}
+      <UpgradeConfirmationModal
+        visible={showUpgradeModal}
+        plan={selectedPlan}
+        currentPlanName={subscription?.plan?.name}
+        onConfirm={handleConfirmUpgrade}
+        onCancel={handleCancelUpgrade}
+        loading={upgradeLoading}
+      />
+
+      {/* Status Modal */}
+      <StatusModal
+        visible={showStatusModal}
+        type={statusType}
+        title={statusTitle}
+        message={statusMessage}
+        onClose={() => setShowStatusModal(false)}
+      />
     </>
   );
 }

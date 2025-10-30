@@ -182,6 +182,63 @@ export default function DeliveryPartnerDetailScreen() {
 		</ScrollView>
 	);
 
+	// Avatar avec fallback aux initiales et gestion d'erreur image (dégradé indigo/violet)
+	const Avatar = ({
+		uri,
+		firstName,
+		lastName,
+		size = 100,
+		borderWidth = 4,
+	}: {
+		uri?: string | null;
+		firstName?: string;
+		lastName?: string;
+		size?: number;
+		borderWidth?: number;
+	}) => {
+		const [error, setError] = React.useState(false);
+
+		const initials = React.useMemo(() => {
+			const f = (firstName?.trim()?.[0] || '').toUpperCase();
+			const l = (lastName?.trim()?.[0] || '').toUpperCase();
+			const init = `${f}${l}`.trim();
+			return init || '?';
+		}, [firstName, lastName]);
+
+		const circle = {
+			width: size,
+			height: size,
+			borderRadius: size / 2,
+			alignItems: 'center' as const,
+			justifyContent: 'center' as const,
+			borderWidth,
+			borderColor: 'rgba(255,255,255,0.2)',
+		};
+
+		if (uri && !error) {
+			return (
+				<Image
+					source={{ uri }}
+					style={circle}
+					onError={() => setError(true)}
+				/>
+			);
+		}
+
+		return (
+			<LinearGradient
+				colors={['#94A3B8', '#475569']}
+				start={{ x: 0, y: 0 }}
+				end={{ x: 1, y: 1 }}
+				style={circle}
+			>
+				<Text className="text-white font-quicksand-bold" style={{ fontSize: size / 2.8 }}>
+					{initials}
+				</Text>
+			</LinearGradient>
+		);
+	};
+
 	if (loading) {
 		return (
 			<SafeAreaView className="flex-1 bg-background-secondary">
@@ -278,19 +335,7 @@ export default function DeliveryPartnerDetailScreen() {
 					<View className="items-center">
 						{/* Photo de profil */}
 						<View className="relative mb-4">
-							{partner.profileImage ? (
-								<Image 
-									source={{ uri: partner.profileImage }} 
-									style={{ width: 100, height: 100, borderRadius: 50 }}
-									className="border-4 border-white/20"
-								/>
-							) : (
-								<View className="w-25 h-25 rounded-full bg-white/20 items-center justify-center border-4 border-white/20">
-									<Text className="text-white font-quicksand-bold text-2xl">
-										{(partner.firstName?.[0] || '').toUpperCase()}{(partner.lastName?.[0] || '').toUpperCase()}
-									</Text>
-								</View>
-							)}
+							<Avatar uri={partner.profileImage} firstName={partner.firstName} lastName={partner.lastName} size={100} />
 							<View className={`absolute -bottom-2 -right-2 w-6 h-6 rounded-full border-3 border-white ${partner.availability ? 'bg-success-500' : 'bg-neutral-400'}`} />
 						</View>
 

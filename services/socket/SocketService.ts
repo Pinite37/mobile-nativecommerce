@@ -165,8 +165,8 @@ class SocketService {
       let serverUrl = 'http://localhost:4000';
       
       if (Platform.OS === 'android') {
-        // serverUrl = 'http://192.168.86.143:4000';
-        serverUrl = 'http://192.168.0.107:4000';
+        serverUrl = 'http://192.168.86.143:4000';
+        // serverUrl = 'http://192.168.0.107:4000';
       } else if (Platform.OS === 'ios') {
         serverUrl = 'http://localhost:4000';
       }

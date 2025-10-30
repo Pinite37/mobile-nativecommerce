@@ -7,17 +7,17 @@ const onboardingData = [
 	{
 		title: 'Découvrez d\'innombrables possibilités d\'achat',
 		subtitle: 'Explorez une vaste collection de produits des meilleures marques, tout en un seul endroit.',
-		image: require('../../assets/images/axiLogo.png'), // Placeholder - vous pourrez remplacer par vos vraies images
+		image: require('../../assets/images/axiLogoo.png'), // Placeholder - vous pourrez remplacer par vos vraies images
 	},
 	{
 		title: 'Achetez auprès d\'entreprises vérifiées',
 		subtitle: 'Connectez-vous avec des entreprises de confiance et découvrez des produits de qualité adaptés à vos besoins.',
-		image: require('../../assets/images/axiLogo.png'),
+		image: require('../../assets/images/axiLogoo.png'),
 	},
 	{
 		title: 'Livraison rapide et fiable',
 		subtitle: 'Suivez vos commandes en temps réel et profitez d\'une livraison sécurisée et rapide à votre porte.',
-		image: require('../../assets/images/axiLogo.png'),
+		image: require('../../assets/images/axiLogoo.png'),
 	},
 ];
 

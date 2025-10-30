@@ -3,21 +3,22 @@ import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Animated,
-  Easing,
-  FlatList,
-  Keyboard,
-  KeyboardAvoidingView,
-  Linking,
-  Modal,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
+    Animated,
+    Easing,
+    FlatList,
+    Keyboard,
+    KeyboardAvoidingView,
+    Linking,
+    Modal,
+    Platform,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
 } from 'react-native';
+import { SubscriptionWelcomeModal } from '../../components/enterprise/SubscriptionWelcomeModal';
 import { useToast } from '../../components/ui/ReanimatedToast/context';
 import { beninCities, neighborhoodsByCity } from '../../constants/LocationData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -51,6 +52,7 @@ export default function EnterpriseSignUpScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   
   // Multi-step form states
   const [currentStep, setCurrentStep] = useState(1);
@@ -84,7 +86,7 @@ export default function EnterpriseSignUpScreen() {
   });
 
   const toast = useToast();
-  const { redirectToRoleBasedHome, handlePostRegistration } = useAuth();
+  const { handlePostRegistration } = useAuth();
   
   const TOTAL_STEPS = 4;
 
@@ -302,12 +304,12 @@ export default function EnterpriseSignUpScreen() {
         
         toast.showToast({ title: 'Succès', subtitle: 'Compte entreprise créé avec succès !' });
         
-        console.log('🎯 Redirection vers l\'interface entreprise...');
+        console.log('🎯 Affichage du modal de sélection de plan...');
         
-        // Rediriger vers l'interface entreprise avec un délai optimisé
+        // Afficher le modal de sélection de plan au lieu de rediriger directement
         setTimeout(() => {
-          redirectToRoleBasedHome('ENTERPRISE');
-        }, 1200);
+          setShowSubscriptionModal(true);
+        }, 800);
       }
     } catch (error: any) {
       console.error('❌ Enterprise registration error:', error);
@@ -925,6 +927,13 @@ export default function EnterpriseSignUpScreen() {
               </View>
             </TouchableWithoutFeedback>
           </Modal>
+          
+          {/* Modal de bienvenue et sélection de plan */}
+          <SubscriptionWelcomeModal
+            visible={showSubscriptionModal}
+            onClose={() => setShowSubscriptionModal(false)}
+            userName={firstName}
+          />
         </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>

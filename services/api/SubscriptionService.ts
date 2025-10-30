@@ -47,6 +47,46 @@ export interface Plan {
   popular?: boolean;
 }
 
+export interface Subscription {
+  _id: string;
+  user: string;
+  plan: {
+    _id: string;
+    name: string;
+    description: string;
+    duration: string;
+    features: {
+      maxProducts: number;
+      maxImagesPerProduct: number;
+      phone: boolean;
+      sms: boolean;
+      whatsapp: boolean;
+      messaging: boolean;
+      advertisements: boolean;
+      [key: string]: any;
+    };
+    price: {
+      amount: number;
+      currency: string;
+    };
+  };
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  autoRenew: boolean;
+  payment: {
+    method: string;
+    reference?: string;
+    amount: number;
+  };
+  usage: {
+    currentProducts: number;
+    currentAdvertisements: number;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ActiveSubscription {
   planCode: SubscriptionPlan['code'];
   startedAt: string;
@@ -153,6 +193,28 @@ class SubscriptionService {
       console.error('❌ SUBSCRIPTION SERVICE - Erreur récupération plans entreprise:', error.message);
       console.log('🔄 SUBSCRIPTION SERVICE - Fallback vers données mockées');
       return this.getMockEnterprisePlans();
+    }
+  }
+
+  /**
+   * Récupérer les plans backend bruts (avec duration field)
+   */
+  async getBackendEnterprisePlans(): Promise<BackendPlan[]> {
+    try {
+      console.log('🔥 SUBSCRIPTION SERVICE - Récupération plans backend bruts');
+
+      const response = await ApiService.get<{ success: boolean; data: BackendPlan[] }>('/plans/enterprises');
+
+      if (response.success && response.data && Array.isArray(response.data)) {
+        console.log(`✅ SUBSCRIPTION SERVICE - ${response.data.length} plans backend récupérés`);
+        return response.data;
+      }
+
+      console.warn('⚠️ SUBSCRIPTION SERVICE - Réponse API invalide');
+      return [];
+    } catch (error: any) {
+      console.error('❌ SUBSCRIPTION SERVICE - Erreur récupération plans backend:', error.message);
+      return [];
     }
   }
 
@@ -264,6 +326,77 @@ class SubscriptionService {
 
   async cancelAutoRenew() {
     if (this.active) this.active.autoRenew = false;
+  }
+
+  /**
+   * Récupérer la souscription active de l'entreprise connectée
+   */
+  async getActiveSubscription(): Promise<Subscription | null> {
+    try {
+      console.log('🔥 SUBSCRIPTION SERVICE - Récupération souscription active');
+      
+      const response: any = await ApiService.get('/subscriptions/active');
+      
+      if (response && response.data) {
+        console.log('✅ SUBSCRIPTION SERVICE - Souscription active récupérée:', response.data);
+        return response.data;
+      }
+      
+      console.log('⚠️ SUBSCRIPTION SERVICE - Aucune souscription active');
+      return null;
+    } catch (error: any) {
+      console.error('❌ SUBSCRIPTION SERVICE - Erreur récupération souscription active:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Activer le plan d'essai gratuit (TRIAL)
+   */
+  async activateTrialPlan(): Promise<Subscription> {
+    try {
+      console.log('🔥 SUBSCRIPTION SERVICE - Activation plan TRIAL');
+      console.log('ℹ️ Aucun paymentData envoyé (gratuit)');
+      
+      const response: any = await ApiService.post(
+        '/subscriptions/trial/activate',
+        {} // Pas de payment data pour le plan gratuit
+      );
+      
+      if (response && response.data) {
+        console.log('✅ SUBSCRIPTION SERVICE - Plan TRIAL activé:', response.data);
+        return response.data;
+      }
+      
+      throw new Error('Erreur lors de l\'activation du plan d\'essai');
+    } catch (error: any) {
+      console.error('❌ SUBSCRIPTION SERVICE - Erreur activation plan TRIAL:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * S'abonner à un plan spécifique
+   */
+  async subscribeToPlan(planId: string, paymentData?: any): Promise<Subscription> {
+    try {
+      console.log('🔥 SUBSCRIPTION SERVICE - Abonnement au plan:', planId);
+      
+      const response: any = await ApiService.post(
+        `/subscriptions/subscribe/${planId}`,
+        { paymentData }
+      );
+      
+      if (response && response.data) {
+        console.log('✅ SUBSCRIPTION SERVICE - Abonné au plan:', response.data);
+        return response.data;
+      }
+      
+      throw new Error('Erreur lors de l\'abonnement au plan');
+    } catch (error: any) {
+      console.error('❌ SUBSCRIPTION SERVICE - Erreur abonnement au plan:', error);
+      throw error;
+    }
   }
 }
 

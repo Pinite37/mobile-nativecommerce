@@ -1,53 +1,55 @@
 import { Stack } from "expo-router";
+import { SubscriptionProvider } from "../../../contexts/SubscriptionContext";
 
 export default function EnterpriseLayout() {
   return (
-    <Stack>
-      <Stack.Screen 
-        name="(tabs)" 
-        options={{ 
-          headerShown: false 
-        }} 
-      />
-      {/* Cache le header pour tout le segment advertisements */}
-      <Stack.Screen
-        name="advertisements"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="profile/settings"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="profile/help"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="profile/info"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="(tabs)/enterprise/[id]"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="conversation"
-        options={{
-          headerShown: false,
-        }}
-      />
-      {/* Cache le header pour les pages delivery-partners */}
-      <Stack.Screen
+    <SubscriptionProvider>
+      <Stack>
+        <Stack.Screen 
+          name="(tabs)" 
+          options={{ 
+            headerShown: false 
+          }} 
+        />
+        {/* Cache le header pour tout le segment advertisements */}
+        <Stack.Screen
+          name="advertisements"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="profile/settings"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="profile/help"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="profile/info"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="(tabs)/enterprise/[id]"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="conversation"
+          options={{
+            headerShown: false,
+          }}
+        />
+        {/* Cache le header pour les pages delivery-partners */}
+        <Stack.Screen
         name="delivery-partners"
         options={{
           headerShown: false,
@@ -101,6 +103,13 @@ export default function EnterpriseLayout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="subscriptions/index"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
+    </SubscriptionProvider>
   );
 }
