@@ -10,17 +10,18 @@ import {
   Image,
   Modal,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   Text,
   TouchableOpacity,
   View
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { FavoriteItem } from "@/types/product";
 
 export default function FavoritesScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [favoriteItems, setFavoriteItems] = useState<FavoriteItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -137,10 +138,10 @@ export default function FavoritesScreen() {
   const renderSkeletonFavorites = () => (
     <ScrollView
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: 90 }}
+      contentContainerStyle={{ paddingBottom: insets.bottom + 90 }}
     >
       {/* Header Skeleton */}
-      <LinearGradient colors={['#10B981', '#34D399']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} className="px-6 py-4 pt-16">
+      <LinearGradient colors={['#10B981', '#34D399']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} className="px-6 pb-4" style={{ paddingTop: insets.top + 16 }}>
         <View className="flex-row items-center justify-between mb-4">
           <ShimmerBlock style={{ height: 24, borderRadius: 12, width: '40%' }} />
         </View>
@@ -245,16 +246,16 @@ export default function FavoritesScreen() {
   // État de chargement avec skeleton
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-background-secondary">
+      <View className="flex-1 bg-background-secondary">
         {renderSkeletonFavorites()}
-      </SafeAreaView>
+      </View>
     );
   }
 
   // État d'erreur
   if (error) {
     return (
-      <SafeAreaView className="flex-1 bg-background-secondary justify-center items-center p-6">
+      <View className="flex-1 bg-background-secondary justify-center items-center p-6">
         <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
         <Text className="text-xl font-quicksand-bold text-neutral-800 mt-4 text-center">
           Erreur de chargement
@@ -270,17 +271,17 @@ export default function FavoritesScreen() {
             Réessayer
           </Text>
         </TouchableOpacity>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background-secondary">
-      <ExpoStatusBar style="light" backgroundColor="#10B981" />
+    <View className="flex-1 bg-background-secondary">
+      <ExpoStatusBar style="light" translucent />
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 90 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 90 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#10B981']} />
         }
@@ -290,7 +291,8 @@ export default function FavoritesScreen() {
           colors={['#10B981', '#34D399']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          className="px-6 py-4 pt-16"
+          className="px-6 pb-4"
+          style={{ paddingTop: insets.top + 16 }}
         >
           <View className="flex-row items-center justify-between mb-4">
             <Text className="text-2xl font-quicksand-bold text-white">
@@ -385,6 +387,6 @@ export default function FavoritesScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
