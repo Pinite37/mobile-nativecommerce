@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
-import { Animated, Easing, Image, Modal, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native";
+import { Animated, Easing, Image, Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../../../contexts/AuthContext";
 
@@ -120,7 +121,7 @@ export default function ProfileScreen() {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         className="px-6 pb-6 rounded-b-3xl shadow-sm"
-        style={{ paddingTop: insets.top + 12 }}
+        style={{ paddingTop: insets.top + 16 }}
       >
         <View className="flex-row items-center justify-between">
           <View className="flex-1 pr-4">
@@ -184,24 +185,25 @@ export default function ProfileScreen() {
 
   const menuItems = [
     { icon: "person-outline", title: "Mes informations", route: "/(app)/(client)/profile/details" },
-    { icon: "location-outline", title: "Mes adresses", route: "/(app)/(client)/profile/addresses" },
-    { icon: "bag-check-outline", title: "Mes commandes", route: "/(app)/(client)/profile/orders" },
-    { icon: "card-outline", title: "Moyens de paiement", route: "/(app)/(client)/profile/payments" },
+    // { icon: "location-outline", title: "Mes adresses", route: "/(app)/(client)/profile/addresses" },
+    // { icon: "bag-check-outline", title: "Mes commandes", route: "/(app)/(client)/profile/orders" },
+    // { icon: "card-outline", title: "Moyens de paiement", route: "/(app)/(client)/profile/payments" },
     { icon: "settings-outline", title: "Paramètres", route: "/(app)/(client)/profile/settings" },
-    { icon: "help-circle-outline", title: "Aide et support", route: "/(app)/(client)/profile/help" },
+    // { icon: "help-circle-outline", title: "Aide et support", route: "/(app)/(client)/profile/help" },
   ];
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-background-secondary">
-        <StatusBar backgroundColor="#10B981" barStyle="light-content" />
+      <View className="flex-1 bg-background-secondary">
+        <ExpoStatusBar style="light" translucent />
         {renderSkeletonProfile()}
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background-secondary">
+    <View className="flex-1 bg-background-secondary">
+      <ExpoStatusBar style="light" translucent />
       <ScrollView 
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 90 }} // Add bottom padding to ensure content isn't hidden by tab bar
@@ -212,7 +214,7 @@ export default function ProfileScreen() {
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           className="px-6 pb-6 rounded-b-3xl shadow-sm"
-          style={{ paddingTop: insets.top + 12 }}
+          style={{ paddingTop: insets.top + 16 }}
         >
           <View className="flex-row items-center justify-between">
             <View>
@@ -225,10 +227,10 @@ export default function ProfileScreen() {
                 </Text>
               )}
             </View>
-            <TouchableOpacity className="relative">
+            {/* <TouchableOpacity className="relative">
               <Ionicons name="notifications-outline" size={24} color="#FFFFFF" />
               <View className="absolute -top-1 -right-1 w-3 h-3 bg-error-500 rounded-full" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         </LinearGradient>
 
@@ -254,25 +256,17 @@ export default function ProfileScreen() {
                 <Text className="text-neutral-500 font-quicksand mt-1">
                   {user?.email || 'email@exemple.com'}
                 </Text>
-                <TouchableOpacity
-                  className="mt-3 bg-primary-500 rounded-xl px-4 py-2 self-start"
-                  onPress={() => router.push("/(app)/(client)/profile/details")}
-                >
-                  <Text className="text-white font-quicksand-semibold text-sm">
-                    Modifier mon profil
-                  </Text>
-                </TouchableOpacity>
               </View>
             </View>
           </View>
         </View>
 
         {/* Menu */}
-        <View className="mx-6 mb-6">
+        <View className="mx-6 mb-6 mt-5">
           {menuItems.map((item, index) => (
             <TouchableOpacity
               key={index}
-              className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-4 mb-3 flex-row items-center"
+              className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-4 mb-2  flex-row items-center"
               onPress={() => router.push(item.route as any)}
             >
                 <View className="w-12 h-12 bg-primary-100 rounded-xl justify-center items-center mr-4">
@@ -339,6 +333,6 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }

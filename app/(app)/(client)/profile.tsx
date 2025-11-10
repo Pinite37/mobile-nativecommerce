@@ -2,17 +2,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    Modal,
-    RefreshControl,
-    ScrollView,
-    Switch,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Image,
+  Modal,
+  RefreshControl,
+  ScrollView,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import ImagePickerModal from '../../../components/ui/ImagePickerModal';
 import { useToast } from '../../../components/ui/ToastManager';
@@ -29,6 +28,7 @@ export default function ProfileScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   
   // Form states
   const [firstName, setFirstName] = useState('');
@@ -124,18 +124,12 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { 
-          text: 'Déconnecter', 
-          style: 'destructive',
-          onPress: logout 
-        },
-      ]
-    );
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutModal(false);
+    logout();
   };
 
   const formatUserInitials = (user: User) => {
@@ -477,6 +471,55 @@ export default function ProfileScreen() {
         onClose={() => setShowImagePicker(false)}
         onImageUpdated={handleImageUpdated}
       />
+
+      {/* Logout Confirmation Modal */}
+      <Modal
+        visible={showLogoutModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowLogoutModal(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50 px-4">
+          <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
+            {/* Icône */}
+            <View className="items-center mb-4">
+              <View className="w-16 h-16 bg-red-100 rounded-full justify-center items-center">
+                <Ionicons name="log-out-outline" size={32} color="#EF4444" />
+              </View>
+            </View>
+
+            {/* Titre */}
+            <Text className="text-xl font-quicksand-bold text-neutral-800 mb-2 text-center">
+              Déconnexion
+            </Text>
+
+            {/* Message */}
+            <Text className="text-base text-neutral-600 font-quicksand-medium mb-6 text-center">
+              Êtes-vous sûr de vouloir vous déconnecter ?
+            </Text>
+
+            {/* Boutons */}
+            <View className="flex-row space-x-3">
+              <TouchableOpacity
+                className="flex-1 bg-neutral-100 rounded-xl py-3"
+                onPress={() => setShowLogoutModal(false)}
+              >
+                <Text className="text-neutral-700 font-quicksand-semibold text-center">
+                  Annuler
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="flex-1 bg-red-500 rounded-xl py-3"
+                onPress={confirmLogout}
+              >
+                <Text className="text-white font-quicksand-semibold text-center">
+                  Déconnecter
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

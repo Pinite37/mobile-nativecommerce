@@ -15,7 +15,6 @@ import {
   SafeAreaView,
   ScrollView,
   StatusBar,
-  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -673,7 +672,6 @@ function EnterpriseProfilePage() {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [profileData, setProfileData] = useState<EnterpriseProfile | null>(null);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   
   // Modals
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -1003,31 +1001,6 @@ function EnterpriseProfilePage() {
     closeConfirmation();
   };
 
-  // Gérer l'activation/désactivation de l'entreprise
-  const handleToggleStatus = async () => {
-    showConfirmation('toggle_status', async () => {
-      try {
-        setLoading(true);
-        const updatedEnterprise = await EnterpriseService.toggleActiveStatus();
-        
-        // Mettre à jour les données locales
-        if (profileData) {
-          setProfileData({
-            ...profileData,
-            enterprise: updatedEnterprise
-          });
-        }
-        
-        notifySuccess('Succès', `Entreprise ${updatedEnterprise.isActive ? 'activée' : 'désactivée'} avec succès`);
-      } catch (error: any) {
-        console.error('❌ Erreur changement statut:', error);
-        notifyError('Erreur', error.message || 'Impossible de changer le statut');
-      } finally {
-        setLoading(false);
-      }
-    });
-  };
-
   // Gérer la déconnexion
   const handleLogout = () => {
     showConfirmation('logout', () => {
@@ -1040,50 +1013,8 @@ function EnterpriseProfilePage() {
   // Gérer la navigation vers les partenaires
   const handleNavigateToPartners = () => {
     // Navigation directe: le dossier (enterprise)/delivery-partners contient index.tsx
-    // On supprime le fallback modal obsolète.
     router.push('/(app)/(enterprise)/delivery-partners');
   };
-  
-  // Navigation vers les produits
-  const handleNavigateToProducts = () => {
-    // Implémentation future: router.push('/(app)/(enterprise)/products');
-    notifyInfo('Fonctionnalité à venir', 'La gestion des produits sera disponible prochainement');
-  };
-
-  // Navigation vers les commandes
-  const handleNavigateToOrders = () => {
-    // Implémentation future: router.push('/(app)/(enterprise)/orders');
-    notifyInfo('Fonctionnalité à venir', 'La gestion des commandes sera disponible prochainement');
-  };
-
-  // Navigation vers les statistiques
-  const handleNavigateToStats = () => {
-    // Implémentation future: router.push('/(app)/(enterprise)/statistics');
-    notifyInfo('Fonctionnalité à venir', 'Les statistiques détaillées seront disponibles prochainement');
-  };
-
-  // Navigation vers les paramètres
-  const handleNavigateToSettings = () => {
-    // Implémentation future: router.push('/(app)/(enterprise)/settings');
-    notifyInfo('Fonctionnalité à venir', 'Les paramètres avancés seront disponibles prochainement');
-  };
-
-  // Navigation vers l'aide
-  const handleNavigateToHelp = () => {
-    // Implémentation future: router.push('/(app)/(enterprise)/help');
-    notifyInfo('Fonctionnalité à venir', 'La section d\'aide sera disponible prochainement');
-  };
-  
-  // Ouvrir la modal d'édition des informations de l'entreprise
-  const handleNavigateToEnterpriseInfo = () => {
-    setShowEditEnterprise(true);
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
-  };
-
-  // formatDate supprimé (non utilisé)
 
   if (loading && !profileData) {
     return (
@@ -1325,46 +1256,46 @@ function EnterpriseProfilePage() {
         {/* Contact & Owner Cards */}
         <View className="px-4 pt-6 space-y-4">
           <View className="bg-white rounded-2xl p-5 shadow-sm border border-neutral-100">
-            <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-3">
+            <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-4">
               Contact Entreprise
             </Text>
-            <View className="space-y-2">
+            <View className="space-y-3">
               {profileData.enterprise.contactInfo?.email && (
-                <View className="flex-row items-center">
-                  <View className="w-8 h-8 rounded-xl bg-primary-100 items-center justify-center">
-                    <Ionicons name="mail" size={16} color="#FE8C00" />
+                <View className="flex-row items-center py-2">
+                  <View className="w-9 h-9 rounded-xl bg-primary-100 items-center justify-center">
+                    <Ionicons name="mail" size={18} color="#FE8C00" />
                   </View>
-                  <Text className="text-sm text-neutral-700 ml-3 font-quicksand-medium flex-1" numberOfLines={1}>
+                  <Text className="text-sm text-neutral-700 ml-4 font-quicksand-medium flex-1" numberOfLines={1}>
                     {profileData.enterprise.contactInfo.email}
                   </Text>
                 </View>
               )}
               {profileData.enterprise.contactInfo?.phone && (
-                <View className="flex-row items-center">
-                  <View className="w-8 h-8 rounded-xl bg-primary-100 items-center justify-center">
-                    <Ionicons name="call" size={16} color="#FE8C00" />
+                <View className="flex-row items-center py-2">
+                  <View className="w-9 h-9 rounded-xl bg-primary-100 items-center justify-center">
+                    <Ionicons name="call" size={18} color="#FE8C00" />
                   </View>
-                  <Text className="text-sm text-neutral-700 ml-3 font-quicksand-medium flex-1" numberOfLines={1}>
+                  <Text className="text-sm text-neutral-700 ml-4 font-quicksand-medium flex-1" numberOfLines={1}>
                     {profileData.enterprise.contactInfo.phone}
                   </Text>
                 </View>
               )}
               {profileData.enterprise.contactInfo?.whatsapp && (
-                <View className="flex-row items-center">
-                  <View className="w-8 h-8 rounded-xl bg-success-100 items-center justify-center">
-                    <Ionicons name="logo-whatsapp" size={16} color="#10B981" />
+                <View className="flex-row items-center py-2">
+                  <View className="w-9 h-9 rounded-xl bg-success-100 items-center justify-center">
+                    <Ionicons name="logo-whatsapp" size={18} color="#10B981" />
                   </View>
-                  <Text className="text-sm text-neutral-700 ml-3 font-quicksand-medium flex-1" numberOfLines={1}>
+                  <Text className="text-sm text-neutral-700 ml-4 font-quicksand-medium flex-1" numberOfLines={1}>
                     {profileData.enterprise.contactInfo.whatsapp}
                   </Text>
                 </View>
               )}
               {profileData.enterprise.contactInfo?.website && (
-                <View className="flex-row items-center">
-                  <View className="w-8 h-8 rounded-xl bg-blue-100 items-center justify-center">
-                    <Ionicons name="globe" size={16} color="#2563EB" />
+                <View className="flex-row items-center py-2">
+                  <View className="w-9 h-9 rounded-xl bg-blue-100 items-center justify-center">
+                    <Ionicons name="globe" size={18} color="#2563EB" />
                   </View>
-                  <Text className="text-sm text-neutral-700 ml-3 font-quicksand-medium flex-1" numberOfLines={1}>
+                  <Text className="text-sm text-neutral-700 ml-4 font-quicksand-medium flex-1" numberOfLines={1}>
                     {profileData.enterprise.contactInfo.website}
                   </Text>
                 </View>
@@ -1401,7 +1332,7 @@ function EnterpriseProfilePage() {
                 <Text className="text-base font-quicksand-semibold text-neutral-800" numberOfLines={1}>
                   {profileData.user.firstName} {profileData.user.lastName}
                 </Text>
-                <Text className="text-sm text-neutral-600" numberOfLines={1}>{profileData.user.email}</Text>
+                <Text className="text-sm text-neutral-600 font-quicksand-light" numberOfLines={1}>{profileData.user.email}</Text>
               </View>
             </View>
           </View>
@@ -1413,22 +1344,6 @@ function EnterpriseProfilePage() {
             Gestion & Outils
           </Text>
           <View className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden">
-            {/* Statistiques détaillées */}
-            <TouchableOpacity 
-              onPress={handleNavigateToStats}
-              className="flex-row items-center justify-between px-4 py-5 border-b border-neutral-100"
-            >
-              <View className="flex-row items-center">
-                <View className="w-10 h-10 bg-warning-100 rounded-full justify-center items-center">
-                  <Ionicons name="analytics-outline" size={20} color="#F59E0B" />
-                </View>
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Statistiques & Rapports
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-            </TouchableOpacity>
-
             {/* Partenaires de livraison */}
             <TouchableOpacity 
               onPress={handleNavigateToPartners}
@@ -1439,73 +1354,39 @@ function EnterpriseProfilePage() {
                   <Ionicons name="people-outline" size={20} color="#6366F1" />
                 </View>
                 <View className="ml-4">
-                  <Text className="text-base font-quicksand-medium text-neutral-800 ">
+                  <Text className="text-base font-quicksand-medium text-neutral-800">
                     Partenaires de Livraison
                   </Text>
                   {profileData.enterprise.deliveryPartners && profileData.enterprise.deliveryPartners.length > 0 && (
-                    <Text className="text-sm text-neutral-600">
+                    <Text className="text-sm text-neutral-600 font-quicksand-light">
                       {profileData.enterprise.deliveryPartners.length} partenaire(s)
                     </Text>
                   )}
                 </View>
               </View>
 
-              <Ionicons name="chevron-forward"  size={20} color="#9CA3AF" />
-
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Paramètres */}
-        <View className="px-4 py-4">
-          <View className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden">
-            {/* Notifications */}
-            <View className="flex-row items-center justify-between px-4 py-5 border-b border-neutral-100">
-              <View className="flex-row items-center">
-                <View className="w-10 h-10 bg-background-secondary rounded-full justify-center items-center">
-                  <Ionicons name="notifications-outline" size={20} color="#374151" />
-                </View>
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Notifications
-                </Text>
-              </View>
-              <Switch
-                value={notificationsEnabled}
-                onValueChange={setNotificationsEnabled}
-                thumbColor="#FFFFFF"
-                trackColor={{ false: "#D1D5DB", true: "#10B981" }}
-              />
-            </View>
-
-            {/* Paramètres */}
-            <TouchableOpacity 
-              onPress={handleNavigateToSettings}
-              className="flex-row items-center justify-between px-4 py-5 border-b border-neutral-100"
-            >
-              <View className="flex-row items-center">
-                <View className="w-10 h-10 bg-secondary-100 rounded-full justify-center items-center">
-                  <Ionicons name="settings-outline" size={20} color="#8B5CF6" />
-                </View>
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Paramètres
-                </Text>
-              </View>
               <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
             </TouchableOpacity>
 
-            {/* Aide et support */}
+            {/* Paramètres */}
             <TouchableOpacity 
-              onPress={handleNavigateToHelp}
+              onPress={() => router.push('/(app)/(enterprise)/profile/settings' as any)}
               className="flex-row items-center justify-between px-4 py-5"
             >
               <View className="flex-row items-center">
-                <View className="w-10 h-10 bg-neutral-100 rounded-full justify-center items-center">
-                  <Ionicons name="help-circle-outline" size={20} color="#6B7280" />
+                <View className="w-10 h-10 bg-primary-100 rounded-full justify-center items-center">
+                  <Ionicons name="settings-outline" size={20} color="#10B981" />
                 </View>
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Aide et support
-                </Text>
+                <View className="ml-4">
+                  <Text className="text-base font-quicksand-medium text-neutral-800">
+                    Paramètres
+                  </Text>
+                  <Text className="text-sm text-neutral-600 font-quicksand-light">
+                    Préférences et configuration
+                  </Text>
+                </View>
               </View>
+
               <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
             </TouchableOpacity>
           </View>

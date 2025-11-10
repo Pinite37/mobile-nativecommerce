@@ -4,7 +4,7 @@ import { useNavigation, useRouter } from "expo-router";
 import React, { useEffect, useLayoutEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
+  Modal,
   SafeAreaView,
   ScrollView,
   Switch,
@@ -13,11 +13,9 @@ import {
   View,
 } from "react-native";
 import { useToast } from "../../../../components/ui/ToastManager";
-import { useAuth } from "../../../../contexts/AuthContext";
-import CustomerService, { UpdatePreferencesRequest } from "../../../../services/api/CustomerService";
+import PreferencesService from "../../../../services/api/PreferencesService";
 
 export default function SettingsScreen() {
-  const { user, refreshUserData } = useAuth();
   const navigation = useNavigation();
   const router = useRouter();
 
@@ -32,14 +30,37 @@ export default function SettingsScreen() {
   
   // État local pour les paramètres
   const [settings, setSettings] = useState({
-    pushNotifications: true,
-    emailNotifications: false,
-    darkMode: false,
-    locationServices: true,
-    biometricAuth: true,
+    // Général
     language: "Français",
-    currency: "FCFA",
+    theme: "auto" as "light" | "dark" | "auto",
+    
+    // Notifications
+    pushEnabled: true,
+    notifDelivery: true,
+    notifMessages: true,
+    notifNewProducts: false,
+    notifAdvertisements: true,
+    notifSystemUpdates: true,
+    quietHoursEnabled: false,
+    quietHoursStart: "22:00",
+    quietHoursEnd: "08:00",
+    
+    // Affichage
+    productView: "grid" as "grid" | "list",
+    productsPerPage: 20,
+    highQualityImages: true,
+    
+    // Livraison
+    defaultInstructions: "",
+    preferredTimeSlot: "anytime" as "morning" | "afternoon" | "evening" | "anytime",
+    
+    // Confidentialité
+    publicProfile: true,
+    allowDataAnalytics: true,
   });
+
+  // État pour le modal de confirmation de réinitialisation
+  const [clearDataModal, setClearDataModal] = useState(false);
 
   // Charger les paramètres utilisateur depuis l'API
   useEffect(() => {
@@ -48,19 +69,39 @@ export default function SettingsScreen() {
   }, []);
 
   const loadUserPreferences = async () => {
-    if (!user || !user.preferences) return;
-    
     try {
       setLoading(true);
       
+      const prefs = await PreferencesService.getPreferences();
+      
       setSettings({
-        pushNotifications: user.preferences.notifications?.push || false,
-        emailNotifications: user.preferences.notifications?.email || false,
-        darkMode: false, // Non géré par l'API
-        locationServices: true, // Non géré par l'API
-        biometricAuth: true, // Non géré par l'API
-        language: user.preferences.language || "Français",
-        currency: user.preferences.currency || "FCFA",
+        // Général
+        language: prefs.general?.language === 'fr' ? 'Français' : 'English',
+        theme: (prefs.general?.theme as "light" | "dark" | "auto") || 'auto',
+        
+        // Notifications
+        pushEnabled: prefs.notifications?.pushEnabled ?? true,
+        notifDelivery: prefs.notifications?.types?.delivery ?? true,
+        notifMessages: prefs.notifications?.types?.messages ?? true,
+        notifNewProducts: prefs.notifications?.types?.newProducts ?? false,
+        notifAdvertisements: prefs.notifications?.types?.advertisements ?? true,
+        notifSystemUpdates: prefs.notifications?.types?.systemUpdates ?? true,
+        quietHoursEnabled: prefs.notifications?.quietHours?.enabled ?? false,
+        quietHoursStart: prefs.notifications?.quietHours?.startTime || "22:00",
+        quietHoursEnd: prefs.notifications?.quietHours?.endTime || "08:00",
+        
+        // Affichage
+        productView: prefs.display?.productView || 'grid',
+        productsPerPage: prefs.display?.productsPerPage || 20,
+        highQualityImages: prefs.display?.highQualityImages ?? true,
+        
+        // Livraison
+        defaultInstructions: prefs.delivery?.defaultInstructions || "",
+        preferredTimeSlot: prefs.delivery?.preferredTimeSlot || 'anytime',
+        
+        // Confidentialité
+        publicProfile: prefs.privacy?.publicProfile ?? true,
+        allowDataAnalytics: prefs.privacy?.allowDataAnalytics ?? true,
       });
     } catch (error) {
       console.error("Erreur lors du chargement des préférences:", error);
@@ -72,29 +113,66 @@ export default function SettingsScreen() {
 
   // Fonction pour mettre à jour un paramètre booléen
   const toggleSetting = async (setting: keyof typeof settings) => {
+    const currentValue = settings[setting];
+    const newValue = typeof currentValue === 'boolean' ? !currentValue : currentValue;
+    
+    // Mise à jour optimiste de l'UI
+    setSettings(prev => ({ ...prev, [setting]: newValue }));
+
     try {
-      const newValue = !settings[setting];
-      setSettings(prev => ({ ...prev, [setting]: newValue }));
-      
-      // Mettre à jour les préférences via l'API si nécessaire
-      if (setting === 'pushNotifications' || setting === 'emailNotifications') {
-        setSaving(true);
-        
-        const updateData: UpdatePreferencesRequest = {
-          notifications: {
-            push: setting === 'pushNotifications' ? newValue : settings.pushNotifications,
-            email: setting === 'emailNotifications' ? newValue : settings.emailNotifications,
-          }
+      setSaving(true);
+
+      // Appel API selon le type de préférence
+      if (setting === 'pushEnabled') {
+        await PreferencesService.updateNotifications({
+          pushEnabled: newValue as boolean,
+        });
+      } else if (setting.startsWith('notif')) {
+        // Notifications types
+        const typeMap: Record<string, string> = {
+          notifDelivery: 'delivery',
+          notifMessages: 'messages',
+          notifNewProducts: 'newProducts',
+          notifAdvertisements: 'advertisements',
+          notifSystemUpdates: 'systemUpdates',
         };
-        
-        await CustomerService.updatePreferences(updateData);
-        await refreshUserData();
+        const typeKey = typeMap[setting];
+        if (typeKey) {
+          await PreferencesService.updateNotifications({
+            types: {
+              [typeKey]: newValue as boolean,
+            }
+          });
+        }
+      } else if (setting === 'quietHoursEnabled') {
+        await PreferencesService.updateNotifications({
+          quietHours: {
+            enabled: newValue as boolean,
+            startTime: settings.quietHoursStart,
+            endTime: settings.quietHoursEnd,
+          }
+        });
+      } else if (setting === 'theme') {
+        await PreferencesService.updateGeneral({
+          theme: newValue as string
+        });
+      } else if (setting === 'productView' || setting === 'highQualityImages') {
+        await PreferencesService.updateDisplay({
+          [setting]: newValue
+        });
+      } else if (setting === 'publicProfile' || setting === 'allowDataAnalytics') {
+        await PreferencesService.updatePrivacy({
+          [setting]: newValue as boolean
+        });
       }
+
+      console.log('✅ Préférence mise à jour:', setting, newValue);
     } catch (error) {
       console.error("Erreur lors de la mise à jour des préférences:", error);
       toast.showError("Erreur", "Impossible de mettre à jour vos préférences");
-      // Remettre l'état précédent en cas d'erreur
-      setSettings(prev => ({ ...prev, [setting]: !prev[setting] }));
+      
+      // Rollback en cas d'erreur
+      setSettings(prev => ({ ...prev, [setting]: currentValue }));
     } finally {
       setSaving(false);
     }
@@ -102,45 +180,27 @@ export default function SettingsScreen() {
 
   // Fonction pour effacer les données
   const handleClearData = () => {
-    Alert.alert(
-      "Effacer les données",
-      "Êtes-vous sûr de vouloir effacer toutes vos données ? Cette action est irréversible.",
-      [
-        { text: "Annuler", style: "cancel" },
-        { 
-          text: "Effacer", 
-          style: "destructive",
-          onPress: async () => {
-            try {
-              setSaving(true);
-              
-              // Dans un vrai scénario, il faudrait appeler une API pour supprimer les données
-              // Pour l'instant, nous allons simplement réinitialiser les préférences
-              const resetPrefs: UpdatePreferencesRequest = {
-                notifications: {
-                  push: false,
-                  email: false,
-                  sms: false
-                },
-                language: "fr",
-                currency: "XOF"
-              };
-              
-              await CustomerService.updatePreferences(resetPrefs);
-              await refreshUserData();
-              
-              toast.showSuccess("Données réinitialisées", "Vos préférences ont été remises à zéro");
-              loadUserPreferences(); // Recharger les paramètres
-            } catch (error) {
-              console.error("Erreur lors de la réinitialisation des données:", error);
-              toast.showError("Erreur", "Impossible de réinitialiser vos données");
-            } finally {
-              setSaving(false);
-            }
-          }
-        }
-      ]
-    );
+    setClearDataModal(true);
+  };
+
+  const confirmClearData = async () => {
+    try {
+      setSaving(true);
+      setClearDataModal(false);
+      
+      // Appeler l'API pour réinitialiser les préférences
+      await PreferencesService.resetPreferences();
+      
+      // Recharger les préférences depuis l'API
+      await loadUserPreferences();
+      
+      toast.showSuccess("Données réinitialisées", "Vos préférences ont été remises à zéro");
+    } catch (error) {
+      console.error("Erreur lors de la réinitialisation des données:", error);
+      toast.showError("Erreur", "Impossible de réinitialiser vos données");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -184,24 +244,80 @@ export default function SettingsScreen() {
                 </Text>
               </View>
               <Switch
-                value={settings.pushNotifications}
-                onValueChange={() => toggleSetting('pushNotifications')}
-                trackColor={{ false: "#E5E7EB", true: "#FE8C0050" }}
-                thumbColor={settings.pushNotifications ? "#FE8C00" : "#9CA3AF"}
+                value={settings.pushEnabled}
+                onValueChange={() => toggleSetting('pushEnabled')}
+                trackColor={{ false: "#E5E7EB", true: "#10B98150" }}
+                thumbColor={settings.pushEnabled ? "#10B981" : "#9CA3AF"}
+              />
+            </View>
+            <View className="px-4 py-4 flex-row justify-between items-center border-b border-gray-100">
+              <View className="flex-row items-center">
+                <Ionicons name="cube-outline" size={20} color="#374151" />
+                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
+                  Livraisons
+                </Text>
+              </View>
+              <Switch
+                value={settings.notifDelivery}
+                onValueChange={() => toggleSetting('notifDelivery')}
+                trackColor={{ false: "#E5E7EB", true: "#10B98150" }}
+                thumbColor={settings.notifDelivery ? "#10B981" : "#9CA3AF"}
+              />
+            </View>
+            <View className="px-4 py-4 flex-row justify-between items-center border-b border-gray-100">
+              <View className="flex-row items-center">
+                <Ionicons name="chatbubble-outline" size={20} color="#374151" />
+                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
+                  Messages
+                </Text>
+              </View>
+              <Switch
+                value={settings.notifMessages}
+                onValueChange={() => toggleSetting('notifMessages')}
+                trackColor={{ false: "#E5E7EB", true: "#10B98150" }}
+                thumbColor={settings.notifMessages ? "#10B981" : "#9CA3AF"}
+              />
+            </View>
+            <View className="px-4 py-4 flex-row justify-between items-center border-b border-gray-100">
+              <View className="flex-row items-center">
+                <Ionicons name="sparkles-outline" size={20} color="#374151" />
+                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
+                  Nouveaux produits
+                </Text>
+              </View>
+              <Switch
+                value={settings.notifNewProducts}
+                onValueChange={() => toggleSetting('notifNewProducts')}
+                trackColor={{ false: "#E5E7EB", true: "#10B98150" }}
+                thumbColor={settings.notifNewProducts ? "#10B981" : "#9CA3AF"}
+              />
+            </View>
+            <View className="px-4 py-4 flex-row justify-between items-center border-b border-gray-100">
+              <View className="flex-row items-center">
+                <Ionicons name="megaphone-outline" size={20} color="#374151" />
+                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
+                  Publicités
+                </Text>
+              </View>
+              <Switch
+                value={settings.notifAdvertisements}
+                onValueChange={() => toggleSetting('notifAdvertisements')}
+                trackColor={{ false: "#E5E7EB", true: "#10B98150" }}
+                thumbColor={settings.notifAdvertisements ? "#10B981" : "#9CA3AF"}
               />
             </View>
             <View className="px-4 py-4 flex-row justify-between items-center">
               <View className="flex-row items-center">
-                <Ionicons name="mail-outline" size={20} color="#374151" />
+                <Ionicons name="sync-outline" size={20} color="#374151" />
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Notifications par email
+                  Mises à jour système
                 </Text>
               </View>
               <Switch
-                value={settings.emailNotifications}
-                onValueChange={() => toggleSetting('emailNotifications')}
-                trackColor={{ false: "#E5E7EB", true: "#FE8C0050" }}
-                thumbColor={settings.emailNotifications ? "#FE8C00" : "#9CA3AF"}
+                value={settings.notifSystemUpdates}
+                onValueChange={() => toggleSetting('notifSystemUpdates')}
+                trackColor={{ false: "#E5E7EB", true: "#10B98150" }}
+                thumbColor={settings.notifSystemUpdates ? "#10B981" : "#9CA3AF"}
               />
             </View>
           </View>
@@ -215,19 +331,33 @@ export default function SettingsScreen() {
           <View className="bg-white rounded-2xl">
             <View className="px-4 py-4 flex-row justify-between items-center border-b border-gray-100">
               <View className="flex-row items-center">
-                <Ionicons name="moon-outline" size={20} color="#374151" />
+                <Ionicons name="grid-outline" size={20} color="#374151" />
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Mode sombre
+                  Affichage grille
                 </Text>
               </View>
               <Switch
-                value={settings.darkMode}
-                onValueChange={() => toggleSetting('darkMode')}
-                trackColor={{ false: "#E5E7EB", true: "#FE8C0050" }}
-                thumbColor={settings.darkMode ? "#FE8C00" : "#9CA3AF"}
+                value={settings.productView === 'grid'}
+                onValueChange={() => toggleSetting('productView')}
+                trackColor={{ false: "#E5E7EB", true: "#10B98150" }}
+                thumbColor={settings.productView === 'grid' ? "#10B981" : "#9CA3AF"}
               />
             </View>
-            <TouchableOpacity className="px-4 py-4 flex-row justify-between items-center border-b border-gray-100">
+            <View className="px-4 py-4 flex-row justify-between items-center border-b border-gray-100">
+              <View className="flex-row items-center">
+                <Ionicons name="image-outline" size={20} color="#374151" />
+                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
+                  Images haute qualité
+                </Text>
+              </View>
+              <Switch
+                value={settings.highQualityImages}
+                onValueChange={() => toggleSetting('highQualityImages')}
+                trackColor={{ false: "#E5E7EB", true: "#10B98150" }}
+                thumbColor={settings.highQualityImages ? "#10B981" : "#9CA3AF"}
+              />
+            </View>
+            <TouchableOpacity className="px-4 py-4 flex-row justify-between items-center">
               <View className="flex-row items-center">
                 <Ionicons name="language-outline" size={20} color="#374151" />
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
@@ -237,20 +367,6 @@ export default function SettingsScreen() {
               <View className="flex-row items-center">
                 <Text className="text-base font-quicksand text-neutral-500 mr-2">
                   {settings.language}
-                </Text>
-                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity className="px-4 py-4 flex-row justify-between items-center">
-              <View className="flex-row items-center">
-                <Ionicons name="cash-outline" size={20} color="#374151" />
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Devise
-                </Text>
-              </View>
-              <View className="flex-row items-center">
-                <Text className="text-base font-quicksand text-neutral-500 mr-2">
-                  {settings.currency}
                 </Text>
                 <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
               </View>
@@ -266,30 +382,30 @@ export default function SettingsScreen() {
           <View className="bg-white rounded-2xl">
             <View className="px-4 py-4 flex-row justify-between items-center border-b border-gray-100">
               <View className="flex-row items-center">
-                <Ionicons name="location-outline" size={20} color="#374151" />
+                <Ionicons name="eye-outline" size={20} color="#374151" />
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Services de localisation
+                  Profil public
                 </Text>
               </View>
               <Switch
-                value={settings.locationServices}
-                onValueChange={() => toggleSetting('locationServices')}
-                trackColor={{ false: "#E5E7EB", true: "#FE8C0050" }}
-                thumbColor={settings.locationServices ? "#FE8C00" : "#9CA3AF"}
+                value={settings.publicProfile}
+                onValueChange={() => toggleSetting('publicProfile')}
+                trackColor={{ false: "#E5E7EB", true: "#10B98150" }}
+                thumbColor={settings.publicProfile ? "#10B981" : "#9CA3AF"}
               />
             </View>
             <View className="px-4 py-4 flex-row justify-between items-center border-b border-gray-100">
               <View className="flex-row items-center">
-                <Ionicons name="finger-print-outline" size={20} color="#374151" />
+                <Ionicons name="analytics-outline" size={20} color="#374151" />
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Authentification biométrique
+                  Analyse des données
                 </Text>
               </View>
               <Switch
-                value={settings.biometricAuth}
-                onValueChange={() => toggleSetting('biometricAuth')}
-                trackColor={{ false: "#E5E7EB", true: "#FE8C0050" }}
-                thumbColor={settings.biometricAuth ? "#FE8C00" : "#9CA3AF"}
+                value={settings.allowDataAnalytics}
+                onValueChange={() => toggleSetting('allowDataAnalytics')}
+                trackColor={{ false: "#E5E7EB", true: "#10B98150" }}
+                thumbColor={settings.allowDataAnalytics ? "#10B981" : "#9CA3AF"}
               />
             </View>
             <TouchableOpacity className="px-4 py-4">
@@ -304,7 +420,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* Bouton pour effacer les données */}
-        <View className="mt-8 mx-4 mb-8">
+        {/* <View className="mt-8 mx-4 mb-8">
           <TouchableOpacity
             onPress={handleClearData}
             className="bg-red-500/10 py-4 rounded-xl"
@@ -323,15 +439,121 @@ export default function SettingsScreen() {
               )}
             </View>
           </TouchableOpacity>
-        </View>
+        </View> */}
 
         {/* Version de l'application */}
-        <View className="mb-12 items-center">
+        <View className="mb-12 mt-9 items-center">
           <Text className="text-sm font-quicksand text-neutral-400">
-            Version 1.0.0
+            Axi Market 1.0.0
           </Text>
         </View>
       </ScrollView>
+
+      {/* Modal de confirmation pour effacer les données */}
+      <Modal
+        visible={clearDataModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setClearDataModal(false)}
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: 20,
+        }}>
+          <View style={{
+            backgroundColor: 'white',
+            borderRadius: 16,
+            padding: 24,
+            width: '100%',
+            maxWidth: 400,
+            alignItems: 'center',
+          }}>
+            {/* Icône d'alerte */}
+            <View style={{
+              width: 60,
+              height: 60,
+              borderRadius: 30,
+              backgroundColor: '#FEE2E2',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 16,
+            }}>
+              <Ionicons name="trash" size={32} color="#EF4444" />
+            </View>
+
+            {/* Titre */}
+            <Text style={{
+              fontSize: 20,
+              fontFamily: 'Quicksand-Bold',
+              color: '#333',
+              marginBottom: 8,
+              textAlign: 'center',
+            }}>
+              Effacer les données
+            </Text>
+
+            {/* Message */}
+            <Text style={{
+              fontSize: 14,
+              fontFamily: 'Quicksand-Regular',
+              color: '#666',
+              textAlign: 'center',
+              marginBottom: 24,
+              lineHeight: 20,
+            }}>
+              Êtes-vous sûr de vouloir effacer toutes vos données ? Cette action réinitialisera toutes vos préférences.
+            </Text>
+
+            {/* Boutons */}
+            <View style={{ flexDirection: 'row', gap: 12, width: '100%' }}>
+              {/* Bouton Annuler */}
+              <TouchableOpacity
+                onPress={() => setClearDataModal(false)}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#F3F4F6',
+                  paddingVertical: 12,
+                  borderRadius: 8,
+                  alignItems: 'center',
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={{
+                  color: '#666',
+                  fontSize: 16,
+                  fontFamily: 'Quicksand-SemiBold',
+                }}>
+                  Annuler
+                </Text>
+              </TouchableOpacity>
+
+              {/* Bouton Effacer */}
+              <TouchableOpacity
+                onPress={confirmClearData}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#EF4444',
+                  paddingVertical: 12,
+                  borderRadius: 8,
+                  alignItems: 'center',
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={{
+                  color: 'white',
+                  fontSize: 16,
+                  fontFamily: 'Quicksand-SemiBold',
+                }}>
+                  Effacer
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

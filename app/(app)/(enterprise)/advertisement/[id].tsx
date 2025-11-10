@@ -4,17 +4,17 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import {
-    Alert,
-    Animated,
-    Dimensions,
-    Easing,
-    Image,
-    SafeAreaView,
-    ScrollView,
-    Share,
-    Text,
-    TouchableOpacity,
-    View
+  Animated,
+  Dimensions,
+  Easing,
+  Image,
+  Modal,
+  SafeAreaView,
+  ScrollView,
+  Share,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AdvertisementService, { Advertisement } from "../../../../services/api/AdvertisementService";
@@ -32,6 +32,9 @@ export default function AdvertisementDetails() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
 
+  // État pour le modal d'erreur
+  const [errorModal, setErrorModal] = useState(false);
+
   useEffect(() => {
     const loadAdvertisementDetails = async () => {
       try {
@@ -41,11 +44,7 @@ export default function AdvertisementDetails() {
         setAdvertisement(adData);
       } catch (error) {
         console.error("❌ Erreur chargement publicité:", error);
-        Alert.alert(
-          "Erreur",
-          "Impossible de charger les détails de la publicité",
-          [{ text: "OK", onPress: () => router.back() }]
-        );
+        setErrorModal(true);
       } finally {
         setLoading(false);
       }
@@ -397,6 +396,59 @@ export default function AdvertisementDetails() {
         {/* Espace pour la navigation bottom */}
         <View style={{ height: 20 }} />
       </ScrollView>
+
+      {/* Modal d'erreur */}
+      <Modal
+        visible={errorModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          setErrorModal(false);
+          router.back();
+        }}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => {
+            setErrorModal(false);
+            router.back();
+          }}
+          className="flex-1 bg-black/50 justify-center items-center px-6"
+        >
+          <TouchableOpacity activeOpacity={1} className="bg-white rounded-3xl p-6 w-full max-w-sm">
+            {/* Icon d'erreur */}
+            <View className="items-center mb-4">
+              <View className="w-16 h-16 bg-red-100 rounded-full justify-center items-center">
+                <Ionicons name="alert-circle" size={32} color="#EF4444" />
+              </View>
+            </View>
+
+            {/* Titre */}
+            <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+              Erreur
+            </Text>
+
+            {/* Message */}
+            <Text className="text-base font-quicksand-medium text-neutral-600 text-center mb-6">
+              Impossible de charger les détails de la publicité
+            </Text>
+
+            {/* Bouton OK */}
+            <TouchableOpacity
+              onPress={() => {
+                setErrorModal(false);
+                router.back();
+              }}
+              className="bg-primary-500 py-3 rounded-xl"
+              activeOpacity={0.7}
+            >
+              <Text className="text-white font-quicksand-bold text-center">
+                OK
+              </Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }

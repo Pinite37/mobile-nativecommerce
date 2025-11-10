@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useToast } from '../../components/ui/ReanimatedToast/context';
 import { useAuth } from '../../contexts/AuthContext';
@@ -71,7 +71,7 @@ export default function SignInScreen() {
   };
 
   const handleSignUp = () => {
-    router.push('/(auth)/signup');
+    router.push('/(auth)/role-selection');
   };
 
   const handleForgotPassword = () => {
@@ -125,9 +125,11 @@ export default function SignInScreen() {
               value={email}
               onChangeText={setEmail}
               placeholder="Entrez votre email"
+              placeholderTextColor="#9CA3AF"
               keyboardType="email-address"
               autoCapitalize="none"
-              className="border border-neutral-200 rounded-xl px-4 py-4 text-base font-quicksand"
+              className="border border-neutral-200 rounded-xl px-4 py-4 text-base font-quicksand text-neutral-900"
+              style={{ color: '#111827' }}
             />
           </View>
 
@@ -141,12 +143,15 @@ export default function SignInScreen() {
                 value={password}
                 onChangeText={setPassword}
                 placeholder="Entrez votre mot de passe"
+                placeholderTextColor="#9CA3AF"
                 secureTextEntry={!showPassword}
-                className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 text-base font-quicksand"
+                className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 text-base font-quicksand text-neutral-900"
+                style={{ color: '#111827' }}
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-4"
+                activeOpacity={0.7}
               >
                 <Ionicons
                   name={showPassword ? 'eye-off' : 'eye'}
@@ -158,23 +163,27 @@ export default function SignInScreen() {
           </View>
 
           {/* Forgot Password */}
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={handleForgotPassword}
             className="self-end mb-8"
           >
             <Text className="text-primary font-quicksand-medium text-sm">
               Mot de passe oublié ?
             </Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           {/* Sign In Button */}
           <TouchableOpacity
             onPress={handleSignIn}
             disabled={isLoading}
-            className={`rounded-xl py-4 mb-6 ${
+            activeOpacity={1}
+            className={`rounded-xl py-4 mb-6 flex-row items-center justify-center ${
               isLoading ? 'bg-primary/70' : 'bg-primary'
             }`}
           >
+            {isLoading && (
+              <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 8 }} />
+            )}
             <Text className="text-white font-quicksand-semibold text-base text-center">
               {isLoading ? 'Connexion...' : 'Se connecter'}
             </Text>

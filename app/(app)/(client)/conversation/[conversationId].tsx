@@ -5,7 +5,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Alert,
   Animated,
   Easing,
   FlatList,
@@ -85,6 +84,12 @@ export default function ConversationDetails() {
     confirmText: string;
     confirmColor: string;
   } | null>(null);
+
+  // États pour les modals d'actions
+  const [messageActionsModal, setMessageActionsModal] = useState<{ visible: boolean; message: Message | null }>({ visible: false, message: null });
+  const [deleteOptionsModal, setDeleteOptionsModal] = useState<{ visible: boolean; messageId: string | null }>({ visible: false, messageId: null });
+  const [attachmentModal, setAttachmentModal] = useState(false);
+  const [retryModal, setRetryModal] = useState<{ visible: boolean; message: Message | null }>({ visible: false, message: null });
 
   // Récupérer l'ID de l'utilisateur connecté depuis le contexte d'auth
   const getCurrentUserId = () => {
@@ -547,6 +552,29 @@ export default function ConversationDetails() {
             ? { ...sentMessage.message, _sendingStatus: 'sent' as const }
             : msg
         ));
+
+        // 🔥 IMPORTANT: Mettre à jour le cache avec le nouveau message
+        const cached = conversationCache.get(conversationId!);
+        if (cached) {
+          const updatedMessages = cached.messages.map(msg => 
+            msg._localId === localId 
+              ? { ...sentMessage.message, _sendingStatus: 'sent' as const }
+              : msg
+          );
+          
+          // Si le message n'était pas dans le cache (nouveau message), l'ajouter
+          const messageExists = updatedMessages.some(msg => msg._id === sentMessage.message._id);
+          if (!messageExists) {
+            updatedMessages.push({ ...sentMessage.message, _sendingStatus: 'sent' as const });
+          }
+
+          conversationCache.set(conversationId!, {
+            ...cached,
+            messages: updatedMessages,
+            timestamp: Date.now()
+          });
+          console.log('✅ Cache mis à jour avec le nouveau message');
+        }
       }
 
       setSending(false);
@@ -666,7 +694,7 @@ export default function ConversationDetails() {
       }
     } catch (error) {
       console.error('Erreur sélection image:', error);
-      Alert.alert('Erreur', 'Impossible de sélectionner l\'image');
+      showNotification('error', 'Erreur', 'Impossible de sélectionner l\'image');
     }
   };
 
@@ -694,7 +722,7 @@ export default function ConversationDetails() {
       }
     } catch (error) {
       console.error('Erreur prise photo:', error);
-      Alert.alert('Erreur', 'Impossible de prendre la photo');
+      showNotification('error', 'Erreur', 'Impossible de prendre la photo');
     }
   };
 
@@ -843,19 +871,7 @@ export default function ConversationDetails() {
     if (message._sendingStatus === 'failed') {
       return (
         <TouchableOpacity 
-          onPress={() => {
-            Alert.alert(
-              'Échec d\'envoi',
-              message._sendError || 'Le message n\'a pas pu être envoyé',
-              [
-                { text: 'Annuler', style: 'cancel' },
-                { 
-                  text: 'Renvoyer', 
-                  onPress: () => retryFailedMessage(message) 
-                }
-              ]
-            );
-          }}
+          onPress={() => setRetryModal({ visible: true, message })}
           className="ml-1"
         >
           <Ionicons name="information-circle" size={14} color="#EF4444" />
@@ -947,17 +963,7 @@ export default function ConversationDetails() {
             <TouchableOpacity
               onLongPress={() => {
                 if (!isDeleted) {
-                  Alert.alert(
-                    'Actions du message',
-                    '',
-                    [
-                      { text: 'Annuler', style: 'cancel' },
-                      { text: 'Répondre', onPress: () => setReplyingTo(message) },
-                      ...(isCurrentUser ? [
-                        { text: 'Supprimer', style: 'destructive' as const, onPress: () => showDeleteConfirmation(message._id) },
-                      ] : []),
-                    ]
-                  );
+                  setMessageActionsModal({ visible: true, message });
                 }
               }}
               activeOpacity={0.9}
@@ -1067,27 +1073,9 @@ export default function ConversationDetails() {
     setConfirmationAction(null);
   };
 
-  const executeDeleteAction = async () => {
-    if (!confirmationAction) return;
-
-    const { messageId } = confirmationAction;
-    closeConfirmation();
-
-    try {
-      // Afficher les options de suppression
-      Alert.alert(
-        'Supprimer le message',
-        'Choisissez comment supprimer le message :',
-        [
-          { text: 'Annuler', style: 'cancel' },
-          { text: 'Pour moi seulement', onPress: () => deleteMessage(messageId, false) },
-          { text: 'Pour tout le monde', style: 'destructive', onPress: () => deleteMessage(messageId, true) },
-        ]
-      );
-    } catch (error) {
-      console.error('❌ Erreur lors de l\'affichage des options:', error);
-      showNotification('error', 'Erreur', 'Impossible d\'afficher les options de suppression');
-    }
+  const executeDeleteAction = async (messageId: string) => {
+    // Afficher les options de suppression
+    setDeleteOptionsModal({ visible: true, messageId });
   };
 
   // Séparateurs de date
@@ -1338,20 +1326,11 @@ export default function ConversationDetails() {
             }`}>
               {/* Bouton d'attachement */}
               <TouchableOpacity
-                onPress={() => {
-                  Alert.alert(
-                    'Ajouter une pièce jointe',
-                    'Choisissez une option',
-                    [
-                      { text: 'Annuler', style: 'cancel' },
-                      { text: 'Prendre une photo', onPress: takePhoto },
-                      { text: 'Choisir depuis la galerie', onPress: pickImageFromGallery },
-                    ]
-                  );
-                }}
+                onPress={() => setAttachmentModal(true)}
                 className="w-10 h-10 bg-white rounded-full justify-center items-center mr-2 shadow-sm"
                 disabled={sending}
                 style={{ opacity: sending ? 0.6 : 1 }}
+                activeOpacity={0.7}
               >
                 <Ionicons name="add" size={20} color="#9CA3AF" />
               </TouchableOpacity>
@@ -1558,20 +1537,11 @@ export default function ConversationDetails() {
             }`}>
               {/* Bouton d'attachement */}
               <TouchableOpacity
-                onPress={() => {
-                  Alert.alert(
-                    'Ajouter une pièce jointe',
-                    'Choisissez une option',
-                    [
-                      { text: 'Annuler', style: 'cancel' },
-                      { text: 'Prendre une photo', onPress: takePhoto },
-                      { text: 'Choisir depuis la galerie', onPress: pickImageFromGallery },
-                    ]
-                  );
-                }}
+                onPress={() => setAttachmentModal(true)}
                 className="w-10 h-10 bg-white rounded-full justify-center items-center mr-2 shadow-sm"
                 disabled={sending}
                 style={{ opacity: sending ? 0.6 : 1 }}
+                activeOpacity={0.7}
               >
                 <Ionicons name="add" size={20} color="#9CA3AF" />
               </TouchableOpacity>
@@ -1734,7 +1704,13 @@ export default function ConversationDetails() {
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={executeDeleteAction}
+                  onPress={() => {
+                    const messageId = confirmationAction?.messageId;
+                    if (messageId) {
+                      closeConfirmation();
+                      executeDeleteAction(messageId);
+                    }
+                  }}
                   className="flex-1 py-4 rounded-2xl items-center"
                   style={{ backgroundColor: confirmationAction?.confirmColor }}
                 >
@@ -1758,6 +1734,359 @@ export default function ConversationDetails() {
           onClose={hideNotification}
         />
       )}
+
+      {/* Modal Actions du message */}
+      <Modal
+        visible={messageActionsModal.visible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setMessageActionsModal({ visible: false, message: null })}
+      >
+        <TouchableOpacity
+          className="flex-1 bg-black/50"
+          activeOpacity={1}
+          onPress={() => setMessageActionsModal({ visible: false, message: null })}
+        >
+          <View className="flex-1 justify-end">
+            <TouchableOpacity
+              className="bg-white rounded-t-3xl"
+              activeOpacity={1}
+              onPress={() => {}}
+            >
+              {/* Handle bar */}
+              <View className="w-full items-center pt-3 pb-2">
+                <View className="w-12 h-1 bg-neutral-300 rounded-full" />
+              </View>
+
+              {/* Header */}
+              <View className="px-6 pb-4 border-b border-neutral-100">
+                <Text className="text-lg font-quicksand-bold text-neutral-800">
+                  Actions du message
+                </Text>
+              </View>
+
+              {/* Options */}
+              <View className="px-6 py-2">
+                <TouchableOpacity
+                  onPress={() => {
+                    const msg = messageActionsModal.message;
+                    setMessageActionsModal({ visible: false, message: null });
+                    if (msg) setReplyingTo(msg);
+                  }}
+                  className="flex-row items-center py-4 border-b border-neutral-50"
+                  activeOpacity={0.7}
+                >
+                  <View className="w-10 h-10 rounded-full bg-blue-50 items-center justify-center mr-4">
+                    <Ionicons name="return-up-forward" size={20} color="#3B82F6" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-base font-quicksand-semibold text-neutral-800">
+                      Répondre
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+                </TouchableOpacity>
+
+                {messageActionsModal.message && messageActionsModal.message.sender._id === user?._id && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      const msgId = messageActionsModal.message?._id;
+                      setMessageActionsModal({ visible: false, message: null });
+                      if (msgId) showDeleteConfirmation(msgId);
+                    }}
+                    className="flex-row items-center py-4"
+                    activeOpacity={0.7}
+                  >
+                    <View className="w-10 h-10 rounded-full bg-red-50 items-center justify-center mr-4">
+                      <Ionicons name="trash" size={20} color="#EF4444" />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-base font-quicksand-semibold text-red-500">
+                        Supprimer
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {/* Cancel Button */}
+              <View className="px-6 pb-6 pt-2">
+                <TouchableOpacity
+                  onPress={() => setMessageActionsModal({ visible: false, message: null })}
+                  className="w-full bg-neutral-100 py-4 rounded-2xl items-center"
+                  activeOpacity={0.7}
+                >
+                  <Text className="text-base font-quicksand-semibold text-neutral-700">
+                    Annuler
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Modal Options de suppression */}
+      <Modal
+        visible={deleteOptionsModal.visible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setDeleteOptionsModal({ visible: false, messageId: null })}
+      >
+        <TouchableOpacity
+          className="flex-1 bg-black/50"
+          activeOpacity={1}
+          onPress={() => setDeleteOptionsModal({ visible: false, messageId: null })}
+        >
+          <View className="flex-1 justify-end">
+            <TouchableOpacity
+              className="bg-white rounded-t-3xl"
+              activeOpacity={1}
+              onPress={() => {}}
+            >
+              {/* Handle bar */}
+              <View className="w-full items-center pt-3 pb-2">
+                <View className="w-12 h-1 bg-neutral-300 rounded-full" />
+              </View>
+
+              {/* Header */}
+              <View className="px-6 pb-4 border-b border-neutral-100">
+                <Text className="text-lg font-quicksand-bold text-neutral-800">
+                  Supprimer le message
+                </Text>
+                <Text className="text-sm text-neutral-500 font-quicksand-medium mt-1">
+                  Choisissez une option
+                </Text>
+              </View>
+
+              {/* Options */}
+              <View className="px-6 py-2">
+                <TouchableOpacity
+                  onPress={() => {
+                    const msgId = deleteOptionsModal.messageId;
+                    setDeleteOptionsModal({ visible: false, messageId: null });
+                    if (msgId) deleteMessage(msgId, false);
+                  }}
+                  className="flex-row items-center py-4 border-b border-neutral-50"
+                  activeOpacity={0.7}
+                >
+                  <View className="w-10 h-10 rounded-full bg-orange-50 items-center justify-center mr-4">
+                    <Ionicons name="eye-off" size={20} color="#F97316" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-base font-quicksand-semibold text-neutral-800">
+                      Pour moi seulement
+                    </Text>
+                    <Text className="text-sm text-neutral-500 font-quicksand-medium">
+                      Le message sera supprimé uniquement pour vous
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    const msgId = deleteOptionsModal.messageId;
+                    setDeleteOptionsModal({ visible: false, messageId: null });
+                    if (msgId) deleteMessage(msgId, true);
+                  }}
+                  className="flex-row items-center py-4"
+                  activeOpacity={0.7}
+                >
+                  <View className="w-10 h-10 rounded-full bg-red-50 items-center justify-center mr-4">
+                    <Ionicons name="trash" size={20} color="#EF4444" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-base font-quicksand-semibold text-red-500">
+                      Pour tout le monde
+                    </Text>
+                    <Text className="text-sm text-neutral-500 font-quicksand-medium">
+                      Le message sera supprimé pour tous les participants
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Cancel Button */}
+              <View className="px-6 pb-6 pt-2">
+                <TouchableOpacity
+                  onPress={() => setDeleteOptionsModal({ visible: false, messageId: null })}
+                  className="w-full bg-neutral-100 py-4 rounded-2xl items-center"
+                  activeOpacity={0.7}
+                >
+                  <Text className="text-base font-quicksand-semibold text-neutral-700">
+                    Annuler
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Modal Pièce jointe */}
+      <Modal
+        visible={attachmentModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setAttachmentModal(false)}
+      >
+        <TouchableOpacity
+          className="flex-1 bg-black/50"
+          activeOpacity={1}
+          onPress={() => setAttachmentModal(false)}
+        >
+          <View className="flex-1 justify-end">
+            <TouchableOpacity
+              className="bg-white rounded-t-3xl"
+              activeOpacity={1}
+              onPress={() => {}}
+            >
+              {/* Handle bar */}
+              <View className="w-full items-center pt-3 pb-2">
+                <View className="w-12 h-1 bg-neutral-300 rounded-full" />
+              </View>
+
+              {/* Header */}
+              <View className="px-6 pb-4 border-b border-neutral-100">
+                <Text className="text-lg font-quicksand-bold text-neutral-800">
+                  Ajouter une pièce jointe
+                </Text>
+                <Text className="text-sm text-neutral-500 font-quicksand-medium mt-1">
+                  Choisissez une option
+                </Text>
+              </View>
+
+              {/* Options */}
+              <View className="px-6 py-2">
+                <TouchableOpacity
+                  onPress={() => {
+                    setAttachmentModal(false);
+                    takePhoto();
+                  }}
+                  className="flex-row items-center py-4 border-b border-neutral-50"
+                  activeOpacity={0.7}
+                >
+                  <View className="w-10 h-10 rounded-full bg-blue-50 items-center justify-center mr-4">
+                    <Ionicons name="camera" size={20} color="#3B82F6" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-base font-quicksand-semibold text-neutral-800">
+                      Prendre une photo
+                    </Text>
+                    <Text className="text-sm text-neutral-500 font-quicksand-medium">
+                      Utiliser l&apos;appareil photo
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    setAttachmentModal(false);
+                    pickImageFromGallery();
+                  }}
+                  className="flex-row items-center py-4"
+                  activeOpacity={0.7}
+                >
+                  <View className="w-10 h-10 rounded-full bg-green-50 items-center justify-center mr-4">
+                    <Ionicons name="images" size={20} color="#10B981" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-base font-quicksand-semibold text-neutral-800">
+                      Choisir depuis la galerie
+                    </Text>
+                    <Text className="text-sm text-neutral-500 font-quicksand-medium">
+                      Sélectionner depuis vos photos
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Cancel Button */}
+              <View className="px-6 pb-6 pt-2">
+                <TouchableOpacity
+                  onPress={() => setAttachmentModal(false)}
+                  className="w-full bg-neutral-100 py-4 rounded-2xl items-center"
+                  activeOpacity={0.7}
+                >
+                  <Text className="text-base font-quicksand-semibold text-neutral-700">
+                    Annuler
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Modal Renvoyer message échoué */}
+      <Modal
+        visible={retryModal.visible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setRetryModal({ visible: false, message: null })}
+      >
+        <TouchableOpacity
+          className="flex-1 bg-black/50"
+          activeOpacity={1}
+          onPress={() => setRetryModal({ visible: false, message: null })}
+        >
+          <View className="flex-1 justify-center items-center px-6">
+            <TouchableOpacity
+              className="bg-white rounded-3xl w-full max-w-sm"
+              activeOpacity={1}
+              onPress={() => {}}
+            >
+              {/* Icon */}
+              <View className="items-center pt-8 pb-4">
+                <View className="w-16 h-16 rounded-full bg-red-100 items-center justify-center">
+                  <Ionicons name="alert-circle" size={32} color="#EF4444" />
+                </View>
+              </View>
+
+              {/* Content */}
+              <View className="px-6 pb-6">
+                <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+                  Échec d&apos;envoi
+                </Text>
+                <Text className="text-base text-neutral-600 font-quicksand-medium text-center leading-5">
+                  {retryModal.message?._sendError || 'Le message n\'a pas pu être envoyé'}
+                </Text>
+              </View>
+
+              {/* Actions */}
+              <View className="flex-row px-6 pb-6 gap-3">
+                <TouchableOpacity
+                  onPress={() => setRetryModal({ visible: false, message: null })}
+                  className="flex-1 bg-neutral-100 py-4 rounded-2xl items-center"
+                  activeOpacity={0.7}
+                >
+                  <Text className="text-base font-quicksand-semibold text-neutral-700">
+                    Annuler
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    const msg = retryModal.message;
+                    setRetryModal({ visible: false, message: null });
+                    if (msg) retryFailedMessage(msg);
+                  }}
+                  className="flex-1 bg-primary-500 py-4 rounded-2xl items-center"
+                  activeOpacity={0.7}
+                >
+                  <Text className="text-base font-quicksand-semibold text-white">
+                    Renvoyer
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }

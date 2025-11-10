@@ -453,7 +453,7 @@ export default function ClientMessagesPage() {
                             <Text className="text-lg font-quicksand-semibold text-neutral-800" numberOfLines={1}>
                                 {participantName}
                             </Text>
-                            <Text className="text-xs text-neutral-200 font-quicksand-medium">
+                            <Text className="text-xs text-neutral-400 font-quicksand-medium">
                                 {lastMessageTime}
                             </Text>
                         </View>
@@ -478,7 +478,7 @@ export default function ClientMessagesPage() {
 
                         {/* Dernier message */}
                         <Text
-                            className={`text-sm ${isUnread ? 'text-neutral-800 font-quicksand-semibold' : 'text-neutral-600 font-quicksand-regular'}`}
+                            className={`text-sm ${isUnread ? 'text-neutral-800 font-quicksand-semibold' : 'text-neutral-600 font-quicksand-light'}`}
                             numberOfLines={2}
                         >
                             {String(messagePreview)}

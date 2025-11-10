@@ -5,16 +5,16 @@ import { useFocusEffect } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import {
-    Alert,
-    Animated,
-    Easing,
-    Image,
-    RefreshControl,
-    SafeAreaView,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View
+  Animated,
+  Easing,
+  Image,
+  Modal,
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 
 import { FavoriteItem } from "@/types/product";
@@ -24,6 +24,16 @@ export default function EnterpriseFavoritesScreen() {
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  // États pour les modals
+  const [deleteModal, setDeleteModal] = useState<{ visible: boolean; productId: string | null }>({
+    visible: false,
+    productId: null
+  });
+  const [errorModal, setErrorModal] = useState<{ visible: boolean; message: string }>({
+    visible: false,
+    message: ''
+  });
 
   // Fonction pour récupérer les produits favoris
   const fetchFavoriteProducts = async (isRefresh: boolean = false) => {
@@ -48,31 +58,27 @@ export default function EnterpriseFavoritesScreen() {
 
   // Fonction pour supprimer un produit des favoris
   const handleRemoveFavorite = async (productId: string) => {
-    Alert.alert(
-      "Retirer des favoris",
-      "Êtes-vous sûr de vouloir retirer ce produit de vos favoris ?",
-      [
-        {
-          text: "Annuler",
-          style: "cancel"
-        },
-        {
-          text: "Retirer",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await ProductService.removeProductFromFavorites(productId);
+    setDeleteModal({ visible: true, productId });
+  };
 
-              // Mise à jour locale
-              setFavoriteItems(prev => prev.filter(item => item.product._id !== productId));
-            } catch (error) {
-              console.error('Erreur lors de la suppression:', error);
-              Alert.alert('Erreur', 'Impossible de retirer ce produit des favoris.');
-            }
-          }
-        }
-      ]
-    );
+  const confirmRemoveFavorite = async () => {
+    if (!deleteModal.productId) return;
+
+    const productId = deleteModal.productId;
+    setDeleteModal({ visible: false, productId: null });
+
+    try {
+      await ProductService.removeProductFromFavorites(productId);
+
+      // Mise à jour locale
+      setFavoriteItems(prev => prev.filter(item => item.product._id !== productId));
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      setErrorModal({
+        visible: true,
+        message: 'Impossible de retirer ce produit des favoris.'
+      });
+    }
   };
 
   // Fonction de rafraîchissement
@@ -332,6 +338,105 @@ export default function EnterpriseFavoritesScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Modal de confirmation de suppression */}
+      <Modal
+        visible={deleteModal.visible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDeleteModal({ visible: false, productId: null })}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setDeleteModal({ visible: false, productId: null })}
+          className="flex-1 bg-black/50 justify-center items-center px-6"
+        >
+          <TouchableOpacity activeOpacity={1} className="bg-white rounded-3xl p-6 w-full max-w-sm">
+            {/* Icon de coeur */}
+            <View className="items-center mb-4">
+              <View className="w-16 h-16 bg-red-100 rounded-full justify-center items-center">
+                <Ionicons name="heart-dislike" size={32} color="#EF4444" />
+              </View>
+            </View>
+
+            {/* Titre */}
+            <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+              Retirer des favoris
+            </Text>
+
+            {/* Message */}
+            <Text className="text-base font-quicksand-medium text-neutral-600 text-center mb-6">
+              Êtes-vous sûr de vouloir retirer ce produit de vos favoris ?
+            </Text>
+
+            {/* Actions */}
+            <View className="flex-row gap-3">
+              <TouchableOpacity
+                onPress={() => setDeleteModal({ visible: false, productId: null })}
+                className="flex-1 bg-neutral-100 py-3 rounded-xl"
+                activeOpacity={0.7}
+              >
+                <Text className="text-neutral-700 font-quicksand-bold text-center">
+                  Annuler
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={confirmRemoveFavorite}
+                className="flex-1 bg-red-500 py-3 rounded-xl"
+                activeOpacity={0.7}
+              >
+                <Text className="text-white font-quicksand-bold text-center">
+                  Retirer
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Modal d'erreur */}
+      <Modal
+        visible={errorModal.visible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setErrorModal({ visible: false, message: '' })}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setErrorModal({ visible: false, message: '' })}
+          className="flex-1 bg-black/50 justify-center items-center px-6"
+        >
+          <TouchableOpacity activeOpacity={1} className="bg-white rounded-3xl p-6 w-full max-w-sm">
+            {/* Icon d'erreur */}
+            <View className="items-center mb-4">
+              <View className="w-16 h-16 bg-red-100 rounded-full justify-center items-center">
+                <Ionicons name="alert-circle" size={32} color="#EF4444" />
+              </View>
+            </View>
+
+            {/* Titre */}
+            <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+              Erreur
+            </Text>
+
+            {/* Message */}
+            <Text className="text-base font-quicksand-medium text-neutral-600 text-center mb-6">
+              {errorModal.message}
+            </Text>
+
+            {/* Bouton OK */}
+            <TouchableOpacity
+              onPress={() => setErrorModal({ visible: false, message: '' })}
+              className="bg-primary py-3 rounded-xl"
+              activeOpacity={0.7}
+            >
+              <Text className="text-white font-quicksand-bold text-center">
+                OK
+              </Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }

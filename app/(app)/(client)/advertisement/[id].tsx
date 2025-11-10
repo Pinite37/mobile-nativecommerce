@@ -4,11 +4,11 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Alert,
   Animated,
   Dimensions,
   Easing,
   Image,
+  Modal,
   SafeAreaView,
   ScrollView,
   Share,
@@ -28,6 +28,7 @@ export default function AdvertisementDetails() {
   const [advertisement, setAdvertisement] = useState<Advertisement | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showErrorModal, setShowErrorModal] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -39,11 +40,7 @@ export default function AdvertisementDetails() {
         setAdvertisement(adData);
       } catch (error) {
         console.error("❌ Erreur chargement publicité:", error);
-        Alert.alert(
-          "Erreur",
-          "Impossible de charger les détails de la publicité",
-          [{ text: "OK", onPress: () => router.back() }]
-        );
+        setShowErrorModal(true);
       } finally {
         setLoading(false);
       }
@@ -128,72 +125,66 @@ export default function AdvertisementDetails() {
     );
   };
 
-  if (loading) {
-    return (
-      <SafeAreaView className="flex-1 bg-white">
-        <ExpoStatusBar style="light" />
-
-        {/* Header Skeleton */}
-        <View className="flex-row items-center justify-between px-4 py-3 border-b border-neutral-100">
-          <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
-          <ShimmerBlock style={{ width: 150, height: 20, borderRadius: 10 }} />
-          <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
-        </View>
-
-        {/* Image Skeleton */}
-        <ShimmerBlock style={{ width: '100%', height: 280 }} />
-
-        {/* Content Skeleton */}
-        <View className="px-4 py-6">
-          <ShimmerBlock style={{ width: '80%', height: 28, borderRadius: 14, marginBottom: 12 }} />
-          <ShimmerBlock style={{ width: '100%', height: 16, borderRadius: 8, marginBottom: 8 }} />
-          <ShimmerBlock style={{ width: '60%', height: 16, borderRadius: 8, marginBottom: 24 }} />
-
-          <View className="bg-neutral-50 rounded-2xl p-4 mb-6">
-            <ShimmerBlock style={{ width: '40%', height: 20, borderRadius: 10, marginBottom: 16 }} />
-            <ShimmerBlock style={{ width: '70%', height: 16, borderRadius: 8, marginBottom: 12 }} />
-            <ShimmerBlock style={{ width: '50%', height: 16, borderRadius: 8, marginBottom: 12 }} />
-            <ShimmerBlock style={{ width: '60%', height: 16, borderRadius: 8 }} />
-          </View>
-
-          <View className="space-y-3">
-            <ShimmerBlock style={{ width: '100%', height: 56, borderRadius: 16 }} />
-            <ShimmerBlock style={{ width: '100%', height: 56, borderRadius: 16 }} />
-          </View>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (!advertisement) {
-    return (
-      <SafeAreaView className="flex-1 bg-white">
-        <ExpoStatusBar style="light" />
-        <View className="flex-1 justify-center items-center px-6">
-          <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
-          <Text className="text-lg font-quicksand-bold text-neutral-800 mt-4">
-            Publicité introuvable
-          </Text>
-          <Text className="text-neutral-600 font-quicksand-medium text-center mt-2">
-            Cette publicité n&apos;est plus disponible ou a expiré.
-          </Text>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="mt-6 bg-primary-500 px-6 py-3 rounded-full"
-          >
-            <Text className="text-white font-quicksand-bold">Retour</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <ExpoStatusBar style="light" />
+    <>
+      {loading ? (
+        <SafeAreaView className="flex-1 bg-white">
+          <ExpoStatusBar style="light" />
 
-      {/* Header amélioré */}
-      <LinearGradient
+          {/* Header Skeleton */}
+          <View className="flex-row items-center justify-between px-4 py-3 border-b border-neutral-100">
+            <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
+            <ShimmerBlock style={{ width: 150, height: 20, borderRadius: 10 }} />
+            <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
+          </View>
+
+          {/* Image Skeleton */}
+          <ShimmerBlock style={{ width: '100%', height: 280 }} />
+
+          {/* Content Skeleton */}
+          <View className="px-4 py-6">
+            <ShimmerBlock style={{ width: '80%', height: 28, borderRadius: 14, marginBottom: 12 }} />
+            <ShimmerBlock style={{ width: '100%', height: 16, borderRadius: 8, marginBottom: 8 }} />
+            <ShimmerBlock style={{ width: '60%', height: 16, borderRadius: 8, marginBottom: 24 }} />
+
+            <View className="bg-neutral-50 rounded-2xl p-4 mb-6">
+              <ShimmerBlock style={{ width: '40%', height: 20, borderRadius: 10, marginBottom: 16 }} />
+              <ShimmerBlock style={{ width: '70%', height: 16, borderRadius: 8, marginBottom: 12 }} />
+              <ShimmerBlock style={{ width: '50%', height: 16, borderRadius: 8, marginBottom: 12 }} />
+              <ShimmerBlock style={{ width: '60%', height: 16, borderRadius: 8 }} />
+            </View>
+
+            <View className="space-y-3">
+              <ShimmerBlock style={{ width: '100%', height: 56, borderRadius: 16 }} />
+              <ShimmerBlock style={{ width: '100%', height: 56, borderRadius: 16 }} />
+            </View>
+          </View>
+        </SafeAreaView>
+      ) : !advertisement ? (
+        <SafeAreaView className="flex-1 bg-white">
+          <ExpoStatusBar style="light" />
+          <View className="flex-1 justify-center items-center px-6">
+            <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
+            <Text className="text-lg font-quicksand-bold text-neutral-800 mt-4">
+              Publicité introuvable
+            </Text>
+            <Text className="text-neutral-600 font-quicksand-medium text-center mt-2">
+              Cette publicité n&apos;est plus disponible ou a expiré.
+            </Text>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="mt-6 bg-primary-500 px-6 py-3 rounded-full"
+            >
+              <Text className="text-white font-quicksand-bold">Retour</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      ) : (
+        <SafeAreaView className="flex-1 bg-white">
+          <ExpoStatusBar style="light" />
+
+          {/* Header amélioré */}
+          <LinearGradient
         colors={['#10B981', '#34D399']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
@@ -394,7 +385,51 @@ export default function AdvertisementDetails() {
 
         {/* Espace pour la navigation bottom */}
         <View style={{ height: 20 }} />
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+      )}
+
+      {/* Modal d'erreur - Toujours rendu */}
+      <Modal
+        visible={showErrorModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowErrorModal(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50 px-4">
+          <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
+            {/* Icône */}
+            <View className="items-center mb-4">
+              <View className="w-16 h-16 bg-red-100 rounded-full justify-center items-center">
+                <Ionicons name="alert-circle" size={32} color="#EF4444" />
+              </View>
+            </View>
+
+            {/* Titre */}
+            <Text className="text-xl font-quicksand-bold text-neutral-800 mb-2 text-center">
+              Erreur
+            </Text>
+
+            {/* Message */}
+            <Text className="text-base text-neutral-600 font-quicksand-medium mb-6 text-center">
+              Impossible de charger les détails de la publicité
+            </Text>
+
+            {/* Bouton */}
+            <TouchableOpacity
+              className="bg-red-500 rounded-xl py-3"
+              onPress={() => {
+                setShowErrorModal(false);
+                router.back();
+              }}
+            >
+              <Text className="text-white font-quicksand-semibold text-center">
+                OK
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 }

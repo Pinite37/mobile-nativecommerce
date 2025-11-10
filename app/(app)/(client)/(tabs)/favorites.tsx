@@ -5,10 +5,10 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
-  Alert,
   Animated,
   Easing,
   Image,
+  Modal,
   RefreshControl,
   SafeAreaView,
   ScrollView,
@@ -25,6 +25,8 @@ export default function FavoritesScreen() {
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [productToRemove, setProductToRemove] = useState<string | null>(null);
 
   // Fonction pour récupérer les produits favoris
   const fetchFavoriteProducts = async (isRefresh: boolean = false) => {
@@ -47,33 +49,37 @@ export default function FavoritesScreen() {
     }
   };
 
-  // Fonction pour supprimer un produit des favoris
-  const handleRemoveFavorite = async (productId: string) => {
-    Alert.alert(
-      "Retirer des favoris",
-      "Êtes-vous sûr de vouloir retirer ce produit de vos favoris ?",
-      [
-        {
-          text: "Annuler",
-          style: "cancel"
-        },
-        {
-          text: "Retirer",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await ProductService.removeProductFromFavorites(productId);
-              
-              // Mise à jour locale
-              setFavoriteItems(prev => prev.filter(item => item.product._id !== productId));
-            } catch (error) {
-              console.error('Erreur lors de la suppression:', error);
-              Alert.alert('Erreur', 'Impossible de retirer ce produit des favoris.');
-            }
-          }
-        }
-      ]
-    );
+  // Fonction pour ouvrir le modal de confirmation
+  const handleRemoveFavorite = (productId: string) => {
+    setProductToRemove(productId);
+    setConfirmModalVisible(true);
+  };
+
+  // Fonction pour confirmer la suppression
+  const confirmRemoveFavorite = async () => {
+    if (!productToRemove) return;
+
+    try {
+      await ProductService.removeProductFromFavorites(productToRemove);
+      
+      // Mise à jour locale
+      setFavoriteItems(prev => prev.filter(item => item.product._id !== productToRemove));
+      
+      // Fermer le modal
+      setConfirmModalVisible(false);
+      setProductToRemove(null);
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      // Vous pouvez ajouter un toast d'erreur ici si vous le souhaitez
+      setConfirmModalVisible(false);
+      setProductToRemove(null);
+    }
+  };
+
+  // Fonction pour annuler la suppression
+  const cancelRemoveFavorite = () => {
+    setConfirmModalVisible(false);
+    setProductToRemove(null);
   };
 
   // Fonction de rafraîchissement
@@ -330,6 +336,55 @@ export default function FavoritesScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Modal de confirmation */}
+      <Modal
+        visible={confirmModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={cancelRemoveFavorite}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50 px-4">
+          <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
+            {/* Icône */}
+            <View className="items-center mb-4">
+              <View className="w-16 h-16 bg-red-100 rounded-full justify-center items-center">
+                <Ionicons name="heart-dislike" size={32} color="#EF4444" />
+              </View>
+            </View>
+
+            {/* Titre */}
+            <Text className="text-xl font-quicksand-bold text-neutral-800 mb-2 text-center">
+              Retirer des favoris
+            </Text>
+
+            {/* Message */}
+            <Text className="text-base text-neutral-600 font-quicksand-medium mb-6 text-center">
+              Êtes-vous sûr de vouloir retirer ce produit de vos favoris ?
+            </Text>
+
+            {/* Boutons */}
+            <View className="flex-row space-x-3">
+              <TouchableOpacity
+                className="flex-1 bg-neutral-100 rounded-xl py-3"
+                onPress={cancelRemoveFavorite}
+              >
+                <Text className="text-neutral-700 font-quicksand-semibold text-center">
+                  Annuler
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="flex-1 bg-red-500 rounded-xl py-3"
+                onPress={confirmRemoveFavorite}
+              >
+                <Text className="text-white font-quicksand-semibold text-center">
+                  Retirer
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

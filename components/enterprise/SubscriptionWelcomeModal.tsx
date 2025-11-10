@@ -3,15 +3,18 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Modal,
-    SafeAreaView,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Modal,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import { SubscriptionProvider, useSubscription } from '../../contexts/SubscriptionContext';
 import SubscriptionService, { Plan } from '../../services/api/SubscriptionService';
+import { useToast as useReanimatedToast } from '../ui/ReanimatedToast/context';
+import { ToastProvider } from '../ui/ReanimatedToast/toast-provider';
 
 interface SubscriptionWelcomeModalProps {
   visible: boolean;
@@ -19,15 +22,18 @@ interface SubscriptionWelcomeModalProps {
   userName?: string;
 }
 
-export const SubscriptionWelcomeModal: React.FC<SubscriptionWelcomeModalProps> = ({
+// Composant interne qui utilise les hooks de contexte
+const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
   visible,
   onClose,
   userName,
 }) => {
+  const { showToast } = useReanimatedToast();
+  const { activateTrialPlan: activateTrialFromContext } = useSubscription();
   const [loading, setLoading] = useState(false);
   const [loadingPlans, setLoadingPlans] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [trialPlan, setTrialPlan] = useState<Plan | null>(null);
+  const [activationProgress, setActivationProgress] = useState<string>('');
 
   // Charger les plans et trouver le plan TRIAL
   useEffect(() => {
@@ -138,34 +144,89 @@ export const SubscriptionWelcomeModal: React.FC<SubscriptionWelcomeModalProps> =
   const handleStartTrial = async () => {
     try {
       setLoading(true);
-      setError(null);
+      setActivationProgress('Préparation de votre essai...');
       console.log('🎉 Activation du plan d\'essai gratuit');
 
-      await SubscriptionService.activateTrialPlan();
+      // Timeout pour gérer les requêtes longues (refresh token, etc.)
+      const activationPromise = activateTrialFromContext();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout: La requête prend trop de temps')), 30000)
+      );
+
+      setActivationProgress('Activation en cours...');
+      
+      // Attendre l'activation avec timeout de 30 secondes
+      await Promise.race([activationPromise, timeoutPromise]);
 
       console.log('✅ Plan d\'essai activé avec succès');
+      
+      // Fermer le modal d'abord
       onClose();
       
-      // Rediriger vers le tableau de bord entreprise
-      router.replace('/(app)/(enterprise)/(tabs)/' as any);
+      // Afficher un toast de succès après fermeture du modal
+      setTimeout(() => {
+        showToast({
+          title: '🎉 Bienvenue !',
+          subtitle: 'Votre essai gratuit est activé',
+          autodismiss: true,
+        });
+        
+        // Rediriger vers le tableau de bord entreprise
+        console.log('🚀 Redirection vers le tableau de bord entreprise...');
+        router.push('/(app)/(enterprise)/(tabs)/' as any);
+      }, 300);
+
     } catch (err: any) {
       console.error('❌ Erreur activation plan d\'essai:', err);
-      setError(err.message || 'Erreur lors de l\'activation du plan d\'essai');
+      
+      // Extraire le message d'erreur du backend
+      let errorMessage = 'Erreur lors de l\'activation du plan d\'essai';
+      
+      if (err.message && err.message.includes('Timeout')) {
+        errorMessage = 'La requête prend trop de temps. Veuillez réessayer.';
+      } else if (err.response && err.response.data) {
+        // Extraire le message depuis la réponse du backend
+        const responseData = err.response.data;
+        console.error('❌ API Response Error:', err.response.status, JSON.stringify(responseData));
+        
+        if (responseData.message) {
+          errorMessage = responseData.message;
+        } else if (typeof responseData === 'string') {
+          errorMessage = responseData;
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      // Afficher un toast d'erreur avec le message du backend
+      showToast({
+        title: '❌ Erreur',
+        subtitle: errorMessage,
+        autodismiss: true,
+      });
+      
+      console.log('⚠️ Détails de l\'erreur:', {
+        message: err.message,
+        status: err.status,
+        response: err.response,
+      });
     } finally {
       setLoading(false);
+      setActivationProgress('');
     }
   };
 
   const handleViewPlans = () => {
-    onClose();
+    // Ne pas fermer le modal, juste naviguer vers la page des abonnements
+    // L'utilisateur devra choisir un plan sur cette page
     router.push('/(app)/(enterprise)/subscriptions' as any);
+    onClose(); // Fermer le modal car l'utilisateur va choisir un plan
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={false}>
-      <SafeAreaView className="flex-1 bg-white">
-        {/* Header avec gradient */}
-        <LinearGradient
+    <SafeAreaView className="flex-1 bg-white">
+            {/* Header avec gradient */}
+            <LinearGradient
           colors={['#10B981', '#34D399']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
@@ -176,7 +237,7 @@ export const SubscriptionWelcomeModal: React.FC<SubscriptionWelcomeModalProps> =
               <Ionicons name="rocket" size={48} color="#FFFFFF" />
             </View>
             <Text className="text-3xl font-quicksand-bold text-white text-center mb-2">
-              Bienvenue{userName ? ` ${userName}` : ''} ! 🎉
+              Bienvenue{userName ? ` ${userName}` : ''} !
             </Text>
             <Text className="text-white/90 font-quicksand-medium text-center text-base">
               Prêt à développer votre activité ?
@@ -240,28 +301,28 @@ export const SubscriptionWelcomeModal: React.FC<SubscriptionWelcomeModalProps> =
                 ))}
               </View>
 
-              {error && (
-                <View className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4">
-                  <Text className="text-red-600 font-quicksand-medium text-sm text-center">
-                    {error}
-                  </Text>
-                </View>
-              )}
-
               <TouchableOpacity
                 onPress={handleStartTrial}
                 disabled={loading}
                 className={`bg-primary-500 rounded-2xl py-4 flex-row items-center justify-center ${
                   loading ? 'opacity-70' : ''
                 }`}
+                activeOpacity={0.8}
               >
                 {loading ? (
-                  <>
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                    <Text className="ml-2 text-white font-quicksand-bold text-base">
-                      Activation en cours...
-                    </Text>
-                  </>
+                  <View className="flex-col items-center">
+                    <View className="flex-row items-center mb-2">
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                      <Text className="ml-2 text-white font-quicksand-bold text-base">
+                        Activation en cours...
+                      </Text>
+                    </View>
+                    {activationProgress && (
+                      <Text className="text-white/80 font-quicksand-medium text-xs">
+                        {activationProgress}
+                      </Text>
+                    )}
+                  </View>
                 ) : (
                   <>
                     <Ionicons name="rocket" size={20} color="#FFFFFF" />
@@ -275,6 +336,17 @@ export const SubscriptionWelcomeModal: React.FC<SubscriptionWelcomeModalProps> =
               <Text className="text-neutral-500 font-quicksand-medium text-xs text-center mt-3">
                 Aucun paiement requis • Annulez à tout moment
               </Text>
+
+              {loading && (
+                <View className="bg-blue-50 border border-blue-200 rounded-xl p-3 mt-3">
+                  <View className="flex-row items-center">
+                    <Ionicons name="information-circle" size={16} color="#3B82F6" />
+                    <Text className="ml-2 text-blue-600 font-quicksand-medium text-xs flex-1">
+                      L&apos;activation peut prendre quelques secondes. Merci de patienter...
+                    </Text>
+                  </View>
+                </View>
+              )}
             </View>
           )}
 
@@ -319,7 +391,31 @@ export const SubscriptionWelcomeModal: React.FC<SubscriptionWelcomeModalProps> =
             </View>
           </View>
         </ScrollView>
-      </SafeAreaView>
+          </SafeAreaView>
+  );
+};
+
+// Composant principal qui enveloppe ModalContent avec les providers
+export const SubscriptionWelcomeModal: React.FC<SubscriptionWelcomeModalProps> = ({
+  visible,
+  onClose,
+  userName,
+}) => {
+  return (
+    <Modal 
+      visible={visible} 
+      animationType="slide" 
+      presentationStyle="pageSheet"
+      onRequestClose={() => {
+        // Ne rien faire - empêche la fermeture par le bouton retour Android
+        console.log('⚠️ Le modal ne peut pas être fermé sans choisir un abonnement');
+      }}
+    >
+      <SubscriptionProvider>
+        <ToastProvider>
+          <ModalContent visible={visible} onClose={onClose} userName={userName} />
+        </ToastProvider>
+      </SubscriptionProvider>
     </Modal>
   );
 };

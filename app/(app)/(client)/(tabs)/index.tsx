@@ -4,6 +4,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
+import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
@@ -16,13 +17,13 @@ import {
     Keyboard,
     Modal,
     RefreshControl,
-    SafeAreaView,
     ScrollView,
     Text,
     TextInput,
     TouchableOpacity,
     View
 } from "react-native";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from "../../../../contexts/AuthContext";
 import AdvertisementService, { Advertisement } from '../../../../services/api/AdvertisementService';
 import CategoryService from "../../../../services/api/CategoryService";
@@ -96,7 +97,13 @@ const categories = [
 export default function ClientHome() {
     const { user } = useAuth();
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     // const { getCacheStats } = useSearchCache(); // (non utilisé pour l'instant)
+
+    // Calcul responsive pour la largeur des produits
+    const screenWidth = Dimensions.get('window').width;
+    const isTablet = screenWidth >= 768;
+    const productWidth = isTablet ? '31%' : '48%'; // 3 colonnes sur tablette, 2 sur mobile
 
     const navigateTo = (path: string) => {
         try {
@@ -352,12 +359,27 @@ export default function ClientHome() {
     );
 
     const SkeletonProduct = () => (
-        <View className="bg-white rounded-2xl shadow-md border border-neutral-100 p-2 mb-3 w-[48%] overflow-hidden">
+        <View className="bg-white rounded-2xl shadow-md border border-neutral-100 p-2 mb-3 overflow-hidden" style={{ width: productWidth }}>
             <ShimmerBlock style={{ height: 128, borderRadius: 16, width: '100%' }} />
             <View className="p-2">
                 <ShimmerBlock style={{ height: 14, borderRadius: 7, width: '80%', marginBottom: 8 }} />
                 <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '60%', marginBottom: 8 }} />
                 <ShimmerBlock style={{ height: 12, borderRadius: 6, width: '40%' }} />
+            </View>
+        </View>
+    );
+
+    const SkeletonProductList = () => (
+        <View className="bg-white rounded-2xl shadow-md border border-neutral-100 p-2 mb-3 overflow-hidden flex-row" style={{ width: '100%' }}>
+            <ShimmerBlock style={{ width: 100, height: 100, borderRadius: 16, marginRight: 12 }} />
+            <View className="flex-1">
+                <ShimmerBlock style={{ height: 14, borderRadius: 7, width: '80%', marginBottom: 8 }} />
+                <View className="flex-row items-center mb-2">
+                    <ShimmerBlock style={{ height: 12, borderRadius: 6, width: '30%', marginRight: 4 }} />
+                    <ShimmerBlock style={{ width: 12, height: 12, borderRadius: 6 }} />
+                </View>
+                <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '50%', marginBottom: 8 }} />
+                <ShimmerBlock style={{ height: 30, borderRadius: 15, width: '70%' }} />
             </View>
         </View>
     );
@@ -368,7 +390,13 @@ export default function ClientHome() {
             contentContainerStyle={{ paddingBottom: 90 }}
         >
             {/* Header Skeleton */}
-            <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="py-6 pt-16 rounded-b-3xl shadow-md">
+            <LinearGradient 
+                colors={['#10B981', '#34D399']} 
+                start={{ x: 0, y: 0 }} 
+                end={{ x: 1, y: 1 }} 
+                className="rounded-b-3xl shadow-md"
+                style={{ paddingTop: insets.top + 16 }}
+            >
                 <View className="px-6 pb-4">
                     <View className="flex-row items-center justify-between">
                         <ShimmerBlock style={{ height: 20, borderRadius: 10, width: '40%' }} />
@@ -381,7 +409,7 @@ export default function ClientHome() {
                     <ShimmerBlock style={{ width: '45%', height: 40, borderRadius: 16 }} />
                 </View>
 
-                <View className="px-6">
+                <View className="px-6 pb-4">
                     <ShimmerBlock style={{ height: 44, borderRadius: 16, width: '100%' }} />
                 </View>
             </LinearGradient>
@@ -410,7 +438,7 @@ export default function ClientHome() {
                     <ShimmerBlock style={{ height: 20, borderRadius: 10, width: '50%' }} />
                 </View>
                 <View className="px-4">
-                    <ShimmerBlock style={{ height: 150, borderRadius: 16, width: '100%' }} />
+                    <ShimmerBlock style={{ height: 180, borderRadius: 16, width: '100%' }} />
                 </View>
             </View>
 
@@ -724,7 +752,8 @@ export default function ClientHome() {
     const renderProduct = (item: Product) => (
         <TouchableOpacity
             key={`product-${item._id}`}
-            className="bg-white rounded-2xl shadow-md border border-neutral-100 p-2 mb-3 w-[48%] overflow-hidden"
+            className="bg-white rounded-2xl shadow-md border border-neutral-100 p-2 mb-3 overflow-hidden"
+            style={{ width: productWidth }}
             onPress={() => navigateTo(`/(app)/(client)/product/${item._id}`)}
         >
             <View className="relative">
@@ -774,7 +803,8 @@ export default function ClientHome() {
     const renderProductListItem = (item: Product) => (
         <TouchableOpacity
             key={item._id}
-            className="bg-white rounded-2xl shadow-md border border-neutral-100 p-2 mb-3 w-full overflow-hidden flex-row"
+            className="bg-white rounded-2xl shadow-md border border-neutral-100 p-2 mb-3 overflow-hidden flex-row"
+            style={{ width: '100%' }}
             onPress={() => navigateTo(`/(app)/(client)/product/${item._id}`)}
         >
             <View className="relative mr-3">
@@ -863,31 +893,32 @@ export default function ClientHome() {
                     handleAdPress(item);
                 }}
                 activeOpacity={0.9}
-                className="rounded-2xl overflow-hidden mx-3 shadow-md bg-white"
-                style={{ width: Dimensions.get('window').width - 48 }}
+                className="rounded-2xl overflow-hidden mx-3 shadow-md"
+                style={{ width: Dimensions.get('window').width - 48, height: 180, position: 'relative' }}
                 accessibilityRole="imagebutton"
                 accessibilityLabel={item.title || 'Publicité'}
             >
                 <Image
                     source={{ uri: item.images && item.images.length > 0 ? item.images[0] : "https://via.placeholder.com/150x150/CCCCCC/FFFFFF?text=No+Image" }}
-                    className="w-full h-40"
+                    style={{ width: '100%', height: 180, position: 'absolute' }}
                     resizeMode="cover"
                 />
-            <LinearGradient
-                colors={['rgba(0,0,0,0.0)','rgba(0,0,0,0.55)']}
-                start={{ x:0, y:0 }} end={{ x:0, y:1 }}
-                className="absolute inset-0 justify-end p-4"
-                pointerEvents="none"
-            >
-                <Text numberOfLines={2} className="text-white font-quicksand-bold text-base mb-1">{item.title}</Text>
-                <Text numberOfLines={1} className="text-white/80 font-quicksand-medium text-xs">{new Date(item.endDate).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' })} • {item.type}</Text>
-            </LinearGradient>
-        </TouchableOpacity>
+                <LinearGradient
+                    colors={['rgba(0,0,0,0.0)','rgba(0,0,0,0.7)']}
+                    start={{ x:0, y:0 }} end={{ x:0, y:1 }}
+                    style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, justifyContent: 'flex-end', padding: 16 }}
+                    pointerEvents="none"
+                >
+                    <Text numberOfLines={2} className="text-white font-quicksand-bold text-base mb-1">{item.title}</Text>
+                    <Text numberOfLines={1} className="text-white/90 font-quicksand-medium text-xs">{new Date(item.endDate).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' })} • {item.type}</Text>
+                </LinearGradient>
+            </TouchableOpacity>
         );
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-background-secondary">
+        <View className="flex-1 bg-background-secondary">
+            <ExpoStatusBar style="light" translucent />
             {loading ? (
                 renderSkeletonHome()
             ) : (
@@ -906,7 +937,13 @@ export default function ClientHome() {
                     }
                 >
                 {/* Header with Location */}
-                <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="py-6 pt-16 rounded-b-3xl shadow-md">
+                <LinearGradient 
+                    colors={['#10B981', '#34D399']} 
+                    start={{ x: 0, y: 0 }} 
+                    end={{ x: 1, y: 1 }} 
+                    className="rounded-b-3xl shadow-md"
+                    style={{ paddingTop: insets.top + 16 }}
+                >
                     {/* Header avec salutation et icône notification */}
                     <View className="px-4 pb-4">
                         <View className="flex-row items-center justify-between">
@@ -918,10 +955,10 @@ export default function ClientHome() {
                                     {user ? `${user.firstName} ${user.lastName}` : 'Client'}
                                 </Text>
                             </View>
-                            <TouchableOpacity className="relative">
+                            {/* <TouchableOpacity className="relative">
                                 <Ionicons name="notifications-outline" size={24} color="white" />
                                 <View className="absolute -top-1 -right-1 w-3 h-3 bg-error-500 rounded-full" />
-                            </TouchableOpacity>
+                            </TouchableOpacity> */}
                         </View>
                     </View>
 
@@ -954,7 +991,7 @@ export default function ClientHome() {
                     </View>
 
                     {/* Search Bar */}
-                    <View className="px-4">
+                    <View className="px-4 pb-4">
                         <View className="bg-white rounded-2xl shadow-lg border border-white/20">
                             <View className="flex-row items-center px-4 py-3">
                                 <Ionicons name="search" size={20} color="#9CA3AF" />
@@ -1211,13 +1248,13 @@ export default function ClientHome() {
                             resultsView === 'grid' ? (
                                 <View className="flex-row flex-wrap justify-between mt-2">
                                     {[0, 1, 2, 3].map((i) => (
-                                        <View key={i} className="w-[48%] h-40 bg-neutral-100 rounded-2xl mb-3" />
+                                        <SkeletonProduct key={i} />
                                     ))}
                                 </View>
                             ) : (
                                 <View className="mt-2">
                                     {[0, 1, 2, 3].map((i) => (
-                                        <View key={i} className="w-full h-28 bg-neutral-100 rounded-2xl mb-3" />
+                                        <SkeletonProductList key={i} />
                                     ))}
                                 </View>
                             )
@@ -1494,6 +1531,6 @@ export default function ClientHome() {
                     </View>
                 </View>
             </Modal>
-        </SafeAreaView>
+        </View>
     );
 }

@@ -203,24 +203,19 @@ export default function EnterpriseOffersScreen() {
           <Text className="text-base font-quicksand-bold text-primary-600">{formatPrice(item.deliveryFee)}</Text>
           <View className="flex-row" style={{ flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {status === 'OPEN' && (
-              <>
-                <TouchableOpacity className="bg-primary-500 rounded-lg px-3 py-2 mr-2 mb-2" activeOpacity={0.8}>
-                  <Text className="text-sm font-quicksand-semibold text-white">Inviter des livreurs</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  className="bg-red-50 rounded-lg px-3 py-2 mb-2"
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    console.log('🔴 Bouton Supprimer cliqué pour offre:', item._id);
-                    console.log('🔴 Offer details:', item);
-                    setSelectedOffer(item);
-                    setConfirmVisible(true);
-                    console.log('🔴 Modal should be visible now');
-                  }}
-                >
-                  <Text className="text-sm font-quicksand-semibold" style={{ color: '#EF4444' }}>Supprimer</Text>
-                </TouchableOpacity>
-              </>
+              <TouchableOpacity
+                className="bg-red-50 rounded-lg px-3 py-2 mb-2"
+                activeOpacity={0.8}
+                onPress={() => {
+                  console.log('🔴 Bouton Supprimer cliqué pour offre:', item._id);
+                  console.log('🔴 Offer details:', item);
+                  setSelectedOffer(item);
+                  setConfirmVisible(true);
+                  console.log('🔴 Modal should be visible now');
+                }}
+              >
+                <Text className="text-sm font-quicksand-semibold" style={{ color: '#EF4444' }}>Supprimer</Text>
+              </TouchableOpacity>
             )}
           </View>
         </View>

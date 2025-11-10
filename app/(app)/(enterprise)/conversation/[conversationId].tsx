@@ -6,7 +6,6 @@ import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Easing,
   FlatList,
   Image,
@@ -111,6 +110,12 @@ export default function ConversationDetails() {
     confirmText: string;
     confirmColor: string;
   } | null>(null);
+
+  // États pour les modals d'actions
+  const [messageActionsModal, setMessageActionsModal] = useState<{ visible: boolean; message: Message | null }>({ visible: false, message: null });
+  const [deleteOptionsModal, setDeleteOptionsModal] = useState<{ visible: boolean; messageId: string | null }>({ visible: false, messageId: null });
+  const [attachmentModal, setAttachmentModal] = useState(false);
+  const [retryModal, setRetryModal] = useState<{ visible: boolean; message: Message | null }>({ visible: false, message: null });
 
   // États pour la gestion des offres de livraison
   // (déjà déclarés plus haut)
@@ -451,6 +456,20 @@ export default function ConversationDetails() {
         console.log('🔄 ENTERPRISE - Chargement depuis API');
         const data = await MessagingService.getConversationMessages(conversationId!);
 
+        console.log('📦 ENTERPRISE - Données reçues de l\'API:', {
+          conversationId: data.conversation._id,
+          participantsCount: data.conversation.participants?.length,
+          participants: data.conversation.participants?.map((p: any) => ({
+            id: typeof p === 'object' ? p._id : p,
+            type: typeof p,
+            firstName: typeof p === 'object' ? p.firstName : 'N/A',
+            lastName: typeof p === 'object' ? p.lastName : 'N/A',
+          })),
+          hasOtherParticipant: !!data.conversation.otherParticipant,
+          otherParticipant: data.conversation.otherParticipant,
+          messagesCount: data.messages.length
+        });
+
         setConversation(data.conversation);
         setMessages(data.messages);
         loadedConversationRef.current = conversationId;
@@ -630,6 +649,29 @@ export default function ConversationDetails() {
             ? { ...sentMessage.message, _sendingStatus: 'sent' as const }
             : msg
         ));
+
+        // 🔥 IMPORTANT: Mettre à jour le cache avec le nouveau message
+        const cached = conversationCache.get(conversationId!);
+        if (cached) {
+          const updatedMessages = cached.messages.map(msg => 
+            msg._localId === localId 
+              ? { ...sentMessage.message, _sendingStatus: 'sent' as const }
+              : msg
+          );
+          
+          // Si le message n'était pas dans le cache (nouveau message), l'ajouter
+          const messageExists = updatedMessages.some(msg => msg._id === sentMessage.message._id);
+          if (!messageExists) {
+            updatedMessages.push({ ...sentMessage.message, _sendingStatus: 'sent' as const });
+          }
+
+          conversationCache.set(conversationId!, {
+            ...cached,
+            messages: updatedMessages,
+            timestamp: Date.now()
+          });
+          console.log('✅ Cache mis à jour avec le nouveau message');
+        }
       }
 
       setSending(false);
@@ -990,19 +1032,7 @@ export default function ConversationDetails() {
     if (message._sendingStatus === 'failed') {
       return (
         <TouchableOpacity 
-          onPress={() => {
-            Alert.alert(
-              'Échec d\'envoi',
-              message._sendError || 'Le message n\'a pas pu être envoyé',
-              [
-                { text: 'Annuler', style: 'cancel' },
-                { 
-                  text: 'Renvoyer', 
-                  onPress: () => retryFailedMessage(message) 
-                }
-              ]
-            );
-          }}
+          onPress={() => setRetryModal({ visible: true, message })}
           className="ml-1"
         >
           <Ionicons name="information-circle" size={14} color="#EF4444" />
@@ -1094,17 +1124,7 @@ export default function ConversationDetails() {
             <TouchableOpacity
               onLongPress={() => {
                 if (!isDeleted) {
-                  Alert.alert(
-                    'Actions du message',
-                    '',
-                    [
-                      { text: 'Annuler', style: 'cancel' },
-                      { text: 'Répondre', onPress: () => setReplyingTo(message) },
-                      ...(isCurrentUser ? [
-                        { text: 'Supprimer', style: 'destructive' as const, onPress: () => showDeleteConfirmation(message._id) },
-                      ] : []),
-                    ]
-                  );
+                  setMessageActionsModal({ visible: true, message });
                 }
               }}
               activeOpacity={0.9}
@@ -1194,43 +1214,14 @@ export default function ConversationDetails() {
   };
 
   // Fonctions pour gérer les confirmations de suppression
-  const showDeleteConfirmation = (messageId: string) => {
-    setConfirmationAction({
-      messageId,
-      title: 'Supprimer le message',
-      message: 'Voulez-vous supprimer ce message ?',
-      confirmText: 'Supprimer',
-      confirmColor: '#EF4444'
-    });
-    setConfirmationVisible(true);
-  };
-
   const closeConfirmation = () => {
     setConfirmationVisible(false);
     setConfirmationAction(null);
   };
 
-  const executeDeleteAction = async () => {
-    if (!confirmationAction) return;
-
-    const { messageId } = confirmationAction;
-    closeConfirmation();
-
-    try {
-      // Afficher les options de suppression
-      Alert.alert(
-        'Supprimer le message',
-        'Choisissez comment supprimer le message :',
-        [
-          { text: 'Annuler', style: 'cancel' },
-          { text: 'Pour moi seulement', onPress: () => deleteMessage(messageId, false) },
-          { text: 'Pour tout le monde', style: 'destructive', onPress: () => deleteMessage(messageId, true) },
-        ]
-      );
-    } catch (error) {
-      console.error('❌ Erreur lors de l\'affichage des options:', error);
-      showNotification('error', 'Erreur', 'Impossible d\'afficher les options de suppression');
-    }
+  const executeDeleteAction = async (messageId: string) => {
+    // Afficher les options de suppression
+    setDeleteOptionsModal({ visible: true, messageId });
   };
 
   // Helpers pour séparateurs de date
@@ -1331,11 +1322,56 @@ export default function ConversationDetails() {
   }
 
   // Gestion sécurisée de otherParticipant
-  const otherParticipant = conversation.otherParticipant || 
-    (Array.isArray(conversation.participants) && typeof conversation.participants[0] === 'object' 
-      ? (conversation.participants as any[]).find(p => p._id !== getCurrentUserId()) 
-      : null);
+  // Extraire l'autre participant depuis la liste des participants
+  const currentUserId = getCurrentUserId();
+  const otherParticipant = (() => {
+    // 1. Vérifier d'abord si otherParticipant est déjà fourni par le backend
+    if (conversation.otherParticipant) {
+      return conversation.otherParticipant;
+    }
 
+    // 2. Si participants sont des objets, extraire l'autre participant
+    if (Array.isArray(conversation.participants) && conversation.participants.length > 0) {
+      if (typeof conversation.participants[0] === 'object') {
+        const other = (conversation.participants as any[]).find(p => p._id !== currentUserId);
+        if (other) {
+          return other;
+        }
+      }
+    }
+
+    // 3. Si participants sont des IDs (strings), extraire depuis les messages
+    // Les messages contiennent les infos complètes du sender
+    if (messages.length > 0) {
+      // Trouver le premier message d'un autre participant
+      const otherMessage = messages.find(msg => {
+        const senderId = msg.sender?._id || (msg as any).senderId;
+        return senderId && senderId !== currentUserId;
+      });
+
+      if (otherMessage?.sender) {
+        console.log('✅ Participant extrait depuis les messages:', otherMessage.sender);
+        return otherMessage.sender;
+      }
+    }
+
+    // 4. Fallback: retourner null
+    return null;
+  })();
+
+  console.log('💬 Rendu conversation avec:', {
+    conversationId: conversation._id,
+    currentUserId,
+    participantsCount: conversation.participants?.length,
+    participantsTypes: conversation.participants?.map(p => typeof p),
+    participantsIds: Array.isArray(conversation.participants) 
+      ? conversation.participants.map(p => typeof p === 'object' ? p._id : p)
+      : [],
+    otherParticipant: otherParticipant ? {
+      id: otherParticipant._id,
+      name: `${otherParticipant.firstName} ${otherParticipant.lastName}`
+    } : null,
+  });
   return (
     <SafeAreaView className="flex-1 bg-white">
       <ExpoStatusBar style="light" translucent />
@@ -1376,7 +1412,7 @@ export default function ConversationDetails() {
               <Text className="text-base font-quicksand-semibold text-white" numberOfLines={1}>
                 {otherParticipant 
                   ? MessagingService.formatParticipantName(otherParticipant)
-                  : 'Conversation'}
+                  : 'Conversationn'}
               </Text>
               <Text className="text-xs text-white/90" numberOfLines={1}>
                 {typeof conversation.product === 'object' && conversation.product?.name 
@@ -1553,18 +1589,9 @@ export default function ConversationDetails() {
           }`}>
             {/* Bouton d'attachement */}
             <TouchableOpacity
-              onPress={() => {
-                Alert.alert(
-                  'Ajouter une pièce jointe',
-                  'Choisissez une option',
-                  [
-                    { text: 'Annuler', style: 'cancel' },
-                    { text: 'Prendre une photo', onPress: takePhoto },
-                    { text: 'Choisir depuis la galerie', onPress: pickImageFromGallery },
-                  ]
-                );
-              }}
+              onPress={() => setAttachmentModal(true)}
               className="w-10 h-10 bg-white rounded-full justify-center items-center mr-2 shadow-sm"
+              activeOpacity={0.7}
             >
               <Ionicons name="add" size={20} color="#9CA3AF" />
             </TouchableOpacity>
@@ -1757,18 +1784,9 @@ export default function ConversationDetails() {
           }`}>
             {/* Bouton d'attachement */}
             <TouchableOpacity
-              onPress={() => {
-                Alert.alert(
-                  'Ajouter une pièce jointe',
-                  'Choisissez une option',
-                  [
-                    { text: 'Annuler', style: 'cancel' },
-                    { text: 'Prendre une photo', onPress: takePhoto },
-                    { text: 'Choisir depuis la galerie', onPress: pickImageFromGallery },
-                  ]
-                );
-              }}
+              onPress={() => setAttachmentModal(true)}
               className="w-10 h-10 bg-white rounded-full justify-center items-center mr-2 shadow-sm"
+              activeOpacity={0.7}
             >
               <Ionicons name="add" size={20} color="#9CA3AF" />
             </TouchableOpacity>
@@ -1924,7 +1942,11 @@ export default function ConversationDetails() {
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={executeDeleteAction}
+                  onPress={() => {
+                    if (confirmationAction?.messageId) {
+                      executeDeleteAction(confirmationAction.messageId);
+                    }
+                  }}
                   className="flex-1 py-4 rounded-2xl items-center"
                   style={{ backgroundColor: confirmationAction?.confirmColor }}
                 >
@@ -2249,6 +2271,299 @@ export default function ConversationDetails() {
             </View>
           </KeyboardAvoidingView>
         </View>
+      </Modal>
+
+      {/* Modal de retry pour message échoué */}
+      <Modal
+        visible={retryModal.visible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRetryModal({ visible: false, message: null })}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setRetryModal({ visible: false, message: null })}
+          className="flex-1 bg-black/50 justify-center items-center px-6"
+        >
+          <TouchableOpacity activeOpacity={1} className="bg-white rounded-3xl p-6 w-full max-w-sm">
+            {/* Icon d'alerte */}
+            <View className="items-center mb-4">
+              <View className="w-16 h-16 bg-red-100 rounded-full justify-center items-center">
+                <Ionicons name="alert-circle" size={32} color="#EF4444" />
+              </View>
+            </View>
+
+            {/* Titre */}
+            <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+              Échec d&apos;envoi
+            </Text>
+
+            {/* Message */}
+            <Text className="text-base font-quicksand-medium text-neutral-600 text-center mb-6">
+              {retryModal.message?._sendError || 'Le message n\'a pas pu être envoyé'}
+            </Text>
+
+            {/* Actions */}
+            <View className="flex-row gap-3">
+              <TouchableOpacity
+                onPress={() => setRetryModal({ visible: false, message: null })}
+                className="flex-1 bg-neutral-100 py-3 rounded-xl"
+                activeOpacity={0.7}
+              >
+                <Text className="text-neutral-700 font-quicksand-bold text-center">
+                  Annuler
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  if (retryModal.message) {
+                    retryFailedMessage(retryModal.message);
+                  }
+                  setRetryModal({ visible: false, message: null });
+                }}
+                className="flex-1 bg-red-500 py-3 rounded-xl"
+                activeOpacity={0.7}
+              >
+                <Text className="text-white font-quicksand-bold text-center">
+                  Renvoyer
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Modal d'actions du message */}
+      <Modal
+        visible={messageActionsModal.visible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setMessageActionsModal({ visible: false, message: null })}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setMessageActionsModal({ visible: false, message: null })}
+          className="flex-1 bg-black/50 justify-end"
+        >
+          <TouchableOpacity activeOpacity={1} className="bg-white rounded-t-3xl p-6">
+            {/* Barre de handle */}
+            <View className="w-12 h-1.5 bg-neutral-300 rounded-full self-center mb-6" />
+
+            {/* Titre */}
+            <Text className="text-xl font-quicksand-bold text-neutral-800 mb-4">
+              Actions
+            </Text>
+
+            {/* Options */}
+            <View className="space-y-2">
+              {/* Répondre */}
+              <TouchableOpacity
+                onPress={() => {
+                  if (messageActionsModal.message) {
+                    setReplyingTo(messageActionsModal.message);
+                  }
+                  setMessageActionsModal({ visible: false, message: null });
+                }}
+                className="flex-row items-center p-4 bg-primary-50 rounded-xl"
+                activeOpacity={0.7}
+              >
+                <View className="w-10 h-10 bg-primary-100 rounded-full justify-center items-center mr-3">
+                  <Ionicons name="arrow-undo" size={20} color="#10B981" />
+                </View>
+                <Text className="text-neutral-800 font-quicksand-semibold flex-1">
+                  Répondre
+                </Text>
+              </TouchableOpacity>
+
+              {/* Supprimer (seulement si c'est notre message) */}
+              {(() => {
+                const currentUserId = getCurrentUserId();
+                const senderId = messageActionsModal.message?.sender?._id || (messageActionsModal.message as any)?.senderId;
+                return currentUserId && senderId && senderId === currentUserId;
+              })() && (
+                <TouchableOpacity
+                  onPress={() => {
+                    if (messageActionsModal.message) {
+                      setDeleteOptionsModal({ visible: true, messageId: messageActionsModal.message._id });
+                    }
+                    setMessageActionsModal({ visible: false, message: null });
+                  }}
+                  className="flex-row items-center p-4 bg-red-50 rounded-xl"
+                  activeOpacity={0.7}
+                >
+                  <View className="w-10 h-10 bg-red-100 rounded-full justify-center items-center mr-3">
+                    <Ionicons name="trash" size={20} color="#EF4444" />
+                  </View>
+                  <Text className="text-neutral-800 font-quicksand-semibold flex-1">
+                    Supprimer
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* Bouton Annuler */}
+            <TouchableOpacity
+              onPress={() => setMessageActionsModal({ visible: false, message: null })}
+              className="mt-4 bg-neutral-100 py-4 rounded-xl"
+              activeOpacity={0.7}
+            >
+              <Text className="text-neutral-700 font-quicksand-bold text-center">
+                Annuler
+              </Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Modal d'options de suppression */}
+      <Modal
+        visible={deleteOptionsModal.visible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setDeleteOptionsModal({ visible: false, messageId: null })}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setDeleteOptionsModal({ visible: false, messageId: null })}
+          className="flex-1 bg-black/50 justify-end"
+        >
+          <TouchableOpacity activeOpacity={1} className="bg-white rounded-t-3xl p-6">
+            {/* Barre de handle */}
+            <View className="w-12 h-1.5 bg-neutral-300 rounded-full self-center mb-6" />
+
+            {/* Titre */}
+            <Text className="text-xl font-quicksand-bold text-neutral-800 mb-2">
+              Supprimer le message
+            </Text>
+            <Text className="text-neutral-600 font-quicksand-medium mb-4">
+              Choisissez comment supprimer le message
+            </Text>
+
+            {/* Options */}
+            <View className="space-y-2">
+              {/* Pour moi seulement */}
+              <TouchableOpacity
+                onPress={() => {
+                  if (deleteOptionsModal.messageId) {
+                    deleteMessage(deleteOptionsModal.messageId, false);
+                  }
+                  setDeleteOptionsModal({ visible: false, messageId: null });
+                }}
+                className="flex-row items-center p-4 bg-orange-50 rounded-xl"
+                activeOpacity={0.7}
+              >
+                <View className="w-10 h-10 bg-orange-100 rounded-full justify-center items-center mr-3">
+                  <Ionicons name="eye-off" size={20} color="#F97316" />
+                </View>
+                <Text className="text-neutral-800 font-quicksand-semibold flex-1">
+                  Pour moi seulement
+                </Text>
+              </TouchableOpacity>
+
+              {/* Pour tout le monde */}
+              <TouchableOpacity
+                onPress={() => {
+                  if (deleteOptionsModal.messageId) {
+                    deleteMessage(deleteOptionsModal.messageId, true);
+                  }
+                  setDeleteOptionsModal({ visible: false, messageId: null });
+                }}
+                className="flex-row items-center p-4 bg-red-50 rounded-xl"
+                activeOpacity={0.7}
+              >
+                <View className="w-10 h-10 bg-red-100 rounded-full justify-center items-center mr-3">
+                  <Ionicons name="trash" size={20} color="#EF4444" />
+                </View>
+                <Text className="text-neutral-800 font-quicksand-semibold flex-1">
+                  Pour tout le monde
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Bouton Annuler */}
+            <TouchableOpacity
+              onPress={() => setDeleteOptionsModal({ visible: false, messageId: null })}
+              className="mt-4 bg-neutral-100 py-4 rounded-xl"
+              activeOpacity={0.7}
+            >
+              <Text className="text-neutral-700 font-quicksand-bold text-center">
+                Annuler
+              </Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Modal de sélection de pièce jointe */}
+      <Modal
+        visible={attachmentModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setAttachmentModal(false)}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setAttachmentModal(false)}
+          className="flex-1 bg-black/50 justify-end"
+        >
+          <TouchableOpacity activeOpacity={1} className="bg-white rounded-t-3xl p-6">
+            {/* Barre de handle */}
+            <View className="w-12 h-1.5 bg-neutral-300 rounded-full self-center mb-6" />
+
+            {/* Titre */}
+            <Text className="text-xl font-quicksand-bold text-neutral-800 mb-4">
+              Ajouter une pièce jointe
+            </Text>
+
+            {/* Options */}
+            <View className="space-y-2">
+              {/* Prendre une photo */}
+              <TouchableOpacity
+                onPress={() => {
+                  setAttachmentModal(false);
+                  takePhoto();
+                }}
+                className="flex-row items-center p-4 bg-primary-50 rounded-xl"
+                activeOpacity={0.7}
+              >
+                <View className="w-10 h-10 bg-primary-100 rounded-full justify-center items-center mr-3">
+                  <Ionicons name="camera" size={20} color="#10B981" />
+                </View>
+                <Text className="text-neutral-800 font-quicksand-semibold flex-1">
+                  Prendre une photo
+                </Text>
+              </TouchableOpacity>
+
+              {/* Choisir depuis la galerie */}
+              <TouchableOpacity
+                onPress={() => {
+                  setAttachmentModal(false);
+                  pickImageFromGallery();
+                }}
+                className="flex-row items-center p-4 bg-green-50 rounded-xl"
+                activeOpacity={0.7}
+              >
+                <View className="w-10 h-10 bg-green-100 rounded-full justify-center items-center mr-3">
+                  <Ionicons name="images" size={20} color="#22C55E" />
+                </View>
+                <Text className="text-neutral-800 font-quicksand-semibold flex-1">
+                  Choisir depuis la galerie
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Bouton Annuler */}
+            <TouchableOpacity
+              onPress={() => setAttachmentModal(false)}
+              className="mt-4 bg-neutral-100 py-4 rounded-xl"
+              activeOpacity={0.7}
+            >
+              <Text className="text-neutral-700 font-quicksand-bold text-center">
+                Annuler
+              </Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
     </SafeAreaView>
   );

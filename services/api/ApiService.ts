@@ -1,5 +1,4 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { Platform } from 'react-native';
 import { ApiResponse } from '../../types/auth';
 import AuthEventEmitter from '../../utils/AuthEventEmitter';
 import TokenStorageService from '../TokenStorageService';
@@ -11,17 +10,12 @@ class ApiService {
   private refreshSubscribers: ((token: string) => void)[] = [];
 
   constructor() {
-    // Configure baseURL based on platform
-    if (Platform.OS === 'android') {
-      this.baseURL = 'http://192.168.86.143:4000/api';
-      // this.baseURL = 'http://192.168.0.107:4000/api';
-    } else if (Platform.OS === 'ios') {
-      this.baseURL = 'http://localhost:4000/api'; // iOS simulator
-    } else {
-      this.baseURL = 'http://localhost:4000/api'; // Web/other platforms
-    }
+    // Utiliser la variable d'environnement ou valeur par défaut
+    const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
+    this.baseURL = `${backendUrl}/api`;
 
     console.log('🌐 API Base URL:', this.baseURL);
+    console.log('🔧 Backend URL from .env:', process.env.EXPO_PUBLIC_BACKEND_URL);
 
     this.axiosInstance = axios.create({
       baseURL: this.baseURL,

@@ -27,11 +27,11 @@ export default function WelcomeScreen() {
           />
           
           <Text className="text-3xl font-quicksand-bold text-center text-neutral-900 mb-3 mt-4">
-            Let&apos;s you in
+            Connectez-vous
           </Text>
           
           <Text className="text-sm font-quicksand text-center text-neutral-600 px-8">
-            Welcome back! Please sign in to your account
+            Bienvenue ! Veuillez vous connecter à votre compte
           </Text>
         </View>
 
@@ -43,7 +43,7 @@ export default function WelcomeScreen() {
             className="bg-primary rounded-2xl py-4 mb-4 shadow-sm"
           >
             <Text className="text-white font-quicksand-semibold text-base text-center">
-              Sign in with password
+              Se connecter avec mot de passe
             </Text>
           </TouchableOpacity>
 
@@ -53,7 +53,7 @@ export default function WelcomeScreen() {
             className="bg-white border-2 border-primary rounded-2xl py-4 shadow-sm"
           >
             <Text className="text-primary font-quicksand-semibold text-base text-center">
-              Create Account
+              Créer un compte
             </Text>
           </TouchableOpacity>
         </View>

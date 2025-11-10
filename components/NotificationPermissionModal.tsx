@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
-import { Alert, Dimensions, Modal, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Dimensions, Modal, Text, TouchableOpacity, View } from 'react-native';
 import { useNotifications } from '../hooks/useNotifications';
 
 interface NotificationPermissionModalProps {
@@ -15,6 +15,13 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
   onPermissionGranted,
 }) => {
   const { requestPermissions, setupNotifications, isLoading, error } = useNotifications();
+
+  // États pour les modals internes
+  const [errorModal, setErrorModal] = useState<{ visible: boolean; message: string }>({
+    visible: false,
+    message: ''
+  });
+  const [permissionDeniedModal, setPermissionDeniedModal] = useState(false);
 
   // Responsive design
   const { width: screenWidth } = Dimensions.get('window');
@@ -40,38 +47,22 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
           onClose();
         } else {
           console.error('❌ Échec configuration:', result.message);
-          Alert.alert(
-            'Erreur',
-            'Une erreur s\'est produite lors de la configuration des notifications. Vous pouvez réessayer plus tard.',
-            [{ text: 'OK' }]
-          );
+          setErrorModal({
+            visible: true,
+            message: 'Une erreur s\'est produite lors de la configuration des notifications. Vous pouvez réessayer plus tard.'
+          });
         }
       } else {
         // Permission refusée
         console.log('❌ Permissions refusées par l\'utilisateur');
-        Alert.alert(
-          'Permission refusée',
-          'Vous pouvez activer les notifications plus tard dans les paramètres de votre appareil.',
-          [
-            { text: 'Plus tard', style: 'cancel', onPress: () => onClose() },
-            {
-              text: 'Paramètres',
-              onPress: () => {
-                // Ici on pourrait ouvrir les paramètres de l'app
-                // Mais pour l'instant on ferme juste le modal
-                onClose();
-              }
-            }
-          ]
-        );
+        setPermissionDeniedModal(true);
       }
     } catch (error) {
       console.error('❌ Erreur lors de la demande de permission:', error);
-      Alert.alert(
-        'Erreur',
-        'Une erreur s\'est produite. Veuillez réessayer.',
-        [{ text: 'OK' }]
-      );
+      setErrorModal({
+        visible: true,
+        message: 'Une erreur s\'est produite. Veuillez réessayer.'
+      });
     }
   };
 
@@ -281,6 +272,205 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
           </Text>
         </View>
       </View>
+
+      {/* Modal d'erreur */}
+      <Modal
+        visible={errorModal.visible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setErrorModal({ visible: false, message: '' })}
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: 20,
+        }}>
+          <View style={{
+            backgroundColor: 'white',
+            borderRadius: 16,
+            padding: 24,
+            width: '100%',
+            maxWidth: 400,
+            alignItems: 'center',
+          }}>
+            {/* Icône d'erreur */}
+            <View style={{
+              width: 60,
+              height: 60,
+              borderRadius: 30,
+              backgroundColor: '#FEE2E2',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 16,
+            }}>
+              <Ionicons name="alert-circle" size={32} color="#EF4444" />
+            </View>
+
+            {/* Titre */}
+            <Text style={{
+              fontSize: 20,
+              fontFamily: 'Quicksand-Bold',
+              color: '#333',
+              marginBottom: 8,
+              textAlign: 'center',
+            }}>
+              Erreur
+            </Text>
+
+            {/* Message */}
+            <Text style={{
+              fontSize: 14,
+              fontFamily: 'Quicksand-Regular',
+              color: '#666',
+              textAlign: 'center',
+              marginBottom: 24,
+              lineHeight: 20,
+            }}>
+              {errorModal.message}
+            </Text>
+
+            {/* Bouton OK */}
+            <TouchableOpacity
+              onPress={() => setErrorModal({ visible: false, message: '' })}
+              style={{
+                backgroundColor: '#EF4444',
+                paddingVertical: 12,
+                paddingHorizontal: 24,
+                borderRadius: 8,
+                width: '100%',
+                alignItems: 'center',
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={{
+                color: 'white',
+                fontSize: 16,
+                fontFamily: 'Quicksand-SemiBold',
+              }}>
+                OK
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal permission refusée */}
+      <Modal
+        visible={permissionDeniedModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          setPermissionDeniedModal(false);
+          onClose();
+        }}
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: 20,
+        }}>
+          <View style={{
+            backgroundColor: 'white',
+            borderRadius: 16,
+            padding: 24,
+            width: '100%',
+            maxWidth: 400,
+            alignItems: 'center',
+          }}>
+            {/* Icône d'info */}
+            <View style={{
+              width: 60,
+              height: 60,
+              borderRadius: 30,
+              backgroundColor: '#DBEAFE',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 16,
+            }}>
+              <Ionicons name="information-circle" size={32} color="#3B82F6" />
+            </View>
+
+            {/* Titre */}
+            <Text style={{
+              fontSize: 20,
+              fontFamily: 'Quicksand-Bold',
+              color: '#333',
+              marginBottom: 8,
+              textAlign: 'center',
+            }}>
+              Permission refusée
+            </Text>
+
+            {/* Message */}
+            <Text style={{
+              fontSize: 14,
+              fontFamily: 'Quicksand-Regular',
+              color: '#666',
+              textAlign: 'center',
+              marginBottom: 24,
+              lineHeight: 20,
+            }}>
+              Vous pouvez activer les notifications plus tard dans les paramètres de votre appareil.
+            </Text>
+
+            {/* Boutons */}
+            <View style={{ flexDirection: 'row', gap: 12, width: '100%' }}>
+              {/* Bouton Plus tard */}
+              <TouchableOpacity
+                onPress={() => {
+                  setPermissionDeniedModal(false);
+                  onClose();
+                }}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#F3F4F6',
+                  paddingVertical: 12,
+                  borderRadius: 8,
+                  alignItems: 'center',
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={{
+                  color: '#666',
+                  fontSize: 16,
+                  fontFamily: 'Quicksand-SemiBold',
+                }}>
+                  Plus tard
+                </Text>
+              </TouchableOpacity>
+
+              {/* Bouton Paramètres */}
+              <TouchableOpacity
+                onPress={() => {
+                  setPermissionDeniedModal(false);
+                  onClose();
+                  // Ici on pourrait ouvrir les paramètres de l'app
+                }}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#10B981',
+                  paddingVertical: 12,
+                  borderRadius: 8,
+                  alignItems: 'center',
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={{
+                  color: 'white',
+                  fontSize: 16,
+                  fontFamily: 'Quicksand-SemiBold',
+                }}>
+                  Paramètres
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </Modal>
   );
 };

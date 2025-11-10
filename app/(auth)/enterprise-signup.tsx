@@ -3,20 +3,19 @@ import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    Animated,
-    Easing,
-    FlatList,
-    Keyboard,
-    KeyboardAvoidingView,
-    Linking,
-    Modal,
-    Platform,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Keyboard,
+  KeyboardAvoidingView,
+  Linking,
+  Modal,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from 'react-native';
 import { SubscriptionWelcomeModal } from '../../components/enterprise/SubscriptionWelcomeModal';
 import { useToast } from '../../components/ui/ReanimatedToast/context';
@@ -60,30 +59,6 @@ export default function EnterpriseSignUpScreen() {
   const companyNameRef = useRef<TextInput>(null);
   const descriptionRef = useRef<TextInput>(null);
   const ifuNumberRef = useRef<TextInput>(null);
-  
-  const spinValue = useRef(new Animated.Value(0)).current;
-
-  // Start spinner animation when loading
-  useEffect(() => {
-    if (isLoading) {
-      Animated.loop(
-        Animated.timing(spinValue, {
-          toValue: 1,
-          duration: 1000,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        })
-      ).start();
-    } else {
-      spinValue.setValue(0);
-    }
-  }, [isLoading, spinValue]);
-
-  // Interpolate rotation value
-  const spin = spinValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
 
   const toast = useToast();
   const { handlePostRegistration } = useAuth();
@@ -320,7 +295,7 @@ export default function EnterpriseSignUpScreen() {
   };
 
   const handleSignIn = () => {
-    router.back();
+    router.push('/(auth)/signin');
   };
 
   // Fonction pour sélectionner une ville
@@ -381,7 +356,7 @@ export default function EnterpriseSignUpScreen() {
           </Text>
           <TextInput
             className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
-            placeholder="Dupont"
+            placeholder="DOSSOU"
             placeholderTextColor="#9CA3AF"
             value={lastName}
             onChangeText={setLastName}
@@ -396,7 +371,7 @@ export default function EnterpriseSignUpScreen() {
         </Text>
         <TextInput
           className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
-          placeholder="jean.dupont@exemple.com"
+          placeholder="jean.dossou@exemple.com"
           placeholderTextColor="#9CA3AF"
           value={email}
           onChangeText={setEmail}
@@ -427,7 +402,7 @@ export default function EnterpriseSignUpScreen() {
         </Text>
         <TextInput
           className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
-          placeholder="123 Rue Principale, Ville"
+          placeholder="Cotonou"
           placeholderTextColor="#9CA3AF"
           value={address}
           onChangeText={setAddress}
@@ -800,7 +775,7 @@ export default function EnterpriseSignUpScreen() {
                 <TouchableOpacity
                   className="flex-1 mr-2 py-3 rounded-2xl border-2 border-neutral-300 flex-row items-center justify-center"
                   onPress={handlePreviousStep}
-                  activeOpacity={0.9}
+                  activeOpacity={1}
                 >
                   <Ionicons name="arrow-back" size={20} color="#374151" />
                   <Text className="text-neutral-700 font-quicksand-semibold text-base ml-2">
@@ -817,16 +792,14 @@ export default function EnterpriseSignUpScreen() {
                 }`}
                 onPress={handleNextStep}
                 disabled={isLoading}
-                activeOpacity={0.9}
+                activeOpacity={1}
               >
                 {isLoading && (
-                  <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                    <Ionicons name="reload" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-                  </Animated.View>
+                  <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 8 }} />
                 )}
                 <Text className="text-white text-center font-quicksand-semibold text-base">
                   {isLoading 
-                    ? 'Création du compte...' 
+                    ? 'Création' 
                     : currentStep === TOTAL_STEPS 
                     ? 'Créer le Compte' 
                     : 'Continuer'}
@@ -934,6 +907,7 @@ export default function EnterpriseSignUpScreen() {
             onClose={() => setShowSubscriptionModal(false)}
             userName={firstName}
           />
+
         </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>

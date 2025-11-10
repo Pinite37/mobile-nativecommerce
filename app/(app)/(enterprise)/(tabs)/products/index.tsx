@@ -348,7 +348,7 @@ export default function EnterpriseProducts() {
                   {item.name}
                 </Text>
                 {typeof item.category === 'object' && (
-                  <Text className="text-sm text-neutral-600">
+                  <Text className="text-sm text-neutral-600 font-quicksand-medium">
                     {item.category.name}
                   </Text>
                 )}
@@ -371,7 +371,7 @@ export default function EnterpriseProducts() {
             </View>
             <View className="flex-row items-center mb-3">
               <Ionicons name="star" size={14} color="#10B981" />
-              <Text className="text-xs text-neutral-600 ml-1">
+              <Text className="text-xs text-neutral-600 ml-1 font-quicksand-light">
                 {item.stats.averageRating.toFixed(1)} ({item.stats.totalReviews} avis)
               </Text>
             </View>

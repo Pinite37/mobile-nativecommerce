@@ -6,6 +6,7 @@ interface SubscriptionContextType {
   subscription: Subscription | null;
   loading: boolean;
   error: string | null;
+  needsSubscription: boolean; // Nouveau: indique si l'utilisateur doit choisir un abonnement
   loadSubscription: () => Promise<void>;
   activateTrialPlan: () => Promise<void>;
   subscribeToPlan: (planId: string, paymentData?: any) => Promise<void>;
@@ -21,12 +22,14 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsSubscription, setNeedsSubscription] = useState(false);
   const { user } = useAuth();
 
   // Charger la souscription active
   const loadSubscription = useCallback(async () => {
     if (!user || user.role !== 'ENTERPRISE') {
       setSubscription(null);
+      setNeedsSubscription(false);
       return;
     }
 
@@ -38,10 +41,24 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const activeSub = await SubscriptionService.getActiveSubscription();
       setSubscription(activeSub);
       
-      console.log('✅ SUBSCRIPTION CONTEXT - Souscription chargée:', activeSub);
+      // Si aucune souscription active, l'utilisateur doit en choisir une
+      if (!activeSub) {
+        console.log('⚠️ SUBSCRIPTION CONTEXT - Aucune souscription active, affichage du modal requis');
+        setNeedsSubscription(true);
+      } else {
+        console.log('✅ SUBSCRIPTION CONTEXT - Souscription active trouvée:', activeSub);
+        setNeedsSubscription(false);
+      }
     } catch (err: any) {
       console.error('❌ SUBSCRIPTION CONTEXT - Erreur chargement souscription:', err);
-      setError(err.message || 'Erreur lors du chargement de la souscription');
+      
+      // Si l'erreur indique qu'il n'y a pas de souscription (404), c'est normal
+      if (err.message?.includes('404') || err.message?.includes('No active subscription')) {
+        console.log('⚠️ SUBSCRIPTION CONTEXT - Pas de souscription, modal requis');
+        setNeedsSubscription(true);
+      } else {
+        setError(err.message || 'Erreur lors du chargement de la souscription');
+      }
       setSubscription(null);
     } finally {
       setLoading(false);
@@ -61,6 +78,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       
       const result = await SubscriptionService.activateTrialPlan();
       setSubscription(result);
+      setNeedsSubscription(false); // Plus besoin du modal après activation
       
       console.log('✅ SUBSCRIPTION CONTEXT - Plan TRIAL activé:', result);
     } catch (err: any) {
@@ -85,6 +103,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       
       const result = await SubscriptionService.subscribeToPlan(planId, paymentData);
       setSubscription(result);
+      setNeedsSubscription(false); // Plus besoin du modal après souscription
       
       console.log('✅ SUBSCRIPTION CONTEXT - Abonné au plan:', result);
     } catch (err: any) {
@@ -165,6 +184,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         subscription,
         loading,
         error,
+        needsSubscription,
         loadSubscription,
         activateTrialPlan,
         subscribeToPlan,

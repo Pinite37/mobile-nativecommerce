@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 import { io, Socket } from 'socket.io-client';
 import TokenStorageService from '../TokenStorageService';
 
@@ -161,17 +160,11 @@ class SocketService {
 
       console.log('🔄 Connexion à Socket.IO...', { userId });
 
-      // URL du serveur - utiliser la même base URL que ApiService
-      let serverUrl = 'http://localhost:4000';
-      
-      if (Platform.OS === 'android') {
-        serverUrl = 'http://192.168.86.143:4000';
-        // serverUrl = 'http://192.168.0.107:4000';
-      } else if (Platform.OS === 'ios') {
-        serverUrl = 'http://localhost:4000';
-      }
+      // URL du serveur - utiliser la variable d'environnement
+      const serverUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
 
       console.log('🌐 Socket.IO Server URL:', serverUrl);
+      console.log('🔧 Backend URL from .env:', process.env.EXPO_PUBLIC_BACKEND_URL);
 
       // Créer la socket avec configuration optimale
       console.log('🔧 Configuration Socket.IO:', {

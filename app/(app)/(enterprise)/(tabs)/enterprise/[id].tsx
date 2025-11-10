@@ -5,13 +5,13 @@ import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Animated,
   Dimensions,
   Easing,
   FlatList,
   Image,
   Linking,
+  Modal,
   RefreshControl,
   SafeAreaView,
   Text,
@@ -38,6 +38,12 @@ export default function EnterpriseDetails() {
     pages: 0
   });
 
+  // États pour les modals d'erreur
+  const [errorModal, setErrorModal] = useState<{ visible: boolean; title: string; message: string }>({
+    visible: false,
+    title: '',
+    message: ''
+  });
 
   useEffect(() => {
     if (id) {
@@ -73,7 +79,11 @@ export default function EnterpriseDetails() {
       console.log("✅ Produits chargés:", (productsData.products || []).length);
     } catch (error) {
       console.error('❌ Erreur chargement entreprise:', error);
-      Alert.alert('Erreur', 'Impossible de charger les informations de l\'entreprise');
+      setErrorModal({
+        visible: true,
+        title: 'Erreur',
+        message: 'Impossible de charger les informations de l\'entreprise'
+      });
     } finally {
       setLoading(false);
     }
@@ -225,11 +235,19 @@ export default function EnterpriseDetails() {
         if (supported) {
           return Linking.openURL(whatsappUrl);
         } else {
-          Alert.alert('WhatsApp non disponible', 'WhatsApp n\'est pas installé sur votre appareil.');
+          setErrorModal({
+            visible: true,
+            title: 'WhatsApp non disponible',
+            message: 'WhatsApp n\'est pas installé sur votre appareil.'
+          });
         }
       })
       .catch(() => {
-        Alert.alert('Erreur', 'Impossible d\'ouvrir WhatsApp');
+        setErrorModal({
+          visible: true,
+          title: 'Erreur',
+          message: 'Impossible d\'ouvrir WhatsApp'
+        });
       });
   };
 
@@ -240,11 +258,19 @@ export default function EnterpriseDetails() {
         if (supported) {
           return Linking.openURL(phoneUrl);
         } else {
-          Alert.alert('Erreur', 'Impossible de passer l\'appel');
+          setErrorModal({
+            visible: true,
+            title: 'Erreur',
+            message: 'Impossible de passer l\'appel'
+          });
         }
       })
       .catch(() => {
-        Alert.alert('Erreur', 'Impossible de passer l\'appel');
+        setErrorModal({
+          visible: true,
+          title: 'Erreur',
+          message: 'Impossible de passer l\'appel'
+        });
       });
   };
 
@@ -259,11 +285,19 @@ export default function EnterpriseDetails() {
         if (supported) {
           return Linking.openURL(url);
         } else {
-          Alert.alert('Erreur', 'Impossible d\'ouvrir le site web');
+          setErrorModal({
+            visible: true,
+            title: 'Erreur',
+            message: 'Impossible d\'ouvrir le site web'
+          });
         }
       })
       .catch(() => {
-        Alert.alert('Erreur', 'Impossible d\'ouvrir le site web');
+        setErrorModal({
+          visible: true,
+          title: 'Erreur',
+          message: 'Impossible d\'ouvrir le site web'
+        });
       });
   };
 
@@ -559,6 +593,50 @@ export default function EnterpriseDetails() {
         }
         contentContainerStyle={{ paddingBottom: 20, paddingTop: 20 }}
       />
+
+      {/* Modal d'erreur */}
+      <Modal
+        visible={errorModal.visible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setErrorModal({ visible: false, title: '', message: '' })}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setErrorModal({ visible: false, title: '', message: '' })}
+          className="flex-1 bg-black/50 justify-center items-center px-6"
+        >
+          <TouchableOpacity activeOpacity={1} className="bg-white rounded-3xl p-6 w-full max-w-sm">
+            {/* Icon d'erreur */}
+            <View className="items-center mb-4">
+              <View className="w-16 h-16 bg-red-100 rounded-full justify-center items-center">
+                <Ionicons name="alert-circle" size={32} color="#EF4444" />
+              </View>
+            </View>
+
+            {/* Titre */}
+            <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+              {errorModal.title}
+            </Text>
+
+            {/* Message */}
+            <Text className="text-base font-quicksand-medium text-neutral-600 text-center mb-6">
+              {errorModal.message}
+            </Text>
+
+            {/* Bouton OK */}
+            <TouchableOpacity
+              onPress={() => setErrorModal({ visible: false, title: '', message: '' })}
+              className="bg-primary-500 py-3 rounded-xl"
+              activeOpacity={0.7}
+            >
+              <Text className="text-white font-quicksand-bold text-center">
+                OK
+              </Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }

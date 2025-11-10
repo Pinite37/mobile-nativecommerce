@@ -5,7 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, KeyboardAvoidingView, Modal, Platform, SafeAreaView, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, KeyboardAvoidingView, Modal, Platform, SafeAreaView, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AdvertisementService, { CreateAdvertisementPayload } from '../../../../services/api/AdvertisementService';
 
@@ -379,6 +379,7 @@ export default function CreateAdvertisement() {
             <TouchableOpacity
               onPress={() => router.back()}
               className="w-10 h-10 rounded-full bg-white/20 items-center justify-center"
+              activeOpacity={0.7}
             >
               <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
             </TouchableOpacity>
@@ -421,6 +422,7 @@ export default function CreateAdvertisement() {
                             setImagesBase64(prev => prev.filter((_, i) => i !== index));
                           }}
                           className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full items-center justify-center"
+                          activeOpacity={0.7}
                         >
                           <Ionicons name="close" size={14} color="#FFFFFF" />
                         </TouchableOpacity>
@@ -440,6 +442,7 @@ export default function CreateAdvertisement() {
                 <TouchableOpacity
                   onPress={() => setImagePickerVisible(true)}
                   className="w-full h-24 bg-neutral-100 rounded-2xl items-center justify-center border-2 border-dashed border-neutral-300"
+                  activeOpacity={0.7}
                 >
                   <Ionicons name="add" size={32} color="#9CA3AF" />
                   <Text className="text-neutral-500 font-quicksand-medium mt-2 text-sm">
@@ -501,6 +504,7 @@ export default function CreateAdvertisement() {
                       key={t}
                       onPress={() => setType(t as any)}
                       className={`px-3 py-2 rounded-xl border ${type===t? 'bg-primary-500 border-primary-500':'bg-white border-neutral-200'}`}
+                      activeOpacity={1}
                     >
                       <Text className={`text-xs font-quicksand-semibold ${type===t?'text-white':'text-neutral-700'}`}>{t}</Text>
                     </TouchableOpacity>
@@ -515,6 +519,7 @@ export default function CreateAdvertisement() {
                       key={a}
                       onPress={() => setAudience(a as any)}
                       className={`px-3 py-2 rounded-xl border ${audience===a? 'bg-primary-500 border-primary-500':'bg-white border-neutral-200'}`}
+                      activeOpacity={1}
                     >
                       <Text className={`text-xs font-quicksand-semibold ${audience===a?'text-white':'text-neutral-700'}`}>{a}</Text>
                     </TouchableOpacity>
@@ -527,11 +532,11 @@ export default function CreateAdvertisement() {
             <View className="mt-6">
               <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">Période *</Text>
               <View className="flex-row gap-3">
-                <TouchableOpacity onPress={() => { if (Platform.OS === 'android') { setShowStartDatePicker(true); } else { setShowStartPicker(true); } }} className="flex-1 bg-white rounded-2xl px-4 py-4 border border-neutral-200">
+                <TouchableOpacity onPress={() => { if (Platform.OS === 'android') { setShowStartDatePicker(true); } else { setShowStartPicker(true); } }} className="flex-1 bg-white rounded-2xl px-4 py-4 border border-neutral-200" activeOpacity={0.7}>
                   <Text className="text-xs text-neutral-500 font-quicksand-medium mb-1">Début</Text>
                   <Text className="text-neutral-800 font-quicksand-semibold text-sm">{startDate.toLocaleString('fr-FR')}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => { if (Platform.OS === 'android') { setShowEndDatePicker(true); } else { setShowEndPicker(true); } }} className="flex-1 bg-white rounded-2xl px-4 py-4 border border-neutral-200">
+                <TouchableOpacity onPress={() => { if (Platform.OS === 'android') { setShowEndDatePicker(true); } else { setShowEndPicker(true); } }} className="flex-1 bg-white rounded-2xl px-4 py-4 border border-neutral-200" activeOpacity={0.7}>
                   <Text className="text-xs text-neutral-500 font-quicksand-medium mb-1">Fin</Text>
                   <Text className="text-neutral-800 font-quicksand-semibold text-sm">{endDate.toLocaleString('fr-FR')}</Text>
                 </TouchableOpacity>
@@ -690,10 +695,14 @@ export default function CreateAdvertisement() {
               <TouchableOpacity
                 onPress={submit}
                 disabled={submitting}
-                className={`flex-1 rounded-2xl py-4 items-center justify-center ${
+                className={`flex-1 rounded-2xl py-4 flex-row items-center justify-center ${
                   validate() ? 'bg-neutral-300' : 'bg-primary-500'
                 }`}
+                activeOpacity={1}
               >
+                {submitting && (
+                  <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 8 }} />
+                )}
                 <Text className={`font-quicksand-semibold ${!validate() ? 'text-white' : 'text-neutral-500'}`}>
                   {submitting ? 'Envoi...' : 'Créer'}
                 </Text>

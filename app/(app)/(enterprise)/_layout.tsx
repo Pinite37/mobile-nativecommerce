@@ -1,9 +1,27 @@
 import { Stack } from "expo-router";
-import { SubscriptionProvider } from "../../../contexts/SubscriptionContext";
+import React, { useEffect, useState } from "react";
+import { SubscriptionWelcomeModal } from "../../../components/enterprise/SubscriptionWelcomeModal";
+import { useAuth } from "../../../contexts/AuthContext";
+import { SubscriptionProvider, useSubscription } from "../../../contexts/SubscriptionContext";
 
-export default function EnterpriseLayout() {
+// Composant interne qui gère l'affichage du modal
+function EnterpriseLayoutContent() {
+  const { needsSubscription, loading } = useSubscription();
+  const { user } = useAuth();
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
+  useEffect(() => {
+    // Afficher le modal si l'utilisateur n'a pas d'abonnement
+    if (!loading && needsSubscription) {
+      console.log('🎯 ENTERPRISE LAYOUT - Affichage du modal de bienvenue requis');
+      setShowWelcomeModal(true);
+    } else if (!needsSubscription) {
+      setShowWelcomeModal(false);
+    }
+  }, [needsSubscription, loading]);
+
   return (
-    <SubscriptionProvider>
+    <>
       <Stack>
         <Stack.Screen 
           name="(tabs)" 
@@ -110,6 +128,27 @@ export default function EnterpriseLayout() {
         }}
       />
     </Stack>
+
+      {/* Modal de bienvenue pour choisir un abonnement */}
+      <SubscriptionWelcomeModal
+        visible={showWelcomeModal}
+        onClose={() => {
+          // Le modal ne peut être fermé que si l'utilisateur n'a plus besoin d'abonnement
+          // (c'est-à-dire après avoir activé un plan)
+          if (!needsSubscription) {
+            setShowWelcomeModal(false);
+          }
+        }}
+        userName={user?.firstName}
+      />
+    </>
+  );
+}
+
+export default function EnterpriseLayout() {
+  return (
+    <SubscriptionProvider>
+      <EnterpriseLayoutContent />
     </SubscriptionProvider>
   );
 }

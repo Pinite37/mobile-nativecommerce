@@ -310,7 +310,7 @@ export default function MessagesPage() {
 
             {/* Dernier message */}
             <Text
-              className={`text-sm ${isUnread ? 'text-neutral-800 font-quicksand-semibold' : 'text-neutral-600 font-quicksand-regular'}`}
+              className={`text-sm ${isUnread ? 'text-neutral-800 font-quicksand-semibold' : 'text-neutral-600 font-quicksand-light'}`}
               numberOfLines={2}
             >
               {String(messagePreview)}
