@@ -3,7 +3,17 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
-import { Animated, Easing, Image, Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import {
+  Animated,
+  Easing,
+  Image,
+  Modal,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../../../contexts/AuthContext";
 
@@ -13,21 +23,48 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [confirmationAction, setConfirmationAction] = useState<{
-    type: 'logout';
+    type: "logout";
     title: string;
     message: string;
     confirmText: string;
     confirmColor: string;
     onConfirm: () => void;
   } | null>(null);
-  
+
+  // Responsive dimensions
+  const { width } = useWindowDimensions();
+  const isSmallPhone = width < 360;
+  const isTablet = width >= 768 && width < 1024;
+  const isLargeTablet = width >= 1024;
+
+  // Header bottom padding (augmenté pour laisser plus d'espace)
+  const headerBottomPadding = isLargeTablet
+    ? 80
+    : isTablet
+    ? 72
+    : isSmallPhone
+    ? 56
+    : 64;
+
+  // Overlay lift (réduit pour ne pas cacher le contenu du header)
+  const overlayLift = isLargeTablet
+    ? -48
+    : isTablet
+    ? -40
+    : isSmallPhone
+    ? -32
+    : -36;
+
   // Rafraîchir les données utilisateur au chargement de la page
   useEffect(() => {
     const loadUserData = async () => {
       try {
         await refreshUserData();
       } catch (error) {
-        console.error('Erreur lors du chargement des données utilisateur:', error);
+        console.error(
+          "Erreur lors du chargement des données utilisateur:",
+          error
+        );
       } finally {
         setLoading(false);
       }
@@ -52,15 +89,23 @@ export default function ProfileScreen() {
       loop.start();
       return () => loop.stop();
     }, [shimmer]);
-    const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
+    const translateX = shimmer.interpolate({
+      inputRange: [0, 1],
+      outputRange: [-150, 150],
+    });
     return (
-      <View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
-        <Animated.View style={{
-          position: 'absolute', top: 0, bottom: 0, width: 120,
-          transform: [{ translateX }],
-          backgroundColor: 'rgba(255,255,255,0.35)',
-          opacity: 0.7,
-        }} />
+      <View style={[{ backgroundColor: "#E5E7EB", overflow: "hidden" }, style]}>
+        <Animated.View
+          style={{
+            position: "absolute",
+            top: 0,
+            bottom: 0,
+            width: 120,
+            transform: [{ translateX }],
+            backgroundColor: "rgba(255,255,255,0.35)",
+            opacity: 0.7,
+          }}
+        />
       </View>
     );
   };
@@ -70,8 +115,15 @@ export default function ProfileScreen() {
       <View className="flex-row items-center">
         <ShimmerBlock style={{ width: 48, height: 48, borderRadius: 12 }} />
         <View className="ml-4 flex-1">
-          <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '70%', marginBottom: 8 }} />
-          <ShimmerBlock style={{ height: 14, borderRadius: 6, width: '50%' }} />
+          <ShimmerBlock
+            style={{
+              height: 16,
+              borderRadius: 8,
+              width: "70%",
+              marginBottom: 8,
+            }}
+          />
+          <ShimmerBlock style={{ height: 14, borderRadius: 6, width: "50%" }} />
         </View>
         <ShimmerBlock style={{ width: 20, height: 20, borderRadius: 2 }} />
       </View>
@@ -79,22 +131,29 @@ export default function ProfileScreen() {
   );
 
   // Fonctions de confirmation modal
-  const showConfirmation = (type: 'logout', onConfirm: () => void) => {
-    let title = '';
-    let message = '';
-    let confirmText = '';
-    let confirmColor = '';
+  const showConfirmation = (type: "logout", onConfirm: () => void) => {
+    let title = "";
+    let message = "";
+    let confirmText = "";
+    let confirmColor = "";
 
     switch (type) {
-      case 'logout':
-        title = 'Déconnexion';
-        message = 'Êtes-vous sûr de vouloir vous déconnecter ?';
-        confirmText = 'Déconnexion';
-        confirmColor = '#EF4444';
+      case "logout":
+        title = "Déconnexion";
+        message = "Êtes-vous sûr de vouloir vous déconnecter ?";
+        confirmText = "Déconnexion";
+        confirmColor = "#EF4444";
         break;
     }
 
-    setConfirmationAction({ type, title, message, confirmText, confirmColor, onConfirm });
+    setConfirmationAction({
+      type,
+      title,
+      message,
+      confirmText,
+      confirmColor,
+      onConfirm,
+    });
     setConfirmationVisible(true);
   };
 
@@ -117,35 +176,64 @@ export default function ProfileScreen() {
     >
       {/* Header Skeleton */}
       <LinearGradient
-        colors={['#10B981', '#059669']}
+        colors={["#047857", "#10B981"]}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        className="rounded-b-3xl shadow-sm"
-        style={{ 
+        end={{ x: 1, y: 0 }}
+        className="px-6"
+        style={{
           paddingTop: insets.top + 16,
           paddingLeft: insets.left + 24,
           paddingRight: insets.right + 24,
-          paddingBottom: 16
+          paddingBottom: headerBottomPadding,
         }}
       >
         <View className="flex-row items-center justify-between">
           <View className="flex-1 pr-4">
-            <ShimmerBlock style={{ height: 24, borderRadius: 12, width: '60%', marginBottom: 8 }} />
-            <ShimmerBlock style={{ height: 14, borderRadius: 7, width: '40%' }} />
+            <ShimmerBlock
+              style={{
+                height: 24,
+                borderRadius: 12,
+                width: "60%",
+                marginBottom: 8,
+              }}
+            />
+            <ShimmerBlock
+              style={{ height: 14, borderRadius: 7, width: "40%" }}
+            />
           </View>
           <ShimmerBlock style={{ width: 24, height: 24, borderRadius: 12 }} />
         </View>
       </LinearGradient>
 
       {/* User Profile Skeleton */}
-      <View className="bg-white mx-6 mt-6 rounded-3xl shadow-md border border-neutral-100 overflow-hidden">
-        <View className="p-6">
-          <View className="flex-row items-center">
-            <ShimmerBlock style={{ width: 80, height: 80, borderRadius: 40 }} />
-            <View className="ml-4 flex-1">
-              <ShimmerBlock style={{ height: 20, borderRadius: 10, width: '80%', marginBottom: 8 }} />
-              <ShimmerBlock style={{ height: 14, borderRadius: 7, width: '60%', marginBottom: 16 }} />
-              <ShimmerBlock style={{ height: 32, borderRadius: 16, width: '40%' }} />
+      <View className="px-4" style={{ marginTop: overlayLift }}>
+        <View className="bg-white rounded-2xl p-4 flex-row items-start shadow-sm border border-neutral-100">
+          <View className="p-6">
+            <View className="flex-row items-center">
+              <ShimmerBlock
+                style={{ width: 80, height: 80, borderRadius: 40 }}
+              />
+              <View className="ml-4 flex-1">
+                <ShimmerBlock
+                  style={{
+                    height: 20,
+                    borderRadius: 10,
+                    width: "80%",
+                    marginBottom: 8,
+                  }}
+                />
+                <ShimmerBlock
+                  style={{
+                    height: 14,
+                    borderRadius: 7,
+                    width: "60%",
+                    marginBottom: 16,
+                  }}
+                />
+                <ShimmerBlock
+                  style={{ height: 32, borderRadius: 16, width: "40%" }}
+                />
+              </View>
             </View>
           </View>
         </View>
@@ -160,40 +248,49 @@ export default function ProfileScreen() {
 
       {/* Logout Button Skeleton */}
       <View className="px-6 mb-10">
-        <ShimmerBlock style={{ height: 48, borderRadius: 16, width: '100%' }} />
+        <ShimmerBlock style={{ height: 48, borderRadius: 16, width: "100%" }} />
       </View>
     </ScrollView>
   );
 
   const handleLogout = () => {
-    showConfirmation('logout', handleConfirmLogout);
+    showConfirmation("logout", handleConfirmLogout);
   };
 
   const handleConfirmLogout = async () => {
     try {
-      console.log('🚪 Début de la déconnexion...');
+      console.log("🚪 Début de la déconnexion...");
 
-      console.log('🚪 Déconnexion en cours...');
+      console.log("🚪 Déconnexion en cours...");
 
       // Effectuer la déconnexion
       await logout();
 
-      console.log('🚪 Déconnexion terminée avec succès');
-
+      console.log("🚪 Déconnexion terminée avec succès");
     } catch (error) {
-      console.error('❌ Erreur lors de la déconnexion:', error);
+      console.error("❌ Erreur lors de la déconnexion:", error);
 
       // En cas d'erreur, afficher une alerte simple
-      alert('Une erreur s\'est produite lors de la déconnexion. Veuillez réessayer.');
+      alert(
+        "Une erreur s'est produite lors de la déconnexion. Veuillez réessayer."
+      );
     }
   };
 
   const menuItems = [
-    { icon: "person-outline", title: "Mes informations", route: "/(app)/(client)/profile/details" },
+    {
+      icon: "person-outline",
+      title: "Mes informations",
+      route: "/(app)/(client)/profile/details",
+    },
     // { icon: "location-outline", title: "Mes adresses", route: "/(app)/(client)/profile/addresses" },
     // { icon: "bag-check-outline", title: "Mes commandes", route: "/(app)/(client)/profile/orders" },
     // { icon: "card-outline", title: "Moyens de paiement", route: "/(app)/(client)/profile/payments" },
-    { icon: "settings-outline", title: "Paramètres", route: "/(app)/(client)/profile/settings" },
+    {
+      icon: "settings-outline",
+      title: "Paramètres",
+      route: "/(app)/(client)/profile/settings",
+    },
     // { icon: "help-circle-outline", title: "Aide et support", route: "/(app)/(client)/profile/help" },
   ];
 
@@ -209,21 +306,21 @@ export default function ProfileScreen() {
   return (
     <View className="flex-1 bg-background-secondary">
       <ExpoStatusBar style="light" translucent />
-      <ScrollView 
+      <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 90 }} // Add bottom padding to ensure content isn't hidden by tab bar
       >
         {/* Header */}
         <LinearGradient
-          colors={['#10B981', '#059669']}
+          colors={["#047857", "#10B981"]}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          className="rounded-b-3xl shadow-sm"
-          style={{ 
+          end={{ x: 1, y: 0 }}
+          className="px-6"
+          style={{
             paddingTop: insets.top + 16,
             paddingLeft: insets.left + 24,
             paddingRight: insets.right + 24,
-            paddingBottom: 16
+            paddingBottom: headerBottomPadding,
           }}
         >
           <View className="flex-row items-center justify-between">
@@ -232,9 +329,16 @@ export default function ProfileScreen() {
                 Mon profil
               </Text>
               {user && (
-                <Text className="text-sm font-quicksand text-white/90 mt-1">
-                  {user.firstName} {user.lastName}
-                </Text>
+                <View className="flex-row items-center mt-1">
+                  <Ionicons
+                    name="person"
+                    size={14}
+                    color="rgba(255,255,255,0.85)"
+                  />
+                  <Text className="text-sm font-quicksand-medium text-white/90 ml-1">
+                    {user.firstName} {user.lastName}
+                  </Text>
+                </View>
               )}
             </View>
             {/* <TouchableOpacity className="relative">
@@ -245,14 +349,14 @@ export default function ProfileScreen() {
         </LinearGradient>
 
         {/* User Profile */}
-        <View className="bg-white mx-6 mt-6 rounded-3xl shadow-md border border-neutral-100 overflow-hidden">
-          <View className="p-6">
-            <View className="flex-row items-center">
+        <View className="px-4" style={{ marginTop: overlayLift }}>
+          <View className="bg-white rounded-2xl p-4 flex-row items-start shadow-sm border border-neutral-100">
+            <View className="flex-row items-center w-full">
               {user?.profileImage ? (
                 <Image
                   source={{ uri: user.profileImage }}
                   className="w-20 h-20 rounded-full mr-4"
-                  style={{ borderWidth: 3, borderColor: '#10B981' }}
+                  style={{ borderWidth: 3, borderColor: "#10B981" }}
                 />
               ) : (
                 <View className="w-20 h-20 rounded-full bg-primary-100 items-center justify-center mr-4 border-2 border-primary-200">
@@ -261,10 +365,10 @@ export default function ProfileScreen() {
               )}
               <View className="flex-1">
                 <Text className="text-xl font-quicksand-bold text-neutral-800">
-                  {user ? `${user.firstName} ${user.lastName}` : 'Utilisateur'}
+                  {user ? `${user.firstName} ${user.lastName}` : "Utilisateur"}
                 </Text>
                 <Text className="text-neutral-500 font-quicksand mt-1">
-                  {user?.email || 'email@exemple.com'}
+                  {user?.email || "email@exemple.com"}
                 </Text>
               </View>
             </View>
@@ -279,7 +383,7 @@ export default function ProfileScreen() {
               className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-4 mb-2  flex-row items-center"
               onPress={() => router.push(item.route as any)}
             >
-                <View className="w-12 h-12 bg-primary-100 rounded-xl justify-center items-center mr-4">
+              <View className="w-12 h-12 bg-primary-100 rounded-xl justify-center items-center mr-4">
                 <Ionicons name={item.icon as any} size={24} color="#10B981" />
               </View>
               <View className="flex-1">
@@ -299,7 +403,12 @@ export default function ProfileScreen() {
             className="bg-red-500 py-4 rounded-2xl shadow-md border border-red-400"
           >
             <View className="flex-row items-center justify-center">
-              <Ionicons name="log-out-outline" size={20} color="white" style={{ marginRight: 8 }} />
+              <Ionicons
+                name="log-out-outline"
+                size={20}
+                color="white"
+                style={{ marginRight: 8 }}
+              />
               <Text className="text-white font-quicksand-semibold">
                 Déconnexion
               </Text>
@@ -328,7 +437,9 @@ export default function ProfileScreen() {
                 className="flex-1 bg-neutral-100 rounded-xl py-3"
                 onPress={closeConfirmation}
               >
-                <Text className="text-neutral-700 font-quicksand-semibold text-center">Annuler</Text>
+                <Text className="text-neutral-700 font-quicksand-semibold text-center">
+                  Annuler
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 className="flex-1 rounded-xl py-3"

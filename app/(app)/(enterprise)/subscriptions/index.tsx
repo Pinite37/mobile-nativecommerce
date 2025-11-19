@@ -1,17 +1,93 @@
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Stack, router } from 'expo-router';
-import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
-import { Animated, Easing, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import KkiapayPayment from '../../../../components/subscription/KkiapayPayment';
-import StatusModal from '../../../../components/subscription/StatusModal';
-import UpgradeConfirmationModal from '../../../../components/subscription/UpgradeConfirmationModal';
-import { useAuth } from '../../../../contexts/AuthContext';
-import { useSubscription } from '../../../../contexts/SubscriptionContext';
-import PaymentService from '../../../../services/api/PaymentService';
-import SubscriptionService, { Plan } from '../../../../services/api/SubscriptionService';
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { Stack, router } from "expo-router";
+import { StatusBar as ExpoStatusBar } from "expo-status-bar";
+import React, { useEffect, useState } from "react";
+import {
+  Animated,
+  Easing,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import KkiapayPayment from "../../../../components/subscription/KkiapayPayment";
+import StatusModal from "../../../../components/subscription/StatusModal";
+import UpgradeConfirmationModal from "../../../../components/subscription/UpgradeConfirmationModal";
+import { useAuth } from "../../../../contexts/AuthContext";
+import { useSubscription } from "../../../../contexts/SubscriptionContext";
+import PaymentService from "../../../../services/api/PaymentService";
+import SubscriptionService, {
+  Plan,
+} from "../../../../services/api/SubscriptionService";
+
+// Skeleton Loader Component
+const ShimmerBlock = ({ style }: { style?: any }) => {
+  const shimmer = React.useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.timing(shimmer, {
+        toValue: 1,
+        duration: 1200,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [shimmer]);
+  const translateX = shimmer.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-150, 150],
+  });
+  return (
+    <View style={[{ backgroundColor: "#E5E7EB", overflow: "hidden" }, style]}>
+      <Animated.View
+        style={{
+          position: "absolute",
+          top: 0,
+          bottom: 0,
+          width: 120,
+          transform: [{ translateX }],
+          backgroundColor: "rgba(255,255,255,0.35)",
+          opacity: 0.7,
+        }}
+      />
+    </View>
+  );
+};
+
+const SkeletonCard = () => (
+  <View className="bg-white rounded-3xl p-5 mb-5 border border-neutral-100 shadow-sm">
+    <View className="flex-row items-start justify-between mb-3">
+      <View className="flex-1 mr-3">
+        <ShimmerBlock
+          style={{ height: 20, borderRadius: 8, width: "40%", marginBottom: 8 }}
+        />
+        <ShimmerBlock style={{ height: 24, borderRadius: 8, width: "60%" }} />
+      </View>
+      <ShimmerBlock style={{ height: 24, borderRadius: 12, width: 80 }} />
+    </View>
+    <View className="mb-4">
+      {[1, 2, 3, 4].map((i) => (
+        <View key={i} className="flex-row items-start mb-2">
+          <ShimmerBlock
+            style={{
+              width: 18,
+              height: 18,
+              borderRadius: 9,
+              marginRight: 8,
+              marginTop: 1,
+            }}
+          />
+          <ShimmerBlock style={{ height: 14, borderRadius: 6, width: "80%" }} />
+        </View>
+      ))}
+    </View>
+    <ShimmerBlock style={{ height: 44, borderRadius: 22, width: "100%" }} />
+  </View>
+);
 
 function EnterpriseSubscriptionsContent() {
   const insets = useSafeAreaInsets();
@@ -20,17 +96,17 @@ function EnterpriseSubscriptionsContent() {
   const [error, setError] = useState<string | null>(null);
   const { subscription, loadSubscription } = useSubscription();
   const { user } = useAuth();
-  
+
   // Modal state
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [upgradeLoading, setUpgradeLoading] = useState(false);
-  
+
   // Status modal state
   const [showStatusModal, setShowStatusModal] = useState(false);
-  const [statusType, setStatusType] = useState<'success' | 'error'>('success');
-  const [statusTitle, setStatusTitle] = useState('');
-  const [statusMessage, setStatusMessage] = useState('');
+  const [statusType, setStatusType] = useState<"success" | "error">("success");
+  const [statusTitle, setStatusTitle] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
 
   // Payment state
   const [currentIntentId, setCurrentIntentId] = useState<string | null>(null);
@@ -76,10 +152,10 @@ function EnterpriseSubscriptionsContent() {
 
   // Callback KKiaPay success
   const handlePaymentSuccess = async (data: any) => {
-    console.log('✅ KKiaPay SUCCESS:', data);
+    console.log("✅ KKiaPay SUCCESS:", data);
     setShowKkiapayWidget(false);
     setProcessingPayment(true);
-    
+
     try {
       // Confirmer le paiement avec le backend
       if (currentIntentId && data.transactionId) {
@@ -88,7 +164,7 @@ function EnterpriseSubscriptionsContent() {
           transactionId: data.transactionId,
         });
 
-        console.log('✅ Paiement confirmé par le backend:', confirmResult);
+        console.log("✅ Paiement confirmé par le backend:", confirmResult);
 
         // Recharger la souscription
         await loadSubscription();
@@ -101,21 +177,26 @@ function EnterpriseSubscriptionsContent() {
         setPaymentConfig(null);
 
         // Afficher le succès
-        setStatusType('success');
-        setStatusTitle('Paiement réussi !');
+        setStatusType("success");
+        setStatusTitle("Paiement réussi !");
         setStatusMessage(
-          `Votre abonnement ${confirmResult.data.subscription ? 'a été activé' : 'est maintenant actif'}. Merci !`
+          `Votre abonnement ${
+            confirmResult.data.subscription
+              ? "a été activé"
+              : "est maintenant actif"
+          }. Merci !`
         );
         setShowStatusModal(true);
       } else {
-        throw new Error('Intention de paiement ou transaction ID manquant');
+        throw new Error("Intention de paiement ou transaction ID manquant");
       }
     } catch (error: any) {
-      console.error('❌ Erreur confirmation paiement:', error);
-      setStatusType('error');
-      setStatusTitle('Erreur');
+      console.error("❌ Erreur confirmation paiement:", error);
+      setStatusType("error");
+      setStatusTitle("Erreur");
       setStatusMessage(
-        error.response?.data?.message || 'Impossible de confirmer le paiement. Contactez le support.'
+        error.response?.data?.message ||
+          "Impossible de confirmer le paiement. Contactez le support."
       );
       setShowStatusModal(true);
     } finally {
@@ -125,39 +206,36 @@ function EnterpriseSubscriptionsContent() {
 
   // Callback KKiaPay failed
   const handlePaymentFailed = (data: any) => {
-    console.log('❌ KKiaPay FAILED:', data);
+    console.log("❌ KKiaPay FAILED:", data);
     setShowKkiapayWidget(false);
     setProcessingPayment(false);
     setCurrentIntentId(null);
     setPaymentConfig(null);
-    
-    setStatusType('error');
-    setStatusTitle('❌ Paiement échoué');
-    setStatusMessage('Le paiement a échoué. Veuillez réessayer.');
+
+    setStatusType("error");
+    setStatusTitle("❌ Paiement échoué");
+    setStatusMessage("Le paiement a échoué. Veuillez réessayer.");
     setShowStatusModal(true);
   };
 
   useEffect(() => {
     loadData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('🔄 Chargement des plans et souscription...');
-      
+      console.log("🔄 Chargement des plans et souscription...");
+
       // Charger les plans disponibles et la souscription active en parallèle
-      await Promise.all([
-        loadPlans(),
-        loadSubscription()
-      ]);
-      
-      console.log('✅ Données chargées');
+      await Promise.all([loadPlans(), loadSubscription()]);
+
+      console.log("✅ Données chargées");
     } catch (err: any) {
-      console.error('❌ Erreur chargement:', err);
-      setError('Impossible de charger les données. Veuillez réessayer.');
+      console.error("❌ Erreur chargement:", err);
+      setError("Impossible de charger les données. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }
@@ -168,7 +246,7 @@ function EnterpriseSubscriptionsContent() {
       const enterprisePlans = await SubscriptionService.getEnterprisePlans();
       setPlans(enterprisePlans);
     } catch (err: any) {
-      console.error('❌ Erreur chargement plans:', err);
+      console.error("❌ Erreur chargement plans:", err);
       throw err;
     }
   };
@@ -185,14 +263,14 @@ function EnterpriseSubscriptionsContent() {
 
     try {
       setUpgradeLoading(true);
-      console.log('🔄 Upgrade vers le plan:', selectedPlan.name);
+      console.log("🔄 Upgrade vers le plan:", selectedPlan.name);
 
-      const isFree = selectedPlan.price === 'Gratuit';
+      const isFree = selectedPlan.price === "Gratuit";
 
       if (isFree) {
         // Plan gratuit - Activer le trial directement
         await SubscriptionService.activateTrialPlan();
-        console.log('✅ Plan d\'essai activé');
+        console.log("✅ Plan d'essai activé");
 
         // Recharger les données
         await loadSubscription();
@@ -201,28 +279,28 @@ function EnterpriseSubscriptionsContent() {
         // Fermer le modal et afficher le succès
         setShowUpgradeModal(false);
         setSelectedPlan(null);
-        
-        setStatusType('success');
-        setStatusTitle('🎉 Succès !');
+
+        setStatusType("success");
+        setStatusTitle("🎉 Succès !");
         setStatusMessage(`Votre période d'essai a été activée avec succès.`);
         setShowStatusModal(true);
       } else {
         // Plan payant - Créer une intention de paiement
-        const amount = parseFloat(selectedPlan.price.replace(/[^0-9]/g, ''));
-        
-        console.log('🔄 Création intention de paiement pour:', amount, 'FCFA');
-        
+        const amount = parseFloat(selectedPlan.price.replace(/[^0-9]/g, ""));
+
+        console.log("🔄 Création intention de paiement pour:", amount, "FCFA");
+
         const intentResponse = await PaymentService.createPaymentIntent({
-          subscriptionType: 'ENTERPRISE',
+          subscriptionType: "ENTERPRISE",
           planId: selectedPlan.id,
           metadata: {
-            source: 'mobile',
+            source: "mobile",
             planName: selectedPlan.name,
           },
         });
 
-        console.log('✅ Intention créée:', intentResponse.data.intentId);
-        
+        console.log("✅ Intention créée:", intentResponse.data.intentId);
+
         // Stocker l'intentId pour le callback KKiaPay
         setCurrentIntentId(intentResponse.data.intentId);
 
@@ -230,27 +308,30 @@ function EnterpriseSubscriptionsContent() {
         setShowUpgradeModal(false);
 
         // Préparer la configuration du paiement
-        console.log('🔄 Préparation widget KKiaPay...');
+        console.log("🔄 Préparation widget KKiaPay...");
         setPaymentConfig({
           amount: amount,
-          email: user.email || 'client@example.com',
-          phone: user.phone || '',
+          email: user.email || "client@example.com",
+          phone: user.phone || "",
           name: `${user.firstName} ${user.lastName}`,
           reason: `Abonnement ${selectedPlan.name}`,
         });
-        
+
         // Afficher le widget KKiaPay
         setShowKkiapayWidget(true);
-        console.log('✅ Widget KKiaPay prêt');
+        console.log("✅ Widget KKiaPay prêt");
       }
     } catch (err: any) {
-      console.error('❌ Erreur upgrade:', err);
-      
-      setStatusType('error');
-      setStatusTitle('❌ Erreur');
-      setStatusMessage(err.response?.data?.message || 'Impossible de lancer le paiement. Veuillez réessayer.');
+      console.error("❌ Erreur upgrade:", err);
+
+      setStatusType("error");
+      setStatusTitle("❌ Erreur");
+      setStatusMessage(
+        err.response?.data?.message ||
+          "Impossible de lancer le paiement. Veuillez réessayer."
+      );
       setShowStatusModal(true);
-      
+
       // Réinitialiser l'intent en cas d'erreur
       setCurrentIntentId(null);
     } finally {
@@ -266,90 +347,56 @@ function EnterpriseSubscriptionsContent() {
     }
   };
 
-  // Skeleton Loader Component
-  const ShimmerBlock = ({ style }: { style?: any }) => {
-    const shimmer = React.useRef(new Animated.Value(0)).current;
-    useEffect(() => {
-      const loop = Animated.loop(
-        Animated.timing(shimmer, {
-          toValue: 1,
-          duration: 1200,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        })
-      );
-      loop.start();
-      return () => loop.stop();
-    }, [shimmer]);
-    const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
-    return (
-      <View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
-        <Animated.View style={{
-          position: 'absolute', top: 0, bottom: 0, width: 120,
-          transform: [{ translateX }],
-          backgroundColor: 'rgba(255,255,255,0.35)',
-          opacity: 0.7,
-        }} />
-      </View>
-    );
-  };
-
-  const SkeletonCard = () => (
-    <View className="bg-white rounded-3xl p-5 mb-5 border border-neutral-100 shadow-sm">
-      <View className="flex-row items-start justify-between mb-3">
-        <View className="flex-1 mr-3">
-          <ShimmerBlock style={{ height: 20, borderRadius: 8, width: '40%', marginBottom: 8 }} />
-          <ShimmerBlock style={{ height: 24, borderRadius: 8, width: '60%' }} />
-        </View>
-        <ShimmerBlock style={{ height: 24, borderRadius: 12, width: 80 }} />
-      </View>
-      <View className="mb-4">
-        {[1, 2, 3, 4].map(i => (
-          <View key={i} className="flex-row items-start mb-2">
-            <ShimmerBlock style={{ width: 18, height: 18, borderRadius: 9, marginRight: 8, marginTop: 1 }} />
-            <ShimmerBlock style={{ height: 14, borderRadius: 6, width: '80%' }} />
-          </View>
-        ))}
-      </View>
-      <ShimmerBlock style={{ height: 44, borderRadius: 22, width: '100%' }} />
-    </View>
-  );
-
   const renderPlan = (plan: Plan) => {
-    const isCurrentPlan = subscription?.plan?._id === plan.id || subscription?.plan?.name === plan.name;
-    const isTrialExpired = subscription && subscription.endDate && new Date(subscription.endDate) < new Date();
-    
+    const isCurrentPlan =
+      subscription?.plan?._id === plan.id ||
+      subscription?.plan?.name === plan.name;
+    const isTrialExpired =
+      subscription &&
+      subscription.endDate &&
+      new Date(subscription.endDate) < new Date();
+
     return (
-      <View key={plan.id} className="bg-white rounded-2xl mb-4 overflow-hidden border border-neutral-100 shadow-lg">
+      <View
+        key={plan.id}
+        className="bg-white rounded-3xl mb-5 overflow-hidden border border-neutral-100 shadow-sm"
+      >
         {/* Plan Header */}
-        <View className="p-5 pb-4 border-b border-neutral-100">
-          <View className="flex-row items-center justify-between mb-2">
+        <View className="p-6 pb-4 border-b border-neutral-50">
+          <View className="flex-row items-center justify-between mb-3">
             <View className="flex-row items-center flex-1">
-              <View 
-                className="w-12 h-12 rounded-full items-center justify-center mr-3" 
-                style={{ backgroundColor: `${plan.color}15` }}
+              <View
+                className="w-14 h-14 rounded-2xl items-center justify-center mr-4"
+                style={{ backgroundColor: `${plan.color}10` }}
               >
-                <Ionicons 
-                  name={isCurrentPlan ? "checkmark-circle" : "diamond-outline"} 
-                  size={24} 
-                  color={plan.color} 
+                <Ionicons
+                  name={isCurrentPlan ? "checkmark-circle" : "diamond"}
+                  size={28}
+                  color={plan.color}
                 />
               </View>
               <View className="flex-1">
-                <View className="flex-row items-center">
-                  <Text className="text-lg font-quicksand-bold text-neutral-800">{plan.name}</Text>
+                <View className="flex-row items-center mb-1">
+                  <Text className="text-xl font-quicksand-bold text-neutral-900">
+                    {plan.name}
+                  </Text>
                   {isCurrentPlan && (
-                    <View className="bg-green-100 px-2 py-0.5 rounded-full ml-2">
-                      <Text className="text-[10px] font-quicksand-bold text-green-700">ACTIF</Text>
+                    <View className="bg-green-100 px-2.5 py-1 rounded-full ml-3">
+                      <Text className="text-[10px] font-quicksand-bold text-green-700 tracking-wide">
+                        ACTIF
+                      </Text>
                     </View>
                   )}
                 </View>
-                <View className="flex-row items-baseline mt-0.5">
-                  <Text className="text-2xl font-quicksand-bold" style={{ color: plan.color }}>
+                <View className="flex-row items-baseline">
+                  <Text
+                    className="text-2xl font-quicksand-bold"
+                    style={{ color: plan.color }}
+                  >
                     {plan.price}
                   </Text>
                   {plan.period && (
-                    <Text className="text-xs font-quicksand-semibold ml-1 text-neutral-500">
+                    <Text className="text-sm font-quicksand-semibold ml-1.5 text-neutral-500">
                       {plan.period}
                     </Text>
                   )}
@@ -358,7 +405,7 @@ function EnterpriseSubscriptionsContent() {
             </View>
             {plan.popular && !isCurrentPlan && (
               <View className="absolute -top-2 -right-2">
-                <View className="bg-gradient-to-r from-amber-400 to-orange-500 px-3 py-1 rounded-full">
+                <View className="bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-1.5 rounded-bl-2xl">
                   <Text className="text-[10px] font-quicksand-bold text-white tracking-wider">
                     POPULAIRE
                   </Text>
@@ -369,42 +416,54 @@ function EnterpriseSubscriptionsContent() {
         </View>
 
         {/* Features List */}
-        <View className="p-5 pt-4 pb-4">
+        <View className="p-6 pt-5 pb-5">
           {plan.features.map((f, idx) => (
-            <View key={idx} className="flex-row items-start mb-3 last:mb-0">
-              <View 
-                className="w-5 h-5 rounded-full items-center justify-center mt-0.5 mr-3" 
-                style={{ backgroundColor: `${plan.color}20` }}
+            <View key={idx} className="flex-row items-start mb-3.5 last:mb-0">
+              <View
+                className="w-6 h-6 rounded-full items-center justify-center mt-0.5 mr-3.5"
+                style={{ backgroundColor: `${plan.color}15` }}
               >
-                <Ionicons name="checkmark" size={14} color={plan.color} style={{ fontWeight: 'bold' }} />
+                <Ionicons
+                  name="checkmark"
+                  size={14}
+                  color={plan.color}
+                  style={{ fontWeight: "bold" }}
+                />
               </View>
-              <Text className="flex-1 text-[13px] font-quicksand-medium text-neutral-700 leading-5">
+              <Text className="flex-1 text-sm font-quicksand-medium text-neutral-600 leading-5">
                 {f}
               </Text>
             </View>
           ))}
         </View>
 
-                  {/* Action Button */}
-        <View className="px-5 pb-5">
+        {/* Action Button */}
+        <View className="px-6 pb-6">
           {isCurrentPlan && !isTrialExpired ? (
-            <View className="rounded-xl py-3.5 items-center flex-row justify-center bg-green-50 border border-green-200">
-              <Ionicons name="checkmark-circle" size={18} color="#059669" />
-              <Text className="text-green-700 font-quicksand-bold text-sm ml-2">
-                Plan actif
+            <View className="rounded-2xl py-4 items-center flex-row justify-center bg-green-50 border border-green-100">
+              <Ionicons name="checkmark-circle" size={20} color="#059669" />
+              <Text className="text-green-700 font-quicksand-bold text-sm ml-2.5">
+                Votre plan actuel
               </Text>
             </View>
           ) : (
             <TouchableOpacity
-              className="rounded-xl py-3.5 items-center flex-row justify-center shadow-sm"
+              className="rounded-2xl py-4 items-center flex-row justify-center shadow-md shadow-primary-500/20"
               style={{ backgroundColor: plan.color }}
               onPress={() => handleSelectPlan(plan)}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
-              <Text className="text-white font-quicksand-bold text-sm">
-                {isTrialExpired ? 'Renouveler' : `Passer à ${plan.name}`}
+              <Text className="text-white font-quicksand-bold text-base">
+                {isTrialExpired
+                  ? "Renouveler maintenant"
+                  : `Choisir ${plan.name}`}
               </Text>
-              <Ionicons name="arrow-forward" size={16} color="#FFFFFF" style={{ marginLeft: 6 }} />
+              <Ionicons
+                name="arrow-forward"
+                size={18}
+                color="#FFFFFF"
+                style={{ marginLeft: 8 }}
+              />
             </TouchableOpacity>
           )}
         </View>
@@ -415,8 +474,12 @@ function EnterpriseSubscriptionsContent() {
   // Format date helper
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'short', year: 'numeric' };
-    return date.toLocaleDateString('fr-FR', options);
+    const options: Intl.DateTimeFormatOptions = {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    };
+    return date.toLocaleDateString("fr-FR", options);
   };
 
   // Calculate days remaining
@@ -449,9 +512,9 @@ function EnterpriseSubscriptionsContent() {
 
         {/* Dynamic Header */}
         <LinearGradient
-          colors={subscription ? ['#10B981', '#059669'] : ['#0D9488', '#0F766E']}
+          colors={["#047857", "#10B981"]}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          end={{ x: 1, y: 0 }}
           style={{
             paddingTop: insets.top + 16,
             paddingBottom: 24,
@@ -467,7 +530,9 @@ function EnterpriseSubscriptionsContent() {
             >
               <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
             </TouchableOpacity>
-            <Text className="text-xl font-quicksand-bold text-white">Abonnements</Text>
+            <Text className="text-xl font-quicksand-bold text-white">
+              Abonnements
+            </Text>
             <TouchableOpacity className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
               <Ionicons name="help-circle-outline" size={22} color="#FFFFFF" />
             </TouchableOpacity>
@@ -488,9 +553,21 @@ function EnterpriseSubscriptionsContent() {
                   {/* Status Badge */}
                   <View className="flex-row items-center justify-between mb-3">
                     <View className="flex-row items-center">
-                      <View className={`w-2 h-2 rounded-full mr-2 ${isExpired() ? 'bg-red-400' : isExpiringSoon() ? 'bg-amber-400' : 'bg-green-400'}`} />
+                      <View
+                        className={`w-2 h-2 rounded-full mr-2 ${
+                          isExpired()
+                            ? "bg-red-400"
+                            : isExpiringSoon()
+                            ? "bg-amber-400"
+                            : "bg-green-400"
+                        }`}
+                      />
                       <Text className="text-neutral-700 font-quicksand-semibold text-xs uppercase tracking-wide">
-                        {isExpired() ? 'Expiré' : isExpiringSoon() ? 'Expire bientôt' : 'Plan actif'}
+                        {isExpired()
+                          ? "Expiré"
+                          : isExpiringSoon()
+                          ? "Expire bientôt"
+                          : "Plan actif"}
                       </Text>
                     </View>
                     {isExpiringSoon() && (
@@ -514,8 +591,14 @@ function EnterpriseSubscriptionsContent() {
                   <View className="flex-row mb-4">
                     <View className="flex-1 bg-primary-50 rounded-xl p-3 mr-2 border border-primary-100">
                       <View className="flex-row items-center justify-between mb-1">
-                        <Text className="text-primary-700 font-quicksand-medium text-[11px]">Produits</Text>
-                        <Ionicons name="cube-outline" size={14} color="#059669" />
+                        <Text className="text-primary-700 font-quicksand-medium text-[11px]">
+                          Produits
+                        </Text>
+                        <Ionicons
+                          name="cube-outline"
+                          size={14}
+                          color="#059669"
+                        />
                       </View>
                       <Text className="text-neutral-800 font-quicksand-bold text-lg">
                         {subscription.usage.currentProducts}
@@ -527,32 +610,47 @@ function EnterpriseSubscriptionsContent() {
 
                     <View className="flex-1 bg-blue-50 rounded-xl p-3 ml-2 border border-blue-100">
                       <View className="flex-row items-center justify-between mb-1">
-                        <Text className="text-blue-700 font-quicksand-medium text-[11px]">Expiration</Text>
-                        <Ionicons name="calendar-outline" size={14} color="#3B82F6" />
+                        <Text className="text-blue-700 font-quicksand-medium text-[11px]">
+                          Expiration
+                        </Text>
+                        <Ionicons
+                          name="calendar-outline"
+                          size={14}
+                          color="#3B82F6"
+                        />
                       </View>
                       <Text className="text-neutral-800 font-quicksand-bold text-sm">
-                        {formatDate(subscription.endDate).split(' ').slice(0, 2).join(' ')}
+                        {formatDate(subscription.endDate)
+                          .split(" ")
+                          .slice(0, 2)
+                          .join(" ")}
                       </Text>
                       <Text className="text-neutral-500 font-quicksand-medium text-[10px]">
-                        {getDaysRemaining()! > 0 ? `${getDaysRemaining()} jours` : 'Expiré'}
+                        {getDaysRemaining()! > 0
+                          ? `${getDaysRemaining()} jours`
+                          : "Expiré"}
                       </Text>
                     </View>
                   </View>
 
                   {/* Quick Actions */}
                   {isExpired() && (
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       className="bg-red-500 rounded-xl py-3.5 items-center shadow-sm"
                       onPress={() => {
                         // Scroll to plans section
-                        const premiumPlan = plans.find(p => p.name.toLowerCase().includes('premium'));
+                        const premiumPlan = plans.find((p) =>
+                          p.name.toLowerCase().includes("premium")
+                        );
                         if (premiumPlan) {
                           handleSelectPlan(premiumPlan);
                         }
                       }}
                       activeOpacity={0.7}
                     >
-                      <Text className="text-white font-quicksand-bold text-sm">Renouveler maintenant</Text>
+                      <Text className="text-white font-quicksand-bold text-sm">
+                        Renouveler maintenant
+                      </Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -562,10 +660,12 @@ function EnterpriseSubscriptionsContent() {
             {/* Section Title */}
             <View className="mb-5">
               <Text className="text-neutral-400 font-quicksand-semibold text-xs uppercase tracking-wider mb-1">
-                {subscription ? 'Autres plans disponibles' : 'Nos plans'}
+                {subscription ? "Autres plans disponibles" : "Nos plans"}
               </Text>
               <Text className="text-neutral-800 font-quicksand-bold text-2xl">
-                {subscription && isExpired() ? 'Renouvelez votre abonnement' : 'Choisissez votre plan'}
+                {subscription && isExpired()
+                  ? "Renouvelez votre abonnement"
+                  : "Choisissez votre plan"}
               </Text>
             </View>
 
@@ -582,7 +682,9 @@ function EnterpriseSubscriptionsContent() {
                 <View className="w-20 h-20 rounded-full bg-red-50 items-center justify-center mb-4">
                   <Ionicons name="alert-circle" size={40} color="#EF4444" />
                 </View>
-                <Text className="text-red-600 font-quicksand-bold text-base mb-2">Erreur de chargement</Text>
+                <Text className="text-red-600 font-quicksand-bold text-base mb-2">
+                  Erreur de chargement
+                </Text>
                 <Text className="text-neutral-500 font-quicksand-medium text-sm text-center px-8 mb-6">
                   {error}
                 </Text>
@@ -590,7 +692,9 @@ function EnterpriseSubscriptionsContent() {
                   onPress={loadData}
                   className="bg-primary-500 px-8 py-3 rounded-xl shadow-sm"
                 >
-                  <Text className="text-white font-quicksand-bold text-sm">Réessayer</Text>
+                  <Text className="text-white font-quicksand-bold text-sm">
+                    Réessayer
+                  </Text>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -603,7 +707,11 @@ function EnterpriseSubscriptionsContent() {
                 <View className="bg-white rounded-2xl p-5 border border-neutral-100 shadow-sm">
                   <View className="flex-row items-center mb-4">
                     <View className="w-10 h-10 rounded-full bg-primary-50 items-center justify-center mr-3">
-                      <Ionicons name="information-circle" size={24} color="#10B981" />
+                      <Ionicons
+                        name="information-circle"
+                        size={24}
+                        color="#10B981"
+                      />
                     </View>
                     <Text className="text-neutral-800 font-quicksand-bold text-lg">
                       Détails de l&apos;abonnement
@@ -616,22 +724,34 @@ function EnterpriseSubscriptionsContent() {
                       Informations de paiement
                     </Text>
                     <View className="flex-row items-center justify-between mb-2.5">
-                      <Text className="text-neutral-600 font-quicksand-medium text-xs">Montant</Text>
+                      <Text className="text-neutral-600 font-quicksand-medium text-xs">
+                        Montant
+                      </Text>
                       <Text className="text-neutral-900 font-quicksand-bold text-base">
-                        {subscription.payment.amount ? `${subscription.payment.amount.toLocaleString()} ${subscription.plan.price.currency}` : 'N/A'}
+                        {subscription.payment.amount
+                          ? `${subscription.payment.amount.toLocaleString()} ${
+                              subscription.plan.price.currency
+                            }`
+                          : "N/A"}
                       </Text>
                     </View>
                     <View className="flex-row items-center justify-between mb-2.5">
-                      <Text className="text-neutral-600 font-quicksand-medium text-xs">Méthode</Text>
+                      <Text className="text-neutral-600 font-quicksand-medium text-xs">
+                        Méthode
+                      </Text>
                       <View className="bg-white px-3 py-1 rounded-lg">
                         <Text className="text-neutral-800 font-quicksand-semibold text-xs">
-                          {subscription.payment.method === 'TRIAL' ? 'Essai gratuit' : subscription.payment.method}
+                          {subscription.payment.method === "TRIAL"
+                            ? "Essai gratuit"
+                            : subscription.payment.method}
                         </Text>
                       </View>
                     </View>
                     {subscription.payment.reference && (
                       <View className="flex-row items-center justify-between">
-                        <Text className="text-neutral-600 font-quicksand-medium text-xs">Référence</Text>
+                        <Text className="text-neutral-600 font-quicksand-medium text-xs">
+                          Référence
+                        </Text>
                         <Text className="text-neutral-700 font-quicksand-medium text-xs font-mono">
                           {subscription.payment.reference}
                         </Text>
@@ -646,26 +766,48 @@ function EnterpriseSubscriptionsContent() {
                     </Text>
                     <View className="flex-row flex-wrap">
                       {[
-                        { key: 'phone', label: 'Appels', icon: 'call' },
-                        { key: 'sms', label: 'SMS', icon: 'chatbox' },
-                        { key: 'whatsapp', label: 'WhatsApp', icon: 'logo-whatsapp' },
-                        { key: 'messaging', label: 'Messages', icon: 'mail' },
-                        { key: 'advertisements', label: 'Publicités', icon: 'megaphone' },
+                        { key: "phone", label: "Appels", icon: "call" },
+                        { key: "sms", label: "SMS", icon: "chatbox" },
+                        {
+                          key: "whatsapp",
+                          label: "WhatsApp",
+                          icon: "logo-whatsapp",
+                        },
+                        { key: "messaging", label: "Messages", icon: "mail" },
+                        {
+                          key: "advertisements",
+                          label: "Publicités",
+                          icon: "megaphone",
+                        },
                       ].map(({ key, label, icon }) => (
-                        <View 
-                          key={key} 
+                        <View
+                          key={key}
                           className={`flex-row items-center px-3 py-2 rounded-lg mr-2 mb-2 ${
-                            subscription.plan.features[key] ? 'bg-green-100' : 'bg-neutral-100'
+                            subscription.plan.features[key]
+                              ? "bg-green-100"
+                              : "bg-neutral-100"
                           }`}
                         >
-                          <Ionicons 
-                            name={subscription.plan.features[key] ? "checkmark-circle" : "close-circle"} 
-                            size={14} 
-                            color={subscription.plan.features[key] ? "#059669" : "#737373"}
+                          <Ionicons
+                            name={
+                              subscription.plan.features[key]
+                                ? "checkmark-circle"
+                                : "close-circle"
+                            }
+                            size={14}
+                            color={
+                              subscription.plan.features[key]
+                                ? "#059669"
+                                : "#737373"
+                            }
                           />
-                          <Text className={`ml-1.5 font-quicksand-semibold text-xs ${
-                            subscription.plan.features[key] ? 'text-green-800' : 'text-neutral-500'
-                          }`}>
+                          <Text
+                            className={`ml-1.5 font-quicksand-semibold text-xs ${
+                              subscription.plan.features[key]
+                                ? "text-green-800"
+                                : "text-neutral-500"
+                            }`}
+                          >
                             {label}
                           </Text>
                         </View>
@@ -687,10 +829,13 @@ function EnterpriseSubscriptionsContent() {
                     Besoin d&apos;aide ?
                   </Text>
                   <Text className="text-neutral-600 font-quicksand-medium text-xs mb-3 leading-5">
-                    Notre équipe est là pour vous accompagner dans le choix de votre plan
+                    Notre équipe est là pour vous accompagner dans le choix de
+                    votre plan
                   </Text>
                   <TouchableOpacity className="bg-blue-500 self-start px-4 py-2 rounded-lg shadow-sm">
-                    <Text className="text-white font-quicksand-semibold text-xs">Contacter le support</Text>
+                    <Text className="text-white font-quicksand-semibold text-xs">
+                      Contacter le support
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -720,20 +865,23 @@ function EnterpriseSubscriptionsContent() {
 
       {/* Processing Payment Modal */}
       {processingPayment && (
-        <View 
+        <View
           style={{
-            position: 'absolute',
+            position: "absolute",
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            justifyContent: 'center',
-            alignItems: 'center',
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            justifyContent: "center",
+            alignItems: "center",
             zIndex: 9999,
           }}
         >
-          <View className="bg-white rounded-3xl p-8 items-center" style={{ maxWidth: 300 }}>
+          <View
+            className="bg-white rounded-3xl p-8 items-center"
+            style={{ maxWidth: 300 }}
+          >
             <View className="w-16 h-16 bg-primary-100 rounded-full items-center justify-center mb-4">
               <Ionicons name="card" size={32} color="#10B981" />
             </View>
@@ -784,7 +932,7 @@ function EnterpriseSubscriptionsContent() {
           phone={paymentConfig.phone}
           name={paymentConfig.name}
           reason={paymentConfig.reason}
-          apiKey={process.env.EXPO_PUBLIC_KKIAPAY_PUBLIC_API_KEY || ''}
+          apiKey={process.env.EXPO_PUBLIC_KKIAPAY_PUBLIC_API_KEY || ""}
           sandbox={true}
           onSuccess={handlePaymentSuccess}
           onFailed={handlePaymentFailed}

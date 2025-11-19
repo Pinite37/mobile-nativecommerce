@@ -409,7 +409,9 @@ export default function MessagesPage() {
 
   const displayedConversations =
     searchQuery.trim().length >= 2
-      ? searchResults
+      ? showUnreadOnly
+        ? searchResults.filter((conv) => (conv.unreadCount || 0) > 0)
+        : searchResults
       : showUnreadOnly
       ? conversations.filter((conv) => (conv.unreadCount || 0) > 0)
       : conversations;
@@ -611,28 +613,57 @@ export default function MessagesPage() {
 
       {/* Filtres et Stats */}
       <View className="flex-row justify-between items-center px-6 py-4">
-        <TouchableOpacity
-          onPress={() => setShowUnreadOnly(!showUnreadOnly)}
-          className={`flex-row items-center px-4 py-2 rounded-full border ${
-            showUnreadOnly
-              ? "bg-primary-50 border-primary-200"
-              : "bg-white border-neutral-200"
-          }`}
-        >
-          <Ionicons
-            name={showUnreadOnly ? "mail-unread" : "mail-outline"}
-            size={16}
-            color={showUnreadOnly ? "#10B981" : "#6B7280"}
-            style={{ marginRight: 6 }}
-          />
-          <Text
-            className={`font-quicksand-bold text-xs ${
-              showUnreadOnly ? "text-primary-700" : "text-neutral-600"
+        <View className="flex-row gap-2">
+          {/* Bouton Tous */}
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={() => setShowUnreadOnly(false)}
+            className={`flex-row items-center px-4 py-2 rounded-full border ${
+              !showUnreadOnly
+                ? "bg-primary-50 border-primary-200"
+                : "bg-white border-neutral-200"
             }`}
           >
-            {showUnreadOnly ? "Non lus" : "Tous"}
-          </Text>
-        </TouchableOpacity>
+            <Ionicons
+              name="mail-outline"
+              size={16}
+              color={!showUnreadOnly ? "#10B981" : "#6B7280"}
+              style={{ marginRight: 6 }}
+            />
+            <Text
+              className={`font-quicksand-bold text-xs ${
+                !showUnreadOnly ? "text-primary-700" : "text-neutral-600"
+              }`}
+            >
+              Tous
+            </Text>
+          </TouchableOpacity>
+
+          {/* Bouton Non lus */}
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={() => setShowUnreadOnly(true)}
+            className={`flex-row items-center px-4 py-2 rounded-full border ${
+              showUnreadOnly
+                ? "bg-primary-50 border-primary-200"
+                : "bg-white border-neutral-200"
+            }`}
+          >
+            <Ionicons
+              name="mail-unread"
+              size={16}
+              color={showUnreadOnly ? "#10B981" : "#6B7280"}
+              style={{ marginRight: 6 }}
+            />
+            <Text
+              className={`font-quicksand-bold text-xs ${
+                showUnreadOnly ? "text-primary-700" : "text-neutral-600"
+              }`}
+            >
+              Non lus
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         <Text className="text-neutral-400 font-quicksand-medium text-xs">
           {displayedConversations.length} conversation
