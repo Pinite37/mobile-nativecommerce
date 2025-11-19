@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Animated, Easing, FlatList, Image, RefreshControl, SafeAreaView, StatusBar, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, Easing, FlatList, Image, RefreshControl, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useToast } from '../../../../components/ui/ToastManager';
 import EnterpriseService, { DeliveryPartnerStatus, DeliveryPartnersWithStatusResponse, Enterprise } from '../../../../services/api/EnterpriseService';
@@ -74,7 +75,13 @@ export default function DeliveryPartnersScreen() {
 				colors={['#10B981', '#34D399']}
 				start={{ x: 0, y: 0 }}
 				end={{ x: 1, y: 0 }}
-				className="px-6 pt-12 pb-6"
+				className="px-6"
+				style={{ 
+					paddingTop: insets.top + 16, 
+					paddingLeft: insets.left + 24,
+					paddingRight: insets.right + 24,
+					paddingBottom: 24 
+				}}
 			>
 				<View className="flex-row items-center justify-between mb-6">
 					<TouchableOpacity
@@ -162,7 +169,8 @@ export default function DeliveryPartnersScreen() {
 		} finally {
 			setLoading(false);
 		}
-	}, [toast]);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	const onRefresh = async () => {
 		try {
@@ -302,25 +310,31 @@ export default function DeliveryPartnersScreen() {
 							<TouchableOpacity
 								disabled={associating === item._id}
 								onPress={() => handleAssociate(item._id)}
-								className="rounded-xl px-4 py-3 items-center overflow-hidden"
+								className="rounded-xl overflow-hidden"
 								activeOpacity={0.85}
 							>
 								<LinearGradient
 									colors={['#10B981', '#34D399']}
 									start={{ x: 0, y: 0 }}
 									end={{ x: 1, y: 0 }}
-									className="absolute inset-0"
-								/>
-								{associating === item._id ? (
-									<ActivityIndicator size="small" color="#FFFFFF" />
-								) : (
-									<View className="flex-row items-center">
-										<Ionicons name="add-circle" size={16} color="#FFFFFF" />
-										<Text className="font-quicksand-semibold text-sm text-white ml-2">
-											Associer
-										</Text>
-									</View>
-								)}
+									style={{ 
+										paddingHorizontal: 16, 
+										paddingVertical: 12,
+										alignItems: 'center',
+										justifyContent: 'center'
+									}}
+								>
+									{associating === item._id ? (
+										<ActivityIndicator size="small" color="#FFFFFF" />
+									) : (
+										<View className="flex-row items-center justify-center">
+											<Ionicons name="add-circle" size={16} color="#FFFFFF" />
+											<Text className="font-quicksand-semibold text-sm text-white ml-2">
+												Associer
+											</Text>
+										</View>
+									)}
+								</LinearGradient>
 							</TouchableOpacity>
 						)}
 					</View>
@@ -330,8 +344,8 @@ export default function DeliveryPartnersScreen() {
 	};
 
 	return (
-		<SafeAreaView className="flex-1 bg-background-secondary">
-			<StatusBar backgroundColor="#10B981" barStyle="light-content" />
+		<View className="flex-1 bg-background-secondary">
+			<ExpoStatusBar style="light" translucent />
 
 			{loading ? (
 				renderSkeletonPartners()
@@ -342,7 +356,13 @@ export default function DeliveryPartnersScreen() {
 						colors={['#10B981', '#34D399']}
 						start={{ x: 0, y: 0 }}
 						end={{ x: 1, y: 0 }}
-						className="px-6 pt-12 pb-8"
+						className="px-6"
+						style={{ 
+							paddingTop: insets.top + 16, 
+							paddingLeft: insets.left + 24,
+							paddingRight: insets.right + 24,
+							paddingBottom: 32 
+						}}
 					>
 						<View className="flex-row items-center justify-between mb-6">
 							<TouchableOpacity
@@ -434,6 +454,6 @@ export default function DeliveryPartnersScreen() {
 					</View>
 				</>
 			)}
-		</SafeAreaView>
+		</View>
 	);
 }

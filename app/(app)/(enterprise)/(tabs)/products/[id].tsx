@@ -13,7 +13,6 @@ import {
   Modal,
   Platform,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   Share,
   Text,
@@ -58,7 +57,7 @@ const ShimmerBlock = ({ style }: { style?: any }) => {
 };
 
 const SkeletonProduct = () => (
-  <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+  <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
     <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
     
     {/* Header Skeleton */}
@@ -67,7 +66,7 @@ const SkeletonProduct = () => (
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
       className="absolute top-0 left-0 right-0 z-10"
-      style={{ paddingTop: Platform.OS === 'ios' ? 50 : 30 }}
+      style={{ paddingTop: Platform.OS === 'ios' ? 66 : 16 }}
     >
       <View className="flex-row items-center justify-between px-4 pb-3">
         <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
@@ -206,16 +205,7 @@ const SkeletonProduct = () => (
         </View>
       </View>
     </ScrollView>
-
-    {/* Bottom Actions Skeleton */}
-    <View className="bg-white px-6 py-4 border-t border-neutral-100">
-      <View className="flex-row space-x-3">
-        <ShimmerBlock style={{ width: '40%', height: 56, borderRadius: 16 }} />
-        <ShimmerBlock style={{ width: '40%', height: 56, borderRadius: 16 }} />
-        <ShimmerBlock style={{ width: 56, height: 56, borderRadius: 16 }} />
-      </View>
-    </View>
-  </SafeAreaView>
+  </View>
 );
 
 export default function ProductDetails() {
@@ -402,7 +392,7 @@ export default function ProductDetails() {
 
   if (error || !product) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF', paddingTop: Platform.OS === 'android' ? 30 : 0 }}>
+      <View style={{ flex: 1, backgroundColor: '#FFFFFF', paddingTop: insets.top }}>
         <View className="flex-1 justify-center items-center px-6">
           <Ionicons name="warning" size={64} color="#EF4444" />
           <Text className="text-xl font-quicksand-bold text-neutral-800 mt-4 text-center">
@@ -423,17 +413,15 @@ export default function ProductDetails() {
             onPress={() => router.back()}
             className="mt-4"
           >
-            <Text className="text-neutral-500 font-quicksand-medium">
-              Retour
-            </Text>
+          <Text className="text-neutral-500 font-quicksand-medium">
+            Retour
+          </Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     );
-  }
-
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF', paddingTop: Platform.OS === 'android' ? 0 : 0 }}>
+  }  return (
+    <View style={{ flex: 1, backgroundColor: 'transparent' }}>
       <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
       {/* Header overlay */}
       <LinearGradient
@@ -491,7 +479,7 @@ export default function ProductDetails() {
         }
       >
         {/* Images Carousel */}
-        <View style={{ marginTop: insets.top }}>
+        <View style={{ marginTop: 0 }}>
           {product.images && product.images.length > 0 ? (
             <View className="relative">
               <FlatList
@@ -826,18 +814,24 @@ export default function ProductDetails() {
         onRequestClose={() => setImageModalVisible(false)}
       >
         <View className="flex-1 bg-black/95">
-          <View className="absolute top-0 left-0 right-0" style={{ paddingTop: insets.top + 8 }}>
+          <View className="absolute top-0 left-0 right-0 z-50" style={{ paddingTop: insets.top + 8 }}>
             <View className="flex-row justify-between items-center px-4 pb-2">
               <TouchableOpacity
-                onPress={() => setImageModalVisible(false)}
-                className="w-10 h-10 bg-white/15 rounded-full justify-center items-center"
+                onPress={() => {
+                  // Petit délai pour éviter les conflits de gestes sur iOS
+                  setTimeout(() => setImageModalVisible(false), 50);
+                }}
+                onPressIn={() => {}}
+                activeOpacity={0.7}
+                className="w-12 h-12 bg-white/20 rounded-full justify-center items-center"
+                style={{ zIndex: 60 }}
               >
-                <Ionicons name="close" size={20} color="#FFFFFF" />
+                <Ionicons name="close" size={24} color="#FFFFFF" />
               </TouchableOpacity>
               <Text className="text-white font-quicksand-medium">
                 {`${currentImageIndex + 1}/${product.images.length}`}
               </Text>
-              <View className="w-10" />
+              <View className="w-12" />
             </View>
           </View>
 
@@ -983,6 +977,6 @@ export default function ProductDetails() {
         message={notification?.message || ''}
         onClose={hideNotification}
       />
-    </SafeAreaView>
+    </View>
   );
 }

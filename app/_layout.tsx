@@ -23,7 +23,9 @@ export default function RootLayout() {
     // Optimisation : Cacher le splash screen immédiatement pour un démarrage ultra-rapide
     if (loaded || error) {
       // Pas de délai pour un démarrage instantané
-      SplashScreen.hideAsync();
+      SplashScreen.hideAsync().catch(() => {
+        // Ignorer l'erreur si le splash screen n'est pas enregistré
+      });
     }
   }, [loaded, error]);
 

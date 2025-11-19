@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
+    "@kkiapay-org/react-native-sdk": "^0.1.11",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/datetimepicker": "^8.4.4",
     "@react-navigation/bottom-tabs": "^7.3.10",
@@ -43,6 +44,7 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.4",
+    "react-native-calendars": "^1.1313.0",
     "react-native-crypto": "^2.2.1",
     "react-native-gesture-handler": "~2.28.0",
     "react-native-get-random-values": "^1.11.0",
@@ -50,10 +52,10 @@
     "react-native-keyboard-aware-scroll-view": "^0.9.5",
     "react-native-randombytes": "^3.6.2",
     "react-native-reanimated": "~4.1.0",
-    "react-native-safe-area-context": "^5.4.0",
+    "react-native-safe-area-context": "^5.6.1",
     "react-native-screens": "~4.16.0",
     "react-native-web": "^0.21.0",
-    "react-native-webview": "13.15.0",
+    "react-native-webview": "^13.16.0",
     "react-native-worklets": "^0.5.1",
     "socket.io-client": "^4.8.1"
   },
@@ -67,5 +69,8 @@
     "tailwindcss": "^3.4.17",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "resolutions": {
+    "react-native-safe-area-context": "^5.6.1"
+  }
 }

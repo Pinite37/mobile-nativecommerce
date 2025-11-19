@@ -49,8 +49,6 @@ export default function EnterpriseSignUpScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   
   // Multi-step form states
@@ -81,30 +79,6 @@ export default function EnterpriseSignUpScreen() {
 
     return () => clearTimeout(timeoutId);
   }, [currentStep]);
-
-  // Keyboard event listeners
-  useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
-      (event) => {
-        setKeyboardHeight(event.endCoordinates.height);
-        setIsKeyboardVisible(true);
-      }
-    );
-
-    const keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide',
-      () => {
-        setKeyboardHeight(0);
-        setIsKeyboardVisible(false);
-      }
-    );
-
-    return () => {
-      keyboardDidShowListener.remove();
-      keyboardDidHideListener.remove();
-    };
-  }, []);
 
   // Validation functions for each step
   const validateStep1 = (): boolean => {
@@ -544,12 +518,18 @@ export default function EnterpriseSignUpScreen() {
           Numéro WhatsApp
         </Text>
         <TextInput
+          key="whatsapp-input"
           className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
           placeholder="+229 XX XX XX XX"
           placeholderTextColor="#9CA3AF"
           value={whatsapp}
-          onChangeText={setWhatsapp}
+          onChangeText={(text) => {
+            console.log('WhatsApp input:', text);
+            setWhatsapp(text);
+          }}
           keyboardType="phone-pad"
+          editable={true}
+          selectTextOnFocus={false}
         />
       </View>
 
@@ -683,11 +663,7 @@ export default function EnterpriseSignUpScreen() {
   );
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-white"
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
-    >
+    <View className="flex-1 bg-white">
       <StatusBar style="dark" />
 
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -744,29 +720,29 @@ export default function EnterpriseSignUpScreen() {
             </View>
           </View>
 
-          <ScrollView
-            ref={scrollViewRef}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             className="flex-1"
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{
-              paddingBottom: isKeyboardVisible ? keyboardHeight + 60 : 120,
-              flexGrow: 1,
-              minHeight: '100%'
-            }}
-            bounces={false}
-            overScrollMode="never"
-            alwaysBounceVertical={false}
-            scrollEventThrottle={16}
-            nestedScrollEnabled={true}
-            keyboardDismissMode="interactive"
-            automaticallyAdjustKeyboardInsets={true}
+            keyboardVerticalOffset={0}
           >
-            {/* Form Content */}
-            <View className="px-6 pt-4">
-              {renderStepContent()}
-            </View>
-          </ScrollView>
+            <ScrollView
+              ref={scrollViewRef}
+              className="flex-1"
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={{
+                paddingBottom: 20,
+                flexGrow: 1
+              }}
+              scrollEventThrottle={16}
+              keyboardDismissMode="interactive"
+            >
+              {/* Form Content */}
+              <View className="px-6 pt-4">
+                {renderStepContent()}
+              </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
 
           {/* Bottom Navigation */}
           <View className="px-6 py-4 bg-white border-t border-neutral-200">
@@ -910,6 +886,6 @@ export default function EnterpriseSignUpScreen() {
 
         </View>
       </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+    </View>
   );
 }

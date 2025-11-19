@@ -1,26 +1,33 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
+import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Animated, Easing,
+  Animated,
+  Easing,
   FlatList,
   Image,
   Modal,
   RefreshControl,
-  SafeAreaView,
-  StatusBar,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import NotificationModal, { useNotification } from "../../../../../components/ui/NotificationModal";
+import NotificationModal, {
+  useNotification,
+} from "../../../../../components/ui/NotificationModal";
 import CategoryService from "../../../../../services/api/CategoryService";
 import ProductService from "../../../../../services/api/ProductService";
-import { Category, Product, ProductsResponse } from "../../../../../types/product";
+import {
+  Category,
+  Product,
+  ProductsResponse,
+} from "../../../../../types/product";
 
 const sortOptions = [
   { id: "name", name: "Nom", field: "name" },
@@ -31,33 +38,35 @@ const sortOptions = [
 
 export default function EnterpriseProducts() {
   const params = useLocalSearchParams();
-  const { notification, showNotification, hideNotification } = useNotification();
+  const { notification, showNotification, hideNotification } =
+    useNotification();
+  const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedSort, setSelectedSort] = useState("createdAt");
-  
+
   const [showSortModal, setShowSortModal] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [initialLoading, setInitialLoading] = useState(true);
-  
+
   // Data state
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  
+
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreProducts, setHasMoreProducts] = useState(true);
-  
+
   // Errors
   const [error, setError] = useState<string | null>(null);
 
   // Confirmation modal
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [confirmationAction, setConfirmationAction] = useState<{
-    type: 'delete' | 'status_change';
+    type: "delete" | "status_change";
     product: Product;
     title: string;
     message: string;
@@ -67,77 +76,100 @@ export default function EnterpriseProducts() {
 
   // Menu modal pour les actions produit en mode grid
   const [menuModalVisible, setMenuModalVisible] = useState(false);
-  const [selectedProductForMenu, setSelectedProductForMenu] = useState<Product | null>(null);
+  const [selectedProductForMenu, setSelectedProductForMenu] =
+    useState<Product | null>(null);
 
   // Load products function
-  const loadProducts = useCallback(async (reset = false, pageToLoad?: number) => {
-    try {
-      if (reset) {
-        setCurrentPage(1);
-        setError(null);
-      }
-      
-      const page = pageToLoad || (reset ? 1 : currentPage);
-      
-      const filters: any = {
-        sort: selectedSort === 'createdAt' ? 'newest' : selectedSort === 'price' ? 'price_desc' : 'newest'
-      };
+  const loadProducts = useCallback(
+    async (reset = false, pageToLoad?: number) => {
+      try {
+        if (reset) {
+          setCurrentPage(1);
+          setError(null);
+        }
 
-      if (selectedCategory !== 'all') {
-        filters.category = selectedCategory;
-      }
+        const page = pageToLoad || (reset ? 1 : currentPage);
 
-      let response: ProductsResponse;
-      if (searchQuery.trim()) {
-        response = await ProductService.searchProducts(searchQuery.trim(), page, 10, filters);
-      } else {
-        response = await ProductService.getEnterpriseProducts(page, 10, filters);
+        const filters: any = {
+          sort:
+            selectedSort === "createdAt"
+              ? "newest"
+              : selectedSort === "price"
+              ? "price_desc"
+              : "newest",
+        };
+
+        if (selectedCategory !== "all") {
+          filters.category = selectedCategory;
+        }
+
+        let response: ProductsResponse;
+        if (searchQuery.trim()) {
+          response = await ProductService.searchProducts(
+            searchQuery.trim(),
+            page,
+            10,
+            filters
+          );
+        } else {
+          response = await ProductService.getEnterpriseProducts(
+            page,
+            10,
+            filters
+          );
+        }
+
+        if (reset) {
+          setProducts(response.products || []);
+        } else {
+          setProducts((prev) => [...prev, ...(response.products || [])]);
+        }
+
+        const pagination = response.pagination || { page: 1, pages: 1 };
+        setCurrentPage(pagination.page);
+        setHasMoreProducts(pagination.page < pagination.pages);
+      } catch (err: any) {
+        const errorMessage =
+          err.message || "Erreur lors du chargement des produits";
+        if (reset) {
+          setError(errorMessage);
+        }
+        console.error("Error loading products:", err);
       }
-      
-      if (reset) {
-        setProducts(response.products || []);
-      } else {
-        setProducts(prev => [...prev, ...(response.products || [])]);
-      }
-      
-      const pagination = response.pagination || { page: 1, pages: 1 };
-      setCurrentPage(pagination.page);
-      setHasMoreProducts(pagination.page < pagination.pages);
-      
-    } catch (err: any) {
-      const errorMessage = err.message || 'Erreur lors du chargement des produits';
-      if (reset) {
-        setError(errorMessage);
-      }
-      console.error('Error loading products:', err);
-    }
-  }, [searchQuery, selectedCategory, selectedSort, currentPage]);
+    },
+    [searchQuery, selectedCategory, selectedSort, currentPage]
+  );
 
   // Load initial data
   const loadInitialData = useCallback(async () => {
     try {
       setError(null);
-      
+
       // Load products and categories separately to handle errors independently
       let productsData: ProductsResponse | null = null;
       let categoriesData: Category[] = [];
-      
+
       // Load products (this is critical)
       try {
         productsData = await ProductService.getEnterpriseProducts(1, 10, {
-          sort: selectedSort === 'createdAt' ? 'newest' : selectedSort === 'price' ? 'price_desc' : 'newest'
+          sort:
+            selectedSort === "createdAt"
+              ? "newest"
+              : selectedSort === "price"
+              ? "price_desc"
+              : "newest",
         });
       } catch (err: any) {
-        console.error('Error loading products:', err);
-        setError(err.message || 'Erreur lors du chargement des produits');
+        console.error("Error loading products:", err);
+        setError(err.message || "Erreur lors du chargement des produits");
         return;
       }
-      
+
       // Load categories (this is optional, failures should not block the UI)
       try {
         categoriesData = await CategoryService.getActiveCategories();
       } catch (err: any) {
-        console.warn('Error loading categories:', err);
+        console.warn("Error loading categories:", err);
         // Don't set error, just log it and continue with empty categories
       }
 
@@ -146,12 +178,14 @@ export default function EnterpriseProducts() {
       if (productsData) {
         setProducts(productsData.products || []);
         setCurrentPage(productsData.pagination?.page || 1);
-        setHasMoreProducts((productsData.pagination?.page || 1) < (productsData.pagination?.pages || 1));
+        setHasMoreProducts(
+          (productsData.pagination?.page || 1) <
+            (productsData.pagination?.pages || 1)
+        );
       }
-      
     } catch (err: any) {
-      setError(err.message || 'Erreur lors du chargement des données');
-      console.error('Error loading initial data:', err);
+      setError(err.message || "Erreur lors du chargement des données");
+      console.error("Error loading initial data:", err);
     } finally {
       setInitialLoading(false);
     }
@@ -163,9 +197,9 @@ export default function EnterpriseProducts() {
 
   // Auto-refresh when coming from create page
   useEffect(() => {
-    if (params.refresh === 'true') {
+    if (params.refresh === "true") {
       // Remove the refresh param and reload data
-      router.replace('/(app)/(enterprise)/(tabs)/products');
+      router.replace("/(app)/(enterprise)/(tabs)/products");
       loadInitialData();
     }
   }, [params.refresh, loadInitialData]);
@@ -187,61 +221,73 @@ export default function EnterpriseProducts() {
 
   const loadMoreProducts = useCallback(async () => {
     if (loadingMore || !hasMoreProducts) return;
-    
+
     setLoadingMore(true);
-    setCurrentPage(prev => prev + 1);
+    setCurrentPage((prev) => prev + 1);
     await loadProducts(false);
     setLoadingMore(false);
   }, [loadingMore, hasMoreProducts, loadProducts]);
 
   const handleStatusChange = (product: Product) => {
-    showConfirmation('status_change', product);
+    showConfirmation("status_change", product);
   };
 
   const handleDeleteProduct = (product: Product) => {
-    showConfirmation('delete', product);
+    showConfirmation("delete", product);
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
+    return new Intl.NumberFormat("fr-FR").format(price) + " FCFA";
   };
 
   const getStatusColor = (isActive: boolean) => {
     return isActive
-      ? { color: '#10B981', bg: '#D1FAE5' }
-      : { color: '#EF4444', bg: '#FEE2E2' };
+      ? { color: "#10B981", bg: "#D1FAE5" }
+      : { color: "#EF4444", bg: "#FEE2E2" };
   };
 
   const getStockStatus = (stock: number) => {
-    if (stock === 0) return { color: '#EF4444', text: 'Rupture' };
-    if (stock < 10) return { color: '#F59E0B', text: 'Faible' };
-    return { color: '#10B981', text: 'Disponible' };
+    if (stock === 0) return { color: "#EF4444", text: "Rupture" };
+    if (stock < 10) return { color: "#F59E0B", text: "Faible" };
+    return { color: "#10B981", text: "Disponible" };
   };
 
-  const showConfirmation = (type: 'delete' | 'status_change', product: Product) => {
-    let title = '';
-    let message = '';
-    let confirmText = '';
-    let confirmColor = '';
+  const showConfirmation = (
+    type: "delete" | "status_change",
+    product: Product
+  ) => {
+    let title = "";
+    let message = "";
+    let confirmText = "";
+    let confirmColor = "";
 
     switch (type) {
-      case 'delete':
-        title = 'Supprimer le produit';
-        message = 'Êtes-vous sûr de vouloir supprimer ce produit ?';
-        confirmText = 'Supprimer';
-        confirmColor = '#EF4444';
+      case "delete":
+        title = "Supprimer le produit";
+        message = "Êtes-vous sûr de vouloir supprimer ce produit ?";
+        confirmText = "Supprimer";
+        confirmColor = "#EF4444";
         break;
-      case 'status_change':
-        title = product.isActive ? 'Désactiver le produit' : 'Activer le produit';
+      case "status_change":
+        title = product.isActive
+          ? "Désactiver le produit"
+          : "Activer le produit";
         message = product.isActive
-          ? 'Le produit ne sera plus visible par les clients.'
-          : 'Le produit sera visible par les clients.';
-        confirmText = product.isActive ? 'Désactiver' : 'Activer';
-        confirmColor = product.isActive ? '#F59E0B' : '#10B981';
+          ? "Le produit ne sera plus visible par les clients."
+          : "Le produit sera visible par les clients.";
+        confirmText = product.isActive ? "Désactiver" : "Activer";
+        confirmColor = product.isActive ? "#F59E0B" : "#10B981";
         break;
     }
 
-    setConfirmationAction({ type, product, title, message, confirmText, confirmColor });
+    setConfirmationAction({
+      type,
+      product,
+      title,
+      message,
+      confirmText,
+      confirmColor,
+    });
     setConfirmationVisible(true);
   };
 
@@ -258,32 +304,60 @@ export default function EnterpriseProducts() {
 
     try {
       switch (type) {
-        case 'delete':
+        case "delete":
           await ProductService.deleteProduct(product._id);
-          setProducts(prev => prev.filter(p => p._id !== product._id));
-          showNotification('success', 'Produit supprimé', 'Le produit a été supprimé avec succès.');
+          setProducts((prev) => prev.filter((p) => p._id !== product._id));
+          showNotification(
+            "success",
+            "Produit supprimé",
+            "Le produit a été supprimé avec succès."
+          );
           break;
-        case 'status_change':
-          await ProductService.updateProduct(product._id, { isActive: !product.isActive });
-          setProducts(prev => prev.map(p =>
-            p._id === product._id ? { ...p, isActive: !p.isActive } : p
-          ));
-          showNotification('success', 'Statut modifié', `Le produit a été ${!product.isActive ? 'activé' : 'désactivé'}.`);
+        case "status_change":
+          await ProductService.updateProduct(product._id, {
+            isActive: !product.isActive,
+          });
+          setProducts((prev) =>
+            prev.map((p) =>
+              p._id === product._id ? { ...p, isActive: !p.isActive } : p
+            )
+          );
+          showNotification(
+            "success",
+            "Statut modifié",
+            `Le produit a été ${!product.isActive ? "activé" : "désactivé"}.`
+          );
           break;
       }
     } catch (err: any) {
-      showNotification('error', 'Erreur', err.message || `Impossible de ${type === 'delete' ? 'supprimer' : 'modifier'} le produit`);
+      showNotification(
+        "error",
+        "Erreur",
+        err.message ||
+          `Impossible de ${
+            type === "delete" ? "supprimer" : "modifier"
+          } le produit`
+      );
     }
-  };  
+  };
 
   const renderProduct = ({ item }: { item: Product }) => {
     const statusStyle = getStatusColor(item.isActive);
     const stockStatus = getStockStatus(item.stock);
-    const isGrid = viewMode === 'grid';
+    const isGrid = viewMode === "grid";
 
     if (isGrid) {
       return (
-        <View className="bg-white rounded-2xl p-3 mb-4 mx-2 flex-1 border border-neutral-100 relative">
+        <View
+          className="bg-white rounded-2xl p-3 mb-4 mx-2 flex-1 relative"
+          style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.03,
+            shadowRadius: 4,
+            elevation: 1,
+          }}
+        >
           <TouchableOpacity
             className="absolute top-2 right-2 z-10 bg-white/90 rounded-full w-7 h-7 items-center justify-center shadow-sm"
             style={{ elevation: 2 }}
@@ -294,7 +368,7 @@ export default function EnterpriseProducts() {
           >
             <Ionicons name="ellipsis-horizontal" size={16} color="#6B7280" />
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             onPress={() => {
               (global as any).__CURRENT_PRODUCT_ID__ = item._id;
@@ -302,23 +376,48 @@ export default function EnterpriseProducts() {
             }}
           >
             <Image
-              source={{ uri: item.images[0] || 'https://via.placeholder.com/160x160/E5E7EB/9CA3AF?text=No+Image' }}
+              source={{
+                uri:
+                  item.images[0] ||
+                  "https://via.placeholder.com/160x160/E5E7EB/9CA3AF?text=No+Image",
+              }}
               className="w-full h-32 rounded-xl"
               resizeMode="cover"
             />
             <View className="mt-3">
-              <Text className="text-sm font-quicksand-semibold text-neutral-800" numberOfLines={1}>{item.name}</Text>
-              <Text className="text-xs font-quicksand-medium text-primary-500 mt-1">{formatPrice(item.price)}</Text>
+              <Text
+                className="text-sm font-quicksand-semibold text-neutral-800"
+                numberOfLines={1}
+              >
+                {item.name}
+              </Text>
+              <Text className="text-xs font-quicksand-medium text-primary-500 mt-1">
+                {formatPrice(item.price)}
+              </Text>
               <View className="flex-row items-center mt-1">
                 <Ionicons name="star" size={12} color="#10B981" />
                 <Text className="text-[10px] text-neutral-600 ml-1">
-                  {item.stats.averageRating.toFixed(1)} ({item.stats.totalReviews})
+                  {item.stats.averageRating.toFixed(1)} (
+                  {item.stats.totalReviews})
                 </Text>
               </View>
               <View className="flex-row items-center mt-1 justify-between">
-                <Text className="text-[10px] font-quicksand-medium" style={{ color: stockStatus.color }}>{stockStatus.text}</Text>
-                <View className="px-2 py-0.5 rounded-full" style={{ backgroundColor: statusStyle.bg }}>
-                  <Text className="text-[10px] font-quicksand-semibold" style={{ color: statusStyle.color }}>{item.isActive ? 'Actif' : 'Inactif'}</Text>
+                <Text
+                  className="text-[10px] font-quicksand-medium"
+                  style={{ color: stockStatus.color }}
+                >
+                  {stockStatus.text}
+                </Text>
+                <View
+                  className="px-2 py-0.5 rounded-full"
+                  style={{ backgroundColor: statusStyle.bg }}
+                >
+                  <Text
+                    className="text-[10px] font-quicksand-semibold"
+                    style={{ color: statusStyle.color }}
+                  >
+                    {item.isActive ? "Actif" : "Inactif"}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -328,8 +427,15 @@ export default function EnterpriseProducts() {
     }
 
     return (
-      <TouchableOpacity 
-        className="bg-white rounded-2xl p-4 mx-4 mb-4 shadow-sm border border-neutral-100"
+      <TouchableOpacity
+        className="bg-white rounded-2xl p-4 mx-4 mb-4"
+        style={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.03,
+          shadowRadius: 4,
+          elevation: 1,
+        }}
         onPress={() => {
           (global as any).__CURRENT_PRODUCT_ID__ = item._id;
           router.push(`/(app)/(enterprise)/(tabs)/products/${item._id}`);
@@ -337,7 +443,11 @@ export default function EnterpriseProducts() {
       >
         <View className="flex-row">
           <Image
-            source={{ uri: item.images[0] || 'https://via.placeholder.com/80x80/E5E7EB/9CA3AF?text=No+Image' }}
+            source={{
+              uri:
+                item.images[0] ||
+                "https://via.placeholder.com/80x80/E5E7EB/9CA3AF?text=No+Image",
+            }}
             className="w-20 h-20 rounded-xl"
             resizeMode="cover"
           />
@@ -347,16 +457,22 @@ export default function EnterpriseProducts() {
                 <Text className="text-base font-quicksand-semibold text-neutral-800">
                   {item.name}
                 </Text>
-                {typeof item.category === 'object' && (
+                {typeof item.category === "object" && (
                   <Text className="text-sm text-neutral-600 font-quicksand-medium">
                     {item.category.name}
                   </Text>
                 )}
               </View>
               <View className="flex-row items-center gap-3">
-                <View className="px-3 py-1 rounded-full" style={{ backgroundColor: statusStyle.bg }}>
-                  <Text className="text-xs font-quicksand-semibold" style={{ color: statusStyle.color }}>
-                    {item.isActive ? 'Actif' : 'Inactif'}
+                <View
+                  className="px-3 py-1 rounded-full"
+                  style={{ backgroundColor: statusStyle.bg }}
+                >
+                  <Text
+                    className="text-xs font-quicksand-semibold"
+                    style={{ color: statusStyle.color }}
+                  >
+                    {item.isActive ? "Actif" : "Inactif"}
                   </Text>
                 </View>
                 <TouchableOpacity
@@ -365,20 +481,33 @@ export default function EnterpriseProducts() {
                   }}
                   className="p-1"
                 >
-                  <Ionicons name="ellipsis-horizontal" size={20} color="#9CA3AF" />
+                  <Ionicons
+                    name="ellipsis-horizontal"
+                    size={20}
+                    color="#9CA3AF"
+                  />
                 </TouchableOpacity>
               </View>
             </View>
             <View className="flex-row items-center mb-3">
               <Ionicons name="star" size={14} color="#10B981" />
               <Text className="text-xs text-neutral-600 ml-1 font-quicksand-light">
-                {item.stats.averageRating.toFixed(1)} ({item.stats.totalReviews} avis)
+                {item.stats.averageRating.toFixed(1)} ({item.stats.totalReviews}{" "}
+                avis)
               </Text>
             </View>
             <View className="flex-row items-center justify-between">
-              <Text className="text-lg font-quicksand-bold text-primary-500">{formatPrice(item.price)}</Text>
-              <View className="px-3 py-1.5 rounded-full" style={{ backgroundColor: stockStatus.color + '15' }}>
-                <Text className="text-xs font-quicksand-semibold" style={{ color: stockStatus.color }}>
+              <Text className="text-lg font-quicksand-bold text-primary-500">
+                {formatPrice(item.price)}
+              </Text>
+              <View
+                className="px-3 py-1.5 rounded-full"
+                style={{ backgroundColor: stockStatus.color + "15" }}
+              >
+                <Text
+                  className="text-xs font-quicksand-semibold"
+                  style={{ color: stockStatus.color }}
+                >
                   {stockStatus.text}
                 </Text>
               </View>
@@ -386,14 +515,16 @@ export default function EnterpriseProducts() {
           </View>
         </View>
         <View className="mt-4 pt-4 border-t border-neutral-100">
-          <TouchableOpacity 
-            className="bg-red-50 rounded-xl py-3.5 flex-row items-center justify-center" 
+          <TouchableOpacity
+            className="bg-red-50 rounded-xl py-3.5 flex-row items-center justify-center"
             onPress={() => {
               handleDeleteProduct(item);
             }}
           >
             <Ionicons name="trash-outline" size={18} color="#EF4444" />
-            <Text className="text-red-600 font-quicksand-semibold ml-2">Supprimer</Text>
+            <Text className="text-red-600 font-quicksand-semibold ml-2">
+              Supprimer
+            </Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -412,7 +543,7 @@ export default function EnterpriseProducts() {
             {error}
           </Text>
           <View className="flex-row space-x-3">
-            <TouchableOpacity 
+            <TouchableOpacity
               className="bg-primary-500 rounded-xl py-4 px-6"
               onPress={loadInitialData}
             >
@@ -420,10 +551,10 @@ export default function EnterpriseProducts() {
                 Réessayer
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               className="bg-neutral-200 rounded-xl py-4 px-6"
               onPress={() => {
-                router.push('/(app)/(enterprise)/(tabs)/products/create');
+                router.push("/(app)/(enterprise)/(tabs)/products/create");
               }}
             >
               <Text className="text-neutral-700 font-quicksand-semibold">
@@ -440,18 +571,19 @@ export default function EnterpriseProducts() {
       <View className="flex-1 justify-center items-center px-6">
         <Ionicons name="cube-outline" size={80} color="#D1D5DB" />
         <Text className="text-xl font-quicksand-bold text-neutral-800 mt-4 mb-2">
-          {searchQuery.trim() || selectedCategory !== 'all' ? 'Aucun produit trouvé' : 'Aucun produit'}
+          {searchQuery.trim() || selectedCategory !== "all"
+            ? "Aucun produit trouvé"
+            : "Aucun produit"}
         </Text>
         <Text className="text-center text-neutral-600 font-quicksand-medium mb-6">
-          {searchQuery.trim() || selectedCategory !== 'all' 
-            ? 'Aucun produit ne correspond à vos critères de recherche' 
-            : 'Commencez par ajouter vos premiers produits à votre catalogue'
-          }
+          {searchQuery.trim() || selectedCategory !== "all"
+            ? "Aucun produit ne correspond à vos critères de recherche"
+            : "Commencez par ajouter vos premiers produits à votre catalogue"}
         </Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           className="bg-primary-500 rounded-xl py-4 px-8"
           onPress={() => {
-            router.push('/(app)/(enterprise)/(tabs)/products/create');
+            router.push("/(app)/(enterprise)/(tabs)/products/create");
           }}
         >
           <Text className="text-white font-quicksand-semibold">
@@ -479,26 +611,32 @@ export default function EnterpriseProducts() {
             <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4">
               Trier par
             </Text>
-            
+
             {sortOptions.map((option) => (
               <TouchableOpacity
                 key={option.id}
                 className={`py-3 px-4 rounded-xl mb-2 ${
-                  selectedSort === option.id ? 'bg-primary-500' : 'bg-neutral-50'
+                  selectedSort === option.id
+                    ? "bg-primary-500"
+                    : "bg-neutral-50"
                 }`}
                 onPress={() => {
                   setSelectedSort(option.id);
                   setShowSortModal(false);
                 }}
               >
-                <Text className={`font-quicksand-medium ${
-                  selectedSort === option.id ? 'text-white' : 'text-neutral-700'
-                }`}>
+                <Text
+                  className={`font-quicksand-medium ${
+                    selectedSort === option.id
+                      ? "text-white"
+                      : "text-neutral-700"
+                  }`}
+                >
                   {option.name}
                 </Text>
               </TouchableOpacity>
             ))}
-            
+
             <TouchableOpacity
               className="mt-4 py-3 px-4 rounded-xl bg-neutral-100"
               onPress={() => setShowSortModal(false)}
@@ -520,48 +658,72 @@ export default function EnterpriseProducts() {
       const loop = Animated.loop(
         Animated.timing(shimmer, {
           toValue: 1,
-            duration: 1200,
-            easing: Easing.linear,
-            useNativeDriver: true,
-          })
+          duration: 1200,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
       );
       loop.start();
       return () => loop.stop();
     }, [shimmer]);
-    const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
+    const translateX = shimmer.interpolate({
+      inputRange: [0, 1],
+      outputRange: [-150, 150],
+    });
     return (
-      <View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
-        <Animated.View style={{
-          position: 'absolute', top: 0, bottom: 0, width: 120,
-          transform: [{ translateX }],
-          backgroundColor: 'rgba(255,255,255,0.35)',
-          opacity: 0.7,
-        }} />
+      <View style={[{ backgroundColor: "#E5E7EB", overflow: "hidden" }, style]}>
+        <Animated.View
+          style={{
+            position: "absolute",
+            top: 0,
+            bottom: 0,
+            width: 120,
+            transform: [{ translateX }],
+            backgroundColor: "rgba(255,255,255,0.35)",
+            opacity: 0.7,
+          }}
+        />
       </View>
     );
   };
 
   const SkeletonCard = ({ grid = false }: { grid?: boolean }) => (
-    <View className={`${grid ? 'w-1/2 px-2' : 'w-full px-4'} mb-4`}>
+    <View className={`${grid ? "w-1/2 px-2" : "w-full px-4"} mb-4`}>
       <View className="rounded-2xl bg-white p-4 border border-neutral-100 overflow-hidden">
-        <ShimmerBlock style={{ height: grid ? 110 : 80, borderRadius: 16, width: '100%' }} />
+        <ShimmerBlock
+          style={{ height: grid ? 110 : 80, borderRadius: 16, width: "100%" }}
+        />
         <View className="mt-4">
-          <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '75%', marginBottom: 8 }} />
-          <ShimmerBlock style={{ height: 12, borderRadius: 8, width: '50%', marginBottom: 8 }} />
-          <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '35%' }} />
+          <ShimmerBlock
+            style={{
+              height: 16,
+              borderRadius: 8,
+              width: "75%",
+              marginBottom: 8,
+            }}
+          />
+          <ShimmerBlock
+            style={{
+              height: 12,
+              borderRadius: 8,
+              width: "50%",
+              marginBottom: 8,
+            }}
+          />
+          <ShimmerBlock style={{ height: 16, borderRadius: 8, width: "35%" }} />
         </View>
       </View>
     </View>
   );
 
   const renderSkeletons = () => {
-    const count = viewMode === 'grid' ? 8 : 6;
+    const count = viewMode === "grid" ? 8 : 6;
     return (
       <FlatList
         data={Array.from({ length: count }).map((_, i) => i.toString())}
-        key={viewMode === 'grid' ? 'grid-skeleton' : 'list-skeleton'}
-        numColumns={viewMode === 'grid' ? 2 : 1}
-        renderItem={() => <SkeletonCard grid={viewMode === 'grid'} />}
+        key={viewMode === "grid" ? "grid-skeleton" : "list-skeleton"}
+        numColumns={viewMode === "grid" ? 2 : 1}
+        renderItem={() => <SkeletonCard grid={viewMode === "grid"} />}
         keyExtractor={(item) => item}
         contentContainerStyle={{ paddingTop: 8, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
@@ -571,41 +733,58 @@ export default function EnterpriseProducts() {
 
   const Header = () => (
     <LinearGradient
-      colors={['#10B981', '#34D399']}
+      colors={["#047857", "#10B981"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
-      className="pt-16 pb-6 rounded-b-[32px] shadow-lg"
+      className="rounded-b-[32px] shadow-lg"
+      style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}
     >
       {/* Title and Actions Row */}
       <View className="px-6 mb-4">
         <View className="flex-row items-center justify-between mb-3">
           <View className="flex-1">
-            <Text className="text-2xl font-quicksand-bold text-white">Mes Produits</Text>
+            <Text className="text-2xl font-quicksand-bold text-white">
+              Mes Produits
+            </Text>
             <Text className="text-white/80 font-quicksand-medium mt-1 text-sm">
-              {products.length} produit{products.length !== 1 ? 's' : ''} au catalogue
+              {products.length} produit{products.length !== 1 ? "s" : ""} au
+              catalogue
             </Text>
           </View>
           <View className="flex-row items-center gap-2">
             <TouchableOpacity
-              onPress={() => setViewMode(prev => prev === 'list' ? 'grid' : 'list')}
+              onPress={() =>
+                setViewMode((prev) => (prev === "list" ? "grid" : "list"))
+              }
               className="bg-white/20 backdrop-blur-sm rounded-2xl p-3 border border-white/30"
             >
-              <Ionicons name={viewMode === 'list' ? 'grid' : 'list'} size={20} color="#FFFFFF" />
+              <Ionicons
+                name={viewMode === "list" ? "grid" : "list"}
+                size={20}
+                color="#FFFFFF"
+              />
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => router.push('/(app)/(enterprise)/(tabs)/products/create')}
+              onPress={() =>
+                router.push("/(app)/(enterprise)/(tabs)/products/create")
+              }
               className="bg-white rounded-2xl px-5 py-3 flex-row items-center shadow-md"
               style={{ elevation: 3 }}
             >
               <Ionicons name="add-circle" size={20} color="#10B981" />
-              <Text className="text-primary-600 font-quicksand-bold ml-2 text-sm">Ajouter</Text>
+              <Text className="text-primary-600 font-quicksand-bold ml-2 text-sm">
+                Ajouter
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Search Bar */}
         <View className="relative">
-          <View className="absolute left-4 top-1/2 -translate-y-1/2 z-10" style={{ transform: [{ translateY: -10 }] }}>
+          <View
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-10"
+            style={{ transform: [{ translateY: -10 }] }}
+          >
             <Ionicons name="search" size={20} color="#9CA3AF" />
           </View>
           <TextInput
@@ -620,7 +799,7 @@ export default function EnterpriseProducts() {
             <TouchableOpacity
               className="absolute right-4 top-1/2 -translate-y-1/2 bg-neutral-100 rounded-full p-1"
               style={{ transform: [{ translateY: -10 }] }}
-              onPress={() => setSearchQuery('')}
+              onPress={() => setSearchQuery("")}
             >
               <Ionicons name="close" size={16} color="#6B7280" />
             </TouchableOpacity>
@@ -631,7 +810,7 @@ export default function EnterpriseProducts() {
       {/* Category Pills */}
       <View className="mb-4">
         <FlatList
-          data={[{ _id: 'all', name: 'Tous' }, ...categories] as any}
+          data={[{ _id: "all", name: "Tous" }, ...categories] as any}
           horizontal
           keyExtractor={(item: any) => item._id}
           showsHorizontalScrollIndicator={false}
@@ -639,16 +818,20 @@ export default function EnterpriseProducts() {
           renderItem={({ item }: any) => (
             <TouchableOpacity
               className={`px-5 py-2.5 mr-2 rounded-full ${
-                selectedCategory === item._id 
-                  ? 'bg-white shadow-md' 
-                  : 'bg-white/20 backdrop-blur-sm border border-white/30'
+                selectedCategory === item._id
+                  ? "bg-white shadow-md"
+                  : "bg-white/20 backdrop-blur-sm border border-white/30"
               }`}
               style={selectedCategory === item._id ? { elevation: 3 } : {}}
               onPress={() => setSelectedCategory(item._id)}
             >
-              <Text className={`text-sm font-quicksand-bold ${
-                selectedCategory === item._id ? 'text-primary-600' : 'text-white'
-              }`}>
+              <Text
+                className={`text-sm font-quicksand-bold ${
+                  selectedCategory === item._id
+                    ? "text-primary-600"
+                    : "text-white"
+                }`}
+              >
                 {item.name}
               </Text>
             </TouchableOpacity>
@@ -665,14 +848,19 @@ export default function EnterpriseProducts() {
         >
           <Ionicons name="swap-vertical" size={16} color="#10B981" />
           <Text className="text-neutral-700 font-quicksand-semibold ml-2 text-sm">
-            {sortOptions.find(o => o.id === selectedSort)?.name}
+            {sortOptions.find((o) => o.id === selectedSort)?.name}
           </Text>
-          <Ionicons name="chevron-down" size={14} color="#6B7280" style={{ marginLeft: 4 }} />
+          <Ionicons
+            name="chevron-down"
+            size={14}
+            color="#6B7280"
+            style={{ marginLeft: 4 }}
+          />
         </TouchableOpacity>
         {searchQuery.trim().length > 0 && (
           <View className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
             <Text className="text-white font-quicksand-semibold text-sm">
-              {products.length} résultat{products.length !== 1 ? 's' : ''}
+              {products.length} résultat{products.length !== 1 ? "s" : ""}
             </Text>
           </View>
         )}
@@ -682,20 +870,18 @@ export default function EnterpriseProducts() {
 
   if (initialLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-background-secondary">
-        <StatusBar backgroundColor="#10B981" barStyle="light-content" />
+      <View className="flex-1 bg-background-secondary">
+        <ExpoStatusBar style="light" translucent />
         <Header />
-        <View className="flex-1 bg-white">
-          {renderSkeletons()}
-        </View>
+        <View className="flex-1 bg-white">{renderSkeletons()}</View>
         {renderSortModal()}
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background-secondary">
-      <StatusBar backgroundColor="#10B981" barStyle="light-content" />
+    <View className="flex-1 bg-background-secondary">
+      <ExpoStatusBar style="light" translucent />
       <Header />
       <View className="flex-1 bg-white">
         {products.length > 0 ? (
@@ -703,16 +889,18 @@ export default function EnterpriseProducts() {
             data={products}
             renderItem={(info) => renderProduct(info)}
             keyExtractor={(item) => item._id}
-            key={viewMode === 'grid' ? 'grid' : 'list'}
-            numColumns={viewMode === 'grid' ? 2 : 1}
-            columnWrapperStyle={viewMode === 'grid' ? { paddingHorizontal: 8 } : undefined}
+            key={viewMode === "grid" ? "grid" : "list"}
+            numColumns={viewMode === "grid" ? 2 : 1}
+            columnWrapperStyle={
+              viewMode === "grid" ? { paddingHorizontal: 8 } : undefined
+            }
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingTop: 28, paddingBottom: 28 }}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
-                colors={['#10B981']}
+                colors={["#10B981"]}
                 tintColor="#10B981"
               />
             }
@@ -727,9 +915,7 @@ export default function EnterpriseProducts() {
             }
           />
         ) : (
-          <View className="flex-1">
-            {renderEmptyState()}
-          </View>
+          <View className="flex-1">{renderEmptyState()}</View>
         )}
       </View>
       {renderSortModal()}
@@ -756,12 +942,19 @@ export default function EnterpriseProducts() {
               <View className="items-center pt-8 pb-4">
                 <View
                   className="w-16 h-16 rounded-full items-center justify-center"
-                  style={{ backgroundColor: confirmationAction?.confirmColor + '20' }}
+                  style={{
+                    backgroundColor: confirmationAction?.confirmColor + "20",
+                  }}
                 >
                   <Ionicons
                     name={
-                      confirmationAction?.type === 'delete' ? 'trash' :
-                      confirmationAction?.type === 'status_change' ? (confirmationAction.product.isActive ? 'pause' : 'play') : 'help'
+                      confirmationAction?.type === "delete"
+                        ? "trash"
+                        : confirmationAction?.type === "status_change"
+                        ? confirmationAction.product.isActive
+                          ? "pause"
+                          : "play"
+                        : "help"
                     }
                     size={28}
                     color={confirmationAction?.confirmColor}
@@ -833,12 +1026,19 @@ export default function EnterpriseProducts() {
                 <View className="p-5 border-b border-neutral-100">
                   <View className="flex-row items-center">
                     <Image
-                      source={{ uri: selectedProductForMenu.images[0] || 'https://via.placeholder.com/60x60/E5E7EB/9CA3AF?text=No+Image' }}
+                      source={{
+                        uri:
+                          selectedProductForMenu.images[0] ||
+                          "https://via.placeholder.com/60x60/E5E7EB/9CA3AF?text=No+Image",
+                      }}
                       className="w-14 h-14 rounded-xl mr-3"
                       resizeMode="cover"
                     />
                     <View className="flex-1">
-                      <Text className="text-base font-quicksand-bold text-neutral-800" numberOfLines={2}>
+                      <Text
+                        className="text-base font-quicksand-bold text-neutral-800"
+                        numberOfLines={2}
+                      >
                         {selectedProductForMenu.name}
                       </Text>
                       <Text className="text-sm font-quicksand-medium text-primary-500 mt-1">
@@ -857,8 +1057,11 @@ export default function EnterpriseProducts() {
                   onPress={() => {
                     setMenuModalVisible(false);
                     if (selectedProductForMenu) {
-                      (global as any).__CURRENT_PRODUCT_ID__ = selectedProductForMenu._id;
-                      router.push(`/(app)/(enterprise)/(tabs)/products/${selectedProductForMenu._id}`);
+                      (global as any).__CURRENT_PRODUCT_ID__ =
+                        selectedProductForMenu._id;
+                      router.push(
+                        `/(app)/(enterprise)/(tabs)/products/${selectedProductForMenu._id}`
+                      );
                     }
                     setSelectedProductForMenu(null);
                   }}
@@ -884,17 +1087,35 @@ export default function EnterpriseProducts() {
                       setSelectedProductForMenu(null);
                     }}
                   >
-                    <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${selectedProductForMenu.isActive ? 'bg-warning-100' : 'bg-success-100'}`}>
-                      <Ionicons 
-                        name={selectedProductForMenu.isActive ? "pause" : "play"} 
-                        size={20} 
-                        color={selectedProductForMenu.isActive ? "#F59E0B" : "#10B981"} 
+                    <View
+                      className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
+                        selectedProductForMenu.isActive
+                          ? "bg-warning-100"
+                          : "bg-success-100"
+                      }`}
+                    >
+                      <Ionicons
+                        name={
+                          selectedProductForMenu.isActive ? "pause" : "play"
+                        }
+                        size={20}
+                        color={
+                          selectedProductForMenu.isActive
+                            ? "#F59E0B"
+                            : "#10B981"
+                        }
                       />
                     </View>
                     <Text className="text-base font-quicksand-semibold text-neutral-800 flex-1">
-                      {selectedProductForMenu.isActive ? 'Désactiver' : 'Activer'}
+                      {selectedProductForMenu.isActive
+                        ? "Désactiver"
+                        : "Activer"}
                     </Text>
-                    <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                    <Ionicons
+                      name="chevron-forward"
+                      size={20}
+                      color="#9CA3AF"
+                    />
                   </TouchableOpacity>
                 )}
 
@@ -948,6 +1169,6 @@ export default function EnterpriseProducts() {
           onClose={hideNotification}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }

@@ -5,19 +5,21 @@ import React, { useEffect, useLayoutEffect, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
-  SafeAreaView,
   ScrollView,
   Switch,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { useToast } from "../../../../components/ui/ToastManager";
 import PreferencesService from "../../../../services/api/PreferencesService";
 
 export default function SettingsScreen() {
   const navigation = useNavigation();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -204,9 +206,10 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background-secondary">
+    <View className="flex-1 bg-background-secondary">
+      <ExpoStatusBar style="light" translucent />
       {/* Header vert */}
-      <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="pt-16 pb-6 rounded-b-3xl shadow-md">
+      <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="pb-6 rounded-b-3xl shadow-md" style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}>
         <View className="px-6">
           <View className="flex-row items-center justify-between">
             <TouchableOpacity
@@ -554,6 +557,6 @@ export default function SettingsScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }

@@ -40,10 +40,31 @@ export default function StatusModal({
             className="p-6 pb-8 items-center"
           >
             <View 
-              className="w-20 h-20 rounded-full items-center justify-center mb-4 shadow-lg"
-              style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+              style={{ 
+                width: 80, 
+                height: 80, 
+                borderRadius: 40, 
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: 16,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
+                elevation: 5,
+              }}
             >
-              <View className="w-16 h-16 rounded-full bg-white items-center justify-center">
+              <View 
+                style={{ 
+                  width: 64, 
+                  height: 64, 
+                  borderRadius: 32, 
+                  backgroundColor: '#FFFFFF',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
                 <Ionicons
                   name={isSuccess ? 'checkmark-circle' : 'close-circle'}
                   size={48}

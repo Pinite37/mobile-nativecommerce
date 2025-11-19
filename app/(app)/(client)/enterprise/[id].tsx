@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import {
     ActivityIndicator,
@@ -13,11 +14,11 @@ import {
     Linking,
     Modal,
     RefreshControl,
-    SafeAreaView,
     Text,
     TouchableOpacity,
     View,
 } from "react-native";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import EnterpriseService, { Enterprise } from "../../../../services/api/EnterpriseService";
 import { Product } from "../../../../types/product";
 
@@ -26,6 +27,7 @@ export default function EnterpriseDetails() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
     const navigation = useNavigation();
+    const insets = useSafeAreaInsets();
     const [enterprise, setEnterprise] = useState<Enterprise | null>(null);
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
@@ -339,9 +341,10 @@ export default function EnterpriseDetails() {
     );
 
     const renderSkeletonEnterprise = () => (
-        <SafeAreaView className="flex-1 bg-background-secondary">
+        <View className="flex-1 bg-background-secondary">
+            <ExpoStatusBar style="light" translucent />
             {/* Header Skeleton */}
-            <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="pt-16 pb-6 rounded-b-3xl shadow-md">
+            <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="pb-6 rounded-b-3xl shadow-md" style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}>
                 <View className="px-6">
                     <View className="flex-row items-center justify-between">
                         <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
@@ -371,7 +374,7 @@ export default function EnterpriseDetails() {
                 }
                 contentContainerStyle={{ paddingBottom: 20, paddingTop: 20 }}
             />
-        </SafeAreaView>
+        </View>
     );
 
     if (loading) {
@@ -380,7 +383,7 @@ export default function EnterpriseDetails() {
 
     if (!enterprise) {
         return (
-            <SafeAreaView className="flex-1 bg-white">
+            <View className="flex-1 bg-white">
                 <View className="flex-1 justify-center items-center">
                     <Ionicons name="business-outline" size={64} color="#EF4444" />
                     <Text className="mt-4 text-xl font-quicksand-bold text-neutral-800">
@@ -396,14 +399,15 @@ export default function EnterpriseDetails() {
                         <Text className="text-white font-quicksand-semibold">Retour</Text>
                     </TouchableOpacity>
                 </View>
-            </SafeAreaView>
+            </View>
         );
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-background-secondary">
+        <View className="flex-1 bg-background-secondary">
+            <ExpoStatusBar style="light" translucent />
             {/* Header vert */}
-            <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="pt-16 pb-6 rounded-b-3xl shadow-md">
+            <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="pb-6 rounded-b-3xl shadow-md" style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}>
                 <View className="px-6">
                     <View className="flex-row items-center justify-between">
                         <TouchableOpacity
@@ -661,6 +665,6 @@ export default function EnterpriseDetails() {
                     </TouchableOpacity>
                 </TouchableOpacity>
             </Modal>
-        </SafeAreaView>
+        </View>
     );
 }

@@ -9,12 +9,10 @@ import {
   Easing,
   FlatList,
   Image,
-  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
   Animated as RNAnimated,
-  SafeAreaView,
   ScrollView,
   Text,
   TextInput,
@@ -33,6 +31,313 @@ import MessagingService, { Conversation, Message } from "../../../../services/ap
 // Cache simple pour les conversations et messages
 const conversationCache = new Map<string, { conversation: Conversation; messages: Message[]; timestamp: number }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes en millisecondes
+
+// DateTimePicker custom iOS en mode clair (texte noir sur fond blanc)
+const IOSLightDateTimePicker = ({
+  value,
+  onChange,
+}: {
+  value: Date;
+  onChange: (date: Date) => void;
+}) => {
+  const hours = Array.from({ length: 24 }, (_, i) => i);
+  const minutes = [0, 15, 30, 45];
+
+  const formatNumber = (n: number) => n.toString().padStart(2, '0');
+
+  const handleHourChange = (hour: number) => {
+    const next = new Date(value);
+    next.setHours(hour);
+    onChange(next);
+  };
+
+  const handleMinuteChange = (minute: number) => {
+    const next = new Date(value);
+    next.setMinutes(minute);
+    onChange(next);
+  };
+
+  return (
+    <View
+      style={{
+        backgroundColor: '#FFFFFF',
+        paddingVertical: 16,
+        paddingHorizontal: 12,
+      }}
+    >
+      {/* Date affichée */}
+      <Text
+        style={{
+          textAlign: 'center',
+          color: '#111827',
+          fontFamily: 'Quicksand-Bold',
+          fontSize: 18,
+          marginBottom: 12,
+        }}
+      >
+        {value.toLocaleDateString('fr-FR', {
+          weekday: 'short',
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        })}
+      </Text>
+
+      {/* Sélecteur date (calendrier) + heures / minutes */}
+
+      {/* Calendrier personnalisé */}
+      <View style={{ marginBottom: 16, backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16 }}>
+        {/* En-tête du mois */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={() => {
+              const prev = new Date(value);
+              prev.setMonth(prev.getMonth() - 1);
+              onChange(prev);
+            }}
+            style={{ padding: 8 }}
+          >
+            <Text style={{ fontSize: 18, color: '#111827' }}>‹</Text>
+          </TouchableOpacity>
+          <Text style={{ fontSize: 16, fontFamily: 'Quicksand-Bold', color: '#111827' }}>
+            {value.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+          </Text>
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={() => {
+              const next = new Date(value);
+              next.setMonth(next.getMonth() + 1);
+              onChange(next);
+            }}
+            style={{ padding: 8 }}
+          >
+            <Text style={{ fontSize: 18, color: '#111827' }}>›</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Jours de la semaine */}
+        <View style={{ flexDirection: 'row', marginBottom: 8 }}>
+          {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day, i) => (
+            <View key={i} style={{ flex: 1, alignItems: 'center' }}>
+              <Text style={{ fontSize: 12, fontFamily: 'Quicksand-Medium', color: '#6B7280' }}>
+                {day}
+              </Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Grille des dates */}
+        <View>
+          {(() => {
+            const year = value.getFullYear();
+            const month = value.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDayOfWeek = (firstDay.getDay() + 6) % 7; // Lundi = 0
+            const daysInMonth = lastDay.getDate();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const weeks = [];
+            let days = [];
+            
+            // Jours vides avant le début du mois
+            for (let i = 0; i < startDayOfWeek; i++) {
+              days.push(<View key={`empty-${i}`} style={{ flex: 1, height: 40 }} />);
+            }
+
+            // Jours du mois
+            for (let day = 1; day <= daysInMonth; day++) {
+              const date = new Date(year, month, day);
+              date.setHours(0, 0, 0, 0);
+              const isSelected = date.getDate() === value.getDate() && 
+                                date.getMonth() === value.getMonth() && 
+                                date.getFullYear() === value.getFullYear();
+              const isPast = date < today;
+              const isToday = date.getTime() === today.getTime();
+
+              days.push(
+                <TouchableOpacity
+                  key={day}
+                  activeOpacity={1}
+                  disabled={isPast}
+                  onPress={() => {
+                    if (!isPast) {
+                      const next = new Date(value);
+                      next.setDate(day);
+                      onChange(next);
+                    }
+                  }}
+                  style={{
+                    flex: 1,
+                    height: 40,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    borderRadius: 8,
+                    backgroundColor: isSelected ? '#10B981' : 'transparent',
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontFamily: 'Quicksand-Medium',
+                      color: isPast 
+                        ? '#D1D5DB' 
+                        : isSelected 
+                          ? '#FFFFFF' 
+                          : isToday 
+                            ? '#10B981' 
+                            : '#111827',
+                    }}
+                  >
+                    {day}
+                  </Text>
+                </TouchableOpacity>
+              );
+
+              if (days.length === 7) {
+                weeks.push(
+                  <View key={`week-${weeks.length}`} style={{ flexDirection: 'row', marginBottom: 4 }}>
+                    {days}
+                  </View>
+                );
+                days = [];
+              }
+            }
+
+            // Compléter la dernière semaine si nécessaire
+            if (days.length > 0) {
+              while (days.length < 7) {
+                days.push(<View key={`empty-end-${days.length}`} style={{ flex: 1, height: 40 }} />);
+              }
+              weeks.push(
+                <View key={`week-${weeks.length}`} style={{ flexDirection: 'row', marginBottom: 4 }}>
+                  {days}
+                </View>
+              );
+            }
+
+            return weeks;
+          })()}
+        </View>
+      </View>
+
+      {/* Sélecteur heures / minutes */}
+      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 24 }}>
+        {/* Heures */}
+        <View>
+          <Text
+            style={{
+              textAlign: 'center',
+              color: '#6B7280',
+              fontFamily: 'Quicksand-Medium',
+              marginBottom: 8,
+            }}
+          >
+            Heure
+          </Text>
+          <View
+            style={{
+              height: 140,
+              width: 80,
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: '#E5E7EB',
+              overflow: 'hidden',
+            }}
+          >
+            <ScrollView
+              contentContainerStyle={{ paddingVertical: 8 }}
+              showsVerticalScrollIndicator={false}
+            >
+              {hours.map((h) => {
+                const selected = h === value.getHours();
+                return (
+                  <TouchableOpacity
+                    key={h}
+                    onPress={() => handleHourChange(h)}
+                    style={{
+                      paddingVertical: 6,
+                      alignItems: 'center',
+                      backgroundColor: selected ? '#ECFDF5' : 'transparent',
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text
+                      style={{
+                        color: selected ? '#10B981' : '#111827',
+                        fontFamily: selected ? 'Quicksand-Bold' : 'Quicksand-Medium',
+                        fontSize: 16,
+                      }}
+                    >
+                      {formatNumber(h)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+
+        {/* Minutes */}
+        <View>
+          <Text
+            style={{
+              textAlign: 'center',
+              color: '#6B7280',
+              fontFamily: 'Quicksand-Medium',
+              marginBottom: 8,
+            }}
+          >
+            Minutes
+          </Text>
+          <View
+            style={{
+              height: 140,
+              width: 80,
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: '#E5E7EB',
+              overflow: 'hidden',
+            }}
+          >
+            <ScrollView
+              contentContainerStyle={{ paddingVertical: 8 }}
+              showsVerticalScrollIndicator={false}
+            >
+              {minutes.map((m) => {
+                const selected = m === value.getMinutes();
+                return (
+                  <TouchableOpacity
+                    key={m}
+                    onPress={() => handleMinuteChange(m)}
+                    style={{
+                      paddingVertical: 6,
+                      alignItems: 'center',
+                      backgroundColor: selected ? '#ECFDF5' : 'transparent',
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text
+                      style={{
+                        color: selected ? '#10B981' : '#111827',
+                        fontFamily: selected ? 'Quicksand-Bold' : 'Quicksand-Medium',
+                        fontSize: 16,
+                      }}
+                    >
+                      {formatNumber(m)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+};
 
 export default function ConversationDetails() {
   const router = useRouter();
@@ -60,8 +365,6 @@ export default function ConversationDetails() {
   const [newMessage, setNewMessage] = useState('');
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [inputHeight, setInputHeight] = useState(50);
-  const [inputFocused, setInputFocused] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [attachment, setAttachment] = useState<{
     type: 'IMAGE' | 'FILE';
     data: string;
@@ -87,9 +390,9 @@ export default function ConversationDetails() {
     expiresAt: "",
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [dateMode, setDateMode] = useState<'date' | 'time' | 'datetime'>('datetime');
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [tempExpiryDate, setTempExpiryDate] = useState<Date | null>(null);
+  const [tempPickerDate, setTempPickerDate] = useState<Date>(new Date(Date.now() + 60 * 60 * 1000));
 
   const openOfferModal = () => {
     // Pré-remplir l'expiration à +1h si vide
@@ -243,15 +546,15 @@ export default function ConversationDetails() {
 
   // Fonction pour rendre les skeletons de conversation
   const renderSkeletonConversation = () => (
-    <SafeAreaView className="flex-1 bg-white">
-      <ExpoStatusBar style="light" translucent />
+    <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+      <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
       {/* Header skeleton */}
       <LinearGradient
         colors={['#10B981', '#34D399']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         className="px-6 pb-4 rounded-b-3xl shadow-sm"
-        style={{ paddingTop: insets.top + 8 }}
+        style={{ paddingTop: insets.top + 16 }}
       >
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center flex-1">
@@ -282,7 +585,7 @@ export default function ConversationDetails() {
           <SkeletonMessage key={index} isCurrentUser={index % 3 === 0} />
         ))}
       </View>
-    </SafeAreaView>
+    </View>
   );
 
   // Gestionnaires d'événements Socket.IO avec useCallback pour stabilité
@@ -306,10 +609,12 @@ export default function ConversationDetails() {
     // Vérifier si c'est un message que nous venons d'envoyer
     const currentUserId = user?._id || null;
     const isOurMessage = data.message.sender._id === currentUserId;
+    const isSystemMessage = data.message.messageType === 'SYSTEM';
 
-    // IMPORTANT: Ignorer nos propres messages via Socket.IO
+    // IMPORTANT: Ignorer nos propres messages via Socket.IO (sauf SYSTEM)
     // Ils sont déjà ajoutés via la réponse HTTP de sendMessage
-    if (isOurMessage) {
+    // Les messages SYSTEM doivent toujours être affichés même s'ils viennent de nous
+    if (isOurMessage && !isSystemMessage) {
       console.log('⏭️ ENTERPRISE - Message ignoré (notre propre message)');
       return;
     }
@@ -394,38 +699,6 @@ export default function ConversationDetails() {
     }
   }, [messages.length]);
 
-  // Gestion du clavier spécifique pour Android et iOS
-  useEffect(() => {
-    const keyboardShowListener = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      (e) => {
-        const keyboardHeight = e.endCoordinates.height;
-        setKeyboardHeight(keyboardHeight);
-        
-        // Scroll vers le bas avec un délai optimisé
-        setTimeout(() => {
-          flatListRef.current?.scrollToEnd({ animated: true });
-        }, Platform.OS === 'android' ? 100 : 150);
-      }
-    );
-
-    const keyboardHideListener = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
-      () => {
-        setKeyboardHeight(0);
-        // Petit délai pour s'assurer que le layout est mis à jour
-        setTimeout(() => {
-          flatListRef.current?.scrollToEnd({ animated: true });
-        }, 50);
-      }
-    );
-
-    return () => {
-      keyboardShowListener.remove();
-      keyboardHideListener.remove();
-    };
-  }, []);
-
   // Ref pour éviter les rechargements multiples
   const loadedConversationRef = useRef<string | null>(null);
 
@@ -501,23 +774,9 @@ export default function ConversationDetails() {
         loadedConversationRef.current = null;
       }
     };
-  }, [conversationId]);
+  }, [conversationId, showNotification]);
 
-  // Assurer visibilité du dernier message pendant la saisie et les changements de clavier
-  useEffect(() => {
-    if (inputFocused || keyboardHeight > 0) {
-      const t1 = setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 50);
-      const t2 = setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 150);
-      return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-      };
-    }
-  }, [inputHeight, keyboardHeight, inputFocused, newMessage]);
+
 
   // === GESTION SOCKET.IO ===
   useEffect(() => {
@@ -913,18 +1172,7 @@ export default function ConversationDetails() {
     setAttachment(null);
   };
 
-  // Fonction pour gérer le focus de l'input
-  const handleInputFocus = () => {
-    setInputFocused(true);
-    // Scroll vers le bas avec délai optimisé pour la plateforme
-    setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: true });
-    }, Platform.OS === 'android' ? 200 : 250);
-  };
 
-  const handleInputBlur = () => {
-    setInputFocused(false);
-  };
 
   const formatMessageTime = (timestamp: string) => {
     try {
@@ -1135,15 +1383,15 @@ export default function ConversationDetails() {
                   colors={['#10B981', '#34D399']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
-                  className="px-4 py-3"
+                  style={{ paddingHorizontal: 16, paddingVertical: 12, borderRadius: 16 }}
                 >
-                  <Text className="font-quicksand-medium text-white">
+                  <Text className="font-quicksand-medium text-white" style={{ fontSize: 15, lineHeight: 20 }}>
                     {message.text}
                   </Text>
                 </LinearGradient>
               ) : (
-                <View className={`${isDeleted ? 'bg-neutral-100' : 'bg-neutral-100'} px-4 py-3`}>
-                  <Text className={`font-quicksand-medium ${isDeleted ? 'text-neutral-600 italic' : 'text-neutral-800'}`}>
+                <View className="bg-neutral-100" style={{ paddingHorizontal: 16, paddingVertical: 12, borderRadius: 16 }}>
+                  <Text className={`font-quicksand-medium ${isDeleted ? 'text-neutral-600 italic' : 'text-neutral-800'}`} style={{ fontSize: 15, lineHeight: 20 }}>
                     {isDeleted ? '[Message supprimé]' : message.text}
                   </Text>
                 </View>
@@ -1224,6 +1472,108 @@ export default function ConversationDetails() {
     setDeleteOptionsModal({ visible: true, messageId });
   };
 
+  // Composant pour les messages système
+  const SystemMessage = ({ message }: { message: Message }) => {
+    // Détecter si c'est un message de livraison
+    const isDeliveryMessage = message.text.toLowerCase().includes('livreur') || 
+                               message.text.toLowerCase().includes('livraison') ||
+                               message.text.toLowerCase().includes('livré');
+    
+    if (isDeliveryMessage) {
+      return (
+        <View style={{ paddingVertical: 16, alignItems: 'center', width: '100%' }}>
+          <View style={{ 
+            backgroundColor: '#FFFFFF',
+            borderRadius: 16,
+            paddingHorizontal: 20,
+            paddingVertical: 16,
+            maxWidth: '90%',
+            width: '90%',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            elevation: 3,
+            borderWidth: 1,
+            borderColor: '#D1FAE5',
+          }}>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 }}>
+              <View style={{ 
+                width: 40, 
+                height: 40, 
+                borderRadius: 20, 
+                backgroundColor: '#D1FAE5',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: 12
+              }}>
+                <Ionicons name="bicycle" size={20} color="#10B981" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ 
+                  fontSize: 10,
+                  color: '#059669',
+                  fontFamily: 'Quicksand-Bold',
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                  marginBottom: 4
+                }}>
+                  Notification de livraison
+                </Text>
+                <Text style={{ 
+                  fontSize: 14,
+                  color: '#262626',
+                  fontFamily: 'Quicksand-SemiBold',
+                  lineHeight: 20
+                }}>
+                  {message.text}
+                </Text>
+              </View>
+            </View>
+            <View style={{ 
+              marginTop: 8,
+              paddingTop: 8,
+              borderTopWidth: 1,
+              borderTopColor: '#F5F5F5'
+            }}>
+              <Text style={{ 
+                fontSize: 10,
+                color: '#737373',
+                fontFamily: 'Quicksand-Medium',
+                textAlign: 'center'
+              }}>
+                {formatMessageTime(message.sentAt || (message as any).createdAt)}
+              </Text>
+            </View>
+          </View>
+        </View>
+      );
+    }
+    
+    // Message système standard
+    return (
+      <View style={{ paddingVertical: 12, alignItems: 'center' }}>
+        <View style={{ 
+          backgroundColor: '#F5F5F5',
+          borderRadius: 999,
+          paddingHorizontal: 16,
+          paddingVertical: 8,
+          borderWidth: 1,
+          borderColor: '#E5E5E5'
+        }}>
+          <Text style={{ 
+            fontSize: 12,
+            color: '#525252',
+            fontFamily: 'Quicksand-Medium',
+            textAlign: 'center'
+          }}>
+            {message.text}
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
   // Helpers pour séparateurs de date
   const isSameDay = (a: string, b: string) => {
     const da = new Date(a);
@@ -1241,6 +1591,11 @@ export default function ConversationDetails() {
     return new Date(ts).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
   };
   const renderMessageItem = ({ item, index }: { item: Message; index: number }) => {
+    // Si c'est un message système, on l'affiche différemment
+    if (item.messageType === 'SYSTEM') {
+      return <SystemMessage message={item} />;
+    }
+
     let showSeparator = false;
     const currentTs = item.sentAt || (item as any).createdAt;
     if (index === 0) {
@@ -1278,7 +1633,7 @@ export default function ConversationDetails() {
   // Si pas d'ID de conversation, afficher un message d'erreur
   if (!conversationId) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
+      <View style={{ flex: 1, backgroundColor: '#FFFFFF', paddingTop: insets.top }}>
         <View className="flex-1 justify-center items-center">
           <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
           <Text className="mt-4 text-xl font-quicksand-bold text-neutral-800">
@@ -1294,14 +1649,14 @@ export default function ConversationDetails() {
             <Text className="text-white font-quicksand-semibold">Retour</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   // Si la conversation n'a pas pu être chargée, afficher un message d'erreur
   if (!conversation) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
+      <View style={{ flex: 1, backgroundColor: '#FFFFFF', paddingTop: insets.top }}>
         <View className="flex-1 justify-center items-center">
           <Ionicons name="chatbubble-outline" size={64} color="#EF4444" />
           <Text className="mt-4 text-xl font-quicksand-bold text-neutral-800">
@@ -1317,7 +1672,7 @@ export default function ConversationDetails() {
             <Text className="text-white font-quicksand-semibold">Retour</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -1373,15 +1728,20 @@ export default function ConversationDetails() {
     } : null,
   });
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <ExpoStatusBar style="light" translucent />
+    <View style={{ flex: 1, backgroundColor: 'transparent' }}>
+      <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
       {/* Header */}
       <LinearGradient
         colors={['#10B981', '#34D399']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         className="px-6 pb-4 rounded-b-3xl shadow-sm"
-        style={{ paddingTop: insets.top + 8 }}
+        style={{
+						paddingTop: insets.top + 16,
+						paddingBottom: 16,
+						paddingLeft: insets.left + 10,
+						paddingRight: insets.right + 10,
+					}}
       >
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center flex-1">
@@ -1477,8 +1837,13 @@ export default function ConversationDetails() {
       )}
 
       {/* Zone de contenu principal */}
-      {Platform.OS !== 'ios' ? (
-      <View className="flex-1">
+      {Platform.OS === 'android' ? (
+      <KeyboardAvoidingView 
+        className="flex-1"
+        behavior="height"
+        keyboardVerticalOffset={0}
+        style={{ flex: 1 }}
+      >
         {/* Messages */}
         <FlatList
           ref={flatListRef}
@@ -1488,8 +1853,7 @@ export default function ConversationDetails() {
           className="flex-1 px-4"
           contentContainerStyle={{ 
             paddingVertical: 16,
-            // Ajout de l'inset bas + hauteur zone saisie estimée
-            paddingBottom: (keyboardHeight > 0 ? keyboardHeight + 100 : 100 + insets.bottom)
+            paddingBottom: 20
           }}
           showsVerticalScrollIndicator={false}
           onContentSizeChange={() => {
@@ -1548,12 +1912,11 @@ export default function ConversationDetails() {
 
         {/* Zone de saisie Android */}
         <View 
-          className="px-4 py-4 bg-white absolute left-0 right-0"
+          className="px-4 py-4 bg-white"
           style={{ 
             borderTopWidth: 1, 
             borderTopColor: '#F3F4F6',
-            // Positionner juste au-dessus du clavier s'il est ouvert sinon sur l'inset
-            bottom: keyboardHeight > 0 ? keyboardHeight : insets.bottom
+            paddingBottom: insets.bottom
           }}
         >
           {/* Affichage de l'image sélectionnée */}
@@ -1584,9 +1947,7 @@ export default function ConversationDetails() {
               </View>
             </View>
           )}
-          <View className={`flex-row items-end rounded-3xl p-2 ${
-            inputFocused ? 'bg-primary-50 border-2 border-primary-200' : 'bg-neutral-50 border-2 border-transparent'
-          }`}>
+          <View className="flex-row items-center rounded-3xl p-2 bg-neutral-50 border-2 border-transparent">
             {/* Bouton d'attachement */}
             <TouchableOpacity
               onPress={() => setAttachmentModal(true)}
@@ -1605,15 +1966,16 @@ export default function ConversationDetails() {
                 placeholder="Tapez votre message..."
                 multiline
                 maxLength={2000}
-                onFocus={handleInputFocus}
-                onBlur={handleInputBlur}
+                
+                
                 onContentSizeChange={(e) => {
                   const height = Math.max(40, Math.min(128, e.nativeEvent.contentSize.height));
                   setInputHeight(height);
                 }}
                 className="text-neutral-800 font-quicksand-medium text-base px-4 py-2"
                 placeholderTextColor="#9CA3AF"
-                style={{ height: Math.max(40, inputHeight) }}
+                style={{ height: Math.max(40, inputHeight), opacity: sending ? 0.95 : 1 }}
+                editable={!sending}
                 textAlignVertical="center"
               />
             </View>
@@ -1654,28 +2016,12 @@ export default function ConversationDetails() {
               />
             </TouchableOpacity>
           </View>
-          
-          {/* Indicateur de frappe */}
-          {inputFocused && (
-            <View className="flex-row items-center mt-2 px-4">
-              <View className="flex-row items-center">
-                <View className="w-2 h-2 bg-primary-400 rounded-full mr-1" />
-                <View className="w-2 h-2 bg-primary-400 rounded-full mr-1" />
-                <View className="w-2 h-2 bg-primary-400 rounded-full" />
-              </View>
-              <Text className="text-xs text-primary-600 font-quicksand-medium ml-2">
-                Vous tapez...
-              </Text>
-            </View>
-          )}
         </View>
-      </View>
-      ) : (
-      /* Zone de saisie iOS */
+      </KeyboardAvoidingView>
+  ) : (
       <KeyboardAvoidingView 
         className="flex-1"
-        behavior="padding"
-        keyboardVerticalOffset={100}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
         {/* Messages */}
@@ -1687,12 +2033,13 @@ export default function ConversationDetails() {
           className="flex-1 px-4"
           contentContainerStyle={{ 
             paddingVertical: 16,
-            // On ajoute l'inset bas pour s'aligner avec la zone interactive
-            paddingBottom: 40 + insets.bottom
+            paddingBottom: 120
           }}
           showsVerticalScrollIndicator={false}
           onContentSizeChange={() => {
-            flatListRef.current?.scrollToEnd({ animated: false });
+            if (messages.length > 0) {
+              flatListRef.current?.scrollToEnd({ animated: false });
+            }
           }}
           onScroll={(e) => {
             const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
@@ -1779,9 +2126,7 @@ export default function ConversationDetails() {
               </View>
             </View>
           )}
-          <View className={`flex-row items-end rounded-3xl p-2 ${
-            inputFocused ? 'bg-primary-50 border-2 border-primary-200' : 'bg-neutral-50 border-2 border-transparent'
-          }`}>
+          <View className="flex-row items-center rounded-3xl p-2 bg-neutral-50 border-2 border-transparent">
             {/* Bouton d'attachement */}
             <TouchableOpacity
               onPress={() => setAttachmentModal(true)}
@@ -1800,15 +2145,16 @@ export default function ConversationDetails() {
                 placeholder="Tapez votre message..."
                 multiline
                 maxLength={2000}
-                onFocus={handleInputFocus}
-                onBlur={handleInputBlur}
+                
+                
                 onContentSizeChange={(e) => {
                   const height = Math.max(40, Math.min(128, e.nativeEvent.contentSize.height));
                   setInputHeight(height);
                 }}
                 className="text-neutral-800 font-quicksand-medium text-base px-4 py-2"
                 placeholderTextColor="#9CA3AF"
-                style={{ height: Math.max(40, inputHeight) }}
+                style={{ height: Math.max(40, inputHeight), opacity: sending ? 0.95 : 1 }}
+                editable={!sending}
                 textAlignVertical="center"
               />
             </View>
@@ -1850,16 +2196,13 @@ export default function ConversationDetails() {
             </TouchableOpacity>
           </View>
           
-          {/* Indicateur de frappe */}
-          {inputFocused && (
-            <View className="flex-row items-center mt-2 px-4">
-              <View className="flex-row items-center">
-                <View className="w-2 h-2 bg-primary-400 rounded-full mr-1" />
-                <View className="w-2 h-2 bg-primary-400 rounded-full mr-1" />
-                <View className="w-2 h-2 bg-primary-400 rounded-full" />
-              </View>
-              <Text className="text-xs text-primary-600 font-quicksand-medium ml-2">
-                Vous tapez...
+          {/* Compteur de caractères */}
+          {newMessage.length > 1800 && (
+            <View className="absolute top-1 right-20 bg-white rounded-full px-2 py-1">
+              <Text className={`text-xs font-quicksand-medium ${
+                newMessage.length > 1950 ? 'text-red-500' : 'text-orange-500'
+              }`}>
+                {2000 - newMessage.length}
               </Text>
             </View>
           )}
@@ -1873,16 +2216,14 @@ export default function ConversationDetails() {
           onPress={() => flatListRef.current?.scrollToEnd({ animated: true })}
           className="absolute right-4 rounded-full w-12 h-12 justify-center items-center"
           style={{
-    // Ajuster la position pour tenir compte de l'inset bas quand clavier fermé
-    bottom: Platform.OS === 'android'
-      ? (keyboardHeight > 0 ? keyboardHeight + 96 : 96 + insets.bottom)
-      : 96 + insets.bottom,
+            bottom: 100 + insets.bottom,
             backgroundColor: '#10B981',
             shadowColor: '#10B981',
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.3,
             shadowRadius: 4,
             elevation: 8,
+            zIndex: 1000,
           }}
         >
           <Ionicons name="arrow-down" size={18} color="#FFFFFF" />
@@ -1996,6 +2337,12 @@ export default function ConversationDetails() {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 className="px-6 pt-6 pb-4 rounded-t-[32px]"
+                style={{
+                  paddingTop: 24,
+                  paddingBottom: 16,
+                  paddingLeft: 12,
+                  paddingRight: 12,
+                }}
               >
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row items-center flex-1">
@@ -2083,6 +2430,7 @@ export default function ConversationDetails() {
                           ? 'bg-green-50 border-green-400' 
                           : 'bg-neutral-50 border-neutral-200'
                       }`}
+                      activeOpacity={1}
                     >
                       <Ionicons 
                         name="walk" 
@@ -2102,6 +2450,7 @@ export default function ConversationDetails() {
                           ? 'bg-orange-50 border-orange-400' 
                           : 'bg-neutral-50 border-neutral-200'
                       }`}
+                      activeOpacity={1}
                     >
                       <Ionicons 
                         name="bicycle" 
@@ -2121,6 +2470,7 @@ export default function ConversationDetails() {
                           ? 'bg-red-50 border-red-400' 
                           : 'bg-neutral-50 border-neutral-200'
                       }`}
+                      activeOpacity={1}
                     >
                       <Ionicons 
                         name="rocket" 
@@ -2145,7 +2495,15 @@ export default function ConversationDetails() {
                     </Text>
                   </View>
                   <TouchableOpacity
-                    onPress={() => { setDateMode('datetime'); setShowDatePicker(true); }}
+                    onPress={() => { 
+                      if (Platform.OS === 'ios') {
+                        setTempPickerDate(offerForm.expiresAt ? new Date(offerForm.expiresAt) : new Date(Date.now() + 60 * 60 * 1000));
+                        setOfferModalVisible(false); // Fermer le modal d'offre
+                        setTimeout(() => setShowDatePicker(true), 300); // Ouvrir le sélecteur de date
+                      } else {
+                        setShowDatePicker(true);
+                      }
+                    }}
                     className="bg-neutral-50 rounded-2xl border-2 border-neutral-200 px-4 py-3 flex-row items-center justify-between"
                   >
                     <Text className={`font-quicksand-medium text-base ${
@@ -2163,26 +2521,19 @@ export default function ConversationDetails() {
                     </Text>
                     <Ionicons name="calendar" size={18} color="#10B981" />
                   </TouchableOpacity>
-                  {showDatePicker && (
+                  {Platform.OS === 'android' && showDatePicker && (
                     <DateTimePicker
                       value={offerForm.expiresAt ? new Date(offerForm.expiresAt) : new Date(Date.now() + 60 * 60 * 1000)}
-                      mode={Platform.OS === 'ios' ? dateMode : 'date'}
-                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                      mode={'date'}
+                      display={'default'}
                       minimumDate={new Date()}
                       onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
-                        if (Platform.OS === 'ios') {
-                          if ((event as any).type === 'dismissed') return;
-                          const date = selectedDate || new Date();
-                          setOfferForm({ ...offerForm, expiresAt: date.toISOString() });
-                        } else {
-                          setShowDatePicker(false);
-                          if ((event as any).type === 'dismissed') return;
-                          const picked = selectedDate || new Date();
-                          setTempExpiryDate(picked);
-                          setShowTimePicker(true);
-                        }
+                        setShowDatePicker(false);
+                        if ((event as any).type === 'dismissed') return;
+                        const picked = selectedDate || new Date();
+                        setTempExpiryDate(picked);
+                        setShowTimePicker(true);
                       }}
-                      style={{ backgroundColor: Platform.OS === 'ios' ? 'white' : undefined }}
                     />
                   )}
                   {Platform.OS === 'android' && showTimePicker && (
@@ -2244,16 +2595,25 @@ export default function ConversationDetails() {
                 <TouchableOpacity
                   onPress={submitOffer}
                   disabled={creatingOffer}
-                  className="flex-1 rounded-2xl justify-center items-center overflow-hidden"
+                  className="flex-1"
                   style={{
-                    opacity: creatingOffer ? 0.7 : 1
+                    opacity: creatingOffer ? 0.7 : 1,
+                    borderRadius: 16,
+                    overflow: 'hidden'
                   }}
+                  activeOpacity={1}
                 >
                   <LinearGradient
                     colors={['#10B981', '#059669']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
-                    className="w-full py-4 justify-center items-center"
+                    style={{
+                      width: '100%',
+                      paddingVertical: 16,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      borderRadius: 16
+                    }}
                   >
                     {creatingOffer ? (
                       <ActivityIndicator size="small" color="#FFFFFF" />
@@ -2272,6 +2632,94 @@ export default function ConversationDetails() {
           </KeyboardAvoidingView>
         </View>
       </Modal>
+
+      {/* Modal iOS pour le sélecteur de date */}
+      {Platform.OS === 'ios' && (
+        <Modal
+          visible={showDatePicker}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => {
+            setShowDatePicker(false);
+            setTimeout(() => setOfferModalVisible(true), 300);
+          }}
+        >
+          <View className="flex-1 bg-black/60 justify-center items-center px-6">
+            <View 
+              className="bg-white rounded-3xl w-full"
+              style={{
+                maxWidth: 400,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 8
+              }}
+            >
+              {/* Header */}
+              <View className="px-6 pt-6 pb-4">
+                <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+                  Date d&apos;expiration
+                </Text>
+                <Text className="text-sm font-quicksand-medium text-neutral-500 text-center">
+                  Choisissez la date et l&apos;heure d&apos;expiration de l&apos;offre
+                </Text>
+              </View>
+
+              {/* DateTimePicker custom iOS en mode clair */}
+              <View 
+                style={{ 
+                  marginHorizontal: 16,
+                  borderRadius: 16,
+                  overflow: 'hidden',
+                  backgroundColor: '#FFFFFF'
+                }}
+              >
+                <IOSLightDateTimePicker
+                  value={tempPickerDate}
+                  onChange={(nextDate) => {
+                    // Empêcher la sélection d'une date passée
+                    const now = new Date();
+                    if (nextDate > now) {
+                      setTempPickerDate(nextDate);
+                    }
+                  }}
+                />
+              </View>
+
+              {/* Actions */}
+              <View className="flex-row px-6 py-6 gap-3">
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowDatePicker(false);
+                    setTimeout(() => setOfferModalVisible(true), 300);
+                  }}
+                  className="flex-1 bg-neutral-100 py-4 rounded-2xl"
+                  activeOpacity={0.7}
+                >
+                  <Text className="text-neutral-700 font-quicksand-bold text-base text-center">
+                    Annuler
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    setOfferForm({ ...offerForm, expiresAt: tempPickerDate.toISOString() });
+                    setShowDatePicker(false);
+                    setTimeout(() => setOfferModalVisible(true), 300);
+                  }}
+                  className="flex-1 py-4 rounded-2xl"
+                  style={{ backgroundColor: '#10B981' }}
+                  activeOpacity={0.7}
+                >
+                  <Text className="text-white font-quicksand-bold text-base text-center">
+                    OK
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
 
       {/* Modal de retry pour message échoué */}
       <Modal
@@ -2565,6 +3013,6 @@ export default function ConversationDetails() {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }

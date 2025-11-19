@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Image, Modal, RefreshControl, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Easing, Image, Modal, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import NotificationModal, { useNotification } from '../../../../components/ui/NotificationModal';
 import AdvertisementService, { Advertisement } from '../../../../services/api/AdvertisementService';
@@ -207,9 +208,19 @@ export default function AdvertisementDetail() {
   }, [ad]);
 
   return (
-    <SafeAreaView className="flex-1 bg-background-secondary">
-      <StatusBar backgroundColor="#10B981" barStyle="light-content" />
-      <LinearGradient colors={['#10B981', '#34D399']} start={{ x:0, y:0 }} end={{ x:1, y:0 }} className="px-6 pt-14 pb-10">
+    <View className="flex-1 bg-background-secondary">
+      <ExpoStatusBar style="light" translucent />
+      <LinearGradient
+        colors={['#10B981', '#34D399']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={{
+          paddingTop: insets.top + 16,
+          paddingBottom: 40,
+          paddingLeft: insets.left + 24,
+          paddingRight: insets.right + 24,
+        }}
+      >
         <View className="flex-row items-center justify-between">
           <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
             <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
@@ -387,6 +398,6 @@ export default function AdvertisementDetail() {
           onClose={hideNotification}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }

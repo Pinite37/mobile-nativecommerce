@@ -165,15 +165,11 @@ export default function UpgradeConfirmationModal({
               onPress={onConfirm}
               disabled={loading}
               className="rounded-xl py-4 items-center justify-center shadow-sm mb-3"
-              style={{ backgroundColor: loading ? '#D4D4D4' : plan.color }}
+              style={{ backgroundColor: plan.color }}
+              activeOpacity={1}
             >
               {loading ? (
-                <View className="flex-row items-center">
-                  <ActivityIndicator color="#FFFFFF" size="small" />
-                  <Text className="text-white font-quicksand-bold text-base ml-3">
-                    Traitement...
-                  </Text>
-                </View>
+                <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
                 <View className="flex-row items-center">
                   <Text className="text-white font-quicksand-bold text-base">

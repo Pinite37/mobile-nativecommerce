@@ -1,23 +1,24 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
   ScrollView,
-  StatusBar,
   Switch,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useToast } from "../../../../components/ui/ToastManager";
 import PreferencesService from "../../../../services/api/PreferencesService";
 
 export default function EnterpriseSettingsScreen() {
   const toast = useToast();
+  const insets = useSafeAreaInsets();
   
   // États pour les paramètres réels du modèle
   const [language, setLanguage] = useState('fr');
@@ -157,13 +158,18 @@ export default function EnterpriseSettingsScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-background-secondary" edges={['bottom', 'left', 'right']}>
-        <StatusBar backgroundColor="#10B981" barStyle="light-content" />
+      <View className="flex-1 bg-background-secondary">
+        <ExpoStatusBar style="light" translucent />
         <LinearGradient
           colors={['#10B981', '#34D399']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          className="px-6 pt-14 pb-4"
+          style={{
+            paddingTop: insets.top + 16,
+            paddingBottom: 16,
+            paddingLeft: insets.left + 24,
+            paddingRight: insets.right + 24,
+          }}
         >
           <View className="flex-row items-center justify-between">
             <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 items-center justify-center">
@@ -177,19 +183,24 @@ export default function EnterpriseSettingsScreen() {
           <ActivityIndicator size="large" color="#10B981" />
           <Text className="mt-4 text-neutral-600 font-quicksand-medium">Chargement...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background-secondary" edges={['bottom', 'left', 'right']}>
-      <StatusBar backgroundColor="#10B981" barStyle="light-content" />
+    <View className="flex-1 bg-background-secondary">
+      <ExpoStatusBar style="light" translucent />
       {/* Header avec gradient vert */}
       <LinearGradient
         colors={['#10B981', '#34D399']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        className="px-6 pt-14 pb-4"
+        style={{
+          paddingTop: insets.top + 16,
+          paddingBottom: 16,
+          paddingLeft: insets.left + 24,
+          paddingRight: insets.right + 24,
+        }}
       >
         <View className="flex-row items-center justify-between">
           <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 items-center justify-center">
@@ -813,6 +824,6 @@ export default function EnterpriseSettingsScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }

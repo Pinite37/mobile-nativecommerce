@@ -360,8 +360,13 @@ export default function ClientMarketplacePage() {
         colors={['#10B981', '#34D399']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        className="px-6 pb-4 rounded-b-3xl shadow-md"
-        style={{ paddingTop: insets.top + 16 }}
+        className="rounded-b-3xl shadow-md"
+        style={{ 
+          paddingTop: insets.top + 16,
+          paddingLeft: insets.left + 24,
+          paddingRight: insets.right + 24,
+          paddingBottom: 16
+        }}
       >
         <View className="flex-row items-center justify-between mb-4">
           <TouchableOpacity

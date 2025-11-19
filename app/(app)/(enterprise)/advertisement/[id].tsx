@@ -9,7 +9,6 @@ import {
   Easing,
   Image,
   Modal,
-  SafeAreaView,
   ScrollView,
   Share,
   Text,
@@ -131,8 +130,8 @@ export default function AdvertisementDetails() {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
-        <ExpoStatusBar style="light" />
+      <View className="flex-1 bg-white">
+        <ExpoStatusBar style="light" translucent />
 
         {/* Header Skeleton */}
         <View className="flex-row items-center justify-between px-4 py-3 border-b border-neutral-100">
@@ -162,14 +161,14 @@ export default function AdvertisementDetails() {
             <ShimmerBlock style={{ width: '100%', height: 56, borderRadius: 16 }} />
           </View>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (!advertisement) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
-        <ExpoStatusBar style="light" />
+      <View className="flex-1 bg-white">
+        <ExpoStatusBar style="light" translucent />
         <View className="flex-1 justify-center items-center px-6">
           <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
           <Text className="text-lg font-quicksand-bold text-neutral-800 mt-4">
@@ -185,20 +184,26 @@ export default function AdvertisementDetails() {
             <Text className="text-white font-quicksand-bold">Retour</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <ExpoStatusBar style="light" />
+    <View className="flex-1 bg-white">
+      <ExpoStatusBar style="light" translucent />
 
       {/* Header amélioré */}
       <LinearGradient
         colors={['#10B981', '#34D399']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        className="px-6 py-4 pt-16"
+        className="px-6"
+        style={{ 
+          paddingTop: insets.top + 16, 
+          paddingLeft: insets.left + 24,
+          paddingRight: insets.right + 24,
+          paddingBottom: 16 
+        }}
       >
         <View className="flex-row items-center justify-between">
           <TouchableOpacity
@@ -449,6 +454,6 @@ export default function AdvertisementDetails() {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }

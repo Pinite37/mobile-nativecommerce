@@ -1,8 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Easing, Image, Modal, RefreshControl, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, Easing, Image, Modal, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useToast } from '../../../../components/ui/ToastManager';
 import EnterpriseService, { DeliveryPartnerStatus } from '../../../../services/api/EnterpriseService';
 
@@ -12,6 +14,7 @@ import EnterpriseService, { DeliveryPartnerStatus } from '../../../../services/a
 export default function DeliveryPartnerDetailScreen() {
 	const router = useRouter();
 	const toast = useToast();
+	const insets = useSafeAreaInsets();
 	const { partnerId } = useLocalSearchParams<{ partnerId: string }>();
 	
 	const [partner, setPartner] = useState<DeliveryPartnerStatus | null>(null);
@@ -241,24 +244,29 @@ export default function DeliveryPartnerDetailScreen() {
 
 	if (loading) {
 		return (
-			<SafeAreaView className="flex-1 bg-background-secondary">
-				<StatusBar backgroundColor="#10B981" barStyle="light-content" />
+			<View className="flex-1 bg-background-secondary">
+				<ExpoStatusBar style="light" translucent />
 				{renderSkeletonDetail()}
-			</SafeAreaView>
+			</View>
 		);
 	}
 
 	if (!partner) {
 		return (
-			<SafeAreaView className="flex-1 bg-background-secondary">
-				<StatusBar backgroundColor="#10B981" barStyle="light-content" />
+			<View className="flex-1 bg-background-secondary">
+				<ExpoStatusBar style="light" translucent />
 				
 				{/* Header avec gradient */}
 				<LinearGradient
 					colors={['#10B981', '#34D399']}
 					start={{ x: 0, y: 0 }}
 					end={{ x: 1, y: 0 }}
-					className="px-6 pt-12 pb-8"
+					style={{
+						paddingTop: insets.top + 16,
+						paddingBottom: 32,
+						paddingLeft: insets.left + 24,
+						paddingRight: insets.right + 24,
+					}}
 				>
 					<View className="flex-row items-center justify-between mb-6">
 						<TouchableOpacity
@@ -291,13 +299,13 @@ export default function DeliveryPartnerDetailScreen() {
 						<Text className="text-white font-quicksand-semibold">Retour</Text>
 					</TouchableOpacity>
 				</View>
-			</SafeAreaView>
+			</View>
 		);
 	}
 
 	return (
-		<SafeAreaView className="flex-1 bg-background-secondary">
-			<StatusBar backgroundColor="#10B981" barStyle="light-content" />
+		<View className="flex-1 bg-background-secondary">
+			<ExpoStatusBar style="light" translucent />
 
 			<ScrollView
 				className="flex-1"
@@ -317,7 +325,12 @@ export default function DeliveryPartnerDetailScreen() {
 					colors={['#10B981', '#34D399']}
 					start={{ x: 0, y: 0 }}
 					end={{ x: 1, y: 0 }}
-					className="px-6 pt-12 pb-8"
+					style={{
+						paddingTop: insets.top + 16,
+						paddingBottom: 32,
+						paddingLeft: insets.left + 24,
+						paddingRight: insets.right + 24,
+					}}
 				>
 					<View className="flex-row items-center justify-between mb-6">
 						<TouchableOpacity
@@ -607,6 +620,6 @@ export default function DeliveryPartnerDetailScreen() {
 					</View>
 				</TouchableOpacity>
 			</Modal>
-		</SafeAreaView>
+		</View>
 	);
 }

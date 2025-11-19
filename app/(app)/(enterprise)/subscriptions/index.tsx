@@ -1,20 +1,25 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router } from 'expo-router';
+import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { Animated, Easing, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Easing, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import KkiapayPayment from '../../../../components/subscription/KkiapayPayment';
 import StatusModal from '../../../../components/subscription/StatusModal';
 import UpgradeConfirmationModal from '../../../../components/subscription/UpgradeConfirmationModal';
+import { useAuth } from '../../../../contexts/AuthContext';
 import { useSubscription } from '../../../../contexts/SubscriptionContext';
+import PaymentService from '../../../../services/api/PaymentService';
 import SubscriptionService, { Plan } from '../../../../services/api/SubscriptionService';
 
-export default function EnterpriseSubscriptions() {
+function EnterpriseSubscriptionsContent() {
   const insets = useSafeAreaInsets();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { subscription, loadSubscription } = useSubscription();
+  const { user } = useAuth();
   
   // Modal state
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -26,6 +31,111 @@ export default function EnterpriseSubscriptions() {
   const [statusType, setStatusType] = useState<'success' | 'error'>('success');
   const [statusTitle, setStatusTitle] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
+
+  // Payment state
+  const [currentIntentId, setCurrentIntentId] = useState<string | null>(null);
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const [showKkiapayWidget, setShowKkiapayWidget] = useState(false);
+  const [paymentConfig, setPaymentConfig] = useState<{
+    amount: number;
+    email: string;
+    phone: string;
+    name: string;
+    reason: string;
+  } | null>(null);
+
+  // Animation pour les points de chargement
+  const pulseAnim = useState(new Animated.Value(0))[0];
+
+  // Démarrer l'animation quand le modal de traitement est affiché
+  useEffect(() => {
+    if (processingPayment) {
+      const startPulseAnimation = () => {
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(pulseAnim, {
+              toValue: 1,
+              duration: 600,
+              easing: Easing.inOut(Easing.ease),
+              useNativeDriver: true,
+            }),
+            Animated.timing(pulseAnim, {
+              toValue: 0,
+              duration: 600,
+              easing: Easing.inOut(Easing.ease),
+              useNativeDriver: true,
+            }),
+          ])
+        ).start();
+      };
+      startPulseAnimation();
+    } else {
+      pulseAnim.setValue(0);
+    }
+  }, [processingPayment, pulseAnim]);
+
+  // Callback KKiaPay success
+  const handlePaymentSuccess = async (data: any) => {
+    console.log('✅ KKiaPay SUCCESS:', data);
+    setShowKkiapayWidget(false);
+    setProcessingPayment(true);
+    
+    try {
+      // Confirmer le paiement avec le backend
+      if (currentIntentId && data.transactionId) {
+        const confirmResult = await PaymentService.confirmPayment({
+          intentId: currentIntentId,
+          transactionId: data.transactionId,
+        });
+
+        console.log('✅ Paiement confirmé par le backend:', confirmResult);
+
+        // Recharger la souscription
+        await loadSubscription();
+        await loadData();
+
+        // Réinitialiser les états
+        setCurrentIntentId(null);
+        setShowUpgradeModal(false);
+        setSelectedPlan(null);
+        setPaymentConfig(null);
+
+        // Afficher le succès
+        setStatusType('success');
+        setStatusTitle('Paiement réussi !');
+        setStatusMessage(
+          `Votre abonnement ${confirmResult.data.subscription ? 'a été activé' : 'est maintenant actif'}. Merci !`
+        );
+        setShowStatusModal(true);
+      } else {
+        throw new Error('Intention de paiement ou transaction ID manquant');
+      }
+    } catch (error: any) {
+      console.error('❌ Erreur confirmation paiement:', error);
+      setStatusType('error');
+      setStatusTitle('Erreur');
+      setStatusMessage(
+        error.response?.data?.message || 'Impossible de confirmer le paiement. Contactez le support.'
+      );
+      setShowStatusModal(true);
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
+  // Callback KKiaPay failed
+  const handlePaymentFailed = (data: any) => {
+    console.log('❌ KKiaPay FAILED:', data);
+    setShowKkiapayWidget(false);
+    setProcessingPayment(false);
+    setCurrentIntentId(null);
+    setPaymentConfig(null);
+    
+    setStatusType('error');
+    setStatusTitle('❌ Paiement échoué');
+    setStatusMessage('Le paiement a échoué. Veuillez réessayer.');
+    setShowStatusModal(true);
+  };
 
   useEffect(() => {
     loadData();
@@ -71,7 +181,7 @@ export default function EnterpriseSubscriptions() {
 
   // Handle upgrade confirmation
   const handleConfirmUpgrade = async () => {
-    if (!selectedPlan) return;
+    if (!selectedPlan || !user) return;
 
     try {
       setUpgradeLoading(true);
@@ -80,40 +190,69 @@ export default function EnterpriseSubscriptions() {
       const isFree = selectedPlan.price === 'Gratuit';
 
       if (isFree) {
-        // Plan gratuit - Activer le trial
+        // Plan gratuit - Activer le trial directement
         await SubscriptionService.activateTrialPlan();
         console.log('✅ Plan d\'essai activé');
+
+        // Recharger les données
+        await loadSubscription();
+        await loadData();
+
+        // Fermer le modal et afficher le succès
+        setShowUpgradeModal(false);
+        setSelectedPlan(null);
+        
+        setStatusType('success');
+        setStatusTitle('🎉 Succès !');
+        setStatusMessage(`Votre période d'essai a été activée avec succès.`);
+        setShowStatusModal(true);
       } else {
-        // Plan payant - Souscrire avec KKIAPAY
-        const paymentData = {
-          method: 'KKIAPAY',
-          amount: parseFloat(selectedPlan.price.replace(/[^0-9]/g, '')),
-          currency: 'XOF',
-        };
+        // Plan payant - Créer une intention de paiement
+        const amount = parseFloat(selectedPlan.price.replace(/[^0-9]/g, ''));
+        
+        console.log('🔄 Création intention de paiement pour:', amount, 'FCFA');
+        
+        const intentResponse = await PaymentService.createPaymentIntent({
+          subscriptionType: 'ENTERPRISE',
+          planId: selectedPlan.id,
+          metadata: {
+            source: 'mobile',
+            planName: selectedPlan.name,
+          },
+        });
 
-        await SubscriptionService.subscribeToPlan(selectedPlan.id, paymentData);
-        console.log('✅ Abonnement activé avec KKIAPAY');
+        console.log('✅ Intention créée:', intentResponse.data.intentId);
+        
+        // Stocker l'intentId pour le callback KKiaPay
+        setCurrentIntentId(intentResponse.data.intentId);
+
+        // Fermer le modal de confirmation
+        setShowUpgradeModal(false);
+
+        // Préparer la configuration du paiement
+        console.log('🔄 Préparation widget KKiaPay...');
+        setPaymentConfig({
+          amount: amount,
+          email: user.email || 'client@example.com',
+          phone: user.phone || '',
+          name: `${user.firstName} ${user.lastName}`,
+          reason: `Abonnement ${selectedPlan.name}`,
+        });
+        
+        // Afficher le widget KKiaPay
+        setShowKkiapayWidget(true);
+        console.log('✅ Widget KKiaPay prêt');
       }
-
-      // Recharger les données
-      await loadSubscription();
-      await loadData();
-
-      // Fermer le modal et afficher le succès
-      setShowUpgradeModal(false);
-      setSelectedPlan(null);
-      
-      setStatusType('success');
-      setStatusTitle('🎉 Succès !');
-      setStatusMessage(`Votre abonnement ${selectedPlan.name} a été activé avec succès.`);
-      setShowStatusModal(true);
     } catch (err: any) {
       console.error('❌ Erreur upgrade:', err);
       
       setStatusType('error');
       setStatusTitle('❌ Erreur');
-      setStatusMessage(err.response?.data?.message || 'Impossible d\'activer l\'abonnement. Veuillez réessayer.');
+      setStatusMessage(err.response?.data?.message || 'Impossible de lancer le paiement. Veuillez réessayer.');
       setShowStatusModal(true);
+      
+      // Réinitialiser l'intent en cas d'erreur
+      setCurrentIntentId(null);
     } finally {
       setUpgradeLoading(false);
     }
@@ -248,36 +387,26 @@ export default function EnterpriseSubscriptions() {
 
                   {/* Action Button */}
         <View className="px-5 pb-5">
-          <TouchableOpacity
-            className={`rounded-xl py-3.5 items-center flex-row justify-center shadow-sm ${
-              isCurrentPlan ? 'bg-neutral-100 border border-neutral-200' : ''
-            }`}
-            style={!isCurrentPlan ? { backgroundColor: plan.color } : {}}
-            onPress={() => {
-              if (isCurrentPlan) {
-                console.log('Gérer l\'abonnement');
-              } else {
-                handleSelectPlan(plan);
-              }
-            }}
-            disabled={isCurrentPlan && !isTrialExpired}
-          >
-            {isCurrentPlan ? (
-              <>
-                <Ionicons name="settings-outline" size={18} color="#525252" />
-                <Text className="text-neutral-700 font-quicksand-bold text-sm ml-2">
-                  {isTrialExpired ? 'Renouveler' : 'Gérer mon plan'}
-                </Text>
-              </>
-            ) : (
-              <>
-                <Text className="text-white font-quicksand-bold text-sm">
-                  Passer à {plan.name}
-                </Text>
-                <Ionicons name="arrow-forward" size={16} color="#FFFFFF" style={{ marginLeft: 6 }} />
-              </>
-            )}
-          </TouchableOpacity>
+          {isCurrentPlan && !isTrialExpired ? (
+            <View className="rounded-xl py-3.5 items-center flex-row justify-center bg-green-50 border border-green-200">
+              <Ionicons name="checkmark-circle" size={18} color="#059669" />
+              <Text className="text-green-700 font-quicksand-bold text-sm ml-2">
+                Plan actif
+              </Text>
+            </View>
+          ) : (
+            <TouchableOpacity
+              className="rounded-xl py-3.5 items-center flex-row justify-center shadow-sm"
+              style={{ backgroundColor: plan.color }}
+              onPress={() => handleSelectPlan(plan)}
+              activeOpacity={0.7}
+            >
+              <Text className="text-white font-quicksand-bold text-sm">
+                {isTrialExpired ? 'Renouveler' : `Passer à ${plan.name}`}
+              </Text>
+              <Ionicons name="arrow-forward" size={16} color="#FFFFFF" style={{ marginLeft: 6 }} />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     );
@@ -315,30 +444,33 @@ export default function EnterpriseSubscriptions() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <SafeAreaView className="flex-1 bg-neutral-50">
-        <StatusBar backgroundColor={subscription ? "#10B981" : "#0D9488"} barStyle="light-content" />
-        
+      <View className="flex-1 bg-neutral-50">
+        <ExpoStatusBar style="light" translucent />
+
         {/* Dynamic Header */}
-        <LinearGradient 
-          colors={subscription ? ['#10B981', '#059669'] : ['#0D9488', '#0F766E']} 
-          start={{ x: 0, y: 0 }} 
+        <LinearGradient
+          colors={subscription ? ['#10B981', '#059669'] : ['#0D9488', '#0F766E']}
+          start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          className="pb-6"
+          style={{
+            paddingTop: insets.top + 16,
+            paddingBottom: 24,
+            paddingLeft: insets.left + 24,
+            paddingRight: insets.right + 24,
+          }}
         >
-          {/* Header Bar */}
-          <View className="px-6 pt-3 pb-4" style={{ paddingTop: insets.top + 12 }}>
-            <View className="flex-row items-center justify-between">
-              <TouchableOpacity 
-                onPress={() => router.back()} 
-                className="w-10 h-10 rounded-full bg-white/20 items-center justify-center"
-              >
-                <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
-              </TouchableOpacity>
-              <Text className="text-xl font-quicksand-bold text-white">Abonnements</Text>
-              <TouchableOpacity className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
-                <Ionicons name="help-circle-outline" size={22} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
+          <View className="flex-row items-center justify-between">
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="w-10 h-10 rounded-full bg-white/20 items-center justify-center"
+              activeOpacity={0.7}
+            >
+              <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+            </TouchableOpacity>
+            <Text className="text-xl font-quicksand-bold text-white">Abonnements</Text>
+            <TouchableOpacity className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
+              <Ionicons name="help-circle-outline" size={22} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
         </LinearGradient>
 
@@ -408,19 +540,18 @@ export default function EnterpriseSubscriptions() {
                   </View>
 
                   {/* Quick Actions */}
-                  {!isExpired() ? (
-                    <View className="flex-row">
-                      <TouchableOpacity className="flex-1 bg-primary-500 rounded-xl py-3 items-center mr-2 shadow-sm">
-                        <Text className="text-white font-quicksand-bold text-sm">Améliorer</Text>
-                      </TouchableOpacity>
-                      {subscription.autoRenew && (
-                        <TouchableOpacity className="flex-1 bg-neutral-100 rounded-xl py-3 items-center ml-2 border border-neutral-200">
-                          <Text className="text-neutral-700 font-quicksand-semibold text-sm">Gérer</Text>
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                  ) : (
-                    <TouchableOpacity className="bg-red-500 rounded-xl py-3.5 items-center shadow-sm">
+                  {isExpired() && (
+                    <TouchableOpacity 
+                      className="bg-red-500 rounded-xl py-3.5 items-center shadow-sm"
+                      onPress={() => {
+                        // Scroll to plans section
+                        const premiumPlan = plans.find(p => p.name.toLowerCase().includes('premium'));
+                        if (premiumPlan) {
+                          handleSelectPlan(premiumPlan);
+                        }
+                      }}
+                      activeOpacity={0.7}
+                    >
                       <Text className="text-white font-quicksand-bold text-sm">Renouveler maintenant</Text>
                     </TouchableOpacity>
                   )}
@@ -487,7 +618,7 @@ export default function EnterpriseSubscriptions() {
                     <View className="flex-row items-center justify-between mb-2.5">
                       <Text className="text-neutral-600 font-quicksand-medium text-xs">Montant</Text>
                       <Text className="text-neutral-900 font-quicksand-bold text-base">
-                        {subscription.payment.amount.toLocaleString()} {subscription.plan.price.currency}
+                        {subscription.payment.amount ? `${subscription.payment.amount.toLocaleString()} ${subscription.plan.price.currency}` : 'N/A'}
                       </Text>
                     </View>
                     <View className="flex-row items-center justify-between mb-2.5">
@@ -566,7 +697,7 @@ export default function EnterpriseSubscriptions() {
             </View>
           </View>
         </ScrollView>
-      </SafeAreaView>
+      </View>
 
       {/* Upgrade Confirmation Modal */}
       <UpgradeConfirmationModal
@@ -586,6 +717,81 @@ export default function EnterpriseSubscriptions() {
         message={statusMessage}
         onClose={() => setShowStatusModal(false)}
       />
+
+      {/* Processing Payment Modal */}
+      {processingPayment && (
+        <View 
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 9999,
+          }}
+        >
+          <View className="bg-white rounded-3xl p-8 items-center" style={{ maxWidth: 300 }}>
+            <View className="w-16 h-16 bg-primary-100 rounded-full items-center justify-center mb-4">
+              <Ionicons name="card" size={32} color="#10B981" />
+            </View>
+            <Text className="text-neutral-800 font-quicksand-bold text-lg mb-2 text-center">
+              Traitement du paiement
+            </Text>
+            <Text className="text-neutral-600 font-quicksand-medium text-sm text-center mb-4">
+              Veuillez patienter pendant que nous vérifions votre paiement...
+            </Text>
+            <View className="flex-row items-center">
+              <Animated.View
+                className="w-2 h-2 bg-primary-500 rounded-full mr-2"
+                style={{
+                  opacity: pulseAnim.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [0.3, 1, 0.3],
+                  }),
+                }}
+              />
+              <Animated.View
+                className="w-2 h-2 bg-primary-400 rounded-full mr-2"
+                style={{
+                  opacity: pulseAnim.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [0.3, 1, 0.3],
+                  }),
+                }}
+              />
+              <Animated.View
+                className="w-2 h-2 bg-primary-300 rounded-full"
+                style={{
+                  opacity: pulseAnim.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [0.3, 1, 0.3],
+                  }),
+                }}
+              />
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* KKiaPay Widget */}
+      {showKkiapayWidget && paymentConfig && (
+        <KkiapayPayment
+          amount={paymentConfig.amount}
+          email={paymentConfig.email}
+          phone={paymentConfig.phone}
+          name={paymentConfig.name}
+          reason={paymentConfig.reason}
+          apiKey={process.env.EXPO_PUBLIC_KKIAPAY_PUBLIC_API_KEY || ''}
+          sandbox={true}
+          onSuccess={handlePaymentSuccess}
+          onFailed={handlePaymentFailed}
+        />
+      )}
     </>
   );
 }
+
+export default EnterpriseSubscriptionsContent;

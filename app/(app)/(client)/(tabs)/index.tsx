@@ -942,7 +942,7 @@ export default function ClientHome() {
                     start={{ x: 0, y: 0 }} 
                     end={{ x: 1, y: 1 }} 
                     className="rounded-b-3xl shadow-md"
-                    style={{ paddingTop: insets.top + 16 }}
+                    style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}
                 >
                     {/* Header avec salutation et icône notification */}
                     <View className="px-4 pb-4">

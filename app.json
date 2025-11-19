@@ -13,6 +13,11 @@
       "bundleIdentifier": "com.axi.axiapp",
       "runtimeVersion": {
         "policy": "appVersion"
+      },
+      "infoPlist": {
+        "NSCameraUsageDescription": "Cette application a besoin d'accéder à votre caméra pour prendre des photos de vos produits et publicités.",
+        "NSPhotoLibraryUsageDescription": "Cette application a besoin d'accéder à votre galerie photo pour sélectionner des images de vos produits et publicités.",
+        "NSPhotoLibraryAddUsageDescription": "Cette application a besoin d'accéder à votre galerie photo pour sauvegarder des images."
       }
     },
     "android": {
@@ -23,7 +28,8 @@
       "edgeToEdgeEnabled": true,
       "package": "com.axi.axiapp",
       "googleServicesFile": "./google-services.json",
-      "runtimeVersion": "1.0.0"
+      "runtimeVersion": "1.0.0",
+      "softwareKeyboardLayoutMode": "pan"
     },
     "web": {
       "bundler": "metro",
@@ -47,6 +53,13 @@
           "icon": "./assets/images/axicauris.png",
           "color": "#ffffff",
           "sounds": []
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Cette application a besoin d'accéder à votre galerie photo pour sélectionner des images.",
+          "cameraPermission": "Cette application a besoin d'accéder à votre caméra pour prendre des photos."
         }
       ],
       "expo-secure-store",

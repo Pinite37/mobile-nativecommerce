@@ -141,7 +141,12 @@ export default function FavoritesScreen() {
       contentContainerStyle={{ paddingBottom: insets.bottom + 90 }}
     >
       {/* Header Skeleton */}
-      <LinearGradient colors={['#10B981', '#34D399']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} className="px-6 pb-4" style={{ paddingTop: insets.top + 16 }}>
+      <LinearGradient colors={['#10B981', '#34D399']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} className="pb-4" style={{ 
+        paddingTop: insets.top + 16, 
+        paddingLeft: insets.left + 24,
+        paddingRight: insets.right + 24,
+        paddingBottom: 16 
+      }}>
         <View className="flex-row items-center justify-between mb-4">
           <ShimmerBlock style={{ height: 24, borderRadius: 12, width: '40%' }} />
         </View>
@@ -291,8 +296,13 @@ export default function FavoritesScreen() {
           colors={['#10B981', '#34D399']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          className="px-6 pb-4"
-          style={{ paddingTop: insets.top + 16 }}
+          className="pb-4"
+          style={{ 
+            paddingTop: insets.top + 16, 
+            paddingLeft: insets.left + 24,
+            paddingRight: insets.right + 24,
+            paddingBottom: 16 
+          }}
         >
           <View className="flex-row items-center justify-between mb-4">
             <Text className="text-2xl font-quicksand-bold text-white">

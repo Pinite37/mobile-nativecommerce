@@ -9,19 +9,20 @@ import {
     FlatList,
     Image,
     RefreshControl,
-    SafeAreaView,
     StatusBar,
     Text,
     TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useToast } from "../../../../../components/ui/ReanimatedToast/context";
 import { useSocket } from "../../../../../hooks/useSocket";
 import MessagingService, { Conversation } from "../../../../../services/api/MessagingService";
 
 export default function ClientMessagesPage() {
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     const { onNewMessage, onMessagesRead } = useSocket();
     const { showToast } = useToast();
     const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -573,10 +574,17 @@ export default function ClientMessagesPage() {
 
     if (loading) {
         return (
-            <SafeAreaView className="flex-1 bg-white">
-                <StatusBar backgroundColor="#10B981" barStyle="light-content" />
+            <View className="flex-1 bg-white">
+                <StatusBar backgroundColor="#10B981" barStyle="light-content" translucent />
                 {/* Header */}
-                <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="px-6 py-6 pt-20 rounded-b-3xl">
+                <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{
+                    paddingTop: insets.top + 24,
+                    paddingLeft: insets.left + 24,
+                    paddingRight: insets.right + 24,
+                    paddingBottom: 24,
+                    borderBottomLeftRadius: 24,
+                    borderBottomRightRadius: 24
+                }}>
                     <View className="flex-row items-center justify-between mb-4">
                         <Text className="text-3xl font-quicksand-bold text-white">
                             Messages
@@ -619,14 +627,21 @@ export default function ClientMessagesPage() {
                 <View className="flex-1 bg-white">
                     {renderSkeletons()}
                 </View>
-            </SafeAreaView>
+            </View>
         );
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
+        <View className="flex-1 bg-white">
             {/* Header */}
-            <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="px-6 py-6 pt-20 rounded-b-3xl">
+            <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{
+                paddingTop: insets.top + 24,
+                paddingLeft: insets.left + 24,
+                paddingRight: insets.right + 24,
+                paddingBottom: 24,
+                borderBottomLeftRadius: 24,
+                borderBottomRightRadius: 24
+            }}>
                 <View className="flex-row items-center justify-between mb-4">
                     <Text className="text-3xl font-quicksand-bold text-white">
                         Messages
@@ -827,6 +842,6 @@ export default function ClientMessagesPage() {
                     </View>
                 </View>
             )}
-        </SafeAreaView>
+        </View>
     );
 }

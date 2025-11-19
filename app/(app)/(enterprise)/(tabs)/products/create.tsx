@@ -3,6 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, router, useFocusEffect } from "expo-router";
+import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -10,13 +11,13 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
-  SafeAreaView,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import NotificationModal, { useNotification } from "../../../../../components/ui/NotificationModal";
 import { useToast } from "../../../../../components/ui/ToastManager";
@@ -99,6 +100,7 @@ type Step = 'basic' | 'details';
 
 export default function CreateProduct() {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -539,7 +541,8 @@ export default function CreateProduct() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background-secondary">
+    <View className="flex-1 bg-background-secondary">
+      <ExpoStatusBar style="light" translucent />
       <KeyboardAvoidingView 
         className="flex-1" 
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -549,7 +552,19 @@ export default function CreateProduct() {
           colors={['#10B981', '#34D399']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          className="pt-16 pb-8 rounded-b-[32px] shadow-lg"
+          style={{
+            paddingTop: insets.top + 16,
+            paddingBottom: 32,
+            paddingLeft: insets.left + 24,
+            paddingRight: insets.right + 24,
+            borderBottomLeftRadius: 32,
+            borderBottomRightRadius: 32,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+            elevation: 4,
+          }}
         >
           <View className="px-6">
             <View className="flex-row items-center justify-between">
@@ -1428,6 +1443,6 @@ export default function CreateProduct() {
         message={notification?.message || ''}
         onClose={hideNotification}
       />
-    </SafeAreaView>
+    </View>
   );
 }

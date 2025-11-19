@@ -13,11 +13,11 @@ import {
   Linking,
   Modal,
   RefreshControl,
-  SafeAreaView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import EnterpriseService, { Enterprise } from "../../../../../services/api/EnterpriseService";
 import { Product } from "../../../../../types/product";
 
@@ -26,6 +26,7 @@ const { width: screenWidth } = Dimensions.get('window');
 export default function EnterpriseDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [enterprise, setEnterprise] = useState<Enterprise | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -145,7 +146,7 @@ export default function EnterpriseDetails() {
   };
 
   const SkeletonEnterprise = () => (
-    <SafeAreaView className="flex-1 bg-neutral-50">
+    <View className="flex-1 bg-neutral-50">
       <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
 
       {/* Header Skeleton */}
@@ -153,7 +154,13 @@ export default function EnterpriseDetails() {
         colors={['#10B981', '#34D399']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        className="px-6 py-4 pt-16"
+        style={{ 
+            paddingTop: insets.top + 16, 
+            paddingLeft: insets.left + 24,
+            paddingRight: insets.right + 24,
+            paddingBottom: 16 
+          }}
+        
       >
         <View className="flex-row items-center justify-between">
           <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
@@ -223,7 +230,7 @@ export default function EnterpriseDetails() {
           </View>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 
   const openWhatsApp = (phone: string) => {
@@ -359,7 +366,7 @@ export default function EnterpriseDetails() {
 
   if (!enterprise) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
+      <View className="flex-1 bg-white">
         <View className="flex-1 justify-center items-center">
           <Ionicons name="business-outline" size={64} color="#EF4444" />
           <Text className="mt-4 text-xl font-quicksand-bold text-neutral-800">
@@ -375,12 +382,12 @@ export default function EnterpriseDetails() {
             <Text className="text-white font-quicksand-semibold">Retour</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-neutral-50">
+    <View className="flex-1 bg-neutral-50">
       <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
 
       {/* Header vert commun */}
@@ -388,7 +395,12 @@ export default function EnterpriseDetails() {
         colors={['#10B981', '#34D399']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        className="px-6 py-4 pt-16"
+        style={{
+          paddingTop: insets.top + 8,
+          paddingLeft: insets.left + 24,
+          paddingRight: insets.right + 24,
+          paddingBottom: 15
+        }}
       >
         <View className="flex-row items-center justify-between">
           <TouchableOpacity
@@ -397,7 +409,7 @@ export default function EnterpriseDetails() {
           >
             <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text className="text-xl font-quicksand-bold text-white flex-1 text-center">
+          <Text numberOfLines={1} className="text-lg font-quicksand-bold text-white flex-1 text-center">
             {enterprise.companyName}
           </Text>
           <TouchableOpacity className="w-10 h-10 bg-white/20 rounded-full items-center justify-center">
@@ -448,9 +460,15 @@ export default function EnterpriseDetails() {
                     </Text>
                     <View className="flex-row items-center mb-2">
                       <Ionicons name="location" size={14} color="#9CA3AF" />
-                      <Text className="text-sm text-neutral-600 ml-1">
-                        {enterprise.location.city}, {enterprise.location.district}
-                      </Text>
+                      {enterprise.location && enterprise.location.city && enterprise.location.district ? (
+                        <Text className="text-sm text-neutral-600 ml-1">
+                          {enterprise.location.city}, {enterprise.location.district}
+                        </Text>
+                      ) : (
+                        <Text className="text-sm text-neutral-600 ml-1">
+                          Localisation non disponible
+                        </Text>
+                      )}
                     </View>
                     <View className="flex-row items-center">
                       <View className="w-2 h-2 bg-success-500 rounded-full mr-2" />
@@ -637,6 +655,6 @@ export default function EnterpriseDetails() {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }

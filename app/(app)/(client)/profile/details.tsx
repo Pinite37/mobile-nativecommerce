@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRouter } from "expo-router";
+import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useEffect, useLayoutEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -9,13 +10,13 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ImagePickerModal from "../../../../components/ui/ImagePickerModal";
 import { useToast } from "../../../../components/ui/ToastManager";
 import { useAuth } from "../../../../contexts/AuthContext";
@@ -25,6 +26,7 @@ export default function ProfileDetailsScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const { user, refreshUserData } = useAuth();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true); // Commencer avec loading = true
   const [saving, setSaving] = useState(false);
   const [imagePickerVisible, setImagePickerVisible] = useState(false);
@@ -190,9 +192,10 @@ export default function ProfileDetailsScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-background-secondary">
+    <View className="flex-1 bg-background-secondary">
+      <ExpoStatusBar style="light" translucent />
       {/* Header vert */}
-      <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="pt-16 pb-6 rounded-b-3xl shadow-md">
+      <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="pb-6 rounded-b-3xl shadow-md" style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}>
         <View className="px-6">
           <View className="flex-row items-center justify-between">
             <TouchableOpacity
@@ -388,6 +391,6 @@ export default function ProfileDetailsScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
     )}
-    </SafeAreaView>
+    </View>
   );
 }

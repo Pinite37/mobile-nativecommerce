@@ -5,12 +5,12 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
-  SafeAreaView,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SubscriptionProvider, useSubscription } from '../../contexts/SubscriptionContext';
 import SubscriptionService, { Plan } from '../../services/api/SubscriptionService';
 import { useToast as useReanimatedToast } from '../ui/ReanimatedToast/context';
@@ -30,6 +30,7 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
 }) => {
   const { showToast } = useReanimatedToast();
   const { activateTrialPlan: activateTrialFromContext } = useSubscription();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(false);
   const [loadingPlans, setLoadingPlans] = useState(true);
   const [trialPlan, setTrialPlan] = useState<Plan | null>(null);
@@ -224,13 +225,18 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View className="flex-1 bg-white">
             {/* Header avec gradient */}
             <LinearGradient
           colors={['#10B981', '#34D399']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          className="px-6 pt-8 pb-12"
+          style={{
+            paddingTop: insets.top + 32,
+            paddingLeft: insets.left + 24,
+            paddingRight: insets.right + 24,
+            paddingBottom: 48
+          }}
         >
           <View className="items-center">
             <View className="bg-white/20 rounded-full mt-6 p-4 mb-4">
@@ -391,7 +397,7 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
             </View>
           </View>
         </ScrollView>
-          </SafeAreaView>
+          </View>
   );
 };
 

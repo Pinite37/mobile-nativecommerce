@@ -1,11 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
+import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { ActivityIndicator, Image, KeyboardAvoidingView, Modal, Platform, SafeAreaView, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AdvertisementService, { CreateAdvertisementPayload } from '../../../../services/api/AdvertisementService';
 
@@ -117,7 +117,7 @@ function NotificationModal({ visible, type, title, message, onClose, onConfirm, 
   );
 }
 
-// Image Picker Modal Component
+// Image Picker Modal Component (Android uniquement)
 interface ImagePickerModalProps {
   visible: boolean;
   onClose: () => void;
@@ -163,8 +163,11 @@ function ImagePickerModal({ visible, onClose, onTakePhoto, onPickImage }: ImageP
             <View className="px-6 py-2">
               <TouchableOpacity
                 onPress={() => {
-                  onTakePhoto();
                   onClose();
+                  // Petit délai pour laisser le modal se fermer
+                  setTimeout(() => {
+                    onTakePhoto();
+                  }, 100);
                 }}
                 className="flex-row items-center py-4 border-b border-neutral-50"
               >
@@ -184,8 +187,11 @@ function ImagePickerModal({ visible, onClose, onTakePhoto, onPickImage }: ImageP
 
               <TouchableOpacity
                 onPress={() => {
-                  onPickImage();
                   onClose();
+                  // Petit délai pour laisser le modal se fermer
+                  setTimeout(() => {
+                    onPickImage();
+                  }, 100);
                 }}
                 className="flex-row items-center py-4"
               >
@@ -267,6 +273,40 @@ export default function CreateAdvertisement() {
     setModalConfig(null);
   };
 
+  // Fonction pour afficher le choix d'image (Alert natif sur iOS, Modal custom sur Android)
+  const showImagePickerOptions = () => {
+    if (images.length >= 4) {
+      showModal('info', 'Limite atteinte', 'Vous ne pouvez ajouter que 4 images maximum.');
+      return;
+    }
+
+    if (Platform.OS === 'ios') {
+      // Sur iOS : utiliser Alert natif (pas de conflit modal)
+      Alert.alert(
+        'Ajouter une image',
+        'Choisissez une option',
+        [
+          {
+            text: 'Prendre une photo',
+            onPress: () => takePhoto(),
+          },
+          {
+            text: 'Choisir depuis la galerie',
+            onPress: () => pickImage(),
+          },
+          {
+            text: 'Annuler',
+            style: 'cancel',
+          },
+        ],
+        { cancelable: true }
+      );
+    } else {
+      // Sur Android : utiliser le beau modal custom
+      setImagePickerVisible(true);
+    }
+  };
+
   const pickImage = async () => {
     if (images.length >= 4) {
       showModal('info', 'Limite atteinte', 'Vous ne pouvez ajouter que 4 images maximum.');
@@ -280,26 +320,31 @@ export default function CreateAdvertisement() {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [3, 1], // Ratio pour bannière
       quality: 0.8,
+      base64: true, // Important pour iOS !
     });
 
-    if (!result.canceled) {
-      const uri = result.assets[0].uri;
-      setImages(prev => [...prev, uri]);
-      try {
-        const b64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
-        const ext = uri.split('.').pop()?.toLowerCase();
-        const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
-        setImagesBase64(prev => [...prev, `data:${mime};base64,${b64}`]);
-      } catch (e: any) {
-        showModal('error', 'Erreur', e?.message || 'Impossible de lire l\'image.');
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      const uri = asset.uri;
+      const base64Data = asset.base64 || '';
+      
+      if (!base64Data) {
+        showModal('error', 'Erreur', 'Impossible de lire l\'image.');
+        return;
       }
+      
+      setImages(prev => [...prev, uri]);
+      const ext = uri.split('.').pop()?.toLowerCase();
+      const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+      setImagesBase64(prev => [...prev, `data:${mime};base64,${base64Data}`]);
     }
   };
 
-    const takePhoto = async () => {
+  const takePhoto = async () => {
     if (images.length >= 4) {
       showModal('info', 'Limite atteinte', 'Vous ne pouvez ajouter que 4 images maximum.');
       return;
@@ -312,20 +357,25 @@ export default function CreateAdvertisement() {
     }
 
     const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [3, 1],
       quality: 0.8,
+      base64: true, // Important pour iOS !
     });
 
-    if (!result.canceled) {
-      const uri = result.assets[0].uri;
-      setImages(prev => [...prev, uri]);
-      try {
-        const b64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
-        setImagesBase64(prev => [...prev, `data:image/jpeg;base64,${b64}`]);
-      } catch (e: any) {
-        showModal('error', 'Erreur', e?.message || 'Impossible de lire la photo.');
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      const uri = asset.uri;
+      const base64Data = asset.base64 || '';
+      
+      if (!base64Data) {
+        showModal('error', 'Erreur', 'Impossible de lire la photo.');
+        return;
       }
+      
+      setImages(prev => [...prev, uri]);
+      setImagesBase64(prev => [...prev, `data:image/jpeg;base64,${base64Data}`]);
     }
   };
 
@@ -365,15 +415,20 @@ export default function CreateAdvertisement() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background-secondary">
-        <StatusBar backgroundColor="#10B981" barStyle="light-content" />
+    <View className="flex-1 bg-background-secondary">
+        <ExpoStatusBar style="light" translucent />
 
         {/* Header */}
         <LinearGradient
           colors={['#10B981', '#34D399']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          className="px-6 pt-14 pb-6"
+          style={{
+            paddingTop: insets.top + 16,
+            paddingBottom: 24,
+            paddingLeft: insets.left + 24,
+            paddingRight: insets.right + 24,
+          }}
         >
           <View className="flex-row items-center justify-between">
             <TouchableOpacity
@@ -440,7 +495,7 @@ export default function CreateAdvertisement() {
               {/* Add image button */}
               {images.length < 4 && (
                 <TouchableOpacity
-                  onPress={() => setImagePickerVisible(true)}
+                  onPress={showImagePickerOptions}
                   className="w-full h-24 bg-neutral-100 rounded-2xl items-center justify-center border-2 border-dashed border-neutral-300"
                   activeOpacity={0.7}
                 >
@@ -724,13 +779,15 @@ export default function CreateAdvertisement() {
           />
         )}
 
-        {/* Image Picker Modal */}
-        <ImagePickerModal
-          visible={imagePickerVisible}
-          onClose={() => setImagePickerVisible(false)}
-          onTakePhoto={takePhoto}
-          onPickImage={pickImage}
-        />
-      </SafeAreaView>
+        {/* Image Picker Modal (Android uniquement) */}
+        {Platform.OS === 'android' && (
+          <ImagePickerModal
+            visible={imagePickerVisible}
+            onClose={() => setImagePickerVisible(false)}
+            onTakePhoto={takePhoto}
+            onPickImage={pickImage}
+          />
+        )}
+      </View>
   );
 }

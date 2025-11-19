@@ -1,25 +1,27 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Animated,
-    Easing,
-    Image,
-    RefreshControl,
-    SafeAreaView,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Easing,
+  Image,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ProductService from '../../../../services/api/ProductService';
 import { Product } from '../../../../types/product';
 
 export default function MyProductsPage() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -194,13 +196,20 @@ export default function MyProductsPage() {
 
   if (loading && products.length === 0) {
     return (
-      <SafeAreaView className="flex-1 bg-background-secondary">
+      <View className="flex-1 bg-background-secondary">
+        <ExpoStatusBar style="light" translucent />
         {/* Header */}
         <LinearGradient
           colors={['#10B981', '#34D399']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          className="px-6 py-4 pt-16"
+          className="px-6"
+          style={{ 
+            paddingTop: insets.top + 16, 
+            paddingLeft: insets.left + 24,
+            paddingRight: insets.right + 24,
+            paddingBottom: 16 
+          }}
         >
           <View className="flex-row items-center justify-between">
             <TouchableOpacity
@@ -216,18 +225,25 @@ export default function MyProductsPage() {
           </View>
         </LinearGradient>
         {renderSkeleton()}
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background-secondary">
+    <View className="flex-1 bg-background-secondary">
+      <ExpoStatusBar style="light" translucent />
       {/* Header */}
       <LinearGradient
         colors={['#10B981', '#34D399']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        className="px-6 py-4 pt-16"
+        className="px-6"
+        style={{ 
+          paddingTop: insets.top + 16, 
+          paddingLeft: insets.left + 24,
+          paddingRight: insets.right + 24,
+          paddingBottom: 16 
+        }}
       >
         <View className="flex-row items-center justify-between">
           <TouchableOpacity
@@ -344,6 +360,6 @@ export default function MyProductsPage() {
         {/* Espace pour la navbar */}
         <View style={{ height: 100 }} />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

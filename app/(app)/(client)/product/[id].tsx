@@ -13,7 +13,6 @@ import {
   Image,
   Linking,
   Modal,
-  SafeAreaView,
   ScrollView,
   Share,
   Text,
@@ -281,7 +280,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
   };
 
   const renderSkeletonProduct = () => (
-    <SafeAreaView className="flex-1 bg-white">
+    <View className="flex-1" style={{ backgroundColor: 'transparent' }}>
       <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
       {/* Header skeleton */}
       <LinearGradient
@@ -289,7 +288,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         className="absolute top-0 left-0 right-0 z-10"
-        style={{ paddingTop: insets.top + 8 }}
+        style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}
       >
         <View className="flex-row items-center justify-between px-4 pb-3">
           <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
@@ -301,9 +300,9 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         </View>
       </LinearGradient>
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} style={{ backgroundColor: 'white' }}>
         {/* Image skeleton */}
-        <View style={{ marginTop: insets.top }}>
+        <View style={{ marginTop: 0 }}>
           <ShimmerBlock style={{ width: screenWidth, height: 350 }} />
         </View>
 
@@ -365,7 +364,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 
   if (loading) {
@@ -374,7 +373,8 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
 
   if (!product) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
+      <View className="flex-1 bg-white">
+        <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
         <View className="flex-1 justify-center items-center">
           <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
           <Text className="mt-4 text-xl font-quicksand-bold text-neutral-800">
@@ -390,12 +390,12 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
             <Text className="text-white font-quicksand-semibold">Retour</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View className="flex-1" style={{ backgroundColor: 'transparent' }}>
       <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
       {/* Header overlay */}
       <LinearGradient
@@ -403,7 +403,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         className="absolute top-0 left-0 right-0 z-10"
-        style={{ paddingTop: insets.top + 8 }}
+        style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}
       >
         <View className="flex-row items-center justify-between px-4 pb-3">
           <TouchableOpacity
@@ -414,7 +414,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
           </TouchableOpacity>
           <View className="flex-1 items-center">
             <Text numberOfLines={1} className="text-white font-quicksand-semibold">
-              Détails du produittt
+              Détails du produit
             </Text>
           </View>
           <View className="flex-row">
@@ -444,9 +444,9 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         </View>
       </LinearGradient>
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} style={{ backgroundColor: 'white' }}>
         {/* Images Carousel */}
-        <View style={{ marginTop: insets.top  }}>
+        <View style={{ marginTop: 0 }}>
           <View className="relative">
             <FlatList
               ref={imagesListRef}
@@ -902,6 +902,6 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
