@@ -128,7 +128,7 @@ export default function CategoryProductsScreen() {
       );
 
       setCategory(response.category);
-      
+
       if (append) {
         setProducts(prev => [...prev, ...response.products]);
       } else {
@@ -214,7 +214,7 @@ export default function CategoryProductsScreen() {
   // Composant Skeleton pour le chargement
   const ShimmerBlock = ({ style }: { style?: any }) => {
     const shimmer = React.useRef(new Animated.Value(0)).current;
-    
+
     useEffect(() => {
       Animated.loop(
         Animated.sequence([
@@ -245,7 +245,13 @@ export default function CategoryProductsScreen() {
   };
 
   const SkeletonProduct = () => (
-    <View className="bg-white rounded-2xl shadow-md border border-neutral-100 p-2 mb-3 w-[48%]">
+    <View className="bg-white rounded-2xl overflow-hidden p-2 mb-3 w-[48%]" style={{
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    }}>
       <ShimmerBlock style={{ height: 128, borderRadius: 16, width: '100%' }} />
       <View className="mt-2">
         <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '80%', marginBottom: 8 }} />
@@ -262,7 +268,14 @@ export default function CategoryProductsScreen() {
     return (
       <TouchableOpacity
         key={item._id}
-        className="bg-white rounded-2xl shadow-md border border-neutral-100 p-2 mb-3 w-[48%]"
+        className="bg-white rounded-2xl overflow-hidden p-2 mb-3 w-[48%]"
+        style={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          elevation: 3,
+        }}
         onPress={() => router.push(`/(app)/(client)/product/${item._id}`)}
       >
         <View className="relative">
@@ -318,7 +331,14 @@ export default function CategoryProductsScreen() {
     return (
       <TouchableOpacity
         key={item._id}
-        className="bg-white rounded-2xl shadow-md border border-neutral-100 p-3 mb-3 flex-row"
+        className="bg-white rounded-2xl overflow-hidden p-3 mb-3 flex-row"
+        style={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          elevation: 3,
+        }}
         onPress={() => router.push(`/(app)/(client)/product/${item._id}`)}
       >
         <View className="relative mr-3">
@@ -368,14 +388,14 @@ export default function CategoryProductsScreen() {
   return (
     <View className="flex-1 bg-neutral-50">
       <ExpoStatusBar style="light" translucent />
-      
+
       {/* Header vert conventionnel avec gradient */}
       <LinearGradient
-        colors={['#10B981', '#34D399']}
+        colors={['#059669', '#10B981']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         className="rounded-b-3xl shadow-md"
-        style={{ 
+        style={{
           paddingTop: insets.top + 16,
           paddingLeft: insets.left + 24,
           paddingRight: insets.right + 24,
@@ -435,7 +455,7 @@ export default function CategoryProductsScreen() {
           />
           {searchQuery.length > 0 ? (
             <>
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={handleSearch}
                 className="mr-2 bg-[#10b981] rounded-lg px-3 py-1"
               >
@@ -467,9 +487,8 @@ export default function CategoryProductsScreen() {
             <TouchableOpacity
               key={sort.value}
               onPress={() => setSortBy(sort.value as SortOption)}
-              className={`flex-row items-center px-3 py-1.5 rounded-lg ${
-                sortBy === sort.value ? 'bg-white' : 'bg-white/20'
-              }`}
+              className={`flex-row items-center px-3 py-1.5 rounded-lg ${sortBy === sort.value ? 'bg-white' : 'bg-white/20'
+                }`}
             >
               <Ionicons
                 name={sort.icon as any}
@@ -477,9 +496,8 @@ export default function CategoryProductsScreen() {
                 color={sortBy === sort.value ? '#10b981' : 'white'}
               />
               <Text
-                className={`ml-1 text-xs font-quicksand-semibold ${
-                  sortBy === sort.value ? 'text-[#10b981]' : 'text-white'
-                }`}
+                className={`ml-1 text-xs font-quicksand-semibold ${sortBy === sort.value ? 'text-[#10b981]' : 'text-white'
+                  }`}
               >
                 {sort.label}
               </Text>
@@ -602,14 +620,12 @@ export default function CategoryProductsScreen() {
                   Produits en stock uniquement
                 </Text>
                 <View
-                  className={`w-12 h-6 rounded-full ${
-                    inStockOnly ? 'bg-[#10b981]' : 'bg-neutral-300'
-                  } justify-center`}
+                  className={`w-12 h-6 rounded-full ${inStockOnly ? 'bg-[#10b981]' : 'bg-neutral-300'
+                    } justify-center`}
                 >
                   <View
-                    className={`w-5 h-5 bg-white rounded-full ${
-                      inStockOnly ? 'ml-6' : 'ml-1'
-                    }`}
+                    className={`w-5 h-5 bg-white rounded-full ${inStockOnly ? 'ml-6' : 'ml-1'
+                      }`}
                   />
                 </View>
               </TouchableOpacity>

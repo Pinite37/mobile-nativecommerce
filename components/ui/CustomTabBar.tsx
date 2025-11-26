@@ -31,7 +31,8 @@ export const CustomTabBar: React.FC<TabBarProps> = ({
 
   // Calculs dynamiques: padding et tailles adaptatives
   // Floating design: on ajoute une marge en bas
-  const bottomMargin = Platform.OS === "ios" ? safeInsets.bottom : 20;
+  // S'adapte à la barre de navigation système sur tous les appareils
+  const bottomMargin = Math.max(safeInsets.bottom, 20);
   const dynamicPaddingBottom = Platform.OS === "ios" ? 0 : 0; // Padding interne géré par le height/justify
   const dynamicPaddingTop = 0;
 
@@ -93,8 +94,8 @@ export const CustomTabBar: React.FC<TabBarProps> = ({
             options.tabBarLabel !== undefined
               ? options.tabBarLabel
               : options.title !== undefined
-              ? options.title
-              : route.name;
+                ? options.title
+                : route.name;
 
           const isFocused = currentRouteKey === route.key;
 

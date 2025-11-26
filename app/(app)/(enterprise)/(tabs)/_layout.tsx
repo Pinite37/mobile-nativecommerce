@@ -150,13 +150,7 @@ export default function TabsLayout() {
           href: null, // Cache cet onglet
         }}
       />
-      <Tabs.Screen
-        name="product"
-        options={{
-          href: null, // Cache cet onglet
-          headerShown: false, // Assure que le header est caché
-        }}
-      />
+
       <Tabs.Screen
         name="cart"
         options={{
@@ -190,4 +184,3 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
-     

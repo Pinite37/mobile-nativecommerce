@@ -128,7 +128,7 @@ export default function CategoryProductsScreen() {
       );
 
       setCategory(response.category);
-      
+
       if (append) {
         setProducts(prev => [...prev, ...response.products]);
       } else {
@@ -214,7 +214,7 @@ export default function CategoryProductsScreen() {
   // Composant Skeleton pour le chargement
   const ShimmerBlock = ({ style }: { style?: any }) => {
     const shimmer = React.useRef(new Animated.Value(0)).current;
-    
+
     useEffect(() => {
       Animated.loop(
         Animated.sequence([
@@ -245,11 +245,14 @@ export default function CategoryProductsScreen() {
   };
 
   const SkeletonProduct = () => (
-    <View className="bg-white rounded-2xl shadow-md border border-neutral-100 p-2 mb-3 w-[48%]">
-      <ShimmerBlock style={{ height: 128, borderRadius: 16, width: '100%' }} />
-      <View className="mt-2">
+    <View className="bg-white rounded-2xl shadow-sm mb-3 w-[48%] overflow-hidden">
+      <ShimmerBlock style={{ height: 144, borderRadius: 12, width: '100%' }} />
+      <View className="p-2">
         <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '80%', marginBottom: 8 }} />
-        <ShimmerBlock style={{ height: 14, borderRadius: 8, width: '60%' }} />
+        <View className="flex-row justify-between items-center">
+          <ShimmerBlock style={{ height: 14, borderRadius: 8, width: '40%' }} />
+          <ShimmerBlock style={{ height: 14, borderRadius: 8, width: '20%' }} />
+        </View>
       </View>
     </View>
   );
@@ -262,17 +265,24 @@ export default function CategoryProductsScreen() {
     return (
       <TouchableOpacity
         key={item._id}
-        className="bg-white rounded-2xl shadow-md border border-neutral-100 p-2 mb-3 w-[48%]"
-        onPress={() => router.push(`/(app)/(enterprise)/(tabs)/product/${item._id}`)}
+        className="bg-white rounded-2xl mb-3 w-[48%] overflow-hidden"
+        style={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          elevation: 3,
+        }}
+        onPress={() => router.push(`/(app)/(enterprise)/product/${item._id}`)}
       >
         <View className="relative">
           <Image
             source={{ uri: item.images?.[0] || 'https://via.placeholder.com/150' }}
-            className="w-full h-32 rounded-xl"
+            className="w-full h-36 rounded-xl"
             resizeMode="cover"
           />
           <TouchableOpacity
-            className="absolute top-2 right-2 bg-white/90 rounded-full p-1.5"
+            className="absolute top-2 right-2 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-sm"
             onPress={() => toggleFavorite(item._id)}
           >
             <Ionicons
@@ -287,24 +297,26 @@ export default function CategoryProductsScreen() {
             </View>
           )}
         </View>
-        <View className="mt-2">
-          <Text className="text-sm font-quicksand-semibold text-neutral-800" numberOfLines={2}>
+        <View className="p-2">
+          <Text className="text-sm font-quicksand-bold text-neutral-800" numberOfLines={2}>
             {item.name}
           </Text>
-          <Text className="text-lg font-quicksand-bold text-[#10b981] mt-1">
-            {formatPrice(item.price)}
-          </Text>
+          <View className="flex-row items-center justify-between mt-1">
+            <Text className="text-base font-quicksand-bold text-emerald-600">
+              {formatPrice(item.price)}
+            </Text>
+            <View className="flex-row items-center bg-yellow-50 px-1.5 py-0.5 rounded-md">
+              <Ionicons name="star" size={10} color="#FBBF24" />
+              <Text className="text-[10px] font-quicksand-bold text-yellow-700 ml-0.5">
+                {item.stats?.averageRating?.toFixed(1) || '0.0'}
+              </Text>
+            </View>
+          </View>
           {enterprise && (
-            <Text className="text-xs font-quicksand-medium text-neutral-500 mt-1" numberOfLines={1}>
+            <Text className="text-xs font-quicksand-medium text-neutral-400 mt-1" numberOfLines={1}>
               {enterprise.companyName}
             </Text>
           )}
-          <View className="flex-row items-center mt-1">
-            <Ionicons name="star" size={14} color="#FBBF24" />
-            <Text className="text-xs font-quicksand-medium text-neutral-600 ml-1">
-              {item.stats?.averageRating?.toFixed(1) || '0.0'} ({item.stats?.totalReviews || 0})
-            </Text>
-          </View>
         </View>
       </TouchableOpacity>
     );
@@ -318,8 +330,15 @@ export default function CategoryProductsScreen() {
     return (
       <TouchableOpacity
         key={item._id}
-        className="bg-white rounded-2xl shadow-md border border-neutral-100 p-3 mb-3 flex-row"
-        onPress={() => router.push(`/(app)/(enterprise)/(tabs)/product/${item._id}`)}
+        className="bg-white rounded-2xl mb-3 flex-row overflow-hidden p-2"
+        style={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          elevation: 3,
+        }}
+        onPress={() => router.push(`/(app)/(enterprise)/product/${item._id}`)}
       >
         <View className="relative mr-3">
           <Image
@@ -368,18 +387,18 @@ export default function CategoryProductsScreen() {
   return (
     <View className="flex-1 bg-neutral-50">
       <ExpoStatusBar style="light" translucent />
-      
+
       {/* Header vert conventionnel avec gradient */}
       <LinearGradient
-        colors={['#10B981', '#34D399']}
+        colors={['#047857', '#10B981']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         className="rounded-b-3xl shadow-md"
-        style={{ 
-            paddingTop: insets.top + 16, 
-            paddingLeft: insets.left + 24,
-            paddingRight: insets.right + 24,
-            paddingBottom: 16 
+        style={{
+          paddingTop: insets.top + 16,
+          paddingLeft: insets.left + 24,
+          paddingRight: insets.right + 24,
+          paddingBottom: 16
         }}
       >
         <View className="flex-row items-center justify-between mb-4">
@@ -435,7 +454,7 @@ export default function CategoryProductsScreen() {
           />
           {searchQuery.length > 0 ? (
             <>
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={handleSearch}
                 className="mr-2 bg-[#10b981] rounded-lg px-3 py-1"
               >
@@ -469,9 +488,8 @@ export default function CategoryProductsScreen() {
             <TouchableOpacity
               key={sort.value}
               onPress={() => setSortBy(sort.value as SortOption)}
-              className={`flex-row items-center px-3 py-1.5 rounded-lg ${
-                sortBy === sort.value ? 'bg-white' : 'bg-white/20'
-              }`}
+              className={`flex-row items-center px-3 py-1.5 rounded-lg ${sortBy === sort.value ? 'bg-white' : 'bg-white/20'
+                }`}
             >
               <Ionicons
                 name={sort.icon as any}
@@ -479,9 +497,8 @@ export default function CategoryProductsScreen() {
                 color={sortBy === sort.value ? '#10b981' : 'white'}
               />
               <Text
-                className={`ml-1 text-xs font-quicksand-semibold ${
-                  sortBy === sort.value ? 'text-[#10b981]' : 'text-white'
-                }`}
+                className={`ml-1 text-xs font-quicksand-semibold ${sortBy === sort.value ? 'text-[#10b981]' : 'text-white'
+                  }`}
               >
                 {sort.label}
               </Text>
@@ -604,14 +621,12 @@ export default function CategoryProductsScreen() {
                   Produits en stock uniquement
                 </Text>
                 <View
-                  className={`w-12 h-6 rounded-full ${
-                    inStockOnly ? 'bg-[#10b981]' : 'bg-neutral-300'
-                  } justify-center`}
+                  className={`w-12 h-6 rounded-full ${inStockOnly ? 'bg-[#10b981]' : 'bg-neutral-300'
+                    } justify-center`}
                 >
                   <View
-                    className={`w-5 h-5 bg-white rounded-full ${
-                      inStockOnly ? 'ml-6' : 'ml-1'
-                    }`}
+                    className={`w-5 h-5 bg-white rounded-full ${inStockOnly ? 'ml-6' : 'ml-1'
+                      }`}
                   />
                 </View>
               </TouchableOpacity>

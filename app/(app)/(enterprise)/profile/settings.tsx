@@ -14,14 +14,17 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useToast } from "../../../../components/ui/ToastManager";
+import { useLocale } from "../../../../contexts/LocaleContext";
+import i18n from "../../../../i18n/i18n";
 import PreferencesService from "../../../../services/api/PreferencesService";
 
 export default function EnterpriseSettingsScreen() {
   const toast = useToast();
   const insets = useSafeAreaInsets();
+  const { locale, changeLocale } = useLocale();
 
   // États pour les paramètres réels du modèle
-  const [language, setLanguage] = useState("fr");
+  const [language, setLanguage] = useState<"fr" | "en">(locale as "fr" | "en");
   const [theme, setTheme] = useState<"light" | "dark" | "auto">("auto");
 
   // Notifications
@@ -61,7 +64,7 @@ export default function EnterpriseSettingsScreen() {
       const prefs = await PreferencesService.getPreferences();
 
       // General
-      setLanguage(prefs.general?.language || "fr");
+      setLanguage((prefs.general?.language || "fr") as "fr" | "en");
       setTheme((prefs.general?.theme as "light" | "dark" | "auto") || "auto");
 
       // Notifications
@@ -86,7 +89,10 @@ export default function EnterpriseSettingsScreen() {
       setAllowDataAnalytics(prefs.privacy?.allowDataAnalytics ?? true);
     } catch (error) {
       console.error("Erreur lors du chargement des préférences:", error);
-      toast.showError("Erreur", "Impossible de charger vos préférences");
+      toast.showError(
+        i18n.t("enterprise.settings.messages.error"),
+        i18n.t("enterprise.settings.messages.loadPreferencesError")
+      );
     } finally {
       setLoading(false);
     }
@@ -106,7 +112,10 @@ export default function EnterpriseSettingsScreen() {
       await apiUpdateFn();
     } catch {
       setter(currentValue); // Rollback on error
-      toast.showError("Erreur", "Impossible de mettre à jour le paramètre");
+      toast.showError(
+        i18n.t("enterprise.settings.messages.error"),
+        i18n.t("enterprise.settings.messages.updateSettingError")
+      );
     }
   };
 
@@ -123,13 +132,16 @@ export default function EnterpriseSettingsScreen() {
       await loadUserPreferences();
 
       toast.showSuccess(
-        "Réinitialisation",
-        "Paramètres réinitialisés avec succès"
+        i18n.t("enterprise.settings.messages.resetSuccess"),
+        i18n.t("enterprise.settings.messages.resetSuccessMessage")
       );
       setClearDataModal(false);
     } catch (error) {
       console.error("Erreur réinitialisation:", error);
-      toast.showError("Erreur", "Impossible de réinitialiser");
+      toast.showError(
+        i18n.t("enterprise.settings.messages.error"),
+        i18n.t("enterprise.settings.messages.resetError")
+      );
     } finally {
       setSaving(false);
     }
@@ -137,15 +149,26 @@ export default function EnterpriseSettingsScreen() {
 
   // Fonction pour changer la langue
   const handleLanguageChange = async (newLanguage: "fr" | "en") => {
-    const oldLanguage = language;
-    setLanguage(newLanguage);
     setLanguageModal(false);
 
     try {
-      await PreferencesService.updateGeneral({ language: newLanguage });
-    } catch {
-      setLanguage(oldLanguage); // Rollback on error
-      toast.showError("Erreur", "Impossible de changer la langue");
+      // Change locale immediately for instant UI update
+      await changeLocale(newLanguage);
+      setLanguage(newLanguage);
+
+      // Update backend in background (don't block UI)
+      PreferencesService.updateGeneral({ language: newLanguage }).catch(
+        (error) => {
+          console.error("Error updating language preference:", error);
+          // Don't show error to user as UI already changed
+        }
+      );
+    } catch (error) {
+      console.error("Error changing locale:", error);
+      toast.showError(
+        i18n.t("enterprise.settings.messages.error"),
+        i18n.t("enterprise.settings.messages.languageChangeError")
+      );
     }
   };
 
@@ -180,7 +203,7 @@ export default function EnterpriseSettingsScreen() {
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#10B981" />
           <Text className="mt-4 text-neutral-600 font-quicksand-medium">
-            Chargement...
+            {i18n.t("enterprise.settings.loading")}
           </Text>
         </View>
       </View>
@@ -211,7 +234,7 @@ export default function EnterpriseSettingsScreen() {
             <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
           </TouchableOpacity>
           <Text className="text-xl font-quicksand-bold text-white">
-            Paramètres
+            {i18n.t("enterprise.settings.title")}
           </Text>
           <View className="w-10 h-10" />
         </View>
@@ -225,14 +248,14 @@ export default function EnterpriseSettingsScreen() {
         {/* Général */}
         <View className="px-4">
           <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3 pl-1">
-            Général
+            {i18n.t("enterprise.settings.general.title")}
           </Text>
           <View className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden">
             <View className="flex-row items-center justify-between px-4 py-4 border-b border-neutral-100">
               <View className="flex-row items-center">
                 <Ionicons name="contrast-outline" size={20} color="#10B981" />
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Thème
+                  {i18n.t("enterprise.settings.general.theme")}
                 </Text>
               </View>
               <Switch
@@ -261,7 +284,7 @@ export default function EnterpriseSettingsScreen() {
               <View className="flex-row items-center">
                 <Ionicons name="language-outline" size={20} color="#10B981" />
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Langue
+                  {i18n.t("enterprise.settings.general.language")}
                 </Text>
               </View>
               <View className="flex-row items-center">
@@ -277,7 +300,7 @@ export default function EnterpriseSettingsScreen() {
         {/* Notifications */}
         <View className="mt-6 px-4">
           <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3 pl-1">
-            Notifications
+            {i18n.t("enterprise.settings.notifications.title")}
           </Text>
           <View className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden">
             <View className="flex-row items-center justify-between px-4 py-4 border-b border-neutral-100">
@@ -288,7 +311,7 @@ export default function EnterpriseSettingsScreen() {
                   color="#10B981"
                 />
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Notifications push
+                  {i18n.t("enterprise.settings.notifications.pushEnabled")}
                 </Text>
               </View>
               <Switch
@@ -314,7 +337,7 @@ export default function EnterpriseSettingsScreen() {
               <View className="flex-row items-center">
                 <Ionicons name="cube-outline" size={20} color="#10B981" />
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Livraisons
+                  {i18n.t("enterprise.settings.notifications.delivery")}
                 </Text>
               </View>
               <Switch
@@ -340,7 +363,7 @@ export default function EnterpriseSettingsScreen() {
               <View className="flex-row items-center">
                 <Ionicons name="chatbubble-outline" size={20} color="#10B981" />
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Messages
+                  {i18n.t("enterprise.settings.notifications.messages")}
                 </Text>
               </View>
               <Switch
@@ -366,7 +389,7 @@ export default function EnterpriseSettingsScreen() {
               <View className="flex-row items-center">
                 <Ionicons name="sparkles-outline" size={20} color="#10B981" />
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Nouveaux produits
+                  {i18n.t("enterprise.settings.notifications.newProducts")}
                 </Text>
               </View>
               <Switch
@@ -392,7 +415,7 @@ export default function EnterpriseSettingsScreen() {
               <View className="flex-row items-center">
                 <Ionicons name="megaphone-outline" size={20} color="#10B981" />
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Publicités
+                  {i18n.t("enterprise.settings.notifications.advertisements")}
                 </Text>
               </View>
               <Switch
@@ -418,7 +441,7 @@ export default function EnterpriseSettingsScreen() {
               <View className="flex-row items-center">
                 <Ionicons name="sync-outline" size={20} color="#10B981" />
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Mises à jour système
+                  {i18n.t("enterprise.settings.notifications.systemUpdates")}
                 </Text>
               </View>
               <Switch
@@ -445,14 +468,14 @@ export default function EnterpriseSettingsScreen() {
         {/* Affichage */}
         <View className="mt-6 px-4">
           <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3 pl-1">
-            Affichage
+            {i18n.t("enterprise.settings.display.title")}
           </Text>
           <View className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden">
             <View className="flex-row items-center justify-between px-4 py-4 border-b border-neutral-100">
               <View className="flex-row items-center">
                 <Ionicons name="grid-outline" size={20} color="#10B981" />
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Vue en grille
+                  {i18n.t("enterprise.settings.display.gridView")}
                 </Text>
               </View>
               <Switch
@@ -478,7 +501,7 @@ export default function EnterpriseSettingsScreen() {
               <View className="flex-row items-center">
                 <Ionicons name="image-outline" size={20} color="#10B981" />
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Images haute qualité
+                  {i18n.t("enterprise.settings.display.highQualityImages")}
                 </Text>
               </View>
               <Switch
@@ -505,14 +528,14 @@ export default function EnterpriseSettingsScreen() {
         {/* Entreprise */}
         <View className="mt-6 px-4">
           <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3 pl-1">
-            Entreprise
+            {i18n.t("enterprise.settings.enterprise.title")}
           </Text>
           <View className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden">
             <View className="flex-row items-center justify-between px-4 py-4 border-b border-neutral-100">
               <View className="flex-row items-center">
                 <Ionicons name="power-outline" size={20} color="#10B981" />
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Statut en ligne auto
+                  {i18n.t("enterprise.settings.enterprise.autoOnlineStatus")}
                 </Text>
               </View>
               <Switch
@@ -539,14 +562,14 @@ export default function EnterpriseSettingsScreen() {
         {/* Confidentialité */}
         <View className="mt-6 px-4">
           <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3 pl-1">
-            Confidentialité
+            {i18n.t("enterprise.settings.privacy.title")}
           </Text>
           <View className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden">
             <View className="flex-row items-center justify-between px-4 py-4 border-b border-neutral-100">
               <View className="flex-row items-center">
                 <Ionicons name="eye-outline" size={20} color="#10B981" />
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Profil public
+                  {i18n.t("enterprise.settings.privacy.publicProfile")}
                 </Text>
               </View>
               <Switch
@@ -572,7 +595,7 @@ export default function EnterpriseSettingsScreen() {
               <View className="flex-row items-center">
                 <Ionicons name="analytics-outline" size={20} color="#10B981" />
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Analyses de données
+                  {i18n.t("enterprise.settings.privacy.dataAnalytics")}
                 </Text>
               </View>
               <Switch
@@ -602,7 +625,7 @@ export default function EnterpriseSettingsScreen() {
                   color="#10B981"
                 />
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Politique de confidentialité
+                  {i18n.t("enterprise.settings.privacy.privacyPolicy")}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
@@ -629,7 +652,7 @@ export default function EnterpriseSettingsScreen() {
                   style={{ marginRight: 8 }}
                 />
                 <Text className="text-red-600 font-quicksand-bold text-base">
-                  Réinitialiser les paramètres
+                  {i18n.t("enterprise.settings.reset.button")}
                 </Text>
               </View>
             )}
@@ -657,7 +680,7 @@ export default function EnterpriseSettingsScreen() {
             {/* Header */}
             <View className="flex-row items-center justify-between mb-6">
               <Text className="text-xl font-quicksand-bold text-neutral-800">
-                Choisir la langue
+                {i18n.t("enterprise.settings.languageModal.title")}
               </Text>
               <TouchableOpacity
                 onPress={() => setLanguageModal(false)}
@@ -670,11 +693,10 @@ export default function EnterpriseSettingsScreen() {
             {/* Options de langue */}
             <TouchableOpacity
               onPress={() => handleLanguageChange("fr")}
-              className={`flex-row items-center p-4 rounded-2xl mb-3 border ${
-                language === "fr"
-                  ? "bg-emerald-50 border-emerald-500"
-                  : "bg-neutral-50 border-transparent"
-              }`}
+              className={`flex-row items-center p-4 rounded-2xl mb-3 border ${language === "fr"
+                ? "bg-emerald-50 border-emerald-500"
+                : "bg-neutral-50 border-transparent"
+                }`}
             >
               <View className="w-8 h-8 rounded-full bg-emerald-500 items-center justify-center mr-4">
                 <Text className="text-white text-xs font-quicksand-bold">
@@ -683,10 +705,10 @@ export default function EnterpriseSettingsScreen() {
               </View>
               <View className="flex-1">
                 <Text className="text-base font-quicksand-bold text-neutral-800">
-                  Français
+                  {i18n.t("enterprise.settings.languageModal.french")}
                 </Text>
                 <Text className="text-sm font-quicksand-medium text-neutral-500">
-                  French
+                  {i18n.t("enterprise.settings.languageModal.frenchSubtitle")}
                 </Text>
               </View>
               {language === "fr" && (
@@ -696,11 +718,10 @@ export default function EnterpriseSettingsScreen() {
 
             <TouchableOpacity
               onPress={() => handleLanguageChange("en")}
-              className={`flex-row items-center p-4 rounded-2xl border ${
-                language === "en"
-                  ? "bg-emerald-50 border-emerald-500"
-                  : "bg-neutral-50 border-transparent"
-              }`}
+              className={`flex-row items-center p-4 rounded-2xl border ${language === "en"
+                ? "bg-emerald-50 border-emerald-500"
+                : "bg-neutral-50 border-transparent"
+                }`}
             >
               <View className="w-8 h-8 rounded-full bg-emerald-500 items-center justify-center mr-4">
                 <Text className="text-white text-xs font-quicksand-bold">
@@ -709,10 +730,10 @@ export default function EnterpriseSettingsScreen() {
               </View>
               <View className="flex-1">
                 <Text className="text-base font-quicksand-bold text-neutral-800">
-                  English
+                  {i18n.t("enterprise.settings.languageModal.english")}
                 </Text>
                 <Text className="text-sm font-quicksand-medium text-neutral-500">
-                  Anglais
+                  {i18n.t("enterprise.settings.languageModal.englishSubtitle")}
                 </Text>
               </View>
               {language === "en" && (
@@ -745,12 +766,10 @@ export default function EnterpriseSettingsScreen() {
                 <Ionicons name="warning" size={32} color="#EF4444" />
               </View>
               <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
-                Réinitialiser les paramètres
+                {i18n.t("enterprise.settings.reset.title")}
               </Text>
               <Text className="text-base text-neutral-600 font-quicksand-medium text-center leading-6">
-                Êtes-vous sûr de vouloir réinitialiser tous les paramètres à
-                leurs valeurs par défaut ? Cette action ne peut pas être
-                annulée.
+                {i18n.t("enterprise.settings.reset.message")}
               </Text>
             </View>
 
@@ -778,12 +797,12 @@ export default function EnterpriseSettingsScreen() {
                   <View className="flex-row items-center">
                     <ActivityIndicator color="#FFFFFF" size="small" />
                     <Text className="font-quicksand-bold text-white ml-2">
-                      En cours...
+                      {i18n.t("enterprise.settings.reset.inProgress")}
                     </Text>
                   </View>
                 ) : (
                   <Text className="font-quicksand-bold text-white">
-                    Réinitialiser
+                    {i18n.t("enterprise.settings.reset.confirm")}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -795,7 +814,7 @@ export default function EnterpriseSettingsScreen() {
                 activeOpacity={0.7}
               >
                 <Text className="font-quicksand-semibold text-neutral-700">
-                  Annuler
+                  {i18n.t("enterprise.settings.reset.cancel")}
                 </Text>
               </TouchableOpacity>
             </View>

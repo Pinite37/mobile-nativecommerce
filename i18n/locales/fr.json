@@ -1,0 +1,557 @@
+{
+    "messages": {
+        "error": "Erreur",
+        "success": "Succès"
+    },
+    "enterprise": {
+        "settings": {
+            "title": "Paramètres",
+            "loading": "Chargement...",
+            "general": {
+                "title": "Général",
+                "theme": "Thème",
+                "language": "Langue"
+            },
+            "notifications": {
+                "title": "Notifications",
+                "pushEnabled": "Notifications push",
+                "delivery": "Livraisons",
+                "messages": "Messages",
+                "newProducts": "Nouveaux produits",
+                "advertisements": "Publicités",
+                "systemUpdates": "Mises à jour système"
+            },
+            "display": {
+                "title": "Affichage",
+                "gridView": "Vue en grille",
+                "highQualityImages": "Images haute qualité"
+            },
+            "enterprise": {
+                "title": "Entreprise",
+                "autoOnlineStatus": "Statut en ligne auto"
+            },
+            "privacy": {
+                "title": "Confidentialité",
+                "publicProfile": "Profil public",
+                "dataAnalytics": "Analyses de données",
+                "privacyPolicy": "Politique de confidentialité"
+            },
+            "reset": {
+                "button": "Réinitialiser les paramètres",
+                "title": "Réinitialiser les paramètres",
+                "message": "Êtes-vous sûr de vouloir réinitialiser tous les paramètres à leurs valeurs par défaut ? Cette action ne peut pas être annulée.",
+                "confirm": "Réinitialiser",
+                "cancel": "Annuler",
+                "inProgress": "En cours..."
+            },
+            "languageModal": {
+                "title": "Choisir la langue",
+                "french": "Français",
+                "english": "English",
+                "frenchSubtitle": "French",
+                "englishSubtitle": "Anglais"
+            },
+            "messages": {
+                "error": "Erreur",
+                "loadPreferencesError": "Impossible de charger vos préférences",
+                "updateSettingError": "Impossible de mettre à jour le paramètre",
+                "resetSuccess": "Réinitialisation",
+                "resetSuccessMessage": "Paramètres réinitialisés avec succès",
+                "resetError": "Impossible de réinitialiser",
+                "languageChangeError": "Impossible de changer la langue"
+            }
+        },
+        "profile": {
+            "modals": {
+                "editProfile": {
+                    "title": "Modifier le profil",
+                    "cancel": "Annuler",
+                    "save": "Sauvegarder",
+                    "firstName": "Prénom",
+                    "lastName": "Nom",
+                    "phone": "Téléphone",
+                    "address": "Adresse",
+                    "changePhoto": "Touchez pour changer",
+                    "placeholders": {
+                        "firstName": "Votre prénom",
+                        "lastName": "Votre nom",
+                        "phone": "Votre téléphone",
+                        "address": "Votre adresse"
+                    },
+                    "permission": {
+                        "title": "Permission requise",
+                        "subtitle": "Vous devez autoriser l'accès à la galerie pour sélectionner une image."
+                    },
+                    "success": "Profil mis à jour avec succès",
+                    "error": "Impossible de mettre à jour le profil"
+                },
+                "editEnterprise": {
+                    "title": "Modifier l'entreprise",
+                    "cancel": "Annuler",
+                    "save": "Sauvegarder",
+                    "changeLogo": "Modifier le logo",
+                    "companyName": "Nom de l'entreprise*",
+                    "description": "Description",
+                    "contactInfo": "Coordonnées",
+                    "website": "Site web",
+                    "phone": "Téléphone",
+                    "email": "Email professionnel",
+                    "whatsapp": "WhatsApp",
+                    "socialNetworks": "Réseaux sociaux",
+                    "addSocial": "Ajouter",
+                    "noSocial": "Aucun réseau social ajouté",
+                    "placeholders": {
+                        "companyName": "Nom de votre entreprise",
+                        "description": "Description de votre entreprise",
+                        "website": "https://www.votreentreprise.com",
+                        "phone": "Numéro de téléphone",
+                        "email": "contact@entreprise.com",
+                        "whatsapp": "Numéro WhatsApp",
+                        "platform": "Plateforme (ex: Facebook)",
+                        "url": "URL"
+                    },
+                    "errors": {
+                        "companyNameRequired": "Le nom de l'entreprise est requis",
+                        "required": "Champ requis"
+                    },
+                    "permission": {
+                        "title": "Permission requise",
+                        "subtitle": "Vous devez autoriser l'accès à la galerie pour sélectionner un logo."
+                    },
+                    "success": "Informations entreprise mises à jour avec succès",
+                    "error": "Impossible de mettre à jour les informations entreprise"
+                },
+                "enterpriseDetails": {
+                    "title": "Détails de l'entreprise",
+                    "close": "Fermer",
+                    "active": "Active",
+                    "inactive": "Inactive",
+                    "about": "À propos",
+                    "noDescription": "Aucune description disponible pour cette entreprise.",
+                    "contact": "Coordonnées",
+                    "noContact": "Aucune coordonnée disponible",
+                    "stats": "Statistiques",
+                    "totalSales": "Ventes totales",
+                    "orders": "Commandes",
+                    "averageRating": "Note moyenne",
+                    "reviews": "Avis clients",
+                    "socialLinks": "Liens sociaux",
+                    "additionalInfo": "Informations supplémentaires",
+                    "creationDate": "Date de création",
+                    "enterpriseId": "ID de l'entreprise"
+                },
+                "addPartner": {
+                    "title": "Ajouter un partenaire",
+                    "cancel": "Annuler",
+                    "add": "Ajouter",
+                    "partnerId": "ID du partenaire",
+                    "placeholder": "ID du partenaire de livraison",
+                    "helpText": "Entrez l'ID du partenaire de livraison que vous voulez ajouter.",
+                    "error": "Veuillez entrer un ID de partenaire valide",
+                    "redirectTitle": "Redirection",
+                    "redirectMessage": "Veuillez utiliser la page Partenaires pour associer un livreur."
+                }
+            },
+            "sections": {
+                "marketing": "Marketing & Abonnements",
+                "owner": "Propriétaire",
+                "contact": "Contact Entreprise"
+            },
+            "actions": {
+                "retry": "Réessayer",
+                "logout": "Déconnexion",
+                "profile": "Profil",
+                "partners": "Partenaires",
+                "details": "Détails",
+                "edit": "Modifier"
+            },
+            "messages": {
+                "loadError": "Impossible de charger le profil",
+                "loadErrorMessage": "Une erreur s'est produite lors du chargement des données.",
+                "logoutConfirm": {
+                    "title": "Déconnexion",
+                    "message": "Êtes-vous sûr de vouloir vous déconnecter ?",
+                    "confirm": "Déconnexion"
+                },
+                "statusConfirm": {
+                    "title": "Changer le statut",
+                    "message": "Voulez-vous vraiment {{action}} votre entreprise ?",
+                    "activate": "activer",
+                    "deactivate": "désactiver",
+                    "confirm": "Confirmer"
+                },
+                "logoutSuccess": "Vous avez été déconnecté avec succès"
+            },
+            "placeholders": {
+                "noDescription": "Ajoutez une description pour présenter votre entreprise"
+            },
+            "features": {
+                "advertisements": {
+                    "title": "Publicités",
+                    "description": "Créer & gérer vos bannières",
+                    "configure": "Configurer maintenant",
+                    "premium": "PREMIUM",
+                    "notAvailable": "Fonctionnalité non disponible",
+                    "upgrade": "Passer à un plan supérieur"
+                },
+                "subscriptions": {
+                    "title": "Abonnements",
+                    "manage": "Gérer mon plan",
+                    "viewOffers": "Voir les offres"
+                }
+            },
+            "management": {
+                "title": "Gestion & Outils",
+                "partners": "Partenaires de Livraison",
+                "partnersCount": "{{count}} partenaire(s)",
+                "settings": "Paramètres",
+                "settingsDescription": "Préférences et configuration",
+                "logout": "Se déconnecter"
+            },
+            "contact": {
+                "noInfo": "Aucune information de contact renseignée"
+            },
+            "appInfo": "Axi Market v1.0.0"
+        },
+        "messages": {
+            "title": "Messages",
+            "search": {
+                "placeholder": "Rechercher une conversation..."
+            },
+            "filters": {
+                "all": "Tous",
+                "unread": "Non lus"
+            },
+            "count": {
+                "conversations": "conversation",
+                "conversationsPlural": "conversations"
+            },
+            "empty": {
+                "noResults": "Aucun résultat",
+                "noConversations": "Aucune conversation",
+                "noResultsMessage": "Nous n'avons trouvé aucune conversation correspondant à \"{{query}}\"",
+                "noConversationsMessage": "Commencez à discuter avec des vendeurs pour voir vos échanges ici.",
+                "discoverProducts": "Découvrir des produits"
+            },
+            "conversation": {
+                "newConversation": "Nouvelle conversation",
+                "unknownUser": "Utilisateur inconnu",
+                "unknownProduct": "Produit inconnu"
+            },
+            "contextMenu": {
+                "options": "Options",
+                "archive": "Archiver la conversation",
+                "delete": "Supprimer la conversation",
+                "deleting": "Suppression..."
+            }
+        },
+        "offers": {
+            "title": "Mes offres",
+            "filters": {
+                "all": "Toutes",
+                "open": "Ouvertes",
+                "assigned": "Attribuées",
+                "cancelled": "Annulées",
+                "expired": "Expirées"
+            },
+            "status": {
+                "open": "Ouverte",
+                "assigned": "Attribuée",
+                "cancelled": "Annulée",
+                "expired": "Expirée"
+            },
+            "count": {
+                "offers": "offre",
+                "offersPlural": "offres"
+            },
+            "labels": {
+                "product": "Produit",
+                "client": "Client",
+                "expires": "Expire",
+                "delete": "Supprimer"
+            },
+            "empty": {
+                "title": "Aucune offre",
+                "message": "Créez une offre depuis une conversation produit pour la voir ici."
+            },
+            "error": {
+                "title": "Erreur",
+                "retry": "Réessayer",
+                "loadError": "Erreur de chargement"
+            },
+            "deleteModal": {
+                "title": "Supprimer l'offre ?",
+                "message": "Cette action est irréversible. L'offre sera définitivement supprimée.",
+                "cancel": "Annuler",
+                "confirm": "Supprimer",
+                "deleting": "Suppression...",
+                "successTitle": "Offre supprimée",
+                "successMessage": "Votre offre a été supprimée avec succès.",
+                "errorTitle": "Échec de la suppression",
+                "errorMessage": "Impossible de supprimer l'offre"
+            }
+        },
+        "favorites": {
+            "title": "Mes Favoris",
+            "count": {
+                "product": "produit",
+                "products": "produits"
+            },
+            "labels": {
+                "addedOn": "Ajouté le"
+            },
+            "empty": {
+                "title": "Votre liste de favoris est vide",
+                "message": "Ajoutez des produits à vos favoris pour les retrouver facilement",
+                "exploreButton": "Explorer les produits"
+            },
+            "error": {
+                "title": "Erreur de chargement",
+                "loadError": "Erreur lors du chargement des favoris",
+                "retry": "Réessayer"
+            },
+            "deleteModal": {
+                "title": "Retirer des favoris",
+                "message": "Êtes-vous sûr de vouloir retirer ce produit de vos favoris ?",
+                "cancel": "Annuler",
+                "confirm": "Retirer"
+            },
+            "errorModal": {
+                "title": "Erreur",
+                "message": "Impossible de retirer ce produit des favoris.",
+                "ok": "OK"
+            }
+        },
+        "deliveryPartners": {
+            "title": "Partenaires de livraison",
+            "searchPlaceholder": "Rechercher un livreur...",
+            "stats": {
+                "total": "Total",
+                "associated": "Associés",
+                "available": "Disponibles"
+            },
+            "status": {
+                "available": "Disponible",
+                "unavailable": "Indisponible"
+            },
+            "badges": {
+                "verified": "Vérifié",
+                "associated": "Associé"
+            },
+            "actions": {
+                "associate": "Associer",
+                "alreadyAssociated": "Déjà associé"
+            },
+            "empty": {
+                "title": "Aucun partenaire trouvé",
+                "message": "Aucun livreur disponible ne correspond à votre recherche."
+            },
+            "toast": {
+                "loadError": "Impossible de charger les partenaires",
+                "associateSuccess": "Partenaire associé avec succès",
+                "associateError": "Échec association partenaire"
+            }
+        },
+        "products": {
+            "title": "Mes Produits",
+            "catalog": "produit au catalogue",
+            "catalogPlural": "produits au catalogue",
+            "searchPlaceholder": "Rechercher un produit...",
+            "addButton": "Ajouter",
+            "addProduct": "Ajouter un produit",
+            "results": "résultat",
+            "resultsPlural": "résultats",
+            "categories": {
+                "all": "Tous"
+            },
+            "sort": {
+                "title": "Trier par",
+                "name": "Nom",
+                "price": "Prix",
+                "stock": "Stock",
+                "createdAt": "Date de création",
+                "cancel": "Annuler"
+            },
+            "status": {
+                "active": "Actif",
+                "inactive": "Inactif"
+            },
+            "stock": {
+                "outOfStock": "Rupture",
+                "low": "Faible",
+                "available": "Disponible"
+            },
+            "reviews": "avis",
+            "actions": {
+                "delete": "Supprimer",
+                "viewDetails": "Voir les détails",
+                "activate": "Activer",
+                "deactivate": "Désactiver",
+                "cancel": "Annuler"
+            },
+            "confirmations": {
+                "delete": {
+                    "title": "Supprimer le produit",
+                    "message": "Êtes-vous sûr de vouloir supprimer ce produit ?",
+                    "confirm": "Supprimer"
+                },
+                "deactivate": {
+                    "title": "Désactiver le produit",
+                    "message": "Le produit ne sera plus visible par les clients.",
+                    "confirm": "Désactiver"
+                },
+                "activate": {
+                    "title": "Activer le produit",
+                    "message": "Le produit sera visible par les clients.",
+                    "confirm": "Activer"
+                }
+            },
+            "notifications": {
+                "deleteSuccess": "Produit supprimé",
+                "deleteSuccessMessage": "Le produit a été supprimé avec succès.",
+                "statusSuccess": "Statut modifié",
+                "statusActivated": "Le produit a été activé.",
+                "statusDeactivated": "Le produit a été désactivé.",
+                "error": "Erreur",
+                "deleteError": "Impossible de supprimer le produit",
+                "updateError": "Impossible de modifier le produit"
+            },
+            "empty": {
+                "error": {
+                    "title": "Erreur",
+                    "retry": "Réessayer"
+                },
+                "noProducts": "Aucun produit",
+                "noProductsFound": "Aucun produit trouvé",
+                "noProductsMessage": "Commencez par ajouter vos premiers produits à votre catalogue",
+                "noProductsFoundMessage": "Aucun produit ne correspond à vos critères de recherche"
+            },
+            "create": {
+                "title": "Nouveau produit",
+                "subtitle": "Ajoutez un nouveau produit à votre catalogue",
+                "steps": {
+                    "basic": "Informations de base",
+                    "details": "Détails produit"
+                },
+                "progress": {
+                    "step": "Étape",
+                    "of": "sur",
+                    "completed": "terminé"
+                },
+                "limits": {
+                    "planTitle": "Limites de votre plan",
+                    "products": "Produits",
+                    "imagesPerProduct": "Images par produit",
+                    "limitReached": "⚠️ Vous avez atteint la limite de produits. Passez à un plan supérieur pour continuer.",
+                    "imageLimitTitle": "Limite atteinte",
+                    "imageLimitReached": "Votre plan \"{{planName}}\" autorise maximum {{count}} image par produit. Passez à un plan supérieur pour ajouter plus d'images.",
+                    "imageLimitReachedPlural": "Votre plan \"{{planName}}\" autorise maximum {{count}} images par produit. Passez à un plan supérieur pour ajouter plus d'images.",
+                    "productLimitReached": "Vous avez atteint la limite de {{count}} produit de votre plan \"{{planName}}\". Passez à un plan supérieur pour ajouter plus de produits.",
+                    "productLimitReachedPlural": "Vous avez atteint la limite de {{count}} produits de votre plan \"{{planName}}\". Passez à un plan supérieur pour ajouter plus de produits."
+                },
+                "fields": {
+                    "photosTitle": "Photos du produit *",
+                    "photosHelp": "Ajoutez des images de votre produit",
+                    "photosHelpPlan": "Maximum {{count}} image selon votre plan",
+                    "photosHelpPlanPlural": "Maximum {{count}} images selon votre plan",
+                    "addPhoto": "Ajouter une photo",
+                    "nameTitle": "Nom du produit *",
+                    "nameHelp": "Le nom commercial de votre produit",
+                    "namePlaceholder": "Ex: iPhone 15 Pro Max",
+                    "descriptionTitle": "Description *",
+                    "descriptionHelp": "Décrivez votre produit",
+                    "descriptionPlaceholder": "Décrivez votre produit...",
+                    "priceTitle": "Prix *",
+                    "priceHelp": "Prix unitaire en FCFA",
+                    "pricePlaceholder": "50000",
+                    "stockTitle": "Quantité en stock *",
+                    "stockHelp": "Nombre d'unités disponibles",
+                    "stockPlaceholder": "10",
+                    "categoryTitle": "Catégorie *",
+                    "categoryHelp": "Sélectionnez une catégorie",
+                    "categoryPlaceholder": "Choisir une catégorie",
+                    "categorySelect": "Sélectionner",
+                    "specificationsTitle": "Spécifications techniques",
+                    "specificationsHelp": "Caractéristiques détaillées",
+                    "addSpecification": "Ajouter une spécification",
+                    "weightTitle": "Poids",
+                    "weightHelp": "Poids en kilogrammes",
+                    "weightPlaceholder": "1.5",
+                    "dimensionsTitle": "Dimensions",
+                    "dimensionsHelp": "Dimensions en centimètres",
+                    "length": "Longueur (cm)",
+                    "width": "Largeur (cm)",
+                    "height": "Hauteur (cm)",
+                    "tagsTitle": "Tags",
+                    "tagsHelp": "Mots-clés pour la recherche",
+                    "addTag": "Ajouter un tag",
+                    "brandTitle": "Marque",
+                    "brandPlaceholder": "Apple, Samsung...",
+                    "modelTitle": "Modèle",
+                    "modelPlaceholder": "iPhone 15 Pro",
+                    "skuTitle": "SKU (Référence)",
+                    "skuPlaceholder": "IPH15P-256-BLK",
+                    "barcodeTitle": "Code-barres",
+                    "barcodePlaceholder": "123456789012",
+                    "lengthShort": "L",
+                    "widthShort": "l",
+                    "heightShort": "H",
+                    "detailsTitle": "Détails du produit",
+                    "detailsHelp": "Informations complémentaires",
+                    "specificationsEmpty": "Aucune spécification ajoutée",
+                    "tagsEmpty": "Aucun tag ajouté",
+                    "loadingCategories": "Chargement des catégories...",
+                    "errorSummary": "Veuillez corriger les erreurs :"
+                },
+                "errors": {
+                    "nameRequired": "Le nom du produit est requis",
+                    "descriptionRequired": "La description est requise",
+                    "priceRequired": "Le prix est requis",
+                    "priceInvalid": "Le prix doit être un nombre positif",
+                    "stockRequired": "Le stock est requis",
+                    "stockInvalid": "Le stock doit être un nombre positif ou nul",
+                    "categoryRequired": "La catégorie est requise",
+                    "imagesRequired": "Au moins une image est requise",
+                    "skuInvalid": "Le SKU ne peut contenir que des lettres, chiffres, tirets et underscores",
+                    "weightInvalid": "Le poids doit être un nombre positif",
+                    "correctErrors": "Veuillez corriger les erreurs avant de continuer",
+                    "permissionDenied": "Permission refusée",
+                    "permissionDeniedMessage": "Nous avons besoin de votre permission pour accéder à la galerie",
+                    "imageTooLarge": "Image trop grande",
+                    "imageTooLargeMessage": "Veuillez choisir une image de moins de 5MB",
+                    "imageError": "Erreur",
+                    "imageErrorMessage": "Impossible de sélectionner l'image",
+                    "createError": "Impossible de créer le produit"
+                },
+                "modals": {
+                    "selectCategory": "Sélectionner une catégorie",
+                    "loadingCategories": "Chargement des catégories...",
+                    "noCategories": "Aucune catégorie disponible",
+                    "close": "Fermer",
+                    "addTag": "Ajouter un tag",
+                    "tagPlaceholder": "Entrez un tag",
+                    "tagAction": "Ajouter",
+                    "cancel": "Annuler",
+                    "addSpecification": "Ajouter une spécification",
+                    "specKey": "Nom",
+                    "specValue": "Valeur",
+                    "specKeyPlaceholder": "Ex: Couleur",
+                    "specValuePlaceholder": "Ex: Noir"
+                },
+                "actions": {
+                    "previous": "Précédent",
+                    "next": "Suivant",
+                    "createProduct": "Créer le produit",
+                    "creating": "Création..."
+                },
+                "notifications": {
+                    "limitReachedTitle": "Limite atteinte",
+                    "productLimitTitle": "Limite de produits atteinte",
+                    "successTitle": "Produit créé avec succès !",
+                    "successMessage": "{{name}} a été ajouté à votre catalogue",
+                    "errorTitle": "Erreur"
+                }
+            }
+        }
+    }
+}

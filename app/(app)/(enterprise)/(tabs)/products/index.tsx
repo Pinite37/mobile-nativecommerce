@@ -21,6 +21,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import NotificationModal, {
   useNotification,
 } from "../../../../../components/ui/NotificationModal";
+import { useLocale } from "../../../../../contexts/LocaleContext";
+import i18n from "../../../../../i18n/i18n";
 import CategoryService from "../../../../../services/api/CategoryService";
 import ProductService from "../../../../../services/api/ProductService";
 import {
@@ -29,14 +31,17 @@ import {
   ProductsResponse,
 } from "../../../../../types/product";
 
-const sortOptions = [
-  { id: "name", name: "Nom", field: "name" },
-  { id: "price", name: "Prix", field: "price" },
-  { id: "stock", name: "Stock", field: "stock" },
-  { id: "createdAt", name: "Date de création", field: "createdAt" },
+const getSortOptions = () => [
+  { id: "name", name: i18n.t("enterprise.products.sort.name"), field: "name" },
+  { id: "price", name: i18n.t("enterprise.products.sort.price"), field: "price" },
+  { id: "stock", name: i18n.t("enterprise.products.sort.stock"), field: "stock" },
+  { id: "createdAt", name: i18n.t("enterprise.products.sort.createdAt"), field: "createdAt" },
 ];
 
 export default function EnterpriseProducts() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { locale } = useLocale(); // Écoute les changements de langue pour re-render automatiquement
+  const sortOptions = getSortOptions();
   const params = useLocalSearchParams();
   const { notification, showNotification, hideNotification } =
     useNotification();
@@ -95,8 +100,8 @@ export default function EnterpriseProducts() {
             selectedSort === "createdAt"
               ? "newest"
               : selectedSort === "price"
-              ? "price_desc"
-              : "newest",
+                ? "price_desc"
+                : "newest",
         };
 
         if (selectedCategory !== "all") {
@@ -130,7 +135,7 @@ export default function EnterpriseProducts() {
         setHasMoreProducts(pagination.page < pagination.pages);
       } catch (err: any) {
         const errorMessage =
-          err.message || "Erreur lors du chargement des produits";
+          err.message || i18n.t("enterprise.products.empty.error.title");
         if (reset) {
           setError(errorMessage);
         }
@@ -156,12 +161,12 @@ export default function EnterpriseProducts() {
             selectedSort === "createdAt"
               ? "newest"
               : selectedSort === "price"
-              ? "price_desc"
-              : "newest",
+                ? "price_desc"
+                : "newest",
         });
       } catch (err: any) {
         console.error("Error loading products:", err);
-        setError(err.message || "Erreur lors du chargement des produits");
+        setError(err.message || i18n.t("enterprise.products.empty.error.title"));
         return;
       }
 
@@ -180,11 +185,11 @@ export default function EnterpriseProducts() {
         setCurrentPage(productsData.pagination?.page || 1);
         setHasMoreProducts(
           (productsData.pagination?.page || 1) <
-            (productsData.pagination?.pages || 1)
+          (productsData.pagination?.pages || 1)
         );
       }
     } catch (err: any) {
-      setError(err.message || "Erreur lors du chargement des données");
+      setError(err.message || i18n.t("enterprise.products.empty.error.title"));
       console.error("Error loading initial data:", err);
     } finally {
       setInitialLoading(false);
@@ -247,9 +252,9 @@ export default function EnterpriseProducts() {
   };
 
   const getStockStatus = (stock: number) => {
-    if (stock === 0) return { color: "#EF4444", text: "Rupture" };
-    if (stock < 10) return { color: "#F59E0B", text: "Faible" };
-    return { color: "#10B981", text: "Disponible" };
+    if (stock === 0) return { color: "#EF4444", text: i18n.t("enterprise.products.stock.outOfStock") };
+    if (stock < 10) return { color: "#F59E0B", text: i18n.t("enterprise.products.stock.low") };
+    return { color: "#10B981", text: i18n.t("enterprise.products.stock.available") };
   };
 
   const showConfirmation = (
@@ -263,19 +268,19 @@ export default function EnterpriseProducts() {
 
     switch (type) {
       case "delete":
-        title = "Supprimer le produit";
-        message = "Êtes-vous sûr de vouloir supprimer ce produit ?";
-        confirmText = "Supprimer";
+        title = i18n.t("enterprise.products.confirmations.delete.title");
+        message = i18n.t("enterprise.products.confirmations.delete.message");
+        confirmText = i18n.t("enterprise.products.confirmations.delete.confirm");
         confirmColor = "#EF4444";
         break;
       case "status_change":
         title = product.isActive
-          ? "Désactiver le produit"
-          : "Activer le produit";
+          ? i18n.t("enterprise.products.confirmations.deactivate.title")
+          : i18n.t("enterprise.products.confirmations.activate.title");
         message = product.isActive
-          ? "Le produit ne sera plus visible par les clients."
-          : "Le produit sera visible par les clients.";
-        confirmText = product.isActive ? "Désactiver" : "Activer";
+          ? i18n.t("enterprise.products.confirmations.deactivate.message")
+          : i18n.t("enterprise.products.confirmations.activate.message");
+        confirmText = product.isActive ? i18n.t("enterprise.products.actions.deactivate") : i18n.t("enterprise.products.actions.activate");
         confirmColor = product.isActive ? "#F59E0B" : "#10B981";
         break;
     }
@@ -309,8 +314,8 @@ export default function EnterpriseProducts() {
           setProducts((prev) => prev.filter((p) => p._id !== product._id));
           showNotification(
             "success",
-            "Produit supprimé",
-            "Le produit a été supprimé avec succès."
+            i18n.t("enterprise.products.notifications.deleteSuccess"),
+            i18n.t("enterprise.products.notifications.deleteSuccessMessage")
           );
           break;
         case "status_change":
@@ -324,19 +329,17 @@ export default function EnterpriseProducts() {
           );
           showNotification(
             "success",
-            "Statut modifié",
-            `Le produit a été ${!product.isActive ? "activé" : "désactivé"}.`
+            i18n.t("enterprise.products.notifications.statusSuccess"),
+            product.isActive ? i18n.t("enterprise.products.notifications.statusDeactivated") : i18n.t("enterprise.products.notifications.statusActivated")
           );
           break;
       }
     } catch (err: any) {
       showNotification(
         "error",
-        "Erreur",
+        i18n.t("enterprise.products.notifications.error"),
         err.message ||
-          `Impossible de ${
-            type === "delete" ? "supprimer" : "modifier"
-          } le produit`
+        (type === "delete" ? i18n.t("enterprise.products.notifications.deleteError") : i18n.t("enterprise.products.notifications.updateError"))
       );
     }
   };
@@ -416,7 +419,7 @@ export default function EnterpriseProducts() {
                     className="text-[10px] font-quicksand-semibold"
                     style={{ color: statusStyle.color }}
                   >
-                    {item.isActive ? "Actif" : "Inactif"}
+                    {item.isActive ? i18n.t("enterprise.products.status.active") : i18n.t("enterprise.products.status.inactive")}
                   </Text>
                 </View>
               </View>
@@ -472,7 +475,7 @@ export default function EnterpriseProducts() {
                     className="text-xs font-quicksand-semibold"
                     style={{ color: statusStyle.color }}
                   >
-                    {item.isActive ? "Actif" : "Inactif"}
+                    {item.isActive ? i18n.t("enterprise.products.status.active") : i18n.t("enterprise.products.status.inactive")}
                   </Text>
                 </View>
                 <TouchableOpacity
@@ -493,7 +496,7 @@ export default function EnterpriseProducts() {
               <Ionicons name="star" size={14} color="#10B981" />
               <Text className="text-xs text-neutral-600 ml-1 font-quicksand-light">
                 {item.stats.averageRating.toFixed(1)} ({item.stats.totalReviews}{" "}
-                avis)
+                {i18n.t("enterprise.products.reviews")})
               </Text>
             </View>
             <View className="flex-row items-center justify-between">
@@ -523,7 +526,7 @@ export default function EnterpriseProducts() {
           >
             <Ionicons name="trash-outline" size={18} color="#EF4444" />
             <Text className="text-red-600 font-quicksand-semibold ml-2">
-              Supprimer
+              {i18n.t("enterprise.products.actions.delete")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -537,7 +540,7 @@ export default function EnterpriseProducts() {
         <View className="flex-1 justify-center items-center px-6">
           <Ionicons name="alert-circle-outline" size={80} color="#EF4444" />
           <Text className="text-xl font-quicksand-bold text-neutral-800 mt-4 mb-2">
-            Erreur
+            {i18n.t("enterprise.products.empty.error.title")}
           </Text>
           <Text className="text-center text-neutral-600 font-quicksand-medium mb-6">
             {error}
@@ -548,7 +551,7 @@ export default function EnterpriseProducts() {
               onPress={loadInitialData}
             >
               <Text className="text-white font-quicksand-semibold">
-                Réessayer
+                {i18n.t("enterprise.products.empty.error.retry")}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -558,7 +561,7 @@ export default function EnterpriseProducts() {
               }}
             >
               <Text className="text-neutral-700 font-quicksand-semibold">
-                Ajouter un produit
+                {i18n.t("enterprise.products.addProduct")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -572,13 +575,13 @@ export default function EnterpriseProducts() {
         <Ionicons name="cube-outline" size={80} color="#D1D5DB" />
         <Text className="text-xl font-quicksand-bold text-neutral-800 mt-4 mb-2">
           {searchQuery.trim() || selectedCategory !== "all"
-            ? "Aucun produit trouvé"
-            : "Aucun produit"}
+            ? i18n.t("enterprise.products.empty.noProductsFound")
+            : i18n.t("enterprise.products.empty.noProducts")}
         </Text>
         <Text className="text-center text-neutral-600 font-quicksand-medium mb-6">
           {searchQuery.trim() || selectedCategory !== "all"
-            ? "Aucun produit ne correspond à vos critères de recherche"
-            : "Commencez par ajouter vos premiers produits à votre catalogue"}
+            ? i18n.t("enterprise.products.empty.noProductsFoundMessage")
+            : i18n.t("enterprise.products.empty.noProductsMessage")}
         </Text>
         <TouchableOpacity
           className="bg-primary-500 rounded-xl py-4 px-8"
@@ -587,7 +590,7 @@ export default function EnterpriseProducts() {
           }}
         >
           <Text className="text-white font-quicksand-semibold">
-            Ajouter un produit
+            {i18n.t("enterprise.products.addProduct")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -609,28 +612,26 @@ export default function EnterpriseProducts() {
         <View className="flex-1 justify-center items-center px-6">
           <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
             <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4">
-              Trier par
+              {i18n.t("enterprise.products.sort.title")}
             </Text>
 
             {sortOptions.map((option) => (
               <TouchableOpacity
                 key={option.id}
-                className={`py-3 px-4 rounded-xl mb-2 ${
-                  selectedSort === option.id
-                    ? "bg-primary-500"
-                    : "bg-neutral-50"
-                }`}
+                className={`py-3 px-4 rounded-xl mb-2 ${selectedSort === option.id
+                  ? "bg-primary-500"
+                  : "bg-neutral-50"
+                  }`}
                 onPress={() => {
                   setSelectedSort(option.id);
                   setShowSortModal(false);
                 }}
               >
                 <Text
-                  className={`font-quicksand-medium ${
-                    selectedSort === option.id
-                      ? "text-white"
-                      : "text-neutral-700"
-                  }`}
+                  className={`font-quicksand-medium ${selectedSort === option.id
+                    ? "text-white"
+                    : "text-neutral-700"
+                    }`}
                 >
                   {option.name}
                 </Text>
@@ -642,7 +643,7 @@ export default function EnterpriseProducts() {
               onPress={() => setShowSortModal(false)}
             >
               <Text className="text-neutral-700 font-quicksand-medium text-center">
-                Annuler
+                {i18n.t("enterprise.products.sort.cancel")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -744,11 +745,10 @@ export default function EnterpriseProducts() {
         <View className="flex-row items-center justify-between mb-3">
           <View className="flex-1">
             <Text className="text-2xl font-quicksand-bold text-white">
-              Mes Produits
+              {i18n.t("enterprise.products.title")}
             </Text>
             <Text className="text-white/80 font-quicksand-medium mt-1 text-sm">
-              {products.length} produit{products.length !== 1 ? "s" : ""} au
-              catalogue
+              {products.length} {products.length !== 1 ? i18n.t("enterprise.products.catalogPlural") : i18n.t("enterprise.products.catalog")}
             </Text>
           </View>
           <View className="flex-row items-center gap-2">
@@ -773,7 +773,7 @@ export default function EnterpriseProducts() {
             >
               <Ionicons name="add-circle" size={20} color="#10B981" />
               <Text className="text-primary-600 font-quicksand-bold ml-2 text-sm">
-                Ajouter
+                {i18n.t("enterprise.products.addButton")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -790,7 +790,7 @@ export default function EnterpriseProducts() {
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholder="Rechercher un produit..."
+            placeholder={i18n.t("enterprise.products.searchPlaceholder")}
             className="bg-white rounded-2xl pl-12 pr-12 py-3.5 text-neutral-800 font-quicksand-medium shadow-sm"
             placeholderTextColor="#9CA3AF"
             style={{ elevation: 2 }}
@@ -810,27 +810,25 @@ export default function EnterpriseProducts() {
       {/* Category Pills */}
       <View className="mb-4">
         <FlatList
-          data={[{ _id: "all", name: "Tous" }, ...categories] as any}
+          data={[{ _id: "all", name: i18n.t("enterprise.products.categories.all") }, ...categories] as any}
           horizontal
           keyExtractor={(item: any) => item._id}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 24 }}
           renderItem={({ item }: any) => (
             <TouchableOpacity
-              className={`px-5 py-2.5 mr-2 rounded-full ${
-                selectedCategory === item._id
-                  ? "bg-white shadow-md"
-                  : "bg-white/20 backdrop-blur-sm border border-white/30"
-              }`}
+              className={`px-5 py-2.5 mr-2 rounded-full ${selectedCategory === item._id
+                ? "bg-white shadow-md"
+                : "bg-white/20 backdrop-blur-sm border border-white/30"
+                }`}
               style={selectedCategory === item._id ? { elevation: 3 } : {}}
               onPress={() => setSelectedCategory(item._id)}
             >
               <Text
-                className={`text-sm font-quicksand-bold ${
-                  selectedCategory === item._id
-                    ? "text-primary-600"
-                    : "text-white"
-                }`}
+                className={`text-sm font-quicksand-bold ${selectedCategory === item._id
+                  ? "text-primary-600"
+                  : "text-white"
+                  }`}
               >
                 {item.name}
               </Text>
@@ -860,7 +858,7 @@ export default function EnterpriseProducts() {
         {searchQuery.trim().length > 0 && (
           <View className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
             <Text className="text-white font-quicksand-semibold text-sm">
-              {products.length} résultat{products.length !== 1 ? "s" : ""}
+              {products.length} {products.length !== 1 ? i18n.t("enterprise.products.resultsPlural") : i18n.t("enterprise.products.results")}
             </Text>
           </View>
         )}
@@ -936,7 +934,7 @@ export default function EnterpriseProducts() {
             <TouchableOpacity
               className="bg-white rounded-3xl w-full max-w-sm"
               activeOpacity={1}
-              onPress={() => {}}
+              onPress={() => { }}
             >
               {/* Icon */}
               <View className="items-center pt-8 pb-4">
@@ -951,10 +949,10 @@ export default function EnterpriseProducts() {
                       confirmationAction?.type === "delete"
                         ? "trash"
                         : confirmationAction?.type === "status_change"
-                        ? confirmationAction.product.isActive
-                          ? "pause"
-                          : "play"
-                        : "help"
+                          ? confirmationAction.product.isActive
+                            ? "pause"
+                            : "play"
+                          : "help"
                     }
                     size={28}
                     color={confirmationAction?.confirmColor}
@@ -979,7 +977,7 @@ export default function EnterpriseProducts() {
                   className="flex-1 bg-neutral-100 py-4 rounded-2xl items-center"
                 >
                   <Text className="text-base font-quicksand-semibold text-neutral-700">
-                    Annuler
+                    {i18n.t("enterprise.products.actions.cancel")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -1019,7 +1017,7 @@ export default function EnterpriseProducts() {
             <TouchableOpacity
               className="bg-white rounded-3xl w-full max-w-sm overflow-hidden"
               activeOpacity={1}
-              onPress={() => {}}
+              onPress={() => { }}
             >
               {/* Header du produit */}
               {selectedProductForMenu && (
@@ -1070,7 +1068,7 @@ export default function EnterpriseProducts() {
                     <Ionicons name="eye" size={20} color="#10B981" />
                   </View>
                   <Text className="text-base font-quicksand-semibold text-neutral-800 flex-1">
-                    Voir les détails
+                    {i18n.t("enterprise.products.actions.viewDetails")}
                   </Text>
                   <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
                 </TouchableOpacity>
@@ -1088,11 +1086,10 @@ export default function EnterpriseProducts() {
                     }}
                   >
                     <View
-                      className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
-                        selectedProductForMenu.isActive
-                          ? "bg-warning-100"
-                          : "bg-success-100"
-                      }`}
+                      className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${selectedProductForMenu.isActive
+                        ? "bg-warning-100"
+                        : "bg-success-100"
+                        }`}
                     >
                       <Ionicons
                         name={
@@ -1108,8 +1105,8 @@ export default function EnterpriseProducts() {
                     </View>
                     <Text className="text-base font-quicksand-semibold text-neutral-800 flex-1">
                       {selectedProductForMenu.isActive
-                        ? "Désactiver"
-                        : "Activer"}
+                        ? i18n.t("enterprise.products.actions.deactivate")
+                        : i18n.t("enterprise.products.actions.activate")}
                     </Text>
                     <Ionicons
                       name="chevron-forward"
@@ -1134,7 +1131,7 @@ export default function EnterpriseProducts() {
                     <Ionicons name="trash" size={20} color="#EF4444" />
                   </View>
                   <Text className="text-base font-quicksand-semibold text-red-600 flex-1">
-                    Supprimer
+                    {i18n.t("enterprise.products.actions.delete")}
                   </Text>
                   <Ionicons name="chevron-forward" size={20} color="#EF4444" />
                 </TouchableOpacity>
@@ -1150,7 +1147,7 @@ export default function EnterpriseProducts() {
                   }}
                 >
                   <Text className="text-base font-quicksand-semibold text-neutral-700">
-                    Annuler
+                    {i18n.t("enterprise.products.actions.cancel")}
                   </Text>
                 </TouchableOpacity>
               </View>

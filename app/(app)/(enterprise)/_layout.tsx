@@ -23,11 +23,11 @@ function EnterpriseLayoutContent() {
   return (
     <>
       <Stack>
-        <Stack.Screen 
-          name="(tabs)" 
-          options={{ 
-            headerShown: false 
-          }} 
+        <Stack.Screen
+          name="(tabs)"
+          options={{
+            headerShown: false
+          }}
         />
         {/* Cache le header pour tout le segment advertisements */}
         <Stack.Screen
@@ -68,66 +68,78 @@ function EnterpriseLayoutContent() {
         />
         {/* Cache le header pour les pages delivery-partners */}
         <Stack.Screen
-        name="delivery-partners"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="delivery-partners/[partnerId]"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="delivery-partners/index"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="(tabs)/offers"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="(tabs)/offers/index"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="marketplace/index"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="my-products/index"
-        options={{
-          headerShown: false,
-        }}
-      />
-       <Stack.Screen
-        name="advertisement/[id]"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="category/[categoryId]"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="subscriptions/index"
-        options={{
-          headerShown: false,
-        }}
-      />
-    </Stack>
+          name="delivery-partners"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="delivery-partners/[partnerId]"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="delivery-partners/index"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="(tabs)/offers"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="(tabs)/offers/index"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="marketplace/index"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="my-products/index"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="advertisement/[id]"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="category/[categoryId]"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="product"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="subscriptions/index"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="categories/index"
+          options={{
+            headerShown: false,
+          }}
+        />
+      </Stack>
 
       {/* Modal de bienvenue pour choisir un abonnement */}
       <SubscriptionWelcomeModal

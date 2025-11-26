@@ -4,7 +4,7 @@
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/axicauris.png",
+    "icon": "./assets/images/axicauriss.png",
     "scheme": "axiapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -22,7 +22,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/axicauris.png",
+        "foregroundImage": "./assets/images/axicauriss.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,

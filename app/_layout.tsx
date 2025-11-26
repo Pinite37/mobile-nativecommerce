@@ -6,6 +6,7 @@ import { ToastProvider as ReanimatedToastProvider } from "../components/ui/Reani
 import { AuthProvider } from "../contexts/AuthContext";
 import { SocketProvider } from "../contexts/SocketContext";
 import "./globals.css";
+import { LocaleProvider } from "@/contexts/LocaleContext";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -36,17 +37,19 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <SocketProvider>
-        <ReanimatedToastProvider>
-          <Stack>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="(app)" options={{ headerShown: false }} />
-          </Stack>
-        </ReanimatedToastProvider>
-      </SocketProvider>
-    </AuthProvider>
+    <LocaleProvider>
+      <AuthProvider>
+        <SocketProvider>
+          <ReanimatedToastProvider>
+            <Stack>
+              <Stack.Screen name="index" options={{ headerShown: false }} />
+              <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen name="(app)" options={{ headerShown: false }} />
+            </Stack>
+          </ReanimatedToastProvider>
+        </SocketProvider>
+      </AuthProvider>
+    </LocaleProvider>
   );
 }

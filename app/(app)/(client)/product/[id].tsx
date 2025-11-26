@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
 import { Image as ExpoImage } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -13,41 +14,87 @@ import {
   Image,
   Linking,
   Modal,
+  Platform,
   ScrollView,
   Share,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import NotificationModal, {
+  useNotification,
+} from "../../../../components/ui/NotificationModal";
 import MessagingService from "../../../../services/api/MessagingService";
 import ProductService from "../../../../services/api/ProductService";
 import { Product } from "../../../../types/product";
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+
+const HEADER_HEIGHT = Math.round(screenHeight * 0.45);
+const COMPACT_HEADER_HEIGHT = 100;
+const TITLE_APPEAR_OFFSET = HEADER_HEIGHT - COMPACT_HEADER_HEIGHT - 50;
+
+const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
+const AnimatedImage = Animated.createAnimatedComponent(ExpoImage);
 
 export default function ProductDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { notification, showNotification, hideNotification } = useNotification();
+  const imagesListRef = useRef<FlatList<string>>(null);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [similarProducts, setSimilarProducts] = useState<Product[]>([]);
   const [loadingSimilar, setLoadingSimilar] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
   const [imageModalVisible, setImageModalVisible] = useState(false);
-  const imagesListRef = useRef<FlatList<string>>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
 
-  // États pour les modals d'erreur
-  const [errorModal, setErrorModal] = useState<{ visible: boolean; title: string; message: string }>({
-    visible: false,
-    title: '',
-    message: ''
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  const imageOpacity = scrollY.interpolate({
+    inputRange: [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
   });
-  const [whatsappModal, setWhatsappModal] = useState<{ visible: boolean; phone: string }>({
-    visible: false,
-    phone: ''
+
+  const imageTranslateY = scrollY.interpolate({
+    inputRange: [0, HEADER_HEIGHT],
+    outputRange: [0, -HEADER_HEIGHT * 0.6],
+    extrapolate: "clamp",
+  });
+
+  const imageScale = scrollY.interpolate({
+    inputRange: [-HEADER_HEIGHT, 0],
+    outputRange: [2, 1],
+    extrapolate: "clamp",
+  });
+
+  const blurIntensity = scrollY.interpolate({
+    inputRange: [0, HEADER_HEIGHT * 0.7],
+    outputRange: [0, 50],
+    extrapolate: "clamp",
+  });
+
+  const compactHeaderTranslateY = scrollY.interpolate({
+    inputRange: [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT],
+    outputRange: [-100, 0],
+    extrapolate: "clamp",
+  });
+
+  const compactHeaderOpacity = scrollY.interpolate({
+    inputRange: [TITLE_APPEAR_OFFSET, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT],
+    outputRange: [0, 1],
+    extrapolate: "clamp",
+  });
+
+  const bigTitleOpacity = scrollY.interpolate({
+    inputRange: [0, HEADER_HEIGHT * 0.5],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
   });
 
   useEffect(() => {
@@ -65,7 +112,7 @@ export default function ProductDetails() {
         // Charger les produits similaires après avoir chargé le produit principal
         loadSimilarProducts(id!);
       } catch (error) {
-        console.error('❌ Erreur chargement détails produit:', error);
+        console.error("❌ Erreur chargement détails produit:", error);
       } finally {
         setLoading(false);
       }
@@ -81,7 +128,6 @@ export default function ProductDetails() {
       setLoadingSimilar(true);
       const response = await ProductService.getSimilarProducts(productId, 6);
       setSimilarProducts(response.similarProducts);
-      console.log("✅ Produits similaires chargés:", response.similarProducts.length);
     } catch (error) {
       console.error("❌ Erreur chargement produits similaires:", error);
       setSimilarProducts([]);
@@ -94,54 +140,47 @@ export default function ProductDetails() {
     try {
       if (isFavorite) {
         await ProductService.removeProductFromFavorites(id!);
+        showNotification("info", "Favoris", "Produit retiré des favoris");
       } else {
         await ProductService.addProductToFavorites(id!);
+        showNotification("success", "Favoris", "Produit ajouté aux favoris");
       }
       setIsFavorite(!isFavorite);
     } catch (error) {
       console.error('❌ Erreur lors de la mise à jour des favoris:', error);
-      setErrorModal({
-        visible: true,
-        title: 'Erreur',
-        message: 'Impossible de mettre à jour les favoris'
-      });
+      showNotification("error", "Erreur", "Impossible de mettre à jour les favoris");
     }
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
+    return new Intl.NumberFormat("fr-FR").format(price) + " FCFA";
   };
 
-  const renderImage = ({ item, index }: { item: string; index: number }) => (
-    <View style={{ width: screenWidth }}>
-      <TouchableOpacity activeOpacity={0.9} onPress={() => { setCurrentImageIndex(index); setImageModalVisible(true); }}>
-        <ExpoImage
-          source={{ uri: item }}
-          style={{ width: screenWidth, height: 350 }}
-          contentFit="cover"
-          transition={300}
-          cachePolicy="memory-disk"
-        />
-      </TouchableOpacity>
-    </View>
-  );
-
   // Composant pour une carte de produit similaire
-  const SimilarProductCard = ({ product: similarProduct }: { product: Product }) => (
+  const SimilarProductCard = ({
+    product: similarProduct,
+  }: {
+    product: Product;
+  }) => (
     <TouchableOpacity
       className="bg-white rounded-xl mr-4 border border-neutral-100 shadow-sm"
-      style={{ width: 160 }}
+      style={{ width: 140 }}
       onPress={() => {
         router.push(`/(app)/(client)/product/${similarProduct._id}`);
       }}
     >
       <View className="relative">
-        <Image
+        <ExpoImage
           source={{
-            uri: similarProduct.images[0] || "https://via.placeholder.com/160x120/CCCCCC/FFFFFF?text=No+Image",
+            uri:
+              similarProduct.images[0] ||
+              "https://via.placeholder.com/140x100/CCCCCC/FFFFFF?text=No+Image",
           }}
-          className="w-full h-32 rounded-t-xl"
-          resizeMode="cover"
+          style={{ width: 140, height: 100 }}
+          contentFit="cover"
+          transition={200}
+          cachePolicy="memory-disk"
+          className="rounded-t-xl"
         />
         {/* Badge stock si faible */}
         {similarProduct.stock <= 5 && similarProduct.stock > 0 && (
@@ -154,50 +193,47 @@ export default function ProductDetails() {
       </View>
 
       <View className="p-3">
-        <Text numberOfLines={2} className="text-sm font-quicksand-semibold text-neutral-800 mb-2">
+        <Text
+          numberOfLines={2}
+          className="text-sm font-quicksand-semibold text-neutral-800 mb-2 leading-5"
+        >
           {similarProduct.name}
         </Text>
 
-        <Text className="text-base font-quicksand-bold text-primary-600 mb-2">
+        <Text className="text-base font-quicksand-bold text-primary-600">
           {formatPrice(similarProduct.price)}
         </Text>
-
-        {/* Stats */}
-        {similarProduct.stats && (
-          <View className="flex-row items-center">
-            <Ionicons name="star" size={12} color="#FFD700" />
-            <Text className="text-xs text-neutral-600 ml-1">
-              {similarProduct.stats.averageRating?.toFixed(1) || "0.0"}
-            </Text>
-          </View>
-        )}
       </View>
     </TouchableOpacity>
   );
 
   const openWhatsApp = (phone: string) => {
-    const message = `Bonjour ! Je suis intéressé(e) par votre produit "${product?.name}" sur DealToo. 
-
-Prix affiché : ${product ? formatPrice(product.price) : ''}
+    const message = `Bonjour ! Je suis intéressé(e) par votre produit "${product?.name
+      }" sur Axi. 
+    
+Prix affiché : ${product ? formatPrice(product.price) : ""}
 
 Pouvez-vous me donner plus d'informations ? Merci !`;
-    
-    const whatsappUrl = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
-    
+
+    const whatsappUrl = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(
+      message
+    )}`;
+
     Linking.canOpenURL(whatsappUrl)
       .then((supported) => {
         if (supported) {
           return Linking.openURL(whatsappUrl);
         } else {
-          setWhatsappModal({ visible: true, phone });
+          showNotification(
+            "warning",
+            "WhatsApp non disponible",
+            "WhatsApp n'est pas installé sur votre appareil. Essayez d'appeler directement."
+          );
+          makePhoneCall(phone);
         }
       })
       .catch(() => {
-        setErrorModal({
-          visible: true,
-          title: 'Erreur',
-          message: 'Impossible d\'ouvrir WhatsApp'
-        });
+        showNotification("error", "Erreur", "Impossible d'ouvrir WhatsApp");
       });
   };
 
@@ -208,46 +244,34 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         if (supported) {
           return Linking.openURL(phoneUrl);
         } else {
-          setErrorModal({
-            visible: true,
-            title: 'Erreur',
-            message: 'Impossible de passer l\'appel'
-          });
+          showNotification("error", "Erreur", "Impossible de passer l'appel");
         }
       })
       .catch(() => {
-        setErrorModal({
-          visible: true,
-          title: 'Erreur',
-          message: 'Impossible de passer l\'appel'
-        });
+        showNotification("error", "Erreur", "Impossible de passer l'appel");
       });
   };
 
   const openWebsite = (website: string) => {
     let url = website;
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
       url = `https://${url}`;
     }
-    
+
     Linking.canOpenURL(url)
       .then((supported) => {
         if (supported) {
           return Linking.openURL(url);
         } else {
-          setErrorModal({
-            visible: true,
-            title: 'Erreur',
-            message: 'Impossible d\'ouvrir le site web'
-          });
+          showNotification(
+            "error",
+            "Erreur",
+            "Impossible d'ouvrir le site web"
+          );
         }
       })
       .catch(() => {
-        setErrorModal({
-          visible: true,
-          title: 'Erreur',
-          message: 'Impossible d\'ouvrir le site web'
-        });
+        showNotification("error", "Erreur", "Impossible d'ouvrir le site web");
       });
   };
 
@@ -266,25 +290,34 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
       loop.start();
       return () => loop.stop();
     }, [shimmer]);
-    const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
+    const translateX = shimmer.interpolate({
+      inputRange: [0, 1],
+      outputRange: [-150, 150],
+    });
     return (
-      <View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
-        <Animated.View style={{
-          position: 'absolute', top: 0, bottom: 0, width: 120,
-          transform: [{ translateX }],
-          backgroundColor: 'rgba(255,255,255,0.35)',
-          opacity: 0.7,
-        }} />
+      <View style={[{ backgroundColor: "#E5E7EB", overflow: "hidden" }, style]}>
+        <Animated.View
+          style={{
+            position: "absolute",
+            top: 0,
+            bottom: 0,
+            width: 120,
+            transform: [{ translateX }],
+            backgroundColor: "rgba(255,255,255,0.35)",
+            opacity: 0.7,
+          }}
+        />
       </View>
     );
   };
 
-  const renderSkeletonProduct = () => (
-    <View className="flex-1" style={{ backgroundColor: 'transparent' }}>
+  const SkeletonProduct = () => (
+    <View className="flex-1" style={{ backgroundColor: "transparent" }}>
       <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
-      {/* Header skeleton */}
+
+      {/* Header Skeleton */}
       <LinearGradient
-        colors={['rgba(0,0,0,0.6)', 'transparent']}
+        colors={["rgba(0,0,0,0.6)", "transparent"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         className="absolute top-0 left-0 right-0 z-10"
@@ -292,96 +325,87 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
       >
         <View className="flex-row items-center justify-between px-4 pb-3">
           <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
-          <ShimmerBlock style={{ width: 120, height: 20, borderRadius: 10 }} />
+          <ShimmerBlock style={{ width: 120, height: 16, borderRadius: 8 }} />
           <View className="flex-row">
-            <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20, marginRight: 8 }} />
+            <ShimmerBlock
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                marginRight: 8,
+              }}
+            />
             <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
           </View>
         </View>
       </LinearGradient>
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} style={{ backgroundColor: 'white' }}>
-        {/* Image skeleton */}
+      <ScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        style={{
+          backgroundColor: "transparent",
+          marginTop: HEADER_HEIGHT * 0.6,
+        }}
+        contentInsetAdjustmentBehavior="never"
+      >
+        {/* Image Skeleton */}
         <View style={{ marginTop: 0 }}>
-          <ShimmerBlock style={{ width: screenWidth, height: 350 }} />
+          <ShimmerBlock style={{ width: "100%", height: 200 }} />
         </View>
 
-        {/* Content skeleton */}
-        <View className="px-6 py-6">
-          {/* Price and name skeleton */}
-          <View className="mb-4">
-            <ShimmerBlock style={{ width: 120, height: 32, borderRadius: 16, marginBottom: 12 }} />
-            <ShimmerBlock style={{ width: '80%', height: 28, borderRadius: 14, marginBottom: 8 }} />
-            <ShimmerBlock style={{ width: '60%', height: 16, borderRadius: 8 }} />
-          </View>
-
-          {/* Enterprise section skeleton */}
-          <View className="px-4 py-4 border border-neutral-100 rounded-2xl mb-6">
-            <ShimmerBlock style={{ width: 100, height: 20, borderRadius: 10, marginBottom: 16 }} />
-            <View className="flex-row items-center">
-              <ShimmerBlock style={{ width: 56, height: 56, borderRadius: 16 }} />
-              <View className="ml-4 flex-1">
-                <ShimmerBlock style={{ width: '70%', height: 20, borderRadius: 10, marginBottom: 8 }} />
-                <ShimmerBlock style={{ width: '50%', height: 14, borderRadius: 7, marginBottom: 4 }} />
-                <ShimmerBlock style={{ width: '40%', height: 12, borderRadius: 6 }} />
-              </View>
-              <ShimmerBlock style={{ width: 80, height: 32, borderRadius: 16 }} />
-            </View>
-          </View>
-
-          {/* Stats skeleton */}
-          <View className="flex-row justify-between mb-6">
-            <View className="flex-1 bg-neutral-50 rounded-2xl p-4 mr-2">
-              <ShimmerBlock style={{ width: 60, height: 20, borderRadius: 10, marginBottom: 8 }} />
-              <ShimmerBlock style={{ width: 40, height: 14, borderRadius: 7 }} />
-            </View>
-            <View className="flex-1 bg-neutral-50 rounded-2xl p-4 ml-2">
-              <ShimmerBlock style={{ width: 60, height: 20, borderRadius: 10, marginBottom: 8 }} />
-              <ShimmerBlock style={{ width: 40, height: 14, borderRadius: 7 }} />
-            </View>
-          </View>
-
-          {/* Stock status skeleton */}
-          <View className="mb-6">
-            <ShimmerBlock style={{ width: 150, height: 16, borderRadius: 8 }} />
-          </View>
-
-          {/* Similar products skeleton */}
-          <View className="px-4 py-4 border-t border-neutral-100">
-            <View className="flex-row justify-between items-center mb-4">
-              <ShimmerBlock style={{ width: 140, height: 24, borderRadius: 12 }} />
-              <ShimmerBlock style={{ width: 60, height: 18, borderRadius: 9 }} />
-            </View>
-            <View className="flex-row">
-              {[0, 1, 2].map((i) => (
-                <View key={i} className="mr-4">
-                  <ShimmerBlock style={{ width: 160, height: 120, borderRadius: 16, marginBottom: 8 }} />
-                  <ShimmerBlock style={{ width: 120, height: 16, borderRadius: 8, marginBottom: 4 }} />
-                  <ShimmerBlock style={{ width: 100, height: 18, borderRadius: 9 }} />
-                </View>
-              ))}
-            </View>
-          </View>
+        {/* Content Skeleton */}
+        <View className="px-6 py-6 bg-white rounded-t-3xl -mt-6">
+          {/* ... skeleton content ... */}
+          <ShimmerBlock
+            style={{
+              width: "30%",
+              height: 32,
+              borderRadius: 16,
+              marginBottom: 12,
+            }}
+          />
+          <ShimmerBlock
+            style={{
+              width: "80%",
+              height: 28,
+              borderRadius: 14,
+              marginBottom: 8,
+            }}
+          />
+          <ShimmerBlock
+            style={{
+              width: "100%",
+              height: 16,
+              borderRadius: 8,
+              marginBottom: 4,
+            }}
+          />
         </View>
       </ScrollView>
     </View>
   );
 
   if (loading) {
-    return renderSkeletonProduct();
+    return <SkeletonProduct />;
   }
 
   if (!product) {
     return (
       <View className="flex-1 bg-white">
-        <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
-        <View className="flex-1 justify-center items-center">
+        <ExpoStatusBar
+          style="light"
+          translucent
+          backgroundColor="transparent"
+        />
+        <View className="flex-1 justify-center items-center px-6">
           <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
           <Text className="mt-4 text-xl font-quicksand-bold text-neutral-800">
             Produit introuvable
           </Text>
-          <Text className="mt-2 text-neutral-600 font-quicksand-medium text-center px-6">
-            Le produit que vous recherchez n&apos;existe pas ou n&apos;est plus disponible.
+          <Text className="mt-2 text-neutral-600 font-quicksand-medium text-center">
+            Le produit que vous recherchez n&apos;existe pas ou n&apos;est plus
+            disponible.
           </Text>
           <TouchableOpacity
             className="mt-6 bg-primary-500 rounded-2xl px-6 py-3"
@@ -395,105 +419,200 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
   }
 
   return (
-    <View className="flex-1" style={{ backgroundColor: 'transparent' }}>
+    <View style={styles.safe}>
       <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
-      {/* Header overlay */}
-      <LinearGradient
-        colors={['rgba(0,0,0,0.6)', 'transparent']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        className="absolute top-0 left-0 right-0 z-10"
-        style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}
+
+      {/* Compact Header (Appears on scroll) */}
+      <Animated.View
+        style={[
+          styles.compactHeaderContainer,
+          {
+            paddingTop: insets.top,
+            height: COMPACT_HEADER_HEIGHT,
+            opacity: compactHeaderOpacity,
+            transform: [{ translateY: compactHeaderTranslateY }],
+          },
+        ]}
+        pointerEvents="box-none"
       >
-        <View className="flex-row items-center justify-between px-4 pb-3">
+        <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill} />
+
+        <View style={styles.compactHeaderContent}>
           <TouchableOpacity
             onPress={() => router.back()}
-            className="w-10 h-10 bg-black/25 rounded-full justify-center items-center"
+            className="w-10 h-10 justify-center items-center"
           >
-            <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
+            <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
-          <View className="flex-1 items-center">
-            <Text numberOfLines={1} className="text-white font-quicksand-semibold">
-              Détails du produit
-            </Text>
-          </View>
-          <View className="flex-row">
+
+          <Text
+            style={styles.compactTitle}
+            className="font-quicksand-bold"
+            numberOfLines={1}
+          >
+            {product.name}
+          </Text>
+
+          <View style={{ flexDirection: "row" }}>
             <TouchableOpacity
               onPress={async () => {
                 try {
                   await Share.share({
-                    message: product ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ''}` : 'Voir ce produit',
+                    message: product
+                      ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ""
+                      }`
+                      : "Voir ce produit",
                   });
-                } catch {}
+                } catch { }
               }}
-              className="w-10 h-10 bg-black/25 rounded-full justify-center items-center mr-2"
+              className="w-10 h-10 justify-center items-center mr-2"
             >
-              <Ionicons name="share-social-outline" size={18} color="#FFFFFF" />
+              <Ionicons name="share-social-outline" size={22} color="#FFFFFF" />
             </TouchableOpacity>
-            <TouchableOpacity 
-              className="w-10 h-10 bg-black/25 rounded-full justify-center items-center"
+
+            <TouchableOpacity
               onPress={toggleFavorite}
+              className="w-10 h-10 justify-center items-center"
             >
-              <Ionicons 
-                name={isFavorite ? "heart" : "heart-outline"} 
-                size={18} 
-                color={isFavorite ? "#EF4444" : "#FFFFFF"} 
+              <Ionicons
+                name={isFavorite ? "heart" : "heart-outline"}
+                size={22}
+                color={isFavorite ? "#EF4444" : "#FFFFFF"}
               />
             </TouchableOpacity>
           </View>
         </View>
-      </LinearGradient>
+      </Animated.View>
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} style={{ backgroundColor: 'white' }}>
-        {/* Images Carousel */}
-        <View style={{ marginTop: 0 }}>
-          <View className="relative">
-            <FlatList
-              ref={imagesListRef}
-              data={product.images}
-              renderItem={renderImage}
-              keyExtractor={(item, index) => index.toString()}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              onMomentumScrollEnd={(event) => {
-                const newIndex = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
-                setCurrentImageIndex(newIndex);
-              }}
-              onScrollToIndexFailed={({ index }) => {
-                setTimeout(() => {
-                  imagesListRef.current?.scrollToIndex({ index, animated: true });
-                }, 100);
-              }}
-            />
+      {/* Fixed Back Button (Initially visible) */}
+      <Animated.View
+        style={{
+          position: "absolute",
+          top: insets.top + 10,
+          left: 16,
+          zIndex: 900,
+          opacity: scrollY.interpolate({
+            inputRange: [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT - 20],
+            outputRange: [1, 0],
+            extrapolate: "clamp",
+          }),
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className="w-10 h-10 bg-black/30 rounded-full justify-center items-center"
+        >
+          <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+      </Animated.View>
 
-            {/* Indicators */}
-            {product.images.length > 1 && (
-              <View className="absolute bottom-4 left-0 right-0 flex-row justify-center">
-                {product.images.map((_: string, index: number) => {
-                  const active = index === currentImageIndex;
-                  return (
-                    <View
-                      key={index}
-                      style={{
-                        width: active ? 16 : 8,
-                        height: 8,
-                        borderRadius: 9999,
-                        backgroundColor: 'rgba(255,255,255,0.95)',
-                        opacity: active ? 1 : 0.5,
-                        marginHorizontal: 4,
-                      }}
-                    />
-                  );
-                })}
-              </View>
-            )}
-          </View>
+      {/* Fixed Right Actions (Initially visible) */}
+      <Animated.View
+        style={{
+          position: "absolute",
+          top: insets.top + 10,
+          right: 16,
+          zIndex: 900,
+          flexDirection: "row",
+          opacity: scrollY.interpolate({
+            inputRange: [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT - 20],
+            outputRange: [1, 0],
+            extrapolate: "clamp",
+          }),
+        }}
+      >
+        <TouchableOpacity
+          onPress={async () => {
+            try {
+              await Share.share({
+                message: product
+                  ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ""
+                  }`
+                  : "Voir ce produit",
+              });
+            } catch { }
+          }}
+          className="w-10 h-10 bg-black/30 rounded-full justify-center items-center mr-2"
+        >
+          <Ionicons name="share-social-outline" size={20} color="#FFFFFF" />
+        </TouchableOpacity>
 
+        <TouchableOpacity
+          onPress={toggleFavorite}
+          className="w-10 h-10 bg-black/30 rounded-full justify-center items-center mr-2"
+        >
+          <Ionicons
+            name={isFavorite ? "heart" : "heart-outline"}
+            size={20}
+            color={isFavorite ? "#EF4444" : "#FFFFFF"}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          className="w-10 h-10 bg-black/30 rounded-full justify-center items-center"
+          onPress={() => setImageModalVisible(true)}
+        >
+          <Ionicons name="images-outline" size={20} color="#FFFFFF" />
+        </TouchableOpacity>
+      </Animated.View>
+
+      {/* Parallax Header Background */}
+      <View style={styles.headerWrapper} pointerEvents="none">
+        <AnimatedImage
+          source={{ uri: product.images?.[0] }}
+          style={[
+            styles.headerImage,
+            {
+              opacity: imageOpacity,
+              transform: [
+                { translateY: imageTranslateY },
+                { scale: imageScale },
+              ],
+            },
+          ]}
+          contentFit="cover"
+        />
+
+        <AnimatedBlurView
+          intensity={blurIntensity}
+          tint="dark"
+          style={StyleSheet.absoluteFillObject}
+        />
+
+        <Animated.View
+          style={[
+            styles.bigTitleContainer,
+            { opacity: bigTitleOpacity, paddingBottom: 40 },
+          ]}
+        >
+          <Text style={styles.bigTitle} className="font-quicksand-bold">
+            {product.name}
+          </Text>
+          <Text style={styles.subTitle} className="font-quicksand-medium">
+            {typeof product.category === "object" && product.category?.name
+              ? product.category.name
+              : "Produit"}{" "}
+            • {formatPrice(product.price)}
+          </Text>
+        </Animated.View>
+      </View>
+
+      {/* Scrollable Content */}
+      <Animated.ScrollView
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: HEADER_HEIGHT }}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+      >
+        <View style={styles.contentContainer}>
           {/* Thumbnails */}
           {product.images.length > 1 && (
-            <View className="px-6 mt-3">
+            <View className="mt-4 mb-6">
               <FlatList
+                ref={imagesListRef}
                 data={product.images}
                 horizontal
                 keyExtractor={(item, index) => `thumb-${index}`}
@@ -504,7 +623,10 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                     <TouchableOpacity
                       onPress={() => {
                         setCurrentImageIndex(index);
-                        imagesListRef.current?.scrollToIndex({ index, animated: true });
+                        imagesListRef.current?.scrollToIndex({
+                          index,
+                          animated: true,
+                        });
                       }}
                       className="mr-3"
                     >
@@ -515,7 +637,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                           height: 64,
                           borderRadius: 12,
                           borderWidth: active ? 2 : 1,
-                          borderColor: active ? '#FE8C00' : '#E5E7EB',
+                          borderColor: active ? "#FE8C00" : "#E5E7EB",
                         }}
                         contentFit="cover"
                         transition={200}
@@ -527,37 +649,37 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
               />
             </View>
           )}
-        </View>
 
-        {/* Product Info */}
-        <View className="px-6 py-6">
-          {/* Price and Name */}
-          <View className="mb-4">
-            <Text className="text-2xl font-quicksand-bold text-primary-500 mb-2">
+          {/* Price and Description */}
+          <View className="mb-6">
+            <Text className="text-3xl font-quicksand-bold text-primary-600 mb-2">
               {formatPrice(product.price)}
             </Text>
-            <Text className="text-xl font-quicksand-bold text-neutral-800 mb-2">
-              {product.name}
-            </Text>
-            <Text className="text-neutral-600 font-quicksand-medium">
+            <Text className="text-neutral-600 font-quicksand-medium leading-6">
               {product.description}
             </Text>
           </View>
 
           {/* Enterprise Section */}
-          <View className="px-4 py-4 border border-neutral-100 rounded-2xl mb-6">
+          <View className="p-4 border border-neutral-100 rounded-2xl mb-6 bg-neutral-50">
             <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3">
-              Vendu par
+              Boutique
             </Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               className="flex-row items-center"
               onPress={() => {
-                if (typeof product.enterprise === 'object' && product.enterprise._id) {
-                  router.push(`/(app)/(client)/enterprise/${product.enterprise._id}`);
+                if (
+                  typeof product.enterprise === "object" &&
+                  product.enterprise._id
+                ) {
+                  router.push(
+                    `/(app)/(client)/enterprise/${product.enterprise._id}`
+                  );
                 }
               }}
             >
-              {typeof product.enterprise === 'object' && product.enterprise.logo ? (
+              {typeof product.enterprise === "object" &&
+                product.enterprise.logo ? (
                 <Image
                   source={{ uri: product.enterprise.logo }}
                   className="w-14 h-14 rounded-2xl"
@@ -570,170 +692,106 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
               )}
               <View className="ml-4 flex-1">
                 <Text className="text-lg font-quicksand-bold text-neutral-800">
-                  {typeof product.enterprise === "object" ? product.enterprise.companyName : product.enterprise}
+                  {typeof product.enterprise === "object"
+                    ? product.enterprise.companyName
+                    : product.enterprise}
                 </Text>
-                <View className="flex-row items-center mt-1">
-                  <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-                  <Text className="text-sm text-neutral-600 ml-1">Vendeur vérifié</Text>
-                </View>
-                {typeof product.enterprise === "object" && product.enterprise.location && (
-                  <Text className="text-sm text-neutral-500 mt-1">
-                    📍 {product.enterprise.location.city}, {product.enterprise.location.district}
-                  </Text>
-                )}
+                {typeof product.enterprise === "object" &&
+                  product.enterprise.location && (
+                    <Text className="text-sm text-neutral-500 mt-1">
+                      📍 {product.enterprise.location.city},{" "}
+                      {product.enterprise.location.district}
+                    </Text>
+                  )}
               </View>
-              <View className="bg-primary-100 rounded-full px-4 py-2">
-                <Text className="text-primary-600 font-quicksand-bold text-sm">Voir boutique</Text>
-              </View>
+              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
             </TouchableOpacity>
 
-            {/* Contact Options */}
-            {typeof product.enterprise === "object" && (product.enterprise.contactInfo?.phone || product.enterprise.contactInfo?.website) && (
-              <View className="mt-2">
-                <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3">
-                  Contacter le vendeur
-                </Text>
-                <View className="flex-row flex-wrap -mx-1">
-                  {product.enterprise.contactInfo?.phone && (
-                    <>
-                      <TouchableOpacity
-                        onPress={() => {
-                          const enterprise = product.enterprise;
-                          if (typeof enterprise === 'object' && enterprise.contactInfo?.phone) {
-                            openWhatsApp(enterprise.contactInfo.phone);
-                          }
-                        }}
-                        className="flex-1 bg-success-50 rounded-2xl px-4 py-3 m-1 flex-row items-center justify-center border border-success-100"
-                      >
-                        <Ionicons name="logo-whatsapp" size={20} color="#10B981" />
-                        <Text className="ml-2 text-success-700 font-quicksand-bold text-base">
-                          WhatsApp
-                        </Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => {
-                          const enterprise = product.enterprise;
-                          if (typeof enterprise === 'object' && enterprise.contactInfo?.phone) {
-                            makePhoneCall(enterprise.contactInfo.phone);
-                          }
-                        }}
-                        className="flex-1 bg-primary-50 rounded-2xl px-4 py-3 m-1 flex-row items-center justify-center border border-primary-100"
-                      >
-                        <Ionicons name="call" size={20} color="#FE8C00" />
-                        <Text className="ml-2 text-primary-700 font-quicksand-bold text-base">
-                          Appeler
-                        </Text>
-                      </TouchableOpacity>
-                    </>
-                  )}
-                  {product.enterprise.contactInfo?.website && (
-                    <TouchableOpacity
-                      onPress={() => {
-                        const enterprise = product.enterprise;
-                        if (typeof enterprise === 'object' && enterprise.contactInfo?.website) {
-                          openWebsite(enterprise.contactInfo.website);
-                        }
-                      }}
-                      className="flex-1 bg-blue-50 rounded-2xl px-4 py-3 m-1 flex-row items-center justify-center border border-blue-100"
-                    >
-                      <Ionicons name="globe" size={20} color="#3B82F6" />
-                      <Text className="ml-2 text-blue-700 font-quicksand-bold text-base">
-                        Site web
-                      </Text>
-                    </TouchableOpacity>
-                  )}
+            {/* Contact Options (Website) */}
+            {typeof product.enterprise === "object" &&
+              product.enterprise.contactInfo?.website && (
+                <View className="mt-4 pt-4 border-t border-neutral-200">
+                  <TouchableOpacity
+                    onPress={() =>
+                      typeof product.enterprise === "object" &&
+                        product.enterprise.contactInfo?.website
+                        ? openWebsite(product.enterprise.contactInfo.website)
+                        : undefined
+                    }
+                    className="flex-row items-center"
+                  >
+                    <Ionicons name="globe-outline" size={18} color="#3B82F6" />
+                    <Text className="ml-2 text-blue-600 font-quicksand-bold text-sm">
+                      Visiter le site web
+                    </Text>
+                  </TouchableOpacity>
                 </View>
-              </View>
-            )}
+              )}
+            {/* Actions: Discuter & WhatsApp */}
+            <View className="flex-row mt-4 items-center">
+              {/* WhatsApp Button */}
+              {typeof product.enterprise === "object" &&
+                product.enterprise.contactInfo?.phone ? (
+                <TouchableOpacity
+                  onPress={() => {
+                    const enterprise = product.enterprise;
+                    if (
+                      typeof enterprise === "object" &&
+                      enterprise.contactInfo?.phone
+                    ) {
+                      openWhatsApp(enterprise.contactInfo.phone);
+                    }
+                  }}
+                  className="w-14 h-14 bg-success-50 rounded-xl justify-center items-center mr-3 border border-success-100"
+                >
+                  <Ionicons name="logo-whatsapp" size={24} color="#10B981" />
+                </TouchableOpacity>
+              ) : null}
 
-            {/* Faire une offre */}
-            <TouchableOpacity
-              onPress={async () => {
-                try {
-                  const conversation = await MessagingService.createConversationForProduct(id!);
-                  router.push(`/(app)/(client)/conversation/${conversation._id}`);
-                } catch (error) {
-                  console.error("Erreur création conversation:", error);
-                  setErrorModal({
-                    visible: true,
-                    title: 'Erreur',
-                    message: 'Impossible de créer la conversation'
-                  });
-                }
-              }}
-              className="bg-amber-50 rounded-2xl py-4 flex-row items-center justify-center border border-amber-200 mt-6"
-            >
-              <Ionicons name="pricetag" size={20} color="#F59E0B" />
-              <Text className="ml-2 text-amber-700 font-quicksand-bold text-base">
-                Faire une offre
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Stats */}
-          <View className="flex-row justify-between mb-6">
-            <View className="flex-1 bg-neutral-50 rounded-2xl p-4 mr-2">
-              <View className="flex-row items-center mb-1">
-                <Ionicons name="star" size={16} color="#FE8C00" />
-                <Text className="text-base font-quicksand-bold text-neutral-800 ml-1">
-                  {product.stats.averageRating.toFixed(1)}
-                </Text>
-              </View>
-              <Text className="text-sm text-neutral-600">
-                {product.stats.totalReviews} avis
-              </Text>
-            </View>
-            
-            <View className="flex-1 bg-neutral-50 rounded-2xl p-4 ml-2">
-              <View className="flex-row items-center mb-1">
-                <Ionicons name="people" size={16} color="#10B981" />
-                <Text className="text-base font-quicksand-bold text-neutral-800 ml-1">
-                  {product.stats.totalSales}
-                </Text>
-              </View>
-              <Text className="text-sm text-neutral-600">
-                vendus
-              </Text>
-            </View>
-          </View>
-
-          {/* Stock Status */}
-          <View className="mb-6">
-            <View className="flex-row items-center">
-              <View
-                className={`w-3 h-3 rounded-full mr-2 ${
-                  product.stock > 0 ? 'bg-success-500' : 'bg-error-500'
-                }`}
-              />
-              <Text
-                className={`font-quicksand-semibold ${
-                  product.stock > 0 ? 'text-success-600' : 'text-error-600'
-                }`}
+              {/* Faire une offre / Discuter */}
+              <TouchableOpacity
+                onPress={async () => {
+                  try {
+                    const conversation =
+                      await MessagingService.createConversationForProduct(id!);
+                    router.push(
+                      `/(app)/(client)/conversation/${conversation._id}`
+                    );
+                  } catch (error) {
+                    console.error("Erreur création conversation:", error);
+                    showNotification(
+                      "error",
+                      "Erreur",
+                      "Impossible de créer la conversation"
+                    );
+                  }
+                }}
+                className="flex-1 bg-amber-100 rounded-xl h-14 flex-row items-center justify-center"
               >
-                {product.stock > 0 ? `En stock (${product.stock} disponibles)` : 'Rupture de stock'}
-              </Text>
+                <Ionicons name="chatbubbles" size={18} color="#D97706" />
+                <Text className="ml-2 text-amber-800 font-quicksand-bold text-sm">
+                  Discuter / Négocier
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
 
-          {/* Related Items */}
+          {/* Similar Products */}
           {(similarProducts.length > 0 || loadingSimilar) && (
-            <View className="px-4 py-4 border-t border-neutral-100">
+            <View className="py-4 border-t border-neutral-100">
               <View className="flex-row justify-between items-center mb-4">
                 <Text className="text-xl font-quicksand-bold text-neutral-800">
                   Produits similaires
                 </Text>
-                <TouchableOpacity>
-                  <Text className="text-primary-500 font-quicksand-semibold text-base">Voir tous</Text>
-                </TouchableOpacity>
               </View>
               {loadingSimilar ? (
-                <View className="h-32 justify-center items-center">
-                  <ActivityIndicator size="small" color="#FE8C00" />
-                </View>
+                <ActivityIndicator size="small" color="#FE8C00" />
               ) : (
                 <FlatList
                   data={similarProducts}
-                  renderItem={({ item }) => <SimilarProductCard product={item} />}
+                  renderItem={({ item }) => (
+                    <SimilarProductCard product={item} />
+                  )}
                   keyExtractor={(item) => item._id}
                   horizontal
                   showsHorizontalScrollIndicator={false}
@@ -742,8 +800,12 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
               )}
             </View>
           )}
+
+          <View style={{ height: 100 }} />
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
+
+
 
       {/* Image Viewer Modal */}
       <Modal
@@ -753,11 +815,15 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         onRequestClose={() => setImageModalVisible(false)}
       >
         <View className="flex-1 bg-black/95">
-          <View className="absolute top-0 left-0 right-0" style={{ paddingTop: insets.top + 8 }}>
+          <View
+            className="absolute top-0 left-0 right-0"
+            style={{ paddingTop: insets.top + 8, zIndex: 10 }}
+          >
             <View className="flex-row justify-between items-center px-4 pb-2">
               <TouchableOpacity
                 onPress={() => setImageModalVisible(false)}
                 className="w-10 h-10 bg-white/15 rounded-full justify-center items-center"
+                activeOpacity={0.7}
               >
                 <Ionicons name="close" size={20} color="#FFFFFF" />
               </TouchableOpacity>
@@ -771,7 +837,14 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
           <FlatList
             data={product.images}
             renderItem={({ item }) => (
-              <View style={{ width: screenWidth, alignItems: 'center', justifyContent: 'center' }}>
+              <View
+                style={{
+                  width: screenWidth,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: screenHeight,
+                }}
+              >
                 <ExpoImage
                   source={{ uri: item }}
                   style={{ width: screenWidth, height: screenWidth }}
@@ -786,122 +859,120 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
             showsHorizontalScrollIndicator={false}
             initialScrollIndex={currentImageIndex}
             onMomentumScrollEnd={(e) => {
-              const newIndex = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
+              const newIndex = Math.round(
+                e.nativeEvent.contentOffset.x / screenWidth
+              );
               setCurrentImageIndex(newIndex);
             }}
             onScrollToIndexFailed={({ index }) => {
-              setTimeout(() => {
-                // retry quietly
-              }, 100);
+              setTimeout(() => { }, 100);
             }}
           />
         </View>
       </Modal>
 
-      {/* Modal d'erreur */}
-      <Modal
-        visible={errorModal.visible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setErrorModal({ visible: false, title: '', message: '' })}
-      >
-        <TouchableOpacity
-          activeOpacity={1}
-          onPress={() => setErrorModal({ visible: false, title: '', message: '' })}
-          className="flex-1 bg-black/50 justify-center items-center px-6"
-        >
-          <TouchableOpacity activeOpacity={1} className="bg-white rounded-3xl p-6 w-full max-w-sm">
-            {/* Icon d'erreur */}
-            <View className="items-center mb-4">
-              <View className="w-16 h-16 bg-red-100 rounded-full justify-center items-center">
-                <Ionicons name="alert-circle" size={32} color="#EF4444" />
-              </View>
-            </View>
-
-            {/* Titre */}
-            <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
-              {errorModal.title}
-            </Text>
-
-            {/* Message */}
-            <Text className="text-base font-quicksand-medium text-neutral-600 text-center mb-6">
-              {errorModal.message}
-            </Text>
-
-            {/* Bouton OK */}
-            <TouchableOpacity
-              onPress={() => setErrorModal({ visible: false, title: '', message: '' })}
-              className="bg-primary-500 py-3 rounded-xl"
-              activeOpacity={0.7}
-            >
-              <Text className="text-white font-quicksand-bold text-center">
-                OK
-              </Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
-
-      {/* Modal WhatsApp non disponible */}
-      <Modal
-        visible={whatsappModal.visible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setWhatsappModal({ visible: false, phone: '' })}
-      >
-        <TouchableOpacity
-          activeOpacity={1}
-          onPress={() => setWhatsappModal({ visible: false, phone: '' })}
-          className="flex-1 bg-black/50 justify-center items-center px-6"
-        >
-          <TouchableOpacity activeOpacity={1} className="bg-white rounded-3xl p-6 w-full max-w-sm">
-            {/* Icon WhatsApp */}
-            <View className="items-center mb-4">
-              <View className="w-16 h-16 bg-green-100 rounded-full justify-center items-center">
-                <Ionicons name="logo-whatsapp" size={32} color="#10B981" />
-              </View>
-            </View>
-
-            {/* Titre */}
-            <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
-              WhatsApp non disponible
-            </Text>
-
-            {/* Message */}
-            <Text className="text-base font-quicksand-medium text-neutral-600 text-center mb-6">
-              WhatsApp n&apos;est pas installé sur votre appareil. Voulez-vous appeler directement ?
-            </Text>
-
-            {/* Actions */}
-            <View className="flex-row gap-3">
-              <TouchableOpacity
-                onPress={() => setWhatsappModal({ visible: false, phone: '' })}
-                className="flex-1 bg-neutral-100 py-3 rounded-xl"
-                activeOpacity={0.7}
-              >
-                <Text className="text-neutral-700 font-quicksand-bold text-center">
-                  Annuler
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  const phone = whatsappModal.phone;
-                  setWhatsappModal({ visible: false, phone: '' });
-                  if (phone) {
-                    makePhoneCall(phone);
-                  }
-                }}
-                className="flex-1 bg-primary-500 py-3 rounded-xl"
-                activeOpacity={0.7}
-              >
-                <Text className="text-white font-quicksand-bold text-center">
-                  Appeler
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
+      <NotificationModal
+        visible={notification?.visible || false}
+        type={notification?.type || "info"}
+        title={notification?.title || ""}
+        message={notification?.message || ""}
+        onClose={hideNotification}
+      />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  compactHeaderContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+    elevation: 10, // Pour Android
+    shadowColor: "#000", // Pour iOS
+    shadowOffset: { width: 0, height: 4 }, // Pour iOS
+    shadowOpacity: 0.3, // Pour iOS
+    shadowRadius: 4, // Pour iOS
+    backgroundColor: "rgba(0,0,0,0.85)", // Fallback si BlurView ne marche pas bien
+    justifyContent: "flex-end",
+    paddingBottom: 10,
+    overflow: "hidden",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.1)",
+  },
+  compactHeaderContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+  },
+  compactTitle: {
+    color: "#fff",
+    fontSize: 18,
+    flex: 1,
+    textAlign: "center",
+    marginHorizontal: 10,
+  },
+  headerWrapper: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: HEADER_HEIGHT,
+    overflow: "hidden",
+    backgroundColor: "#000",
+  },
+  headerImage: {
+    width: screenWidth,
+    height: HEADER_HEIGHT + 100,
+    position: "absolute",
+  },
+  bigTitleContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 20,
+    right: 20,
+    justifyContent: "flex-end",
+  },
+  bigTitle: {
+    color: "#fff",
+    fontSize: 32,
+    textShadowColor: "rgba(0,0,0,0.7)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 10,
+    marginBottom: 4,
+  },
+  subTitle: {
+    color: "#eee",
+    fontSize: 16,
+    opacity: 0.9,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  contentContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    backgroundColor: "#fff",
+    minHeight: screenHeight,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    marginTop: -20, // Overlap slightly
+  },
+  bottomActions: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "white",
+    padding: 16,
+    paddingBottom: Platform.OS === "ios" ? 30 : 16,
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
+  },
+});

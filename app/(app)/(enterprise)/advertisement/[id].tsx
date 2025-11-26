@@ -134,11 +134,24 @@ export default function AdvertisementDetails() {
         <ExpoStatusBar style="light" translucent />
 
         {/* Header Skeleton */}
-        <View className="flex-row items-center justify-between px-4 py-3 border-b border-neutral-100">
-          <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
-          <ShimmerBlock style={{ width: 150, height: 20, borderRadius: 10 }} />
-          <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
-        </View>
+        <LinearGradient
+          colors={['#047857', '#10B981']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          className="px-6"
+          style={{
+            paddingTop: insets.top + 16,
+            paddingLeft: insets.left + 24,
+            paddingRight: insets.right + 24,
+            paddingBottom: 16
+          }}
+        >
+          <View className="flex-row items-center justify-between">
+            <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
+            <ShimmerBlock style={{ width: 150, height: 20, borderRadius: 10 }} />
+            <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
+          </View>
+        </LinearGradient>
 
         {/* Image Skeleton */}
         <ShimmerBlock style={{ width: '100%', height: 280 }} />
@@ -192,17 +205,17 @@ export default function AdvertisementDetails() {
     <View className="flex-1 bg-white">
       <ExpoStatusBar style="light" translucent />
 
-      {/* Header amélioré */}
+      {/* Fixed Header */}
       <LinearGradient
-        colors={['#10B981', '#34D399']}
+        colors={['#047857', '#10B981']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         className="px-6"
-        style={{ 
-          paddingTop: insets.top + 16, 
+        style={{
+          paddingTop: insets.top + 16,
           paddingLeft: insets.left + 24,
           paddingRight: insets.right + 24,
-          paddingBottom: 16 
+          paddingBottom: 16
         }}
       >
         <View className="flex-row items-center justify-between">
@@ -267,9 +280,8 @@ export default function AdvertisementDetails() {
                 <TouchableOpacity
                   key={index}
                   onPress={() => scrollToImage(index)}
-                  className={`w-2 h-2 rounded-full mx-1 ${
-                    index === currentImageIndex ? 'bg-white' : 'bg-white/50'
-                  }`}
+                  className={`w-2 h-2 rounded-full mx-1 ${index === currentImageIndex ? 'bg-white' : 'bg-white/50'
+                    }`}
                 />
               ))}
             </View>
@@ -309,7 +321,13 @@ export default function AdvertisementDetails() {
           </Text>
 
           {/* Informations avec design carte moderne */}
-          <View className="bg-gradient-to-br from-neutral-50 to-neutral-100 rounded-3xl p-5 mb-6 shadow-sm border border-neutral-200/50">
+          <View className="bg-neutral-50 rounded-3xl p-5 mb-6 border border-neutral-200/50" style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            elevation: 3,
+          }}>
             <View className="flex-row items-center mb-5">
               <View className="w-10 h-10 bg-primary-500/10 rounded-full items-center justify-center mr-3">
                 <Ionicons name="information-circle" size={20} color="#10B981" />

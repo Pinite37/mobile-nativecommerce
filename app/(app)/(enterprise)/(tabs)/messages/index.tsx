@@ -16,7 +16,9 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useLocale } from "../../../../../contexts/LocaleContext";
 import { useSocket } from "../../../../../hooks/useSocket";
+import i18n from "../../../../../i18n/i18n";
 import MessagingService, {
   Conversation,
 } from "../../../../../services/api/MessagingService";
@@ -24,6 +26,8 @@ import MessagingService, {
 export default function MessagesPage() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { locale } = useLocale(); // Écoute les changements de langue pour re-render automatiquement
   const { onNewMessage, onMessagesRead } = useSocket();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -265,16 +269,16 @@ export default function MessagesPage() {
 
     const lastMessageTime = conversation?.lastMessage
       ? MessagingService.formatMessageTime(
-          conversation.lastMessage.sentAt ||
-            (conversation.lastMessage as any).createdAt
-        )
+        conversation.lastMessage.sentAt ||
+        (conversation.lastMessage as any).createdAt
+      )
       : conversation?.lastActivity
-      ? MessagingService.formatMessageTime(conversation.lastActivity)
-      : "";
+        ? MessagingService.formatMessageTime(conversation.lastActivity)
+        : "";
 
     const messagePreview = conversation?.lastMessage
       ? MessagingService.getMessagePreview(conversation.lastMessage) || ""
-      : "Nouvelle conversation";
+      : i18n.t("enterprise.messages.conversation.newConversation");
 
     const isUnread = Boolean(
       conversation?.unreadCount && conversation.unreadCount > 0
@@ -343,15 +347,14 @@ export default function MessagesPage() {
               >
                 {otherParticipant
                   ? MessagingService.formatParticipantName(otherParticipant) ||
-                    "Utilisateur inconnu"
-                  : "Utilisateur inconnu"}
+                  "Utilisateur inconnu"
+                  : i18n.t("enterprise.messages.conversation.unknownUser")}
               </Text>
               <Text
-                className={`text-xs ${
-                  isUnread
-                    ? "text-primary-600 font-quicksand-bold"
-                    : "text-neutral-400 font-quicksand-medium"
-                }`}
+                className={`text-xs ${isUnread
+                  ? "text-primary-600 font-quicksand-bold"
+                  : "text-neutral-400 font-quicksand-medium"
+                  }`}
               >
                 {String(lastMessageTime)}
               </Text>
@@ -379,19 +382,18 @@ export default function MessagesPage() {
               >
                 {conversation?.product?.name && conversation?.product?.price
                   ? `${String(conversation.product.name)} • ${formatPrice(
-                      Number(conversation.product.price)
-                    )}`
-                  : "Produit inconnu"}
+                    Number(conversation.product.price)
+                  )}`
+                  : i18n.t("enterprise.messages.conversation.unknownProduct")}
               </Text>
             </View>
 
             {/* Dernier message */}
             <Text
-              className={`text-sm ${
-                isUnread
-                  ? "text-neutral-800 font-quicksand-bold"
-                  : "text-neutral-500 font-quicksand-medium"
-              }`}
+              className={`text-sm ${isUnread
+                ? "text-neutral-800 font-quicksand-bold"
+                : "text-neutral-500 font-quicksand-medium"
+                }`}
               numberOfLines={2}
             >
               {String(messagePreview)}
@@ -413,8 +415,8 @@ export default function MessagesPage() {
         ? searchResults.filter((conv) => (conv.unreadCount || 0) > 0)
         : searchResults
       : showUnreadOnly
-      ? conversations.filter((conv) => (conv.unreadCount || 0) > 0)
-      : conversations;
+        ? conversations.filter((conv) => (conv.unreadCount || 0) > 0)
+        : conversations;
 
   // Skeleton Loader Component
   const ShimmerBlock = ({ style }: { style?: any }) => {
@@ -530,7 +532,7 @@ export default function MessagesPage() {
         >
           <View className="flex-row items-center justify-between mb-6">
             <Text className="text-3xl font-quicksand-bold text-white">
-              Messages
+              {i18n.t("enterprise.messages.title")}
             </Text>
             <TouchableOpacity className="w-10 h-10 bg-white/20 rounded-full justify-center items-center">
               <Ionicons name="add" size={24} color="white" />
@@ -577,7 +579,7 @@ export default function MessagesPage() {
       >
         <View className="flex-row items-center justify-between mb-6">
           <Text className="text-3xl font-quicksand-bold text-white tracking-tight">
-            Messages
+            {i18n.t("enterprise.messages.title")}
           </Text>
           <TouchableOpacity className="w-10 h-10 bg-white/20 rounded-full justify-center items-center active:bg-white/30">
             <Ionicons name="create-outline" size={24} color="white" />
@@ -592,7 +594,7 @@ export default function MessagesPage() {
           <TextInput
             value={searchQuery}
             onChangeText={handleSearch}
-            placeholder="Rechercher une conversation..."
+            placeholder={i18n.t("enterprise.messages.search.placeholder")}
             className="bg-white rounded-2xl pl-11 pr-4 py-3.5 text-neutral-800 font-quicksand-medium text-base"
             placeholderTextColor="#9CA3AF"
             style={{
@@ -618,11 +620,10 @@ export default function MessagesPage() {
           <TouchableOpacity
             activeOpacity={1}
             onPress={() => setShowUnreadOnly(false)}
-            className={`flex-row items-center px-4 py-2 rounded-full border ${
-              !showUnreadOnly
-                ? "bg-primary-50 border-primary-200"
-                : "bg-white border-neutral-200"
-            }`}
+            className={`flex-row items-center px-4 py-2 rounded-full border ${!showUnreadOnly
+              ? "bg-primary-50 border-primary-200"
+              : "bg-white border-neutral-200"
+              }`}
           >
             <Ionicons
               name="mail-outline"
@@ -631,11 +632,10 @@ export default function MessagesPage() {
               style={{ marginRight: 6 }}
             />
             <Text
-              className={`font-quicksand-bold text-xs ${
-                !showUnreadOnly ? "text-primary-700" : "text-neutral-600"
-              }`}
+              className={`font-quicksand-bold text-xs ${!showUnreadOnly ? "text-primary-700" : "text-neutral-600"
+                }`}
             >
-              Tous
+              {i18n.t("enterprise.messages.filters.all")}
             </Text>
           </TouchableOpacity>
 
@@ -643,11 +643,10 @@ export default function MessagesPage() {
           <TouchableOpacity
             activeOpacity={1}
             onPress={() => setShowUnreadOnly(true)}
-            className={`flex-row items-center px-4 py-2 rounded-full border ${
-              showUnreadOnly
-                ? "bg-primary-50 border-primary-200"
-                : "bg-white border-neutral-200"
-            }`}
+            className={`flex-row items-center px-4 py-2 rounded-full border ${showUnreadOnly
+              ? "bg-primary-50 border-primary-200"
+              : "bg-white border-neutral-200"
+              }`}
           >
             <Ionicons
               name="mail-unread"
@@ -656,18 +655,16 @@ export default function MessagesPage() {
               style={{ marginRight: 6 }}
             />
             <Text
-              className={`font-quicksand-bold text-xs ${
-                showUnreadOnly ? "text-primary-700" : "text-neutral-600"
-              }`}
+              className={`font-quicksand-bold text-xs ${showUnreadOnly ? "text-primary-700" : "text-neutral-600"
+                }`}
             >
-              Non lus
+              {i18n.t("enterprise.messages.filters.unread")}
             </Text>
           </TouchableOpacity>
         </View>
 
         <Text className="text-neutral-400 font-quicksand-medium text-xs">
-          {displayedConversations.length} conversation
-          {displayedConversations.length !== 1 ? "s" : ""}
+          {displayedConversations.length} {displayedConversations.length !== 1 ? i18n.t("enterprise.messages.count.conversationsPlural") : i18n.t("enterprise.messages.count.conversations")}
         </Text>
       </View>
 
@@ -698,13 +695,13 @@ export default function MessagesPage() {
               </View>
               <Text className="text-xl font-quicksand-bold text-neutral-800 mb-2 text-center">
                 {searchQuery.trim().length >= 2
-                  ? "Aucun résultat"
-                  : "Aucune conversation"}
+                  ? i18n.t("enterprise.messages.empty.noResults")
+                  : i18n.t("enterprise.messages.empty.noConversations")}
               </Text>
               <Text className="text-neutral-500 font-quicksand-medium text-center leading-6">
                 {searchQuery.trim().length >= 2
-                  ? `Nous n'avons trouvé aucune conversation correspondant à "${searchQuery}"`
-                  : "Commencez à discuter avec des vendeurs pour voir vos échanges ici."}
+                  ? i18n.t("enterprise.messages.empty.noResultsMessage", { query: searchQuery })
+                  : i18n.t("enterprise.messages.empty.noConversationsMessage")}
               </Text>
               {searchQuery.trim().length === 0 && (
                 <TouchableOpacity
@@ -714,7 +711,7 @@ export default function MessagesPage() {
                   }
                 >
                   <Text className="text-white font-quicksand-bold text-base">
-                    Découvrir des produits
+                    {i18n.t("enterprise.messages.empty.discoverProducts")}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -770,7 +767,7 @@ export default function MessagesPage() {
             {/* Titre */}
             <View style={{ paddingHorizontal: 20, paddingVertical: 16 }}>
               <Text className="font-quicksand-bold text-neutral-900 text-lg text-center">
-                Options
+                {i18n.t("enterprise.messages.contextMenu.options")}
               </Text>
             </View>
 
@@ -793,7 +790,7 @@ export default function MessagesPage() {
                 <Ionicons name="archive-outline" size={20} color="#4B5563" />
               </View>
               <Text className="font-quicksand-semibold text-neutral-700 text-base">
-                Archiver la conversation
+                {i18n.t("enterprise.messages.contextMenu.archive")}
               </Text>
             </TouchableOpacity>
 
@@ -817,13 +814,12 @@ export default function MessagesPage() {
                 )}
               </View>
               <Text
-                className={`font-quicksand-semibold text-base ${
-                  contextMenuLoading ? "text-neutral-400" : "text-red-600"
-                }`}
+                className={`font-quicksand-semibold text-base ${contextMenuLoading ? "text-neutral-400" : "text-red-600"
+                  }`}
               >
                 {contextMenuLoading
-                  ? "Suppression..."
-                  : "Supprimer la conversation"}
+                  ? i18n.t("enterprise.messages.contextMenu.deleting")
+                  : i18n.t("enterprise.messages.contextMenu.delete")}
               </Text>
             </TouchableOpacity>
           </View>

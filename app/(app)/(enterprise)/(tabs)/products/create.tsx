@@ -21,6 +21,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import NotificationModal, { useNotification } from "../../../../../components/ui/NotificationModal";
 import { useToast } from "../../../../../components/ui/ToastManager";
+import { useLocale } from "../../../../../contexts/LocaleContext";
+import i18n from "../../../../../i18n/i18n";
 
 import { useSubscription } from "../../../../../contexts/SubscriptionContext";
 import CategoryService from "../../../../../services/api/CategoryService";
@@ -99,6 +101,8 @@ interface ProductForm {
 type Step = 'basic' | 'details';
 
 export default function CreateProduct() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { locale } = useLocale(); // Écoute les changements de langue pour re-render automatiquement
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(false);
@@ -110,11 +114,11 @@ export default function CreateProduct() {
   const [showSpecModal, setShowSpecModal] = useState(false);
   const [newSpec, setNewSpec] = useState({ key: '', value: '' });
   const [totalProducts, setTotalProducts] = useState(0);
-  
+
   // Hook pour afficher des notifications toast
   const { showSuccess, showError } = useToast();
   const { notification, showNotification, hideNotification } = useNotification();
-  
+
   // Hook pour gérer les restrictions d'abonnement
   const { subscription, hasReachedLimit } = useSubscription();
 
@@ -166,8 +170,8 @@ export default function CreateProduct() {
   const [showErrorSummary, setShowErrorSummary] = useState(false);
 
   const steps: { id: Step; title: string; icon: string }[] = [
-    { id: 'basic', title: 'Informations de base', icon: 'information-circle' },
-    { id: 'details', title: 'Détails produit', icon: 'list' },
+    { id: 'basic', title: i18n.t('enterprise.products.create.steps.basic'), icon: 'information-circle' },
+    { id: 'details', title: i18n.t('enterprise.products.create.steps.details'), icon: 'list' },
   ];
 
   const currentStepIndex = steps.findIndex(s => s.id === currentStep);
@@ -216,34 +220,34 @@ export default function CreateProduct() {
     switch (step) {
       case 'basic':
         if (!form.name.trim()) {
-          newErrors.name = "Le nom du produit est requis";
+          newErrors.name = i18n.t("enterprise.products.create.errors.nameRequired");
         }
         if (!form.description.trim()) {
-          newErrors.description = "La description est requise";
+          newErrors.description = i18n.t("enterprise.products.create.errors.descriptionRequired");
         }
         if (!form.price.trim()) {
-          newErrors.price = "Le prix est requis";
+          newErrors.price = i18n.t("enterprise.products.create.errors.priceRequired");
         } else if (isNaN(Number(form.price)) || Number(form.price) <= 0) {
-          newErrors.price = "Le prix doit être un nombre positif";
+          newErrors.price = i18n.t("enterprise.products.create.errors.priceInvalid");
         }
         if (!form.stock.trim()) {
-          newErrors.stock = "Le stock est requis";
+          newErrors.stock = i18n.t("enterprise.products.create.errors.stockRequired");
         } else if (isNaN(Number(form.stock)) || Number(form.stock) < 0) {
-          newErrors.stock = "Le stock doit être un nombre positif ou nul";
+          newErrors.stock = i18n.t("enterprise.products.create.errors.stockInvalid");
         }
         if (!form.category) {
-          newErrors.category = "La catégorie est requise";
+          newErrors.category = i18n.t("enterprise.products.create.errors.categoryRequired");
         }
         if (form.images.filter(img => !img.loading).length === 0) {
-          newErrors.images = "Au moins une image est requise";
+          newErrors.images = i18n.t("enterprise.products.create.errors.imagesRequired");
         }
         break;
       case 'details':
         if (form.sku.trim() && !/^[A-Za-z0-9-_]+$/.test(form.sku.trim())) {
-          newErrors.sku = "Le SKU ne peut contenir que des lettres, chiffres, tirets et underscores";
+          newErrors.sku = i18n.t("enterprise.products.create.errors.skuInvalid");
         }
         if (form.weight.trim() && (isNaN(Number(form.weight)) || Number(form.weight) <= 0)) {
-          newErrors.weight = "Le poids doit être un nombre positif";
+          newErrors.weight = i18n.t("enterprise.products.create.errors.weightInvalid");
         }
         break;
     }
@@ -261,20 +265,23 @@ export default function CreateProduct() {
     try {
       // Vérifier la limite d'images par produit selon le plan
       const maxImagesPerProduct = subscription?.plan?.features?.maxImagesPerProduct || 1;
-      
+
       if (form.images.filter(img => !img.loading).length >= maxImagesPerProduct) {
+        const message = maxImagesPerProduct > 1
+          ? `Votre plan "${subscription?.plan?.name}" autorise maximum ${maxImagesPerProduct} images par produit. Passez à un plan supérieur pour ajouter plus d'images.`
+          : `Votre plan "${subscription?.plan?.name}" autorise maximum ${maxImagesPerProduct} image par produit. Passez à un plan supérieur pour ajouter plus d'images.`;
         showNotification(
-          'warning', 
-          'Limite atteinte', 
-          `Votre plan "${subscription?.plan?.name}" autorise maximum ${maxImagesPerProduct} image${maxImagesPerProduct > 1 ? 's' : ''} par produit. Passez à un plan supérieur pour ajouter plus d'images.`
+          'warning',
+          i18n.t('enterprise.products.create.notifications.limitReachedTitle'),
+          message
         );
         return;
       }
-      
+
       // Vérifier les permissions
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        showNotification('error', 'Permission refusée', 'Nous avons besoin de votre permission pour accéder à la galerie');
+        showNotification('error', i18n.t('enterprise.products.create.errors.permissionDenied'), i18n.t('enterprise.products.create.errors.permissionDeniedMessage'));
         return;
       }
 
@@ -288,11 +295,11 @@ export default function CreateProduct() {
 
       if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
-        
+
         // Vérifier la taille du fichier (max 5MB)
         const fileSizeInMB = (asset.fileSize || 0) / (1024 * 1024);
         if (fileSizeInMB > 5) {
-          showNotification('error', 'Image trop grande', 'Veuillez choisir une image de moins de 5MB');
+          showNotification('error', i18n.t('enterprise.products.create.errors.imageTooLarge'), i18n.t('enterprise.products.create.errors.imageTooLargeMessage'));
           return;
         }
 
@@ -301,7 +308,7 @@ export default function CreateProduct() {
           ...prev,
           images: [...prev.images, { base64: asset.base64 || '', uri: asset.uri, loading: true }]
         }));
-        
+
         // Simuler le traitement de l'image
         setTimeout(() => {
           setForm(prev => ({
@@ -309,7 +316,7 @@ export default function CreateProduct() {
             images: prev.images.map(img => img.uri === asset.uri ? { ...img, loading: false } : img)
           }));
         }, 700);
-        
+
         // Effacer l'erreur d'images s'il y en avait une
         if (errors.images) {
           setErrors(prev => ({ ...prev, images: undefined }));
@@ -317,7 +324,7 @@ export default function CreateProduct() {
       }
     } catch (err) {
       console.error('Error picking image:', err);
-      showNotification('error', 'Erreur', "Impossible de sélectionner l'image");
+      showNotification('error', i18n.t('enterprise.products.create.errors.imageError'), i18n.t('enterprise.products.create.errors.imageErrorMessage'));
     }
   };
 
@@ -371,7 +378,7 @@ export default function CreateProduct() {
       // Scroll to top pour voir les erreurs
       return;
     }
-    
+
     const currentIndex = steps.findIndex(s => s.id === currentStep);
     if (currentIndex < steps.length - 1) {
       const nextIndex = currentIndex + 1;
@@ -418,20 +425,23 @@ export default function CreateProduct() {
     // Vérifier la limite de produits selon le plan
     const maxProducts = subscription?.plan?.features?.maxProducts || 0;
     const productLimitReached = hasReachedLimit('maxProducts', totalProducts);
-    
+
     if (productLimitReached) {
+      const message = maxProducts > 1
+        ? `Vous avez atteint la limite de ${maxProducts} produits de votre plan "${subscription?.plan?.name}". Passez à un plan supérieur pour ajouter plus de produits.`
+        : `Vous avez atteint la limite de ${maxProducts} produit de votre plan "${subscription?.plan?.name}". Passez à un plan supérieur pour ajouter plus de produits.`;
       showNotification(
-        'error', 
-        'Limite de produits atteinte', 
-        `Vous avez atteint la limite de ${maxProducts} produit${maxProducts > 1 ? 's' : ''} de votre plan "${subscription?.plan?.name}". Passez à un plan supérieur pour ajouter plus de produits.`
+        'error',
+        i18n.t('enterprise.products.create.notifications.productLimitTitle'),
+        message
       );
       return;
     }
-    
+
     const ok = validateForm();
     setShowErrorSummary(!ok);
     if (!ok) {
-      showNotification('error', 'Erreur', 'Veuillez corriger les erreurs avant de continuer');
+      showNotification('error', i18n.t('enterprise.products.create.notifications.errorTitle'), i18n.t('enterprise.products.create.errors.correctErrors'));
       return;
     }
 
@@ -487,10 +497,10 @@ export default function CreateProduct() {
 
       // Création du produit
       const createdProduct = await ProductService.createProduct(productData);
-      
+
       // Affichage du toast de succès
-      showSuccess("Produit créé avec succès !", `${createdProduct.name} a été ajouté à votre catalogue`);
-      
+      showSuccess(i18n.t("enterprise.products.create.notifications.successTitle"), `${createdProduct.name} ${i18n.t("enterprise.products.create.notifications.successMessage").replace('{{name}}', '')}`.replace('  ', ' ').trim());
+
       // Réinitialiser le formulaire
       setForm({
         name: "",
@@ -522,18 +532,18 @@ export default function CreateProduct() {
         variants: [],
         seo: { metaTitle: "", metaDescription: "", keywords: [] },
       });
-      
+
       setCurrentStep('basic');
       setMaxReachedStep(0);
       setErrors({});
       setShowErrorSummary(false);
-      
+
       // Redirection vers la liste des produits après un court délai
       setTimeout(() => {
         router.replace("/(app)/(enterprise)/(tabs)/products");
       }, 1500);
     } catch (error: any) {
-      showError("Erreur", error.message || "Impossible de créer le produit");
+      showError(i18n.t("enterprise.products.create.notifications.errorTitle"), error.message || i18n.t("enterprise.products.create.errors.createError"));
       console.error('Erreur création produit:', error);
     } finally {
       setLoading(false);
@@ -543,8 +553,8 @@ export default function CreateProduct() {
   return (
     <View className="flex-1 bg-background-secondary">
       <ExpoStatusBar style="light" translucent />
-      <KeyboardAvoidingView 
-        className="flex-1" 
+      <KeyboardAvoidingView
+        className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         {/* Header */}
@@ -568,7 +578,7 @@ export default function CreateProduct() {
         >
           <View className="px-6">
             <View className="flex-row items-center justify-between">
-              <Link 
+              <Link
                 href="/(app)/(enterprise)/(tabs)/products"
                 asChild
               >
@@ -580,10 +590,10 @@ export default function CreateProduct() {
               </Link>
               <View className="flex-1 items-center px-2">
                 <Text className="text-2xl font-quicksand-bold text-white text-center">
-                  Nouveau produit
+                  {i18n.t("enterprise.products.create.title")}
                 </Text>
                 <Text className="text-white/90 font-quicksand-medium text-sm text-center mt-1">
-                  Ajoutez un nouveau produit à votre catalogue
+                  {i18n.t("enterprise.products.create.subtitle")}
                 </Text>
               </View>
               <View className="w-12" />
@@ -594,23 +604,23 @@ export default function CreateProduct() {
         {/* Step Indicator + Progress */}
         <View className="bg-white px-6 pt-5 pb-6 border-b border-neutral-100">
           <View className="h-2.5 w-full rounded-full bg-neutral-200 overflow-hidden mb-5">
-            <View 
-              style={{ 
+            <View
+              style={{
                 width: `${progress * 100}%`,
                 backgroundColor: '#10B981',
                 borderRadius: 4
-              }} 
+              }}
               className="h-full"
             />
           </View>
           <View className="flex-row items-center justify-center mb-4">
             <Text className="text-sm text-neutral-600 font-quicksand-medium">
-              Étape {currentStepIndex + 1} sur {steps.length} • {Math.round(progress * 100)}% terminé
+              {i18n.t("enterprise.products.create.progress.step")} {currentStepIndex + 1} {i18n.t("enterprise.products.create.progress.of")} {steps.length} • {Math.round(progress * 100)}% {i18n.t("enterprise.products.create.progress.completed")}
             </Text>
           </View>
           <View className="flex-row items-center justify-between">
             {steps.map((step, index) => {
-              const stepErrors: Record<string,string> = {};
+              const stepErrors: Record<string, string> = {};
               if (step.id === 'basic') {
                 if (errors.name || errors.description || errors.price || errors.stock || errors.category || errors.images) stepErrors.basic = '1';
               }
@@ -619,63 +629,61 @@ export default function CreateProduct() {
               }
               const hasErr = Object.keys(stepErrors).length > 0;
               return (
-              <React.Fragment key={step.id}>
-                <TouchableOpacity
-                  onPress={() => goToStep(step.id)}
-                  className="items-center flex-1"
-                >
-                  <View
-                    className={`w-10 h-10 rounded-full items-center justify-center ${
-                      currentStep === step.id
+                <React.Fragment key={step.id}>
+                  <TouchableOpacity
+                    onPress={() => goToStep(step.id)}
+                    className="items-center flex-1"
+                  >
+                    <View
+                      className={`w-10 h-10 rounded-full items-center justify-center ${currentStep === step.id
                         ? "bg-primary-500"
                         : steps.findIndex(s => s.id === currentStep) > index
-                        ? "bg-success-500"
-                        : hasErr ? 'bg-red-200' : "bg-neutral-200"
-                    }`}
-                  >
-                    <Ionicons
-                      name={step.icon as any}
-                      size={16}
-                      color={
-                        currentStep === step.id || steps.findIndex(s => s.id === currentStep) > index
-                          ? "white"
-                          : hasErr ? '#B91C1C' : "#9CA3AF"
-                      }
-                    />
-                    {hasErr && (
-                      <View className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 items-center justify-center">
-                        <Text className="text-[9px] text-white font-quicksand-bold">!</Text>
-                      </View>
-                    )}
-                  </View>
-                  <Text
-                    className={`text-xs font-quicksand-medium mt-1 text-center ${
-                      currentStep === step.id
+                          ? "bg-success-500"
+                          : hasErr ? 'bg-red-200' : "bg-neutral-200"
+                        }`}
+                    >
+                      <Ionicons
+                        name={step.icon as any}
+                        size={16}
+                        color={
+                          currentStep === step.id || steps.findIndex(s => s.id === currentStep) > index
+                            ? "white"
+                            : hasErr ? '#B91C1C' : "#9CA3AF"
+                        }
+                      />
+                      {hasErr && (
+                        <View className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 items-center justify-center">
+                          <Text className="text-[9px] text-white font-quicksand-bold">!</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text
+                      className={`text-xs font-quicksand-medium mt-1 text-center ${currentStep === step.id
                         ? "text-primary-500"
                         : steps.findIndex(s => s.id === currentStep) > index
-                        ? "text-success-500"
-                        : hasErr ? 'text-red-500' : "text-neutral-500"
-                    }`}
-                    numberOfLines={1}
-                  >
-                    {step.title}
-                  </Text>
-                </TouchableOpacity>
-                {index < steps.length - 1 && (
-                  <View
-                    className={`flex-1 h-0.5 mx-2 ${
-                      steps.findIndex(s => s.id === currentStep) > index
+                          ? "text-success-500"
+                          : hasErr ? 'text-red-500' : "text-neutral-500"
+                        }`}
+                      numberOfLines={1}
+                    >
+                      {step.title}
+                    </Text>
+                  </TouchableOpacity>
+                  {index < steps.length - 1 && (
+                    <View
+                      className={`flex-1 h-0.5 mx-2 ${steps.findIndex(s => s.id === currentStep) > index
                         ? "bg-success-500"
                         : "bg-neutral-200"
-                    }`}
-                  />
-                )}
-              </React.Fragment>
-            );})}
+                        }`}
+                    />
+                  )}
+                </React.Fragment>
+              );
+            })}
           </View>
         </View>
 
-  <ScrollView 
+        <ScrollView
           className="flex-1"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 140, paddingTop: 8 }}
@@ -691,13 +699,13 @@ export default function CreateProduct() {
                       <Ionicons name="information" size={16} color="#FFFFFF" />
                     </View>
                     <Text className="text-primary-700 font-quicksand-bold text-sm">
-                      Limites de votre plan {subscription.plan.name}
+                      {i18n.t("enterprise.products.create.limits.planTitle")} {subscription.plan.name}
                     </Text>
                   </View>
                   <View className="space-y-2">
                     <View className="flex-row items-center justify-between">
                       <Text className="text-neutral-600 font-quicksand-medium text-xs">
-                        Produits
+                        {i18n.t("enterprise.products.create.limits.products")}
                       </Text>
                       <Text className="text-neutral-800 font-quicksand-bold text-sm">
                         {totalProducts} / {subscription.plan.features.maxProducts}
@@ -705,7 +713,7 @@ export default function CreateProduct() {
                     </View>
                     <View className="flex-row items-center justify-between">
                       <Text className="text-neutral-600 font-quicksand-medium text-xs">
-                        Images par produit
+                        {i18n.t("enterprise.products.create.limits.imagesPerProduct")}
                       </Text>
                       <Text className="text-neutral-800 font-quicksand-bold text-sm">
                         {subscription.plan.features.maxImagesPerProduct}
@@ -715,13 +723,13 @@ export default function CreateProduct() {
                   {hasReachedLimit('maxProducts', totalProducts) && (
                     <View className="mt-3 pt-3 border-t border-primary-200">
                       <Text className="text-amber-700 font-quicksand-semibold text-xs">
-                        ⚠️ Vous avez atteint la limite de produits. Passez à un plan supérieur pour continuer.
+                        {i18n.t("enterprise.products.create.limits.limitReached")}
                       </Text>
                     </View>
                   )}
                 </View>
               )}
-              
+
               {/* Images */}
               <View className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-100">
                 <View className="flex-row items-center mb-5">
@@ -731,7 +739,7 @@ export default function CreateProduct() {
                   <View className="flex-1 ml-4">
                     <View className="flex-row items-center justify-between">
                       <Text className="text-lg font-quicksand-bold text-neutral-800">
-                        Photos du produit *
+                        {i18n.t("enterprise.products.create.fields.photosTitle")}
                       </Text>
                       {subscription && (
                         <Text className="text-xs font-quicksand-semibold text-primary-600">
@@ -740,14 +748,16 @@ export default function CreateProduct() {
                       )}
                     </View>
                     <Text className="text-xs text-neutral-500 font-quicksand-medium mt-0.5">
-                      {subscription 
-                        ? `Maximum ${subscription.plan.features.maxImagesPerProduct} image${subscription.plan.features.maxImagesPerProduct > 1 ? 's' : ''} selon votre plan`
-                        : 'Ajoutez des images de votre produit'
+                      {subscription
+                        ? (subscription.plan.features.maxImagesPerProduct > 1
+                          ? `Maximum ${subscription.plan.features.maxImagesPerProduct} images selon votre plan`
+                          : `Maximum ${subscription.plan.features.maxImagesPerProduct} image selon votre plan`)
+                        : i18n.t("enterprise.products.create.fields.photosHelp")
                       }
                     </Text>
                   </View>
                 </View>
-                
+
                 <View className="space-y-4">
                   {form.images.length > 0 && (
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3 -mx-2">
@@ -781,7 +791,7 @@ export default function CreateProduct() {
                       </View>
                     </ScrollView>
                   )}
-                  
+
                   {/* Add Image Button */}
                   {subscription && form.images.filter(img => !img.loading).length >= subscription.plan.features.maxImagesPerProduct ? (
                     <View className="border-2 border-dashed border-neutral-300 rounded-2xl py-10 items-center justify-center bg-neutral-50">
@@ -789,7 +799,7 @@ export default function CreateProduct() {
                         <Ionicons name="lock-closed" size={32} color="#9CA3AF" />
                       </View>
                       <Text className="text-neutral-500 font-quicksand-bold text-base mb-1">
-                        Limite atteinte
+                        {i18n.t("enterprise.products.create.limits.imageLimitTitle")}
                       </Text>
                       <Text className="text-neutral-400 font-quicksand-medium text-xs text-center px-8">
                         Maximum {subscription.plan.features.maxImagesPerProduct} image{subscription.plan.features.maxImagesPerProduct > 1 ? 's' : ''} pour votre plan
@@ -805,14 +815,14 @@ export default function CreateProduct() {
                         <Ionicons name="add" size={32} color="#6366F1" />
                       </View>
                       <Text className="text-primary-600 font-quicksand-bold text-base">
-                        Ajouter une photo
+                        {i18n.t("enterprise.products.create.fields.addPhoto")}
                       </Text>
                       <Text className="text-primary-400 font-quicksand-medium text-sm mt-1">
                         PNG, JPG jusqu&apos;à 5MB
                       </Text>
                     </TouchableOpacity>
                   )}
-                  
+
                   {errors.images && (
                     <View className="flex-row items-center bg-red-50 rounded-xl p-3 mt-2">
                       <Ionicons name="alert-circle" size={16} color="#EF4444" />
@@ -837,15 +847,15 @@ export default function CreateProduct() {
                     </Text>
                   </View>
                 </View>
-                
+
                 <View className="space-y-5">
                   <View>
                     <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-2">
-                      Nom du produit *
+                      {i18n.t("enterprise.products.create.fields.nameTitle")}
                     </Text>
                     <TextInput
                       className="bg-neutral-50 rounded-xl px-4 py-3.5 text-neutral-800 font-quicksand-medium border border-neutral-200"
-                      placeholder="Ex: iPhone 15 Pro Max 256GB"
+                      placeholder={i18n.t("enterprise.products.create.fields.namePlaceholder")}
                       placeholderTextColor="#9CA3AF"
                       value={form.name}
                       onChangeText={(text) => setForm(prev => ({ ...prev, name: text }))}
@@ -860,11 +870,11 @@ export default function CreateProduct() {
 
                   <View>
                     <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-2">
-                      Description *
+                      {i18n.t("enterprise.products.create.fields.descriptionTitle")}
                     </Text>
                     <TextInput
                       className="bg-neutral-50 rounded-xl px-4 py-3.5 text-neutral-800 font-quicksand-medium border border-neutral-200"
-                      placeholder="Décrivez votre produit en détail..."
+                      placeholder={i18n.t("enterprise.products.create.fields.descriptionPlaceholder")}
                       placeholderTextColor="#9CA3AF"
                       value={form.description}
                       onChangeText={(text) => setForm(prev => ({ ...prev, description: text }))}
@@ -884,7 +894,7 @@ export default function CreateProduct() {
                   <View className="flex-row gap-3">
                     <View className="flex-1">
                       <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-2">
-                        Prix (FCFA) *
+                        {i18n.t("enterprise.products.create.fields.priceTitle")}
                       </Text>
                       <View className="flex-row items-center bg-neutral-50 rounded-xl border border-neutral-200">
                         <View className="pl-4 pr-2">
@@ -892,7 +902,7 @@ export default function CreateProduct() {
                         </View>
                         <TextInput
                           className="flex-1 py-3.5 pr-4 text-neutral-800 font-quicksand-medium"
-                          placeholder="50000"
+                          placeholder={i18n.t("enterprise.products.create.fields.pricePlaceholder")}
                           placeholderTextColor="#9CA3AF"
                           value={form.price}
                           onChangeText={(text) => setForm(prev => ({ ...prev, price: text }))}
@@ -909,7 +919,7 @@ export default function CreateProduct() {
 
                     <View className="flex-1">
                       <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-2">
-                        Stock *
+                        {i18n.t("enterprise.products.create.fields.stockTitle")}
                       </Text>
                       <View className="flex-row items-center bg-neutral-50 rounded-xl border border-neutral-200">
                         <View className="pl-4 pr-2">
@@ -917,7 +927,7 @@ export default function CreateProduct() {
                         </View>
                         <TextInput
                           className="flex-1 py-3.5 pr-4 text-neutral-800 font-quicksand-medium"
-                          placeholder="100"
+                          placeholder={i18n.t("enterprise.products.create.fields.stockPlaceholder")}
                           placeholderTextColor="#9CA3AF"
                           value={form.stock}
                           onChangeText={(text) => setForm(prev => ({ ...prev, stock: text }))}
@@ -950,7 +960,7 @@ export default function CreateProduct() {
                     </Text>
                   </View>
                 </View>
-                
+
                 {loadingCategories ? (
                   <View className="py-12 items-center">
                     <ActivityIndicator size="large" color="#6366F1" />
@@ -964,11 +974,10 @@ export default function CreateProduct() {
                       {categories.map((category) => (
                         <TouchableOpacity
                           key={category._id}
-                          className={`px-5 py-3 rounded-xl border ${
-                            form.category === category._id
-                              ? "bg-primary-500 border-primary-500"
-                              : "bg-neutral-50 border-neutral-200"
-                          }`}
+                          className={`px-5 py-3 rounded-xl border ${form.category === category._id
+                            ? "bg-primary-500 border-primary-500"
+                            : "bg-neutral-50 border-neutral-200"
+                            }`}
                           onPress={() => {
                             setForm(prev => ({ ...prev, category: category._id }));
                             if (errors.category) {
@@ -982,9 +991,8 @@ export default function CreateProduct() {
                               <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
                             )}
                             <Text
-                              className={`font-quicksand-semibold text-sm ${
-                                form.category === category._id ? "text-white" : "text-neutral-700"
-                              }`}
+                              className={`font-quicksand-semibold text-sm ${form.category === category._id ? "text-white" : "text-neutral-700"
+                                }`}
                             >
                               {category.name}
                             </Text>
@@ -1021,7 +1029,7 @@ export default function CreateProduct() {
                     </Text>
                   </View>
                 </View>
-                
+
                 <View className="space-y-5">
                   <View className="flex-row gap-3">
                     <View className="flex-1">
@@ -1122,8 +1130,8 @@ export default function CreateProduct() {
                           placeholder="L"
                           placeholderTextColor="#9CA3AF"
                           value={form.dimensions.length}
-                          onChangeText={(text) => setForm(prev => ({ 
-                            ...prev, 
+                          onChangeText={(text) => setForm(prev => ({
+                            ...prev,
                             dimensions: { ...prev.dimensions, length: text }
                           }))}
                           keyboardType="decimal-pad"
@@ -1138,8 +1146,8 @@ export default function CreateProduct() {
                           placeholder="l"
                           placeholderTextColor="#9CA3AF"
                           value={form.dimensions.width}
-                          onChangeText={(text) => setForm(prev => ({ 
-                            ...prev, 
+                          onChangeText={(text) => setForm(prev => ({
+                            ...prev,
                             dimensions: { ...prev.dimensions, width: text }
                           }))}
                           keyboardType="decimal-pad"
@@ -1154,8 +1162,8 @@ export default function CreateProduct() {
                           placeholder="H"
                           placeholderTextColor="#9CA3AF"
                           value={form.dimensions.height}
-                          onChangeText={(text) => setForm(prev => ({ 
-                            ...prev, 
+                          onChangeText={(text) => setForm(prev => ({
+                            ...prev,
                             dimensions: { ...prev.dimensions, height: text }
                           }))}
                           keyboardType="decimal-pad"
@@ -1292,7 +1300,7 @@ export default function CreateProduct() {
             >
               <View className="flex-row items-center justify-center">
                 <Text className="text-white text-center font-quicksand-semibold mr-2">
-                  Suivant : Détails du produit
+                  {i18n.t("enterprise.products.create.actions.next")} : {i18n.t("enterprise.products.create.steps.details")}
                 </Text>
                 <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
               </View>
@@ -1309,15 +1317,14 @@ export default function CreateProduct() {
               >
                 <View className="flex-row items-center justify-center">
                   <Ionicons name="chevron-back" size={18} color="#374151" />
-                  <Text className="text-neutral-700 text-center font-quicksand-semibold ml-2">Précédent</Text>
+                  <Text className="text-neutral-700 text-center font-quicksand-semibold ml-2">{i18n.t("enterprise.products.create.actions.previous")}</Text>
                 </View>
               </TouchableOpacity>
               <TouchableOpacity
-                className={`flex-1 py-4 rounded-2xl ${
-                  loading 
-                    ? 'bg-primary-300' 
-                    : 'bg-primary-500 shadow-sm active:bg-primary-600'
-                }`}
+                className={`flex-1 py-4 rounded-2xl ${loading
+                  ? 'bg-primary-300'
+                  : 'bg-primary-500 shadow-sm active:bg-primary-600'
+                  }`}
                 onPress={handleSubmit}
                 disabled={loading}
                 activeOpacity={loading ? 1 : 0.8}
@@ -1325,12 +1332,12 @@ export default function CreateProduct() {
                 {loading ? (
                   <View className="flex-row items-center justify-center">
                     <ActivityIndicator size="small" color="white" />
-                    <Text className="text-white font-quicksand-semibold ml-2">Création...</Text>
+                    <Text className="text-white font-quicksand-semibold ml-2">{i18n.t("enterprise.products.create.actions.creating")}</Text>
                   </View>
                 ) : (
                   <View className="flex-row items-center justify-center">
                     <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
-                    <Text className="text-white text-center font-quicksand-semibold ml-2">Créer le produit</Text>
+                    <Text className="text-white text-center font-quicksand-semibold ml-2">{i18n.t("enterprise.products.create.actions.createProduct")}</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -1352,11 +1359,11 @@ export default function CreateProduct() {
           >
             <View className="bg-white rounded-2xl p-6 mx-6 w-full max-w-sm">
               <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4">
-                Ajouter un tag
+                {i18n.t("enterprise.products.create.modals.addTag")}
               </Text>
               <TextInput
                 className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200 mb-4 focus:border-primary-500"
-                placeholder="Ex: Nouveau, Populaire, Promo..."
+                placeholder={i18n.t("enterprise.products.create.modals.tagPlaceholder")}
                 placeholderTextColor="#9CA3AF"
                 value={newTag}
                 onChangeText={setNewTag}
@@ -1368,7 +1375,7 @@ export default function CreateProduct() {
                   onPress={() => setShowTagModal(false)}
                 >
                   <Text className="text-neutral-700 text-center font-quicksand-semibold">
-                    Annuler
+                    {i18n.t("enterprise.products.create.modals.cancel")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -1376,7 +1383,7 @@ export default function CreateProduct() {
                   onPress={addTag}
                 >
                   <Text className="text-white text-center font-quicksand-semibold">
-                    Ajouter
+                    {i18n.t("enterprise.products.create.modals.tagAction")}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -1398,18 +1405,18 @@ export default function CreateProduct() {
           >
             <View className="bg-white rounded-2xl p-6 mx-6 w-full max-w-sm">
               <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4">
-                Ajouter une spécification
+                {i18n.t("enterprise.products.create.modals.addSpecification")}
               </Text>
               <TextInput
                 className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200 mb-3 focus:border-primary-500"
-                placeholder="Nom (ex: Couleur, Taille...)"
+                placeholder={i18n.t("enterprise.products.create.modals.specKeyPlaceholder")}
                 placeholderTextColor="#9CA3AF"
                 value={newSpec.key}
                 onChangeText={(text) => setNewSpec(prev => ({ ...prev, key: text }))}
               />
               <TextInput
                 className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200 mb-4 focus:border-primary-500"
-                placeholder="Valeur (ex: Noir, XL...)"
+                placeholder={i18n.t("enterprise.products.create.modals.specValuePlaceholder")}
                 placeholderTextColor="#9CA3AF"
                 value={newSpec.value}
                 onChangeText={(text) => setNewSpec(prev => ({ ...prev, value: text }))}
@@ -1420,7 +1427,7 @@ export default function CreateProduct() {
                   onPress={() => setShowSpecModal(false)}
                 >
                   <Text className="text-neutral-700 text-center font-quicksand-semibold">
-                    Annuler
+                    {i18n.t("enterprise.products.create.modals.cancel")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -1428,7 +1435,7 @@ export default function CreateProduct() {
                   onPress={addSpecification}
                 >
                   <Text className="text-white text-center font-quicksand-semibold">
-                    Ajouter
+                    {i18n.t("enterprise.products.create.modals.tagAction")}
                   </Text>
                 </TouchableOpacity>
               </View>

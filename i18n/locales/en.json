@@ -1,0 +1,557 @@
+{
+    "messages": {
+        "error": "Error",
+        "success": "Success"
+    },
+    "enterprise": {
+        "settings": {
+            "title": "Settings",
+            "loading": "Loading...",
+            "general": {
+                "title": "General",
+                "theme": "Theme",
+                "language": "Language"
+            },
+            "notifications": {
+                "title": "Notifications",
+                "pushEnabled": "Push notifications",
+                "delivery": "Deliveries",
+                "messages": "Messages",
+                "newProducts": "New products",
+                "advertisements": "Advertisements",
+                "systemUpdates": "System updates"
+            },
+            "display": {
+                "title": "Display",
+                "gridView": "Grid view",
+                "highQualityImages": "High quality images"
+            },
+            "enterprise": {
+                "title": "Enterprise",
+                "autoOnlineStatus": "Auto online status"
+            },
+            "privacy": {
+                "title": "Privacy",
+                "publicProfile": "Public profile",
+                "dataAnalytics": "Data analytics",
+                "privacyPolicy": "Privacy policy"
+            },
+            "reset": {
+                "button": "Reset settings",
+                "title": "Reset settings",
+                "message": "Are you sure you want to reset all settings to their default values? This action cannot be undone.",
+                "confirm": "Reset",
+                "cancel": "Cancel",
+                "inProgress": "In progress..."
+            },
+            "languageModal": {
+                "title": "Choose language",
+                "french": "Français",
+                "english": "English",
+                "frenchSubtitle": "French",
+                "englishSubtitle": "Anglais"
+            },
+            "messages": {
+                "error": "Error",
+                "loadPreferencesError": "Unable to load your preferences",
+                "updateSettingError": "Unable to update setting",
+                "resetSuccess": "Reset",
+                "resetSuccessMessage": "Settings successfully reset",
+                "resetError": "Unable to reset",
+                "languageChangeError": "Unable to change language"
+            }
+        },
+        "profile": {
+            "modals": {
+                "editProfile": {
+                    "title": "Edit Profile",
+                    "cancel": "Cancel",
+                    "save": "Save",
+                    "firstName": "First Name",
+                    "lastName": "Last Name",
+                    "phone": "Phone",
+                    "address": "Address",
+                    "changePhoto": "Tap to change",
+                    "placeholders": {
+                        "firstName": "Your first name",
+                        "lastName": "Your last name",
+                        "phone": "Your phone",
+                        "address": "Your address"
+                    },
+                    "permission": {
+                        "title": "Permission required",
+                        "subtitle": "You must allow access to the gallery to select an image."
+                    },
+                    "success": "Profile updated successfully",
+                    "error": "Unable to update profile"
+                },
+                "editEnterprise": {
+                    "title": "Edit Enterprise",
+                    "cancel": "Cancel",
+                    "save": "Save",
+                    "changeLogo": "Change logo",
+                    "companyName": "Company Name*",
+                    "description": "Description",
+                    "contactInfo": "Contact Info",
+                    "website": "Website",
+                    "phone": "Phone",
+                    "email": "Business Email",
+                    "whatsapp": "WhatsApp",
+                    "socialNetworks": "Social Networks",
+                    "addSocial": "Add",
+                    "noSocial": "No social network added",
+                    "placeholders": {
+                        "companyName": "Your company name",
+                        "description": "Description of your company",
+                        "website": "https://www.yourcompany.com",
+                        "phone": "Phone number",
+                        "email": "contact@company.com",
+                        "whatsapp": "WhatsApp number",
+                        "platform": "Platform (e.g. Facebook)",
+                        "url": "URL"
+                    },
+                    "errors": {
+                        "companyNameRequired": "Company name is required",
+                        "required": "Field Required"
+                    },
+                    "permission": {
+                        "title": "Permission required",
+                        "subtitle": "You must allow access to the gallery to select a logo."
+                    },
+                    "success": "Enterprise information updated successfully",
+                    "error": "Unable to update enterprise information"
+                },
+                "enterpriseDetails": {
+                    "title": "Enterprise Details",
+                    "close": "Close",
+                    "active": "Active",
+                    "inactive": "Inactive",
+                    "about": "About",
+                    "noDescription": "No description available for this enterprise.",
+                    "contact": "Contact Info",
+                    "noContact": "No contact info available",
+                    "stats": "Statistics",
+                    "totalSales": "Total Sales",
+                    "orders": "Orders",
+                    "averageRating": "Average Rating",
+                    "reviews": "Reviews",
+                    "socialLinks": "Social Links",
+                    "additionalInfo": "Additional Information",
+                    "creationDate": "Creation Date",
+                    "enterpriseId": "Enterprise ID"
+                },
+                "addPartner": {
+                    "title": "Add Partner",
+                    "cancel": "Cancel",
+                    "add": "Add",
+                    "partnerId": "Partner ID",
+                    "placeholder": "Delivery partner ID",
+                    "helpText": "Enter the ID of the delivery partner you want to add.",
+                    "error": "Please enter a valid partner ID",
+                    "redirectTitle": "Redirect",
+                    "redirectMessage": "Please use the Partners page to link a delivery person."
+                }
+            },
+            "sections": {
+                "marketing": "Marketing & Subscriptions",
+                "owner": "Owner",
+                "contact": "Enterprise Contact"
+            },
+            "actions": {
+                "retry": "Retry",
+                "logout": "Logout",
+                "profile": "Profile",
+                "partners": "Partners",
+                "details": "Details",
+                "edit": "Edit"
+            },
+            "messages": {
+                "loadError": "Unable to load profile",
+                "loadErrorMessage": "An error occurred while loading data.",
+                "logoutConfirm": {
+                    "title": "Logout",
+                    "message": "Are you sure you want to logout?",
+                    "confirm": "Logout"
+                },
+                "statusConfirm": {
+                    "title": "Change Status",
+                    "message": "Do you really want to {{action}} your enterprise?",
+                    "activate": "activate",
+                    "deactivate": "deactivate",
+                    "confirm": "Confirm"
+                },
+                "logoutSuccess": "You have been logged out successfully"
+            },
+            "placeholders": {
+                "noDescription": "Add a description to present your enterprise"
+            },
+            "features": {
+                "advertisements": {
+                    "title": "Advertisements",
+                    "description": "Create & manage your banners",
+                    "configure": "Configure now",
+                    "premium": "PREMIUM",
+                    "notAvailable": "Feature not available",
+                    "upgrade": "Upgrade to a higher plan"
+                },
+                "subscriptions": {
+                    "title": "Subscriptions",
+                    "manage": "Manage my plan",
+                    "viewOffers": "View offers"
+                }
+            },
+            "management": {
+                "title": "Management & Tools",
+                "partners": "Delivery Partners",
+                "partnersCount": "{{count}} partner(s)",
+                "settings": "Settings",
+                "settingsDescription": "Preferences and configuration",
+                "logout": "Log out"
+            },
+            "contact": {
+                "noInfo": "No contact information provided"
+            },
+            "appInfo": "Axi Market v1.0.0"
+        },
+        "messages": {
+            "title": "Messages",
+            "search": {
+                "placeholder": "Search a conversation..."
+            },
+            "filters": {
+                "all": "All",
+                "unread": "Unread"
+            },
+            "count": {
+                "conversations": "conversation",
+                "conversationsPlural": "conversations"
+            },
+            "empty": {
+                "noResults": "No results",
+                "noConversations": "No conversations",
+                "noResultsMessage": "We couldn't find any conversation matching \"{{query}}\"",
+                "noConversationsMessage": "Start chatting with sellers to see your exchanges here.",
+                "discoverProducts": "Discover products"
+            },
+            "conversation": {
+                "newConversation": "New conversation",
+                "unknownUser": "Unknown user",
+                "unknownProduct": "Unknown product"
+            },
+            "contextMenu": {
+                "options": "Options",
+                "archive": "Archive conversation",
+                "delete": "Delete conversation",
+                "deleting": "Deleting..."
+            }
+        },
+        "offers": {
+            "title": "My offers",
+            "filters": {
+                "all": "All",
+                "open": "Open",
+                "assigned": "Assigned",
+                "cancelled": "Cancelled",
+                "expired": "Expired"
+            },
+            "status": {
+                "open": "Open",
+                "assigned": "Assigned",
+                "cancelled": "Cancelled",
+                "expired": "Expired"
+            },
+            "count": {
+                "offers": "offer",
+                "offersPlural": "offers"
+            },
+            "labels": {
+                "product": "Product",
+                "client": "Client",
+                "expires": "Expires",
+                "delete": "Delete"
+            },
+            "empty": {
+                "title": "No offers",
+                "message": "Create an offer from a product conversation to see it here."
+            },
+            "error": {
+                "title": "Error",
+                "retry": "Retry",
+                "loadError": "Loading error"
+            },
+            "deleteModal": {
+                "title": "Delete offer?",
+                "message": "This action is irreversible. The offer will be permanently deleted.",
+                "cancel": "Cancel",
+                "confirm": "Delete",
+                "deleting": "Deleting...",
+                "successTitle": "Offer deleted",
+                "successMessage": "Your offer has been successfully deleted.",
+                "errorTitle": "Deletion failed",
+                "errorMessage": "Unable to delete offer"
+            }
+        },
+        "favorites": {
+            "title": "My Favorites",
+            "count": {
+                "product": "product",
+                "products": "products"
+            },
+            "labels": {
+                "addedOn": "Added on"
+            },
+            "empty": {
+                "title": "Your favorites list is empty",
+                "message": "Add products to your favorites to find them easily",
+                "exploreButton": "Explore products"
+            },
+            "error": {
+                "title": "Loading error",
+                "loadError": "Error loading favorites",
+                "retry": "Retry"
+            },
+            "deleteModal": {
+                "title": "Remove from favorites",
+                "message": "Are you sure you want to remove this product from your favorites?",
+                "cancel": "Cancel",
+                "confirm": "Remove"
+            },
+            "errorModal": {
+                "title": "Error",
+                "message": "Unable to remove this product from favorites.",
+                "ok": "OK"
+            }
+        },
+        "deliveryPartners": {
+            "title": "Delivery Partners",
+            "searchPlaceholder": "Search for a delivery person...",
+            "stats": {
+                "total": "Total",
+                "associated": "Associated",
+                "available": "Available"
+            },
+            "status": {
+                "available": "Available",
+                "unavailable": "Unavailable"
+            },
+            "badges": {
+                "verified": "Verified",
+                "associated": "Associated"
+            },
+            "actions": {
+                "associate": "Associate",
+                "alreadyAssociated": "Already associated"
+            },
+            "empty": {
+                "title": "No partners found",
+                "message": "No available delivery person matches your search."
+            },
+            "toast": {
+                "loadError": "Unable to load partners",
+                "associateSuccess": "Partner associated successfully",
+                "associateError": "Partner association failed"
+            }
+        },
+        "products": {
+            "title": "My Products",
+            "catalog": "product in catalog",
+            "catalogPlural": "products in catalog",
+            "searchPlaceholder": "Search for a product...",
+            "addButton": "Add",
+            "addProduct": "Add a product",
+            "results": "result",
+            "resultsPlural": "results",
+            "categories": {
+                "all": "All"
+            },
+            "sort": {
+                "title": "Sort by",
+                "name": "Name",
+                "price": "Price",
+                "stock": "Stock",
+                "createdAt": "Creation date",
+                "cancel": "Cancel"
+            },
+            "status": {
+                "active": "Active",
+                "inactive": "Inactive"
+            },
+            "stock": {
+                "outOfStock": "Out of stock",
+                "low": "Low",
+                "available": "Available"
+            },
+            "reviews": "reviews",
+            "actions": {
+                "delete": "Delete",
+                "viewDetails": "View details",
+                "activate": "Activate",
+                "deactivate": "Deactivate",
+                "cancel": "Cancel"
+            },
+            "confirmations": {
+                "delete": {
+                    "title": "Delete product",
+                    "message": "Are you sure you want to delete this product?",
+                    "confirm": "Delete"
+                },
+                "deactivate": {
+                    "title": "Deactivate product",
+                    "message": "The product will no longer be visible to customers.",
+                    "confirm": "Deactivate"
+                },
+                "activate": {
+                    "title": "Activate product",
+                    "message": "The product will be visible to customers.",
+                    "confirm": "Activate"
+                }
+            },
+            "notifications": {
+                "deleteSuccess": "Product deleted",
+                "deleteSuccessMessage": "The product has been successfully deleted.",
+                "statusSuccess": "Status changed",
+                "statusActivated": "The product has been activated.",
+                "statusDeactivated": "The product has been deactivated.",
+                "error": "Error",
+                "deleteError": "Unable to delete the product",
+                "updateError": "Unable to update the product"
+            },
+            "empty": {
+                "error": {
+                    "title": "Error",
+                    "retry": "Retry"
+                },
+                "noProducts": "No products",
+                "noProductsFound": "No products found",
+                "noProductsMessage": "Start by adding your first products to your catalog",
+                "noProductsFoundMessage": "No products match your search criteria"
+            },
+            "create": {
+                "title": "New product",
+                "subtitle": "Add a new product to your catalog",
+                "steps": {
+                    "basic": "Basic information",
+                    "details": "Product details"
+                },
+                "progress": {
+                    "step": "Step",
+                    "of": "of",
+                    "completed": "completed"
+                },
+                "limits": {
+                    "planTitle": "Your plan limits",
+                    "products": "Products",
+                    "imagesPerProduct": "Images per product",
+                    "limitReached": "⚠️ You have reached the product limit. Upgrade to a higher plan to continue.",
+                    "imageLimitTitle": "Limit reached",
+                    "imageLimitReached": "Your \"{{planName}}\" plan allows a maximum of {{count}} image per product. Upgrade to a higher plan to add more images.",
+                    "imageLimitReachedPlural": "Your \"{{planName}}\" plan allows a maximum of {{count}} images per product. Upgrade to a higher plan to add more images.",
+                    "productLimitReached": "You have reached the limit of {{count}} product for your \"{{planName}}\" plan. Upgrade to a higher plan to add more products.",
+                    "productLimitReachedPlural": "You have reached the limit of {{count}} products for your \"{{planName}}\" plan. Upgrade to a higher plan to add more products."
+                },
+                "fields": {
+                    "photosTitle": "Product photos *",
+                    "photosHelp": "Add images of your product",
+                    "photosHelpPlan": "Maximum {{count}} image according to your plan",
+                    "photosHelpPlanPlural": "Maximum {{count}} images according to your plan",
+                    "addPhoto": "Add a photo",
+                    "nameTitle": "Product name *",
+                    "nameHelp": "The commercial name of your product",
+                    "namePlaceholder": "Ex: iPhone 15 Pro Max",
+                    "descriptionTitle": "Description *",
+                    "descriptionHelp": "Describe your product",
+                    "descriptionPlaceholder": "Describe your product...",
+                    "priceTitle": "Price *",
+                    "priceHelp": "Unit price in FCFA",
+                    "pricePlaceholder": "50000",
+                    "stockTitle": "Stock quantity *",
+                    "stockHelp": "Number of units available",
+                    "stockPlaceholder": "10",
+                    "categoryTitle": "Category *",
+                    "categoryHelp": "Select a category",
+                    "categoryPlaceholder": "Choose a category",
+                    "categorySelect": "Select",
+                    "specificationsTitle": "Technical specifications",
+                    "specificationsHelp": "Detailed characteristics",
+                    "addSpecification": "Add a specification",
+                    "weightTitle": "Weight",
+                    "weightHelp": "Weight in kilograms",
+                    "weightPlaceholder": "1.5",
+                    "dimensionsTitle": "Dimensions",
+                    "dimensionsHelp": "Dimensions in centimeters",
+                    "length": "Length (cm)",
+                    "width": "Width (cm)",
+                    "height": "Height (cm)",
+                    "tagsTitle": "Tags",
+                    "tagsHelp": "Keywords for search",
+                    "addTag": "Add a tag",
+                    "brandTitle": "Brand",
+                    "brandPlaceholder": "Apple, Samsung...",
+                    "modelTitle": "Model",
+                    "modelPlaceholder": "iPhone 15 Pro",
+                    "skuTitle": "SKU (Reference)",
+                    "skuPlaceholder": "IPH15P-256-BLK",
+                    "barcodeTitle": "Barcode",
+                    "barcodePlaceholder": "123456789012",
+                    "lengthShort": "L",
+                    "widthShort": "W",
+                    "heightShort": "H",
+                    "detailsTitle": "Product details",
+                    "detailsHelp": "Additional information",
+                    "specificationsEmpty": "No specifications added",
+                    "tagsEmpty": "No tags added",
+                    "loadingCategories": "Loading categories...",
+                    "errorSummary": "Please correct the errors:"
+                },
+                "errors": {
+                    "nameRequired": "Product name is required",
+                    "descriptionRequired": "Description is required",
+                    "priceRequired": "Price is required",
+                    "priceInvalid": "Price must be a positive number",
+                    "stockRequired": "Stock is required",
+                    "stockInvalid": "Stock must be a positive number or zero",
+                    "categoryRequired": "Category is required",
+                    "imagesRequired": "At least one image is required",
+                    "skuInvalid": "SKU can only contain letters, numbers, hyphens and underscores",
+                    "weightInvalid": "Weight must be a positive number",
+                    "correctErrors": "Please correct the errors before continuing",
+                    "permissionDenied": "Permission denied",
+                    "permissionDeniedMessage": "We need your permission to access the gallery",
+                    "imageTooLarge": "Image too large",
+                    "imageTooLargeMessage": "Please choose an image smaller than 5MB",
+                    "imageError": "Error",
+                    "imageErrorMessage": "Unable to select image",
+                    "createError": "Unable to create product"
+                },
+                "modals": {
+                    "selectCategory": "Select a category",
+                    "loadingCategories": "Loading categories...",
+                    "noCategories": "No categories available",
+                    "close": "Close",
+                    "addTag": "Add a tag",
+                    "tagPlaceholder": "Enter a tag",
+                    "tagAction": "Add",
+                    "cancel": "Cancel",
+                    "addSpecification": "Add a specification",
+                    "specKey": "Name",
+                    "specValue": "Value",
+                    "specKeyPlaceholder": "Ex: Color",
+                    "specValuePlaceholder": "Ex: Black"
+                },
+                "actions": {
+                    "previous": "Previous",
+                    "next": "Next",
+                    "createProduct": "Create product",
+                    "creating": "Creating..."
+                },
+                "notifications": {
+                    "limitReachedTitle": "Limit reached",
+                    "productLimitTitle": "Product limit reached",
+                    "successTitle": "Product created successfully!",
+                    "successMessage": "{{name}} has been added to your catalog",
+                    "errorTitle": "Error"
+                }
+            }
+        }
+    }
+}

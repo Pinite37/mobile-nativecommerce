@@ -34,12 +34,12 @@ export default function FavoritesScreen() {
     try {
       if (!isRefresh) setLoading(true);
       setError(null);
-      
+
       const response = await ProductService.getFavoriteProducts();
-      
+
       // Filtrer les favoris qui ont un produit valide (product non null)
       const validFavorites = (response || []).filter(item => item.product !== null && item.product !== undefined);
-      
+
       setFavoriteItems(validFavorites);
     } catch (err: any) {
       console.error('Erreur lors de la récupération des favoris:', err);
@@ -62,10 +62,10 @@ export default function FavoritesScreen() {
 
     try {
       await ProductService.removeProductFromFavorites(productToRemove);
-      
+
       // Mise à jour locale
       setFavoriteItems(prev => prev.filter(item => item.product._id !== productToRemove));
-      
+
       // Fermer le modal
       setConfirmModalVisible(false);
       setProductToRemove(null);
@@ -141,17 +141,23 @@ export default function FavoritesScreen() {
       contentContainerStyle={{ paddingBottom: insets.bottom + 90 }}
     >
       {/* Header Skeleton */}
-      <LinearGradient colors={['#10B981', '#34D399']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} className="pb-4" style={{ 
-        paddingTop: insets.top + 16, 
-        paddingLeft: insets.left + 24,
-        paddingRight: insets.right + 24,
-        paddingBottom: 16 
-      }}>
+      <LinearGradient
+        colors={["#047857", "#10B981"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        className="rounded-b-3xl shadow-md"
+        style={{
+          paddingTop: insets.top + 16,
+          paddingLeft: insets.left + 24,
+          paddingRight: insets.right + 24,
+          paddingBottom: 16,
+        }}
+      >
         <View className="flex-row items-center justify-between mb-4">
-          <ShimmerBlock style={{ height: 24, borderRadius: 12, width: '40%' }} />
+          <ShimmerBlock style={{ height: 24, borderRadius: 12, width: "40%" }} />
         </View>
         <View className="flex-row justify-between items-center">
-          <ShimmerBlock style={{ height: 32, borderRadius: 16, width: '35%' }} />
+          <ShimmerBlock style={{ height: 32, borderRadius: 16, width: "35%" }} />
         </View>
       </LinearGradient>
 
@@ -215,7 +221,7 @@ export default function FavoritesScreen() {
                 </Text>
               )}
             </View>
-            
+
             {/* Prix et infos */}
             <View className="mt-2">
               <View className="flex-row items-center justify-between">
@@ -293,15 +299,15 @@ export default function FavoritesScreen() {
       >
         {/* Header */}
         <LinearGradient
-          colors={['#10B981', '#34D399']}
+          colors={["#047857", "#10B981"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          className="pb-4"
-          style={{ 
-            paddingTop: insets.top + 16, 
+          className="rounded-b-3xl shadow-md"
+          style={{
+            paddingTop: insets.top + 16,
             paddingLeft: insets.left + 24,
             paddingRight: insets.right + 24,
-            paddingBottom: 16 
+            paddingBottom: 16,
           }}
         >
           <View className="flex-row items-center justify-between mb-4">

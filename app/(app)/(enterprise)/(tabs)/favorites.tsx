@@ -1,7 +1,7 @@
 import ProductService from "@/services/api/ProductService";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import {
@@ -17,10 +17,15 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useLocale } from "@/contexts/LocaleContext";
+import i18n from "@/i18n/i18n";
 import { FavoriteItem } from "@/types/product";
 
 export default function EnterpriseFavoritesScreen() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { locale } = useLocale(); // Écoute les changements de langue pour re-render automatiquement
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const [favoriteItems, setFavoriteItems] = useState<FavoriteItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -58,7 +63,7 @@ export default function EnterpriseFavoritesScreen() {
       setFavoriteItems(validFavorites);
     } catch (err: any) {
       console.error("Erreur lors de la récupération des favoris:", err);
-      setError(err.message || "Erreur lors du chargement des favoris");
+      setError(err.message || i18n.t("enterprise.favorites.error.loadError"));
     } finally {
       setLoading(false);
       if (isRefresh) setRefreshing(false);
@@ -87,7 +92,7 @@ export default function EnterpriseFavoritesScreen() {
       console.error("Erreur lors de la suppression:", error);
       setErrorModal({
         visible: true,
-        message: "Impossible de retirer ce produit des favoris.",
+        message: i18n.t("enterprise.favorites.errorModal.message"),
       });
     }
   };
@@ -219,7 +224,7 @@ export default function EnterpriseFavoritesScreen() {
           elevation: 1,
         }}
         onPress={() => {
-          console.log("Navigate to product:", favoriteItem.product._id);
+          router.push(`/(app)/(enterprise)/product/${favoriteItem.product._id}`);
         }}
       >
         <View className="flex-row p-4">
@@ -227,7 +232,7 @@ export default function EnterpriseFavoritesScreen() {
           <View className="relative">
             <View className="w-28 h-28 rounded-2xl overflow-hidden bg-gray-50">
               {favoriteItem.product.images &&
-              favoriteItem.product.images.length > 0 ? (
+                favoriteItem.product.images.length > 0 ? (
                 <Image
                   source={{ uri: favoriteItem.product.images[0] }}
                   className="w-full h-full"
@@ -269,7 +274,7 @@ export default function EnterpriseFavoritesScreen() {
                 </Text>
               </View>
               <Text className="text-[10px] font-quicksand text-gray-400 mt-1">
-                Ajouté le{" "}
+                {i18n.t("enterprise.favorites.labels.addedOn")}{" "}
                 {new Date(favoriteItem.createdAt).toLocaleDateString("fr-FR", {
                   day: "2-digit",
                   month: "short",
@@ -309,7 +314,7 @@ export default function EnterpriseFavoritesScreen() {
       <View className="flex-1 bg-background-secondary justify-center items-center p-6">
         <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
         <Text className="text-xl font-quicksand-bold text-neutral-800 mt-4 text-center">
-          Erreur de chargement
+          {i18n.t("enterprise.favorites.error.title")}
         </Text>
         <Text className="text-base font-quicksand text-neutral-600 mt-2 text-center">
           {error}
@@ -318,7 +323,7 @@ export default function EnterpriseFavoritesScreen() {
           className="mt-6 bg-primary rounded-2xl px-6 py-3"
           onPress={() => fetchFavoriteProducts()}
         >
-          <Text className="text-white font-quicksand-bold">Réessayer</Text>
+          <Text className="text-white font-quicksand-bold">{i18n.t("enterprise.favorites.error.retry")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -354,7 +359,7 @@ export default function EnterpriseFavoritesScreen() {
         >
           <View className="flex-row items-center justify-between mb-4">
             <Text className="text-2xl font-quicksand-bold text-white">
-              Mes Favoris
+              {i18n.t("enterprise.favorites.title")}
             </Text>
           </View>
 
@@ -369,7 +374,7 @@ export default function EnterpriseFavoritesScreen() {
               />
               <Text className="text-white font-quicksand-medium text-sm">
                 {favoriteItems.length}{" "}
-                {favoriteItems.length > 1 ? "produits" : "produit"}
+                {favoriteItems.length > 1 ? i18n.t("enterprise.favorites.count.products") : i18n.t("enterprise.favorites.count.product")}
               </Text>
             </View>
           </View>
@@ -380,14 +385,14 @@ export default function EnterpriseFavoritesScreen() {
           <View className="flex-1 justify-center items-center py-20 px-6">
             <Ionicons name="heart-outline" size={64} color="#CBD5E1" />
             <Text className="text-xl font-quicksand-bold text-neutral-800 mt-4 text-center">
-              Votre liste de favoris est vide
+              {i18n.t("enterprise.favorites.empty.title")}
             </Text>
             <Text className="text-base font-quicksand text-neutral-600 mt-2 text-center">
-              Ajoutez des produits à vos favoris pour les retrouver facilement
+              {i18n.t("enterprise.favorites.empty.message")}
             </Text>
             <TouchableOpacity className="mt-6 bg-primary rounded-2xl px-6 py-3">
               <Text className="text-white font-quicksand-bold">
-                Explorer les produits
+                {i18n.t("enterprise.favorites.empty.exploreButton")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -430,12 +435,12 @@ export default function EnterpriseFavoritesScreen() {
 
             {/* Titre */}
             <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
-              Retirer des favoris
+              {i18n.t("enterprise.favorites.deleteModal.title")}
             </Text>
 
             {/* Message */}
             <Text className="text-base font-quicksand-medium text-neutral-600 text-center mb-6">
-              Êtes-vous sûr de vouloir retirer ce produit de vos favoris ?
+              {i18n.t("enterprise.favorites.deleteModal.message")}
             </Text>
 
             {/* Actions */}
@@ -448,7 +453,7 @@ export default function EnterpriseFavoritesScreen() {
                 activeOpacity={0.7}
               >
                 <Text className="text-neutral-700 font-quicksand-bold text-center">
-                  Annuler
+                  {i18n.t("enterprise.favorites.deleteModal.cancel")}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -457,7 +462,7 @@ export default function EnterpriseFavoritesScreen() {
                 activeOpacity={0.7}
               >
                 <Text className="text-white font-quicksand-bold text-center">
-                  Retirer
+                  {i18n.t("enterprise.favorites.deleteModal.confirm")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -490,7 +495,7 @@ export default function EnterpriseFavoritesScreen() {
 
             {/* Titre */}
             <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
-              Erreur
+              {i18n.t("enterprise.favorites.errorModal.title")}
             </Text>
 
             {/* Message */}
@@ -505,7 +510,7 @@ export default function EnterpriseFavoritesScreen() {
               activeOpacity={0.7}
             >
               <Text className="text-white font-quicksand-bold text-center">
-                OK
+                {i18n.t("enterprise.favorites.errorModal.ok")}
               </Text>
             </TouchableOpacity>
           </TouchableOpacity>

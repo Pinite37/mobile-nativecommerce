@@ -25,10 +25,10 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import NotificationModal, {
   useNotification,
-} from "../../../../../components/ui/NotificationModal";
-import MessagingService from "../../../../../services/api/MessagingService";
-import ProductService from "../../../../../services/api/ProductService";
-import { Product } from "../../../../../types/product";
+} from "../../../../components/ui/NotificationModal";
+import MessagingService from "../../../../services/api/MessagingService";
+import ProductService from "../../../../services/api/ProductService";
+import { Product } from "../../../../types/product";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -147,10 +147,17 @@ export default function ProductDetails() {
     product: Product;
   }) => (
     <TouchableOpacity
-      className="bg-white rounded-xl mr-4 border border-neutral-100 shadow-sm"
-      style={{ width: 140 }}
+      className="bg-white rounded-xl mr-4 overflow-hidden"
+      style={{
+        width: 140,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+      }}
       onPress={() => {
-        router.push(`/(app)/(enterprise)/(tabs)/product/${similarProduct._id}`);
+        router.push(`/(app)/(enterprise)/product/${similarProduct._id}`);
       }}
     >
       <View className="relative">
@@ -160,11 +167,10 @@ export default function ProductDetails() {
               similarProduct.images[0] ||
               "https://via.placeholder.com/140x100/CCCCCC/FFFFFF?text=No+Image",
           }}
-          style={{ width: 140, height: 100 }}
+          style={{ width: 140, height: 140 }}
           contentFit="cover"
           transition={200}
           cachePolicy="memory-disk"
-          className="rounded-t-xl"
         />
         {/* Badge stock si faible */}
         {similarProduct.stock <= 5 && similarProduct.stock > 0 && (
@@ -184,24 +190,18 @@ export default function ProductDetails() {
           {similarProduct.name}
         </Text>
 
-        <Text className="text-base font-quicksand-bold text-primary-600">
+        <Text className="text-base font-quicksand-bold text-emerald-600">
           {formatPrice(similarProduct.price)}
         </Text>
       </View>
     </TouchableOpacity>
   );
 
-  const handleAddToCart = () => {
-    // TODO: Implémenter l'ajout au panier
-    console.log("Ajouter au panier:", {
-      productId: id,
-    });
-  };
+
 
   const openWhatsApp = (phone: string) => {
-    const message = `Bonjour ! Je suis intéressé(e) par votre produit "${
-      product?.name
-    }" sur Axi. 
+    const message = `Bonjour ! Je suis intéressé(e) par votre produit "${product?.name
+      }" sur Axi. 
     
 Prix affiché : ${product ? formatPrice(product.price) : ""}
 
@@ -427,18 +427,18 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         ]}
         pointerEvents="box-none"
       >
-        <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill} />
+        <BlurView intensity={100} tint="light" style={StyleSheet.absoluteFill} />
 
         <View style={styles.compactHeaderContent}>
           <TouchableOpacity
             onPress={() => router.back()}
             className="w-10 h-10 justify-center items-center"
           >
-            <Ionicons name="arrow-back" size={24} color="#fff" />
+            <Ionicons name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
 
           <Text
-            style={styles.compactTitle}
+            style={[styles.compactTitle, { color: "#000" }]}
             className="font-quicksand-bold"
             numberOfLines={1}
           >
@@ -451,16 +451,21 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                 try {
                   await Share.share({
                     message: product
-                      ? `${product.name} • ${formatPrice(product.price)}${
-                          product.images?.[0] ? `\n${product.images[0]}` : ""
-                        }`
+                      ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ""
+                      }`
                       : "Voir ce produit",
                   });
-                } catch {}
+                } catch { }
               }}
-              className="w-10 h-10 justify-center items-center mr-2"
+              className="w-10 h-10 justify-center items-center mr-1"
             >
-              <Ionicons name="share-social-outline" size={22} color="#FFFFFF" />
+              <Ionicons name="share-social-outline" size={22} color="#000" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="w-10 h-10 justify-center items-center"
+              onPress={() => setImageModalVisible(true)}
+            >
+              <Ionicons name="images-outline" size={22} color="#000" />
             </TouchableOpacity>
           </View>
         </View>
@@ -511,12 +516,11 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
             try {
               await Share.share({
                 message: product
-                  ? `${product.name} • ${formatPrice(product.price)}${
-                      product.images?.[0] ? `\n${product.images[0]}` : ""
-                    }`
+                  ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ""
+                  }`
                   : "Voir ce produit",
               });
-            } catch {}
+            } catch { }
           }}
           className="w-10 h-10 bg-black/30 rounded-full justify-center items-center mr-2"
         >
@@ -653,7 +657,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
               }}
             >
               {typeof product.enterprise === "object" &&
-              product.enterprise.logo ? (
+                product.enterprise.logo ? (
                 <Image
                   source={{ uri: product.enterprise.logo }}
                   className="w-14 h-14 rounded-2xl"
@@ -696,10 +700,10 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                           <TouchableOpacity
                             onPress={() =>
                               typeof product.enterprise === "object" &&
-                              product.enterprise.contactInfo?.phone
+                                product.enterprise.contactInfo?.phone
                                 ? openWhatsApp(
-                                    product.enterprise.contactInfo.phone
-                                  )
+                                  product.enterprise.contactInfo.phone
+                                )
                                 : undefined
                             }
                             className="flex-1 bg-white rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border border-neutral-200 shadow-sm"
@@ -716,10 +720,10 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                           <TouchableOpacity
                             onPress={() =>
                               typeof product.enterprise === "object" &&
-                              product.enterprise.contactInfo?.phone
+                                product.enterprise.contactInfo?.phone
                                 ? makePhoneCall(
-                                    product.enterprise.contactInfo.phone
-                                  )
+                                  product.enterprise.contactInfo.phone
+                                )
                                 : undefined
                             }
                             className="flex-1 bg-white rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border border-neutral-200 shadow-sm"
@@ -787,51 +791,9 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
             </View>
           )}
 
-          <View style={{ height: 100 }} />
+          <View style={{ height: 40 }} />
         </View>
       </Animated.ScrollView>
-
-      {/* Bottom Actions (Fixed at bottom) */}
-      <View style={styles.bottomActions}>
-        <View className="flex-row">
-          {/* Chat Button */}
-          {typeof product.enterprise === "object" &&
-          product.enterprise.contactInfo?.phone ? (
-            <TouchableOpacity
-              onPress={() => {
-                const enterprise = product.enterprise;
-                if (
-                  typeof enterprise === "object" &&
-                  enterprise.contactInfo?.phone
-                ) {
-                  openWhatsApp(enterprise.contactInfo.phone);
-                }
-              }}
-              className="w-14 h-14 bg-success-50 rounded-2xl justify-center items-center mr-3 border border-success-100"
-            >
-              <Ionicons name="logo-whatsapp" size={24} color="#10B981" />
-            </TouchableOpacity>
-          ) : null}
-
-          {/* Add to Cart Button */}
-          {product.stock > 0 ? (
-            <TouchableOpacity
-              onPress={handleAddToCart}
-              className="flex-1 bg-primary-500 rounded-2xl justify-center items-center shadow-lg shadow-primary-500/30"
-            >
-              <Text className="text-white font-quicksand-bold text-lg">
-                Ajouter au panier
-              </Text>
-            </TouchableOpacity>
-          ) : (
-            <View className="flex-1 bg-neutral-300 rounded-2xl justify-center items-center">
-              <Text className="text-neutral-600 font-quicksand-bold text-lg">
-                Indisponible
-              </Text>
-            </View>
-          )}
-        </View>
-      </View>
 
       {/* Image Viewer Modal */}
       <Modal
@@ -891,7 +853,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
               setCurrentImageIndex(newIndex);
             }}
             onScrollToIndexFailed={({ index }) => {
-              setTimeout(() => {}, 100);
+              setTimeout(() => { }, 100);
             }}
           />
         </View>
@@ -924,12 +886,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 }, // Pour iOS
     shadowOpacity: 0.3, // Pour iOS
     shadowRadius: 4, // Pour iOS
-    backgroundColor: "rgba(0,0,0,0.85)", // Fallback si BlurView ne marche pas bien
+    backgroundColor: "rgba(255,255,255,0.8)", // Fallback plus clair
     justifyContent: "flex-end",
     paddingBottom: 10,
     overflow: "hidden",
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.1)",
+    borderBottomColor: "rgba(0,0,0,0.05)",
   },
   compactHeaderContent: {
     flexDirection: "row",

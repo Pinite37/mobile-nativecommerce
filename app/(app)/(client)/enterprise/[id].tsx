@@ -214,7 +214,7 @@ export default function EnterpriseDetails() {
             className="bg-white rounded-2xl shadow-sm border border-neutral-100 mb-3"
             style={{ width: (screenWidth - 48) / 2 }}
             onPress={() => {
-                router.push(`/(app)/(enterprise)/(tabs)/product/${product._id}`);
+                router.push(`/(app)/(enterprise)/product/${product._id}`);
             }}
         >
             <View className="relative">
@@ -522,19 +522,7 @@ export default function EnterpriseDetails() {
                                         </Text>
                                     </View>
 
-                                    <View className="flex-1 bg-gradient-to-br from-neutral-50 to-neutral-100 rounded-xl p-4 ml-2 border border-neutral-200/50">
-                                        <View className="flex-row items-center mb-2">
-                                            <View className="w-8 h-8 bg-purple-100 rounded-full justify-center items-center mr-2">
-                                                <Ionicons name="people" size={14} color="#8B5CF6" />
-                                            </View>
-                                            <Text className="text-lg font-quicksand-bold text-neutral-800">
-                                                {enterprise.stats.totalOrders || 0}
-                                            </Text>
-                                        </View>
-                                        <Text className="text-xs text-neutral-600 font-quicksand-medium">
-                                            commandes
-                                        </Text>
-                                    </View>
+                                    
                                 </View>
 
                                 {/* Actions de contact */}
@@ -592,8 +580,8 @@ export default function EnterpriseDetails() {
                             </View>
                         </View>
 
-                        
-                        
+
+
                     </View>
                 }
                 ListFooterComponent={

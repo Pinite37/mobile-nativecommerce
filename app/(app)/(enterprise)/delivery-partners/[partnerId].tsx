@@ -16,7 +16,7 @@ export default function DeliveryPartnerDetailScreen() {
 	const toast = useToast();
 	const insets = useSafeAreaInsets();
 	const { partnerId } = useLocalSearchParams<{ partnerId: string }>();
-	
+
 	const [partner, setPartner] = useState<DeliveryPartnerStatus | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [refreshing, setRefreshing] = useState(false);
@@ -56,7 +56,7 @@ export default function DeliveryPartnerDetailScreen() {
 
 	const checkAssociationStatus = useCallback(async () => {
 		if (!partnerId) return;
-		
+
 		try {
 			setCheckingAssociation(true);
 			const associated = await EnterpriseService.checkDeliveryPartnerAssociation(partnerId);
@@ -72,13 +72,13 @@ export default function DeliveryPartnerDetailScreen() {
 
 	const loadPartnerDetails = useCallback(async () => {
 		if (!partnerId) return;
-		
+
 		try {
 			setLoading(true);
 			// Utiliser l'endpoint avec statut enrichi si disponible, sinon fallback sur l'endpoint simple
 			const partnerData = await EnterpriseService.getDeliveryPartnerWithStatusById(partnerId);
 			setPartner(partnerData);
-			
+
 			// Vérifier le statut d'association avec l'API dédiée
 			await checkAssociationStatus();
 		} catch (error: any) {
@@ -97,18 +97,18 @@ export default function DeliveryPartnerDetailScreen() {
 		loadRef.current = loadPartnerDetails;
 	}, [loadPartnerDetails]);
 
-	useFocusEffect(useCallback(() => { 
-		loadRef.current(); 
+	useFocusEffect(useCallback(() => {
+		loadRef.current();
 	}, []));
 
-	const onRefresh = async () => { 
-		setRefreshing(true); 
-		await loadPartnerDetails(); 
+	const onRefresh = async () => {
+		setRefreshing(true);
+		await loadPartnerDetails();
 	};
 
 	const handleAssociate = async () => {
 		if (!partner) return;
-		
+
 		try {
 			setAssociating(true);
 			await EnterpriseService.associateDeliveryPartner(partner._id);
@@ -132,9 +132,9 @@ export default function DeliveryPartnerDetailScreen() {
 
 	const handleDissociate = async () => {
 		if (!partner) return;
-		
+
 		closeDissociateConfirmation();
-		
+
 		try {
 			setDissociating(true);
 			await EnterpriseService.dissociateDeliveryPartner(partner._id);
@@ -152,7 +152,7 @@ export default function DeliveryPartnerDetailScreen() {
 		<ScrollView className="flex-1">
 			{/* Header avec gradient */}
 			<LinearGradient
-				colors={['#10B981', '#34D399']}
+				colors={['#047857', '#10B981']}
 				start={{ x: 0, y: 0 }}
 				end={{ x: 1, y: 0 }}
 				className="px-6 pt-12 pb-8"
@@ -176,7 +176,17 @@ export default function DeliveryPartnerDetailScreen() {
 			{/* Contenu skeleton */}
 			<View className="px-6 pt-6 -mt-6 rounded-t-[32px] bg-background-secondary">
 				{Array.from({ length: 4 }).map((_, index) => (
-					<View key={index} className="bg-white rounded-2xl p-4 mb-4 shadow-sm border border-neutral-100">
+					<View
+						key={index}
+						className="bg-white rounded-2xl p-4 mb-4"
+						style={{
+							shadowColor: "#000",
+							shadowOffset: { width: 0, height: 2 },
+							shadowOpacity: 0.1,
+							shadowRadius: 4,
+							elevation: 3,
+						}}
+					>
 						<ShimmerBlock style={{ height: 16, borderRadius: 8, width: '60%', marginBottom: 12 }} />
 						<ShimmerBlock style={{ height: 60, borderRadius: 12, width: '100%' }} />
 					</View>
@@ -255,10 +265,10 @@ export default function DeliveryPartnerDetailScreen() {
 		return (
 			<View className="flex-1 bg-background-secondary">
 				<ExpoStatusBar style="light" translucent />
-				
+
 				{/* Header avec gradient */}
 				<LinearGradient
-					colors={['#10B981', '#34D399']}
+					colors={['#047857', '#10B981']}
 					start={{ x: 0, y: 0 }}
 					end={{ x: 1, y: 0 }}
 					style={{
@@ -307,6 +317,32 @@ export default function DeliveryPartnerDetailScreen() {
 		<View className="flex-1 bg-background-secondary">
 			<ExpoStatusBar style="light" translucent />
 
+			{/* Header fixe avec gradient moderne */}
+			<LinearGradient
+				colors={['#047857', '#10B981']}
+				start={{ x: 0, y: 0 }}
+				end={{ x: 1, y: 0 }}
+				style={{
+					paddingTop: insets.top + 16,
+					paddingBottom: 16,
+					paddingLeft: insets.left + 24,
+					paddingRight: insets.right + 24,
+					zIndex: 10,
+				}}
+			>
+				<View className="flex-row items-center justify-between">
+					<TouchableOpacity
+						onPress={() => router.back()}
+						className="w-10 h-10 rounded-full bg-white/20 items-center justify-center"
+					>
+						<Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+					</TouchableOpacity>
+					<Text className="text-xl font-quicksand-bold text-white flex-1 text-center mr-10">
+						Détails du partenaire
+					</Text>
+				</View>
+			</LinearGradient>
+
 			<ScrollView
 				className="flex-1"
 				showsVerticalScrollIndicator={false}
@@ -320,30 +356,18 @@ export default function DeliveryPartnerDetailScreen() {
 					/>
 				}
 			>
-				{/* Header avec gradient moderne */}
+				{/* Partie supérieure scrollable avec le reste du gradient */}
 				<LinearGradient
-					colors={['#10B981', '#34D399']}
+					colors={['#047857', '#10B981']}
 					start={{ x: 0, y: 0 }}
 					end={{ x: 1, y: 0 }}
 					style={{
-						paddingTop: insets.top + 16,
+						paddingTop: 8,
 						paddingBottom: 32,
 						paddingLeft: insets.left + 24,
 						paddingRight: insets.right + 24,
 					}}
 				>
-					<View className="flex-row items-center justify-between mb-6">
-						<TouchableOpacity
-							onPress={() => router.back()}
-							className="w-10 h-10 rounded-full bg-white/20 items-center justify-center"
-						>
-							<Ionicons name="arrow-back" size={20} color="#FFFFFF" />
-						</TouchableOpacity>
-						<Text className="text-xl font-quicksand-bold text-white flex-1 text-center mr-10">
-							Détails du partenaire
-						</Text>
-					</View>
-
 					{/* Profil principal */}
 					<View className="items-center">
 						{/* Photo de profil */}
@@ -356,14 +380,14 @@ export default function DeliveryPartnerDetailScreen() {
 						<Text className="text-white font-quicksand-bold text-2xl text-center mb-2">
 							{partner.firstName} {partner.lastName}
 						</Text>
-						
+
 						<View className="flex-row items-center space-x-3">
 							<View className={`px-3 py-1 rounded-full ${partner.availability ? 'bg-success-500/20' : 'bg-neutral-500/20'}`}>
 								<Text className={`font-quicksand-semibold text-sm ${partner.availability ? 'text-success-100' : 'text-neutral-100'}`}>
 									{partner.availability ? 'Disponible' : 'Indisponible'}
 								</Text>
 							</View>
-							
+
 							{partner.isVerified && (
 								<View className="px-3 py-1 rounded-full bg-blue-500/20">
 									<Text className="font-quicksand-semibold text-sm text-blue-100">✓ Vérifié</Text>
@@ -376,11 +400,20 @@ export default function DeliveryPartnerDetailScreen() {
 				{/* Contenu principal */}
 				<View className="px-6 pt-6 -mt-6 rounded-t-[32px] bg-background-secondary">
 					{/* Section informations générales */}
-					<View className="bg-white rounded-2xl p-4 mb-4 shadow-sm border border-neutral-100">
+					<View
+						className="bg-white rounded-2xl p-4 mb-4"
+						style={{
+							shadowColor: "#000",
+							shadowOffset: { width: 0, height: 2 },
+							shadowOpacity: 0.1,
+							shadowRadius: 4,
+							elevation: 3,
+						}}
+					>
 						<Text className="text-neutral-800 font-quicksand-bold text-lg mb-4">
 							Informations générales
 						</Text>
-						
+
 						{/* Email */}
 						{partner.email && (
 							<View className="flex-row items-center mb-3">
@@ -423,11 +456,20 @@ export default function DeliveryPartnerDetailScreen() {
 
 					{/* Section horaires de travail */}
 					{(partner as any).workingHours && (
-						<View className="bg-white rounded-2xl p-4 mb-4 shadow-sm border border-neutral-100">
+						<View
+							className="bg-white rounded-2xl p-4 mb-4"
+							style={{
+								shadowColor: "#000",
+								shadowOffset: { width: 0, height: 2 },
+								shadowOpacity: 0.1,
+								shadowRadius: 4,
+								elevation: 3,
+							}}
+						>
 							<Text className="text-neutral-800 font-quicksand-bold text-lg mb-4">
 								Horaires de travail
 							</Text>
-							
+
 							<View className="flex-row items-center">
 								<View className="w-10 h-10 rounded-full bg-warning-100 items-center justify-center mr-3">
 									<Ionicons name="time" size={16} color="#F59E0B" />
@@ -444,11 +486,20 @@ export default function DeliveryPartnerDetailScreen() {
 
 					{/* Section rating et statistiques */}
 					{(partner.rating !== undefined || (partner as any).stats) && (
-						<View className="bg-white rounded-2xl p-4 mb-4 shadow-sm border border-neutral-100">
+						<View
+							className="bg-white rounded-2xl p-4 mb-4"
+							style={{
+								shadowColor: "#000",
+								shadowOffset: { width: 0, height: 2 },
+								shadowOpacity: 0.1,
+								shadowRadius: 4,
+								elevation: 3,
+							}}
+						>
 							<Text className="text-neutral-800 font-quicksand-bold text-lg mb-4">
 								Performance
 							</Text>
-							
+
 							{partner.rating !== undefined && (
 								<View className="flex-row items-center mb-3">
 									<View className="w-10 h-10 rounded-full bg-warning-100 items-center justify-center mr-3">
@@ -475,11 +526,20 @@ export default function DeliveryPartnerDetailScreen() {
 					)}
 
 					{/* Section statut d'association */}
-					<View className="bg-white rounded-2xl p-4 mb-6 shadow-sm border border-neutral-100">
+					<View
+						className="bg-white rounded-2xl p-4 mb-6"
+						style={{
+							shadowColor: "#000",
+							shadowOffset: { width: 0, height: 2 },
+							shadowOpacity: 0.1,
+							shadowRadius: 4,
+							elevation: 3,
+						}}
+					>
 						<Text className="text-neutral-800 font-quicksand-bold text-lg mb-4">
 							Statut d&apos;association
 						</Text>
-						
+
 						{isAssociated === null || checkingAssociation ? (
 							// Loading state for association check
 							<View className="items-center py-4">
@@ -499,7 +559,7 @@ export default function DeliveryPartnerDetailScreen() {
 								<Text className="text-success-600 font-quicksand-medium text-center mb-4">
 									Ce livreur est déjà associé à votre entreprise
 								</Text>
-								
+
 								{/* Bouton de dissociation */}
 								<TouchableOpacity
 									disabled={dissociating}
@@ -540,7 +600,7 @@ export default function DeliveryPartnerDetailScreen() {
 									activeOpacity={0.85}
 								>
 									<LinearGradient
-										colors={['#10B981', '#34D399']}
+										colors={['#047857', '#10B981']}
 										start={{ x: 0, y: 0 }}
 										end={{ x: 1, y: 0 }}
 										className="absolute inset-0"
@@ -578,7 +638,7 @@ export default function DeliveryPartnerDetailScreen() {
 						<TouchableOpacity
 							className="bg-white rounded-3xl w-full max-w-sm"
 							activeOpacity={1}
-							onPress={() => {}}
+							onPress={() => { }}
 						>
 							{/* Icon */}
 							<View className="items-center pt-8 pb-4">

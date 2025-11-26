@@ -88,7 +88,7 @@ export default function MyProductsPage() {
       className="bg-white rounded-2xl shadow-md border border-neutral-100 p-3 mb-4 overflow-hidden"
       onPress={() => {
         try {
-          router.push(`/(app)/(enterprise)/(tabs)/product/${item._id}`);
+          router.push(`/(app)/(enterprise)/product/${item._id}`);
         } catch (error) {
           console.warn('Erreur navigation produit:', error);
         }
@@ -204,11 +204,11 @@ export default function MyProductsPage() {
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           className="px-6"
-          style={{ 
-            paddingTop: insets.top + 16, 
+          style={{
+            paddingTop: insets.top + 16,
             paddingLeft: insets.left + 24,
             paddingRight: insets.right + 24,
-            paddingBottom: 16 
+            paddingBottom: 16
           }}
         >
           <View className="flex-row items-center justify-between">
@@ -238,11 +238,11 @@ export default function MyProductsPage() {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         className="px-6"
-        style={{ 
-          paddingTop: insets.top + 16, 
+        style={{
+          paddingTop: insets.top + 16,
           paddingLeft: insets.left + 24,
           paddingRight: insets.right + 24,
-          paddingBottom: 16 
+          paddingBottom: 16
         }}
       >
         <View className="flex-row items-center justify-between">

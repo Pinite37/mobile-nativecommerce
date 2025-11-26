@@ -56,17 +56,17 @@ export default function EnterpriseDetails() {
   const loadEnterpriseData = async () => {
     try {
       setLoading(true);
-      
+
       console.log('🔄 Chargement données entreprise:', id);
-      
+
       const [enterpriseData, productsData] = await Promise.all([
         EnterpriseService.getPublicEnterpriseById(id!),
         EnterpriseService.getEnterpriseProducts(id!, 1, 12)
       ]);
-      
+
       console.log('📊 Enterprise data received:', enterpriseData);
       console.log('📦 Products data received:', productsData);
-      
+
       setEnterprise(enterpriseData);
       setProducts(productsData.products || []);
       setPagination(productsData.pagination || {
@@ -75,7 +75,7 @@ export default function EnterpriseDetails() {
         total: 0,
         pages: 0
       });
-      
+
       console.log("✅ Données entreprise chargées:", enterpriseData.companyName);
       console.log("✅ Produits chargés:", (productsData.products || []).length);
     } catch (error) {
@@ -92,12 +92,12 @@ export default function EnterpriseDetails() {
 
   const loadMoreProducts = async () => {
     if (loadingProducts || pagination.page >= pagination.pages) return;
-    
+
     try {
       setLoadingProducts(true);
       const nextPage = pagination.page + 1;
       const productsData = await EnterpriseService.getEnterpriseProducts(id!, nextPage, 12);
-      
+
       setProducts(prev => [...prev, ...(productsData.products || [])]);
       setPagination(productsData.pagination || pagination);
     } catch (error) {
@@ -151,16 +151,16 @@ export default function EnterpriseDetails() {
 
       {/* Header Skeleton */}
       <LinearGradient
-        colors={['#10B981', '#34D399']}
+        colors={['#047857', '#10B981']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        style={{ 
-            paddingTop: insets.top + 16, 
-            paddingLeft: insets.left + 24,
-            paddingRight: insets.right + 24,
-            paddingBottom: 16 
-          }}
-        
+        style={{
+          paddingTop: insets.top + 16,
+          paddingLeft: insets.left + 24,
+          paddingRight: insets.right + 24,
+          paddingBottom: 16
+        }}
+
       >
         <View className="flex-row items-center justify-between">
           <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
@@ -171,7 +171,16 @@ export default function EnterpriseDetails() {
 
       <View className="flex-1">
         {/* Enterprise Info Skeleton */}
-        <View className="bg-white mx-4 rounded-2xl shadow-sm border border-neutral-100 mt-6 mb-6">
+        <View
+          className="bg-white mx-4 rounded-2xl mt-6 mb-6"
+          style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            elevation: 3,
+          }}
+        >
           <View className="p-6">
             <View className="flex-row items-center mb-4">
               <ShimmerBlock style={{ width: 80, height: 80, borderRadius: 16 }} />
@@ -236,7 +245,7 @@ export default function EnterpriseDetails() {
   const openWhatsApp = (phone: string) => {
     const message = `Bonjour ! Je découvre votre entreprise "${enterprise?.companyName}" sur NativeCommerce. Pouvez-vous me donner plus d'informations sur vos produits ? Merci !`;
     const whatsappUrl = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
-    
+
     Linking.canOpenURL(whatsappUrl)
       .then((supported) => {
         if (supported) {
@@ -286,7 +295,7 @@ export default function EnterpriseDetails() {
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       url = `https://${url}`;
     }
-    
+
     Linking.canOpenURL(url)
       .then((supported) => {
         if (supported) {
@@ -310,17 +319,24 @@ export default function EnterpriseDetails() {
 
   // Composant pour une carte de produit
   const ProductCard = ({ product }: { product: Product }) => (
-    <TouchableOpacity 
-      className="bg-white rounded-2xl shadow-sm border border-neutral-100 mb-3"
-      style={{ width: (screenWidth - 48) / 2 }}
+    <TouchableOpacity
+      className="bg-white rounded-2xl mb-3 overflow-hidden"
+      style={{
+        width: (screenWidth - 48) / 2,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+      }}
       onPress={() => {
-        router.push(`/(app)/(enterprise)/(tabs)/product/${product._id}`);
+        router.push(`/(app)/(enterprise)/product/${product._id}`);
       }}
     >
       <View className="relative">
         <Image
-          source={{ 
-            uri: product.images[0] || "https://via.placeholder.com/160x120/CCCCCC/FFFFFF?text=No+Image" 
+          source={{
+            uri: product.images[0] || "https://via.placeholder.com/160x120/CCCCCC/FFFFFF?text=No+Image"
           }}
           className="w-full h-28 rounded-t-2xl"
           resizeMode="cover"
@@ -333,16 +349,16 @@ export default function EnterpriseDetails() {
           </View>
         )}
       </View>
-      
+
       <View className="p-3">
         <Text numberOfLines={2} className="text-sm font-quicksand-semibold text-neutral-800 mb-2 h-10">
           {product.name}
         </Text>
-        
+
         <Text className="text-base font-quicksand-bold text-primary-600 mb-2">
           {formatPrice(product.price)}
         </Text>
-        
+
         {product.stats && (
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center">
@@ -392,7 +408,7 @@ export default function EnterpriseDetails() {
 
       {/* Header vert commun */}
       <LinearGradient
-        colors={['#10B981', '#34D399']}
+        colors={['#047857', '#10B981']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={{
@@ -438,7 +454,16 @@ export default function EnterpriseDetails() {
         ListHeaderComponent={
           <View>
             {/* Informations de l'entreprise */}
-            <View className="bg-white mx-4 rounded-2xl shadow-sm border border-neutral-100 mb-6">
+            <View
+              className="bg-white mx-4 rounded-2xl mb-6"
+              style={{
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 3,
+              }}
+            >
               {/* Logo et infos principales */}
               <View className="p-6">
                 <View className="flex-row items-center mb-4">
@@ -453,7 +478,7 @@ export default function EnterpriseDetails() {
                       <Ionicons name="business" size={32} color="#FE8C00" />
                     </View>
                   )}
-                  
+
                   <View className="ml-4 flex-1">
                     <Text className="text-xl font-quicksand-bold text-neutral-800 mb-1">
                       {enterprise.companyName}
@@ -501,7 +526,7 @@ export default function EnterpriseDetails() {
                       {enterprise.stats.totalReviews || 0} avis
                     </Text>
                   </View>
-                  
+
                   <View className="flex-1 bg-neutral-50 rounded-xl p-3 mx-1">
                     <View className="flex-row items-center mb-1">
                       <Ionicons name="cube" size={16} color="#10B981" />
@@ -513,7 +538,7 @@ export default function EnterpriseDetails() {
                       produits
                     </Text>
                   </View>
-                  
+
                   <View className="flex-1 bg-neutral-50 rounded-xl p-3 ml-2">
                     <View className="flex-row items-center mb-1">
                       <Ionicons name="people" size={16} color="#8B5CF6" />
@@ -544,7 +569,7 @@ export default function EnterpriseDetails() {
                             WhatsApp
                           </Text>
                         </TouchableOpacity>
-                        
+
                         <TouchableOpacity
                           onPress={() => makePhoneCall(enterprise.contactInfo.phone)}
                           className="flex-row items-center bg-primary-100 rounded-xl px-3 py-2 mr-2 mb-2"
@@ -556,7 +581,7 @@ export default function EnterpriseDetails() {
                         </TouchableOpacity>
                       </>
                     )}
-                    
+
                     {enterprise.contactInfo.website && (
                       <TouchableOpacity
                         onPress={() => openWebsite(enterprise.contactInfo.website!)}

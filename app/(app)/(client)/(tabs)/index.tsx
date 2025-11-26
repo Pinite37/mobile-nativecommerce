@@ -28,6 +28,7 @@ import { useAuth } from "../../../../contexts/AuthContext";
 import AdvertisementService, { Advertisement } from '../../../../services/api/AdvertisementService';
 import CategoryService from "../../../../services/api/CategoryService";
 // import { useSearchCache } from "../../../../hooks/useSearchCache"; // retiré (non utilisé)
+import { Enterprise } from "../../../../services/api/EnterpriseService";
 import ProductService from "../../../../services/api/ProductService";
 import SearchService from "../../../../services/api/SearchService";
 import SearchCacheService, { RecentSearch } from "../../../../services/SearchCacheService";
@@ -98,6 +99,7 @@ export default function ClientHome() {
     const { user } = useAuth();
     const router = useRouter();
     const insets = useSafeAreaInsets();
+    const FIXED_HEADER_HEIGHT = 120 + insets.top;
     // const { getCacheStats } = useSearchCache(); // (non utilisé pour l'instant)
 
     // Calcul responsive pour la largeur des produits
@@ -121,6 +123,7 @@ export default function ClientHome() {
     const [currentAdIndex, setCurrentAdIndex] = useState(0);
     const [refreshing, setRefreshing] = useState(false);
     const [loading, setLoading] = useState(true); // État de chargement global
+    const scrollY = useRef(new Animated.Value(0)).current;
     const [imageRefreshKey, setImageRefreshKey] = useState(0); // Clé pour forcer le rechargement des images
 
     // États pour les produits de l'API
@@ -130,6 +133,10 @@ export default function ClientHome() {
     // États pour les catégories
     const [categoriesData, setCategoriesData] = useState<Category[]>([]);
     const [loadingCategories, setLoadingCategories] = useState(false);
+
+    // États pour les boutiques
+    const [featuredStores, setFeaturedStores] = useState<Enterprise[]>([]);
+    const [loadingStores, setLoadingStores] = useState(false);
 
     // États pour la recherche
     const [searchQuery, setSearchQuery] = useState('');
@@ -186,15 +193,15 @@ export default function ClientHome() {
     const handleAdPress = async (ad: Advertisement) => {
         try {
             console.log("🖱️ Clic sur publicité:", ad._id);
-            
+
             // Incrémenter le clic en arrière-plan
             AdvertisementService.incrementClick(ad._id).catch(() => { });
 
             console.log("🧭 Navigation vers la page de la pub...");
-            
+
             // Naviguer vers la page de détails de la publicité
             router.push(`/(app)/(client)/advertisement/${ad._id}` as any);
-            
+
             console.log("✅ Navigation lancée");
         } catch (e) {
             console.error('⚠️ Erreur clic publicité:', e);
@@ -224,12 +231,25 @@ export default function ClientHome() {
         }
     }
 
+    async function loadFeaturedStores() {
+        try {
+            setLoadingStores(true);
+            // Note: Pour l'instant on initialise vide car l'API nécessite un terme de recherche
+            // TODO: Implémenter une méthode API dédiée pour obtenir les entreprises en vedette
+            setFeaturedStores([]);
+        } catch (e) {
+            console.error('❌ Erreur chargement boutiques:', e);
+        } finally {
+            setLoadingStores(false);
+        }
+    }
+
     async function loadFavorites() {
         try {
             console.log('🔥 Chargement des favoris...');
             const favResponse = await ProductService.getFavoriteProducts();
             console.log('📦 Réponse favoris:', favResponse);
-            
+
             if (Array.isArray(favResponse)) {
                 const favoriteIds = favResponse.map((f: any) => f.product?._id);
                 console.log('❤️ IDs favoris:', favoriteIds);
@@ -263,7 +283,8 @@ export default function ClientHome() {
     async function refreshData() {
         try {
             setRefreshing(true);
-            await Promise.all([loadAds(), loadFeaturedProducts(), loadFavorites(), loadCategories()]);
+            setRefreshing(true);
+            await Promise.all([loadAds(), loadFeaturedProducts(), loadFavorites(), loadCategories(), loadFeaturedStores()]);
         } catch (e) {
             console.error('❌ Erreur refresh:', e);
         } finally {
@@ -296,19 +317,16 @@ export default function ClientHome() {
 
     // ================= Chargement initial =================
     const loadInitialData = async () => {
-        try {
-            await Promise.all([
-                loadAds(),
-                loadFeaturedProducts(),
-                loadRecentSearches(),
-                loadFavorites(),
-                loadCategories()
-            ]);
-        } catch (error) {
-            console.error('❌ Erreur chargement données initiales:', error);
-        } finally {
-            setLoading(false);
-        }
+        setLoading(true);
+        await Promise.all([
+            loadAds(),
+            loadFeaturedProducts(),
+            loadFavorites(),
+            loadCategories(),
+            loadFeaturedStores(),
+            loadRecentSearches()
+        ]);
+        setLoading(false);
     };
 
     useEffect(() => {
@@ -385,76 +403,106 @@ export default function ClientHome() {
     );
 
     const renderSkeletonHome = () => (
-        <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 90 }}
-        >
-            {/* Header Skeleton */}
-            <LinearGradient 
-                colors={['#10B981', '#34D399']} 
-                start={{ x: 0, y: 0 }} 
-                end={{ x: 1, y: 1 }} 
-                className="rounded-b-3xl shadow-md"
-                style={{ paddingTop: insets.top + 16 }}
+        <View className="flex-1 bg-background-secondary">
+            {/* Header Skeleton with Floating Search */}
+            <View className="z-50">
+                <LinearGradient
+                    colors={["#059669", "#10B981"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{
+                        paddingTop: insets.top + 10,
+                        paddingBottom: 80,
+                        borderBottomLeftRadius: 30,
+                        borderBottomRightRadius: 30,
+                    }}
+                    className="shadow-lg"
+                >
+                    <View className="px-6 flex-row justify-between items-center mb-4">
+                        <View>
+                            <ShimmerBlock style={{ height: 16, borderRadius: 8, width: 80, marginBottom: 8 }} />
+                            <ShimmerBlock style={{ height: 24, borderRadius: 12, width: 120 }} />
+                        </View>
+                        <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
+                    </View>
+                </LinearGradient>
+
+                {/* Floating Search Skeleton */}
+                <View className="-mt-14 px-4">
+                    <View className="bg-white rounded-3xl shadow-xl p-2">
+                        <ShimmerBlock style={{ height: 44, borderRadius: 16, width: '100%', marginBottom: 12 }} />
+                        <View className="flex-row justify-between">
+                            <ShimmerBlock style={{ width: '48%', height: 36, borderRadius: 12 }} />
+                            <ShimmerBlock style={{ width: '48%', height: 36, borderRadius: 12 }} />
+                        </View>
+                    </View>
+                </View>
+            </View>
+
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 90 }}
             >
-                <View className="px-6 pb-4">
-                    <View className="flex-row items-center justify-between">
-                        <ShimmerBlock style={{ height: 20, borderRadius: 10, width: '40%' }} />
-                        <ShimmerBlock style={{ width: 24, height: 24, borderRadius: 12 }} />
+                {/* Ads Skeleton - Carousel Style */}
+                <View className="py-0">
+                    <View className="px-4 mt-1">
+                        <ShimmerBlock style={{ height: 200, borderRadius: 24, width: '100%' }} />
+                    </View>
+                    {/* Indicators */}
+                    <View className="flex-row justify-center mt-3 gap-2">
+                        {[0, 1, 2].map((i) => (
+                            <ShimmerBlock key={i} style={{ width: 8, height: 8, borderRadius: 4 }} />
+                        ))}
                     </View>
                 </View>
 
-                <View className="flex-row justify-between px-6 mb-4">
-                    <ShimmerBlock style={{ width: '45%', height: 40, borderRadius: 16 }} />
-                    <ShimmerBlock style={{ width: '45%', height: 40, borderRadius: 16 }} />
-                </View>
-
-                <View className="px-6 pb-4">
-                    <ShimmerBlock style={{ height: 44, borderRadius: 16, width: '100%' }} />
-                </View>
-            </LinearGradient>
-
-            {/* Categories Skeleton */}
-            <View className="py-6">
-                <View className="px-6 mb-4">
-                    <ShimmerBlock style={{ height: 20, borderRadius: 10, width: '50%', marginBottom: 8 }} />
-                    <ShimmerBlock style={{ height: 14, borderRadius: 7, width: '70%' }} />
-                </View>
-                <View className="flex-row flex-wrap justify-center px-3">
-                    {Array.from({ length: 8 }).map((_, index) => (
-                        <View key={index} style={{ width: '25%', paddingHorizontal: 5, marginBottom: 16 }}>
-                            <View className="items-center">
-                                <ShimmerBlock style={{ width: 64, height: 64, borderRadius: 16, marginBottom: 12 }} />
-                                <ShimmerBlock style={{ width: 48, height: 12, borderRadius: 6 }} />
+                {/* Categories Skeleton - Horizontal Scroll */}
+                <View className="py-6">
+                    <View className="px-6 mb-4">
+                        <ShimmerBlock style={{ height: 20, borderRadius: 10, width: 140, marginBottom: 4 }} />
+                        <ShimmerBlock style={{ height: 14, borderRadius: 7, width: 200 }} />
+                    </View>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}>
+                        {Array.from({ length: 6 }).map((_, index) => (
+                            <View key={index} className="items-center">
+                                <ShimmerBlock style={{ width: 70, height: 70, borderRadius: 20, marginBottom: 8 }} />
+                                <ShimmerBlock style={{ width: 60, height: 12, borderRadius: 6 }} />
                             </View>
-                        </View>
-                    ))}
+                        ))}
+                    </ScrollView>
                 </View>
-            </View>
 
-            {/* Ads Skeleton */}
-            <View className="py-4">
-                <View className="px-6 mb-4">
-                    <ShimmerBlock style={{ height: 20, borderRadius: 10, width: '50%' }} />
-                </View>
-                <View className="px-4">
-                    <ShimmerBlock style={{ height: 180, borderRadius: 16, width: '100%' }} />
-                </View>
-            </View>
+                {/* Featured Stores Skeleton - Hidden since we don't have stores */}
+                {/* Uncomment when featured stores are available */}
+                {/* <View className="py-4">
+                    <View className="px-6 mb-4">
+                        <ShimmerBlock style={{ height: 20, borderRadius: 10, width: 160 }} />
+                    </View>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 16 }}>
+                        {Array.from({ length: 4 }).map((_, index) => (
+                            <View key={index} className="items-center">
+                                <ShimmerBlock style={{ width: 80, height: 80, borderRadius: 40, marginBottom: 8 }} />
+                                <ShimmerBlock style={{ width: 70, height: 12, borderRadius: 6, marginBottom: 4 }} />
+                                <ShimmerBlock style={{ width: 50, height: 10, borderRadius: 5 }} />
+                            </View>
+                        ))}
+                    </ScrollView>
+                </View> */}
 
-            {/* Featured Products Skeleton */}
-            <View className="py-4 px-4">
-                <View className="mb-4 flex-row justify-between items-center">
-                    <ShimmerBlock style={{ height: 18, borderRadius: 9, width: '40%' }} />
-                    <ShimmerBlock style={{ width: 80, height: 32, borderRadius: 16 }} />
+                {/* Featured Products Skeleton */}
+                <View className="px-4 py-4">
+                    <View className="mb-4 flex-row justify-between items-center">
+                        <ShimmerBlock style={{ height: 20, borderRadius: 10, width: 140 }} />
+                        <ShimmerBlock style={{ width: 80, height: 32, borderRadius: 16 }} />
+                    </View>
+                    <View className="flex-row flex-wrap justify-between">
+                        {Array.from({ length: 6 }).map((_, index) => (
+                            <SkeletonProduct key={index} />
+                        ))}
+                    </View>
                 </View>
-                <View className="flex-row flex-wrap justify-between">
-                    {Array.from({ length: 6 }).map((_, index) => (
-                        <SkeletonProduct key={index} />
-                    ))}
-                </View>
-            </View>
-        </ScrollView>
+            </ScrollView>
+        </View>
     );
 
     const formatPrice = (price: number) => {
@@ -752,53 +800,162 @@ export default function ClientHome() {
     const renderProduct = (item: Product) => (
         <TouchableOpacity
             key={`product-${item._id}`}
-            className="bg-white rounded-2xl shadow-md border border-neutral-100 p-2 mb-3 overflow-hidden"
+            className="bg-white rounded-3xl shadow-sm border border-neutral-100 mb-4 overflow-hidden"
             style={{ width: productWidth }}
             onPress={() => navigateTo(`/(app)/(client)/product/${item._id}`)}
+            activeOpacity={0.9}
         >
             <View className="relative">
                 <Image
                     key={`image-${item._id}-${imageRefreshKey}`}
-                    source={{ uri: item.images[0] || "https://via.placeholder.com/150x150/CCCCCC/FFFFFF?text=No+Image" }}
-                    className="w-full h-32 rounded-t-2xl"
+                    source={{ uri: item.images[0] || "https://via.placeholder.com/300" }}
+                    className="w-full h-40 bg-neutral-100"
                     resizeMode="cover"
                 />
-                {item.stats.totalSales > 10 && (
-                    <View className="absolute top-2 left-2 bg-success-500 rounded-full px-2 py-1">
-                        <Text className="text-white text-xs font-quicksand-bold">
-                            Populaire
-                        </Text>
-                    </View>
-                )}
+                <LinearGradient
+                    colors={['transparent', 'rgba(0,0,0,0.05)']}
+                    className="absolute bottom-0 left-0 right-0 h-12"
+                />
+
+                {/* Badges */}
+                <View className="absolute top-2 left-2 flex-row flex-wrap gap-1">
+                    {item.stats && item.stats.totalSales > 10 && (
+                        <View className="bg-emerald-500/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-sm">
+                            <Text className="text-white text-[10px] font-quicksand-bold">Top</Text>
+                        </View>
+                    )}
+                    {(item as any).promotion && (
+                        <View className="bg-red-500/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-sm">
+                            <Text className="text-white text-[10px] font-quicksand-bold">Promo</Text>
+                        </View>
+                    )}
+                </View>
+
+                {/* Favorite Button */}
                 <TouchableOpacity
-                    className="absolute bottom-2 right-2 bg-white/80 rounded-full p-1"
-                    onPress={() => toggleFavorite(item._id)}
+                    className="absolute top-2 right-2 w-8 h-8 bg-white/90 backdrop-blur-md rounded-full items-center justify-center shadow-sm"
+                    onPress={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite(item._id);
+                    }}
                 >
                     <Ionicons
                         name={favorites.has(item._id) ? "heart" : "heart-outline"}
-                        size={20}
-                        color={favorites.has(item._id) ? "#EF4444" : "#6B7280"}
+                        size={16}
+                        color={favorites.has(item._id) ? "#EF4444" : "#4B5563"}
                     />
                 </TouchableOpacity>
             </View>
-            <View className="p-2">
-                <Text numberOfLines={2} className="text-sm font-quicksand-semibold text-neutral-800 mb-1">
+
+            <View className="p-3">
+                <Text numberOfLines={1} className="text-xs text-neutral-400 font-quicksand-medium mb-0.5">
+                    {(item.category as any)?.name || 'Divers'}
+                </Text>
+                <Text numberOfLines={2} className="text-sm font-quicksand-bold text-neutral-800 leading-5 h-10 mb-1">
                     {item.name}
                 </Text>
-                <Text className="text-base font-quicksand-bold text-primary-600 mb-1">
-                    {formatPrice(item.price)}
-                </Text>
-                {item.stats && (
-                    <View className="flex-row items-center">
-                        <Ionicons name="star" size={12} color="#FFD700" />
-                        <Text className="text-xs text-neutral-600 ml-1">
-                            {item.stats.averageRating?.toFixed(1) || '0.0'}
-                        </Text>
-                    </View>
-                )}
+
+                <View className="flex-row items-center justify-between mt-1">
+                    <Text className="text-base font-quicksand-bold text-emerald-600">
+                        {formatPrice(item.price)}
+                    </Text>
+                    {item.stats && (
+                        <View className="flex-row items-center bg-amber-50 px-1.5 py-0.5 rounded-md">
+                            <Ionicons name="star" size={10} color="#F59E0B" />
+                            <Text className="text-[10px] font-quicksand-bold text-amber-700 ml-1">
+                                {item.stats.averageRating?.toFixed(1) || '5.0'}
+                            </Text>
+                        </View>
+                    )}
+                </View>
             </View>
         </TouchableOpacity>
     );
+
+    const renderHeader = () => (
+        <View className="z-50">
+            <LinearGradient
+                colors={["#059669", "#10B981"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                    paddingTop: insets.top + 10,
+                    paddingBottom: 80,
+                    borderBottomLeftRadius: 30,
+                    borderBottomRightRadius: 30,
+                }}
+                className="shadow-lg"
+            >
+                <View className="px-6 flex-row justify-between items-center mb-4">
+                    <View>
+                        <Text className="text-emerald-50 text-sm font-quicksand-medium">
+                            {greetUser()},
+                        </Text>
+                        <Text className="text-white text-2xl font-quicksand-bold">
+                            {user ? user.firstName : "Invité"}
+                        </Text>
+                    </View>
+                    <TouchableOpacity
+                        className="bg-white/20 p-2 rounded-full backdrop-blur-sm border border-white/30"
+                        onPress={() => { }}
+                    >
+                        <Ionicons name="notifications-outline" size={24} color="white" />
+                        <View className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-emerald-600" />
+                    </TouchableOpacity>
+                </View>
+            </LinearGradient>
+
+            {/* Search Section Floating Over Header */}
+            <View className="-mt-14 px-4">
+                <View className="bg-white rounded-3xl shadow-xl shadow-emerald-900/10 border border-neutral-100 p-2">
+                    <View className="flex-row items-center px-3 py-2 bg-gray-50 rounded-2xl border border-gray-100">
+                        <Ionicons name="search" size={22} color="#10B981" />
+                        <TextInput
+                            className="flex-1 ml-3 text-neutral-800 font-quicksand-semibold text-base"
+                            placeholder="Que recherchez-vous ?"
+                            placeholderTextColor="#9CA3AF"
+                            value={searchQuery}
+                            onChangeText={handleSearchChange}
+                            onFocus={handleSearchInputFocus}
+                            onBlur={handleSearchInputBlur}
+                            onSubmitEditing={() => performSearch()}
+                            returnKeyType="search"
+                        />
+                        {searchQuery.length > 0 && (
+                            <TouchableOpacity onPress={() => setSearchQuery('')} className="mr-2">
+                                <Ionicons name="close-circle" size={18} color="#9CA3AF" />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
+                    {/* Location Chips inside Search Card */}
+                    <View className="flex-row mt-3 px-1 pb-1">
+                        <TouchableOpacity
+                            onPress={() => setCityModalVisible(true)}
+                            className="flex-1 flex-row items-center justify-center bg-emerald-50 py-2 rounded-xl mr-2"
+                        >
+                            <Ionicons name="location" size={14} color="#059669" />
+                            <Text numberOfLines={1} className="ml-1.5 text-xs font-quicksand-bold text-emerald-800">
+                                {selectedCity}
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => selectedCity && setNeighborhoodModalVisible(true)}
+                            className={`flex-1 flex-row items-center justify-center py-2 rounded-xl ml-2 ${selectedCity ? 'bg-gray-100' : 'bg-gray-50 opacity-50'}`}
+                            disabled={!selectedCity}
+                        >
+                            <Ionicons name="map" size={14} color="#4B5563" />
+                            <Text numberOfLines={1} className="ml-1.5 text-xs font-quicksand-bold text-gray-700">
+                                {selectedNeighborhood || "Quartier"}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View>
+        </View>
+    );
+
+    const renderSearchSection = () => null; // Search is now integrated in Header
 
     const renderProductListItem = (item: Product) => (
         <TouchableOpacity
@@ -855,34 +1012,7 @@ export default function ClientHome() {
         </TouchableOpacity>
     );
 
-    const renderStore = (item: any) => (
-        <TouchableOpacity 
-            key={item.id}
-            className="bg-white rounded-xl shadow-sm border border-neutral-100 p-2 mb-3 w-[48%]"
-            onPress={() => navigateTo(`/(app)/(client)/enterprise/${item.id}`)}
-        >
-            <Image
-                source={{ uri: item.images && item.images.length > 0 ? item.images[0] : "https://via.placeholder.com/150x150/CCCCCC/FFFFFF?text=No+Image" }}
-                className="w-full h-32 rounded-t-xl mb-2"
-                resizeMode="cover"
-            />
-            <Text numberOfLines={1} className="text-sm font-quicksand-semibold text-neutral-800 mb-1 text-center">
-                {item.name}
-            </Text>
-            <Text className="text-xs text-neutral-600 mb-1 text-center">
-                {item.category}
-            </Text>
-            <View className="flex-row items-center justify-center">
-                <Ionicons name="star" size={12} color="#FFD700" />
-                <Text className="text-xs text-neutral-600 ml-1">
-                    {item.rating}
-                </Text>
-                {item.verified && (
-                    <Ionicons name="checkmark-circle" size={12} color="#10B981" className="ml-1" />
-                )}
-            </View>
-        </TouchableOpacity>
-    );
+
 
     const renderAd = ({ item }: { item: any }) => {
         console.log("🎨 renderAd appelé pour:", item._id);
@@ -894,23 +1024,55 @@ export default function ClientHome() {
                 }}
                 activeOpacity={0.9}
                 className="rounded-2xl overflow-hidden mx-3 shadow-md"
-                style={{ width: Dimensions.get('window').width - 48, height: 180, position: 'relative' }}
+                style={{
+                    width: Dimensions.get("window").width - 48,
+                    height: 180,
+                    position: "relative",
+                }}
                 accessibilityRole="imagebutton"
-                accessibilityLabel={item.title || 'Publicité'}
+                accessibilityLabel={item.title || "Publicité"}
             >
                 <Image
-                    source={{ uri: item.images && item.images.length > 0 ? item.images[0] : "https://via.placeholder.com/150x150/CCCCCC/FFFFFF?text=No+Image" }}
-                    style={{ width: '100%', height: 180, position: 'absolute' }}
+                    source={{
+                        uri:
+                            item.images && item.images.length > 0
+                                ? item.images[0]
+                                : "https://via.placeholder.com/150x150/CCCCCC/FFFFFF?text=No+Image",
+                    }}
+                    style={{ width: "100%", height: 180, position: "absolute" }}
                     resizeMode="cover"
                 />
                 <LinearGradient
-                    colors={['rgba(0,0,0,0.0)','rgba(0,0,0,0.7)']}
-                    start={{ x:0, y:0 }} end={{ x:0, y:1 }}
-                    style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, justifyContent: 'flex-end', padding: 16 }}
+                    colors={["rgba(0,0,0,0.0)", "rgba(0,0,0,0.7)"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={{
+                        position: "absolute",
+                        left: 0,
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        justifyContent: "flex-end",
+                        padding: 16,
+                    }}
                     pointerEvents="none"
                 >
-                    <Text numberOfLines={2} className="text-white font-quicksand-bold text-base mb-1">{item.title}</Text>
-                    <Text numberOfLines={1} className="text-white/90 font-quicksand-medium text-xs">{new Date(item.endDate).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' })} • {item.type}</Text>
+                    <Text
+                        numberOfLines={2}
+                        className="text-white font-quicksand-bold text-base mb-1"
+                    >
+                        {item.title}
+                    </Text>
+                    <Text
+                        numberOfLines={1}
+                        className="text-white/90 font-quicksand-medium text-xs"
+                    >
+                        {new Date(item.endDate).toLocaleDateString("fr-FR", {
+                            day: "2-digit",
+                            month: "short",
+                        })}{" "}
+                        • {item.type}
+                    </Text>
                 </LinearGradient>
             </TouchableOpacity>
         );
@@ -922,615 +1084,613 @@ export default function ClientHome() {
             {loading ? (
                 renderSkeletonHome()
             ) : (
-                <ScrollView 
-                    className="flex-1" 
-                    showsVerticalScrollIndicator={false}
-                    keyboardShouldPersistTaps="handled"
-                    contentContainerStyle={{ paddingBottom: 90 }}
-                    refreshControl={
-                            <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={refreshData}
-                            colors={['#10B981']}
-                            tintColor="#10B981"
-                        />
-                    }
-                >
-                {/* Header with Location */}
-                <LinearGradient 
-                    colors={['#10B981', '#34D399']} 
-                    start={{ x: 0, y: 0 }} 
-                    end={{ x: 1, y: 1 }} 
-                    className="rounded-b-3xl shadow-md"
-                    style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}
-                >
-                    {/* Header avec salutation et icône notification */}
-                    <View className="px-4 pb-4">
-                        <View className="flex-row items-center justify-between">
-                            <View>
-                                <Text className="text-sm font-quicksand-medium text-white opacity-90">
-                                    {greetUser()},
-                                </Text>
-                                <Text className="text-lg font-quicksand-bold text-white">
-                                    {user ? `${user.firstName} ${user.lastName}` : 'Client'}
-                                </Text>
-                            </View>
-                            {/* <TouchableOpacity className="relative">
-                                <Ionicons name="notifications-outline" size={24} color="white" />
-                                <View className="absolute -top-1 -right-1 w-3 h-3 bg-error-500 rounded-full" />
-                            </TouchableOpacity> */}
-                        </View>
-                    </View>
+                <>
+                    {renderHeader()}
 
-                    {/* Location Selection */}
-                    <View className="flex-row justify-between px-4 mb-4">
-                        <TouchableOpacity 
-                            onPress={() => setCityModalVisible(true)}
-                            className="bg-white/15 border border-white/20 flex-1 rounded-2xl py-3 px-4 mr-2"
+                    {/* Suggestions et Recherches récentes - Position absolute pour éviter l'espace blanc */}
+                    {(showSuggestions || showRecentSearches) && (
+                        <View
+                            className="absolute bg-white rounded-b-2xl shadow-lg border-t border-gray-100 mx-4 z-40"
+                            style={{
+                                top: insets.top + 10 + 80 - 56 + 110, // header paddingTop + paddingBottom - mt-14 + hauteur carte
+                                left: 0,
+                                right: 0,
+                                maxHeight: 400
+                            }}
                         >
-                            <View className="flex-row items-center justify-between">
-                                <Text className="text-white font-quicksand-medium">
-                                    {selectedCity || "Toutes les villes"}
-                                </Text>
-                                <Ionicons name="chevron-down-outline" size={16} color="white" />
-                            </View>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity 
-                            onPress={() => selectedCity && setNeighborhoodModalVisible(true)}
-                            className="bg-white/15 border border-white/20 flex-1 rounded-2xl py-3 px-4 ml-2"
-                            disabled={!selectedCity}
-                        >
-                            <View className="flex-row items-center justify-between">
-                                <Text className={`font-quicksand-medium ${selectedNeighborhood ? "text-white" : "text-gray-200"}`}>
-                                    {selectedNeighborhood || "Tous les quartiers"}
-                                </Text>
-                                <Ionicons name="chevron-down-outline" size={16} color="white" />
-                            </View>
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Search Bar */}
-                    <View className="px-4 pb-4">
-                        <View className="bg-white rounded-2xl shadow-lg border border-white/20">
-                            <View className="flex-row items-center px-4 py-3">
-                                <Ionicons name="search" size={20} color="#9CA3AF" />
-                                <TextInput
-                                    className="ml-3 flex-1 text-neutral-700 font-quicksand-medium"
-                                    placeholder="Rechercher des produits..."
-                                    placeholderTextColor="#9CA3AF"
-                                    value={searchQuery}
-                                    onChangeText={handleSearchChange}
-                                    onFocus={handleSearchInputFocus}
-                                    onBlur={handleSearchInputBlur}
-                                    onSubmitEditing={() => performSearch()}
-                                    returnKeyType="search"
-                                />
-                                {loadingSearch ? (
-                                    <ActivityIndicator size="small" color="#9CA3AF" />
-                                ) : (
-                                    <TouchableOpacity onPress={() => {
-                                        if (searchQuery.trim()) {
-                                            performSearch();
-                                        }
-                                    }}>
-                                        <Ionicons name="search" size={20} color="#10B981" />
-                                    </TouchableOpacity>
+                            <ScrollView
+                                showsVerticalScrollIndicator={false}
+                                keyboardShouldPersistTaps="handled"
+                            >
+                                {/* Recherches récentes */}
+                                {showRecentSearches && recentSearches.length > 0 && (
+                                    <View>
+                                        <View className="flex-row items-center justify-between px-4 py-2 bg-gray-50">
+                                            <Text className="text-xs font-quicksand-semibold text-neutral-600 uppercase">
+                                                Recherches récentes
+                                            </Text>
+                                            <TouchableOpacity onPress={clearSearchHistory}>
+                                                <Text className="text-xs font-quicksand-medium text-primary-500">
+                                                    Effacer
+                                                </Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                        {recentSearches.slice(0, 5).map((recentSearch, index) => (
+                                            <TouchableOpacity
+                                                key={index}
+                                                className="flex-row items-center justify-between px-4 py-3 border-b border-gray-50"
+                                                onPress={() => {
+                                                    setSearchQuery(recentSearch.query);
+                                                    performSearch(recentSearch.query);
+                                                }}
+                                            >
+                                                <View className="flex-row items-center flex-1">
+                                                    <Ionicons name="time-outline" size={16} color="#9CA3AF" />
+                                                    <Text className="ml-3 flex-1 text-neutral-700 font-quicksand-medium">
+                                                        {recentSearch.query}
+                                                    </Text>
+                                                    <Text className="text-xs text-neutral-400 font-quicksand-medium mr-2">
+                                                        {recentSearch.resultCount} résultat{recentSearch.resultCount > 1 ? 's' : ''}
+                                                    </Text>
+                                                </View>
+                                                <TouchableOpacity
+                                                    onPress={(e) => {
+                                                        e.stopPropagation();
+                                                        removeFromSearchHistory(recentSearch.query);
+                                                    }}
+                                                    className="p-1"
+                                                >
+                                                    <Ionicons name="close" size={14} color="#9CA3AF" />
+                                                </TouchableOpacity>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
                                 )}
-                            </View>
 
-                            {/* Recherches récentes */}
-                            {showRecentSearches && recentSearches.length > 0 && (
-                                <View className="border-t border-gray-100">
-                                    <View className="flex-row items-center justify-between px-4 py-2 bg-gray-50">
-                                        <Text className="text-xs font-quicksand-semibold text-neutral-600 uppercase">
-                                            Recherches récentes
+                                {/* Suggestions */}
+                                {showSuggestions && searchSuggestions.length > 0 && (
+                                    <View className="border-t border-gray-100 rounded-b-2xl overflow-hidden">
+                                        <View className="px-4 py-3 bg-gradient-to-r from-primary-50 to-primary-100">
+                                            <Text className="text-xs font-quicksand-bold text-primary-700 uppercase tracking-wide">
+                                                Suggestions
+                                            </Text>
+                                        </View>
+                                        {searchSuggestions.map((suggestion, index) => {
+                                            const isLast = index === searchSuggestions.length - 1;
+                                            const getIconColor = (type: string) => {
+                                                switch (type) {
+                                                    case 'product': return '#10B981';
+                                                    case 'category': return '#8B5CF6';
+                                                    case 'enterprise': return '#F59E0B';
+                                                    default: return '#6B7280';
+                                                }
+                                            };
+                                            const getTypeColor = (type: string) => {
+                                                switch (type) {
+                                                    case 'product': return '#10B981';
+                                                    case 'category': return '#8B5CF6';
+                                                    case 'enterprise': return '#F59E0B';
+                                                    default: return '#9CA3AF';
+                                                }
+                                            };
+
+                                            return (
+                                                <TouchableOpacity
+                                                    key={index}
+                                                    className={`flex-row items-center px-4 py-3.5 ${!isLast ? 'border-b border-gray-100' : ''}`}
+                                                    onPress={() => selectSuggestion(suggestion)}
+                                                    activeOpacity={0.7}
+                                                >
+                                                    <View className="w-8 h-8 rounded-full items-center justify-center" style={{ backgroundColor: getIconColor(suggestion.type) + '15' }}>
+                                                        <Ionicons
+                                                            name={suggestion.type === 'product' ? 'cube-outline' :
+                                                                suggestion.type === 'category' ? 'folder-outline' : 'business-outline'}
+                                                            size={16}
+                                                            color={getIconColor(suggestion.type)}
+                                                        />
+                                                    </View>
+                                                    <View className="ml-3 flex-1">
+                                                        <Text className="text-sm text-neutral-800 font-quicksand-medium" numberOfLines={1}>
+                                                            {suggestion.text}
+                                                        </Text>
+                                                    </View>
+                                                    <View className="px-2 py-1 rounded-full bg-gray-100">
+                                                        <Text className="text-xs font-quicksand-semibold uppercase" style={{ color: getTypeColor(suggestion.type) }}>
+                                                            {suggestion.type === 'product' ? 'Produit' :
+                                                                suggestion.type === 'category' ? 'Catégorie' : 'Entreprise'}
+                                                        </Text>
+                                                    </View>
+                                                </TouchableOpacity>
+                                            );
+                                        })}
+                                    </View>
+                                )}
+                            </ScrollView>
+                        </View>
+                    )}
+
+                    <Animated.ScrollView
+                        className="flex-1"
+                        showsVerticalScrollIndicator={false}
+                        keyboardShouldPersistTaps="handled"
+                        contentContainerStyle={{
+                            paddingTop: 10,
+                            paddingBottom: 90 + insets.bottom,
+                        }}
+                        scrollEventThrottle={16}
+                        onScroll={Animated.event(
+                            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                            { useNativeDriver: false }
+                        )}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing}
+                                onRefresh={refreshData}
+                                colors={['#10B981']}
+                                tintColor="#10B981"
+                                progressViewOffset={FIXED_HEADER_HEIGHT}
+                            />
+                        }
+                    >
+                        {renderSearchSection()}
+
+                        {/* Résultats de recherche */}
+                        {showSearchResults && (
+                            <View className="bg-white px-4 py-4 border-b border-neutral-100">
+                                {/* En-tête résultats + toggle vue */}
+                                <View className="flex-row items-center justify-between">
+                                    <Text className="text-lg font-quicksand-bold text-neutral-800 flex-1">
+                                        Résultats pour &quot;{searchQuery}&quot;
+                                    </Text>
+                                    <View className="flex-row items-center">
+                                        <View className="flex-row items-center bg-neutral-100 rounded-full p-1 mr-2">
+                                            <TouchableOpacity
+                                                onPress={() => setResultsView('grid')}
+                                                className={`px-2 py-1 rounded-full ${resultsView === 'grid' ? 'bg-white' : ''}`}
+                                            >
+                                                <Ionicons name="grid-outline" size={18} color={resultsView === 'grid' ? '#10B981' : '#6B7280'} />
+                                            </TouchableOpacity>
+                                            <TouchableOpacity
+                                                onPress={() => setResultsView('list')}
+                                                className={`px-2 py-1 rounded-full ${resultsView === 'list' ? 'bg-white' : ''}`}
+                                            >
+                                                <Ionicons name="list-outline" size={18} color={resultsView === 'list' ? '#10B981' : '#6B7280'} />
+                                            </TouchableOpacity>
+                                        </View>
+                                        <TouchableOpacity
+                                            onPress={hideSearchResults}
+                                            className="p-2 bg-neutral-100 rounded-full"
+                                        >
+                                            <Ionicons name="close" size={18} color="#6B7280" />
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+
+                                {/* Infos supplémentaires */}
+                                {searchInfo && (
+                                    <View className="flex-row items-center mt-1">
+                                        <Text className="text-xs text-neutral-400 font-quicksand-medium">
+                                            {searchInfo.totalResults || searchResults.length} résultat{searchInfo.totalResults > 1 ? 's' : ''}
                                         </Text>
-                                        <TouchableOpacity onPress={clearSearchHistory}>
-                                            <Text className="text-xs font-quicksand-medium text-primary-500">
-                                                Effacer
+                                        {searchInfo.searchTime && (
+                                            <Text className="text-xs text-neutral-400 font-quicksand-medium ml-2">
+                                                • {searchInfo.searchTime}ms
+                                            </Text>
+                                        )}
+                                        {searchInfo.fromCache && (
+                                            <Text className="text-xs text-green-600 font-quicksand-medium ml-2">
+                                                • En cache
+                                            </Text>
+                                        )}
+                                    </View>
+                                )}
+
+                                {/* Chips localisation */}
+                                <View className="flex-row mt-3">
+                                    <TouchableOpacity
+                                        onPress={() => setCityModalVisible(true)}
+                                        className="flex-row items-center px-3 py-1.5 rounded-full border mr-2"
+                                        style={{ backgroundColor: '#F9FAFB', borderColor: '#E5E7EB' }}
+                                    >
+                                        <Ionicons name="location-outline" size={14} color="#6B7280" />
+                                        <Text className="ml-1 text-xs font-quicksand-medium text-neutral-700">
+                                            {selectedCity}
+                                        </Text>
+                                    </TouchableOpacity>
+                                    {!!selectedNeighborhood && (
+                                        <TouchableOpacity
+                                            onPress={() => setNeighborhoodModalVisible(true)}
+                                            className="flex-row items-center px-3 py-1.5 rounded-full border"
+                                            style={{ backgroundColor: '#F9FAFB', borderColor: '#E5E7EB' }}
+                                        >
+                                            <Ionicons name="navigate-outline" size={14} color="#6B7280" />
+                                            <Text className="ml-1 text-xs font-quicksand-medium text-neutral-700">
+                                                {selectedNeighborhood}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+
+                                {/* Chips de tri */}
+                                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 8 }}>
+                                    <TouchableOpacity
+                                        onPress={() => setSelectedSort('relevance')}
+                                        className="px-3 py-1.5 rounded-full border mr-2"
+                                        style={{ backgroundColor: selectedSort === 'relevance' ? '#FFF1E6' : '#F3F4F6', borderColor: selectedSort === 'relevance' ? '#FED7AA' : '#E5E7EB' }}
+                                    >
+                                        <Text className={`text-xs font-quicksand-semibold ${selectedSort === 'relevance' ? 'text-primary-600' : 'text-neutral-700'}`}>
+                                            Pertinence
+                                        </Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => setSelectedSort('priceLow')}
+                                        className="px-3 py-1.5 rounded-full border mr-2"
+                                        style={{ backgroundColor: selectedSort === 'priceLow' ? '#FFF1E6' : '#F3F4F6', borderColor: selectedSort === 'priceLow' ? '#FED7AA' : '#E5E7EB' }}
+                                    >
+                                        <Text className={`text-xs font-quicksand-semibold ${selectedSort === 'priceLow' ? 'text-primary-600' : 'text-neutral-700'}`}>
+                                            Moins cher
+                                        </Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => setSelectedSort('priceHigh')}
+                                        className="px-3 py-1.5 rounded-full border mr-2"
+                                        style={{ backgroundColor: selectedSort === 'priceHigh' ? '#FFF1E6' : '#F3F4F6', borderColor: selectedSort === 'priceHigh' ? '#FED7AA' : '#E5E7EB' }}
+                                    >
+                                        <Text className={`text-xs font-quicksand-semibold ${selectedSort === 'priceHigh' ? 'text-primary-600' : 'text-neutral-700'}`}>
+                                            Plus cher
+                                        </Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => setSelectedSort('newest')}
+                                        className="px-3 py-1.5 rounded-full border"
+                                        style={{ backgroundColor: selectedSort === 'newest' ? '#FFF1E6' : '#F3F4F6', borderColor: selectedSort === 'newest' ? '#FED7AA' : '#E5E7EB' }}
+                                    >
+                                        <Text className={`text-xs font-quicksand-semibold ${selectedSort === 'newest' ? 'text-primary-600' : 'text-neutral-700'}`}>
+                                            Nouveaux
+                                        </Text>
+                                    </TouchableOpacity>
+                                </ScrollView>
+
+                                {/* Contenu */}
+                                {loadingSearch ? (
+                                    resultsView === 'grid' ? (
+                                        <View className="flex-row flex-wrap justify-between mt-2">
+                                            {[0, 1, 2, 3].map((i) => (
+                                                <SkeletonProduct key={i} />
+                                            ))}
+                                        </View>
+                                    ) : (
+                                        <View className="mt-2">
+                                            {[0, 1, 2, 3].map((i) => (
+                                                <SkeletonProductList key={i} />
+                                            ))}
+                                        </View>
+                                    )
+                                ) : searchResults.length > 0 ? (
+                                    resultsView === 'grid' ? (
+                                        <View className="flex-row flex-wrap justify-between">
+                                            {searchResults.map(renderProduct)}
+                                        </View>
+                                    ) : (
+                                        <View>
+                                            {searchResults.map(renderProductListItem)}
+                                        </View>
+                                    )
+                                ) : (
+                                    <View className="items-center justify-center py-8">
+                                        <Ionicons name="search-outline" size={36} color="#9CA3AF" />
+                                        <Text className="mt-2 text-neutral-600 font-quicksand-medium">
+                                            Aucun produit trouvé
+                                        </Text>
+                                        <TouchableOpacity
+                                            onPress={() => setCityModalVisible(true)}
+                                            className="mt-3 px-4 py-2 rounded-full border"
+                                            style={{ borderColor: '#FED7AA' }}
+                                        >
+                                            <Text className="text-primary-600 font-quicksand-semibold">
+                                                Ajuster les filtres
                                             </Text>
                                         </TouchableOpacity>
                                     </View>
-                                    {recentSearches.slice(0, 5).map((recentSearch, index) => (
-                                        <TouchableOpacity
-                                            key={index}
-                                            className="flex-row items-center justify-between px-4 py-3 border-b border-gray-50"
-                                            onPress={() => {
-                                                setSearchQuery(recentSearch.query);
-                                                performSearch(recentSearch.query);
-                                            }}
-                                        >
-                                            <View className="flex-row items-center flex-1">
-                                                <Ionicons name="time-outline" size={16} color="#9CA3AF" />
-                                                <Text className="ml-3 flex-1 text-neutral-700 font-quicksand-medium">
-                                                    {recentSearch.query}
-                                                </Text>
-                                                <Text className="text-xs text-neutral-400 font-quicksand-medium mr-2">
-                                                    {recentSearch.resultCount} résultat{recentSearch.resultCount > 1 ? 's' : ''}
-                                                </Text>
-                                            </View>
-                                            <TouchableOpacity
-                                                onPress={(e) => {
-                                                    e.stopPropagation();
-                                                    removeFromSearchHistory(recentSearch.query);
-                                                }}
-                                                className="p-1"
-                                            >
-                                                <Ionicons name="close" size={14} color="#9CA3AF" />
-                                            </TouchableOpacity>
-                                        </TouchableOpacity>
-                                    ))}
+                                )}
+                            </View>
+                        )}
+
+                        {/* Boosted Ads Carousel (amélioré avec images et overlay) */}
+                        <View className="py-0">
+                            {adsToDisplay.length > 0 ? (
+                                <>
+                                    <FlatList
+                                        data={adsToDisplay}
+                                        renderItem={renderAd}
+                                        keyExtractor={(_item: any, index) => (_item && _item._id ? String(_item._id) : `ad-${index}`)}
+                                        horizontal
+                                        pagingEnabled
+                                        showsHorizontalScrollIndicator={false}
+                                        onViewableItemsChanged={onAdViewableItemsChanged}
+                                        viewabilityConfig={adViewabilityConfig}
+                                        onMomentumScrollEnd={(event) => {
+                                            const newIndex = Math.round(event.nativeEvent.contentOffset.x / (Dimensions.get('window').width - 48));
+                                            setCurrentAdIndex(newIndex);
+                                        }}
+                                        contentContainerStyle={{ paddingHorizontal: 16 }}
+                                    />
+                                    {/* Indicators */}
+                                    <View className="flex-row justify-center mt-3">
+                                        {adsToDisplay.map((_, index) => {
+                                            const active = index === currentAdIndex;
+                                            return (
+                                                <View
+                                                    key={index}
+                                                    style={{
+                                                        width: active ? 16 : 8,
+                                                        height: 8,
+                                                        borderRadius: 9999,
+                                                        backgroundColor: active ? '#10B981' : '#D1D5DB',
+                                                        marginHorizontal: 4,
+                                                        opacity: active ? 1 : 0.7,
+                                                    }}
+                                                />
+                                            );
+                                        })}
+                                    </View>
+                                </>
+                            ) : (
+                                <View className="mx-4 bg-white rounded-2xl p-6 items-center border border-neutral-100">
+                                    <View className="w-16 h-16 rounded-full bg-neutral-100 items-center justify-center mb-4">
+                                        <Ionicons name="megaphone-outline" size={32} color="#9CA3AF" />
+                                    </View>
+                                    <Text className="text-base font-quicksand-bold text-neutral-800 text-center mb-2">
+                                        Aucune publicité disponible
+                                    </Text>
+                                    <Text className="text-sm font-quicksand text-neutral-600 text-center">
+                                        Revenez bientôt pour découvrir nos dernières offres
+                                    </Text>
                                 </View>
                             )}
+                        </View>
 
-                            {/* Suggestions */}
-                            {showSuggestions && searchSuggestions.length > 0 && (
-                                <View className="border-t border-gray-100 rounded-b-2xl overflow-hidden">
-                                    <View className="px-4 py-3 bg-gradient-to-r from-primary-50 to-primary-100">
-                                        <Text className="text-xs font-quicksand-bold text-primary-700 uppercase tracking-wide">
-                                            Suggestions
-                                        </Text>
-                                    </View>
-                                    {searchSuggestions.map((suggestion, index) => {
-                                        const isLast = index === searchSuggestions.length - 1;
-                                        const getIconColor = (type: string) => {
-                                            switch (type) {
-                                                case 'product': return '#10B981';
-                                                case 'category': return '#8B5CF6';
-                                                case 'enterprise': return '#F59E0B';
-                                                default: return '#6B7280';
-                                            }
-                                        };
-                                        const getTypeColor = (type: string) => {
-                                            switch (type) {
-                                                case 'product': return '#10B981';
-                                                case 'category': return '#8B5CF6';
-                                                case 'enterprise': return '#F59E0B';
-                                                default: return '#9CA3AF';
-                                            }
+                        {/* Categories - Horizontal Scroll */}
+                        <View className="py-6">
+                            <View className="px-6 mb-4 flex-row justify-between items-end">
+                                <View>
+                                    <Text className="text-xl font-quicksand-bold text-neutral-800">
+                                        Catégories
+                                    </Text>
+                                    <Text className="text-xs font-quicksand text-neutral-500">
+                                        Explorez par thématique
+                                    </Text>
+                                </View>
+                                <TouchableOpacity onPress={() => navigateTo('/(app)/(client)/categories')}>
+                                    <Text className="text-emerald-600 font-quicksand-bold text-sm">Voir tout</Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            {loadingCategories ? (
+                                <ActivityIndicator size="small" color="#10B981" />
+                            ) : (
+                                <ScrollView
+                                    horizontal
+                                    showsHorizontalScrollIndicator={false}
+                                    contentContainerStyle={{ paddingHorizontal: 20 }}
+                                >
+                                    {(categoriesData.length > 0 ? categoriesData : categories).map((category: any, index: number) => {
+                                        const colors = ["#FF6B35", "#3B82F6", "#8B5CF6", "#EC4899", "#10B981", "#6366F1", "#EF4444", "#F59E0B"];
+                                        const icons = ["flame", "car-sport", "home", "phone-portrait", "laptop", "bed", "shirt", "construct"];
+                                        const categoryColor = category.color || colors[index % colors.length];
+                                        const categoryIcon = category.icon || icons[index % icons.length];
+                                        const categoryId = category._id || category.id || index;
+                                        // Détecte tous les types d'emojis (pas seulement les visages)
+                                        const isEmoji = (str: string) => {
+                                            const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}]/u;
+                                            return emojiRegex.test(str);
                                         };
 
                                         return (
                                             <TouchableOpacity
-                                                key={index}
-                                                className={`flex-row items-center px-4 py-3.5 ${!isLast ? 'border-b border-gray-100' : ''}`}
-                                                onPress={() => selectSuggestion(suggestion)}
-                                                activeOpacity={0.7}
+                                                key={categoryId}
+                                                onPress={() => category._id && navigateTo(`/(app)/(client)/category/${category._id}`)}
+                                                className="mr-4 items-center"
                                             >
-                                                <View className="w-8 h-8 rounded-full items-center justify-center" style={{ backgroundColor: getIconColor(suggestion.type) + '15' }}>
-                                                    <Ionicons
-                                                        name={suggestion.type === 'product' ? 'cube-outline' :
-                                                            suggestion.type === 'category' ? 'folder-outline' : 'business-outline'}
-                                                        size={16}
-                                                        color={getIconColor(suggestion.type)}
-                                                    />
+                                                <View
+                                                    className="w-16 h-16 rounded-2xl justify-center items-center mb-3 shadow-md"
+                                                    style={{
+                                                        backgroundColor: categoryColor + "15",
+                                                        borderWidth: 1,
+                                                        borderColor: categoryColor + "30",
+                                                    }}
+                                                >
+                                                    {isEmoji(categoryIcon) ? (
+                                                        <Text style={{ fontSize: 24 }}>
+                                                            {categoryIcon}
+                                                        </Text>
+                                                    ) : (
+                                                        <Ionicons
+                                                            name={categoryIcon as any}
+                                                            size={24}
+                                                            color={categoryColor}
+                                                        />
+                                                    )}
                                                 </View>
-                                                <View className="ml-3 flex-1">
-                                                    <Text className="text-sm text-neutral-800 font-quicksand-medium" numberOfLines={1}>
-                                                        {suggestion.text}
-                                                    </Text>
-                                                </View>
-                                                <View className="px-2 py-1 rounded-full bg-gray-100">
-                                                    <Text className="text-xs font-quicksand-semibold uppercase" style={{ color: getTypeColor(suggestion.type) }}>
-                                                        {suggestion.type === 'product' ? 'Produit' :
-                                                            suggestion.type === 'category' ? 'Catégorie' : 'Entreprise'}
-                                                    </Text>
-                                                </View>
+                                                <Text className="text-xs font-quicksand-semibold text-neutral-700 text-center w-16 leading-4" numberOfLines={2}>
+                                                    {category.name}
+                                                </Text>
                                             </TouchableOpacity>
                                         );
                                     })}
-                                </View>
-                            )}
-                        </View>
-                    </View>
-                </LinearGradient>
-
-                {/* Résultats de recherche */}
-                {showSearchResults && (
-                    <View className="bg-white px-4 py-4 border-b border-neutral-100">
-                        {/* En-tête résultats + toggle vue */}
-                        <View className="flex-row items-center justify-between">
-                            <Text className="text-lg font-quicksand-bold text-neutral-800 flex-1">
-                                Résultats pour &quot;{searchQuery}&quot;
-                            </Text>
-                            <View className="flex-row items-center">
-                                <View className="flex-row items-center bg-neutral-100 rounded-full p-1 mr-2">
-                                    <TouchableOpacity
-                                        onPress={() => setResultsView('grid')}
-                                        className={`px-2 py-1 rounded-full ${resultsView === 'grid' ? 'bg-white' : ''}`}
-                                    >
-                                        <Ionicons name="grid-outline" size={18} color={resultsView === 'grid' ? '#10B981' : '#6B7280'} />
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        onPress={() => setResultsView('list')}
-                                        className={`px-2 py-1 rounded-full ${resultsView === 'list' ? 'bg-white' : ''}`}
-                                    >
-                                        <Ionicons name="list-outline" size={18} color={resultsView === 'list' ? '#10B981' : '#6B7280'} />
-                                    </TouchableOpacity>
-                                </View>
-                                <TouchableOpacity
-                                    onPress={hideSearchResults}
-                                    className="p-2 bg-neutral-100 rounded-full"
-                                >
-                                    <Ionicons name="close" size={18} color="#6B7280" />
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-
-                        {/* Infos supplémentaires */}
-                        {searchInfo && (
-                            <View className="flex-row items-center mt-1">
-                                <Text className="text-xs text-neutral-400 font-quicksand-medium">
-                                    {searchInfo.totalResults || searchResults.length} résultat{searchInfo.totalResults > 1 ? 's' : ''}
-                                </Text>
-                                {searchInfo.searchTime && (
-                                    <Text className="text-xs text-neutral-400 font-quicksand-medium ml-2">
-                                        • {searchInfo.searchTime}ms
-                                    </Text>
-                                )}
-                                {searchInfo.fromCache && (
-                                    <Text className="text-xs text-green-600 font-quicksand-medium ml-2">
-                                        • En cache
-                                    </Text>
-                                )}
-                            </View>
-                        )}
-
-                        {/* Chips localisation */}
-                        <View className="flex-row mt-3">
-                            <TouchableOpacity
-                                onPress={() => setCityModalVisible(true)}
-                                className="flex-row items-center px-3 py-1.5 rounded-full border mr-2"
-                                style={{ backgroundColor: '#F9FAFB', borderColor: '#E5E7EB' }}
-                            >
-                                <Ionicons name="location-outline" size={14} color="#6B7280" />
-                                <Text className="ml-1 text-xs font-quicksand-medium text-neutral-700">
-                                    {selectedCity}
-                                </Text>
-                            </TouchableOpacity>
-                            {!!selectedNeighborhood && (
-                                <TouchableOpacity
-                                    onPress={() => setNeighborhoodModalVisible(true)}
-                                    className="flex-row items-center px-3 py-1.5 rounded-full border"
-                                    style={{ backgroundColor: '#F9FAFB', borderColor: '#E5E7EB' }}
-                                >
-                                    <Ionicons name="navigate-outline" size={14} color="#6B7280" />
-                                    <Text className="ml-1 text-xs font-quicksand-medium text-neutral-700">
-                                        {selectedNeighborhood}
-                                    </Text>
-                                </TouchableOpacity>
+                                </ScrollView>
                             )}
                         </View>
 
-                        {/* Chips de tri */}
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 8 }}>
-                            <TouchableOpacity
-                                onPress={() => setSelectedSort('relevance')}
-                                className="px-3 py-1.5 rounded-full border mr-2"
-                                style={{ backgroundColor: selectedSort === 'relevance' ? '#FFF1E6' : '#F3F4F6', borderColor: selectedSort === 'relevance' ? '#FED7AA' : '#E5E7EB' }}
-                            >
-                                <Text className={`text-xs font-quicksand-semibold ${selectedSort === 'relevance' ? 'text-primary-600' : 'text-neutral-700'}`}>
-                                    Pertinence
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={() => setSelectedSort('priceLow')}
-                                className="px-3 py-1.5 rounded-full border mr-2"
-                                style={{ backgroundColor: selectedSort === 'priceLow' ? '#FFF1E6' : '#F3F4F6', borderColor: selectedSort === 'priceLow' ? '#FED7AA' : '#E5E7EB' }}
-                            >
-                                <Text className={`text-xs font-quicksand-semibold ${selectedSort === 'priceLow' ? 'text-primary-600' : 'text-neutral-700'}`}>
-                                    Moins cher
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={() => setSelectedSort('priceHigh')}
-                                className="px-3 py-1.5 rounded-full border mr-2"
-                                style={{ backgroundColor: selectedSort === 'priceHigh' ? '#FFF1E6' : '#F3F4F6', borderColor: selectedSort === 'priceHigh' ? '#FED7AA' : '#E5E7EB' }}
-                            >
-                                <Text className={`text-xs font-quicksand-semibold ${selectedSort === 'priceHigh' ? 'text-primary-600' : 'text-neutral-700'}`}>
-                                    Plus cher
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={() => setSelectedSort('newest')}
-                                className="px-3 py-1.5 rounded-full border"
-                                style={{ backgroundColor: selectedSort === 'newest' ? '#FFF1E6' : '#F3F4F6', borderColor: selectedSort === 'newest' ? '#FED7AA' : '#E5E7EB' }}
-                            >
-                                <Text className={`text-xs font-quicksand-semibold ${selectedSort === 'newest' ? 'text-primary-600' : 'text-neutral-700'}`}>
-                                    Nouveaux
-                                </Text>
-                            </TouchableOpacity>
-                        </ScrollView>
-
-                        {/* Contenu */}
-                        {loadingSearch ? (
-                            resultsView === 'grid' ? (
-                                <View className="flex-row flex-wrap justify-between mt-2">
-                                    {[0, 1, 2, 3].map((i) => (
-                                        <SkeletonProduct key={i} />
-                                    ))}
-                                </View>
-                            ) : (
-                                <View className="mt-2">
-                                    {[0, 1, 2, 3].map((i) => (
-                                        <SkeletonProductList key={i} />
-                                    ))}
-                                </View>
-                            )
-                        ) : searchResults.length > 0 ? (
-                            resultsView === 'grid' ? (
-                                <View className="flex-row flex-wrap justify-between">
-                                    {searchResults.map(renderProduct)}
-                                </View>
-                            ) : (
+                        {/* Featured Stores */}
+                        <View className="py-6 bg-white">
+                            <View className="px-6 mb-4 flex-row justify-between items-end">
                                 <View>
-                                    {searchResults.map(renderProductListItem)}
+                                    <Text className="text-xl font-quicksand-bold text-neutral-800">
+                                        Boutiques à la une
+                                    </Text>
+                                    <Text className="text-xs font-quicksand text-neutral-500">
+                                        Les meilleurs vendeurs du moment
+                                    </Text>
                                 </View>
-                            )
-                        ) : (
-                            <View className="items-center justify-center py-8">
-                                <Ionicons name="search-outline" size={36} color="#9CA3AF" />
-                                <Text className="mt-2 text-neutral-600 font-quicksand-medium">
-                                    Aucun produit trouvé
+                                <TouchableOpacity onPress={() => navigateTo('/(app)/(client)/stores')}>
+                                    <Text className="text-emerald-600 font-quicksand-bold text-sm">Voir tout</Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            {loadingStores ? (
+                                <ActivityIndicator size="small" color="#10B981" />
+                            ) : (
+                                <ScrollView
+                                    horizontal
+                                    showsHorizontalScrollIndicator={false}
+                                    contentContainerStyle={{ paddingHorizontal: 20 }}
+                                >
+                                    {featuredStores.map((store, index) => (
+                                        <TouchableOpacity
+                                            key={store._id || index}
+                                            onPress={() => navigateTo(`/(app)/(client)/store/${store._id}`)}
+                                            className="mr-4 items-center"
+                                        >
+                                            <View className="w-20 h-20 rounded-full border-2 border-emerald-100 p-0.5 mb-2">
+                                                <Image
+                                                    source={{ uri: store.logo || "https://via.placeholder.com/80" }}
+                                                    className="w-full h-full rounded-full"
+                                                    resizeMode="cover"
+                                                />
+                                            </View>
+                                            <Text className="text-xs font-quicksand-bold text-neutral-800 text-center w-20" numberOfLines={1}>
+                                                {store.companyName}
+                                            </Text>
+                                            <View className="flex-row items-center mt-1">
+                                                <Ionicons name="star" size={10} color="#F59E0B" />
+                                                <Text className="text-[10px] text-neutral-500 ml-1">
+                                                    {store.stats?.averageRating?.toFixed(1) || "5.0"}
+                                                </Text>
+                                            </View>
+                                        </TouchableOpacity>
+                                    ))}
+                                </ScrollView>
+                            )}
+                        </View>
+
+                        {/* Featured Products (changé en vertical avec 2 colonnes) */}
+                        <View className="py-4 px-4">
+                            <View className="mb-4 flex-row justify-between items-center">
+                                <Text className="text-base font-quicksand-bold text-neutral-800">
+                                    Produits populaires
                                 </Text>
                                 <TouchableOpacity
-                                    onPress={() => setCityModalVisible(true)}
-                                    className="mt-3 px-4 py-2 rounded-full border"
-                                    style={{ borderColor: '#FED7AA' }}
+                                    onPress={() => navigateTo('/(app)/(client)/marketplace')}
+                                    className="px-3 py-1.5 rounded-full border border-primary-200 bg-white/60"
                                 >
-                                    <Text className="text-primary-600 font-quicksand-semibold">
-                                        Ajuster les filtres
+                                    <Text className="text-primary-500 text-sm font-quicksand-semibold">
+                                        Voir tout
                                     </Text>
                                 </TouchableOpacity>
                             </View>
-                        )}
-                    </View>
-                )}
-
-                {/* Boosted Ads Carousel (amélioré avec images et overlay) */}
-                <View className="py-4">
-                    {adsToDisplay.length > 0 ? (
-                        <>
-                            <FlatList
-                                data={adsToDisplay}
-                                renderItem={renderAd}
-                                keyExtractor={(_item: any, index) => (_item && _item._id ? String(_item._id) : `ad-${index}`)}
-                                horizontal
-                                pagingEnabled
-                                showsHorizontalScrollIndicator={false}
-                                onViewableItemsChanged={onAdViewableItemsChanged}
-                                viewabilityConfig={adViewabilityConfig}
-                                onMomentumScrollEnd={(event) => {
-                                    const newIndex = Math.round(event.nativeEvent.contentOffset.x / (Dimensions.get('window').width - 48));
-                                    setCurrentAdIndex(newIndex);
-                                }}
-                                contentContainerStyle={{ paddingHorizontal: 16 }}
-                            />
-                            {/* Indicators */}
-                            <View className="flex-row justify-center mt-3">
-                                {adsToDisplay.map((_, index) => {
-                                    const active = index === currentAdIndex;
-                                    return (
-                                        <View
-                                            key={index}
-                                            style={{
-                                                width: active ? 16 : 8,
-                                                height: 8,
-                                                borderRadius: 9999,
-                                                backgroundColor: active ? '#10B981' : '#D1D5DB',
-                                                marginHorizontal: 4,
-                                                opacity: active ? 1 : 0.7,
-                                            }}
-                                        />
-                                    );
-                                })}
-                            </View>
-                        </>
-                    ) : (
-                        <View className="mx-4 bg-white rounded-2xl p-6 items-center border border-neutral-100">
-                            <View className="w-16 h-16 rounded-full bg-neutral-100 items-center justify-center mb-4">
-                                <Ionicons name="megaphone-outline" size={32} color="#9CA3AF" />
-                            </View>
-                            <Text className="text-base font-quicksand-bold text-neutral-800 text-center mb-2">
-                                Aucune publicité disponible
-                            </Text>
-                            <Text className="text-sm font-quicksand text-neutral-600 text-center">
-                                Revenez bientôt pour découvrir nos dernières offres
-                            </Text>
+                            {loadingProducts ? (
+                                <View className="flex-1 justify-center items-center py-8">
+                                    <ActivityIndicator size="large" color="#10B981" />
+                                    <Text className="mt-2 text-neutral-600 font-quicksand-medium">
+                                        Chargement des produits...
+                                    </Text>
+                                </View>
+                            ) : featuredProducts.length > 0 ? (
+                                <View className="flex-row flex-wrap justify-between">
+                                    {featuredProducts.map(renderProduct)}
+                                </View>
+                            ) : (
+                                <View className="flex-1 justify-center items-center py-8">
+                                    <Text className="text-neutral-600 font-quicksand-medium">
+                                        Aucun produit disponible
+                                    </Text>
+                                </View>
+                            )}
                         </View>
-                    )}
-                </View>
 
-                {/* Categories */}
-                <View className="py-6 bg-background-secondary">
-                    <View className="px-6 mb-6">
-                        <Text className="text-xl font-quicksand-bold text-neutral-800">
-                            Catégories
-                        </Text>
-                        <Text className="text-sm font-quicksand text-neutral-600 mt-1">
-                            Découvrez nos catégories de produits
-                        </Text>
-                    </View>
-                    {loadingCategories ? (
-                        <View className="flex-1 justify-center items-center py-8">
-                            <ActivityIndicator size="large" color="#10B981" />
-                            <Text className="mt-2 text-neutral-600 font-quicksand-medium">
-                                Chargement des catégories...
-                            </Text>
-                        </View>
-                    ) : (
-                        <View className="flex-row flex-wrap justify-center px-3">
-                            {(categoriesData.length > 0 ? categoriesData : categories).slice(0, 8).map((category: any, index: number) => {
-                                // Couleurs par défaut pour les vraies catégories
-                                const colors = ["#FF6B35", "#3B82F6", "#8B5CF6", "#EC4899", "#10B981", "#6366F1", "#EF4444", "#F59E0B"];
-                                const icons = ["flame", "car-sport", "home", "phone-portrait", "laptop", "bed", "shirt", "construct"];
+                    </Animated.ScrollView>
 
-                                const categoryColor = category.color || colors[index % colors.length];
-                                const categoryIcon = category.icon || icons[index % icons.length];
-                                const categoryId = category._id || category.id || index;
+                    {/* Modal de sélection de ville */}
+                    <Modal
+                        animationType="slide"
+                        transparent={true}
+                        visible={cityModalVisible}
+                        onRequestClose={() => setCityModalVisible(false)}
+                    >
+                        <View className="flex-1 bg-transparent justify-end">
+                            <View className="bg-white rounded-t-3xl pb-10 pt-4 px-4">
+                                <View className="flex-row justify-between items-center mb-6">
+                                    <Text className="text-lg font-quicksand-bold text-neutral-800">
+                                        Choisir une ville
+                                    </Text>
+                                    <TouchableOpacity onPress={() => setCityModalVisible(false)}>
+                                        <Ionicons name="close" size={24} color="#374151" />
+                                    </TouchableOpacity>
+                                </View>
 
-                                // Fonction helper pour déterminer si c'est un emoji ou une icône Ionicons
-                                const isEmoji = (str: string) => {
-                                    const emojiRegex = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u;
-                                    return emojiRegex.test(str);
-                                };
-
-                                return (
-                                    <View key={categoryId} style={{ width: '25%', paddingHorizontal: 5, marginBottom: 16 }}>
-                                        <TouchableOpacity 
-                                            className="items-center"
-                                            onPress={() => {
-                                                // Navigation vers la page de produits de la catégorie
-                                                if (category._id) {
-                                                    navigateTo(`/(app)/(client)/category/${category._id}`);
-                                                }
-                                            }}
+                                <FlatList
+                                    data={beninCities}
+                                    keyExtractor={(item) => item.id.toString()}
+                                    renderItem={({ item }) => (
+                                        <TouchableOpacity
+                                            onPress={() => selectCity(item.name)}
+                                            className="py-3 border-b border-gray-100"
                                         >
-                                            <View
-                                                className="w-16 h-16 rounded-2xl justify-center items-center mb-3 shadow-md"
-                                                style={{
-                                                    backgroundColor: categoryColor + '15',
-                                                    borderWidth: 1,
-                                                    borderColor: categoryColor + '30'
-                                                }}
+                                            <Text
+                                                className={`text-base font-quicksand-medium ${selectedCity === item.name ? 'text-primary' : 'text-neutral-700'
+                                                    }`}
                                             >
-                                                {isEmoji(categoryIcon) ? (
-                                                    <Text style={{ fontSize: 24 }}>{categoryIcon}</Text>
-                                                ) : (
-                                                    <Ionicons name={categoryIcon as any} size={24} color={categoryColor} />
-                                                )}
-                                            </View>
-                                            <Text className="text-xs font-quicksand-semibold text-neutral-700 text-center leading-4">
-                                                {category.name}
+                                                {item.name}
                                             </Text>
                                         </TouchableOpacity>
-                                    </View>
-                                );
-                            })}
+                                    )}
+                                />
+                            </View>
                         </View>
-                    )}
-                </View>
+                    </Modal>
 
-                {/* Featured Products (changé en vertical avec 2 colonnes) */}
-                <View className="py-4 px-4">
-                    <View className="mb-4 flex-row justify-between items-center">
-                        <Text className="text-base font-quicksand-bold text-neutral-800">
-                            Produits populaires
-                        </Text>
-                        <TouchableOpacity
-                          onPress={() => navigateTo('/(app)/(client)/marketplace')}
-                          className="px-3 py-1.5 rounded-full border border-primary-200 bg-white/60"
-                        >
-                            <Text className="text-primary-500 text-sm font-quicksand-semibold">
-                                Voir tout
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                    {loadingProducts ? (
-                        <View className="flex-1 justify-center items-center py-8">
-                            <ActivityIndicator size="large" color="#10B981" />
-                            <Text className="mt-2 text-neutral-600 font-quicksand-medium">
-                                Chargement des produits...
-                            </Text>
-                        </View>
-                    ) : featuredProducts.length > 0 ? (
-                        <View className="flex-row flex-wrap justify-between">
-                            {featuredProducts.map(renderProduct)}
-                        </View>
-                    ) : (
-                        <View className="flex-1 justify-center items-center py-8">
-                            <Text className="text-neutral-600 font-quicksand-medium">
-                                Aucun produit disponible
-                            </Text>
-                        </View>
-                    )}
-                </View>
-
-
-            </ScrollView>
-
-            )}
-
-            {/* Modal de sélection de ville */}
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={cityModalVisible}
-                onRequestClose={() => setCityModalVisible(false)}
-            >
-                <View className="flex-1 bg-transparent justify-end">
-                    <View className="bg-white rounded-t-3xl pb-10 pt-4 px-4">
-                        <View className="flex-row justify-between items-center mb-6">
-                            <Text className="text-lg font-quicksand-bold text-neutral-800">
-                                Choisir une ville
-                            </Text>
-                            <TouchableOpacity onPress={() => setCityModalVisible(false)}>
-                                <Ionicons name="close" size={24} color="#374151" />
-                            </TouchableOpacity>
-                        </View>
-
-                        <FlatList
-                            data={beninCities}
-                            keyExtractor={(item) => item.id.toString()}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity
-                                    onPress={() => selectCity(item.name)}
-                                    className="py-3 border-b border-gray-100"
-                                >
-                                    <Text
-                                        className={`text-base font-quicksand-medium ${
-                                            selectedCity === item.name ? 'text-primary' : 'text-neutral-700'
-                                        }`}
-                                    >
-                                        {item.name}
+                    {/* Modal de sélection de quartier */}
+                    <Modal
+                        animationType="slide"
+                        transparent={true}
+                        visible={neighborhoodModalVisible}
+                        onRequestClose={() => setNeighborhoodModalVisible(false)}
+                    >
+                        <View className="flex-1 bg-transparent justify-end">
+                            <View className="bg-white rounded-t-3xl pb-10 pt-4 px-4">
+                                <View className="flex-row justify-between items-center mb-6">
+                                    <Text className="text-lg font-quicksand-bold text-neutral-800">
+                                        Choisir un quartier à {selectedCity}
                                     </Text>
-                                </TouchableOpacity>
-                            )}
-                        />
-                    </View>
-                </View>
-            </Modal>
+                                    <TouchableOpacity onPress={() => setNeighborhoodModalVisible(false)}>
+                                        <Ionicons name="close" size={24} color="#374151" />
+                                    </TouchableOpacity>
+                                </View>
 
-            {/* Modal de sélection de quartier */}
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={neighborhoodModalVisible}
-                onRequestClose={() => setNeighborhoodModalVisible(false)}
-            >
-                <View className="flex-1 bg-transparent justify-end">
-                    <View className="bg-white rounded-t-3xl pb-10 pt-4 px-4">
-                        <View className="flex-row justify-between items-center mb-6">
-                            <Text className="text-lg font-quicksand-bold text-neutral-800">
-                                Choisir un quartier à {selectedCity}
-                            </Text>
-                            <TouchableOpacity onPress={() => setNeighborhoodModalVisible(false)}>
-                                <Ionicons name="close" size={24} color="#374151" />
-                            </TouchableOpacity>
+                                <FlatList
+                                    data={neighborhoodsByCity[selectedCity] || []}
+                                    keyExtractor={(item, index) => index.toString()}
+                                    renderItem={({ item }) => (
+                                        <TouchableOpacity
+                                            onPress={() => selectNeighborhood(item)}
+                                            className="py-3 border-b border-gray-100"
+                                        >
+                                            <Text
+                                                className={`text-base font-quicksand-medium ${selectedNeighborhood === item ? 'text-primary' : 'text-neutral-700'
+                                                    }`}
+                                            >
+                                                {item}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    )}
+                                />
+                            </View>
                         </View>
-
-                        <FlatList
-                            data={neighborhoodsByCity[selectedCity] || []}
-                            keyExtractor={(item, index) => index.toString()}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity
-                                    onPress={() => selectNeighborhood(item)}
-                                    className="py-3 border-b border-gray-100"
-                                >
-                                    <Text
-                                        className={`text-base font-quicksand-medium ${
-                                            selectedNeighborhood === item ? 'text-primary' : 'text-neutral-700'
-                                        }`}
-                                    >
-                                        {item}
-                                    </Text>
-                                </TouchableOpacity>
-                            )}
-                        />
-                    </View>
-                </View>
-            </Modal>
-        </View>
+                    </Modal>
+                </>
+            )
+            }
+        </View >
     );
 }

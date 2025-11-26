@@ -53,7 +53,16 @@ export default function DeliveryPartnersScreen() {
 	};
 
 	const SkeletonPartnerCard = () => (
-		<View className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-4 mb-4">
+		<View
+			className="bg-white rounded-2xl mb-4"
+			style={{
+				shadowColor: "#000",
+				shadowOffset: { width: 0, height: 2 },
+				shadowOpacity: 0.1,
+				shadowRadius: 4,
+				elevation: 3,
+			}}
+		>
 			<View className="flex-row items-center">
 				<ShimmerBlock style={{ width: 60, height: 60, borderRadius: 30 }} />
 				<View className="flex-1 ml-4">
@@ -72,15 +81,15 @@ export default function DeliveryPartnersScreen() {
 		<View className="flex-1">
 			{/* Header avec gradient */}
 			<LinearGradient
-				colors={['#10B981', '#34D399']}
+				colors={['#047857', '#10B981']}
 				start={{ x: 0, y: 0 }}
 				end={{ x: 1, y: 0 }}
 				className="px-6"
-				style={{ 
-					paddingTop: insets.top + 16, 
+				style={{
+					paddingTop: insets.top + 16,
 					paddingLeft: insets.left + 24,
 					paddingRight: insets.right + 24,
-					paddingBottom: 24 
+					paddingBottom: 24
 				}}
 			>
 				<View className="flex-row items-center justify-between mb-6">
@@ -169,7 +178,7 @@ export default function DeliveryPartnersScreen() {
 		} finally {
 			setLoading(false);
 		}
-	// eslint-disable-next-line react-hooks/exhaustive-deps
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	const onRefresh = async () => {
@@ -221,7 +230,14 @@ export default function DeliveryPartnersScreen() {
 			<TouchableOpacity
 				onPress={openDetail}
 				activeOpacity={0.9}
-				className="bg-white mx-4 mb-4 rounded-2xl shadow-sm border border-neutral-100 overflow-hidden"
+				className="bg-white mx-4 mb-4 rounded-2xl overflow-hidden"
+				style={{
+					shadowColor: "#000",
+					shadowOffset: { width: 0, height: 2 },
+					shadowOpacity: 0.1,
+					shadowRadius: 4,
+					elevation: 3,
+				}}
 			>
 				<View className="p-4">
 					{/* Header avec photo et nom */}
@@ -317,8 +333,8 @@ export default function DeliveryPartnersScreen() {
 									colors={['#10B981', '#34D399']}
 									start={{ x: 0, y: 0 }}
 									end={{ x: 1, y: 0 }}
-									style={{ 
-										paddingHorizontal: 16, 
+									style={{
+										paddingHorizontal: 16,
 										paddingVertical: 12,
 										alignItems: 'center',
 										justifyContent: 'center'
@@ -353,15 +369,15 @@ export default function DeliveryPartnersScreen() {
 				<>
 					{/* Header avec gradient moderne */}
 					<LinearGradient
-						colors={['#10B981', '#34D399']}
+						colors={['#047857', '#10B981']}
 						start={{ x: 0, y: 0 }}
 						end={{ x: 1, y: 0 }}
 						className="px-6"
-						style={{ 
-							paddingTop: insets.top + 16, 
+						style={{
+							paddingTop: insets.top + 16,
 							paddingLeft: insets.left + 24,
 							paddingRight: insets.right + 24,
-							paddingBottom: 32 
+							paddingBottom: 32
 						}}
 					>
 						<View className="flex-row items-center justify-between mb-6">

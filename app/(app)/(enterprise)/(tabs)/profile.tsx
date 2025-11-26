@@ -25,7 +25,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 // New Reanimated toast system only
 import { useToast as useReanimatedToast } from "../../../../components/ui/ReanimatedToast/context";
 import { useAuth } from "../../../../contexts/AuthContext";
+import { useLocale } from "../../../../contexts/LocaleContext";
 import { useSubscription } from "../../../../contexts/SubscriptionContext";
+import i18n from "../../../../i18n/i18n";
 import EnterpriseService, {
   Enterprise,
   EnterpriseProfile,
@@ -83,9 +85,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
     if (permissionResult.granted === false) {
       showReToast({
-        title: "Permission requise",
-        subtitle:
-          "Vous devez autoriser l'accès à la galerie pour sélectionner une image.",
+        title: i18n.t("enterprise.profile.modals.editProfile.permission.title"),
+        subtitle: i18n.t("enterprise.profile.modals.editProfile.permission.subtitle"),
         autodismiss: true,
       });
       return;
@@ -130,18 +131,18 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
             <View className="flex-row items-center justify-between">
               <TouchableOpacity onPress={onClose}>
                 <Text className="text-primary-500 font-quicksand-medium">
-                  Annuler
+                  {i18n.t("enterprise.profile.modals.editProfile.cancel")}
                 </Text>
               </TouchableOpacity>
               <Text className="text-lg font-quicksand-bold">
-                Modifier le profil
+                {i18n.t("enterprise.profile.modals.editProfile.title")}
               </Text>
               <TouchableOpacity onPress={handleSave} disabled={loading}>
                 {loading ? (
                   <ActivityIndicator size="small" color="#10B981" />
                 ) : (
                   <Text className="text-primary-500 font-quicksand-medium">
-                    Sauvegarder
+                    {i18n.t("enterprise.profile.modals.editProfile.save")}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -163,9 +164,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 ) : (
                   <View className="w-24 h-24 rounded-full bg-primary-500 items-center justify-center">
                     <Text className="text-white font-quicksand-bold text-2xl">
-                      {`${initialData.user.firstName?.[0] || ""}${
-                        initialData.user.lastName?.[0] || ""
-                      }`.toUpperCase()}
+                      {`${initialData.user.firstName?.[0] || ""}${initialData.user.lastName?.[0] || ""
+                        }`.toUpperCase()}
                     </Text>
                   </View>
                 )}
@@ -174,7 +174,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 </View>
               </TouchableOpacity>
               <Text className="text-neutral-600 text-sm mt-2">
-                Touchez pour changer
+                {i18n.t("enterprise.profile.modals.editProfile.changePhoto")}
               </Text>
             </View>
 
@@ -182,50 +182,50 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
             <View className="space-y-4">
               <View>
                 <Text className="text-neutral-700 font-quicksand-medium mb-2">
-                  Prénom
+                  {i18n.t("enterprise.profile.modals.editProfile.firstName")}
                 </Text>
                 <TextInput
                   value={firstName}
                   onChangeText={setFirstName}
                   className="bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 font-quicksand-regular"
-                  placeholder="Votre prénom"
+                  placeholder={i18n.t("enterprise.profile.modals.editProfile.placeholders.firstName")}
                 />
               </View>
 
               <View>
                 <Text className="text-neutral-700 font-quicksand-medium mb-2">
-                  Nom
+                  {i18n.t("enterprise.profile.modals.editProfile.lastName")}
                 </Text>
                 <TextInput
                   value={lastName}
                   onChangeText={setLastName}
                   className="bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 font-quicksand-regular"
-                  placeholder="Votre nom"
+                  placeholder={i18n.t("enterprise.profile.modals.editProfile.placeholders.lastName")}
                 />
               </View>
 
               <View>
                 <Text className="text-neutral-700 font-quicksand-medium mb-2">
-                  Téléphone
+                  {i18n.t("enterprise.profile.modals.editProfile.phone")}
                 </Text>
                 <TextInput
                   value={phone}
                   onChangeText={setPhone}
                   className="bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 font-quicksand-regular"
-                  placeholder="Votre téléphone"
+                  placeholder={i18n.t("enterprise.profile.modals.editProfile.placeholders.phone")}
                   keyboardType="phone-pad"
                 />
               </View>
 
               <View>
                 <Text className="text-neutral-700 font-quicksand-medium mb-2">
-                  Adresse
+                  {i18n.t("enterprise.profile.modals.editProfile.address")}
                 </Text>
                 <TextInput
                   value={address}
                   onChangeText={setAddress}
                   className="bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 font-quicksand-regular"
-                  placeholder="Votre adresse"
+                  placeholder={i18n.t("enterprise.profile.modals.editProfile.placeholders.address")}
                   multiline
                   numberOfLines={3}
                 />
@@ -269,9 +269,8 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({
 
     if (permissionResult.granted === false) {
       showReToast({
-        title: "Permission requise",
-        subtitle:
-          "Vous devez autoriser l'accès à la galerie pour sélectionner un logo.",
+        title: i18n.t("enterprise.profile.modals.editEnterprise.permission.title"),
+        subtitle: i18n.t("enterprise.profile.modals.editEnterprise.permission.subtitle"),
         autodismiss: true,
       });
       return;
@@ -312,8 +311,8 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({
   const handleSave = () => {
     if (!companyName.trim()) {
       showReToast({
-        title: "Champ requis",
-        subtitle: "Le nom de l'entreprise est requis",
+        title: i18n.t("enterprise.profile.modals.editEnterprise.errors.required"),
+        subtitle: i18n.t("enterprise.profile.modals.editEnterprise.errors.companyNameRequired"),
         autodismiss: true,
       });
       return;
@@ -348,18 +347,18 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({
             <View className="flex-row items-center justify-between">
               <TouchableOpacity onPress={onClose}>
                 <Text className="text-primary-500 font-quicksand-medium">
-                  Annuler
+                  {i18n.t("enterprise.profile.modals.editEnterprise.cancel")}
                 </Text>
               </TouchableOpacity>
               <Text className="text-lg font-quicksand-bold">
-                Modifier l&apos;entreprise
+                {i18n.t("enterprise.profile.modals.editEnterprise.title")}
               </Text>
               <TouchableOpacity onPress={handleSave} disabled={loading}>
                 {loading ? (
                   <ActivityIndicator size="small" color="#10B981" />
                 ) : (
                   <Text className="text-primary-500 font-quicksand-medium">
-                    Sauvegarder
+                    {i18n.t("enterprise.profile.modals.editEnterprise.save")}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -388,7 +387,7 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({
                 </View>
               </TouchableOpacity>
               <Text className="text-primary-600 font-quicksand-medium mt-2">
-                Modifier le logo
+                {i18n.t("enterprise.profile.modals.editEnterprise.changeLogo")}
               </Text>
             </View>
 
@@ -397,25 +396,25 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({
               {/* Nom de l'entreprise */}
               <View>
                 <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
-                  Nom de l&apos;entreprise*
+                  {i18n.t("enterprise.profile.modals.editEnterprise.companyName")}
                 </Text>
                 <TextInput
                   value={companyName}
                   onChangeText={setCompanyName}
                   className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
-                  placeholder="Nom de votre entreprise"
+                  placeholder={i18n.t("enterprise.profile.modals.editEnterprise.placeholders.companyName")}
                 />
               </View>
 
               {/* Description */}
               <View>
                 <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
-                  Description
+                  {i18n.t("enterprise.profile.modals.editEnterprise.description")}
                 </Text>
                 <TextInput
                   value={description}
                   onChangeText={setDescription}
-                  placeholder="Description de votre entreprise"
+                  placeholder={i18n.t("enterprise.profile.modals.editEnterprise.placeholders.description")}
                   multiline
                   numberOfLines={4}
                   className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
@@ -426,29 +425,29 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({
               {/* Coordonnées */}
               <View className="pt-2">
                 <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3 pl-1">
-                  Coordonnées
+                  {i18n.t("enterprise.profile.modals.editEnterprise.contactInfo")}
                 </Text>
 
                 <View className="mb-4">
                   <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
-                    Site web
+                    {i18n.t("enterprise.profile.modals.editEnterprise.website")}
                   </Text>
                   <TextInput
                     value={website}
                     onChangeText={setWebsite}
-                    placeholder="https://www.votreentreprise.com"
+                    placeholder={i18n.t("enterprise.profile.modals.editEnterprise.placeholders.website")}
                     className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
                   />
                 </View>
 
                 <View className="mb-4">
                   <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
-                    Téléphone
+                    {i18n.t("enterprise.profile.modals.editEnterprise.phone")}
                   </Text>
                   <TextInput
                     value={phone}
                     onChangeText={setPhone}
-                    placeholder="Numéro de téléphone"
+                    placeholder={i18n.t("enterprise.profile.modals.editEnterprise.placeholders.phone")}
                     keyboardType="phone-pad"
                     className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
                   />
@@ -456,12 +455,12 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({
 
                 <View className="mb-4">
                   <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
-                    Email professionnel
+                    {i18n.t("enterprise.profile.modals.editEnterprise.email")}
                   </Text>
                   <TextInput
                     value={email}
                     onChangeText={setEmail}
-                    placeholder="contact@entreprise.com"
+                    placeholder={i18n.t("enterprise.profile.modals.editEnterprise.placeholders.email")}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
@@ -470,12 +469,12 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({
 
                 <View className="mb-4">
                   <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
-                    WhatsApp
+                    {i18n.t("enterprise.profile.modals.editEnterprise.whatsapp")}
                   </Text>
                   <TextInput
                     value={whatsapp}
                     onChangeText={setWhatsapp}
-                    placeholder="Numéro WhatsApp"
+                    placeholder={i18n.t("enterprise.profile.modals.editEnterprise.placeholders.whatsapp")}
                     keyboardType="phone-pad"
                     className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
                   />
@@ -486,7 +485,7 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({
               <View className="pt-2">
                 <View className="flex-row items-center justify-between mb-3">
                   <Text className="text-lg font-quicksand-bold text-neutral-800 pl-1">
-                    Réseaux sociaux
+                    {i18n.t("enterprise.profile.modals.editEnterprise.socialNetworks")}
                   </Text>
                   <TouchableOpacity
                     onPress={addSocialLink}
@@ -494,7 +493,7 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({
                   >
                     <Ionicons name="add-circle" size={20} color="#10B981" />
                     <Text className="text-primary-500 font-quicksand-medium ml-1">
-                      Ajouter
+                      {i18n.t("enterprise.profile.modals.editEnterprise.addSocial")}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -506,7 +505,7 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({
                       onChangeText={(value) =>
                         updateSocialLink(index, "platform", value)
                       }
-                      placeholder="Plateforme (ex: Facebook)"
+                      placeholder={i18n.t("enterprise.profile.modals.editEnterprise.placeholders.platform")}
                       className="flex-1 bg-white border border-neutral-200 rounded-l-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
                     />
                     <TextInput
@@ -514,7 +513,7 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({
                       onChangeText={(value) =>
                         updateSocialLink(index, "url", value)
                       }
-                      placeholder="URL"
+                      placeholder={i18n.t("enterprise.profile.modals.editEnterprise.placeholders.url")}
                       className="flex-2 bg-white border-t border-r border-b border-neutral-200 rounded-r-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
                       style={{ flex: 2 }}
                     />
@@ -529,7 +528,7 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({
 
                 {socialLinks.length === 0 && (
                   <Text className="text-neutral-500 font-quicksand-regular italic pl-1 mb-4">
-                    Aucun réseau social ajouté
+                    {i18n.t("enterprise.profile.modals.editEnterprise.noSocial")}
                   </Text>
                 )}
               </View>
@@ -558,11 +557,11 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
           <View className="flex-row items-center justify-between">
             <TouchableOpacity onPress={onClose}>
               <Text className="text-primary-500 font-quicksand-medium">
-                Fermer
+                {i18n.t("enterprise.profile.modals.enterpriseDetails.close")}
               </Text>
             </TouchableOpacity>
             <Text className="text-lg font-quicksand-bold">
-              Détails de l&apos;entreprise
+              {i18n.t("enterprise.profile.modals.enterpriseDetails.title")}
             </Text>
             <View style={{ width: 70 }} />
           </View>
@@ -589,16 +588,16 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
             </Text>
             <View className="flex-row items-center mt-2">
               <View
-                className={`w-3 h-3 rounded-full mr-2 ${
-                  enterprise.isActive ? "bg-success-500" : "bg-neutral-400"
-                }`}
+                className={`w-3 h-3 rounded-full mr-2 ${enterprise.isActive ? "bg-success-500" : "bg-neutral-400"
+                  }`}
               />
               <Text
-                className={`${
-                  enterprise.isActive ? "text-success-500" : "text-neutral-500"
-                } font-quicksand-medium`}
+                className={`${enterprise.isActive ? "text-success-500" : "text-neutral-500"
+                  } font-quicksand-medium`}
               >
-                {enterprise.isActive ? "Active" : "Inactive"}
+                {enterprise.isActive
+                  ? i18n.t("enterprise.profile.modals.enterpriseDetails.active")
+                  : i18n.t("enterprise.profile.modals.enterpriseDetails.inactive")}
               </Text>
             </View>
           </View>
@@ -606,12 +605,12 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
           {/* Informations */}
           <View className="mb-6">
             <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3">
-              À propos
+              {i18n.t("enterprise.profile.modals.enterpriseDetails.about")}
             </Text>
             <View className="bg-neutral-50 rounded-xl p-4">
               <Text className="text-neutral-700 font-quicksand-regular">
                 {enterprise.description ||
-                  "Aucune description disponible pour cette entreprise."}
+                  i18n.t("enterprise.profile.modals.enterpriseDetails.noDescription")}
               </Text>
             </View>
           </View>
@@ -619,7 +618,7 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
           {/* Coordonnées */}
           <View className="mb-6">
             <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3">
-              Coordonnées
+              {i18n.t("enterprise.profile.modals.enterpriseDetails.contact")}
             </Text>
             <View className="bg-neutral-50 rounded-xl p-4 space-y-3">
               {enterprise.contactInfo?.website && (
@@ -643,7 +642,7 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
               {!enterprise.contactInfo?.website &&
                 !enterprise.contactInfo?.phone && (
                   <Text className="text-neutral-600 font-quicksand-regular italic">
-                    Aucune coordonnée disponible
+                    {i18n.t("enterprise.profile.modals.enterpriseDetails.noContact")}
                   </Text>
                 )}
             </View>
@@ -652,24 +651,24 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
           {/* Statistiques */}
           <View className="mb-6">
             <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3">
-              Statistiques
+              {i18n.t("enterprise.profile.modals.enterpriseDetails.stats")}
             </Text>
             <View className="bg-neutral-50 rounded-xl p-4 space-y-3">
               <View className="flex-row justify-between">
                 <Text className="text-neutral-600 font-quicksand-medium">
-                  Ventes totales
+                  {i18n.t("enterprise.profile.modals.enterpriseDetails.totalSales")}
                 </Text>
                 <Text className="text-primary-500 font-quicksand-bold">
                   {enterprise.stats?.totalSales
                     ? new Intl.NumberFormat("fr-FR").format(
-                        enterprise.stats.totalSales
-                      ) + " FCFA"
+                      enterprise.stats.totalSales
+                    ) + " FCFA"
                     : "0 FCFA"}
                 </Text>
               </View>
               <View className="flex-row justify-between">
                 <Text className="text-neutral-600 font-quicksand-medium">
-                  Commandes
+                  {i18n.t("enterprise.profile.modals.enterpriseDetails.orders")}
                 </Text>
                 <Text className="text-success-500 font-quicksand-bold">
                   {enterprise.stats?.totalOrders || 0}
@@ -677,7 +676,7 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
               </View>
               <View className="flex-row justify-between">
                 <Text className="text-neutral-600 font-quicksand-medium">
-                  Note moyenne
+                  {i18n.t("enterprise.profile.modals.enterpriseDetails.averageRating")}
                 </Text>
                 <View className="flex-row items-center">
                   <Ionicons name="star" size={16} color="#F59E0B" />
@@ -688,7 +687,7 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
               </View>
               <View className="flex-row justify-between">
                 <Text className="text-neutral-600 font-quicksand-medium">
-                  Avis clients
+                  {i18n.t("enterprise.profile.modals.enterpriseDetails.reviews")}
                 </Text>
                 <Text className="text-secondary-500 font-quicksand-bold">
                   {enterprise.stats?.totalReviews || 0}
@@ -701,7 +700,7 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
           {enterprise.socialLinks && enterprise.socialLinks.length > 0 && (
             <View className="mb-6">
               <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3">
-                Liens sociaux
+                {i18n.t("enterprise.profile.modals.enterpriseDetails.socialLinks")}
               </Text>
               <View className="bg-neutral-50 rounded-xl p-4 space-y-3">
                 {enterprise.socialLinks.map((link, index) => (
@@ -721,12 +720,12 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
           {/* Date de création */}
           <View className="mb-6">
             <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3">
-              Informations supplémentaires
+              {i18n.t("enterprise.profile.modals.enterpriseDetails.additionalInfo")}
             </Text>
             <View className="bg-neutral-50 rounded-xl p-4 space-y-3">
               <View className="flex-row justify-between">
                 <Text className="text-neutral-600 font-quicksand-medium">
-                  Date de création
+                  {i18n.t("enterprise.profile.modals.enterpriseDetails.creationDate")}
                 </Text>
                 <Text className="text-neutral-700 font-quicksand-medium">
                   {new Date(enterprise.createdAt).toLocaleDateString("fr-FR", {
@@ -738,7 +737,7 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
               </View>
               <View className="flex-row justify-between">
                 <Text className="text-neutral-600 font-quicksand-medium">
-                  ID de l&apos;entreprise
+                  {i18n.t("enterprise.profile.modals.enterpriseDetails.enterpriseId")}
                 </Text>
                 <Text className="text-neutral-700 font-quicksand-medium">
                   {enterprise._id?.substring(0, 8) || "N/A"}
@@ -768,8 +767,8 @@ const AddPartnerModal: React.FC<AddPartnerModalProps> = ({
       setPartnerId("");
     } else {
       showReToast({
-        title: "Attention",
-        subtitle: "Veuillez entrer un ID de partenaire valide",
+        title: i18n.t("messages.error"),
+        subtitle: i18n.t("enterprise.profile.modals.addPartner.error"),
         autodismiss: true,
       });
     }
@@ -786,11 +785,11 @@ const AddPartnerModal: React.FC<AddPartnerModalProps> = ({
           <View className="flex-row items-center justify-between">
             <TouchableOpacity onPress={onClose}>
               <Text className="text-primary-500 font-quicksand-medium">
-                Annuler
+                {i18n.t("enterprise.profile.modals.addPartner.cancel")}
               </Text>
             </TouchableOpacity>
             <Text className="text-lg font-quicksand-bold">
-              Ajouter un partenaire
+              {i18n.t("enterprise.profile.modals.addPartner.title")}
             </Text>
             <TouchableOpacity
               onPress={handleAdd}
@@ -800,7 +799,7 @@ const AddPartnerModal: React.FC<AddPartnerModalProps> = ({
                 <ActivityIndicator size="small" color="#10B981" />
               ) : (
                 <Text className="text-primary-500 font-quicksand-medium">
-                  Ajouter
+                  {i18n.t("enterprise.profile.modals.addPartner.add")}
                 </Text>
               )}
             </TouchableOpacity>
@@ -810,17 +809,16 @@ const AddPartnerModal: React.FC<AddPartnerModalProps> = ({
         <View className="px-6 py-6">
           <View>
             <Text className="text-neutral-700 font-quicksand-medium mb-2">
-              ID du partenaire
+              {i18n.t("enterprise.profile.modals.addPartner.partnerId")}
             </Text>
             <TextInput
               value={partnerId}
               onChangeText={setPartnerId}
               className="bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 font-quicksand-regular"
-              placeholder="ID du partenaire de livraison"
+              placeholder={i18n.t("enterprise.profile.modals.addPartner.placeholder")}
             />
             <Text className="text-neutral-500 text-sm mt-2">
-              Entrez l&apos;ID du partenaire de livraison que vous voulez
-              ajouter.
+              {i18n.t("enterprise.profile.modals.addPartner.helpText")}
             </Text>
           </View>
         </View>
@@ -832,6 +830,8 @@ const AddPartnerModal: React.FC<AddPartnerModalProps> = ({
 // Composant principal du profil entreprise
 function EnterpriseProfilePage() {
   const { logout } = useAuth();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { locale } = useLocale(); // Écoute les changements de langue pour re-render automatiquement
   const { showToast: showReToast } = useReanimatedToast();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -869,19 +869,19 @@ function EnterpriseProfilePage() {
   const headerBottomPadding = isLargeTablet
     ? 80
     : isTablet
-    ? 72
-    : isSmallPhone
-    ? 56
-    : 64;
+      ? 72
+      : isSmallPhone
+        ? 56
+        : 64;
 
   // Overlay lift (réduit pour ne pas cacher le contenu du header)
   const overlayLift = isLargeTablet
     ? -48
     : isTablet
-    ? -40
-    : isSmallPhone
-    ? -32
-    : -36;
+      ? -40
+      : isSmallPhone
+        ? -32
+        : -36;
 
   // Logo size
   const logoSize = isLargeTablet ? 104 : isTablet ? 88 : isSmallPhone ? 72 : 80;
@@ -896,18 +896,18 @@ function EnterpriseProfilePage() {
   const dashboardColumns = isLargeTablet
     ? 4
     : isTablet
-    ? 3
-    : isSmallPhone
-    ? 1
-    : 2;
+      ? 3
+      : isSmallPhone
+        ? 1
+        : 2;
   const dashboardCardWidth =
     dashboardColumns === 1
       ? "100%"
       : dashboardColumns === 2
-      ? "48%"
-      : dashboardColumns === 3
-      ? "31.5%"
-      : "23%";
+        ? "48%"
+        : dashboardColumns === 3
+          ? "31.5%"
+          : "23%";
 
   // Skeleton Loader Component
   const ShimmerBlock = ({ style }: { style?: any }) => {
@@ -1182,7 +1182,7 @@ function EnterpriseProfilePage() {
     (title: string, message?: string) => {
       try {
         showReToast({ title, subtitle: message, autodismiss: true });
-      } catch {}
+      } catch { }
     },
     [showReToast]
   );
@@ -1190,7 +1190,7 @@ function EnterpriseProfilePage() {
     (title: string, message?: string) => {
       try {
         showReToast({ title, subtitle: message, autodismiss: true });
-      } catch {}
+      } catch { }
     },
     [showReToast]
   );
@@ -1198,7 +1198,7 @@ function EnterpriseProfilePage() {
     (title: string, message?: string) => {
       try {
         showReToast({ title, subtitle: message, autodismiss: true });
-      } catch {}
+      } catch { }
     },
     [showReToast]
   );
@@ -1211,7 +1211,7 @@ function EnterpriseProfilePage() {
       setProfileData(data);
     } catch (error: any) {
       console.error("❌ Erreur chargement profil:", error);
-      notifyError("Erreur", error.message || "Impossible de charger le profil");
+      notifyError(i18n.t("messages.error"), error.message || i18n.t("enterprise.profile.messages.loadError"));
     } finally {
       setLoading(false);
     }
@@ -1254,12 +1254,12 @@ function EnterpriseProfilePage() {
       }
 
       setShowEditProfile(false);
-      notifySuccess("Succès", "Profil mis à jour avec succès");
+      notifySuccess(i18n.t("enterprise.profile.modals.editProfile.success"));
     } catch (error: any) {
       console.error("❌ Erreur mise à jour profil:", error);
       notifyError(
-        "Erreur",
-        error.message || "Impossible de mettre à jour le profil"
+        i18n.t("messages.error"),
+        error.message || i18n.t("enterprise.profile.modals.editProfile.error")
       );
     } finally {
       setEditLoading(false);
@@ -1289,15 +1289,14 @@ function EnterpriseProfilePage() {
 
       setShowEditEnterprise(false);
       notifySuccess(
-        "Succès",
-        "Informations entreprise mises à jour avec succès"
+        i18n.t("enterprise.profile.modals.editEnterprise.success")
       );
     } catch (error: any) {
       console.error("❌ Erreur mise à jour entreprise:", error);
       notifyError(
-        "Erreur",
+        i18n.t("messages.error"),
         error.message ||
-          "Impossible de mettre à jour les informations entreprise"
+        i18n.t("enterprise.profile.modals.editEnterprise.error")
       );
     } finally {
       setEditLoading(false);
@@ -1308,8 +1307,8 @@ function EnterpriseProfilePage() {
   // Ancienne fonction d'ajout direct d'un partenaire (remplacée par le flux via la page dédiée)
   const handleAddPartner = async (_partnerId: string) => {
     notifyInfo(
-      "Redirection",
-      "Veuillez utiliser la page Partenaires pour associer un livreur."
+      i18n.t("enterprise.profile.modals.addPartner.redirectTitle"),
+      i18n.t("enterprise.profile.modals.addPartner.redirectMessage")
     );
   };
 
@@ -1328,17 +1327,17 @@ function EnterpriseProfilePage() {
     switch (type) {
       case "toggle_status":
         const newStatus = profileData?.enterprise.isActive
-          ? "désactiver"
-          : "activer";
-        title = "Changer le statut";
-        message = `Voulez-vous vraiment ${newStatus} votre entreprise ?`;
-        confirmText = "Confirmer";
+          ? i18n.t("enterprise.profile.messages.statusConfirm.deactivate")
+          : i18n.t("enterprise.profile.messages.statusConfirm.activate");
+        title = i18n.t("enterprise.profile.messages.statusConfirm.title");
+        message = i18n.t("enterprise.profile.messages.statusConfirm.message", { action: newStatus });
+        confirmText = i18n.t("enterprise.profile.messages.statusConfirm.confirm");
         confirmColor = profileData?.enterprise.isActive ? "#F59E0B" : "#10B981";
         break;
       case "logout":
-        title = "Déconnexion";
-        message = "Êtes-vous sûr de vouloir vous déconnecter ?";
-        confirmText = "Déconnexion";
+        title = i18n.t("enterprise.profile.messages.logoutConfirm.title");
+        message = i18n.t("enterprise.profile.messages.logoutConfirm.message");
+        confirmText = i18n.t("enterprise.profile.messages.logoutConfirm.confirm");
         confirmColor = "#EF4444";
         break;
     }
@@ -1370,7 +1369,7 @@ function EnterpriseProfilePage() {
   const handleLogout = () => {
     showConfirmation("logout", () => {
       logout();
-      notifyInfo("Déconnecté", "Vous avez été déconnecté avec succès");
+      notifyInfo(i18n.t("enterprise.profile.messages.logoutConfirm.title"), i18n.t("enterprise.profile.messages.logoutSuccess"));
       router.replace("/(auth)/welcome");
     });
   };
@@ -1396,17 +1395,17 @@ function EnterpriseProfilePage() {
         <View className="flex-1 justify-center items-center px-6">
           <Ionicons name="alert-circle" size={48} color="#EF4444" />
           <Text className="mt-4 text-neutral-800 font-quicksand-bold text-lg text-center">
-            Impossible de charger le profil
+            {i18n.t("enterprise.profile.messages.loadError")}
           </Text>
           <Text className="mt-2 text-neutral-600 font-quicksand-medium text-center">
-            Une erreur s&apos;est produite lors du chargement des données.
+            {i18n.t("enterprise.profile.messages.loadErrorMessage")}
           </Text>
           <TouchableOpacity
             onPress={loadProfile}
             className="mt-6 bg-primary-500 px-6 py-3 rounded-xl"
           >
             <Text className="text-white font-quicksand-semibold">
-              Réessayer
+              {i18n.t("enterprise.profile.actions.retry")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -1417,73 +1416,78 @@ function EnterpriseProfilePage() {
   return (
     <View className="flex-1 bg-background-secondary">
       <ExpoStatusBar style="light" translucent />
+
+      {/* Fixed Gradient Header */}
+      <LinearGradient
+        colors={["#047857", "#10B981"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        className="px-6"
+        style={{
+          paddingTop: insets.top + 16,
+          paddingLeft: insets.left + 24,
+          paddingRight: insets.right + 24,
+          paddingBottom: 20,
+        }}
+      >
+        <View className="flex-row items-start justify-between">
+          <View className="flex-1 pr-4">
+            <Text
+              className="text-2xl font-quicksand-bold text-white"
+              numberOfLines={2}
+            >
+              {profileData.enterprise.companyName}
+            </Text>
+            <View className="flex-row items-center mt-2">
+              <Ionicons
+                name="location"
+                size={16}
+                color="rgba(255,255,255,0.85)"
+              />
+              <Text
+                className="text-sm font-quicksand-medium text-white/90 ml-1"
+                numberOfLines={1}
+              >
+                {profileData.enterprise.location.district},{" "}
+                {profileData.enterprise.location.city}
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            onPress={() => setShowEditEnterprise(true)}
+            className="w-10 h-10 bg-white/20 rounded-full items-center justify-center"
+          >
+            <Ionicons name="create" size={18} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
+
+      {/* Scrollable Content */}
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={refreshProfile}
             colors={["#10B981"]}
             tintColor="#10B981"
+            progressViewOffset={insets.top + 80}
           />
         }
       >
-        {/* Gradient Header */}
-        <LinearGradient
-          colors={["#047857", "#10B981"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          className="px-6"
-          style={{
-            paddingTop: insets.top + 16,
-            paddingLeft: insets.left + 24,
-            paddingRight: insets.right + 24,
-            paddingBottom: headerBottomPadding,
-          }}
-        >
-          <View className="flex-row items-start justify-between">
-            <View className="flex-1 pr-4">
-              <Text
-                className="text-2xl font-quicksand-bold text-white"
-                numberOfLines={2}
-              >
-                {profileData.enterprise.companyName}
-              </Text>
-              <View className="flex-row items-center mt-3">
-                <Ionicons
-                  name="location"
-                  size={16}
-                  color="rgba(255,255,255,0.85)"
-                />
-                <Text
-                  className="text-sm font-quicksand-medium text-white/90 ml-1"
-                  numberOfLines={1}
-                >
-                  {profileData.enterprise.location.district},{" "}
-                  {profileData.enterprise.location.city}
-                </Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              onPress={() => setShowEditEnterprise(true)}
-              className="w-10 h-10 bg-white/20 rounded-full items-center justify-center"
-            >
-              <Ionicons name="create" size={18} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-        </LinearGradient>
 
         {/* Overlay Card */}
-        <View className="px-4" style={{ marginTop: overlayLift }}>
+        <View className="px-4 pt-4">
           <View
             className="bg-white rounded-2xl p-4 flex-row items-start"
             style={{
               shadowColor: "#000",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.03,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
               shadowRadius: 4,
-              elevation: 1,
+              elevation: 3,
             }}
           >
             <View className="relative">
@@ -1525,7 +1529,7 @@ function EnterpriseProfilePage() {
                 </Text>
               ) : (
                 <Text className="text-neutral-400 font-quicksand-regular text-sm italic">
-                  Ajoutez une description pour présenter votre entreprise
+                  {i18n.t("enterprise.profile.placeholders.noDescription")}
                 </Text>
               )}
               <View
@@ -1542,7 +1546,7 @@ function EnterpriseProfilePage() {
                 >
                   <Ionicons name="person" size={14} color="#10B981" />
                   <Text className="text-primary-500 font-quicksand-semibold text-xs ml-1">
-                    Profil
+                    {i18n.t("enterprise.profile.actions.profile")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -1556,7 +1560,7 @@ function EnterpriseProfilePage() {
                 >
                   <Ionicons name="people" size={14} color="#8B5CF6" />
                   <Text className="text-purple-600 font-quicksand-semibold text-xs ml-1">
-                    Partenaires
+                    {i18n.t("enterprise.profile.actions.partners")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -1573,7 +1577,7 @@ function EnterpriseProfilePage() {
                     color="#4B5563"
                   />
                   <Text className="text-neutral-700 font-quicksand-semibold text-xs ml-1">
-                    Détails
+                    {i18n.t("enterprise.profile.actions.details")}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -1584,7 +1588,7 @@ function EnterpriseProfilePage() {
         {/* Marketing & Abonnements (UI Only) */}
         <View className="px-4 pt-6">
           <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4 pl-1">
-            Marketing & Abonnements
+            {i18n.t("enterprise.profile.sections.marketing")}
           </Text>
           <View
             className="flex-row"
@@ -1615,13 +1619,13 @@ function EnterpriseProfilePage() {
                         className="text-white font-quicksand-semibold text-base"
                         numberOfLines={1}
                       >
-                        Publicités
+                        {i18n.t("enterprise.profile.features.advertisements.title")}
                       </Text>
                       <Text
                         className="text-white/80 font-quicksand-medium text-[12px] mt-1"
                         numberOfLines={2}
                       >
-                        Créer & gérer vos bannières
+                        {i18n.t("enterprise.profile.features.advertisements.description")}
                       </Text>
                     </View>
                     <View className="w-10 h-10 rounded-xl bg-white/25 items-center justify-center">
@@ -1630,7 +1634,7 @@ function EnterpriseProfilePage() {
                   </View>
                   <View className="mt-4 flex-row items-center">
                     <Text className="text-white font-quicksand-medium text-xs">
-                      Configurer maintenant
+                      {i18n.t("enterprise.profile.features.advertisements.configure")}
                     </Text>
                     <Ionicons
                       name="chevron-forward"
@@ -1660,11 +1664,11 @@ function EnterpriseProfilePage() {
                           className="text-neutral-800 font-quicksand-semibold text-base"
                           numberOfLines={1}
                         >
-                          Publicités
+                          {i18n.t("enterprise.profile.features.advertisements.title")}
                         </Text>
                         <View className="ml-2 bg-amber-100 px-2 py-0.5 rounded-full">
                           <Text className="text-amber-700 font-quicksand-bold text-[9px]">
-                            PREMIUM
+                            {i18n.t("enterprise.profile.features.advertisements.premium")}
                           </Text>
                         </View>
                       </View>
@@ -1672,7 +1676,7 @@ function EnterpriseProfilePage() {
                         className="text-neutral-500 font-quicksand-medium text-[12px] mt-1"
                         numberOfLines={2}
                       >
-                        Fonctionnalité non disponible
+                        {i18n.t("enterprise.profile.features.advertisements.notAvailable")}
                       </Text>
                     </View>
                     <View className="w-10 h-10 rounded-xl bg-neutral-200 items-center justify-center">
@@ -1692,7 +1696,7 @@ function EnterpriseProfilePage() {
                         color="#10B981"
                       />
                       <Text className="text-primary-600 font-quicksand-bold text-xs ml-1.5">
-                        Passer à un plan supérieur
+                        {i18n.t("enterprise.profile.features.advertisements.upgrade")}
                       </Text>
                     </View>
                   </TouchableOpacity>
@@ -1719,7 +1723,7 @@ function EnterpriseProfilePage() {
                     className="text-neutral-800 font-quicksand-semibold text-base"
                     numberOfLines={1}
                   >
-                    Abonnements
+                    {i18n.t("enterprise.profile.features.subscriptions.title")}
                   </Text>
                   <Text
                     className="text-neutral-500 font-quicksand-medium text-[12px] mt-1"
@@ -1736,7 +1740,7 @@ function EnterpriseProfilePage() {
               </View>
               <View className="mt-4 flex-row items-center">
                 <Text className="text-primary-600 font-quicksand-semibold text-xs">
-                  {subscription ? "Gérer mon plan" : "Voir les offres"}
+                  {subscription ? i18n.t("enterprise.profile.features.subscriptions.manage") : i18n.t("enterprise.profile.features.subscriptions.viewOffers")}
                 </Text>
                 <Ionicons
                   name="chevron-forward"
@@ -1753,7 +1757,7 @@ function EnterpriseProfilePage() {
         <View className="px-4 pt-6 space-y-4">
           <View className="bg-white rounded-2xl p-5 shadow-sm border border-neutral-100">
             <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-4">
-              Contact Entreprise
+              {i18n.t("enterprise.profile.sections.contact")}
             </Text>
             <View className="space-y-3">
               {profileData.enterprise.contactInfo?.email && (
@@ -1813,7 +1817,7 @@ function EnterpriseProfilePage() {
                 !profileData.enterprise.contactInfo?.whatsapp &&
                 !profileData.enterprise.contactInfo?.website && (
                   <Text className="text-neutral-400 text-sm font-quicksand-regular italic">
-                    Aucune information de contact renseignée
+                    {i18n.t("enterprise.profile.contact.noInfo")}
                   </Text>
                 )}
             </View>
@@ -1822,7 +1826,7 @@ function EnterpriseProfilePage() {
           <View className="bg-white rounded-2xl p-5 shadow-sm border border-neutral-100">
             <View className="flex-row items-center justify-between mb-3">
               <Text className="text-sm font-quicksand-semibold text-neutral-700">
-                Propriétaire
+                {i18n.t("enterprise.profile.sections.owner")}
               </Text>
               <TouchableOpacity
                 onPress={() => setShowEditProfile(true)}
@@ -1830,7 +1834,7 @@ function EnterpriseProfilePage() {
               >
                 <Ionicons name="create-outline" size={16} color="#6B7280" />
                 <Text className="text-neutral-600 text-xs font-quicksand-medium ml-1">
-                  Modifier
+                  {i18n.t("enterprise.profile.actions.edit")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -1843,9 +1847,8 @@ function EnterpriseProfilePage() {
               ) : (
                 <View className="w-12 h-12 rounded-full bg-neutral-200 items-center justify-center">
                   <Text className="text-neutral-600 font-quicksand-bold text-sm">
-                    {`${profileData.user.firstName?.[0] || ""}${
-                      profileData.user.lastName?.[0] || ""
-                    }`.toUpperCase()}
+                    {`${profileData.user.firstName?.[0] || ""}${profileData.user.lastName?.[0] || ""
+                      }`.toUpperCase()}
                   </Text>
                 </View>
               )}
@@ -1870,7 +1873,7 @@ function EnterpriseProfilePage() {
         {/* Menu de gestion */}
         <View className="px-4 py-4">
           <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4 pl-1">
-            Gestion & Outils
+            {i18n.t("enterprise.profile.management.title")}
           </Text>
           <View className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden">
             {/* Partenaires de livraison */}
@@ -1884,13 +1887,12 @@ function EnterpriseProfilePage() {
                 </View>
                 <View className="ml-4">
                   <Text className="text-base font-quicksand-medium text-neutral-800">
-                    Partenaires de Livraison
+                    {i18n.t("enterprise.profile.management.partners")}
                   </Text>
                   {profileData.enterprise.deliveryPartners &&
                     profileData.enterprise.deliveryPartners.length > 0 && (
                       <Text className="text-sm text-neutral-600 font-quicksand-light">
-                        {profileData.enterprise.deliveryPartners.length}{" "}
-                        partenaire(s)
+                        {i18n.t("enterprise.profile.management.partnersCount", { count: profileData.enterprise.deliveryPartners.length })}
                       </Text>
                     )}
                 </View>
@@ -1912,10 +1914,10 @@ function EnterpriseProfilePage() {
                 </View>
                 <View className="ml-4">
                   <Text className="text-base font-quicksand-medium text-neutral-800">
-                    Paramètres
+                    {i18n.t("enterprise.profile.management.settings")}
                   </Text>
                   <Text className="text-sm text-neutral-600 font-quicksand-light">
-                    Préférences et configuration
+                    {i18n.t("enterprise.profile.management.settingsDescription")}
                   </Text>
                 </View>
               </View>
@@ -1934,7 +1936,7 @@ function EnterpriseProfilePage() {
             <View className="flex-row items-center justify-center">
               <Ionicons name="log-out-outline" size={20} color="#EF4444" />
               <Text className="text-error-500 font-quicksand-semibold ml-2">
-                Se déconnecter
+                {i18n.t("enterprise.profile.management.logout")}
               </Text>
             </View>
           </TouchableOpacity>
@@ -1943,7 +1945,7 @@ function EnterpriseProfilePage() {
         {/* App Info */}
         <View className="px-6 py-4">
           <Text className="text-center text-xs text-neutral-500 font-quicksand-medium">
-            Axi Market v1.0.0
+            {i18n.t("enterprise.profile.appInfo")}
           </Text>
         </View>
 
@@ -1973,7 +1975,7 @@ function EnterpriseProfilePage() {
           <AddPartnerModal
             // Modal AddPartner retirée : ne plus rendre (placeholder pour éviter rupture si import conservé)
             visible={false}
-            onClose={() => {}}
+            onClose={() => { }}
             onAdd={handleAddPartner}
             loading={editLoading}
           />

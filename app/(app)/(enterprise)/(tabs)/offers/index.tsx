@@ -18,19 +18,17 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import NotificationModal, {
   useNotification,
 } from "../../../../../components/ui/NotificationModal";
+import { useLocale } from "../../../../../contexts/LocaleContext";
+import i18n from "../../../../../i18n/i18n";
 import DeliveryService, {
   DeliveryOffer,
 } from "../../../../../services/api/DeliveryService";
 
-const FILTERS: {
-  id: "ALL" | "OPEN" | "ASSIGNED" | "CANCELLED" | "EXPIRED";
-  label: string;
-}[] = [
-  { id: "ALL", label: "Toutes" },
-  { id: "OPEN", label: "Ouvertes" },
-  { id: "ASSIGNED", label: "Attribuées" },
-  { id: "CANCELLED", label: "Annulées" },
-  { id: "EXPIRED", label: "Expirées" },
+const getFilters = () => [
+  { id: "ALL" as const, label: i18n.t("enterprise.offers.filters.all") },
+  { id: "OPEN" as const, label: i18n.t("enterprise.offers.filters.open") },
+  { id: "ASSIGNED" as const, label: i18n.t("enterprise.offers.filters.assigned") },
+  { id: "CANCELLED" as const, label: i18n.t("enterprise.offers.filters.cancelled") },
 ];
 
 function formatPrice(n?: number) {
@@ -50,6 +48,9 @@ function formatDateTime(iso?: string) {
 }
 
 export default function EnterpriseOffersScreen() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { locale } = useLocale(); // Écoute les changements de langue pour re-render automatiquement
+  const FILTERS = getFilters();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const isSmallPhone = width < 360;
@@ -57,7 +58,7 @@ export default function EnterpriseOffersScreen() {
   const barBaseHeight = isTablet ? 68 : isSmallPhone ? 58 : 62;
   const bottomSpacer = barBaseHeight + insets.bottom + 16; // ensure content clears the custom tab bar
   const [filter, setFilter] = useState<
-    "ALL" | "OPEN" | "ASSIGNED" | "CANCELLED" | "EXPIRED"
+    "ALL" | "OPEN" | "ASSIGNED" | "CANCELLED"
   >("ALL");
   const [offers, setOffers] = useState<DeliveryOffer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,7 +84,7 @@ export default function EnterpriseOffersScreen() {
         console.log(`📦 ${list} offres chargées (filtre: ${filter})`);
         setOffers(list);
       } catch (e: any) {
-        setError(e.message || "Erreur de chargement");
+        setError(e.message || i18n.t("enterprise.offers.error.loadError"));
       } finally {
         if (withSpinner) setLoading(false);
       }
@@ -211,30 +212,24 @@ export default function EnterpriseOffersScreen() {
           return {
             color: "#10B981",
             bg: "#D1FAE5",
-            text: "Ouverte",
+            text: i18n.t("enterprise.offers.status.open"),
             icon: "alert",
           };
         case "ASSIGNED":
           return {
             color: "#3B82F6",
             bg: "#DBEAFE",
-            text: "Attribuée",
+            text: i18n.t("enterprise.offers.status.assigned"),
             icon: "person",
           };
         case "CANCELLED":
           return {
             color: "#EF4444",
             bg: "#FEE2E2",
-            text: "Annulée",
+            text: i18n.t("enterprise.offers.status.cancelled"),
             icon: "close",
           };
-        case "EXPIRED":
-          return {
-            color: "#6B7280",
-            bg: "#E5E7EB",
-            text: "Expirée",
-            icon: "time",
-          };
+
         default:
           return {
             color: "#6B7280",
@@ -272,7 +267,7 @@ export default function EnterpriseOffersScreen() {
                 className="text-sm font-quicksand-semibold text-neutral-800"
                 numberOfLines={1}
               >
-                {productData.name || "Produit"}
+                {productData.name || i18n.t("enterprise.offers.labels.product")}
               </Text>
               <Text className="text-xs text-neutral-600">
                 {formatPrice(productData.price)}
@@ -300,20 +295,19 @@ export default function EnterpriseOffersScreen() {
         {/* Details */}
         <View className="flex-row items-center justify-between">
           <View className="flex-1 mr-3">
-            <Text className="text-xs text-neutral-500">Client</Text>
+            <Text className="text-xs text-neutral-500">{i18n.t("enterprise.offers.labels.client")}</Text>
             <Text
               className="text-sm font-quicksand-medium text-neutral-800"
               numberOfLines={1}
             >
               {customer.firstName || customer.lastName
-                ? `${customer.firstName || ""} ${
-                    customer.lastName || ""
+                ? `${customer.firstName || ""} ${customer.lastName || ""
                   }`.trim()
-                : customer._id || "Client"}
+                : customer._id || i18n.t("enterprise.offers.labels.client")}
             </Text>
           </View>
           <View className="items-end">
-            <Text className="text-xs text-neutral-500">Expire</Text>
+            <Text className="text-xs text-neutral-500">{i18n.t("enterprise.offers.labels.expires")}</Text>
             <Text className="text-sm font-quicksand-semibold text-neutral-800">
               {formatDateTime(item.expiresAt)}
             </Text>
@@ -373,7 +367,7 @@ export default function EnterpriseOffersScreen() {
     >
       <View className="flex-row items-center justify-between mb-4">
         <Text className="text-2xl font-quicksand-bold text-white">
-          Mes offres
+          {i18n.t("enterprise.offers.title")}
         </Text>
       </View>
 
@@ -387,9 +381,8 @@ export default function EnterpriseOffersScreen() {
           <TouchableOpacity
             key={f.id}
             onPress={() => setFilter(f.id)}
-            className={`mr-2 px-4 py-2 rounded-full ${
-              filter === f.id ? "bg-white/30" : "bg-white/20"
-            }`}
+            className={`mr-2 px-4 py-2 rounded-full ${filter === f.id ? "bg-white/30" : "bg-white/20"
+              }`}
             activeOpacity={0.8}
           >
             <Text className={`text-sm font-quicksand-medium text-white`}>
@@ -401,7 +394,7 @@ export default function EnterpriseOffersScreen() {
 
       <View className="flex-row justify-between items-center mt-4">
         <Text className="text-white/80 font-quicksand-medium text-sm">
-          {offers.length} offre{offers.length !== 1 ? "s" : ""}
+          {offers.length} {offers.length !== 1 ? i18n.t("enterprise.offers.count.offersPlural") : i18n.t("enterprise.offers.count.offers")}
         </Text>
       </View>
     </LinearGradient>
@@ -426,7 +419,7 @@ export default function EnterpriseOffersScreen() {
         >
           <View className="flex-row items-center justify-between mb-4">
             <Text className="text-2xl font-quicksand-bold text-white">
-              Mes offres
+              {i18n.t("enterprise.offers.title")}
             </Text>
             <TouchableOpacity className="w-10 h-10 bg-white/20 rounded-full justify-center items-center">
               <Ionicons name="add" size={20} color="white" />
@@ -466,7 +459,7 @@ export default function EnterpriseOffersScreen() {
         <View className="flex-1 bg-white justify-center items-center px-6">
           <Ionicons name="warning" size={80} color="#EF4444" />
           <Text className="text-neutral-800 font-quicksand-bold text-lg mt-4 mb-2">
-            Erreur
+            {i18n.t("enterprise.offers.error.title")}
           </Text>
           <Text className="text-neutral-600 font-quicksand-medium text-center mt-1">
             {error}
@@ -476,7 +469,7 @@ export default function EnterpriseOffersScreen() {
             className="mt-4 bg-primary-500 rounded-xl px-4 py-2"
           >
             <Text className="text-white font-quicksand-semibold">
-              Réessayer
+              {i18n.t("enterprise.offers.error.retry")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -508,11 +501,10 @@ export default function EnterpriseOffersScreen() {
             <View className="flex-1 justify-center items-center px-6 mt-20">
               <Ionicons name="bicycle" size={80} color="#D1D5DB" />
               <Text className="text-xl font-quicksand-bold text-neutral-800 mt-4 mb-2">
-                Aucune offre
+                {i18n.t("enterprise.offers.empty.title")}
               </Text>
               <Text className="text-center text-neutral-600 font-quicksand-medium">
-                Créez une offre depuis une conversation produit pour la voir
-                ici.
+                {i18n.t("enterprise.offers.empty.message")}
               </Text>
             </View>
           }
@@ -575,7 +567,7 @@ export default function EnterpriseOffersScreen() {
                 marginBottom: 8,
               }}
             >
-              Supprimer l&apos;offre ?
+              {i18n.t("enterprise.offers.deleteModal.title")}
             </Text>
 
             {/* Message */}
@@ -587,8 +579,7 @@ export default function EnterpriseOffersScreen() {
                 marginBottom: 24,
               }}
             >
-              Cette action est irréversible. L&apos;offre sera définitivement
-              supprimée.
+              {i18n.t("enterprise.offers.deleteModal.message")}
             </Text>
 
             {/* Boutons */}
@@ -609,7 +600,7 @@ export default function EnterpriseOffersScreen() {
                 disabled={confirmLoading}
               >
                 <Text className="font-quicksand-semibold text-neutral-700">
-                  Annuler
+                  {i18n.t("enterprise.offers.deleteModal.cancel")}
                 </Text>
               </TouchableOpacity>
 
@@ -630,8 +621,8 @@ export default function EnterpriseOffersScreen() {
                     );
                     showNotification(
                       "success",
-                      "Offre supprimée",
-                      "Votre offre a été supprimée avec succès."
+                      i18n.t("enterprise.offers.deleteModal.successTitle"),
+                      i18n.t("enterprise.offers.deleteModal.successMessage")
                     );
                     setConfirmVisible(false);
                     setTimeout(() => setSelectedOffer(null), 300);
@@ -639,8 +630,8 @@ export default function EnterpriseOffersScreen() {
                     console.error("❌ Erreur suppression offre:", e);
                     showNotification(
                       "error",
-                      "Échec de la suppression",
-                      e.message || "Impossible de supprimer l'offre"
+                      i18n.t("enterprise.offers.deleteModal.errorTitle"),
+                      e.message || i18n.t("enterprise.offers.deleteModal.errorMessage")
                     );
                   } finally {
                     setConfirmLoading(false);
@@ -657,11 +648,11 @@ export default function EnterpriseOffersScreen() {
               >
                 {confirmLoading ? (
                   <Text className="font-quicksand-semibold text-white">
-                    Suppression...
+                    {i18n.t("enterprise.offers.deleteModal.deleting")}
                   </Text>
                 ) : (
                   <Text className="font-quicksand-semibold text-white">
-                    Supprimer
+                    {i18n.t("enterprise.offers.deleteModal.confirm")}
                   </Text>
                 )}
               </TouchableOpacity>
