@@ -1,3 +1,7 @@
+import { useAuth } from "@/contexts/AuthContext";
+import { useLocale } from "@/contexts/LocaleContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import i18n from "@/i18n/i18n";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -21,7 +25,6 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useAuth } from "../../../../contexts/AuthContext";
 import AdvertisementService, {
   Advertisement,
 } from "../../../../services/api/AdvertisementService";
@@ -110,6 +113,9 @@ const staticCategories = [
 // const growthData = { monthlyGrowth: 0, orderGrowth: 0, ratingGrowth: 0, reviewGrowth: 0 }; // désactivé (non utilisé)
 
 export default function EnterpriseDashboard() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { locale } = useLocale();
+  const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const { user, isAuthenticated, userRole } = useAuth();
   const router = useRouter();
@@ -380,7 +386,7 @@ export default function EnterpriseDashboard() {
       outputRange: [-150, 150],
     });
     return (
-      <View style={[{ backgroundColor: "#E5E7EB", overflow: "hidden" }, style]}>
+      <View style={[{ backgroundColor: isDark ? colors.tertiary : "#E5E7EB", overflow: "hidden" }, style]}>
         <Animated.View
           style={{
             position: "absolute",
@@ -388,7 +394,7 @@ export default function EnterpriseDashboard() {
             bottom: 0,
             width: 120,
             transform: [{ translateX }],
-            backgroundColor: "rgba(255,255,255,0.35)",
+            backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.35)",
             opacity: 0.7,
           }}
         />
@@ -397,7 +403,7 @@ export default function EnterpriseDashboard() {
   };
 
   const SkeletonProduct = () => (
-    <View className="bg-white rounded-2xl shadow-md border border-neutral-100 p-2 mb-3 w-[48%] overflow-hidden">
+    <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="rounded-2xl shadow-md border p-2 mb-3 w-[48%] overflow-hidden">
       <ShimmerBlock style={{ height: 128, borderRadius: 16, width: "100%" }} />
       <View className="p-2">
         <ShimmerBlock
@@ -412,11 +418,11 @@ export default function EnterpriseDashboard() {
   );
 
   const renderSkeletonHome = () => (
-    <View className="flex-1 bg-background-secondary">
+    <View style={{ flex: 1, backgroundColor: colors.secondary }}>
       {/* Header Skeleton with Floating Search */}
       <View className="z-50">
         <LinearGradient
-          colors={["#047857", "#10B981"]}
+          colors={[colors.brandGradientStart, colors.brandGradientEnd]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{
@@ -438,7 +444,7 @@ export default function EnterpriseDashboard() {
 
         {/* Floating Search Skeleton */}
         <View className="-mt-14 px-4">
-          <View className="bg-white rounded-3xl shadow-xl p-2">
+          <View style={{ backgroundColor: colors.card }} className="rounded-3xl shadow-xl p-2">
             <ShimmerBlock style={{ height: 44, borderRadius: 16, width: '100%', marginBottom: 12 }} />
             <View className="flex-row justify-between">
               <ShimmerBlock style={{ width: '48%', height: 36, borderRadius: 12 }} />
@@ -795,11 +801,11 @@ export default function EnterpriseDashboard() {
   const greetUser = () => {
     const hours = new Date().getHours();
     if (hours < 12) {
-      return "Bonjour";
+      return i18n.t("enterprise.dashboard.greetings.morning");
     } else if (hours < 18) {
-      return "Bon après-midi";
+      return i18n.t("enterprise.dashboard.greetings.afternoon");
     } else {
-      return "Bonsoir";
+      return i18n.t("enterprise.dashboard.greetings.evening");
     }
   };
 
@@ -817,14 +823,16 @@ export default function EnterpriseDashboard() {
   const renderProduct = (item: Product) => (
     <TouchableOpacity
       key={item._id}
-      className="bg-white rounded-2xl p-2 mb-3 w-[48%] overflow-hidden"
       style={{
+        backgroundColor: colors.card,
+        borderColor: colors.border,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
       }}
+      className="rounded-2xl p-2 mb-3 w-[48%] overflow-hidden border"
       onPress={() => {
         try {
           router.push(`/(app)/(enterprise)/product/${item._id}`);
@@ -865,17 +873,18 @@ export default function EnterpriseDashboard() {
       <View className="p-2">
         <Text
           numberOfLines={2}
-          className="text-sm font-quicksand-semibold text-neutral-800 mb-1"
+          style={{ color: colors.textPrimary }}
+          className="text-sm font-quicksand-semibold mb-1"
         >
           {item.name}
         </Text>
-        <Text className="text-base font-quicksand-bold text-primary-600 mb-1">
+        <Text style={{ color: colors.brandPrimary }} className="text-base font-quicksand-bold mb-1">
           {formatPrice(item.price)}
         </Text>
         {item.stats && (
           <View className="flex-row items-center">
             <Ionicons name="star" size={12} color="#FFD700" />
-            <Text className="text-xs text-neutral-600 ml-1">
+            <Text style={{ color: colors.textSecondary }} className="text-xs ml-1">
               {item.stats.averageRating?.toFixed(1) || "0.0"}
             </Text>
           </View>
@@ -887,14 +896,16 @@ export default function EnterpriseDashboard() {
   const renderProductListItem = (item: Product) => (
     <TouchableOpacity
       key={item._id}
-      className="bg-white rounded-2xl p-2 mb-3 w-full overflow-hidden flex-row"
       style={{
+        backgroundColor: colors.card,
+        borderColor: colors.border,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.03,
         shadowRadius: 4,
         elevation: 1,
       }}
+      className="rounded-2xl p-2 mb-3 w-full overflow-hidden flex-row border"
       onPress={() => {
         try {
           router.push(`/(app)/(enterprise)/product/${item._id}`);
@@ -925,21 +936,22 @@ export default function EnterpriseDashboard() {
         <View>
           <Text
             numberOfLines={2}
-            className="text-sm font-quicksand-semibold text-neutral-800"
+            style={{ color: colors.textPrimary }}
+            className="text-sm font-quicksand-semibold"
           >
             {item.name}
           </Text>
           {item.stats && (
             <View className="flex-row items-center mt-1">
               <Ionicons name="star" size={12} color="#FFD700" />
-              <Text className="text-xs text-neutral-600 ml-1">
+              <Text style={{ color: colors.textSecondary }} className="text-xs ml-1">
                 {item.stats.averageRating?.toFixed(1) || "0.0"}
               </Text>
             </View>
           )}
         </View>
         <View className="flex-row items-center justify-between mt-2">
-          <Text className="text-base font-quicksand-bold text-primary-600">
+          <Text style={{ color: colors.brandPrimary }} className="text-base font-quicksand-bold">
             {formatPrice(item.price)}
           </Text>
           <TouchableOpacity
@@ -1024,7 +1036,7 @@ export default function EnterpriseDashboard() {
   const renderHeader = () => (
     <View className="z-50">
       <LinearGradient
-        colors={["#047857", "#10B981"]}
+        colors={[colors.brandGradientStart, colors.brandGradientEnd]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{
@@ -1056,13 +1068,14 @@ export default function EnterpriseDashboard() {
 
       {/* Search Section Floating Over Header */}
       <View className="-mt-14 px-4">
-        <View className="bg-white rounded-3xl shadow-xl shadow-emerald-900/10 border border-neutral-100 p-2">
-          <View className="flex-row items-center px-3 py-2 bg-gray-50 rounded-2xl border border-gray-100">
-            <Ionicons name="search" size={22} color="#10B981" />
+        <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="rounded-3xl shadow-xl shadow-emerald-900/10 border p-2">
+          <View style={{ backgroundColor: isDark ? colors.tertiary : "#F9FAFB", borderColor: colors.border }} className="flex-row items-center px-3 py-2 rounded-2xl border">
+            <Ionicons name="search" size={22} color={colors.brandPrimary} />
             <TextInput
-              className="flex-1 ml-3 text-neutral-800 font-quicksand-semibold text-base"
-              placeholder="Que recherchez-vous ?"
-              placeholderTextColor="#9CA3AF"
+              style={{ color: colors.textPrimary }}
+              className="flex-1 ml-3 font-quicksand-semibold text-base"
+              placeholder={i18n.t("enterprise.dashboard.search.placeholder")}
+              placeholderTextColor={colors.textTertiary}
               value={searchQuery}
               onChangeText={handleSearchChange}
               onFocus={handleSearchInputFocus}
@@ -1081,21 +1094,23 @@ export default function EnterpriseDashboard() {
           <View className="flex-row mt-3 px-1 pb-1">
             <TouchableOpacity
               onPress={() => setCityModalVisible(true)}
-              className="flex-1 flex-row items-center justify-center bg-emerald-50 py-2 rounded-xl mr-2"
+              style={{ backgroundColor: isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5" }}
+              className="flex-1 flex-row items-center justify-center py-2 rounded-xl mr-2"
             >
-              <Ionicons name="location" size={14} color="#047857" />
-              <Text numberOfLines={1} className="ml-1.5 text-xs font-quicksand-bold text-emerald-800">
+              <Ionicons name="location" size={14} color={colors.brandSecondary} />
+              <Text style={{ color: colors.brandSecondary }} numberOfLines={1} className="ml-1.5 text-xs font-quicksand-bold">
                 {selectedCity}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => selectedCity && setNeighborhoodModalVisible(true)}
-              className={`flex-1 flex-row items-center justify-center py-2 rounded-xl ml-2 ${selectedCity ? 'bg-gray-100' : 'bg-gray-50 opacity-50'}`}
+              style={{ backgroundColor: selectedCity ? (isDark ? colors.tertiary : "#F3F4F6") : (isDark ? colors.tertiary : "#F9FAFB"), opacity: selectedCity ? 1 : 0.5 }}
+              className={`flex-1 flex-row items-center justify-center py-2 rounded-xl ml-2`}
               disabled={!selectedCity}
             >
-              <Ionicons name="map" size={14} color="#4B5563" />
-              <Text numberOfLines={1} className="ml-1.5 text-xs font-quicksand-bold text-gray-700">
-                {selectedNeighborhood || "Quartier"}
+              <Ionicons name="map" size={14} color={colors.textSecondary} />
+              <Text style={{ color: colors.textSecondary }} numberOfLines={1} className="ml-1.5 text-xs font-quicksand-bold">
+                {selectedNeighborhood || i18n.t("enterprise.dashboard.search.neighborhoodPlaceholder")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -1112,7 +1127,7 @@ export default function EnterpriseDashboard() {
   );
 
   return (
-    <View className="flex-1 bg-background-secondary">
+    <View style={{ flex: 1, backgroundColor: colors.secondary }}>
       <ExpoStatusBar style="light" translucent />
 
       {loading ? (
@@ -1124,31 +1139,34 @@ export default function EnterpriseDashboard() {
           {/* Search Suggestions - Positioned Absolutely Below Search Card */}
           {(showSuggestions || showRecentSearches) && (
             <View
-              className="absolute bg-white rounded-b-2xl shadow-lg border-t border-gray-100 mx-4 z-40"
               style={{
+                backgroundColor: colors.card,
+                borderColor: colors.border,
                 top: insets.top + 10 + 80 - 56 + 125,
                 left: 0,
                 right: 0,
                 maxHeight: 400
               }}
+              className="absolute rounded-b-2xl shadow-lg border-t mx-4 z-40"
             >
               <ScrollView showsVerticalScrollIndicator={false}>
                 {showSuggestions && searchSuggestions.length > 0 && (
                   <View className="py-2">
-                    <Text className="px-4 py-2 text-xs font-quicksand-bold text-gray-500 uppercase">
+                    <Text style={{ color: colors.textSecondary }} className="px-4 py-2 text-xs font-quicksand-bold uppercase">
                       Suggestions
                     </Text>
                     {searchSuggestions.map((suggestion: any, index: number) => (
                       <TouchableOpacity
                         key={index}
-                        className="px-4 py-3 flex-row items-center border-b border-gray-50"
+                        style={{ borderColor: colors.border }}
+                        className="px-4 py-3 flex-row items-center border-b"
                         onPress={() => selectSuggestion(suggestion)}
                       >
-                        <Ionicons name="search" size={18} color="#9CA3AF" />
-                        <Text className="ml-3 text-neutral-800 font-quicksand-medium flex-1">
+                        <Ionicons name="search" size={18} color={colors.textTertiary} />
+                        <Text style={{ color: colors.textPrimary }} className="ml-3 font-quicksand-medium flex-1">
                           {suggestion.text || suggestion.value || suggestion.query || suggestion.name || ''}
                         </Text>
-                        <Ionicons name="arrow-forward" size={16} color="#D1D5DB" />
+                        <Ionicons name="arrow-forward" size={16} color={colors.textTertiary} />
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -1157,11 +1175,11 @@ export default function EnterpriseDashboard() {
                 {showRecentSearches && recentSearches.length > 0 && (
                   <View className="py-2">
                     <View className="px-4 py-2 flex-row justify-between items-center">
-                      <Text className="text-xs font-quicksand-bold text-gray-500 uppercase">
+                      <Text style={{ color: colors.textSecondary }} className="text-xs font-quicksand-bold uppercase">
                         Recherches récentes
                       </Text>
                       <TouchableOpacity onPress={clearSearchHistory}>
-                        <Text className="text-xs font-quicksand-semibold text-emerald-600">
+                        <Text style={{ color: colors.brandPrimary }} className="text-xs font-quicksand-semibold">
                           Effacer tout
                         </Text>
                       </TouchableOpacity>
@@ -1169,21 +1187,22 @@ export default function EnterpriseDashboard() {
                     {recentSearches.map((search: RecentSearch, index: number) => (
                       <TouchableOpacity
                         key={index}
-                        className="px-4 py-3 flex-row items-center border-b border-gray-50"
+                        style={{ borderColor: colors.border }}
+                        className="px-4 py-3 flex-row items-center border-b"
                         onPress={() => {
                           setSearchQuery(search.query);
                           performSearch(search.query);
                         }}
                       >
-                        <Ionicons name="time-outline" size={18} color="#9CA3AF" />
-                        <Text className="ml-3 text-neutral-800 font-quicksand-medium flex-1">
+                        <Ionicons name="time-outline" size={18} color={colors.textTertiary} />
+                        <Text style={{ color: colors.textPrimary }} className="ml-3 font-quicksand-medium flex-1">
                           {search.query}
                         </Text>
                         <TouchableOpacity
                           onPress={() => removeFromSearchHistory(search.query)}
                           className="p-1"
                         >
-                          <Ionicons name="close-circle" size={18} color="#D1D5DB" />
+                          <Ionicons name="close-circle" size={18} color={colors.textTertiary} />
                         </TouchableOpacity>
                       </TouchableOpacity>
                     ))}
@@ -1209,8 +1228,8 @@ export default function EnterpriseDashboard() {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={refreshData}
-                colors={["#10B981"]}
-                tintColor="#10B981"
+                colors={[colors.brandPrimary]}
+                tintColor={colors.brandPrimary}
                 progressViewOffset={FIXED_HEADER_HEIGHT}
               />
             }
@@ -1218,42 +1237,43 @@ export default function EnterpriseDashboard() {
             {renderSearchSection()}
             {/* Résultats de recherche */}
             {showSearchResults && (
-              <View className="bg-white px-4 py-4 border-b border-neutral-100">
+              <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="px-4 py-4 border-b">
                 {/* En-tête résultats + toggle vue */}
                 <View className="flex-row items-center justify-between">
-                  <Text className="text-lg font-quicksand-bold text-neutral-800 flex-1">
+                  <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold flex-1">
                     Résultats pour &quot;{searchQuery}&quot;
                   </Text>
                   <View className="flex-row items-center">
-                    <View className="flex-row items-center bg-neutral-100 rounded-full p-1 mr-2">
+                    <View style={{ backgroundColor: isDark ? colors.tertiary : "#F3F4F6" }} className="flex-row items-center rounded-full p-1 mr-2">
                       <TouchableOpacity
                         onPress={() => setResultsView("grid")}
-                        className={`px-2 py-1 rounded-full ${resultsView === "grid" ? "bg-white" : ""
-                          }`}
+                        style={{ backgroundColor: resultsView === "grid" ? colors.card : "transparent" }}
+                        className={`px-2 py-1 rounded-full`}
                       >
                         <Ionicons
                           name="grid-outline"
                           size={18}
-                          color={resultsView === "grid" ? "#10B981" : "#6B7280"}
+                          color={resultsView === "grid" ? colors.brandPrimary : colors.textSecondary}
                         />
                       </TouchableOpacity>
                       <TouchableOpacity
                         onPress={() => setResultsView("list")}
-                        className={`px-2 py-1 rounded-full ${resultsView === "list" ? "bg-white" : ""
-                          }`}
+                        style={{ backgroundColor: resultsView === "list" ? colors.card : "transparent" }}
+                        className={`px-2 py-1 rounded-full`}
                       >
                         <Ionicons
                           name="list-outline"
                           size={18}
-                          color={resultsView === "list" ? "#10B981" : "#6B7280"}
+                          color={resultsView === "list" ? colors.brandPrimary : colors.textSecondary}
                         />
                       </TouchableOpacity>
                     </View>
                     <TouchableOpacity
                       onPress={hideSearchResults}
-                      className="p-2 bg-neutral-100 rounded-full"
+                      style={{ backgroundColor: isDark ? colors.tertiary : "#F3F4F6" }}
+                      className="p-2 rounded-full"
                     >
-                      <Ionicons name="close" size={18} color="#6B7280" />
+                      <Ionicons name="close" size={18} color={colors.textSecondary} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -1261,12 +1281,12 @@ export default function EnterpriseDashboard() {
                 {/* Infos supplémentaires */}
                 {searchInfo && (
                   <View className="flex-row items-center mt-1">
-                    <Text className="text-xs text-neutral-400 font-quicksand-medium">
+                    <Text style={{ color: colors.textTertiary }} className="text-xs font-quicksand-medium">
                       {searchInfo.totalResults || searchResults.length} résultat
                       {searchInfo.totalResults > 1 ? "s" : ""}
                     </Text>
                     {searchInfo.searchTime && (
-                      <Text className="text-xs text-neutral-400 font-quicksand-medium ml-2">
+                      <Text style={{ color: colors.textTertiary }} className="text-xs font-quicksand-medium ml-2">
                         • {searchInfo.searchTime}ms
                       </Text>
                     )}
@@ -1283,10 +1303,10 @@ export default function EnterpriseDashboard() {
                   <TouchableOpacity
                     onPress={() => setCityModalVisible(true)}
                     className="flex-row items-center px-3 py-1.5 rounded-full border mr-2"
-                    style={{ backgroundColor: "#F9FAFB", borderColor: "#E5E7EB" }}
+                    style={{ backgroundColor: isDark ? colors.tertiary : "#F9FAFB", borderColor: colors.border }}
                   >
-                    <Ionicons name="location-outline" size={14} color="#6B7280" />
-                    <Text className="ml-1 text-xs font-quicksand-medium text-neutral-700">
+                    <Ionicons name="location-outline" size={14} color={colors.textSecondary} />
+                    <Text style={{ color: colors.textSecondary }} className="ml-1 text-xs font-quicksand-medium">
                       {selectedCity}
                     </Text>
                   </TouchableOpacity>
@@ -1295,16 +1315,16 @@ export default function EnterpriseDashboard() {
                       onPress={() => setNeighborhoodModalVisible(true)}
                       className="flex-row items-center px-3 py-1.5 rounded-full border"
                       style={{
-                        backgroundColor: "#F9FAFB",
-                        borderColor: "#E5E7EB",
+                        backgroundColor: isDark ? colors.tertiary : "#F9FAFB",
+                        borderColor: colors.border,
                       }}
                     >
                       <Ionicons
                         name="navigate-outline"
                         size={14}
-                        color="#6B7280"
+                        color={colors.textSecondary}
                       />
-                      <Text className="ml-1 text-xs font-quicksand-medium text-neutral-700">
+                      <Text style={{ color: colors.textSecondary }} className="ml-1 text-xs font-quicksand-medium">
                         {selectedNeighborhood}
                       </Text>
                     </TouchableOpacity>
@@ -1328,10 +1348,8 @@ export default function EnterpriseDashboard() {
                     }}
                   >
                     <Text
-                      className={`text-xs font-quicksand-semibold ${selectedSort === "relevance"
-                        ? "text-primary-600"
-                        : "text-neutral-700"
-                        }`}
+                      style={{ color: selectedSort === "relevance" ? colors.brandPrimary : colors.textPrimary }}
+                      className={`text-xs font-quicksand-semibold`}
                     >
                       Pertinence
                     </Text>
@@ -1347,10 +1365,8 @@ export default function EnterpriseDashboard() {
                     }}
                   >
                     <Text
-                      className={`text-xs font-quicksand-semibold ${selectedSort === "priceLow"
-                        ? "text-primary-600"
-                        : "text-neutral-700"
-                        }`}
+                      style={{ color: selectedSort === "priceLow" ? colors.brandPrimary : colors.textPrimary }}
+                      className={`text-xs font-quicksand-semibold`}
                     >
                       Moins cher
                     </Text>
@@ -1366,10 +1382,8 @@ export default function EnterpriseDashboard() {
                     }}
                   >
                     <Text
-                      className={`text-xs font-quicksand-semibold ${selectedSort === "priceHigh"
-                        ? "text-primary-600"
-                        : "text-neutral-700"
-                        }`}
+                      style={{ color: selectedSort === "priceHigh" ? colors.brandPrimary : colors.textPrimary }}
+                      className={`text-xs font-quicksand-semibold`}
                     >
                       Plus cher
                     </Text>
@@ -1385,10 +1399,8 @@ export default function EnterpriseDashboard() {
                     }}
                   >
                     <Text
-                      className={`text-xs font-quicksand-semibold ${selectedSort === "newest"
-                        ? "text-primary-600"
-                        : "text-neutral-700"
-                        }`}
+                      style={{ color: selectedSort === "newest" ? colors.brandPrimary : colors.textPrimary }}
+                      className={`text-xs font-quicksand-semibold`}
                     >
                       Nouveaux
                     </Text>
@@ -1426,16 +1438,16 @@ export default function EnterpriseDashboard() {
                   )
                 ) : (
                   <View className="items-center justify-center py-8">
-                    <Ionicons name="search-outline" size={36} color="#9CA3AF" />
-                    <Text className="mt-2 text-neutral-600 font-quicksand-medium">
-                      Aucun produit trouvé
+                    <Ionicons name="search-outline" size={36} color={colors.textTertiary} />
+                    <Text style={{ color: colors.textSecondary }} className="mt-2 font-quicksand-medium">
+                      {i18n.t("enterprise.dashboard.empty.noProductsFound")}
                     </Text>
                     <TouchableOpacity
                       onPress={() => setCityModalVisible(true)}
                       className="mt-3 px-4 py-2 rounded-full border"
-                      style={{ borderColor: "#FED7AA" }}
+                      style={{ borderColor: colors.brandSecondary }}
                     >
-                      <Text className="text-primary-600 font-quicksand-semibold">
+                      <Text style={{ color: colors.brandPrimary }} className="font-quicksand-semibold">
                         Ajuster les filtres
                       </Text>
                     </TouchableOpacity>
@@ -1489,33 +1501,33 @@ export default function EnterpriseDashboard() {
                   </View>
                 </>
               ) : (
-                <View className="mx-4 bg-white rounded-2xl p-6 items-center border border-neutral-100">
-                  <View className="w-16 h-16 rounded-full bg-neutral-100 items-center justify-center mb-4">
+                <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="mx-4 rounded-2xl p-6 items-center border">
+                  <View style={{ backgroundColor: isDark ? colors.tertiary : "#F5F5F5" }} className="w-16 h-16 rounded-full items-center justify-center mb-4">
                     <Ionicons
                       name="megaphone-outline"
                       size={32}
-                      color="#9CA3AF"
+                      color={colors.textTertiary}
                     />
                   </View>
-                  <Text className="text-base font-quicksand-bold text-neutral-800 text-center mb-2">
-                    Aucune publicité disponible
+                  <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-bold text-center mb-2">
+                    {i18n.t("enterprise.dashboard.ads.noAds")}
                   </Text>
-                  <Text className="text-sm font-quicksand text-neutral-600 text-center">
-                    Revenez bientôt pour découvrir nos dernières offres
+                  <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand text-center">
+                    {i18n.t("enterprise.dashboard.ads.comeBack")}
                   </Text>
                 </View>
               )}
             </View>
 
             {/* Categories Business Grid */}
-            <View className="py-6 bg-background-secondary">
+            <View style={{ backgroundColor: colors.secondary }} className="py-6">
               <View className="px-6 mb-6 flex-row items-center justify-between">
                 <View className="flex-1">
-                  <Text className="text-xl font-quicksand-bold text-neutral-800">
-                    Services Business
+                  <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold">
+                    {i18n.t("enterprise.dashboard.categories.title")}
                   </Text>
-                  <Text className="text-sm font-quicksand text-neutral-600 mt-1">
-                    Découvrez nos catégories de services professionnels
+                  <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand mt-1">
+                    {i18n.t("enterprise.dashboard.categories.subtitle")}
                   </Text>
                 </View>
                 <TouchableOpacity
@@ -1526,19 +1538,20 @@ export default function EnterpriseDashboard() {
                       console.warn("Erreur navigation catégories:", error);
                     }
                   }}
-                  className="flex-row items-center bg-primary-50 rounded-xl px-3 py-2 ml-2"
+                  style={{ backgroundColor: isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5" }}
+                  className="flex-row items-center rounded-xl px-3 py-2 ml-2"
                 >
-                  <Text className="text-primary-600 font-quicksand-semibold text-sm mr-1">
-                    Voir tout
+                  <Text style={{ color: colors.brandPrimary }} className="font-quicksand-semibold text-sm mr-1">
+                    {i18n.t("enterprise.dashboard.categories.viewAll")}
                   </Text>
-                  <Ionicons name="chevron-forward" size={14} color="#10B981" />
+                  <Ionicons name="chevron-forward" size={14} color={colors.brandPrimary} />
                 </TouchableOpacity>
               </View>
               {loadingCategories ? (
                 <View className="flex-1 justify-center items-center py-8">
-                  <ActivityIndicator size="large" color="#10B981" />
-                  <Text className="mt-2 text-neutral-600 font-quicksand-medium">
-                    Chargement des catégories...
+                  <ActivityIndicator size="large" color={colors.brandPrimary} />
+                  <Text style={{ color: colors.textSecondary }} className="mt-2 font-quicksand-medium">
+                    {i18n.t("enterprise.dashboard.categories.loading")}
                   </Text>
                 </View>
               ) : (
@@ -1551,7 +1564,7 @@ export default function EnterpriseDashboard() {
                     .slice(0, 9)
                     .map((category: any, index: number) => {
                       // Couleurs par défaut pour les vraies catégories
-                      const colors = [
+                      const categoryColors = [
                         "#FF6B35",
                         "#3B82F6",
                         "#8B5CF6",
@@ -1573,7 +1586,7 @@ export default function EnterpriseDashboard() {
                       ];
 
                       const categoryColor =
-                        category.color || colors[index % colors.length];
+                        category.color || categoryColors[index % categoryColors.length];
                       const categoryIcon =
                         category.icon || icons[index % icons.length];
                       const categoryId = category._id || category.id || index;
@@ -1617,7 +1630,7 @@ export default function EnterpriseDashboard() {
                               />
                             )}
                           </View>
-                          <Text className="text-xs font-quicksand-semibold text-neutral-700 text-center w-16 leading-4" numberOfLines={2}>
+                          <Text style={{ color: colors.textSecondary }} className="text-xs font-quicksand-semibold text-center w-16 leading-4" numberOfLines={2}>
                             {category.name}
                           </Text>
                         </TouchableOpacity>
@@ -1632,11 +1645,11 @@ export default function EnterpriseDashboard() {
               <View className="px-6 mb-6">
                 <View className="flex-row items-center justify-between">
                   <View>
-                    <Text className="text-xl font-quicksand-bold text-neutral-800">
-                      Mes Produits en Vedette
+                    <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold">
+                      {i18n.t("enterprise.dashboard.featuredProducts.title")}
                     </Text>
-                    <Text className="text-sm font-quicksand text-neutral-600 mt-1">
-                      Vos produits les plus populaires
+                    <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand mt-1">
+                      {i18n.t("enterprise.dashboard.featuredProducts.subtitle")}
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -1647,20 +1660,21 @@ export default function EnterpriseDashboard() {
                         console.warn("Erreur navigation mes produits:", error);
                       }
                     }}
-                    className="flex-row items-center bg-primary-50 rounded-xl px-3 py-2"
+                    style={{ backgroundColor: isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5" }}
+                    className="flex-row items-center rounded-xl px-3 py-2"
                   >
-                    <Text className="text-primary-600 font-quicksand-semibold text-sm mr-1">
-                      Voir tout
+                    <Text style={{ color: colors.brandPrimary }} className="font-quicksand-semibold text-sm mr-1">
+                      {i18n.t("enterprise.dashboard.featuredProducts.viewAll")}
                     </Text>
-                    <Ionicons name="chevron-forward" size={14} color="#10B981" />
+                    <Ionicons name="chevron-forward" size={14} color={colors.brandPrimary} />
                   </TouchableOpacity>
                 </View>
               </View>
               {loadingProducts ? (
                 <View className="flex-1 justify-center items-center py-8">
-                  <ActivityIndicator size="large" color="#10B981" />
-                  <Text className="mt-2 text-neutral-600 font-quicksand-medium">
-                    Chargement des produits...
+                  <ActivityIndicator size="large" color={colors.brandPrimary} />
+                  <Text style={{ color: colors.textSecondary }} className="mt-2 font-quicksand-medium">
+                    {i18n.t("enterprise.dashboard.featuredProducts.loading")}
                   </Text>
                 </View>
               ) : featuredProducts.length > 0 ? (
@@ -1669,8 +1683,8 @@ export default function EnterpriseDashboard() {
                 </View>
               ) : (
                 <View className="flex-1 justify-center items-center py-8">
-                  <Text className="text-neutral-600 font-quicksand-medium">
-                    Aucun produit disponible
+                  <Text style={{ color: colors.textSecondary }} className="font-quicksand-medium">
+                    {i18n.t("enterprise.dashboard.featuredProducts.noProducts")}
                   </Text>
                 </View>
               )}
@@ -1681,11 +1695,11 @@ export default function EnterpriseDashboard() {
               <View className="px-6 mb-6">
                 <View className="flex-row items-center justify-between">
                   <View>
-                    <Text className="text-xl font-quicksand-bold text-neutral-800">
-                      Tendances du Marketplace
+                    <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold">
+                      {i18n.t("enterprise.dashboard.popularProducts.title")}
                     </Text>
-                    <Text className="text-sm font-quicksand text-neutral-600 mt-1">
-                      Découvrez les produits populaires
+                    <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand mt-1">
+                      {i18n.t("enterprise.dashboard.popularProducts.subtitle")}
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -1696,20 +1710,21 @@ export default function EnterpriseDashboard() {
                         console.warn("Erreur navigation marketplace:", error);
                       }
                     }}
-                    className="flex-row items-center bg-primary-50 rounded-xl px-3 py-2"
+                    style={{ backgroundColor: isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5" }}
+                    className="flex-row items-center rounded-xl px-3 py-2"
                   >
-                    <Text className="text-primary-600 font-quicksand-semibold text-sm mr-1">
-                      Voir tout
+                    <Text style={{ color: colors.brandPrimary }} className="font-quicksand-semibold text-sm mr-1">
+                      {i18n.t("enterprise.dashboard.popularProducts.viewAll")}
                     </Text>
-                    <Ionicons name="chevron-forward" size={14} color="#10B981" />
+                    <Ionicons name="chevron-forward" size={14} color={colors.brandPrimary} />
                   </TouchableOpacity>
                 </View>
               </View>
               {loadingPopular ? (
                 <View className="flex-1 justify-center items-center py-8">
-                  <ActivityIndicator size="large" color="#10B981" />
-                  <Text className="mt-2 text-neutral-600 font-quicksand-medium">
-                    Chargement des tendances...
+                  <ActivityIndicator size="large" color={colors.brandPrimary} />
+                  <Text style={{ color: colors.textSecondary }} className="mt-2 font-quicksand-medium">
+                    {i18n.t("enterprise.dashboard.popularProducts.loading")}
                   </Text>
                 </View>
               ) : popularProducts.length > 0 ? (
@@ -1718,7 +1733,7 @@ export default function EnterpriseDashboard() {
                 </View>
               ) : (
                 <View className="flex-1 justify-center items-center py-8">
-                  <Text className="text-neutral-600 font-quicksand-medium">
+                  <Text style={{ color: colors.textSecondary }} className="font-quicksand-medium">
                     Aucune tendance disponible
                   </Text>
                 </View>
@@ -1740,13 +1755,13 @@ export default function EnterpriseDashboard() {
         onRequestClose={() => setCityModalVisible(false)}
       >
         <View className="flex-1 bg-transparent justify-end">
-          <View className="bg-white rounded-t-3xl pb-10 pt-4 px-4">
+          <View style={{ backgroundColor: colors.card }} className="rounded-t-3xl pb-10 pt-4 px-4 shadow-xl">
             <View className="flex-row justify-between items-center mb-6">
-              <Text className="text-lg font-quicksand-bold text-neutral-800">
-                Choisir une ville
+              <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold">
+                {i18n.t("enterprise.dashboard.modals.city.title")}
               </Text>
               <TouchableOpacity onPress={() => setCityModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#374151" />
+                <Ionicons name="close" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
@@ -1756,13 +1771,12 @@ export default function EnterpriseDashboard() {
               renderItem={({ item }) => (
                 <TouchableOpacity
                   onPress={() => selectCity(item.name)}
-                  className="py-3 border-b border-gray-100"
+                  style={{ borderColor: colors.border }}
+                  className="py-3 border-b"
                 >
                   <Text
-                    className={`text-base font-quicksand-medium ${selectedCity === item.name
-                      ? "text-primary"
-                      : "text-neutral-700"
-                      }`}
+                    style={{ color: selectedCity === item.name ? colors.brandPrimary : colors.textPrimary }}
+                    className={`text-base font-quicksand-medium`}
                   >
                     {item.name}
                   </Text>
@@ -1781,15 +1795,15 @@ export default function EnterpriseDashboard() {
         onRequestClose={() => setNeighborhoodModalVisible(false)}
       >
         <View className="flex-1 bg-transparent justify-end">
-          <View className="bg-white rounded-t-3xl pb-10 pt-4 px-4">
+          <View style={{ backgroundColor: colors.card }} className="rounded-t-3xl pb-10 pt-4 px-4 shadow-xl">
             <View className="flex-row justify-between items-center mb-6">
-              <Text className="text-lg font-quicksand-bold text-neutral-800">
-                Choisir un quartier à {selectedCity}
+              <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold">
+                {i18n.t("enterprise.dashboard.modals.neighborhood.title", { city: selectedCity })}
               </Text>
               <TouchableOpacity
                 onPress={() => setNeighborhoodModalVisible(false)}
               >
-                <Ionicons name="close" size={24} color="#374151" />
+                <Ionicons name="close" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
@@ -1802,10 +1816,8 @@ export default function EnterpriseDashboard() {
                   className="py-3 border-b border-gray-100"
                 >
                   <Text
-                    className={`text-base font-quicksand-medium ${selectedNeighborhood === item
-                      ? "text-primary"
-                      : "text-neutral-700"
-                      }`}
+                    style={{ color: selectedNeighborhood === item ? colors.brandPrimary : colors.textPrimary }}
+                    className={`text-base font-quicksand-medium`}
                   >
                     {item}
                   </Text>

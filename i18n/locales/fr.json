@@ -552,6 +552,68 @@
                     "errorTitle": "Erreur"
                 }
             }
+        },
+        "dashboard": {
+            "search": {
+                "placeholder": "Que recherchez-vous ?",
+                "neighborhoodPlaceholder": "Quartier",
+                "suggestions": "Suggestions",
+                "recentSearches": "Recherches récentes",
+                "clearAll": "Effacer tout"
+            },
+            "sort": {
+                "relevance": "Pertinence",
+                "priceLow": "Moins cher",
+                "priceHigh": "Plus cher",
+                "newest": "Nouveaux"
+            },
+            "ads": {
+                "noAds": "Aucune publicité disponible",
+                "comeBack": "Revenez bientôt pour découvrir nos dernières offres"
+            },
+            "categories": {
+                "title": "Services Business",
+                "subtitle": "Découvrez nos catégories de services professionnels",
+                "loading": "Chargement des catégories...",
+                "viewAll": "Voir tout"
+            },
+            "featuredProducts": {
+                "title": "Mes Produits en Vedette",
+                "subtitle": "Vos produits les plus populaires",
+                "loading": "Chargement des produits...",
+                "noProducts": "Aucun produit disponible",
+                "viewAll": "Voir tout"
+            },
+            "popularProducts": {
+                "title": "Tendances du Marketplace",
+                "subtitle": "Découvrez les produits populaires",
+                "loading": "Chargement des tendances...",
+                "noProducts": "Aucune tendance disponible",
+                "viewAll": "Voir tout"
+            },
+            "modals": {
+                "city": {
+                    "title": "Choisir une ville"
+                },
+                "neighborhood": {
+                    "title": "Choisir un quartier à {{city}}"
+                }
+            },
+            "badges": {
+                "popular": "Populaire"
+            },
+            "greetings": {
+                "morning": "Bonjour",
+                "afternoon": "Bon après-midi",
+                "evening": "Bonsoir"
+            },
+            "empty": {
+                "noProductsFound": "Aucun produit trouvé",
+                "noAdsAvailable": "Aucune publicité disponible",
+                "noAdsMessage": "Revenez bientôt pour découvrir nos dernières offres",
+                "noProductsAvailable": "Aucun produit disponible",
+                "noTrendsAvailable": "Aucune tendance disponible"
+            }
         }
     }
 }

@@ -1,3 +1,4 @@
+import { useTheme } from "@/contexts/ThemeContext";
 import React from "react";
 import {
   Platform,
@@ -20,6 +21,8 @@ export const CustomTabBar: React.FC<TabBarProps> = ({
   navigation,
   insets,
 }) => {
+  const { colors, isDark } = useTheme();
+
   // Utiliser les insets passés en prop ou les récupérer si non fournis
   const defaultInsets = useSafeAreaInsets();
   const safeInsets = insets || defaultInsets;
@@ -75,17 +78,20 @@ export const CustomTabBar: React.FC<TabBarProps> = ({
       pointerEvents="box-none"
     >
       <View
-        className="flex-row bg-white items-center justify-between"
+        className="flex-row items-center justify-between"
         style={{
+          backgroundColor: colors.card,
           borderRadius: 32, // Pill shape
           height: dynamicHeight,
           paddingHorizontal: 8,
           // Ombres sophistiquées
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.15,
+          shadowOpacity: isDark ? 0.3 : 0.15,
           shadowRadius: 16,
           elevation: 10,
+          borderWidth: isDark ? 1 : 0,
+          borderColor: colors.border,
         }}
       >
         {routes.map((route: any) => {
@@ -149,13 +155,13 @@ export const CustomTabBar: React.FC<TabBarProps> = ({
                   width: 48,
                   height: 48,
                   borderRadius: 24, // Force circle (half of size)
-                  backgroundColor: isFocused ? "#ECFDF5" : "transparent", // Green-50
+                  backgroundColor: isFocused ? (isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5") : "transparent",
                 }}
               >
                 {!!IconComponent && (
                   <View>
                     {IconComponent({
-                      color: isFocused ? "#10B981" : "#9CA3AF", // Green-500 vs Gray-400
+                      color: isFocused ? colors.brandPrimary : colors.textTertiary,
                       size: isFocused ? baseIcon + 2 : baseIcon,
                       focused: isFocused,
                     })}

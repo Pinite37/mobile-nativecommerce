@@ -552,6 +552,68 @@
                     "errorTitle": "Error"
                 }
             }
+        },
+        "dashboard": {
+            "search": {
+                "placeholder": "What are you looking for?",
+                "neighborhoodPlaceholder": "Neighborhood",
+                "suggestions": "Suggestions",
+                "recentSearches": "Recent searches",
+                "clearAll": "Clear all"
+            },
+            "sort": {
+                "relevance": "Relevance",
+                "priceLow": "Cheapest",
+                "priceHigh": "Most expensive",
+                "newest": "Newest"
+            },
+            "ads": {
+                "noAds": "No advertisements available",
+                "comeBack": "Come back soon to discover our latest offers"
+            },
+            "categories": {
+                "title": "Business Services",
+                "subtitle": "Discover our professional service categories",
+                "loading": "Loading categories...",
+                "viewAll": "View all"
+            },
+            "featuredProducts": {
+                "title": "My Featured Products",
+                "subtitle": "Your most popular products",
+                "loading": "Loading products...",
+                "noProducts": "No products available",
+                "viewAll": "View all"
+            },
+            "popularProducts": {
+                "title": "Marketplace Trends",
+                "subtitle": "Discover popular products",
+                "loading": "Loading trends...",
+                "noProducts": "No trends available",
+                "viewAll": "View all"
+            },
+            "modals": {
+                "city": {
+                    "title": "Choose a city"
+                },
+                "neighborhood": {
+                    "title": "Choose a neighborhood in {{city}}"
+                }
+            },
+            "badges": {
+                "popular": "Popular"
+            },
+            "greetings": {
+                "morning": "Good morning",
+                "afternoon": "Good afternoon",
+                "evening": "Good evening"
+            },
+            "empty": {
+                "noProductsFound": "No products found",
+                "noAdsAvailable": "No ads available",
+                "noAdsMessage": "Come back soon to discover our latest offers",
+                "noProductsAvailable": "No products available",
+                "noTrendsAvailable": "No trends available"
+            }
         }
     }
 }

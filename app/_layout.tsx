@@ -1,3 +1,5 @@
+import { LocaleProvider } from "@/contexts/LocaleContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -6,7 +8,6 @@ import { ToastProvider as ReanimatedToastProvider } from "../components/ui/Reani
 import { AuthProvider } from "../contexts/AuthContext";
 import { SocketProvider } from "../contexts/SocketContext";
 import "./globals.css";
-import { LocaleProvider } from "@/contexts/LocaleContext";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -38,18 +39,20 @@ export default function RootLayout() {
 
   return (
     <LocaleProvider>
-      <AuthProvider>
-        <SocketProvider>
-          <ReanimatedToastProvider>
-            <Stack>
-              <Stack.Screen name="index" options={{ headerShown: false }} />
-              <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-              <Stack.Screen name="(app)" options={{ headerShown: false }} />
-            </Stack>
-          </ReanimatedToastProvider>
-        </SocketProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <SocketProvider>
+            <ReanimatedToastProvider>
+              <Stack>
+                <Stack.Screen name="index" options={{ headerShown: false }} />
+                <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen name="(app)" options={{ headerShown: false }} />
+              </Stack>
+            </ReanimatedToastProvider>
+          </SocketProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </LocaleProvider>
   );
 }
