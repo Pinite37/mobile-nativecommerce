@@ -6,6 +6,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Animated, Easing, FlatList, Image, RefreshControl, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useToast } from '../../../../components/ui/ToastManager';
+import { useLocale } from '../../../../contexts/LocaleContext';
+import i18n from '../../../../i18n/i18n';
 import EnterpriseService, { DeliveryPartnerStatus, DeliveryPartnersWithStatusResponse, Enterprise } from '../../../../services/api/EnterpriseService';
 
 /**
@@ -15,6 +17,7 @@ export default function DeliveryPartnersScreen() {
 	const router = useRouter();
 	const toast = useToast();
 	const insets = useSafeAreaInsets();
+	const { locale } = useLocale();
 	const [partners, setPartners] = useState<DeliveryPartnerStatus[]>([]);
 	const [filtered, setFiltered] = useState<DeliveryPartnerStatus[]>([]);
 	const [search, setSearch] = useState('');
@@ -99,7 +102,7 @@ export default function DeliveryPartnersScreen() {
 						<Ionicons name="arrow-back" size={20} color="#FFFFFF" />
 					</TouchableOpacity>
 					<Text className="text-xl font-quicksand-bold text-white flex-1 text-center mr-10">
-						Partenaires livraison
+						{i18n.t("enterprise.deliveryPartners.title")}
 					</Text>
 				</View>
 
@@ -174,7 +177,7 @@ export default function DeliveryPartnersScreen() {
 			setFiltered(data.deliverers);
 		} catch (error: any) {
 			console.error('❌ Erreur chargement partenaires:', error);
-			toast.showError('Erreur', error.message || 'Impossible de charger les partenaires');
+			toast.showError('Erreur', error.message || i18n.t("enterprise.deliveryPartners.toast.loadError"));
 		} finally {
 			setLoading(false);
 		}
@@ -210,13 +213,13 @@ export default function DeliveryPartnersScreen() {
 			setAssociating(partnerId);
 			const updatedEnterprise = await EnterpriseService.associateDeliveryPartner(partnerId);
 			setEnterprise(updatedEnterprise);
-			toast.showSuccess('Succès', 'Partenaire associé avec succès');
+			toast.showSuccess('Succès', i18n.t("enterprise.deliveryPartners.toast.associateSuccess"));
 			setPartners(prev => prev.map(p => p._id === partnerId ? { ...p, isAssociated: true } : p));
 			setFiltered(prev => prev.map(p => p._id === partnerId ? { ...p, isAssociated: true } : p));
 			setTotals(prev => ({ ...prev, associatedCount: prev.associatedCount + 1 }));
 		} catch (error: any) {
 			console.error('❌ Erreur association partenaire:', error);
-			toast.showError('Erreur', error.message || 'Échec association partenaire');
+			toast.showError('Erreur', error.message || i18n.t("enterprise.deliveryPartners.toast.associateError"));
 		} finally {
 			setAssociating(null);
 		}
@@ -253,7 +256,7 @@ export default function DeliveryPartnersScreen() {
 							</Text>
 							<View className="flex-row items-center mt-1">
 								<Text className="text-sm font-quicksand-medium text-neutral-600">
-									{item.availability ? 'Disponible' : 'Indisponible'}
+									{item.availability ? i18n.t("enterprise.deliveryPartners.status.available") : i18n.t("enterprise.deliveryPartners.status.unavailable")}
 								</Text>
 								{item.vehicleType && (
 									<Text className="text-sm font-quicksand-medium text-neutral-500 ml-2">
@@ -269,12 +272,12 @@ export default function DeliveryPartnersScreen() {
 						<View className="flex-row items-center flex-wrap">
 							{item.isVerified && (
 								<View className="mr-2 px-2 py-1 bg-success-100 rounded-full">
-									<Text className="text-xs font-quicksand-semibold text-success-700">✓ Vérifié</Text>
+									<Text className="text-xs font-quicksand-semibold text-success-700">✓ {i18n.t("enterprise.deliveryPartners.badges.verified")}</Text>
 								</View>
 							)}
 							{item.isAssociated && (
 								<View className="px-2 py-1 bg-primary-100 rounded-full">
-									<Text className="text-xs font-quicksand-semibold text-primary-700">Associé</Text>
+									<Text className="text-xs font-quicksand-semibold text-primary-700">{i18n.t("enterprise.deliveryPartners.badges.associated")}</Text>
 								</View>
 							)}
 						</View>
@@ -318,7 +321,7 @@ export default function DeliveryPartnersScreen() {
 								<View className="flex-row items-center">
 									<Ionicons name="checkmark-circle" size={16} color="#6B7280" />
 									<Text className="font-quicksand-semibold text-sm text-neutral-600 ml-2">
-										Déjà associé
+										{i18n.t("enterprise.deliveryPartners.actions.alreadyAssociated")}
 									</Text>
 								</View>
 							</View>
@@ -346,7 +349,7 @@ export default function DeliveryPartnersScreen() {
 										<View className="flex-row items-center justify-center">
 											<Ionicons name="add-circle" size={16} color="#FFFFFF" />
 											<Text className="font-quicksand-semibold text-sm text-white ml-2">
-												Associer
+												{i18n.t("enterprise.deliveryPartners.actions.associate")}
 											</Text>
 										</View>
 									)}
@@ -388,7 +391,7 @@ export default function DeliveryPartnersScreen() {
 								<Ionicons name="arrow-back" size={20} color="#FFFFFF" />
 							</TouchableOpacity>
 							<Text className="text-xl font-quicksand-bold text-white flex-1 text-center mr-10">
-								Partenaires de livraison
+								{i18n.t("enterprise.deliveryPartners.title")}
 							</Text>
 						</View>
 
@@ -396,15 +399,15 @@ export default function DeliveryPartnersScreen() {
 						<View className="bg-white/10 rounded-2xl p-4 mb-6">
 							<View className="flex-row justify-between">
 								<View className="items-center flex-1">
-									<Text className="text-white/80 font-quicksand-medium text-sm">Total</Text>
+									<Text className="text-white/80 font-quicksand-medium text-sm">{i18n.t("enterprise.deliveryPartners.stats.total")}</Text>
 									<Text className="text-white font-quicksand-bold text-2xl">{totals.total}</Text>
 								</View>
 								<View className="items-center flex-1">
-									<Text className="text-white/80 font-quicksand-medium text-sm">Associés</Text>
+									<Text className="text-white/80 font-quicksand-medium text-sm">{i18n.t("enterprise.deliveryPartners.stats.associated")}</Text>
 									<Text className="text-white font-quicksand-bold text-2xl">{totals.associatedCount}</Text>
 								</View>
 								<View className="items-center flex-1">
-									<Text className="text-white/80 font-quicksand-medium text-sm">Disponibles</Text>
+									<Text className="text-white/80 font-quicksand-medium text-sm">{i18n.t("enterprise.deliveryPartners.stats.available")}</Text>
 									<Text className="text-white font-quicksand-bold text-2xl">
 										{partners.filter(p => p.availability).length}
 									</Text>
@@ -418,7 +421,7 @@ export default function DeliveryPartnersScreen() {
 								<TextInput
 									value={search}
 									onChangeText={setSearch}
-									placeholder="Rechercher un livreur..."
+									placeholder={i18n.t("enterprise.deliveryPartners.searchPlaceholder")}
 									placeholderTextColor="#FFFFFF80"
 									className="text-white font-quicksand-medium"
 									autoCapitalize="none"
@@ -449,10 +452,10 @@ export default function DeliveryPartnersScreen() {
 										<Ionicons name="people" size={32} color="#9CA3AF" />
 									</View>
 									<Text className="text-neutral-700 font-quicksand-semibold text-lg text-center mb-2">
-										Aucun partenaire trouvé
+										{i18n.t("enterprise.deliveryPartners.empty.title")}
 									</Text>
 									<Text className="text-neutral-500 font-quicksand-regular text-center">
-										Aucun livreur disponible ne correspond à votre recherche.
+										{i18n.t("enterprise.deliveryPartners.empty.message")}
 									</Text>
 								</View>
 							}

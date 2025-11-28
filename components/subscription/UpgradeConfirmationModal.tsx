@@ -2,6 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import React from 'react';
 import { ActivityIndicator, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useLocale } from '../../contexts/LocaleContext';
+import i18n from '../../i18n/i18n';
 
 interface Plan {
   id: string;
@@ -29,10 +31,11 @@ export default function UpgradeConfirmationModal({
   onCancel,
   loading = false,
 }: UpgradeConfirmationModalProps) {
-  if (!plan) return null;
+  const { locale } = useLocale();
+  const isUpgrade = currentPlanName && currentPlanName !== plan?.name;
+  const isFree = plan?.price === 'Gratuit';
 
-  const isUpgrade = currentPlanName && currentPlanName !== plan.name;
-  const isFree = plan.price === 'Gratuit';
+  if (!plan) return null;
 
   return (
     <Modal
@@ -67,12 +70,12 @@ export default function UpgradeConfirmationModal({
             </View>
             
             <Text className="text-neutral-800 font-quicksand-bold text-2xl mb-1">
-              {isUpgrade ? 'Passer à ' : 'Activer '}{plan.name}
+              {isUpgrade ? `${i18n.t('enterprise.subscription.upgrade.switchTo')} ` : `${i18n.t('enterprise.subscription.upgrade.activate')} `}{plan.name}
             </Text>
             <Text className="text-neutral-600 font-quicksand-medium text-sm leading-5">
               {isUpgrade 
-                ? `Vous allez passer de ${currentPlanName} à ${plan.name}`
-                : `Vous allez activer le plan ${plan.name}`
+                ? i18n.t('enterprise.subscription.upgrade.switchingFromTo', { from: currentPlanName, to: plan.name })
+                : i18n.t('enterprise.subscription.upgrade.activatingPlan', { plan: plan.name })
               }
             </Text>
           </View>
@@ -86,7 +89,7 @@ export default function UpgradeConfirmationModal({
               {/* Price Section */}
               <View className="bg-gradient-to-br from-neutral-50 to-neutral-100 rounded-2xl p-4 mb-5 border border-neutral-200">
                 <Text className="text-neutral-500 font-quicksand-semibold text-xs uppercase tracking-wide mb-2">
-                  Tarif
+                  {i18n.t('enterprise.subscription.upgrade.price')}
                 </Text>
                 <View className="flex-row items-baseline">
                   <Text 
@@ -106,7 +109,7 @@ export default function UpgradeConfirmationModal({
               {/* Features List */}
               <View className="mb-5">
                 <Text className="text-neutral-700 font-quicksand-bold text-sm mb-3">
-                  Ce qui est inclus :
+                  {i18n.t('enterprise.subscription.upgrade.whatsIncluded')}
                 </Text>
                 {plan.features.map((feature, idx) => (
                   <View key={idx} className="flex-row items-start mb-2.5">
@@ -132,10 +135,10 @@ export default function UpgradeConfirmationModal({
                     </View>
                     <View className="flex-1">
                       <Text className="text-blue-900 font-quicksand-bold text-sm mb-1">
-                        Paiement sécurisé
+                        {i18n.t('enterprise.subscription.upgrade.securePayment')}
                       </Text>
                       <Text className="text-blue-700 font-quicksand-medium text-xs leading-5">
-                        Le paiement sera traité via KKiaPay, une solution de paiement sécurisée
+                        {i18n.t('enterprise.subscription.upgrade.paymentProcessedVia')}
                       </Text>
                     </View>
                   </View>
@@ -148,10 +151,10 @@ export default function UpgradeConfirmationModal({
                   <Ionicons name="information-circle" size={20} color="#F59E0B" style={{ marginTop: 1, marginRight: 8 }} />
                   <Text className="flex-1 text-amber-800 font-quicksand-medium text-xs leading-5">
                     {isUpgrade 
-                      ? 'Votre abonnement actuel sera remplacé immédiatement après confirmation du paiement.'
+                      ? i18n.t('enterprise.subscription.upgrade.upgradeNotice')
                       : isFree
-                        ? 'Vous bénéficierez d\'un essai gratuit de 1 mois.'
-                        : 'Votre abonnement sera activé immédiatement après confirmation du paiement.'
+                        ? i18n.t('enterprise.subscription.upgrade.freeTrialNotice')
+                        : i18n.t('enterprise.subscription.upgrade.activationNotice')
                     }
                   </Text>
                 </View>
@@ -173,7 +176,7 @@ export default function UpgradeConfirmationModal({
               ) : (
                 <View className="flex-row items-center">
                   <Text className="text-white font-quicksand-bold text-base">
-                    {isFree ? 'Activer gratuitement' : 'Confirmer et payer'}
+                    {isFree ? i18n.t('enterprise.subscription.upgrade.activateFree') : i18n.t('enterprise.subscription.upgrade.confirmAndPay')}
                   </Text>
                   <Ionicons name="arrow-forward" size={18} color="#FFFFFF" style={{ marginLeft: 8 }} />
                 </View>
@@ -186,7 +189,7 @@ export default function UpgradeConfirmationModal({
               className="rounded-xl py-4 items-center justify-center bg-white border border-neutral-200"
             >
               <Text className="text-neutral-700 font-quicksand-semibold text-base">
-                Annuler
+                {i18n.t('common.actions.cancel')}
               </Text>
             </TouchableOpacity>
           </View>

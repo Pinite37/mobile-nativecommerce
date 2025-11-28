@@ -16,7 +16,9 @@ import KkiapayPayment from "../../../../components/subscription/KkiapayPayment";
 import StatusModal from "../../../../components/subscription/StatusModal";
 import UpgradeConfirmationModal from "../../../../components/subscription/UpgradeConfirmationModal";
 import { useAuth } from "../../../../contexts/AuthContext";
+import { useLocale } from "../../../../contexts/LocaleContext";
 import { useSubscription } from "../../../../contexts/SubscriptionContext";
+import i18n from "../../../../i18n/i18n";
 import PaymentService from "../../../../services/api/PaymentService";
 import SubscriptionService, {
   Plan,
@@ -96,6 +98,7 @@ function EnterpriseSubscriptionsContent() {
   const [error, setError] = useState<string | null>(null);
   const { subscription, loadSubscription } = useSubscription();
   const { user } = useAuth();
+  const { locale } = useLocale();
 
   // Modal state
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -178,13 +181,13 @@ function EnterpriseSubscriptionsContent() {
 
         // Afficher le succès
         setStatusType("success");
-        setStatusTitle("Paiement réussi !");
+        setStatusTitle(i18n.t("enterprise.subscriptions.payment.success"));
         setStatusMessage(
-          `Votre abonnement ${
+          `${i18n.t("enterprise.subscriptions.payment.activated")} ${
             confirmResult.data.subscription
-              ? "a été activé"
-              : "est maintenant actif"
-          }. Merci !`
+              ? ""
+              : i18n.t("enterprise.subscriptions.payment.active")
+          }. ${i18n.t("enterprise.subscriptions.payment.thanks")}`
         );
         setShowStatusModal(true);
       } else {
@@ -196,7 +199,7 @@ function EnterpriseSubscriptionsContent() {
       setStatusTitle("Erreur");
       setStatusMessage(
         error.response?.data?.message ||
-          "Impossible de confirmer le paiement. Contactez le support."
+          i18n.t("enterprise.subscriptions.payment.confirmError")
       );
       setShowStatusModal(true);
     } finally {
@@ -213,8 +216,8 @@ function EnterpriseSubscriptionsContent() {
     setPaymentConfig(null);
 
     setStatusType("error");
-    setStatusTitle("❌ Paiement échoué");
-    setStatusMessage("Le paiement a échoué. Veuillez réessayer.");
+    setStatusTitle(i18n.t("enterprise.subscriptions.payment.failed"));
+    setStatusMessage(i18n.t("enterprise.subscriptions.payment.failedMessage"));
     setShowStatusModal(true);
   };
 
@@ -235,7 +238,7 @@ function EnterpriseSubscriptionsContent() {
       console.log("✅ Données chargées");
     } catch (err: any) {
       console.error("❌ Erreur chargement:", err);
-      setError("Impossible de charger les données. Veuillez réessayer.");
+      setError(i18n.t("enterprise.subscriptions.payment.loadError"));
     } finally {
       setLoading(false);
     }
@@ -407,7 +410,7 @@ function EnterpriseSubscriptionsContent() {
               <View className="absolute -top-2 -right-2">
                 <View className="bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-1.5 rounded-bl-2xl">
                   <Text className="text-[10px] font-quicksand-bold text-white tracking-wider">
-                    POPULAIRE
+                    {i18n.t("enterprise.subscriptions.plans.popular")}
                   </Text>
                 </View>
               </View>
@@ -443,7 +446,7 @@ function EnterpriseSubscriptionsContent() {
             <View className="rounded-2xl py-4 items-center flex-row justify-center bg-green-50 border border-green-100">
               <Ionicons name="checkmark-circle" size={20} color="#059669" />
               <Text className="text-green-700 font-quicksand-bold text-sm ml-2.5">
-                Votre plan actuel
+                {i18n.t("enterprise.subscriptions.plans.current")}
               </Text>
             </View>
           ) : (
@@ -455,8 +458,8 @@ function EnterpriseSubscriptionsContent() {
             >
               <Text className="text-white font-quicksand-bold text-base">
                 {isTrialExpired
-                  ? "Renouveler maintenant"
-                  : `Choisir ${plan.name}`}
+                  ? i18n.t("enterprise.subscriptions.plans.renew")
+                  : `${i18n.t("enterprise.subscriptions.plans.choose")} ${plan.name}`}
               </Text>
               <Ionicons
                 name="arrow-forward"
@@ -531,7 +534,7 @@ function EnterpriseSubscriptionsContent() {
               <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
             </TouchableOpacity>
             <Text className="text-xl font-quicksand-bold text-white">
-              Abonnements
+              {i18n.t("enterprise.subscriptions.title")}
             </Text>
             <TouchableOpacity className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
               <Ionicons name="help-circle-outline" size={22} color="#FFFFFF" />
@@ -564,16 +567,16 @@ function EnterpriseSubscriptionsContent() {
                       />
                       <Text className="text-neutral-700 font-quicksand-semibold text-xs uppercase tracking-wide">
                         {isExpired()
-                          ? "Expiré"
+                          ? i18n.t("enterprise.subscriptions.plans.expired")
                           : isExpiringSoon()
-                          ? "Expire bientôt"
-                          : "Plan actif"}
+                          ? i18n.t("enterprise.subscriptions.plans.expiringSoon")
+                          : i18n.t("enterprise.subscriptions.plans.active")}
                       </Text>
                     </View>
                     {isExpiringSoon() && (
                       <View className="bg-amber-100 px-3 py-1 rounded-full border border-amber-200">
                         <Text className="text-amber-700 font-quicksand-bold text-[10px]">
-                          {getDaysRemaining()} jours restants
+                          {getDaysRemaining()} {i18n.t("enterprise.subscriptions.plans.daysRemaining")}
                         </Text>
                       </View>
                     )}
@@ -592,7 +595,7 @@ function EnterpriseSubscriptionsContent() {
                     <View className="flex-1 bg-primary-50 rounded-xl p-3 mr-2 border border-primary-100">
                       <View className="flex-row items-center justify-between mb-1">
                         <Text className="text-primary-700 font-quicksand-medium text-[11px]">
-                          Produits
+                          {i18n.t("enterprise.subscriptions.plans.products")}
                         </Text>
                         <Ionicons
                           name="cube-outline"
@@ -604,14 +607,14 @@ function EnterpriseSubscriptionsContent() {
                         {subscription.usage.currentProducts}
                       </Text>
                       <Text className="text-neutral-500 font-quicksand-medium text-[10px]">
-                        sur {subscription.plan.features.maxProducts}
+                        {i18n.t("enterprise.subscriptions.plans.on")} {subscription.plan.features.maxProducts}
                       </Text>
                     </View>
 
                     <View className="flex-1 bg-blue-50 rounded-xl p-3 ml-2 border border-blue-100">
                       <View className="flex-row items-center justify-between mb-1">
                         <Text className="text-blue-700 font-quicksand-medium text-[11px]">
-                          Expiration
+                          {i18n.t("enterprise.subscriptions.plans.expiration")}
                         </Text>
                         <Ionicons
                           name="calendar-outline"
@@ -627,8 +630,8 @@ function EnterpriseSubscriptionsContent() {
                       </Text>
                       <Text className="text-neutral-500 font-quicksand-medium text-[10px]">
                         {getDaysRemaining()! > 0
-                          ? `${getDaysRemaining()} jours`
-                          : "Expiré"}
+                          ? `${getDaysRemaining()} ${i18n.t("enterprise.subscriptions.plans.days")}`
+                          : i18n.t("enterprise.subscriptions.plans.expired")}
                       </Text>
                     </View>
                   </View>
@@ -649,7 +652,7 @@ function EnterpriseSubscriptionsContent() {
                       activeOpacity={0.7}
                     >
                       <Text className="text-white font-quicksand-bold text-sm">
-                        Renouveler maintenant
+                        {i18n.t("enterprise.subscriptions.plans.renew")}
                       </Text>
                     </TouchableOpacity>
                   )}
@@ -660,12 +663,12 @@ function EnterpriseSubscriptionsContent() {
             {/* Section Title */}
             <View className="mb-5">
               <Text className="text-neutral-400 font-quicksand-semibold text-xs uppercase tracking-wider mb-1">
-                {subscription ? "Autres plans disponibles" : "Nos plans"}
+                {subscription ? i18n.t("enterprise.subscriptions.sections.otherPlans") : i18n.t("enterprise.subscriptions.sections.ourPlans")}
               </Text>
               <Text className="text-neutral-800 font-quicksand-bold text-2xl">
                 {subscription && isExpired()
-                  ? "Renouvelez votre abonnement"
-                  : "Choisissez votre plan"}
+                  ? i18n.t("enterprise.subscriptions.sections.renewSubscription")
+                  : i18n.t("enterprise.subscriptions.sections.choosePlan")}
               </Text>
             </View>
 
@@ -683,7 +686,7 @@ function EnterpriseSubscriptionsContent() {
                   <Ionicons name="alert-circle" size={40} color="#EF4444" />
                 </View>
                 <Text className="text-red-600 font-quicksand-bold text-base mb-2">
-                  Erreur de chargement
+                  {i18n.t("enterprise.subscriptions.sections.loadingError")}
                 </Text>
                 <Text className="text-neutral-500 font-quicksand-medium text-sm text-center px-8 mb-6">
                   {error}
@@ -693,7 +696,7 @@ function EnterpriseSubscriptionsContent() {
                   className="bg-primary-500 px-8 py-3 rounded-xl shadow-sm"
                 >
                   <Text className="text-white font-quicksand-bold text-sm">
-                    Réessayer
+                    {i18n.t("enterprise.subscriptions.sections.retry")}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -714,18 +717,18 @@ function EnterpriseSubscriptionsContent() {
                       />
                     </View>
                     <Text className="text-neutral-800 font-quicksand-bold text-lg">
-                      Détails de l&apos;abonnement
+                      {i18n.t("enterprise.subscriptions.details.title")}
                     </Text>
                   </View>
 
                   {/* Payment Info */}
                   <View className="bg-gradient-to-br from-neutral-50 to-neutral-100 rounded-xl p-4 mb-4">
                     <Text className="text-neutral-700 font-quicksand-bold text-sm mb-3">
-                      Informations de paiement
+                      {i18n.t("enterprise.subscriptions.details.paymentInfo")}
                     </Text>
                     <View className="flex-row items-center justify-between mb-2.5">
                       <Text className="text-neutral-600 font-quicksand-medium text-xs">
-                        Montant
+                        {i18n.t("enterprise.subscriptions.details.amount")}
                       </Text>
                       <Text className="text-neutral-900 font-quicksand-bold text-base">
                         {subscription.payment.amount
@@ -737,12 +740,12 @@ function EnterpriseSubscriptionsContent() {
                     </View>
                     <View className="flex-row items-center justify-between mb-2.5">
                       <Text className="text-neutral-600 font-quicksand-medium text-xs">
-                        Méthode
+                        {i18n.t("enterprise.subscriptions.details.method")}
                       </Text>
                       <View className="bg-white px-3 py-1 rounded-lg">
                         <Text className="text-neutral-800 font-quicksand-semibold text-xs">
                           {subscription.payment.method === "TRIAL"
-                            ? "Essai gratuit"
+                            ? i18n.t("enterprise.subscriptions.details.trial")
                             : subscription.payment.method}
                         </Text>
                       </View>
@@ -750,7 +753,7 @@ function EnterpriseSubscriptionsContent() {
                     {subscription.payment.reference && (
                       <View className="flex-row items-center justify-between">
                         <Text className="text-neutral-600 font-quicksand-medium text-xs">
-                          Référence
+                          {i18n.t("enterprise.subscriptions.details.reference")}
                         </Text>
                         <Text className="text-neutral-700 font-quicksand-medium text-xs font-mono">
                           {subscription.payment.reference}
@@ -762,21 +765,21 @@ function EnterpriseSubscriptionsContent() {
                   {/* Features Grid */}
                   <View className="bg-gradient-to-br from-primary-50 to-emerald-50 rounded-xl p-4">
                     <Text className="text-neutral-700 font-quicksand-bold text-sm mb-3">
-                      Fonctionnalités activées
+                      {i18n.t("enterprise.subscriptions.details.features")}
                     </Text>
                     <View className="flex-row flex-wrap">
                       {[
-                        { key: "phone", label: "Appels", icon: "call" },
-                        { key: "sms", label: "SMS", icon: "chatbox" },
+                        { key: "phone", label: i18n.t("enterprise.subscriptions.details.featuresList.phone"), icon: "call" },
+                        { key: "sms", label: i18n.t("enterprise.subscriptions.details.featuresList.sms"), icon: "chatbox" },
                         {
                           key: "whatsapp",
-                          label: "WhatsApp",
+                          label: i18n.t("enterprise.subscriptions.details.featuresList.whatsapp"),
                           icon: "logo-whatsapp",
                         },
-                        { key: "messaging", label: "Messages", icon: "mail" },
+                        { key: "messaging", label: i18n.t("enterprise.subscriptions.details.featuresList.messaging"), icon: "mail" },
                         {
                           key: "advertisements",
-                          label: "Publicités",
+                          label: i18n.t("enterprise.subscriptions.details.featuresList.advertisements"),
                           icon: "megaphone",
                         },
                       ].map(({ key, label, icon }) => (
@@ -826,15 +829,14 @@ function EnterpriseSubscriptionsContent() {
                 </View>
                 <View className="flex-1">
                   <Text className="text-neutral-800 font-quicksand-bold text-base mb-1">
-                    Besoin d&apos;aide ?
+                    {i18n.t("enterprise.subscriptions.help.title")}
                   </Text>
                   <Text className="text-neutral-600 font-quicksand-medium text-xs mb-3 leading-5">
-                    Notre équipe est là pour vous accompagner dans le choix de
-                    votre plan
+                    {i18n.t("enterprise.subscriptions.help.message")}
                   </Text>
                   <TouchableOpacity className="bg-blue-500 self-start px-4 py-2 rounded-lg shadow-sm">
                     <Text className="text-white font-quicksand-semibold text-xs">
-                      Contacter le support
+                      {i18n.t("enterprise.subscriptions.help.contact")}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -886,10 +888,10 @@ function EnterpriseSubscriptionsContent() {
               <Ionicons name="card" size={32} color="#10B981" />
             </View>
             <Text className="text-neutral-800 font-quicksand-bold text-lg mb-2 text-center">
-              Traitement du paiement
+              {i18n.t("enterprise.subscriptions.processing.title")}
             </Text>
             <Text className="text-neutral-600 font-quicksand-medium text-sm text-center mb-4">
-              Veuillez patienter pendant que nous vérifions votre paiement...
+              {i18n.t("enterprise.subscriptions.processing.message")}
             </Text>
             <View className="flex-row items-center">
               <Animated.View

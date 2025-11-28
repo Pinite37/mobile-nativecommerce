@@ -6,6 +6,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Easing, Image, Modal, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useToast } from '../../../../components/ui/ToastManager';
+import { useLocale } from '../../../../contexts/LocaleContext';
+import i18n from '../../../../i18n/i18n';
 import EnterpriseService, { DeliveryPartnerStatus } from '../../../../services/api/EnterpriseService';
 
 /**
@@ -15,6 +17,7 @@ export default function DeliveryPartnerDetailScreen() {
 	const router = useRouter();
 	const toast = useToast();
 	const insets = useSafeAreaInsets();
+	const { locale } = useLocale();
 	const { partnerId } = useLocalSearchParams<{ partnerId: string }>();
 
 	const [partner, setPartner] = useState<DeliveryPartnerStatus | null>(null);
@@ -286,7 +289,7 @@ export default function DeliveryPartnerDetailScreen() {
 							<Ionicons name="arrow-back" size={20} color="#FFFFFF" />
 						</TouchableOpacity>
 						<Text className="text-xl font-quicksand-bold text-white flex-1 text-center mr-10">
-							Partenaire introuvable
+							{i18n.t("enterprise.deliveryPartners.detail.notFound.title")}
 						</Text>
 					</View>
 				</LinearGradient>
@@ -297,16 +300,16 @@ export default function DeliveryPartnerDetailScreen() {
 						<Ionicons name="alert-circle" size={32} color="#EF4444" />
 					</View>
 					<Text className="text-neutral-700 font-quicksand-semibold text-lg text-center mb-2">
-						Partenaire non trouvé
+						{i18n.t("enterprise.deliveryPartners.detail.notFound.message")}
 					</Text>
 					<Text className="text-neutral-500 font-quicksand-regular text-center mb-6">
-						Le partenaire de livraison demandé n&apos;existe pas ou n&apos;est plus disponible.
+						{i18n.t("enterprise.deliveryPartners.detail.notFound.description")}
 					</Text>
 					<TouchableOpacity
 						onPress={() => router.back()}
 						className="bg-primary-500 rounded-xl px-6 py-3"
 					>
-						<Text className="text-white font-quicksand-semibold">Retour</Text>
+						<Text className="text-white font-quicksand-semibold">{i18n.t("enterprise.deliveryPartners.detail.notFound.backButton")}</Text>
 					</TouchableOpacity>
 				</View>
 			</View>
@@ -338,7 +341,7 @@ export default function DeliveryPartnerDetailScreen() {
 						<Ionicons name="arrow-back" size={20} color="#FFFFFF" />
 					</TouchableOpacity>
 					<Text className="text-xl font-quicksand-bold text-white flex-1 text-center mr-10">
-						Détails du partenaire
+						{i18n.t("enterprise.deliveryPartners.detail.title")}
 					</Text>
 				</View>
 			</LinearGradient>
@@ -384,13 +387,13 @@ export default function DeliveryPartnerDetailScreen() {
 						<View className="flex-row items-center space-x-3">
 							<View className={`px-3 py-1 rounded-full ${partner.availability ? 'bg-success-500/20' : 'bg-neutral-500/20'}`}>
 								<Text className={`font-quicksand-semibold text-sm ${partner.availability ? 'text-success-100' : 'text-neutral-100'}`}>
-									{partner.availability ? 'Disponible' : 'Indisponible'}
+									{partner.availability ? i18n.t("enterprise.deliveryPartners.status.available") : i18n.t("enterprise.deliveryPartners.status.unavailable")}
 								</Text>
 							</View>
 
 							{partner.isVerified && (
 								<View className="px-3 py-1 rounded-full bg-blue-500/20">
-									<Text className="font-quicksand-semibold text-sm text-blue-100">✓ Vérifié</Text>
+									<Text className="font-quicksand-semibold text-sm text-blue-100">✓ {i18n.t("enterprise.deliveryPartners.badges.verified")}</Text>
 								</View>
 							)}
 						</View>
@@ -411,7 +414,7 @@ export default function DeliveryPartnerDetailScreen() {
 						}}
 					>
 						<Text className="text-neutral-800 font-quicksand-bold text-lg mb-4">
-							Informations générales
+							{i18n.t("enterprise.deliveryPartners.detail.sections.generalInfo")}
 						</Text>
 
 						{/* Email */}
@@ -421,7 +424,7 @@ export default function DeliveryPartnerDetailScreen() {
 									<Ionicons name="mail" size={16} color="#10B981" />
 								</View>
 								<View className="flex-1">
-									<Text className="text-neutral-500 font-quicksand-medium text-sm">Email</Text>
+									<Text className="text-neutral-500 font-quicksand-medium text-sm">{i18n.t("enterprise.deliveryPartners.detail.labels.email")}</Text>
 									<Text className="text-neutral-800 font-quicksand-semibold">{partner.email}</Text>
 								</View>
 							</View>
@@ -434,7 +437,7 @@ export default function DeliveryPartnerDetailScreen() {
 									<Ionicons name="call" size={16} color="#10B981" />
 								</View>
 								<View className="flex-1">
-									<Text className="text-neutral-500 font-quicksand-medium text-sm">Téléphone</Text>
+									<Text className="text-neutral-500 font-quicksand-medium text-sm">{i18n.t("enterprise.deliveryPartners.detail.labels.phone")}</Text>
 									<Text className="text-neutral-800 font-quicksand-semibold">{partner.phone}</Text>
 								</View>
 							</View>
@@ -447,7 +450,7 @@ export default function DeliveryPartnerDetailScreen() {
 									<Ionicons name="bicycle" size={16} color="#10B981" />
 								</View>
 								<View className="flex-1">
-									<Text className="text-neutral-500 font-quicksand-medium text-sm">Véhicule</Text>
+									<Text className="text-neutral-500 font-quicksand-medium text-sm">{i18n.t("enterprise.deliveryPartners.detail.labels.vehicle")}</Text>
 									<Text className="text-neutral-800 font-quicksand-semibold">{partner.vehicleType}</Text>
 								</View>
 							</View>
@@ -467,7 +470,7 @@ export default function DeliveryPartnerDetailScreen() {
 							}}
 						>
 							<Text className="text-neutral-800 font-quicksand-bold text-lg mb-4">
-								Horaires de travail
+								{i18n.t("enterprise.deliveryPartners.detail.sections.workingHours")}
 							</Text>
 
 							<View className="flex-row items-center">
@@ -475,7 +478,7 @@ export default function DeliveryPartnerDetailScreen() {
 									<Ionicons name="time" size={16} color="#F59E0B" />
 								</View>
 								<View className="flex-1">
-									<Text className="text-neutral-500 font-quicksand-medium text-sm">Plage horaire</Text>
+									<Text className="text-neutral-500 font-quicksand-medium text-sm">{i18n.t("enterprise.deliveryPartners.detail.labels.timeRange")}</Text>
 									<Text className="text-neutral-800 font-quicksand-semibold">
 										{(partner as any).workingHours.start} - {(partner as any).workingHours.end}
 									</Text>
@@ -497,7 +500,7 @@ export default function DeliveryPartnerDetailScreen() {
 							}}
 						>
 							<Text className="text-neutral-800 font-quicksand-bold text-lg mb-4">
-								Performance
+								{i18n.t("enterprise.deliveryPartners.detail.sections.performance")}
 							</Text>
 
 							{partner.rating !== undefined && (
@@ -506,7 +509,7 @@ export default function DeliveryPartnerDetailScreen() {
 										<Ionicons name="star" size={16} color="#F59E0B" />
 									</View>
 									<View className="flex-1">
-										<Text className="text-neutral-500 font-quicksand-medium text-sm">Note moyenne</Text>
+										<Text className="text-neutral-500 font-quicksand-medium text-sm">{i18n.t("enterprise.deliveryPartners.detail.labels.averageRating")}</Text>
 										<Text className="text-neutral-800 font-quicksand-semibold">
 											{partner.rating.toFixed(1)} / 5
 										</Text>
@@ -518,7 +521,7 @@ export default function DeliveryPartnerDetailScreen() {
 							{(partner as any).stats && Object.keys((partner as any).stats).length > 0 && (
 								<View className="pt-3 border-t border-neutral-100">
 									<Text className="text-neutral-600 font-quicksand-medium text-sm mb-2">
-										Statistiques détaillées disponibles
+										{i18n.t("enterprise.deliveryPartners.detail.labels.detailedStats")}
 									</Text>
 								</View>
 							)}
@@ -537,7 +540,7 @@ export default function DeliveryPartnerDetailScreen() {
 						}}
 					>
 						<Text className="text-neutral-800 font-quicksand-bold text-lg mb-4">
-							Statut d&apos;association
+							{i18n.t("enterprise.deliveryPartners.detail.sections.associationStatus")}
 						</Text>
 
 						{isAssociated === null || checkingAssociation ? (
@@ -545,7 +548,7 @@ export default function DeliveryPartnerDetailScreen() {
 							<View className="items-center py-4">
 								<ActivityIndicator size="small" color="#10B981" />
 								<Text className="text-neutral-500 font-quicksand-medium text-sm mt-2">
-									Vérification du statut...
+									{i18n.t("enterprise.deliveryPartners.detail.status.checking")}
 								</Text>
 							</View>
 						) : isAssociated ? (
@@ -553,11 +556,11 @@ export default function DeliveryPartnerDetailScreen() {
 								<View className="flex-row items-center justify-center mb-2">
 									<Ionicons name="checkmark-circle" size={24} color="#10B981" />
 									<Text className="text-success-700 font-quicksand-bold text-lg ml-2">
-										Partenaire associé
+										{i18n.t("enterprise.deliveryPartners.detail.status.associated.title")}
 									</Text>
 								</View>
 								<Text className="text-success-600 font-quicksand-medium text-center mb-4">
-									Ce livreur est déjà associé à votre entreprise
+									{i18n.t("enterprise.deliveryPartners.detail.status.associated.description")}
 								</Text>
 
 								{/* Bouton de dissociation */}
@@ -573,7 +576,7 @@ export default function DeliveryPartnerDetailScreen() {
 										<View className="flex-row items-center">
 											<Ionicons name="remove-circle" size={18} color="#FFFFFF" />
 											<Text className="font-quicksand-semibold text-white ml-2">
-												Dissocier ce partenaire
+												{i18n.t("enterprise.deliveryPartners.detail.actions.dissociate")}
 											</Text>
 										</View>
 									)}
@@ -582,14 +585,14 @@ export default function DeliveryPartnerDetailScreen() {
 						) : (
 							<View>
 								<View className="bg-neutral-50 rounded-xl p-4 border border-neutral-200 mb-4">
-									<View className="flex-row items-center justify-center mb-2">
-										<Ionicons name="information-circle" size={24} color="#6B7280" />
-										<Text className="text-neutral-700 font-quicksand-bold text-lg ml-2">
-											Non associé
-										</Text>
-									</View>
+								<View className="flex-row items-center justify-center mb-2">
+									<Ionicons name="information-circle" size={24} color="#6B7280" />
+									<Text className="text-neutral-700 font-quicksand-bold text-lg ml-2">
+										{i18n.t("enterprise.deliveryPartners.detail.status.notAssociated.title")}
+									</Text>
+								</View>
 									<Text className="text-neutral-600 font-quicksand-medium text-center">
-										Ce livreur n&apos;est pas encore associé à votre entreprise
+										{i18n.t("enterprise.deliveryPartners.detail.status.notAssociated.description")}
 									</Text>
 								</View>
 
@@ -611,7 +614,7 @@ export default function DeliveryPartnerDetailScreen() {
 										<View className="flex-row items-center">
 											<Ionicons name="add-circle" size={20} color="#FFFFFF" />
 											<Text className="font-quicksand-bold text-white ml-2">
-												Associer ce partenaire
+												{i18n.t("enterprise.deliveryPartners.detail.actions.associate")}
 											</Text>
 										</View>
 									)}
@@ -650,10 +653,10 @@ export default function DeliveryPartnerDetailScreen() {
 							{/* Content */}
 							<View className="px-6 pb-6">
 								<Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
-									Dissocier le partenaire
+									{i18n.t("enterprise.deliveryPartners.detail.modal.dissociate.title")}
 								</Text>
 								<Text className="text-base text-neutral-600 font-quicksand-medium text-center leading-5">
-									Êtes-vous sûr de vouloir dissocier {partner?.firstName} {partner?.lastName} de votre entreprise ? Cette action est réversible.
+									{i18n.t("enterprise.deliveryPartners.detail.modal.dissociate.message", { name: `${partner?.firstName} ${partner?.lastName}` })}
 								</Text>
 							</View>
 
@@ -664,7 +667,7 @@ export default function DeliveryPartnerDetailScreen() {
 									className="flex-1 bg-neutral-100 py-4 rounded-2xl items-center"
 								>
 									<Text className="text-base font-quicksand-semibold text-neutral-700">
-										Annuler
+										{i18n.t("enterprise.deliveryPartners.detail.modal.dissociate.cancel")}
 									</Text>
 								</TouchableOpacity>
 								<TouchableOpacity
@@ -672,7 +675,7 @@ export default function DeliveryPartnerDetailScreen() {
 									className="flex-1 bg-red-500 py-4 rounded-2xl items-center"
 								>
 									<Text className="text-base font-quicksand-semibold text-white">
-										Dissocier
+										{i18n.t("enterprise.deliveryPartners.detail.modal.dissociate.confirm")}
 									</Text>
 								</TouchableOpacity>
 							</View>

@@ -3,6 +3,8 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Modal, Text, TouchableOpacity, View } from 'react-native';
+import { useLocale } from '../../contexts/LocaleContext';
+import i18n from '../../i18n/i18n';
 
 interface StatusModalProps {
   visible: boolean;
@@ -20,6 +22,7 @@ export default function StatusModal({
   onClose,
 }: StatusModalProps) {
   const isSuccess = type === 'success';
+  const { locale } = useLocale();
 
   return (
     <Modal
@@ -90,7 +93,7 @@ export default function StatusModal({
               style={{ backgroundColor: isSuccess ? '#10B981' : '#EF4444' }}
             >
               <Text className="text-white font-quicksand-bold text-base">
-                {isSuccess ? 'Super !' : 'Compris'}
+                {isSuccess ? i18n.t('common.actions.great') : i18n.t('common.actions.understood')}
               </Text>
             </TouchableOpacity>
           </View>

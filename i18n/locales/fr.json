@@ -3,6 +3,13 @@
         "error": "Erreur",
         "success": "Succès"
     },
+    "common": {
+        "actions": {
+            "great": "Super !",
+            "understood": "Compris",
+            "cancel": "Annuler"
+        }
+    },
     "enterprise": {
         "settings": {
             "title": "Paramètres",
@@ -213,6 +220,67 @@
             },
             "appInfo": "Axi Market v1.0.0"
         },
+        "subscriptions": {
+            "title": "Abonnements",
+            "payment": {
+                "success": "Paiement réussi !",
+                "activated": "Votre abonnement a été activé",
+                "active": "est maintenant actif",
+                "thanks": "Merci !",
+                "confirmError": "Impossible de confirmer le paiement. Contactez le support.",
+                "error": "Erreur",
+                "failed": "❌ Paiement échoué",
+                "failedMessage": "Le paiement a échoué. Veuillez réessayer.",
+                "loadError": "Impossible de charger les données. Veuillez réessayer."
+            },
+            "plans": {
+                "popular": "POPULAIRE",
+                "current": "Votre plan actuel",
+                "renew": "Renouveler maintenant",
+                "choose": "Choisir",
+                "expired": "Expiré",
+                "expiringSoon": "Expire bientôt",
+                "active": "Plan actif",
+                "daysRemaining": "jours restants",
+                "products": "Produits",
+                "on": "sur",
+                "expiration": "Expiration",
+                "days": "jours"
+            },
+            "sections": {
+                "otherPlans": "Autres plans disponibles",
+                "ourPlans": "Nos plans",
+                "renewSubscription": "Renouvelez votre abonnement",
+                "choosePlan": "Choisissez votre plan",
+                "loadingError": "Erreur de chargement",
+                "retry": "Réessayer"
+            },
+            "details": {
+                "title": "Détails de l'abonnement",
+                "paymentInfo": "Informations de paiement",
+                "amount": "Montant",
+                "method": "Méthode",
+                "trial": "Essai gratuit",
+                "reference": "Référence",
+                "features": "Fonctionnalités activées",
+                "featuresList": {
+                    "phone": "Appels",
+                    "sms": "SMS",
+                    "whatsapp": "WhatsApp",
+                    "messaging": "Messages",
+                    "advertisements": "Publicités"
+                }
+            },
+            "help": {
+                "title": "Besoin d'aide ?",
+                "message": "Notre équipe est là pour vous accompagner dans le choix de votre plan",
+                "contact": "Contacter le support"
+            },
+            "processing": {
+                "title": "Traitement du paiement",
+                "message": "Veuillez patienter pendant que nous vérifions votre paiement..."
+            }
+        },
         "messages": {
             "title": "Messages",
             "search": {
@@ -243,6 +311,23 @@
                 "archive": "Archiver la conversation",
                 "delete": "Supprimer la conversation",
                 "deleting": "Suppression..."
+            }
+        },
+        "subscription": {
+            "upgrade": {
+                "switchTo": "Passer à",
+                "activate": "Activer",
+                "switchingFromTo": "Vous allez passer de {{from}} à {{to}}",
+                "activatingPlan": "Vous allez activer le plan {{plan}}",
+                "price": "Tarif",
+                "whatsIncluded": "Ce qui est inclus :",
+                "securePayment": "Paiement sécurisé",
+                "paymentProcessedVia": "Le paiement sera traité via KKiaPay, une solution de paiement sécurisée",
+                "upgradeNotice": "Votre abonnement actuel sera remplacé immédiatement après confirmation du paiement.",
+                "freeTrialNotice": "Vous bénéficierez d'un essai gratuit de 1 mois.",
+                "activationNotice": "Votre abonnement sera activé immédiatement après confirmation du paiement.",
+                "activateFree": "Activer gratuitement",
+                "confirmAndPay": "Confirmer et payer"
             }
         },
         "offers": {
@@ -350,6 +435,56 @@
                 "loadError": "Impossible de charger les partenaires",
                 "associateSuccess": "Partenaire associé avec succès",
                 "associateError": "Échec association partenaire"
+            },
+            "detail": {
+                "title": "Détails du partenaire",
+                "notFound": {
+                    "title": "Partenaire introuvable",
+                    "message": "Partenaire non trouvé",
+                    "description": "Le partenaire de livraison demandé n'existe pas ou n'est plus disponible.",
+                    "backButton": "Retour"
+                },
+                "sections": {
+                    "generalInfo": "Informations générales",
+                    "workingHours": "Horaires de travail",
+                    "performance": "Performance",
+                    "associationStatus": "Statut d'association"
+                },
+                "labels": {
+                    "email": "Email",
+                    "phone": "Téléphone",
+                    "vehicle": "Véhicule",
+                    "timeRange": "Plage horaire",
+                    "averageRating": "Note moyenne",
+                    "detailedStats": "Statistiques détaillées disponibles"
+                },
+                "status": {
+                    "checking": "Vérification du statut...",
+                    "associated": {
+                        "title": "Partenaire associé",
+                        "description": "Ce livreur est déjà associé à votre entreprise"
+                    },
+                    "notAssociated": {
+                        "title": "Non associé",
+                        "description": "Ce livreur n'est pas encore associé à votre entreprise"
+                    }
+                },
+                "actions": {
+                    "dissociate": "Dissocier ce partenaire",
+                    "associate": "Associer ce partenaire"
+                },
+                "modal": {
+                    "dissociate": {
+                        "title": "Dissocier le partenaire",
+                        "message": "Êtes-vous sûr de vouloir dissocier {{name}} de votre entreprise ? Cette action est réversible.",
+                        "cancel": "Annuler",
+                        "confirm": "Dissocier"
+                    }
+                },
+                "toast": {
+                    "dissociateSuccess": "Partenaire dissocié avec succès",
+                    "dissociateError": "Échec dissociation partenaire"
+                }
             }
         },
         "products": {
