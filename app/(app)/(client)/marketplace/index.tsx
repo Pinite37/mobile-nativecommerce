@@ -17,6 +17,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import i18n from '../../../../i18n/i18n';
 import ProductService from '../../../../services/api/ProductService';
 import { Product } from '../../../../types/product';
 
@@ -282,7 +283,7 @@ export default function ClientMarketplacePage() {
           </TouchableOpacity>
           {item.stock === 0 && (
             <View className="absolute top-2 left-2 bg-red-500 px-2 py-1 rounded-lg">
-              <Text className="text-white text-xs font-quicksand-bold">Rupture</Text>
+              <Text className="text-white text-xs font-quicksand-bold">{i18n.t("client.marketplace.product.outOfStock")}</Text>
             </View>
           )}
         </View>
@@ -335,7 +336,7 @@ export default function ClientMarketplacePage() {
           />
           {item.stock === 0 && (
             <View className="absolute inset-0 bg-black/50 rounded-xl items-center justify-center">
-              <Text className="text-white text-xs font-quicksand-bold">Rupture</Text>
+              <Text className="text-white text-xs font-quicksand-bold">{i18n.t("client.marketplace.product.outOfStock")}</Text>
             </View>
           )}
         </View>
@@ -397,11 +398,11 @@ export default function ClientMarketplacePage() {
           </TouchableOpacity>
           <View className="flex-1">
             <Text className="text-white text-lg font-quicksand-bold" numberOfLines={1}>
-              Marketplace
+              {i18n.t("client.marketplace.title")}
             </Text>
             {!loading && (
               <Text className="text-white/80 text-sm font-quicksand-medium">
-                {totalProducts} produit{totalProducts > 1 ? 's' : ''} disponible{totalProducts > 1 ? 's' : ''}
+                {i18n.t(totalProducts === 1 ? "client.marketplace.subtitle.singular" : "client.marketplace.subtitle.plural", { count: totalProducts })}
               </Text>
             )}
           </View>
@@ -427,7 +428,7 @@ export default function ClientMarketplacePage() {
           <Ionicons name="search" size={20} color="#6B7280" />
           <TextInput
             className="flex-1 ml-2 text-neutral-800 font-quicksand-medium"
-            placeholder="Rechercher des produits..."
+            placeholder={i18n.t("client.marketplace.search.placeholder")}
             placeholderTextColor="#9CA3AF"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -460,10 +461,10 @@ export default function ClientMarketplacePage() {
           contentContainerStyle={{ gap: 8 }}
         >
           {[
-            { value: 'popular', label: 'Populaires', icon: 'trending-up' },
-            { value: 'newest', label: 'Plus récents', icon: 'time' },
-            { value: 'price_asc', label: 'Prix croissant', icon: 'arrow-up' },
-            { value: 'price_desc', label: 'Prix décroissant', icon: 'arrow-down' },
+            { value: 'popular', label: i18n.t("client.marketplace.sort.popular"), icon: 'trending-up' },
+            { value: 'newest', label: i18n.t("client.marketplace.sort.newest"), icon: 'time' },
+            { value: 'price_asc', label: i18n.t("client.marketplace.sort.priceAsc"), icon: 'arrow-up' },
+            { value: 'price_desc', label: i18n.t("client.marketplace.sort.priceDesc"), icon: 'arrow-down' },
           ].map((sort) => (
             <TouchableOpacity
               key={sort.value}
@@ -503,17 +504,17 @@ export default function ClientMarketplacePage() {
         <View className="flex-1 items-center justify-center px-6">
           <Ionicons name="cube-outline" size={64} color="#D1D5DB" />
           <Text className="text-neutral-600 text-lg font-quicksand-bold mt-4">
-            Aucun produit trouvé
+            {i18n.t("client.marketplace.empty.title")}
           </Text>
           <Text className="text-neutral-500 font-quicksand-medium text-center mt-2">
-            Essayez de modifier vos filtres ou votre recherche
+            {i18n.t("client.marketplace.empty.message")}
           </Text>
           {(minPrice || maxPrice || inStockOnly || searchQuery) && (
             <TouchableOpacity
               onPress={handleResetFilters}
               className="mt-4 bg-[#10b981] px-6 py-3 rounded-xl"
             >
-              <Text className="text-white font-quicksand-semibold">Réinitialiser les filtres</Text>
+              <Text className="text-white font-quicksand-semibold">{i18n.t("client.marketplace.empty.resetFilters")}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -550,7 +551,7 @@ export default function ClientMarketplacePage() {
           {/* Pagination info */}
           {!loadingMore && products.length > 0 && (
             <Text className="text-center text-neutral-500 font-quicksand-medium text-sm mt-4">
-              Page {currentPage} sur {totalPages}
+              {i18n.t("client.marketplace.pagination", { current: currentPage, total: totalPages })}
             </Text>
           )}
         </ScrollView>
@@ -561,7 +562,7 @@ export default function ClientMarketplacePage() {
         <View className="absolute inset-0 bg-black/50" style={{ paddingTop: insets.top }}>
           <View className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 max-h-[80%]">
             <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-xl font-quicksand-bold text-neutral-800">Filtres</Text>
+              <Text className="text-xl font-quicksand-bold text-neutral-800">{i18n.t("client.marketplace.filters.title")}</Text>
               <TouchableOpacity onPress={() => setShowFilters(false)}>
                 <Ionicons name="close" size={24} color="#6B7280" />
               </TouchableOpacity>
@@ -570,11 +571,11 @@ export default function ClientMarketplacePage() {
             <ScrollView showsVerticalScrollIndicator={false}>
               {/* Filtre de prix */}
               <View className="mb-4">
-                <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-2">Prix (FCFA)</Text>
+                <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-2">{i18n.t("client.marketplace.filters.price.label")}</Text>
                 <View className="flex-row items-center">
                   <TextInput
                     className="flex-1 bg-neutral-100 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-medium"
-                    placeholder="Min"
+                    placeholder={i18n.t("client.marketplace.filters.price.min")}
                     placeholderTextColor="#9CA3AF"
                     keyboardType="numeric"
                     value={minPrice}
@@ -583,7 +584,7 @@ export default function ClientMarketplacePage() {
                   <Text className="mx-2 text-neutral-600">-</Text>
                   <TextInput
                     className="flex-1 bg-neutral-100 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-medium"
-                    placeholder="Max"
+                    placeholder={i18n.t("client.marketplace.filters.price.max")}
                     placeholderTextColor="#9CA3AF"
                     keyboardType="numeric"
                     value={maxPrice}
@@ -598,7 +599,7 @@ export default function ClientMarketplacePage() {
                 className="flex-row items-center justify-between py-3 mb-4"
               >
                 <Text className="text-sm font-quicksand-semibold text-neutral-700">
-                  Produits en stock uniquement
+                  {i18n.t("client.marketplace.filters.stock")}
                 </Text>
                 <View
                   className={`w-12 h-6 rounded-full ${inStockOnly ? 'bg-[#10b981]' : 'bg-neutral-300'
@@ -618,7 +619,7 @@ export default function ClientMarketplacePage() {
                   onPress={handleResetFilters}
                 >
                   <Text className="text-neutral-700 font-quicksand-semibold text-center">
-                    Réinitialiser
+                    {i18n.t("client.marketplace.filters.reset")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -626,7 +627,7 @@ export default function ClientMarketplacePage() {
                   onPress={handleApplyFilters}
                 >
                   <Text className="text-white font-quicksand-semibold text-center">
-                    Appliquer
+                    {i18n.t("client.marketplace.filters.apply")}
                   </Text>
                 </TouchableOpacity>
               </View>

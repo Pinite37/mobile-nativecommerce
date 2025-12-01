@@ -16,12 +16,15 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useLocale } from '../../../../contexts/LocaleContext';
+import i18n from '../../../../i18n/i18n';
 import ProductService from '../../../../services/api/ProductService';
 import { Product } from '../../../../types/product';
 
 export default function MyProductsPage() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { locale } = useLocale();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -78,7 +81,7 @@ export default function MyProductsPage() {
 
   // Formater le prix
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
+    return new Intl.NumberFormat(locale === 'fr' ? 'fr-FR' : 'en-US').format(price) + ' FCFA';
   };
 
   // Rendu d'un produit
@@ -104,14 +107,14 @@ export default function MyProductsPage() {
         {item.stats?.totalSales > 10 && (
           <View className="absolute top-2 left-2 bg-success-500 rounded-full px-2 py-1">
             <Text style={{ fontFamily: 'Quicksand-Bold' }} className="text-white text-xs">
-              Populaire
+              {i18n.t('enterprise.myProducts.popular')}
             </Text>
           </View>
         )}
         {/* Badge pour le statut */}
         <View className="absolute top-2 right-2 bg-primary-500 rounded-full px-2 py-1">
           <Text style={{ fontFamily: 'Quicksand-Bold' }} className="text-white text-xs">
-            {item.isActive ? 'Actif' : 'Inactif'}
+            {item.isActive ? i18n.t('enterprise.myProducts.active') : i18n.t('enterprise.myProducts.inactive')}
           </Text>
         </View>
       </View>
@@ -135,10 +138,10 @@ export default function MyProductsPage() {
         </View>
         <View className="flex-row items-center justify-between mt-2">
           <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-xs text-neutral-500">
-            {item.stats?.totalSales || 0} vente{(item.stats?.totalSales || 0) > 1 ? 's' : ''}
+            {item.stats?.totalSales || 0} {i18n.t((item.stats?.totalSales || 0) > 1 ? 'enterprise.myProducts.sales.plural' : 'enterprise.myProducts.sales.singular')}
           </Text>
           <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-xs text-neutral-500">
-            {typeof item.category === 'object' ? item.category.name : item.category || 'Sans catégorie'}
+            {typeof item.category === 'object' ? item.category.name : item.category || i18n.t('enterprise.myProducts.noCategory')}
           </Text>
         </View>
       </View>
@@ -219,7 +222,7 @@ export default function MyProductsPage() {
               <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
             </TouchableOpacity>
             <Text style={{ fontFamily: 'Quicksand-Bold' }} className="text-xl text-white flex-1 text-center">
-              Mes Produits
+              {i18n.t('enterprise.myProducts.title')}
             </Text>
             <View style={{ width: 40 }} />
           </View>
@@ -254,16 +257,16 @@ export default function MyProductsPage() {
           </TouchableOpacity>
           <View className="flex-1 items-center">
             <Text style={{ fontFamily: 'Quicksand-Bold' }} className="text-xl text-white">
-              Mes Produits
+              {i18n.t('enterprise.myProducts.title')}
             </Text>
             <Text style={{ fontFamily: 'Quicksand-Medium' }} className="text-sm text-white/80">
-              Gérez votre catalogue
+              {i18n.t('enterprise.myProducts.subtitle')}
             </Text>
           </View>
           <TouchableOpacity
             onPress={() => {
               // TODO: Navigate to create product page
-              Alert.alert('Fonctionnalité à venir', 'La création de produit sera disponible prochainement');
+              Alert.alert(i18n.t('enterprise.myProducts.createComingSoon'), i18n.t('enterprise.myProducts.createComingSoonMessage'));
             }}
             className="w-10 h-10 bg-white/20 rounded-full items-center justify-center"
           >
@@ -297,7 +300,7 @@ export default function MyProductsPage() {
           <View className="bg-white rounded-2xl p-4 shadow-sm border border-neutral-100">
             <View className="flex-row items-center justify-between mb-3">
               <Text style={{ fontFamily: 'Quicksand-SemiBold' }} className="text-sm text-neutral-700">
-                Aperçu rapide
+                {i18n.t('enterprise.myProducts.stats.overview')}
               </Text>
               <Ionicons name="stats-chart" size={16} color="#10B981" />
             </View>
@@ -306,19 +309,19 @@ export default function MyProductsPage() {
                 <Text style={{ fontFamily: 'Quicksand-Bold' }} className="text-lg text-primary-600">
                   {products.filter(p => p.isActive).length}
                 </Text>
-                <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-xs text-neutral-600">Actifs</Text>
+                <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-xs text-neutral-600">{i18n.t('enterprise.myProducts.stats.active')}</Text>
               </View>
               <View className="items-center flex-1">
                 <Text style={{ fontFamily: 'Quicksand-Bold' }} className="text-lg text-warning-600">
                   {products.filter(p => !p.isActive).length}
                 </Text>
-                <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-xs text-neutral-600">Inactifs</Text>
+                <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-xs text-neutral-600">{i18n.t('enterprise.myProducts.stats.inactive')}</Text>
               </View>
               <View className="items-center flex-1">
                 <Text style={{ fontFamily: 'Quicksand-Bold' }} className="text-lg text-success-600">
                   {products.reduce((sum, p) => sum + (p.stats?.totalSales || 0), 0)}
                 </Text>
-                <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-xs text-neutral-600">Ventes</Text>
+                <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-xs text-neutral-600">{i18n.t('enterprise.myProducts.stats.sales')}</Text>
               </View>
             </View>
           </View>
@@ -332,7 +335,7 @@ export default function MyProductsPage() {
               {loadingMore && (
                 <View className="items-center py-4">
                   <ActivityIndicator size="small" color="#10B981" />
-                  <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-sm text-neutral-600 mt-2">Chargement...</Text>
+                  <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-sm text-neutral-600 mt-2">{i18n.t('enterprise.myProducts.loading')}</Text>
                 </View>
               )}
             </>
@@ -340,10 +343,10 @@ export default function MyProductsPage() {
             <View className="items-center justify-center py-12">
               <Ionicons name="storefront-outline" size={48} color="#9CA3AF" />
               <Text style={{ fontFamily: 'Quicksand-SemiBold' }} className="text-lg text-neutral-800 mt-4">
-                Aucun produit
+                {i18n.t('enterprise.myProducts.empty.title')}
               </Text>
               <Text style={{ fontFamily: 'Quicksand-Regular' }} className="text-sm text-neutral-600 text-center mt-2">
-                Vous n&apos;avez pas encore ajouté de produits à votre catalogue.
+                {i18n.t('enterprise.myProducts.empty.message')}
               </Text>
               <TouchableOpacity
                 onPress={() => {
@@ -351,7 +354,7 @@ export default function MyProductsPage() {
                 }}
                 className="mt-6 bg-primary-500 px-6 py-3 rounded-xl"
               >
-                <Text style={{ fontFamily: 'Quicksand-SemiBold' }} className="text-white">Ajouter un produit</Text>
+                <Text style={{ fontFamily: 'Quicksand-SemiBold' }} className="text-white">{i18n.t('enterprise.myProducts.empty.addButton')}</Text>
               </TouchableOpacity>
             </View>
           )}

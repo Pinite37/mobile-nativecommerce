@@ -330,6 +330,192 @@
                 "confirmAndPay": "Confirm and pay"
             }
         },
+        "advertisements": {
+            "title": "Advertisements",
+            "create": "New advertisement",
+            "search": {
+                "placeholder": "Search for an advertisement...",
+                "loading": "Loading advertisements"
+            },
+            "summary": {
+                "title": "Summary",
+                "active": "Active",
+                "paused": "Paused",
+                "expired": "Expired"
+            },
+            "filters": {
+                "title": "Filter by status",
+                "all": "All",
+                "active": "Active",
+                "paused": "Paused",
+                "expired": "Expired"
+            },
+            "results": {
+                "singular": "result",
+                "plural": "results",
+                "search": "Search:"
+            },
+            "card": {
+                "created": "Created on",
+                "open": "Open advertisement"
+            },
+            "menu": {
+                "title": "Actions",
+                "pause": "Pause",
+                "pauseDescription": "Hide temporarily",
+                "activate": "Reactivate",
+                "activateDescription": "Put back online",
+                "delete": "Delete",
+                "deleteDescription": "Irreversible action"
+            },
+            "confirmations": {
+                "pause": {
+                    "title": "Pause advertisement",
+                    "message": "The advertisement will no longer be displayed to customers but can be reactivated later.",
+                    "confirm": "Pause"
+                },
+                "delete": {
+                    "title": "Delete advertisement",
+                    "message": "This action is irreversible. The advertisement will be permanently deleted.",
+                    "confirm": "Delete"
+                },
+                "activate": {
+                    "title": "Reactivate advertisement",
+                    "message": "The advertisement will be put back online and visible to customers.",
+                    "confirm": "Reactivate"
+                }
+            },
+            "errors": {
+                "loading": "Loading error",
+                "loadingMessage": "Unable to load advertisements.",
+                "action": "Error",
+                "actionMessage": "Action failed"
+            },
+            "empty": {
+                "noResults": "No items found",
+                "noAds": "No advertisements",
+                "noResultsMessage": "No advertisements match your criteria. Try adjusting your search or filters.",
+                "noAdsMessage": "Create your first banner to boost your visibility on the homepage.",
+                "createAd": "Create advertisement"
+            },
+            "loadMore": "Scroll to load more…",
+            "cancel": "Cancel"
+        },
+        "categories": {
+            "title": "All categories",
+            "count": {
+                "singular": "category",
+                "plural": "categories",
+                "available": "available",
+                "availables": "available"
+            },
+            "empty": {
+                "title": "No categories available"
+            },
+            "products": {
+                "singular": "product",
+                "plural": "products"
+            }
+        },
+        "myProducts": {
+            "title": "My Products",
+            "subtitle": "Manage your catalog",
+            "stats": {
+                "overview": "Quick overview",
+                "active": "Active",
+                "inactive": "Inactive",
+                "sales": "Sales"
+            },
+            "empty": {
+                "title": "No products",
+                "message": "You haven't added any products to your catalog yet.",
+                "addButton": "Add a product"
+            },
+            "loading": "Loading...",
+            "popular": "Popular",
+            "active": "Active",
+            "inactive": "Inactive",
+            "sales": {
+                "singular": "sale",
+                "plural": "sales"
+            },
+            "noCategory": "No category",
+            "createComingSoon": "Feature coming soon",
+            "createComingSoonMessage": "Product creation will be available soon"
+        },
+        "advertisementsCreate": {
+            "title": {
+                "create": "New advertisement",
+                "edit": "Edit advertisement"
+            },
+            "imagePicker": {
+                "title": "Add an image",
+                "subtitle": "Choose an option",
+                "takePhoto": "Take a photo",
+                "takePhotoDescription": "Use the camera",
+                "pickFromGallery": "Choose from gallery",
+                "pickFromGalleryDescription": "Select from your photos",
+                "cancel": "Cancel"
+            },
+            "sections": {
+                "images": "Banner images * (1-4 images)",
+                "title": "Advertisement title *",
+                "description": "Description *",
+                "type": "Type *",
+                "audience": "Audience",
+                "period": "Period *",
+                "preview": "Preview"
+            },
+            "placeholders": {
+                "title": "Ex: Exceptional promo -30% on all products",
+                "description": "Describe your advertisement, offer details, etc."
+            },
+            "labels": {
+                "start": "Start",
+                "end": "End",
+                "principal": "Main",
+                "addImage": "Add an image",
+                "characters": "characters",
+                "requiredImage": "At least one image is required"
+            },
+            "limits": {
+                "maxImages": "You can add a maximum of 4 images.",
+                "titleMax": "100",
+                "descriptionMax": "500"
+            },
+            "permissions": {
+                "galleryDenied": "Permission denied",
+                "galleryMessage": "We need access to your gallery to select an image.",
+                "cameraDenied": "Permission denied",
+                "cameraMessage": "We need access to your camera to take a photo."
+            },
+            "errors": {
+                "imageRead": "Unable to read the image.",
+                "photoRead": "Unable to read the photo.",
+                "titleRequired": "Title required",
+                "descriptionRequired": "Description required",
+                "imageRequired": "At least one image required",
+                "endBeforeStart": "End date must be after start date",
+                "startInPast": "Start date must be in the future",
+                "generic": "Error",
+                "creationFailed": "Creation failed"
+            },
+            "success": {
+                "created": "Advertisement created successfully"
+            },
+            "warnings": {
+                "limitReached": "Limit reached",
+                "endBeforeStart": "End must be after start."
+            },
+            "buttons": {
+                "submitting": "Sending...",
+                "create": "Create advertisement"
+            },
+            "preview": {
+                "defaultTitle": "Your advertisement title",
+                "defaultText": "Your title will appear here"
+            }
+        },
         "offers": {
             "title": "My offers",
             "filters": {
@@ -376,6 +562,78 @@
                 "errorMessage": "Unable to delete offer"
             }
         },
+        "marketplace": {
+            "title": "Marketplace",
+            "subtitle": {
+                "singular": "product available",
+                "plural": "products available"
+            },
+            "search": {
+                "placeholder": "Search for products..."
+            },
+            "sort": {
+                "popular": "Popular",
+                "newest": "Most recent",
+                "priceAsc": "Price ascending",
+                "priceDesc": "Price descending"
+            },
+            "empty": {
+                "title": "No products found",
+                "message": "Try modifying your filters or search",
+                "resetFilters": "Reset filters"
+            },
+            "pagination": "Page {{current}} of {{total}}",
+            "filters": {
+                "title": "Filters",
+                "price": {
+                    "label": "Price (FCFA)",
+                    "min": "Min",
+                    "max": "Max"
+                },
+                "stock": "In stock products only",
+                "reset": "Reset",
+                "apply": "Apply"
+            },
+            "product": {
+                "outOfStock": "Out of stock"
+            }
+        },
+        "productDetails": {
+            "notFound": {
+                "title": "Product not found",
+                "message": "The product you are looking for does not exist or is no longer available.",
+                "backButton": "Back"
+            },
+            "stock": {
+                "remaining": "remaining"
+            },
+            "share": {
+                "defaultMessage": "View this product"
+            },
+            "category": {
+                "default": "Product"
+            },
+            "store": {
+                "title": "Store",
+                "contact": "Contact",
+                "whatsapp": "WhatsApp",
+                "call": "Call",
+                "negotiate": "Chat / Negotiate"
+            },
+            "similar": {
+                "title": "Similar products"
+            },
+            "notifications": {
+                "whatsappNotAvailable": "WhatsApp not available",
+                "whatsappNotAvailableMessage": "WhatsApp is not installed on your device. Try calling directly.",
+                "callError": "Error",
+                "callErrorMessage": "Unable to make the call",
+                "websiteError": "Error",
+                "websiteErrorMessage": "Unable to open website",
+                "conversationError": "Error",
+                "conversationErrorMessage": "Unable to create conversation"
+            }
+        },
         "favorites": {
             "title": "My Favorites",
             "count": {
@@ -405,6 +663,40 @@
                 "title": "Error",
                 "message": "Unable to remove this product from favorites.",
                 "ok": "OK"
+            }
+        },
+        "advertisementDetails": {
+            "notFound": {
+                "title": "Advertisement not found",
+                "message": "This advertisement is no longer available or has expired.",
+                "backButton": "Back"
+            },
+            "imageUnavailable": "Image not available",
+            "header": {
+                "title": "Offer details"
+            },
+            "info": {
+                "title": "Information",
+                "validity": "Validity",
+                "validUntil": "Until {{date}}",
+                "views": "Views",
+                "viewsCount": "{{count}} people"
+            },
+            "actions": {
+                "contact": "Contact the company",
+                "share": "Share the offer"
+            },
+            "limitedOffer": {
+                "title": "Limited time offer",
+                "message": "This offer is valid for a limited time. Take advantage of it quickly by contacting the company."
+            },
+            "errorModal": {
+                "title": "Error",
+                "message": "Unable to load advertisement details",
+                "ok": "OK"
+            },
+            "share": {
+                "message": "Discover this exceptional offer: {{title}}\n\n{{description}}\n\nValid until {{date}}"
             }
         },
         "deliveryPartners": {
@@ -748,6 +1040,525 @@
                 "noAdsMessage": "Come back soon to discover our latest offers",
                 "noProductsAvailable": "No products available",
                 "noTrendsAvailable": "No trends available"
+            }
+        }
+    },
+    "client": {
+        "home": {
+            "greetings": {
+                "morning": "Good morning",
+                "afternoon": "Good afternoon",
+                "evening": "Good evening"
+            },
+            "search": {
+                "placeholder": "What are you looking for?",
+                "recentSearches": "Recent searches",
+                "clearHistory": "Clear history",
+                "noRecentSearches": "No recent searches",
+                "suggestions": "Suggestions",
+                "types": {
+                    "product": "Product",
+                    "category": "Category",
+                    "enterprise": "Enterprise"
+                }
+            },
+            "location": {
+                "selectCity": "Select a city",
+                "selectNeighborhood": "Select a neighborhood",
+                "city": "City",
+                "neighborhood": "Neighborhood"
+            },
+            "categories": {
+                "title": "Categories",
+                "subtitle": "Explore our categories",
+                "trends": "Trends",
+                "vehicles": "Vehicles",
+                "realEstate": "Real Estate",
+                "phones": "Phones",
+                "electronics": "Electronics",
+                "furniture": "Furniture",
+                "fashion": "Fashion",
+                "services": "Services",
+                "jobs": "Jobs"
+            },
+            "featuredStores": {
+                "title": "Featured Stores",
+                "subtitle": "Discover our partner stores",
+                "viewAll": "View all",
+                "noStores": "No stores available"
+            },
+            "featuredProducts": {
+                "title": "Featured Products",
+                "subtitle": "Discover our popular products",
+                "viewAll": "View all",
+                "loading": "Loading...",
+                "noProducts": "No products available"
+            },
+            "ads": {
+                "noAds": "No advertisements available",
+                "comeBackSoon": "Come back soon to discover our offers"
+            },
+            "searchResults": {
+                "title": "Results for \"{{query}}\"",
+                "noResults": "No results found",
+                "noResultsMessage": "Try modifying your search criteria",
+                "resultsCount": "{{count}} result(s) found",
+                "searchTime": "Search completed in {{time}}ms",
+                "fromCache": "Results from cache",
+                "sortBy": "Sort by",
+                "relevance": "Relevance",
+                "priceLowToHigh": "Cheaper",
+                "priceHighToLow": "More expensive",
+                "newest": "Newest",
+                "viewAs": "View as",
+                "grid": "Grid",
+                "list": "List"
+            },
+            "badges": {
+                "top": "Top",
+                "promo": "Promo",
+                "popular": "Popular"
+            },
+            "modals": {
+                "city": {
+                    "title": "Select a city"
+                },
+                "neighborhood": {
+                    "title": "Select a neighborhood in {{city}}"
+                }
+            },
+            "empty": {
+                "noProductsFound": "No products found",
+                "tryDifferentSearch": "Try a different search",
+                "adjustFilters": "Adjust filters"
+            }
+        },
+        "favorites": {
+            "title": "My Favorites",
+            "counter": {
+                "one": "{{count}} product",
+                "other": "{{count}} products"
+            },
+            "error": {
+                "title": "Loading Error",
+                "retry": "Retry"
+            },
+            "empty": {
+                "title": "Your favorites list is empty",
+                "message": "Add products to your favorites to find them easily",
+                "button": "Explore Products"
+            },
+            "modal": {
+                "title": "Remove from Favorites",
+                "message": "Are you sure you want to remove this product from your favorites?",
+                "cancel": "Cancel",
+                "confirm": "Remove"
+            },
+            "addedDate": "Added on {{date}}"
+        },
+        "profile": {
+            "title": "My Profile",
+            "menu": {
+                "personalInfo": "My Information",
+                "settings": "Settings"
+            },
+            "logout": {
+                "button": "Logout",
+                "modal": {
+                    "title": "Logout",
+                    "message": "Are you sure you want to log out?",
+                    "cancel": "Cancel",
+                    "confirm": "Logout"
+                }
+            },
+            "placeholders": {
+                "userName": "User",
+                "email": "email@example.com"
+            }
+        },
+        "messages": {
+            "title": "Messages",
+            "search": {
+                "placeholder": "Search conversations..."
+            },
+            "filters": {
+                "all": "All",
+                "unread": "Unread"
+            },
+            "conversation": {
+                "singular": "conversation",
+                "plural": "conversations"
+            },
+            "empty": {
+                "noResults": "No results",
+                "noConversations": "No conversations",
+                "noResultsMessage": "We couldn't find any conversations matching \"{{query}}\"",
+                "noConversationsMessage": "Start chatting with sellers to see your conversations here.",
+                "discoverProducts": "Discover Products"
+            },
+            "contextMenu": {
+                "title": "Options",
+                "archive": "Archive conversation",
+                "delete": "Delete conversation",
+                "deleting": "Deleting..."
+            },
+            "errors": {
+                "network": {
+                    "title": "Connection problem",
+                    "message": "Check your internet connection and try again.",
+                    "userMessage": "Network connection problem. Check your internet connection."
+                },
+                "server": {
+                    "title": "Server error",
+                    "message": "The server is experiencing difficulties. Please try again later.",
+                    "userMessage": "Service temporarily unavailable. Try again in a few moments."
+                },
+                "auth": {
+                    "title": "Authentication required",
+                    "message": "Your session has expired. Please log in again.",
+                    "userMessage": "Session expired. Please log in again."
+                },
+                "validation": {
+                    "title": "Invalid data",
+                    "message": "The provided information is not valid.",
+                    "userMessage": "Invalid information. Check your data."
+                },
+                "notFound": {
+                    "title": "Resource not found",
+                    "message": "The requested item does not exist or has been deleted.",
+                    "userMessage": "Item not found or deleted."
+                },
+                "unknown": {
+                    "title": "Error",
+                    "message": "An unexpected error occurred.",
+                    "userMessage": "An unexpected error occurred. Please try again."
+                }
+            },
+            "notifications": {
+                "conversationDeleted": {
+                    "title": "Conversation deleted",
+                    "message": "The conversation has been successfully deleted."
+                },
+                "searchError": {
+                    "title": "Search error",
+                    "message": "Unable to filter conversations at the moment."
+                },
+                "syncError": {
+                    "title": "Synchronization error",
+                    "message": "Unable to update messages. Reload the page."
+                },
+                "readStatusError": {
+                    "title": "Synchronization error",
+                    "message": "Unable to update read status."
+                }
+            }
+        },
+        "settings": {
+            "title": "Settings",
+            "sections": {
+                "general": "GENERAL",
+                "notifications": "NOTIFICATIONS",
+                "display": "DISPLAY",
+                "privacy": "PRIVACY"
+            },
+            "general": {
+                "darkMode": "Dark Mode",
+                "themeChanged": "Theme Changed",
+                "themeActivated": {
+                    "dark": "Dark mode activated",
+                    "light": "Light mode activated"
+                },
+                "languageChanged": "Language Changed",
+                "languageActivated": {
+                    "fr": "French language activated",
+                    "en": "English language activated"
+                }
+            },
+            "notifications": {
+                "pushEnabled": "Push Notifications",
+                "delivery": "Deliveries",
+                "messages": "Messages",
+                "newProducts": "New Products",
+                "advertisements": "Advertisements",
+                "systemUpdates": "System Updates"
+            },
+            "display": {
+                "gridView": "Grid View",
+                "highQualityImages": "High Quality Images",
+                "language": "Language"
+            },
+            "privacy": {
+                "publicProfile": "Public Profile",
+                "dataAnalytics": "Data Analytics",
+                "privacyPolicy": "Privacy Policy"
+            },
+            "actions": {
+                "clearData": "Clear All Data"
+            },
+            "languageModal": {
+                "title": "Choose Language",
+                "french": "Français",
+                "english": "English",
+                "frenchDescription": "Default language",
+                "englishDescription": "International language"
+            },
+            "clearDataModal": {
+                "title": "Clear Data",
+                "message": "Are you sure you want to clear all your data? This action will reset all your preferences.",
+                "cancel": "Cancel",
+                "confirm": "Clear"
+            },
+            "errors": {
+                "loadPreferences": "Unable to load your preferences",
+                "saveTheme": "Unable to save your theme preference",
+                "changeLanguage": "Unable to change language",
+                "updatePreferences": "Unable to update your preferences",
+                "resetData": "Unable to reset your data"
+            },
+            "success": {
+                "dataReset": "Data Reset",
+                "dataResetMessage": "Your preferences have been reset"
+            },
+            "appVersion": "Axi Market 1.0.0"
+        },
+        "details": {
+            "title": "My Information",
+            "photo": {
+                "change": "Change my photo"
+            },
+            "sections": {
+                "personal": "Personal Information",
+                "security": "Security"
+            },
+            "fields": {
+                "firstName": "First Name",
+                "lastName": "Last Name",
+                "email": "Email",
+                "phone": "Phone"
+            },
+            "placeholders": {
+                "firstName": "Your first name",
+                "lastName": "Your last name",
+                "email": "Your email",
+                "phone": "Your phone number"
+            },
+            "security": {
+                "changePassword": "Change password",
+                "biometric": "Biometric authentication",
+                "loginNotifications": "Login notifications"
+            },
+            "actions": {
+                "save": "Save changes"
+            },
+            "errors": {
+                "load": "Unable to load profile information",
+                "update": "Unable to update your profile"
+            },
+            "success": {
+                "update": "Profile updated",
+                "updateMessage": "Your information has been saved successfully"
+            }
+        },
+        "categories": {
+            "title": "All categories",
+            "subtitle": {
+                "singular": "{{count}} category available",
+                "plural": "{{count}} categories available"
+            },
+            "empty": "No categories available",
+            "productCount": {
+                "singular": "{{count}} product",
+                "plural": "{{count}} products"
+            }
+        },
+        "category": {
+            "loading": "Loading...",
+            "defaultTitle": "Category",
+            "productCount": {
+                "singular": "product",
+                "plural": "products"
+            },
+            "search": {
+                "placeholder": "Search in this category...",
+                "button": "OK"
+            },
+            "sort": {
+                "newest": "Newest",
+                "popular": "Popular",
+                "priceAsc": "Price ascending",
+                "priceDesc": "Price descending"
+            },
+            "viewMode": {
+                "grid": "Grid",
+                "list": "List"
+            },
+            "filters": {
+                "title": "Filters",
+                "price": {
+                    "label": "Price (FCFA)",
+                    "min": "Min",
+                    "max": "Max"
+                },
+                "stock": "In stock products only",
+                "reset": "Reset",
+                "apply": "Apply"
+            },
+            "product": {
+                "outOfStock": "Out of stock"
+            },
+            "empty": {
+                "title": "No products found",
+                "message": "Try modifying your filters or search",
+                "resetFilters": "Reset filters"
+            },
+            "pagination": "Page {{current}} of {{total}}"
+        },
+        "marketplace": {
+            "title": "Marketplace",
+            "subtitle": {
+                "singular": "{{count}} product available",
+                "plural": "{{count}} products available"
+            },
+            "search": {
+                "placeholder": "Search for products..."
+            },
+            "sort": {
+                "popular": "Popular",
+                "newest": "Newest",
+                "priceAsc": "Price ascending",
+                "priceDesc": "Price descending"
+            },
+            "product": {
+                "outOfStock": "Out of stock"
+            },
+            "empty": {
+                "title": "No products found",
+                "message": "Try modifying your filters or search",
+                "resetFilters": "Reset filters"
+            },
+            "pagination": "Page {{current}} of {{total}}",
+            "filters": {
+                "title": "Filters",
+                "price": {
+                    "label": "Price (FCFA)",
+                    "min": "Min",
+                    "max": "Max"
+                },
+                "stock": "In stock products only",
+                "reset": "Reset",
+                "apply": "Apply"
+            }
+        },
+        "product": {
+            "favorites": {
+                "title": "Favorites",
+                "added": "Product added to favorites",
+                "removed": "Product removed from favorites",
+                "error": "Unable to update favorites"
+            },
+            "whatsapp": {
+                "message": "Hello! I'm interested in your product \"{{productName}}\" on Axi.\n\nListed price: {{price}}\n\nCan you give me more information? Thank you!",
+                "notAvailable": "WhatsApp not available",
+                "notAvailableMessage": "WhatsApp is not installed on your device. Try calling directly.",
+                "error": "Unable to open WhatsApp"
+            },
+            "contact": {
+                "callError": "Unable to make the call",
+                "websiteError": "Unable to open website"
+            },
+            "stock": {
+                "remaining": "{{count}} remaining"
+            },
+            "error": {
+                "notFound": "Product not found",
+                "notFoundMessage": "The product you're looking for doesn't exist or is no longer available.",
+                "back": "Back"
+            },
+            "share": {
+                "message": "View this product"
+            },
+            "enterprise": {
+                "title": "Store",
+                "visitWebsite": "Visit website"
+            },
+            "actions": {
+                "negotiate": "Chat / Negotiate",
+                "conversationError": "Unable to create conversation"
+            },
+            "similar": {
+                "title": "Similar products"
+            }
+        },
+        "enterprise": {
+            "error": {
+                "loading": "Unable to load company information",
+                "notFound": "Company not found",
+                "notFoundMessage": "The company you're looking for doesn't exist or is no longer active.",
+                "back": "Back",
+                "whatsappNotAvailable": "WhatsApp not available",
+                "whatsappNotAvailableMessage": "WhatsApp is not installed on your device.",
+                "whatsappError": "Unable to open WhatsApp",
+                "callError": "Unable to make the call",
+                "websiteError": "Unable to open website",
+                "modalOk": "OK"
+            },
+            "whatsapp": {
+                "message": "Hello! I'm discovering your company \"{{companyName}}\" on NativeCommerce. Can you give me more information about your products? Thank you!"
+            },
+            "status": {
+                "active": "Active company"
+            },
+            "stats": {
+                "reviews": "{{count}} reviews",
+                "products": "products",
+                "sold": "{{count}} sold"
+            },
+            "stock": {
+                "remaining": "{{count}} remaining"
+            },
+            "contact": {
+                "title": "Contact the company",
+                "whatsapp": "WhatsApp",
+                "call": "Call",
+                "website": "Website"
+            },
+            "loading": "Loading...",
+            "empty": {
+                "title": "No products available",
+                "message": "This company doesn't have any products online yet."
+            }
+        },
+        "advertisement": {
+            "error": {
+                "notFound": "Advertisement not found",
+                "notFoundMessage": "This advertisement is no longer available or has expired.",
+                "loading": "Unable to load advertisement details",
+                "back": "Back",
+                "modalOk": "OK"
+            },
+            "header": {
+                "title": "Offer details"
+            },
+            "image": {
+                "notAvailable": "Image not available"
+            },
+            "info": {
+                "title": "Information",
+                "validity": "Validity",
+                "validUntil": "Until {{date}}",
+                "views": "Views",
+                "viewsCount": "{{count}} people"
+            },
+            "actions": {
+                "contactCompany": "Contact the company",
+                "shareOffer": "Share the offer"
+            },
+            "limitedTime": {
+                "title": "Limited time offer",
+                "message": "This offer is valid for a limited time. Take advantage of it quickly by contacting the company."
+            },
+            "share": {
+                "message": "Discover this exceptional offer: {{title}}\n\n{{description}}\n\nValid until {{date}}"
             }
         }
     }

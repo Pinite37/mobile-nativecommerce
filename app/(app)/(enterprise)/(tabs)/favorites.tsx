@@ -20,10 +20,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocale } from "@/contexts/LocaleContext";
 import i18n from "@/i18n/i18n";
 import { FavoriteItem } from "@/types/product";
+import { useTheme } from "../../../../contexts/ThemeContext";
 
 export default function EnterpriseFavoritesScreen() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { locale } = useLocale(); // Écoute les changements de langue pour re-render automatiquement
+  const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [favoriteItems, setFavoriteItems] = useState<FavoriteItem[]>([]);

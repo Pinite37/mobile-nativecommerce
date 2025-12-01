@@ -24,6 +24,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import NotificationModal, {
   useNotification,
 } from "../../../../components/ui/NotificationModal";
+import { useLocale } from "../../../../contexts/LocaleContext";
+import i18n from "../../../../i18n/i18n";
 import AdvertisementService, {
   CreateAdvertisementPayload,
 } from "../../../../services/api/AdvertisementService";
@@ -68,10 +70,10 @@ function ImagePickerModal({
             {/* Header */}
             <View className="px-6 pb-4 border-b border-neutral-100">
               <Text className="text-lg font-quicksand-bold text-neutral-800">
-                Ajouter une image
+                {i18n.t("enterprise.advertisementsCreate.imagePicker.title")}
               </Text>
               <Text className="text-sm text-neutral-500 font-quicksand-medium mt-1">
-                Choisissez une option
+                {i18n.t("enterprise.advertisementsCreate.imagePicker.subtitle")}
               </Text>
             </View>
 
@@ -92,10 +94,10 @@ function ImagePickerModal({
                 </View>
                 <View className="flex-1">
                   <Text className="text-base font-quicksand-semibold text-neutral-800">
-                    Prendre une photo
+                    {i18n.t("enterprise.advertisementsCreate.imagePicker.takePhoto")}
                   </Text>
                   <Text className="text-sm text-neutral-500 font-quicksand-medium">
-                    Utiliser l'appareil photo
+                    {i18n.t("enterprise.advertisementsCreate.imagePicker.takePhotoDescription")}
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
@@ -116,10 +118,10 @@ function ImagePickerModal({
                 </View>
                 <View className="flex-1">
                   <Text className="text-base font-quicksand-semibold text-neutral-800">
-                    Choisir depuis la galerie
+                    {i18n.t("enterprise.advertisementsCreate.imagePicker.pickFromGallery")}
                   </Text>
                   <Text className="text-sm text-neutral-500 font-quicksand-medium">
-                    Sélectionner depuis vos photos
+                    {i18n.t("enterprise.advertisementsCreate.imagePicker.pickFromGalleryDescription")}
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
@@ -133,7 +135,7 @@ function ImagePickerModal({
                 className="w-full bg-neutral-100 py-4 rounded-2xl items-center"
               >
                 <Text className="text-base font-quicksand-semibold text-neutral-700">
-                  Annuler
+                  {i18n.t("enterprise.advertisementsCreate.imagePicker.cancel")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -148,6 +150,7 @@ export default function CreateAdvertisement() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ id?: string }>();
   const isEditing = !!params.id;
+  const { locale } = useLocale();
   const { notification, showNotification, hideNotification } =
     useNotification();
 
@@ -186,8 +189,8 @@ export default function CreateAdvertisement() {
     if (images.length >= 4) {
       showNotification(
         "info",
-        "Limite atteinte",
-        "Vous ne pouvez ajouter que 4 images maximum."
+        i18n.t("enterprise.advertisementsCreate.warnings.limitReached"),
+        i18n.t("enterprise.advertisementsCreate.limits.maxImages")
       );
       return;
     }
@@ -195,19 +198,19 @@ export default function CreateAdvertisement() {
     if (Platform.OS === "ios") {
       // Sur iOS : utiliser Alert natif (pas de conflit modal)
       Alert.alert(
-        "Ajouter une image",
-        "Choisissez une option",
+        i18n.t("enterprise.advertisementsCreate.imagePicker.title"),
+        i18n.t("enterprise.advertisementsCreate.imagePicker.subtitle"),
         [
           {
-            text: "Prendre une photo",
+            text: i18n.t("enterprise.advertisementsCreate.imagePicker.takePhoto"),
             onPress: () => takePhoto(),
           },
           {
-            text: "Choisir depuis la galerie",
+            text: i18n.t("enterprise.advertisementsCreate.imagePicker.pickFromGallery"),
             onPress: () => pickImage(),
           },
           {
-            text: "Annuler",
+            text: i18n.t("enterprise.advertisementsCreate.imagePicker.cancel"),
             style: "cancel",
           },
         ],
@@ -223,8 +226,8 @@ export default function CreateAdvertisement() {
     if (images.length >= 4) {
       showNotification(
         "info",
-        "Limite atteinte",
-        "Vous ne pouvez ajouter que 4 images maximum."
+        i18n.t("enterprise.advertisementsCreate.warnings.limitReached"),
+        i18n.t("enterprise.advertisementsCreate.limits.maxImages")
       );
       return;
     }
@@ -233,8 +236,8 @@ export default function CreateAdvertisement() {
     if (status !== "granted") {
       showNotification(
         "error",
-        "Permission refusée",
-        "Nous avons besoin de l'accès à votre galerie pour sélectionner une image."
+        i18n.t("enterprise.advertisementsCreate.permissions.galleryDenied"),
+        i18n.t("enterprise.advertisementsCreate.permissions.galleryMessage")
       );
       return;
     }
@@ -253,7 +256,7 @@ export default function CreateAdvertisement() {
       const base64Data = asset.base64 || "";
 
       if (!base64Data) {
-        showNotification("error", "Erreur", "Impossible de lire l'image.");
+        showNotification("error", i18n.t("enterprise.advertisementsCreate.errors.generic"), i18n.t("enterprise.advertisementsCreate.errors.imageRead"));
         return;
       }
 
@@ -268,8 +271,8 @@ export default function CreateAdvertisement() {
     if (images.length >= 4) {
       showNotification(
         "info",
-        "Limite atteinte",
-        "Vous ne pouvez ajouter que 4 images maximum."
+        i18n.t("enterprise.advertisementsCreate.warnings.limitReached"),
+        i18n.t("enterprise.advertisementsCreate.limits.maxImages")
       );
       return;
     }
@@ -278,8 +281,8 @@ export default function CreateAdvertisement() {
     if (status !== "granted") {
       showNotification(
         "error",
-        "Permission refusée",
-        "Nous avons besoin de l'accès à votre caméra pour prendre une photo."
+        i18n.t("advertisementsCreate.permissions.cameraDenied"),
+        i18n.t("advertisementsCreate.permissions.cameraMessage")
       );
       return;
     }
@@ -298,7 +301,7 @@ export default function CreateAdvertisement() {
       const base64Data = asset.base64 || "";
 
       if (!base64Data) {
-        showNotification("error", "Erreur", "Impossible de lire la photo.");
+        showNotification("error", i18n.t("enterprise.advertisementsCreate.errors.generic"), i18n.t("enterprise.advertisementsCreate.errors.photoRead"));
         return;
       }
 
@@ -311,13 +314,13 @@ export default function CreateAdvertisement() {
   };
 
   const validate = () => {
-    if (!title.trim()) return "Titre requis";
-    if (!description.trim()) return "Description requise";
-    if (imagesBase64.length === 0) return "Au moins une image requise";
+    if (!title.trim()) return i18n.t("enterprise.advertisementsCreate.errors.titleRequired");
+    if (!description.trim()) return i18n.t("enterprise.advertisementsCreate.errors.descriptionRequired");
+    if (imagesBase64.length === 0) return i18n.t("enterprise.advertisementsCreate.errors.imageRequired");
     if (endDate <= startDate)
-      return "La date de fin doit être après la date de début";
+      return i18n.t("enterprise.advertisementsCreate.errors.endBeforeStart");
     if (startDate.getTime() < Date.now())
-      return "La date de début doit être dans le futur";
+      return i18n.t("enterprise.advertisementsCreate.errors.startInPast");
     return null;
   };
 
@@ -339,13 +342,13 @@ export default function CreateAdvertisement() {
         endDate: endDate.toISOString(),
       };
       await AdvertisementService.create(payload);
-      showNotification("success", "Succès", "Publicité créée avec succès");
+      showNotification("success", i18n.t("messages.success"), i18n.t("enterprise.advertisementsCreate.success.created"));
       // Delay navigation to let the user see the notification
       setTimeout(() => {
         router.back();
       }, 1500);
     } catch (e: any) {
-      showNotification("error", "Erreur", e?.message || "Échec de la création");
+      showNotification("error", i18n.t("enterprise.advertisementsCreate.errors.generic"), e?.message || i18n.t("enterprise.advertisementsCreate.errors.creationFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -376,7 +379,7 @@ export default function CreateAdvertisement() {
             <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
           </TouchableOpacity>
           <Text className="text-xl font-quicksand-bold text-white">
-            {isEditing ? "Modifier la publicité" : "Nouvelle publicité"}
+            {isEditing ? i18n.t("enterprise.advertisementsCreate.title.edit") : i18n.t("enterprise.advertisementsCreate.title.create")}
           </Text>
           <View className="w-10 h-10" />
         </View>
@@ -394,7 +397,7 @@ export default function CreateAdvertisement() {
           {/* Image Section */}
           <View>
             <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">
-              Images de la bannière * (1-4 images)
+              {i18n.t("enterprise.advertisementsCreate.sections.images")}
             </Text>
 
             {/* Display selected images */}
@@ -429,7 +432,7 @@ export default function CreateAdvertisement() {
                       {index === 0 && (
                         <View className="absolute bottom-1 left-1 bg-emerald-500 px-1.5 py-0.5 rounded">
                           <Text className="text-xs font-quicksand-bold text-white">
-                            Principal
+                            {i18n.t("enterprise.advertisementsCreate.labels.principal")}
                           </Text>
                         </View>
                       )}
@@ -448,14 +451,14 @@ export default function CreateAdvertisement() {
               >
                 <Ionicons name="add" size={32} color="#9CA3AF" />
                 <Text className="text-neutral-500 font-quicksand-medium mt-2 text-sm">
-                  Ajouter une image ({images.length}/4)
+                  {i18n.t("enterprise.advertisementsCreate.labels.addImage")} ({images.length}/4)
                 </Text>
               </TouchableOpacity>
             )}
 
             {images.length === 0 && (
               <Text className="text-neutral-400 font-quicksand-medium text-xs mt-2 text-center">
-                Au moins une image est requise
+                {i18n.t("enterprise.advertisementsCreate.labels.requiredImage")}
               </Text>
             )}
           </View>
@@ -463,12 +466,12 @@ export default function CreateAdvertisement() {
           {/* Title Section */}
           <View className="mt-6">
             <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">
-              Titre de la publicité *
+              {i18n.t("enterprise.advertisementsCreate.sections.title")}
             </Text>
             <TextInput
               value={title}
               onChangeText={setTitle}
-              placeholder="Ex: Promo exceptionnelle -30% sur tous les produits"
+              placeholder={i18n.t("enterprise.advertisementsCreate.placeholders.title")}
               className="bg-white rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border border-neutral-200 shadow-sm"
               placeholderTextColor="#9CA3AF"
               maxLength={100}
@@ -476,19 +479,19 @@ export default function CreateAdvertisement() {
               numberOfLines={2}
             />
             <Text className="text-xs text-neutral-500 font-quicksand-medium mt-2 text-right">
-              {title.length}/100 caractères
+              {title.length}/{i18n.t("enterprise.advertisementsCreate.limits.titleMax")} {i18n.t("enterprise.advertisementsCreate.labels.characters")}
             </Text>
           </View>
 
           {/* Description */}
           <View className="mt-6">
             <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">
-              Description *
+              {i18n.t("enterprise.advertisementsCreate.sections.description")}
             </Text>
             <TextInput
               value={description}
               onChangeText={setDescription}
-              placeholder="Décrivez votre publicité, les détails de l'offre, etc."
+              placeholder={i18n.t("enterprise.advertisementsCreate.placeholders.description")}
               className="bg-white rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border border-neutral-200 shadow-sm"
               placeholderTextColor="#9CA3AF"
               multiline
@@ -496,7 +499,7 @@ export default function CreateAdvertisement() {
               maxLength={500}
             />
             <Text className="text-xs text-neutral-500 font-quicksand-medium mt-2 text-right">
-              {description.length}/500
+              {description.length}/{i18n.t("enterprise.advertisementsCreate.limits.descriptionMax")}
             </Text>
           </View>
 
@@ -504,7 +507,7 @@ export default function CreateAdvertisement() {
           <View className="mt-6 flex-row gap-3">
             <View className="flex-1">
               <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">
-                Type *
+                {i18n.t("enterprise.advertisementsCreate.sections.type")}
               </Text>
               <View className="flex-row flex-wrap gap-2">
                 {["PROMOTION", "EVENT", "ANNOUNCEMENT", "BANNER"].map((t) => (
@@ -531,7 +534,7 @@ export default function CreateAdvertisement() {
             </View>
             <View className="flex-1">
               <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">
-                Audience
+                {i18n.t("enterprise.advertisementsCreate.sections.audience")}
               </Text>
               <View className="flex-row flex-wrap gap-2">
                 {["ALL", "CLIENTS", "ENTERPRISES", "DELIVERS"].map((a) => (
@@ -561,7 +564,7 @@ export default function CreateAdvertisement() {
           {/* Dates */}
           <View className="mt-6">
             <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">
-              Période *
+              {i18n.t("enterprise.advertisementsCreate.sections.period")}
             </Text>
             <View className="flex-row gap-3">
               <TouchableOpacity
@@ -576,10 +579,10 @@ export default function CreateAdvertisement() {
                 activeOpacity={0.7}
               >
                 <Text className="text-xs text-neutral-500 font-quicksand-medium mb-1">
-                  Début
+                  {i18n.t("enterprise.advertisementsCreate.labels.start")}
                 </Text>
                 <Text className="text-neutral-800 font-quicksand-semibold text-sm">
-                  {startDate.toLocaleString("fr-FR")}
+                  {startDate.toLocaleString(locale === "fr" ? "fr-FR" : "en-US")}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -594,10 +597,10 @@ export default function CreateAdvertisement() {
                 activeOpacity={0.7}
               >
                 <Text className="text-xs text-neutral-500 font-quicksand-medium mb-1">
-                  Fin
+                  {i18n.t("enterprise.advertisementsCreate.labels.end")}
                 </Text>
                 <Text className="text-neutral-800 font-quicksand-semibold text-sm">
-                  {endDate.toLocaleString("fr-FR")}
+                  {endDate.toLocaleString(locale === "fr" ? "fr-FR" : "en-US")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -728,8 +731,8 @@ export default function CreateAdvertisement() {
                     if (updated <= startDate) {
                       showNotification(
                         "info",
-                        "Attention",
-                        "La fin doit être après le début."
+                        i18n.t("enterprise.advertisementsCreate.warnings.endBeforeStartTitle"),
+                        i18n.t("enterprise.advertisementsCreate.warnings.endBeforeStart")
                       );
                       return;
                     }
@@ -744,7 +747,7 @@ export default function CreateAdvertisement() {
           {(title.trim() || images.length > 0) && (
             <View className="mt-8">
               <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">
-                Aperçu
+                {i18n.t("enterprise.advertisementsCreate.sections.preview")}
               </Text>
               <View className="bg-white rounded-2xl overflow-hidden border border-neutral-100 shadow-sm">
                 {images.length > 0 ? (
@@ -765,14 +768,14 @@ export default function CreateAdvertisement() {
                         className="text-white font-quicksand-bold text-lg"
                         numberOfLines={2}
                       >
-                        {title.trim() || "Titre de votre publicité"}
+                        {title.trim() || i18n.t("enterprise.advertisementsCreate.preview.defaultTitle")}
                       </Text>
                     </View>
                   </View>
                 ) : (
                   <View className="w-full h-32 bg-neutral-100 items-center justify-center">
                     <Text className="text-neutral-600 font-quicksand-medium">
-                      {title.trim() || "Votre titre apparaîtra ici"}
+                      {title.trim() || i18n.t("enterprise.advertisementsCreate.preview.defaultText")}
                     </Text>
                   </View>
                 )}
@@ -809,7 +812,7 @@ export default function CreateAdvertisement() {
                   !validate() ? "text-white" : "text-neutral-500"
                 }`}
               >
-                {submitting ? "Envoi..." : "Créer la publicité"}
+                {submitting ? i18n.t("enterprise.advertisementsCreate.buttons.submitting") : i18n.t("enterprise.advertisementsCreate.buttons.create")}
               </Text>
             </TouchableOpacity>
           </View>

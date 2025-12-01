@@ -16,6 +16,8 @@ import {
   View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import i18n from "../../../../i18n/i18n";
+import { useLocale } from "../../../../contexts/LocaleContext";
 import AdvertisementService, { Advertisement } from "../../../../services/api/AdvertisementService";
 
 
@@ -26,6 +28,7 @@ export default function AdvertisementDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { locale } = useLocale();
   const [advertisement, setAdvertisement] = useState<Advertisement | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -66,7 +69,11 @@ export default function AdvertisementDetails() {
     if (!advertisement) return;
 
     try {
-      const message = `Découvrez cette offre exceptionnelle : ${advertisement.title}\n\n${advertisement.description}\n\nValable jusqu'au ${formatDate(advertisement.endDate)}`;
+      const message = i18n.t('enterprise.advertisementDetails.share.message', {
+        title: advertisement.title,
+        description: advertisement.description,
+        date: formatDate(advertisement.endDate)
+      });
 
       await Share.share({
         message,
@@ -185,16 +192,16 @@ export default function AdvertisementDetails() {
         <View className="flex-1 justify-center items-center px-6">
           <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
           <Text className="text-lg font-quicksand-bold text-neutral-800 mt-4">
-            Publicité introuvable
+            {i18n.t('enterprise.advertisementDetails.notFound.title')}
           </Text>
           <Text className="text-neutral-600 font-quicksand-medium text-center mt-2">
-            Cette publicité n&apos;est plus disponible ou a expiré.
+            {i18n.t('enterprise.advertisementDetails.notFound.message')}
           </Text>
           <TouchableOpacity
             onPress={() => router.back()}
             className="mt-6 bg-primary-500 px-6 py-3 rounded-full"
           >
-            <Text className="text-white font-quicksand-bold">Retour</Text>
+            <Text className="text-white font-quicksand-bold">{i18n.t('enterprise.advertisementDetails.notFound.backButton')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -227,7 +234,7 @@ export default function AdvertisementDetails() {
           </TouchableOpacity>
 
           <Text className="text-lg font-quicksand-bold text-white flex-1 text-center">
-            Détails de l&apos;offre
+            {i18n.t('enterprise.advertisementDetails.header.title')}
           </Text>
 
           <TouchableOpacity
@@ -267,7 +274,7 @@ export default function AdvertisementDetails() {
               <View className="w-screen h-64 bg-neutral-100 items-center justify-center">
                 <Ionicons name="image-outline" size={64} color="#9CA3AF" />
                 <Text className="mt-2 text-neutral-500 font-quicksand-medium">
-                  Image non disponible
+                  {i18n.t('enterprise.advertisementDetails.imageUnavailable')}
                 </Text>
               </View>
             )}
@@ -333,7 +340,7 @@ export default function AdvertisementDetails() {
                 <Ionicons name="information-circle" size={20} color="#10B981" />
               </View>
               <Text className="text-lg font-quicksand-bold text-neutral-900">
-                Informations
+                {i18n.t('enterprise.advertisementDetails.info.title')}
               </Text>
             </View>
 
@@ -344,10 +351,10 @@ export default function AdvertisementDetails() {
                 </View>
                 <View className="flex-1">
                   <Text className="text-xs font-quicksand-medium text-neutral-500 mb-1">
-                    Validité
+                    {i18n.t('enterprise.advertisementDetails.info.validity')}
                   </Text>
                   <Text className="text-sm font-quicksand-semibold text-neutral-800" numberOfLines={1}>
-                    Jusqu&apos;au {formatDate(advertisement.endDate)}
+                    {i18n.t('enterprise.advertisementDetails.info.validUntil', { date: formatDate(advertisement.endDate) })}
                   </Text>
                 </View>
               </View>
@@ -358,10 +365,10 @@ export default function AdvertisementDetails() {
                 </View>
                 <View className="flex-1">
                   <Text className="text-xs font-quicksand-medium text-neutral-500 mb-1">
-                    Vues
+                    {i18n.t('enterprise.advertisementDetails.info.views')}
                   </Text>
                   <Text className="text-sm font-quicksand-semibold text-neutral-800" numberOfLines={1}>
-                    {new Intl.NumberFormat('fr-FR').format(advertisement.views || 0)} personnes
+                    {i18n.t('enterprise.advertisementDetails.info.viewsCount', { count: new Intl.NumberFormat('fr-FR').format(advertisement.views || 0) })}
                   </Text>
                 </View>
               </View>
@@ -380,7 +387,7 @@ export default function AdvertisementDetails() {
                 <Ionicons name="chatbubble-outline" size={16} color="white" />
               </View>
               <Text className="text-white font-quicksand-bold text-base">
-                Contacter l&apos;entreprise
+                {i18n.t('enterprise.advertisementDetails.actions.contact')}
               </Text>
             </TouchableOpacity>
 
@@ -393,7 +400,7 @@ export default function AdvertisementDetails() {
                 <Ionicons name="share-outline" size={16} color="#10B981" />
               </View>
               <Text className="text-primary-600 font-quicksand-bold text-base">
-                Partager l&apos;offre
+                {i18n.t('enterprise.advertisementDetails.actions.share')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -406,10 +413,10 @@ export default function AdvertisementDetails() {
               </View>
               <View className="flex-1 pr-1">
                 <Text className="text-amber-900 font-quicksand-bold text-base mb-2">
-                  Offre à durée limitée
+                  {i18n.t('enterprise.advertisementDetails.limitedOffer.title')}
                 </Text>
                 <Text className="text-amber-800 font-quicksand-medium text-sm leading-6">
-                  Cette offre est valable pour une durée limitée. Profitez-en rapidement en contactant l&apos;entreprise.
+                  {i18n.t('enterprise.advertisementDetails.limitedOffer.message')}
                 </Text>
               </View>
             </View>
@@ -448,12 +455,12 @@ export default function AdvertisementDetails() {
 
             {/* Titre */}
             <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
-              Erreur
+              {i18n.t('enterprise.advertisementDetails.errorModal.title')}
             </Text>
 
             {/* Message */}
             <Text className="text-base font-quicksand-medium text-neutral-600 text-center mb-6">
-              Impossible de charger les détails de la publicité
+              {i18n.t('enterprise.advertisementDetails.errorModal.message')}
             </Text>
 
             {/* Bouton OK */}
@@ -466,7 +473,7 @@ export default function AdvertisementDetails() {
               activeOpacity={0.7}
             >
               <Text className="text-white font-quicksand-bold text-center">
-                OK
+                {i18n.t('enterprise.advertisementDetails.errorModal.ok')}
               </Text>
             </TouchableOpacity>
           </TouchableOpacity>

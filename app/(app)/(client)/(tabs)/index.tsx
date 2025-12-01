@@ -33,6 +33,8 @@ import ProductService from "../../../../services/api/ProductService";
 import SearchService from "../../../../services/api/SearchService";
 import SearchCacheService, { RecentSearch } from "../../../../services/SearchCacheService";
 import { Category, Product } from "../../../../types/product";
+import i18n from "../../../../i18n/i18n";
+import { useLocale } from "../../../../contexts/LocaleContext";
 
 // Polyfill Buffer pour React Native (utilisé par le cache)
 import { Buffer } from "buffer";
@@ -82,21 +84,22 @@ const neighborhoodsByCity: { [key: string]: string[] } = {
 
 // Données fictives
 const categories = [
-    { id: 1, name: "Tendances", icon: "flame", color: "#FF6B35" },
-    { id: 2, name: "Véhicules", icon: "car-sport", color: "#3B82F6" },
-    { id: 3, name: "Immobilier", icon: "home", color: "#8B5CF6" },
-    { id: 4, name: "Téléphones", icon: "phone-portrait", color: "#EC4899" },
-    { id: 5, name: "Électronique", icon: "laptop", color: "#10B981" },
-    { id: 6, name: "Meubles", icon: "bed", color: "#6366F1" },
-    { id: 7, name: "Mode", icon: "shirt", color: "#EF4444" },
-    { id: 8, name: "Services", icon: "construct", color: "#F59E0B" },
-    { id: 9, name: "Emplois", icon: "briefcase", color: "#0EA5E9" },
+    { id: 1, name: i18n.t('client.home.categories.trends'), icon: "flame", color: "#FF6B35" },
+    { id: 2, name: i18n.t('client.home.categories.vehicles'), icon: "car-sport", color: "#3B82F6" },
+    { id: 3, name: i18n.t('client.home.categories.realEstate'), icon: "home", color: "#8B5CF6" },
+    { id: 4, name: i18n.t('client.home.categories.phones'), icon: "phone-portrait", color: "#EC4899" },
+    { id: 5, name: i18n.t('client.home.categories.electronics'), icon: "laptop", color: "#10B981" },
+    { id: 6, name: i18n.t('client.home.categories.furniture'), icon: "bed", color: "#6366F1" },
+    { id: 7, name: i18n.t('client.home.categories.fashion'), icon: "shirt", color: "#EF4444" },
+    { id: 8, name: i18n.t('client.home.categories.services'), icon: "construct", color: "#F59E0B" },
+    { id: 9, name: i18n.t('client.home.categories.jobs'), icon: "briefcase", color: "#0EA5E9" },
 ];
 
 // popularStores retiré (non utilisé)
 
 export default function ClientHome() {
     const { user } = useAuth();
+    const { locale } = useLocale();
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const FIXED_HEADER_HEIGHT = 120 + insets.top;
@@ -512,11 +515,11 @@ export default function ClientHome() {
     const greetUser = () => {
         const hours = new Date().getHours();
         if (hours < 12) {
-            return "Bonjour";
+            return i18n.t('client.home.greetings.morning');
         } else if (hours < 18) {
-            return "Bon après-midi";
+            return i18n.t('client.home.greetings.afternoon');
         } else {
-            return "Bonsoir";
+            return i18n.t('client.home.greetings.evening');
         }
     };
 
@@ -821,12 +824,12 @@ export default function ClientHome() {
                 <View className="absolute top-2 left-2 flex-row flex-wrap gap-1">
                     {item.stats && item.stats.totalSales > 10 && (
                         <View className="bg-emerald-500/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-sm">
-                            <Text className="text-white text-[10px] font-quicksand-bold">Top</Text>
+                            <Text className="text-white text-[10px] font-quicksand-bold">{i18n.t('client.home.badges.top')}</Text>
                         </View>
                     )}
                     {(item as any).promotion && (
                         <View className="bg-red-500/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-sm">
-                            <Text className="text-white text-[10px] font-quicksand-bold">Promo</Text>
+                            <Text className="text-white text-[10px] font-quicksand-bold">{i18n.t('client.home.badges.promo')}</Text>
                         </View>
                     )}
                 </View>
@@ -912,7 +915,7 @@ export default function ClientHome() {
                         <Ionicons name="search" size={22} color="#10B981" />
                         <TextInput
                             className="flex-1 ml-3 text-neutral-800 font-quicksand-semibold text-base"
-                            placeholder="Que recherchez-vous ?"
+                            placeholder={i18n.t('client.home.search.placeholder')}
                             placeholderTextColor="#9CA3AF"
                             value={searchQuery}
                             onChangeText={handleSearchChange}
@@ -946,7 +949,7 @@ export default function ClientHome() {
                         >
                             <Ionicons name="map" size={14} color="#4B5563" />
                             <Text numberOfLines={1} className="ml-1.5 text-xs font-quicksand-bold text-gray-700">
-                                {selectedNeighborhood || "Quartier"}
+                                {selectedNeighborhood || i18n.t('client.home.location.neighborhood')}
                             </Text>
                         </TouchableOpacity>
                     </View>
@@ -974,7 +977,7 @@ export default function ClientHome() {
                 {item.stats.totalSales > 10 && (
                     <View className="absolute top-1 left-1 bg-success-500 rounded-full px-2 py-0.5">
                         <Text className="text-white text-[10px] font-quicksand-bold">
-                            Populaire
+                            {i18n.t('client.home.badges.popular')}
                         </Text>
                     </View>
                 )}
@@ -1107,11 +1110,11 @@ export default function ClientHome() {
                                     <View>
                                         <View className="flex-row items-center justify-between px-4 py-2 bg-gray-50">
                                             <Text className="text-xs font-quicksand-semibold text-neutral-600 uppercase">
-                                                Recherches récentes
+                                                {i18n.t('client.home.search.recentSearches')}
                                             </Text>
                                             <TouchableOpacity onPress={clearSearchHistory}>
                                                 <Text className="text-xs font-quicksand-medium text-primary-500">
-                                                    Effacer
+                                                    {i18n.t('client.home.search.clearHistory')}
                                                 </Text>
                                             </TouchableOpacity>
                                         </View>
@@ -1130,7 +1133,7 @@ export default function ClientHome() {
                                                         {recentSearch.query}
                                                     </Text>
                                                     <Text className="text-xs text-neutral-400 font-quicksand-medium mr-2">
-                                                        {recentSearch.resultCount} résultat{recentSearch.resultCount > 1 ? 's' : ''}
+                                                        {i18n.t('client.home.searchResults.resultsCount', { count: recentSearch.resultCount })}
                                                     </Text>
                                                 </View>
                                                 <TouchableOpacity
@@ -1152,7 +1155,7 @@ export default function ClientHome() {
                                     <View className="border-t border-gray-100 rounded-b-2xl overflow-hidden">
                                         <View className="px-4 py-3 bg-gradient-to-r from-primary-50 to-primary-100">
                                             <Text className="text-xs font-quicksand-bold text-primary-700 uppercase tracking-wide">
-                                                Suggestions
+                                                {i18n.t('client.home.search.suggestions')}
                                             </Text>
                                         </View>
                                         {searchSuggestions.map((suggestion, index) => {
@@ -1196,8 +1199,7 @@ export default function ClientHome() {
                                                     </View>
                                                     <View className="px-2 py-1 rounded-full bg-gray-100">
                                                         <Text className="text-xs font-quicksand-semibold uppercase" style={{ color: getTypeColor(suggestion.type) }}>
-                                                            {suggestion.type === 'product' ? 'Produit' :
-                                                                suggestion.type === 'category' ? 'Catégorie' : 'Entreprise'}
+                                                            {i18n.t(`client.home.search.types.${suggestion.type}`)}
                                                         </Text>
                                                     </View>
                                                 </TouchableOpacity>
@@ -1240,7 +1242,7 @@ export default function ClientHome() {
                                 {/* En-tête résultats + toggle vue */}
                                 <View className="flex-row items-center justify-between">
                                     <Text className="text-lg font-quicksand-bold text-neutral-800 flex-1">
-                                        Résultats pour &quot;{searchQuery}&quot;
+                                        {i18n.t('client.home.searchResults.title', { query: searchQuery })}
                                     </Text>
                                     <View className="flex-row items-center">
                                         <View className="flex-row items-center bg-neutral-100 rounded-full p-1 mr-2">
@@ -1270,16 +1272,16 @@ export default function ClientHome() {
                                 {searchInfo && (
                                     <View className="flex-row items-center mt-1">
                                         <Text className="text-xs text-neutral-400 font-quicksand-medium">
-                                            {searchInfo.totalResults || searchResults.length} résultat{searchInfo.totalResults > 1 ? 's' : ''}
+                                            {i18n.t('client.home.searchResults.resultsCount', { count: searchInfo.totalResults || searchResults.length })}
                                         </Text>
                                         {searchInfo.searchTime && (
                                             <Text className="text-xs text-neutral-400 font-quicksand-medium ml-2">
-                                                • {searchInfo.searchTime}ms
+                                                • {i18n.t('client.home.searchResults.searchTime', { time: searchInfo.searchTime })}
                                             </Text>
                                         )}
                                         {searchInfo.fromCache && (
                                             <Text className="text-xs text-green-600 font-quicksand-medium ml-2">
-                                                • En cache
+                                                • {i18n.t('client.home.searchResults.fromCache')}
                                             </Text>
                                         )}
                                     </View>
@@ -1319,7 +1321,7 @@ export default function ClientHome() {
                                         style={{ backgroundColor: selectedSort === 'relevance' ? '#FFF1E6' : '#F3F4F6', borderColor: selectedSort === 'relevance' ? '#FED7AA' : '#E5E7EB' }}
                                     >
                                         <Text className={`text-xs font-quicksand-semibold ${selectedSort === 'relevance' ? 'text-primary-600' : 'text-neutral-700'}`}>
-                                            Pertinence
+                                            {i18n.t('client.home.searchResults.relevance')}
                                         </Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
@@ -1328,7 +1330,7 @@ export default function ClientHome() {
                                         style={{ backgroundColor: selectedSort === 'priceLow' ? '#FFF1E6' : '#F3F4F6', borderColor: selectedSort === 'priceLow' ? '#FED7AA' : '#E5E7EB' }}
                                     >
                                         <Text className={`text-xs font-quicksand-semibold ${selectedSort === 'priceLow' ? 'text-primary-600' : 'text-neutral-700'}`}>
-                                            Moins cher
+                                            {i18n.t('client.home.searchResults.priceLowToHigh')}
                                         </Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
@@ -1337,7 +1339,7 @@ export default function ClientHome() {
                                         style={{ backgroundColor: selectedSort === 'priceHigh' ? '#FFF1E6' : '#F3F4F6', borderColor: selectedSort === 'priceHigh' ? '#FED7AA' : '#E5E7EB' }}
                                     >
                                         <Text className={`text-xs font-quicksand-semibold ${selectedSort === 'priceHigh' ? 'text-primary-600' : 'text-neutral-700'}`}>
-                                            Plus cher
+                                            {i18n.t('client.home.searchResults.priceHighToLow')}
                                         </Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
@@ -1346,7 +1348,7 @@ export default function ClientHome() {
                                         style={{ backgroundColor: selectedSort === 'newest' ? '#FFF1E6' : '#F3F4F6', borderColor: selectedSort === 'newest' ? '#FED7AA' : '#E5E7EB' }}
                                     >
                                         <Text className={`text-xs font-quicksand-semibold ${selectedSort === 'newest' ? 'text-primary-600' : 'text-neutral-700'}`}>
-                                            Nouveaux
+                                            {i18n.t('client.home.searchResults.newest')}
                                         </Text>
                                     </TouchableOpacity>
                                 </ScrollView>
@@ -1380,7 +1382,7 @@ export default function ClientHome() {
                                     <View className="items-center justify-center py-8">
                                         <Ionicons name="search-outline" size={36} color="#9CA3AF" />
                                         <Text className="mt-2 text-neutral-600 font-quicksand-medium">
-                                            Aucun produit trouvé
+                                            {i18n.t('client.home.empty.noProductsFound')}
                                         </Text>
                                         <TouchableOpacity
                                             onPress={() => setCityModalVisible(true)}
@@ -1388,7 +1390,7 @@ export default function ClientHome() {
                                             style={{ borderColor: '#FED7AA' }}
                                         >
                                             <Text className="text-primary-600 font-quicksand-semibold">
-                                                Ajuster les filtres
+                                                {i18n.t('client.home.empty.adjustFilters')}
                                             </Text>
                                         </TouchableOpacity>
                                     </View>
@@ -1441,10 +1443,10 @@ export default function ClientHome() {
                                         <Ionicons name="megaphone-outline" size={32} color="#9CA3AF" />
                                     </View>
                                     <Text className="text-base font-quicksand-bold text-neutral-800 text-center mb-2">
-                                        Aucune publicité disponible
+                                        {i18n.t('client.home.ads.noAds')}
                                     </Text>
                                     <Text className="text-sm font-quicksand text-neutral-600 text-center">
-                                        Revenez bientôt pour découvrir nos dernières offres
+                                        {i18n.t('client.home.ads.comeBackSoon')}
                                     </Text>
                                 </View>
                             )}
@@ -1455,14 +1457,14 @@ export default function ClientHome() {
                             <View className="px-6 mb-4 flex-row justify-between items-end">
                                 <View>
                                     <Text className="text-xl font-quicksand-bold text-neutral-800">
-                                        Catégories
+                                        {i18n.t('client.home.categories.title')}
                                     </Text>
                                     <Text className="text-xs font-quicksand text-neutral-500">
-                                        Explorez par thématique
+                                        {i18n.t('client.home.categories.subtitle')}
                                     </Text>
                                 </View>
                                 <TouchableOpacity onPress={() => navigateTo('/(app)/(client)/categories')}>
-                                    <Text className="text-emerald-600 font-quicksand-bold text-sm">Voir tout</Text>
+                                    <Text className="text-emerald-600 font-quicksand-bold text-sm">{i18n.t('client.home.featuredProducts.viewAll')}</Text>
                                 </TouchableOpacity>
                             </View>
 
@@ -1527,14 +1529,14 @@ export default function ClientHome() {
                             <View className="px-6 mb-4 flex-row justify-between items-end">
                                 <View>
                                     <Text className="text-xl font-quicksand-bold text-neutral-800">
-                                        Boutiques à la une
+                                        {i18n.t('client.home.featuredStores.title')}
                                     </Text>
                                     <Text className="text-xs font-quicksand text-neutral-500">
-                                        Les meilleurs vendeurs du moment
+                                        {i18n.t('client.home.featuredStores.subtitle')}
                                     </Text>
                                 </View>
                                 <TouchableOpacity onPress={() => navigateTo('/(app)/(client)/stores')}>
-                                    <Text className="text-emerald-600 font-quicksand-bold text-sm">Voir tout</Text>
+                                    <Text className="text-emerald-600 font-quicksand-bold text-sm">{i18n.t('client.home.featuredStores.viewAll')}</Text>
                                 </TouchableOpacity>
                             </View>
 
@@ -1578,14 +1580,14 @@ export default function ClientHome() {
                         <View className="py-4 px-4">
                             <View className="mb-4 flex-row justify-between items-center">
                                 <Text className="text-base font-quicksand-bold text-neutral-800">
-                                    Produits populaires
+                                    {i18n.t('client.home.featuredProducts.title')}
                                 </Text>
                                 <TouchableOpacity
                                     onPress={() => navigateTo('/(app)/(client)/marketplace')}
                                     className="px-3 py-1.5 rounded-full border border-primary-200 bg-white/60"
                                 >
                                     <Text className="text-primary-500 text-sm font-quicksand-semibold">
-                                        Voir tout
+                                        {i18n.t('client.home.featuredProducts.viewAll')}
                                     </Text>
                                 </TouchableOpacity>
                             </View>
@@ -1593,7 +1595,7 @@ export default function ClientHome() {
                                 <View className="flex-1 justify-center items-center py-8">
                                     <ActivityIndicator size="large" color="#10B981" />
                                     <Text className="mt-2 text-neutral-600 font-quicksand-medium">
-                                        Chargement des produits...
+                                        {i18n.t('client.home.featuredProducts.loading')}
                                     </Text>
                                 </View>
                             ) : featuredProducts.length > 0 ? (
@@ -1603,7 +1605,7 @@ export default function ClientHome() {
                             ) : (
                                 <View className="flex-1 justify-center items-center py-8">
                                     <Text className="text-neutral-600 font-quicksand-medium">
-                                        Aucun produit disponible
+                                        {i18n.t('client.home.featuredProducts.noProducts')}
                                     </Text>
                                 </View>
                             )}
@@ -1622,7 +1624,7 @@ export default function ClientHome() {
                             <View className="bg-white rounded-t-3xl pb-10 pt-4 px-4">
                                 <View className="flex-row justify-between items-center mb-6">
                                     <Text className="text-lg font-quicksand-bold text-neutral-800">
-                                        Choisir une ville
+                                        {i18n.t('client.home.modals.city.title')}
                                     </Text>
                                     <TouchableOpacity onPress={() => setCityModalVisible(false)}>
                                         <Ionicons name="close" size={24} color="#374151" />
@@ -1661,7 +1663,7 @@ export default function ClientHome() {
                             <View className="bg-white rounded-t-3xl pb-10 pt-4 px-4">
                                 <View className="flex-row justify-between items-center mb-6">
                                     <Text className="text-lg font-quicksand-bold text-neutral-800">
-                                        Choisir un quartier à {selectedCity}
+                                        {i18n.t('client.home.modals.neighborhood.title', { city: selectedCity })}
                                     </Text>
                                     <TouchableOpacity onPress={() => setNeighborhoodModalVisible(false)}>
                                         <Ionicons name="close" size={24} color="#374151" />

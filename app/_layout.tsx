@@ -1,4 +1,5 @@
 import { LocaleProvider } from "@/contexts/LocaleContext";
+import { PreferencesSync } from "@/contexts/PreferencesSync";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
@@ -41,16 +42,18 @@ export default function RootLayout() {
     <LocaleProvider>
       <ThemeProvider>
         <AuthProvider>
-          <SocketProvider>
-            <ReanimatedToastProvider>
-              <Stack>
-                <Stack.Screen name="index" options={{ headerShown: false }} />
-                <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen name="(app)" options={{ headerShown: false }} />
-              </Stack>
-            </ReanimatedToastProvider>
-          </SocketProvider>
+          <PreferencesSync>
+            <SocketProvider>
+              <ReanimatedToastProvider>
+                <Stack>
+                  <Stack.Screen name="index" options={{ headerShown: false }} />
+                  <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+                  <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                  <Stack.Screen name="(app)" options={{ headerShown: false }} />
+                </Stack>
+              </ReanimatedToastProvider>
+            </SocketProvider>
+          </PreferencesSync>
         </AuthProvider>
       </ThemeProvider>
     </LocaleProvider>

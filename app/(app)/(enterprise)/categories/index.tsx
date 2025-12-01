@@ -11,11 +11,14 @@ import {
     View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useLocale } from '../../../../contexts/LocaleContext';
+import i18n from '../../../../i18n/i18n';
 import CategoryService from '../../../../services/api/CategoryService';
 
 export default function AllCategoriesPage() {
     const insets = useSafeAreaInsets();
     const router = useRouter();
+    const { locale } = useLocale();
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -74,11 +77,11 @@ export default function AllCategoriesPage() {
                     </TouchableOpacity>
                     <View className="flex-1">
                         <Text className="text-white text-xl font-quicksand-bold">
-                            Toutes les catégories
+                            {i18n.t("enterprise.categories.title")}
                         </Text>
                         {!loading && (
                             <Text className="text-white/80 text-xs font-quicksand-medium mt-1">
-                                {categories.length} catégorie{categories.length > 1 ? 's' : ''} disponible{categories.length > 1 ? 's' : ''}
+                                {categories.length} {categories.length > 1 ? i18n.t("enterprise.categories.count.plural") : i18n.t("enterprise.categories.count.singular")} {categories.length > 1 ? i18n.t("enterprise.categories.count.availables") : i18n.t("enterprise.categories.count.available")}
                             </Text>
                         )}
                     </View>
@@ -94,7 +97,7 @@ export default function AllCategoriesPage() {
                 <View className="flex-1 items-center justify-center px-6">
                     <Ionicons name="file-tray-outline" size={64} color="#D1D5DB" />
                     <Text className="text-neutral-600 text-lg font-quicksand-bold mt-4">
-                        Aucune catégorie disponible
+                        {i18n.t("enterprise.categories.empty.title")}
                     </Text>
                 </View>
             ) : (
@@ -151,7 +154,7 @@ export default function AllCategoriesPage() {
                                     )}
                                     {category.productCount !== undefined && (
                                         <Text className="text-neutral-400 text-xs font-quicksand-medium mt-1">
-                                            {category.productCount} produit{category.productCount > 1 ? 's' : ''}
+                                            {category.productCount} {category.productCount > 1 ? i18n.t("enterprise.categories.products.plural") : i18n.t("enterprise.categories.products.singular")}
                                         </Text>
                                     )}
                                 </View>

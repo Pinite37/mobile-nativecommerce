@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ImagePickerModal from "../../../../components/ui/ImagePickerModal";
 import { useToast } from "../../../../components/ui/ToastManager";
 import { useAuth } from "../../../../contexts/AuthContext";
+import i18n from "../../../../i18n/i18n";
 import CustomerService, { UpdateProfileRequest } from "../../../../services/api/CustomerService";
 
 export default function ProfileDetailsScreen() {
@@ -68,7 +69,7 @@ export default function ProfileDetailsScreen() {
       // Le rafraîchissement du contexte est géré par l'API refreshUserData
       await refreshUserData();
     } catch (error) {
-      toast.showError("Erreur", "Impossible de charger les informations du profil");
+      toast.showError(i18n.t("client.details.errors.load"));
       console.error("Erreur lors du chargement du profil:", error);
     } finally {
       setLoading(false);
@@ -99,12 +100,12 @@ export default function ProfileDetailsScreen() {
       await refreshUserData();
       
       // Afficher un toast de succès
-      toast.showSuccess("Profil mis à jour", "Vos informations ont été enregistrées avec succès");
+      toast.showSuccess(i18n.t("client.details.success.update"), i18n.t("client.details.success.updateMessage"));
       
       // Retourner à la page précédente
       router.back();
     } catch (error) {
-      toast.showError("Erreur", "Impossible de mettre à jour votre profil");
+      toast.showError(i18n.t("client.details.errors.update"));
       console.error("Erreur lors de la mise à jour du profil:", error);
     } finally {
       setSaving(false);
@@ -206,7 +207,7 @@ export default function ProfileDetailsScreen() {
             </TouchableOpacity>
             <View className="flex-1 mx-4">
               <Text className="text-lg font-quicksand-bold text-white text-center">
-                Mes informations
+                {i18n.t("client.details.title")}
               </Text>
             </View>
             <View className="w-10 h-10">
@@ -259,52 +260,52 @@ export default function ProfileDetailsScreen() {
               </View>
             </TouchableOpacity>
             <Text className="text-center font-quicksand-semibold text-primary-500">
-              Modifier ma photo
+              {i18n.t("client.details.photo.change")}
             </Text>
           </View>
 
           {/* Informations personnelles */}
           <View className="bg-white rounded-2xl mt-6 p-4">
             <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4">
-              Informations personnelles
+              {i18n.t("client.details.sections.personal")}
             </Text>
             
             {/* Prénom */}
             <View className="mb-4">
               <Text className="text-sm font-quicksand-medium text-neutral-600 mb-2">
-                Prénom
+                {i18n.t("client.details.fields.firstName")}
               </Text>
               <TextInput
                 value={profile.firstName}
                 onChangeText={(text) => handleChange("firstName", text)}
                 className="border border-gray-200 rounded-xl p-3 font-quicksand"
-                placeholder="Votre prénom"
+                placeholder={i18n.t("client.details.placeholders.firstName")}
               />
             </View>
 
             {/* Nom */}
             <View className="mb-4">
               <Text className="text-sm font-quicksand-medium text-neutral-600 mb-2">
-                Nom
+                {i18n.t("client.details.fields.lastName")}
               </Text>
               <TextInput
                 value={profile.lastName}
                 onChangeText={(text) => handleChange("lastName", text)}
                 className="border border-gray-200 rounded-xl p-3 font-quicksand"
-                placeholder="Votre nom"
+                placeholder={i18n.t("client.details.placeholders.lastName")}
               />
             </View>
 
             {/* Email */}
             <View className="mb-4">
               <Text className="text-sm font-quicksand-medium text-neutral-600 mb-2">
-                Email
+                {i18n.t("client.details.fields.email")}
               </Text>
               <TextInput
                 value={profile.email}
                 onChangeText={(text) => handleChange("email", text)}
                 className="border border-gray-200 rounded-xl p-3 font-quicksand"
-                placeholder="Votre email"
+                placeholder={i18n.t("client.details.placeholders.email")}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
@@ -313,13 +314,13 @@ export default function ProfileDetailsScreen() {
             {/* Téléphone */}
             <View className="mb-4">
               <Text className="text-sm font-quicksand-medium text-neutral-600 mb-2">
-                Téléphone
+                {i18n.t("client.details.fields.phone")}
               </Text>
               <TextInput
                 value={profile.phone}
                 onChangeText={(text) => handleChange("phone", text)}
                 className="border border-gray-200 rounded-xl p-3 font-quicksand"
-                placeholder="Votre numéro de téléphone"
+                placeholder={i18n.t("client.details.placeholders.phone")}
                 keyboardType="phone-pad"
               />
             </View>
@@ -328,7 +329,7 @@ export default function ProfileDetailsScreen() {
           {/* Sécurité */}
           <View className="bg-white rounded-2xl mt-6 p-4">
             <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4">
-              Sécurité
+              {i18n.t("client.details.sections.security")}
             </Text>
             
             <TouchableOpacity
@@ -337,7 +338,7 @@ export default function ProfileDetailsScreen() {
               <View className="flex-row items-center">
                 <Ionicons name="lock-closed-outline" size={20} color="#374151" />
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Modifier le mot de passe
+                  {i18n.t("client.details.security.changePassword")}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
@@ -349,7 +350,7 @@ export default function ProfileDetailsScreen() {
               <View className="flex-row items-center">
                 <Ionicons name="finger-print-outline" size={20} color="#374151" />
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Authentification biométrique
+                  {i18n.t("client.details.security.biometric")}
                 </Text>
               </View>
               <View className="w-12 h-6 bg-primary rounded-full px-1 justify-center">
@@ -363,7 +364,7 @@ export default function ProfileDetailsScreen() {
               <View className="flex-row items-center">
                 <Ionicons name="notifications-outline" size={20} color="#374151" />
                 <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
-                  Notifications de connexion
+                  {i18n.t("client.details.security.loginNotifications")}
                 </Text>
               </View>
               <View className="w-12 h-6 bg-gray-200 rounded-full px-1 justify-center">
@@ -383,7 +384,7 @@ export default function ProfileDetailsScreen() {
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
                 <Text className="text-white text-center font-quicksand-bold text-base">
-                  Enregistrer les modifications
+                  {i18n.t("client.details.actions.save")}
                 </Text>
               )}
             </TouchableOpacity>

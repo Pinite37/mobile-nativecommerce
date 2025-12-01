@@ -26,6 +26,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import NotificationModal, {
   useNotification,
 } from "../../../../components/ui/NotificationModal";
+import { useLocale } from "../../../../contexts/LocaleContext";
+import i18n from "../../../../i18n/i18n";
 import AdvertisementService, {
   Advertisement,
 } from "../../../../services/api/AdvertisementService";
@@ -119,6 +121,7 @@ const SkeletonCard: React.FC = () => (
 
 export default function EnterpriseAdvertisements() {
   const insets = useSafeAreaInsets();
+  const { locale } = useLocale();
   const { notification, showNotification, hideNotification } =
     useNotification();
   const [ads, setAds] = useState<UIAd[]>([]);
@@ -155,8 +158,8 @@ export default function EnterpriseAdvertisements() {
       } catch (e: any) {
         showNotification(
           "error",
-          "Erreur de chargement",
-          e?.message || "Impossible de charger les publicités."
+          i18n.t("enterprise.advertisements.errors.loading"),
+          e?.message || i18n.t("enterprise.advertisements.errors.loadingMessage")
         );
       } finally {
         setInitialLoading(false);
@@ -234,7 +237,7 @@ export default function EnterpriseAdvertisements() {
           break;
       }
     } catch (err: any) {
-      showNotification("error", "Erreur", err?.message || `Échec de l'action`);
+      showNotification("error", i18n.t("enterprise.advertisements.errors.action"), err?.message || i18n.t("enterprise.advertisements.errors.actionMessage"));
     }
   };
 
@@ -263,24 +266,21 @@ export default function EnterpriseAdvertisements() {
 
     switch (type) {
       case "pause":
-        title = "Couper la publicité";
-        message =
-          "La publicité ne sera plus affichée chez les clients mais pourra être réactivée plus tard.";
-        confirmText = "Couper";
+        title = i18n.t("enterprise.advertisements.confirmations.pause.title");
+        message = i18n.t("enterprise.advertisements.confirmations.pause.message");
+        confirmText = i18n.t("enterprise.advertisements.confirmations.pause.confirm");
         confirmColor = "#F59E0B";
         break;
       case "delete":
-        title = "Supprimer la publicité";
-        message =
-          "Cette action est irréversible. La publicité sera définitivement supprimée.";
-        confirmText = "Supprimer";
+        title = i18n.t("enterprise.advertisements.confirmations.delete.title");
+        message = i18n.t("enterprise.advertisements.confirmations.delete.message");
+        confirmText = i18n.t("enterprise.advertisements.confirmations.delete.confirm");
         confirmColor = "#EF4444";
         break;
       case "activate":
-        title = "Réactiver la publicité";
-        message =
-          "La publicité sera remise en ligne et visible par les clients.";
-        confirmText = "Réactiver";
+        title = i18n.t("enterprise.advertisements.confirmations.activate.title");
+        message = i18n.t("enterprise.advertisements.confirmations.activate.message");
+        confirmText = i18n.t("enterprise.advertisements.confirmations.activate.confirm");
         confirmColor = "#10B981";
         break;
     }
@@ -314,7 +314,7 @@ export default function EnterpriseAdvertisements() {
         className="bg-white rounded-3xl overflow-hidden mb-5 border border-neutral-100 shadow-sm"
         activeOpacity={0.9}
         accessibilityRole="button"
-        accessibilityLabel={`Ouvrir la publicité ${item.title}`}
+        accessibilityLabel={`${i18n.t("enterprise.advertisements.card.open")} ${item.title}`}
       >
         {item.preview ? (
           <View className="relative">
@@ -372,8 +372,8 @@ export default function EnterpriseAdvertisements() {
               style={{ marginRight: 6 }}
             />
             <Text className="text-xs font-quicksand-medium text-neutral-500">
-              Créée le{" "}
-              {new Date(item.createdAt).toLocaleDateString("fr-FR", {
+              {i18n.t("enterprise.advertisements.card.created")}{" "}
+              {new Date(item.createdAt).toLocaleDateString(locale === "fr" ? "fr-FR" : "en-US", {
                 day: "numeric",
                 month: "long",
                 year: "numeric",
@@ -408,7 +408,7 @@ export default function EnterpriseAdvertisements() {
             <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
           </TouchableOpacity>
           <Text className="text-xl font-quicksand-bold text-white">
-            Publicités
+            {i18n.t("enterprise.advertisements.title")}
           </Text>
           <View className="w-10 h-10" />
         </View>
@@ -421,7 +421,7 @@ export default function EnterpriseAdvertisements() {
           >
             <Ionicons name="add" size={22} color="#059669" />
             <Text className="text-emerald-700 font-quicksand-bold ml-2 text-sm">
-              Nouvelle publicité
+              {i18n.t("enterprise.advertisements.create")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -434,7 +434,7 @@ export default function EnterpriseAdvertisements() {
             <TextInput
               value={searchQuery}
               onChangeText={setSearchQuery}
-              placeholder="Rechercher une publicité..."
+              placeholder={i18n.t("enterprise.advertisements.search.placeholder")}
               style={{ fontFamily: "Quicksand-Medium" }}
               className="bg-white rounded-2xl pl-12 pr-10 py-3.5 text-neutral-800 text-sm shadow-sm"
               placeholderTextColor="#9CA3AF"
@@ -458,7 +458,7 @@ export default function EnterpriseAdvertisements() {
         {initialLoading ? (
           <View
             className="-mt-2"
-            accessibilityLabel="Chargement des publicités"
+            accessibilityLabel={i18n.t("enterprise.advertisements.search.loading")}
           >
             {Array.from({ length: 5 }).map((_, i) => (
               <SkeletonCard key={i} />
@@ -488,14 +488,14 @@ export default function EnterpriseAdvertisements() {
             ListHeaderComponent={
               <View className="mb-6">
                 <Text className="text-neutral-400 font-quicksand-bold text-xs uppercase tracking-wider mb-3">
-                  Résumé
+                  {i18n.t("enterprise.advertisements.summary.title")}
                 </Text>
                 <View className="flex-row gap-3">
                   <View className="flex-1 bg-white rounded-2xl p-4 border border-neutral-100 shadow-sm">
                     <View className="flex-row items-center mb-2">
                       <View className="w-2 h-2 rounded-full bg-emerald-500 mr-2" />
                       <Text className="text-xs text-neutral-500 font-quicksand-bold">
-                        Actives
+                        {i18n.t("enterprise.advertisements.summary.active")}
                       </Text>
                     </View>
                     <Text className="text-2xl font-quicksand-bold text-neutral-800">
@@ -506,7 +506,7 @@ export default function EnterpriseAdvertisements() {
                     <View className="flex-row items-center mb-2">
                       <View className="w-2 h-2 rounded-full bg-amber-500 mr-2" />
                       <Text className="text-xs text-neutral-500 font-quicksand-bold">
-                        Coupées
+                        {i18n.t("enterprise.advertisements.summary.paused")}
                       </Text>
                     </View>
                     <Text className="text-2xl font-quicksand-bold text-neutral-800">
@@ -517,7 +517,7 @@ export default function EnterpriseAdvertisements() {
                     <View className="flex-row items-center mb-2">
                       <View className="w-2 h-2 rounded-full bg-neutral-400 mr-2" />
                       <Text className="text-xs text-neutral-500 font-quicksand-bold">
-                        Expirées
+                        {i18n.t("enterprise.advertisements.summary.expired")}
                       </Text>
                     </View>
                     <Text className="text-2xl font-quicksand-bold text-neutral-800">
@@ -528,14 +528,14 @@ export default function EnterpriseAdvertisements() {
 
                 <View className="mt-6">
                   <Text className="text-neutral-400 font-quicksand-bold text-xs uppercase tracking-wider mb-3">
-                    Filtrer par statut
+                    {i18n.t("enterprise.advertisements.filters.title")}
                   </Text>
                   <View className="flex-row flex-wrap gap-2">
                     {[
-                      { key: "all", label: "Toutes" },
-                      { key: "active", label: "Actives" },
-                      { key: "paused", label: "Coupées" },
-                      { key: "expired", label: "Expirées" },
+                      { key: "all", label: i18n.t("enterprise.advertisements.filters.all") },
+                      { key: "active", label: i18n.t("enterprise.advertisements.filters.active") },
+                      { key: "paused", label: i18n.t("enterprise.advertisements.filters.paused") },
+                      { key: "expired", label: i18n.t("enterprise.advertisements.filters.expired") },
                     ].map((s: any) => (
                       <TouchableOpacity
                         key={s.key}
@@ -563,12 +563,11 @@ export default function EnterpriseAdvertisements() {
 
                 <View className="mt-4 flex-row items-center justify-between">
                   <Text className="text-xs font-quicksand-medium text-neutral-400">
-                    {filteredAds.length} résultat
-                    {filteredAds.length > 1 ? "s" : ""}
+                    {filteredAds.length} {filteredAds.length > 1 ? i18n.t("enterprise.advertisements.results.plural") : i18n.t("enterprise.advertisements.results.singular")}
                   </Text>
                   {searchQuery.length > 0 && (
                     <Text className="text-xs font-quicksand-medium text-primary-600">
-                      Recherche: "{searchQuery}"
+                      {i18n.t("enterprise.advertisements.results.search")} &ldquo;{searchQuery}&rdquo;
                     </Text>
                   )}
                 </View>
@@ -584,7 +583,7 @@ export default function EnterpriseAdvertisements() {
                       style={{ fontFamily: "Quicksand-Regular" }}
                       className="text-neutral-400 text-xs"
                     >
-                      Faites défiler pour charger plus…
+                      {i18n.t("enterprise.advertisements.loadMore")}
                     </Text>
                   )}
                 </View>
@@ -600,16 +599,16 @@ export default function EnterpriseAdvertisements() {
                   className="mt-4 text-neutral-700"
                 >
                   {searchQuery || filterStatus !== "all"
-                    ? "Aucun élément trouvé"
-                    : "Aucune publicité"}
+                    ? i18n.t("enterprise.advertisements.empty.noResults")
+                    : i18n.t("enterprise.advertisements.empty.noAds")}
                 </Text>
                 <Text
                   style={{ fontFamily: "Quicksand-Regular" }}
                   className="mt-2 text-neutral-500 text-center text-sm"
                 >
                   {searchQuery || filterStatus !== "all"
-                    ? "Aucune publicité ne correspond à vos critères. Essayez d’ajuster votre recherche ou vos filtres."
-                    : "Créez votre première bannière pour booster votre visibilité sur l’accueil."}
+                    ? i18n.t("enterprise.advertisements.empty.noResultsMessage")
+                    : i18n.t("enterprise.advertisements.empty.noAdsMessage")}
                 </Text>
                 <TouchableOpacity
                   onPress={handleCreateAd}
@@ -619,7 +618,7 @@ export default function EnterpriseAdvertisements() {
                     style={{ fontFamily: "Quicksand-SemiBold" }}
                     className="text-white"
                   >
-                    Créer une publicité
+                    {i18n.t("enterprise.advertisements.empty.createAd")}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -655,7 +654,7 @@ export default function EnterpriseAdvertisements() {
               {/* Menu Header */}
               <View className="px-6 pb-4 border-b border-neutral-100">
                 <Text className="text-lg font-quicksand-bold text-neutral-800">
-                  Actions
+                  {i18n.t("enterprise.advertisements.menu.title")}
                 </Text>
                 <Text
                   className="text-sm text-neutral-500 font-quicksand-medium mt-1"
@@ -680,10 +679,10 @@ export default function EnterpriseAdvertisements() {
                     </View>
                     <View className="flex-1">
                       <Text className="text-base font-quicksand-semibold text-neutral-800">
-                        Couper
+                        {i18n.t("enterprise.advertisements.menu.pause")}
                       </Text>
                       <Text className="text-sm text-neutral-500 font-quicksand-medium">
-                        Masquer temporairement
+                        {i18n.t("enterprise.advertisements.menu.pauseDescription")}
                       </Text>
                     </View>
                     <Ionicons
@@ -710,13 +709,13 @@ export default function EnterpriseAdvertisements() {
                         style={{ fontFamily: "Quicksand-SemiBold" }}
                         className="text-base text-neutral-800"
                       >
-                        Réactiver
+                        {i18n.t("enterprise.advertisements.menu.activate")}
                       </Text>
                       <Text
                         style={{ fontFamily: "Quicksand-Regular" }}
                         className="text-sm text-neutral-500"
                       >
-                        Remettre en ligne
+                        {i18n.t("enterprise.advertisements.menu.activateDescription")}
                       </Text>
                     </View>
                     <Ionicons
@@ -742,13 +741,13 @@ export default function EnterpriseAdvertisements() {
                       style={{ fontFamily: "Quicksand-SemiBold" }}
                       className="text-base text-red-600"
                     >
-                      Supprimer
+                      {i18n.t("enterprise.advertisements.menu.delete")}
                     </Text>
                     <Text
                       style={{ fontFamily: "Quicksand-Regular" }}
                       className="text-sm text-neutral-500"
                     >
-                      Action irréversible
+                      {i18n.t("enterprise.advertisements.menu.deleteDescription")}
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
@@ -765,7 +764,7 @@ export default function EnterpriseAdvertisements() {
                     style={{ fontFamily: "Quicksand-SemiBold" }}
                     className="text-base text-neutral-700"
                   >
-                    Annuler
+                    {i18n.t("enterprise.advertisements.cancel")}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -831,7 +830,7 @@ export default function EnterpriseAdvertisements() {
                   className="flex-1 bg-neutral-100 py-4 rounded-2xl items-center"
                 >
                   <Text className="text-base font-quicksand-semibold text-neutral-700">
-                    Annuler
+                    {i18n.t("enterprise.advertisements.cancel")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity

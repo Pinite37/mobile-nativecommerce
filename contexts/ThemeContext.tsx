@@ -14,6 +14,8 @@ interface ThemeContextType {
     isDark: boolean;
     toggleTheme: () => Promise<void>;
     setTheme: (theme: Theme) => Promise<void>;
+    clearThemePreference: () => Promise<void>;
+    loadUserTheme: (userTheme?: string) => Promise<void>;
     isLoading: boolean;
 }
 
@@ -61,12 +63,37 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
         await setTheme(newTheme);
     };
 
+    const clearThemePreference = async () => {
+        try {
+            await AsyncStorage.removeItem(THEME_STORAGE_KEY);
+            setThemeState("light"); // Reset to default
+            console.log("✅ Theme preference cleared");
+        } catch (error) {
+            console.error("Error clearing theme preference:", error);
+        }
+    };
+
+    const loadUserTheme = async (userTheme?: string) => {
+        try {
+            if (userTheme && (userTheme === "light" || userTheme === "dark")) {
+                setThemeState(userTheme);
+                await AsyncStorage.setItem(THEME_STORAGE_KEY, userTheme);
+                console.log("✅ User theme loaded:", userTheme);
+            } else {
+                // If no user theme, load from local storage or default
+                await loadSavedTheme();
+            }
+        } catch (error) {
+            console.error("Error loading user theme:", error);
+        }
+    };
+
     const colors = getColors(theme);
     const isDark = theme === "dark";
 
     return (
         <ThemeContext.Provider
-            value={{ theme, colors, isDark, toggleTheme, setTheme, isLoading }}
+            value={{ theme, colors, isDark, toggleTheme, setTheme, clearThemePreference, loadUserTheme, isLoading }}
         >
             {children}
         </ThemeContext.Provider>

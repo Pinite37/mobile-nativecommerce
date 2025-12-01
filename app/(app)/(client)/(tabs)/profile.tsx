@@ -15,11 +15,14 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import i18n from "@/i18n/i18n";
+import { useLocale } from "@/contexts/LocaleContext";
 import { useAuth } from "../../../../contexts/AuthContext";
 
 export default function ProfileScreen() {
   const { user, logout, refreshUserData } = useAuth();
   const insets = useSafeAreaInsets();
+  const { locale } = useLocale();
   const [loading, setLoading] = useState(true);
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [confirmationAction, setConfirmationAction] = useState<{
@@ -139,9 +142,9 @@ export default function ProfileScreen() {
 
     switch (type) {
       case "logout":
-        title = "Déconnexion";
-        message = "Êtes-vous sûr de vouloir vous déconnecter ?";
-        confirmText = "Déconnexion";
+        title = i18n.t("client.profile.logout.modal.title");
+        message = i18n.t("client.profile.logout.modal.message");
+        confirmText = i18n.t("client.profile.logout.modal.confirm");
         confirmColor = "#EF4444";
         break;
     }
@@ -280,7 +283,7 @@ export default function ProfileScreen() {
   const menuItems = [
     {
       icon: "person-outline",
-      title: "Mes informations",
+      title: i18n.t("client.profile.menu.personalInfo"),
       route: "/(app)/(client)/profile/details",
     },
     // { icon: "location-outline", title: "Mes adresses", route: "/(app)/(client)/profile/addresses" },
@@ -288,7 +291,7 @@ export default function ProfileScreen() {
     // { icon: "card-outline", title: "Moyens de paiement", route: "/(app)/(client)/profile/payments" },
     {
       icon: "settings-outline",
-      title: "Paramètres",
+      title: i18n.t("client.profile.menu.settings"),
       route: "/(app)/(client)/profile/settings",
     },
     // { icon: "help-circle-outline", title: "Aide et support", route: "/(app)/(client)/profile/help" },
@@ -326,7 +329,7 @@ export default function ProfileScreen() {
           <View className="flex-row items-center justify-between">
             <View>
               <Text className="text-2xl font-quicksand-bold text-white">
-                Mon profil
+                {i18n.t("client.profile.title")}
               </Text>
               {user && (
                 <View className="flex-row items-center mt-1">
@@ -365,10 +368,10 @@ export default function ProfileScreen() {
               )}
               <View className="flex-1">
                 <Text className="text-xl font-quicksand-bold text-neutral-800">
-                  {user ? `${user.firstName} ${user.lastName}` : "Utilisateur"}
+                  {user ? `${user.firstName} ${user.lastName}` : i18n.t("client.profile.placeholders.userName")}
                 </Text>
                 <Text className="text-neutral-500 font-quicksand mt-1">
-                  {user?.email || "email@exemple.com"}
+                  {user?.email || i18n.t("client.profile.placeholders.email")}
                 </Text>
               </View>
             </View>
@@ -410,7 +413,7 @@ export default function ProfileScreen() {
                 style={{ marginRight: 8 }}
               />
               <Text className="text-white font-quicksand-semibold">
-                Déconnexion
+                {i18n.t("client.profile.logout.button")}
               </Text>
             </View>
           </TouchableOpacity>
@@ -438,7 +441,7 @@ export default function ProfileScreen() {
                 onPress={closeConfirmation}
               >
                 <Text className="text-neutral-700 font-quicksand-semibold text-center">
-                  Annuler
+                  {i18n.t("client.profile.logout.modal.cancel")}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity

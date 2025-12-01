@@ -19,6 +19,7 @@ export interface User {
   preferences: {
     language: string;
     currency: string;
+    theme?: string; // ajout du thème
     notifications: {
       email: boolean;
       push: boolean;

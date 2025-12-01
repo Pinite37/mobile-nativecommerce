@@ -13,6 +13,8 @@ type Locale = "fr" | "en";
 interface LocaleContextType {
     locale: Locale;
     changeLocale: (newLocale: Locale) => Promise<void>;
+    clearLocalePreference: () => Promise<void>;
+    loadUserLocale: (userLocale?: string) => Promise<void>;
     isLoading: boolean;
 }
 
@@ -59,8 +61,35 @@ export const LocaleProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    const clearLocalePreference = async () => {
+        try {
+            await AsyncStorage.removeItem(LOCALE_STORAGE_KEY);
+            setLocale("fr"); // Reset to default
+            i18n.locale = "fr";
+            console.log("✅ Locale preference cleared");
+        } catch (error) {
+            console.error("Error clearing locale preference:", error);
+        }
+    };
+
+    const loadUserLocale = async (userLocale?: string) => {
+        try {
+            if (userLocale && (userLocale === "fr" || userLocale === "en")) {
+                setLocale(userLocale);
+                i18n.locale = userLocale;
+                await AsyncStorage.setItem(LOCALE_STORAGE_KEY, userLocale);
+                console.log("✅ User locale loaded:", userLocale);
+            } else {
+                // If no user locale, load from local storage or default
+                await loadSavedLocale();
+            }
+        } catch (error) {
+            console.error("Error loading user locale:", error);
+        }
+    };
+
     return (
-        <LocaleContext.Provider value={{ locale, changeLocale, isLoading }}>
+        <LocaleContext.Provider value={{ locale, changeLocale, clearLocalePreference, loadUserLocale, isLoading }}>
             {children}
         </LocaleContext.Provider>
     );

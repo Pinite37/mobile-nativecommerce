@@ -26,6 +26,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import NotificationModal, {
   useNotification,
 } from "../../../../components/ui/NotificationModal";
+import { useLocale } from "../../../../contexts/LocaleContext";
+import i18n from "../../../../i18n/i18n";
 import MessagingService from "../../../../services/api/MessagingService";
 import ProductService from "../../../../services/api/ProductService";
 import { Product } from "../../../../types/product";
@@ -43,6 +45,7 @@ export default function ProductDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { locale } = useLocale();
   const { notification, showNotification, hideNotification } =
     useNotification();
   const imagesListRef = useRef<FlatList<string>>(null);
@@ -176,7 +179,7 @@ export default function ProductDetails() {
         {similarProduct.stock <= 5 && similarProduct.stock > 0 && (
           <View className="absolute top-2 left-2 bg-warning-500 rounded-full px-2 py-1">
             <Text className="text-white text-xs font-quicksand-bold">
-              {similarProduct.stock} restants
+              {similarProduct.stock} {i18n.t('enterprise.productDetails.stock.remaining')}
             </Text>
           </View>
         )}
@@ -218,8 +221,8 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         } else {
           showNotification(
             "warning",
-            "WhatsApp non disponible",
-            "WhatsApp n'est pas installé sur votre appareil. Essayez d'appeler directement."
+            i18n.t('enterprise.productDetails.notifications.whatsappNotAvailable'),
+            i18n.t('enterprise.productDetails.notifications.whatsappNotAvailableMessage')
           );
           makePhoneCall(phone);
         }
@@ -236,7 +239,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         if (supported) {
           return Linking.openURL(phoneUrl);
         } else {
-          showNotification("error", "Erreur", "Impossible de passer l'appel");
+          showNotification("error", i18n.t('enterprise.productDetails.notifications.callError'), i18n.t('enterprise.productDetails.notifications.callErrorMessage'));
         }
       })
       .catch(() => {
@@ -393,17 +396,16 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         <View className="flex-1 justify-center items-center px-6">
           <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
           <Text className="mt-4 text-xl font-quicksand-bold text-neutral-800">
-            Produit introuvable
+            {i18n.t('enterprise.productDetails.notFound.title')}
           </Text>
           <Text className="mt-2 text-neutral-600 font-quicksand-medium text-center">
-            Le produit que vous recherchez n&apos;existe pas ou n&apos;est plus
-            disponible.
+            {i18n.t('enterprise.productDetails.notFound.message')}
           </Text>
           <TouchableOpacity
             className="mt-6 bg-primary-500 rounded-2xl px-6 py-3"
             onPress={() => router.back()}
           >
-            <Text className="text-white font-quicksand-semibold">Retour</Text>
+            <Text className="text-white font-quicksand-semibold">{i18n.t('enterprise.productDetails.notFound.backButton')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -450,10 +452,9 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
               onPress={async () => {
                 try {
                   await Share.share({
-                    message: product
-                      ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ""
-                      }`
-                      : "Voir ce produit",
+                    message: product && product.name
+                      ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ""}`
+                      : i18n.t('enterprise.productDetails.share.defaultMessage') ?? 'Voir ce produit',
                   });
                 } catch { }
               }}
@@ -518,7 +519,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                 message: product
                   ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ""
                   }`
-                  : "Voir ce produit",
+                  : i18n.t('enterprise.productDetails.share.defaultMessage') ?? 'Voir ce produit',
               });
             } catch { }
           }}
@@ -569,7 +570,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
           <Text style={styles.subTitle} className="font-quicksand-medium">
             {typeof product.category === "object" && product.category?.name
               ? product.category.name
-              : "Produit"}{" "}
+              : i18n.t('enterprise.productDetails.category.default')}{" "}
             • {formatPrice(product.price)}
           </Text>
         </Animated.View>
@@ -641,7 +642,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
           {/* Enterprise Section */}
           <View className="p-4 border border-neutral-100 rounded-2xl mb-6 bg-neutral-50">
             <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3">
-              Boutique
+              {i18n.t('enterprise.productDetails.store.title')}
             </Text>
             <TouchableOpacity
               className="flex-row items-center"
@@ -691,7 +692,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                 product.enterprise.contactInfo?.website) && (
                 <View className="mt-4 pt-4 border-t border-neutral-200">
                   <Text className="text-sm font-quicksand-bold text-neutral-500 mb-3 uppercase tracking-wider">
-                    Contacter
+                    {i18n.t('enterprise.productDetails.store.contact')}
                   </Text>
                   <View className="flex-row flex-wrap -mx-1">
                     {typeof product.enterprise === "object" &&
@@ -714,7 +715,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                               color="#10B981"
                             />
                             <Text className="ml-2 text-neutral-700 font-quicksand-bold text-sm">
-                              WhatsApp
+                              {i18n.t('enterprise.productDetails.store.whatsapp')}
                             </Text>
                           </TouchableOpacity>
                           <TouchableOpacity
@@ -730,7 +731,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                           >
                             <Ionicons name="call" size={18} color="#FE8C00" />
                             <Text className="ml-2 text-neutral-700 font-quicksand-bold text-sm">
-                              Appeler
+                              {i18n.t('enterprise.productDetails.store.call')}
                             </Text>
                           </TouchableOpacity>
                         </>
@@ -761,7 +762,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
             >
               <Ionicons name="chatbubbles" size={18} color="#D97706" />
               <Text className="ml-2 text-amber-800 font-quicksand-bold text-sm">
-                Discuter / Négocier
+                {i18n.t('enterprise.productDetails.store.negotiate')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -771,7 +772,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
             <View className="py-4 border-t border-neutral-100">
               <View className="flex-row justify-between items-center mb-4">
                 <Text className="text-xl font-quicksand-bold text-neutral-800">
-                  Produits similaires
+                  {i18n.t('enterprise.productDetails.similar.title')}
                 </Text>
               </View>
               {loadingSimilar ? (

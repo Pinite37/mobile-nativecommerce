@@ -48,20 +48,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // DÉMARRAGE ULTRA-RAPIDE : Précharger les données puis les utiliser
       StartupPerformanceMonitor.mark('AuthContext - Début vérification');
       console.log('⚡ Démarrage de vérification auth...');
-      
+
       // Précharger toutes les données en cache avant de les utiliser
       await PreCacheService.preloadCriticalData();
-      
+
       // Utiliser une seule méthode optimisée pour éviter les appels multiples
       const [tokens, storedUserData, storedRole] = await Promise.all([
         TokenStorageService.getTokens(),
         TokenStorageService.getUserData(),
         TokenStorageService.getUserRole()
       ]);
-      
+
       StartupPerformanceMonitor.mark('AuthContext - Données en cache récupérées');
       console.log('⚡ Données récupérées du cache');
-      
+
       // *** NETTOYAGE AUTOMATIQUE DES TOKENS MOCK ***
       if (tokens.accessToken && tokens.accessToken.includes('mock-access-token')) {
         console.log('🧹 Détection de tokens mock - nettoyage automatique');
@@ -73,7 +73,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         StartupPerformanceMonitor.mark('AuthContext - Nettoyage tokens mock terminé');
         return;
       }
-      
+
       // Vérification rapide : si on a des tokens, des données utilisateur et un rôle
       if (tokens.accessToken && storedUserData && storedRole) {
         // Charger immédiatement avec les données disponibles
@@ -81,23 +81,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(storedUserData);
         setUserRole(storedRole);
         setIsLoading(false); // Stopper le loading immédiatement
-        
+
         StartupPerformanceMonitor.mark('AuthContext - Session restaurée (cache)');
         console.log('⚡ Démarrage rapide avec données en cache terminé');
-        
+
         // Puis vérifier et rafraîchir en arrière-plan (sans bloquer)
         // Délai réduit pour un démarrage encore plus rapide
         setTimeout(() => {
           refreshUserDataInBackground(storedRole);
         }, 10); // Réduit de 100ms à 10ms
-        
+
         // Vérifier les permissions de notifications après la connexion
         console.log('⏰ Planification vérification permissions dans 2 secondes...');
         setTimeout(() => {
           console.log('⏰ Exécution de checkNotificationPermissions maintenant...');
           checkNotificationPermissions();
         }, 2000); // Délai de 2 secondes pour laisser l'UI se charger complètement
-        
+
       } else {
         // Pas de session valide complète
         console.log('❌ Session incomplète, nettoyage...');
@@ -124,18 +124,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('� ========================================');
       console.log('🔔 DÉBUT VÉRIFICATION PERMISSIONS NOTIFICATIONS');
       console.log('🔔 ========================================');
-      
+
       const shouldShow = await NotificationPermissionService.shouldShowPermissionModal();
-      
+
       console.log('🔔 Résultat shouldShowPermissionModal:', shouldShow);
-      
+
       if (shouldShow) {
         console.log('✅ AFFICHAGE DU MODAL DE PERMISSIONS');
         setShowNotificationModal(true);
       } else {
         console.log('❌ Modal de permissions NON nécessaire');
       }
-      
+
       console.log('🔔 ========================================');
       console.log('🔔 FIN VÉRIFICATION PERMISSIONS NOTIFICATIONS');
       console.log('🔔 ========================================');
@@ -149,7 +149,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log('🔄 Rafraîchissement des données utilisateur en arrière-plan...');
       let userData: User | null = null;
-      
+
       if (role === 'CLIENT') {
         userData = await CustomerService.getProfile();
       } else if (role === 'ENTERPRISE') {
@@ -164,7 +164,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         }
       }
-      
+
       if (userData) {
         // Mettre à jour silencieusement les données
         setUser(userData);
@@ -181,7 +181,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const loadFreshUserData = async (role: string) => {
     try {
       let userData: User | null = null;
-      
+
       if (role === 'CLIENT') {
         userData = await CustomerService.getProfile();
       } else if (role === 'ENTERPRISE') {
@@ -196,7 +196,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         }
       }
-      
+
       if (userData) {
         setIsAuthenticated(true);
         setUser(userData);
@@ -207,7 +207,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // On garde la session active (les données sont peut-être déjà en cache)
         const tokens = await TokenStorageService.getTokens();
         const cachedUser = await TokenStorageService.getUserData();
-        
+
         if (tokens.accessToken && tokens.refreshToken && cachedUser) {
           console.log('⚠️ Pas de nouvelles données, mais session en cache valide - conservation');
           setIsAuthenticated(true);
@@ -223,12 +223,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (apiError: any) {
       console.warn('⚠️ Erreur API lors du chargement des données:', apiError?.message);
-      
+
       // NE PAS DÉCONNECTER en cas d'erreur réseau !
       // Vérifier si on a des données en cache
       const tokens = await TokenStorageService.getTokens();
       const cachedUser = await TokenStorageService.getUserData();
-      
+
       if (tokens.accessToken && tokens.refreshToken && cachedUser) {
         console.log('✅ Erreur API mais session en cache valide - conservation de la session');
         setIsAuthenticated(true);
@@ -258,7 +258,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const redirectToRoleBasedHome = (role?: string) => {
     const targetRole = role || userRole;
-    
+
     if (!targetRole) {
       console.warn('No role found, redirecting to auth');
       NavigationHelper.navigateToAuth();
@@ -292,22 +292,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const handlePostRegistration = async (userData: User, role: string) => {
     try {
       console.log('🎯 Traitement post-inscription pour:', userData.email);
-      
+
       // Double vérification que les données sont bien stockées
       const tokens = await TokenStorageService.getTokens();
       const storedRole = await TokenStorageService.getUserRole();
       const storedUser = await TokenStorageService.getUserData();
-      
+
       if (!tokens.accessToken || !storedRole || !storedUser) {
         console.warn('⚠️ Données manquantes après inscription, attente et nouvelle vérification...');
-        
+
         // Attendre un peu et vérifier à nouveau
         await new Promise(resolve => setTimeout(resolve, 500));
-        
+
         const retryTokens = await TokenStorageService.getTokens();
         const retryRole = await TokenStorageService.getUserRole();
         const retryUser = await TokenStorageService.getUserData();
-        
+
         if (!retryTokens.accessToken || !retryRole || !retryUser) {
           console.error('❌ Données toujours manquantes après nouvelle tentative');
           // Forcer une re-vérification complète
@@ -315,28 +315,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           return;
         }
       }
-      
+
       // Mettre à jour immédiatement l'état de l'authentification
       setIsAuthenticated(true);
       setUser(userData);
       setUserRole(role);
       setIsLoading(false);
-      
+
       console.log('✅ État post-inscription mis à jour avec succès');
       console.log('🔍 État final - Authentifié:', true);
       console.log('🔍 État final - Utilisateur:', userData.email);
       console.log('🔍 État final - Rôle:', role);
-      
+
       // Optionnel : charger des données fraîches en arrière-plan après un délai
       setTimeout(() => {
         refreshUserDataInBackground(role);
       }, 1000);
-      
+
       // Vérifier les permissions de notifications après l'inscription
       setTimeout(() => {
         checkNotificationPermissions();
       }, 2000); // Délai de 2 secondes pour laisser l'utilisateur voir l'écran d'accueil d'abord
-      
+
     } catch (error) {
       console.error('❌ Erreur lors du traitement post-inscription:', error);
       // En cas d'erreur, forcer une re-vérification complète
@@ -349,7 +349,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await checkAuthStatus();
     };
     initAuth();
-    
+
     // Écouter les événements de tokens invalidés
     const handleTokenInvalidated = async () => {
       console.log('🔔 Tokens invalidés détectés - déconnexion automatique');
@@ -357,15 +357,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
       setUserRole(null);
       setIsLoading(false);
-      
+
       // Rediriger vers la page de connexion
       setTimeout(() => {
         NavigationHelper.navigateToAuth();
       }, 100);
     };
-    
+
     AuthEventEmitter.onTokenInvalidated(handleTokenInvalidated);
-    
+
     // Nettoyer les listeners à la destruction du composant
     return () => {
       AuthEventEmitter.removeAllAuthListeners();

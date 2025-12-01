@@ -11,6 +11,7 @@ import {
     View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import i18n from '../../../../i18n/i18n';
 import CategoryService from '../../../../services/api/CategoryService';
 
 export default function AllCategoriesPage() {
@@ -74,11 +75,11 @@ export default function AllCategoriesPage() {
                     </TouchableOpacity>
                     <View className="flex-1">
                         <Text className="text-white text-xl font-quicksand-bold">
-                            Toutes les catégories
+                            {i18n.t("client.categories.title")}
                         </Text>
                         {!loading && (
                             <Text className="text-white/80 text-xs font-quicksand-medium mt-1">
-                                {categories.length} catégorie{categories.length > 1 ? 's' : ''} disponible{categories.length > 1 ? 's' : ''}
+                                {i18n.t(categories.length === 1 ? "client.categories.subtitle.singular" : "client.categories.subtitle.plural", { count: categories.length })}
                             </Text>
                         )}
                     </View>
@@ -94,7 +95,7 @@ export default function AllCategoriesPage() {
                 <View className="flex-1 items-center justify-center px-6">
                     <Ionicons name="file-tray-outline" size={64} color="#D1D5DB" />
                     <Text className="text-neutral-600 text-lg font-quicksand-bold mt-4">
-                        Aucune catégorie disponible
+                        {i18n.t("client.categories.empty")}
                     </Text>
                 </View>
             ) : (
@@ -151,7 +152,7 @@ export default function AllCategoriesPage() {
                                     )}
                                     {category.productCount !== undefined && (
                                         <Text className="text-neutral-400 text-xs font-quicksand-medium mt-1">
-                                            {category.productCount} produit{category.productCount > 1 ? 's' : ''}
+                                            {i18n.t(category.productCount === 1 ? "client.categories.productCount.singular" : "client.categories.productCount.plural", { count: category.productCount })}
                                         </Text>
                                     )}
                                 </View>

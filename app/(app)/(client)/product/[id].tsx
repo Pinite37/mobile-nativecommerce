@@ -26,6 +26,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import NotificationModal, {
   useNotification,
 } from "../../../../components/ui/NotificationModal";
+import i18n from "../../../../i18n/i18n";
 import MessagingService from "../../../../services/api/MessagingService";
 import ProductService from "../../../../services/api/ProductService";
 import { Product } from "../../../../types/product";
@@ -140,15 +141,15 @@ export default function ProductDetails() {
     try {
       if (isFavorite) {
         await ProductService.removeProductFromFavorites(id!);
-        showNotification("info", "Favoris", "Produit retiré des favoris");
+        showNotification("info", i18n.t("client.product.favorites.title"), i18n.t("client.product.favorites.removed"));
       } else {
         await ProductService.addProductToFavorites(id!);
-        showNotification("success", "Favoris", "Produit ajouté aux favoris");
+        showNotification("success", i18n.t("client.product.favorites.title"), i18n.t("client.product.favorites.added"));
       }
       setIsFavorite(!isFavorite);
     } catch (error) {
       console.error('❌ Erreur lors de la mise à jour des favoris:', error);
-      showNotification("error", "Erreur", "Impossible de mettre à jour les favoris");
+      showNotification("error", "Erreur", i18n.t("client.product.favorites.error"));
     }
   };
 
@@ -186,7 +187,7 @@ export default function ProductDetails() {
         {similarProduct.stock <= 5 && similarProduct.stock > 0 && (
           <View className="absolute top-2 left-2 bg-warning-500 rounded-full px-2 py-1">
             <Text className="text-white text-xs font-quicksand-bold">
-              {similarProduct.stock} restants
+              {i18n.t("client.product.stock.remaining", { count: similarProduct.stock })}
             </Text>
           </View>
         )}
@@ -208,12 +209,10 @@ export default function ProductDetails() {
   );
 
   const openWhatsApp = (phone: string) => {
-    const message = `Bonjour ! Je suis intéressé(e) par votre produit "${product?.name
-      }" sur Axi. 
-    
-Prix affiché : ${product ? formatPrice(product.price) : ""}
-
-Pouvez-vous me donner plus d'informations ? Merci !`;
+    const message = i18n.t("client.product.whatsapp.message", {
+      productName: product?.name,
+      price: product ? formatPrice(product.price) : ""
+    });
 
     const whatsappUrl = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(
       message
@@ -226,14 +225,14 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         } else {
           showNotification(
             "warning",
-            "WhatsApp non disponible",
-            "WhatsApp n'est pas installé sur votre appareil. Essayez d'appeler directement."
+            i18n.t("client.product.whatsapp.notAvailable"),
+            i18n.t("client.product.whatsapp.notAvailableMessage")
           );
           makePhoneCall(phone);
         }
       })
       .catch(() => {
-        showNotification("error", "Erreur", "Impossible d'ouvrir WhatsApp");
+        showNotification("error", "Erreur", i18n.t("client.product.whatsapp.error"));
       });
   };
 
@@ -244,11 +243,11 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         if (supported) {
           return Linking.openURL(phoneUrl);
         } else {
-          showNotification("error", "Erreur", "Impossible de passer l'appel");
+          showNotification("error", "Erreur", i18n.t("client.product.contact.callError"));
         }
       })
       .catch(() => {
-        showNotification("error", "Erreur", "Impossible de passer l'appel");
+        showNotification("error", "Erreur", i18n.t("client.product.contact.callError"));
       });
   };
 
@@ -266,12 +265,12 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
           showNotification(
             "error",
             "Erreur",
-            "Impossible d'ouvrir le site web"
+            i18n.t("client.product.contact.websiteError")
           );
         }
       })
       .catch(() => {
-        showNotification("error", "Erreur", "Impossible d'ouvrir le site web");
+        showNotification("error", "Erreur", i18n.t("client.product.contact.websiteError"));
       });
   };
 
@@ -401,17 +400,16 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         <View className="flex-1 justify-center items-center px-6">
           <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
           <Text className="mt-4 text-xl font-quicksand-bold text-neutral-800">
-            Produit introuvable
+            {i18n.t("client.product.error.notFound")}
           </Text>
           <Text className="mt-2 text-neutral-600 font-quicksand-medium text-center">
-            Le produit que vous recherchez n&apos;existe pas ou n&apos;est plus
-            disponible.
+            {i18n.t("client.product.error.notFoundMessage")}
           </Text>
           <TouchableOpacity
             className="mt-6 bg-primary-500 rounded-2xl px-6 py-3"
             onPress={() => router.back()}
           >
-            <Text className="text-white font-quicksand-semibold">Retour</Text>
+            <Text className="text-white font-quicksand-semibold">{i18n.t("client.product.error.back")}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -461,7 +459,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                     message: product
                       ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ""
                       }`
-                      : "Voir ce produit",
+                      : i18n.t("client.product.share.message") || "Voir ce produit",
                   });
                 } catch { }
               }}
@@ -528,7 +526,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                 message: product
                   ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ""
                   }`
-                  : "Voir ce produit",
+                  : i18n.t("client.product.share.message") || "Voir ce produit",
               });
             } catch { }
           }}
@@ -663,7 +661,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
           {/* Enterprise Section */}
           <View className="p-4 border border-neutral-100 rounded-2xl mb-6 bg-neutral-50">
             <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3">
-              Boutique
+              {i18n.t("client.product.enterprise.title")}
             </Text>
             <TouchableOpacity
               className="flex-row items-center"
@@ -722,7 +720,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                   >
                     <Ionicons name="globe-outline" size={18} color="#3B82F6" />
                     <Text className="ml-2 text-blue-600 font-quicksand-bold text-sm">
-                      Visiter le site web
+                      {i18n.t("client.product.enterprise.visitWebsite")}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -762,7 +760,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                     showNotification(
                       "error",
                       "Erreur",
-                      "Impossible de créer la conversation"
+                      i18n.t("client.product.actions.conversationError")
                     );
                   }
                 }}
@@ -770,7 +768,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
               >
                 <Ionicons name="chatbubbles" size={18} color="#D97706" />
                 <Text className="ml-2 text-amber-800 font-quicksand-bold text-sm">
-                  Discuter / Négocier
+                  {i18n.t("client.product.actions.negotiate")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -781,7 +779,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
             <View className="py-4 border-t border-neutral-100">
               <View className="flex-row justify-between items-center mb-4">
                 <Text className="text-xl font-quicksand-bold text-neutral-800">
-                  Produits similaires
+                  {i18n.t("client.product.similar.title")}
                 </Text>
               </View>
               {loadingSimilar ? (

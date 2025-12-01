@@ -19,6 +19,7 @@ import {
     View,
 } from "react-native";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import i18n from "../../../../i18n/i18n";
 import EnterpriseService, { Enterprise } from "../../../../services/api/EnterpriseService";
 import { Product } from "../../../../types/product";
 
@@ -99,7 +100,7 @@ export default function EnterpriseDetails() {
             setErrorModal({
                 visible: true,
                 title: 'Erreur',
-                message: 'Impossible de charger les informations de l\'entreprise'
+                message: i18n.t("client.enterprise.error.loading")
             });
         } finally {
             setLoading(false);
@@ -134,7 +135,9 @@ export default function EnterpriseDetails() {
     };
 
     const openWhatsApp = (phone: string) => {
-        const message = `Bonjour ! Je découvre votre entreprise "${enterprise?.companyName}" sur NativeCommerce. Pouvez-vous me donner plus d'informations sur vos produits ? Merci !`;
+        const message = i18n.t("client.enterprise.whatsapp.message", {
+            companyName: enterprise?.companyName
+        });
         const whatsappUrl = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
 
         Linking.canOpenURL(whatsappUrl)
@@ -144,8 +147,8 @@ export default function EnterpriseDetails() {
                 } else {
                     setErrorModal({
                         visible: true,
-                        title: 'WhatsApp non disponible',
-                        message: 'WhatsApp n\'est pas installé sur votre appareil.'
+                        title: i18n.t("client.enterprise.error.whatsappNotAvailable"),
+                        message: i18n.t("client.enterprise.error.whatsappNotAvailableMessage")
                     });
                 }
             })
@@ -153,7 +156,7 @@ export default function EnterpriseDetails() {
                 setErrorModal({
                     visible: true,
                     title: 'Erreur',
-                    message: 'Impossible d\'ouvrir WhatsApp'
+                    message: i18n.t("client.enterprise.error.whatsappError")
                 });
             });
     };
@@ -168,7 +171,7 @@ export default function EnterpriseDetails() {
                     setErrorModal({
                         visible: true,
                         title: 'Erreur',
-                        message: 'Impossible de passer l\'appel'
+                        message: i18n.t("client.enterprise.error.callError")
                     });
                 }
             })
@@ -176,7 +179,7 @@ export default function EnterpriseDetails() {
                 setErrorModal({
                     visible: true,
                     title: 'Erreur',
-                    message: 'Impossible de passer l\'appel'
+                    message: i18n.t("client.enterprise.error.callError")
                 });
             });
     };
@@ -195,7 +198,7 @@ export default function EnterpriseDetails() {
                     setErrorModal({
                         visible: true,
                         title: 'Erreur',
-                        message: 'Impossible d\'ouvrir le site web'
+                        message: i18n.t("client.enterprise.error.websiteError")
                     });
                 }
             })
@@ -203,7 +206,7 @@ export default function EnterpriseDetails() {
                 setErrorModal({
                     visible: true,
                     title: 'Erreur',
-                    message: 'Impossible d\'ouvrir le site web'
+                    message: i18n.t("client.enterprise.error.websiteError")
                 });
             });
     };
@@ -229,7 +232,7 @@ export default function EnterpriseDetails() {
                 {product.stock <= 5 && product.stock > 0 && (
                     <View className="absolute top-2 right-2 bg-warning-500 rounded-full px-2 py-1">
                         <Text className="text-white text-xs font-quicksand-bold">
-                            {product.stock} restants
+                            {i18n.t("client.enterprise.stock.remaining", { count: product.stock })}
                         </Text>
                     </View>
                 )}
@@ -253,7 +256,7 @@ export default function EnterpriseDetails() {
                             </Text>
                         </View>
                         <Text className="text-xs text-neutral-400">
-                            {product.stats.totalSales || 0} vendus
+                            {i18n.t("client.enterprise.stats.sold", { count: product.stats?.totalSales || 0 })}
                         </Text>
                     </View>
                 )}
@@ -387,16 +390,16 @@ export default function EnterpriseDetails() {
                 <View className="flex-1 justify-center items-center">
                     <Ionicons name="business-outline" size={64} color="#EF4444" />
                     <Text className="mt-4 text-xl font-quicksand-bold text-neutral-800">
-                        Entreprise introuvable
+                        {i18n.t("client.enterprise.error.notFound")}
                     </Text>
                     <Text className="mt-2 text-neutral-600 font-quicksand-medium text-center px-6">
-                        L&apos;entreprise que vous recherchez n&apos;existe pas ou n&apos;est plus active.
+                        {i18n.t("client.enterprise.error.notFoundMessage")}
                     </Text>
                     <TouchableOpacity
                         className="mt-6 bg-primary-500 rounded-2xl px-6 py-3"
                         onPress={() => router.back()}
                     >
-                        <Text className="text-white font-quicksand-semibold">Retour</Text>
+                        <Text className="text-white font-quicksand-semibold">{i18n.t("client.enterprise.error.back")}</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -477,7 +480,7 @@ export default function EnterpriseDetails() {
                                         <View className="flex-row items-center">
                                             <View className="w-2 h-2 bg-success-500 rounded-full mr-2" />
                                             <Text className="text-sm text-success-600 font-quicksand-medium">
-                                                Entreprise active
+                                                {i18n.t("client.enterprise.status.active")}
                                             </Text>
                                         </View>
                                     </View>
@@ -504,7 +507,7 @@ export default function EnterpriseDetails() {
                                             </Text>
                                         </View>
                                         <Text className="text-xs text-neutral-600 font-quicksand-medium">
-                                            {enterprise.stats.totalReviews || 0} avis
+                                            {i18n.t("client.enterprise.stats.reviews", { count: enterprise.stats.totalReviews || 0 })}
                                         </Text>
                                     </View>
 
@@ -518,7 +521,7 @@ export default function EnterpriseDetails() {
                                             </Text>
                                         </View>
                                         <Text className="text-xs text-neutral-600 font-quicksand-medium">
-                                            produits
+                                            {i18n.t("client.enterprise.stats.products")}
                                         </Text>
                                     </View>
 
@@ -528,7 +531,7 @@ export default function EnterpriseDetails() {
                                 {/* Actions de contact */}
                                 <View className="mt-2">
                                     <Text className="text-sm font-quicksand-semibold text-neutral-800 mb-4">
-                                        Contacter l&apos;entreprise
+                                        {i18n.t("client.enterprise.contact.title")}
                                     </Text>
                                     <View className="flex-row flex-wrap gap-3">
                                         {enterprise.contactInfo.phone && (
@@ -542,7 +545,7 @@ export default function EnterpriseDetails() {
                                                         <Ionicons name="logo-whatsapp" size={16} color="white" />
                                                     </View>
                                                     <Text className="text-green-700 font-quicksand-semibold text-sm">
-                                                        WhatsApp
+                                                        {i18n.t("client.enterprise.contact.whatsapp")}
                                                     </Text>
                                                 </TouchableOpacity>
 
@@ -555,7 +558,7 @@ export default function EnterpriseDetails() {
                                                         <Ionicons name="call" size={16} color="white" />
                                                     </View>
                                                     <Text className="text-orange-700 font-quicksand-semibold text-sm">
-                                                        Appeler
+                                                        {i18n.t("client.enterprise.contact.call")}
                                                     </Text>
                                                 </TouchableOpacity>
                                             </>
@@ -571,7 +574,7 @@ export default function EnterpriseDetails() {
                                                     <Ionicons name="globe" size={16} color="white" />
                                                 </View>
                                                 <Text className="text-blue-700 font-quicksand-semibold text-sm">
-                                                    Site web
+                                                    {i18n.t("client.enterprise.contact.website")}
                                                 </Text>
                                             </TouchableOpacity>
                                         )}
@@ -589,7 +592,7 @@ export default function EnterpriseDetails() {
                         <View className="py-4 items-center">
                             <ActivityIndicator size="small" color="#FE8C00" />
                             <Text className="mt-2 text-neutral-600 font-quicksand-medium text-sm">
-                                Chargement...
+                                {i18n.t("client.enterprise.loading")}
                             </Text>
                         </View>
                     ) : null
@@ -599,10 +602,10 @@ export default function EnterpriseDetails() {
                         <View className="flex-1 justify-center items-center py-20">
                             <Ionicons name="cube-outline" size={64} color="#9CA3AF" />
                             <Text className="mt-4 text-lg font-quicksand-bold text-neutral-600">
-                                Aucun produit disponible
+                                {i18n.t("client.enterprise.empty.title")}
                             </Text>
                             <Text className="mt-2 text-neutral-500 font-quicksand-medium text-center px-6">
-                                Cette entreprise n&apos;a pas encore de produits en ligne.
+                                {i18n.t("client.enterprise.empty.message")}
                             </Text>
                         </View>
                     ) : null
@@ -647,7 +650,7 @@ export default function EnterpriseDetails() {
                             activeOpacity={0.7}
                         >
                             <Text className="text-white font-quicksand-bold text-center">
-                                OK
+                                {i18n.t("client.enterprise.error.modalOk")}
                             </Text>
                         </TouchableOpacity>
                     </TouchableOpacity>

@@ -1,3 +1,5 @@
+import { useLocale } from "@/contexts/LocaleContext";
+import i18n from "@/i18n/i18n";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -92,6 +94,7 @@ const SkeletonCard = () => (
 export default function ClientMessagesPage() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { locale } = useLocale();
   const { onNewMessage, onMessagesRead } = useSocket();
   const { showToast } = useToast();
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -146,10 +149,9 @@ export default function ClientMessagesPage() {
     ) {
       return {
         type: "network",
-        title: "Problème de connexion",
-        message: "Vérifiez votre connexion internet et réessayez.",
-        userMessage:
-          "Problème de connexion réseau. Vérifiez votre connexion internet.",
+        title: i18n.t("client.messages.errors.network.title"),
+        message: i18n.t("client.messages.errors.network.message"),
+        userMessage: i18n.t("client.messages.errors.network.userMessage"),
       };
     }
 
@@ -161,11 +163,9 @@ export default function ClientMessagesPage() {
     ) {
       return {
         type: "server",
-        title: "Erreur serveur",
-        message:
-          "Le serveur rencontre des difficultés. Veuillez réessayer plus tard.",
-        userMessage:
-          "Service temporairement indisponible. Réessayez dans quelques instants.",
+        title: i18n.t("client.messages.errors.server.title"),
+        message: i18n.t("client.messages.errors.server.message"),
+        userMessage: i18n.t("client.messages.errors.server.userMessage"),
       };
     }
 
@@ -178,9 +178,9 @@ export default function ClientMessagesPage() {
     ) {
       return {
         type: "auth",
-        title: "Authentification requise",
-        message: "Votre session a expiré. Veuillez vous reconnecter.",
-        userMessage: "Session expirée. Veuillez vous reconnecter.",
+        title: i18n.t("client.messages.errors.auth.title"),
+        message: i18n.t("client.messages.errors.auth.message"),
+        userMessage: i18n.t("client.messages.errors.auth.userMessage"),
       };
     }
 
@@ -192,9 +192,9 @@ export default function ClientMessagesPage() {
     ) {
       return {
         type: "validation",
-        title: "Données invalides",
-        message: "Les informations fournies ne sont pas valides.",
-        userMessage: "Informations invalides. Vérifiez vos données.",
+        title: i18n.t("client.messages.errors.validation.title"),
+        message: i18n.t("client.messages.errors.validation.message"),
+        userMessage: i18n.t("client.messages.errors.validation.userMessage"),
       };
     }
 
@@ -202,18 +202,18 @@ export default function ClientMessagesPage() {
     if (error.status === 404 || error.message?.includes("Not Found")) {
       return {
         type: "not_found",
-        title: "Ressource introuvable",
-        message: "L'élément demandé n'existe pas ou a été supprimé.",
-        userMessage: "Élément introuvable ou supprimé.",
+        title: i18n.t("client.messages.errors.notFound.title"),
+        message: i18n.t("client.messages.errors.notFound.message"),
+        userMessage: i18n.t("client.messages.errors.notFound.userMessage"),
       };
     }
 
     // Erreur par défaut
     return {
       type: "unknown",
-      title: "Erreur",
-      message: error.message || "Une erreur inattendue s'est produite.",
-      userMessage: "Une erreur inattendue s'est produite. Veuillez réessayer.",
+      title: i18n.t("client.messages.errors.unknown.title"),
+      message: i18n.t("client.messages.errors.unknown.message"),
+      userMessage: i18n.t("client.messages.errors.unknown.userMessage"),
     };
   };
 
@@ -292,8 +292,8 @@ export default function ClientMessagesPage() {
         setSearchResults([]);
         // Pour les erreurs de recherche, on affiche un message discret
         notifyInfo(
-          "Erreur de recherche",
-          "Impossible de filtrer les conversations pour le moment."
+          i18n.t("client.messages.notifications.searchError.title"),
+          i18n.t("client.messages.notifications.searchError.message")
         );
       } finally {
         setSearching(false);
@@ -344,8 +344,8 @@ export default function ClientMessagesPage() {
 
       console.log("✅ Conversation supprimée avec succès");
       notifySuccess(
-        "Conversation supprimée",
-        "La conversation a été supprimée avec succès."
+        i18n.t("client.messages.notifications.conversationDeleted.title"),
+        i18n.t("client.messages.notifications.conversationDeleted.message")
       );
       setContextMenuVisible(false);
       setSelectedConversation(null);
@@ -420,8 +420,8 @@ export default function ClientMessagesPage() {
       } catch (e) {
         console.error("❌ Erreur critique Socket.IO new_message:", e);
         notifyError(
-          "Erreur de synchronisation",
-          "Impossible de mettre à jour les messages. Rechargez la page."
+          i18n.t("client.messages.notifications.syncError.title"),
+          i18n.t("client.messages.notifications.syncError.message")
         );
       }
     });
@@ -466,8 +466,8 @@ export default function ClientMessagesPage() {
       } catch (e) {
         console.error("❌ Erreur critique Socket.IO messages_read:", e);
         notifyError(
-          "Erreur de synchronisation",
-          "Impossible de mettre à jour le statut de lecture."
+          i18n.t("client.messages.notifications.readStatusError.title"),
+          i18n.t("client.messages.notifications.readStatusError.message")
         );
       }
     });
@@ -738,7 +738,7 @@ export default function ClientMessagesPage() {
         >
           <View className="flex-row items-center justify-between mb-6">
             <Text className="text-3xl font-quicksand-bold text-white">
-              Messages
+              {i18n.t("client.messages.title")}
             </Text>
             <TouchableOpacity className="w-10 h-10 bg-white/20 rounded-full justify-center items-center">
               <Ionicons name="add" size={24} color="white" />
@@ -806,7 +806,7 @@ export default function ClientMessagesPage() {
           <TextInput
             value={searchQuery}
             onChangeText={handleSearch}
-            placeholder="Rechercher une conversation..."
+            placeholder={i18n.t("client.messages.search.placeholder")}
             className="bg-white rounded-2xl pl-11 pr-4 py-3.5 text-neutral-800 font-quicksand-medium text-base"
             placeholderTextColor="#9CA3AF"
             style={{
@@ -860,7 +860,7 @@ export default function ClientMessagesPage() {
                 !showUnreadOnly ? "text-primary-700" : "text-neutral-600"
               }`}
             >
-              Tous
+              {i18n.t("client.messages.filters.all")}
             </Text>
           </TouchableOpacity>
 
@@ -885,14 +885,13 @@ export default function ClientMessagesPage() {
                 showUnreadOnly ? "text-primary-700" : "text-neutral-600"
               }`}
             >
-              Non lus
+              {i18n.t("client.messages.filters.unread")}
             </Text>
           </TouchableOpacity>
         </View>
 
         <Text className="text-neutral-400 font-quicksand-medium text-xs">
-          {displayedConversations.length} conversation
-          {displayedConversations.length !== 1 ? "s" : ""}
+          {displayedConversations.length} {displayedConversations.length === 1 ? i18n.t("client.messages.conversation.singular") : i18n.t("client.messages.conversation.plural")}
         </Text>
       </View>
 
@@ -920,13 +919,13 @@ export default function ClientMessagesPage() {
             </View>
             <Text className="text-xl font-quicksand-bold text-neutral-800 mb-2 text-center">
               {searchQuery.trim().length >= 2
-                ? "Aucun résultat"
-                : "Aucune conversation"}
+                ? i18n.t("client.messages.empty.noResults")
+                : i18n.t("client.messages.empty.noConversations")}
             </Text>
             <Text className="text-neutral-500 font-quicksand-medium text-center leading-6">
               {searchQuery.trim().length >= 2
-                ? `Nous n'avons trouvé aucune conversation correspondant à "${searchQuery}"`
-                : "Commencez à discuter avec des vendeurs pour voir vos échanges ici."}
+                ? i18n.t("client.messages.empty.noResultsMessage", { query: searchQuery })
+                : i18n.t("client.messages.empty.noConversationsMessage")}
             </Text>
             {searchQuery.trim().length === 0 && (
               <TouchableOpacity
@@ -936,7 +935,7 @@ export default function ClientMessagesPage() {
                 }
               >
                 <Text className="text-white font-quicksand-bold text-base">
-                  Découvrir des produits
+                  {i18n.t("client.messages.empty.discoverProducts")}
                 </Text>
               </TouchableOpacity>
             )}
@@ -991,7 +990,7 @@ export default function ClientMessagesPage() {
             {/* Titre */}
             <View style={{ paddingHorizontal: 20, paddingVertical: 16 }}>
               <Text className="font-quicksand-bold text-neutral-900 text-lg text-center">
-                Options
+                {i18n.t("client.messages.contextMenu.title")}
               </Text>
             </View>
 
@@ -1014,7 +1013,7 @@ export default function ClientMessagesPage() {
                 <Ionicons name="archive-outline" size={20} color="#4B5563" />
               </View>
               <Text className="font-quicksand-semibold text-neutral-700 text-base">
-                Archiver la conversation
+                {i18n.t("client.messages.contextMenu.archive")}
               </Text>
             </TouchableOpacity>
 
@@ -1043,8 +1042,8 @@ export default function ClientMessagesPage() {
                 }`}
               >
                 {contextMenuLoading
-                  ? "Suppression..."
-                  : "Supprimer la conversation"}
+                  ? i18n.t("client.messages.contextMenu.deleting")
+                  : i18n.t("client.messages.contextMenu.delete")}
               </Text>
             </TouchableOpacity>
           </View>

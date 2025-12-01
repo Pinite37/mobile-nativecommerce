@@ -17,11 +17,15 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import i18n from "@/i18n/i18n";
+import { useLocale } from "@/contexts/LocaleContext";
+
 import { FavoriteItem } from "@/types/product";
 
 export default function FavoritesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { locale } = useLocale();
   const [favoriteItems, setFavoriteItems] = useState<FavoriteItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -230,10 +234,12 @@ export default function FavoritesScreen() {
                 </Text>
               </View>
               <Text className="text-[10px] font-quicksand text-gray-400 mt-1">
-                Ajouté le {new Date(favoriteItem.createdAt).toLocaleDateString('fr-FR', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric'
+                {i18n.t("client.favorites.addedDate", {
+                  date: new Date(favoriteItem.createdAt).toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                  })
                 })}
               </Text>
             </View>
@@ -269,7 +275,7 @@ export default function FavoritesScreen() {
       <View className="flex-1 bg-background-secondary justify-center items-center p-6">
         <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
         <Text className="text-xl font-quicksand-bold text-neutral-800 mt-4 text-center">
-          Erreur de chargement
+          {i18n.t("client.favorites.error.title")}
         </Text>
         <Text className="text-base font-quicksand text-neutral-600 mt-2 text-center">
           {error}
@@ -279,7 +285,7 @@ export default function FavoritesScreen() {
           onPress={() => fetchFavoriteProducts()}
         >
           <Text className="text-white font-quicksand-bold">
-            Réessayer
+            {i18n.t("client.favorites.error.retry")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -312,7 +318,7 @@ export default function FavoritesScreen() {
         >
           <View className="flex-row items-center justify-between mb-4">
             <Text className="text-2xl font-quicksand-bold text-white">
-              Mes Favoris
+              {i18n.t("client.favorites.title")}
             </Text>
           </View>
 
@@ -321,7 +327,7 @@ export default function FavoritesScreen() {
             <View className="flex-row items-center px-4 py-2 rounded-full bg-white/20">
               <Ionicons name="heart" size={16} color="white" style={{ marginRight: 8 }} />
               <Text className="text-white font-quicksand-medium text-sm">
-                {favoriteItems.length} {favoriteItems.length > 1 ? 'produits' : 'produit'}
+                {i18n.t(favoriteItems.length === 1 ? "client.favorites.counter.one" : "client.favorites.counter.other", { count: favoriteItems.length })}
               </Text>
             </View>
           </View>
@@ -332,14 +338,14 @@ export default function FavoritesScreen() {
           <View className="flex-1 justify-center items-center py-20 px-6">
             <Ionicons name="heart-outline" size={64} color="#CBD5E1" />
             <Text className="text-xl font-quicksand-bold text-neutral-800 mt-4 text-center">
-              Votre liste de favoris est vide
+              {i18n.t("client.favorites.empty.title")}
             </Text>
             <Text className="text-base font-quicksand text-neutral-600 mt-2 text-center">
-              Ajoutez des produits à vos favoris pour les retrouver facilement
+              {i18n.t("client.favorites.empty.message")}
             </Text>
             <TouchableOpacity className="mt-6 bg-primary rounded-2xl px-6 py-3">
               <Text className="text-white font-quicksand-bold">
-                Explorer les produits
+                {i18n.t("client.favorites.empty.button")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -373,12 +379,12 @@ export default function FavoritesScreen() {
 
             {/* Titre */}
             <Text className="text-xl font-quicksand-bold text-neutral-800 mb-2 text-center">
-              Retirer des favoris
+              {i18n.t("client.favorites.modal.title")}
             </Text>
 
             {/* Message */}
             <Text className="text-base text-neutral-600 font-quicksand-medium mb-6 text-center">
-              Êtes-vous sûr de vouloir retirer ce produit de vos favoris ?
+              {i18n.t("client.favorites.modal.message")}
             </Text>
 
             {/* Boutons */}
@@ -388,7 +394,7 @@ export default function FavoritesScreen() {
                 onPress={cancelRemoveFavorite}
               >
                 <Text className="text-neutral-700 font-quicksand-semibold text-center">
-                  Annuler
+                  {i18n.t("client.favorites.modal.cancel")}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -396,7 +402,7 @@ export default function FavoritesScreen() {
                 onPress={confirmRemoveFavorite}
               >
                 <Text className="text-white font-quicksand-semibold text-center">
-                  Retirer
+                  {i18n.t("client.favorites.modal.confirm")}
                 </Text>
               </TouchableOpacity>
             </View>
