@@ -132,7 +132,7 @@ export default function EnterpriseFavoritesScreen() {
       outputRange: [-150, 150],
     });
     return (
-      <View style={[{ backgroundColor: "#E5E7EB", overflow: "hidden" }, style]}>
+      <View style={[{ backgroundColor: isDark ? colors.tertiary : "#E5E7EB", overflow: "hidden" }, style]}>
         <Animated.View
           style={{
             position: "absolute",
@@ -140,7 +140,7 @@ export default function EnterpriseFavoritesScreen() {
             bottom: 0,
             width: 120,
             transform: [{ translateX }],
-            backgroundColor: "rgba(255,255,255,0.35)",
+            backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.35)",
             opacity: 0.7,
           }}
         />
@@ -149,7 +149,10 @@ export default function EnterpriseFavoritesScreen() {
   };
 
   const SkeletonProduct = () => (
-    <View className="bg-white rounded-2xl border border-neutral-100 p-2 mb-3 w-[48%] overflow-hidden">
+    <View
+      style={{ backgroundColor: colors.card, borderColor: colors.border }}
+      className="rounded-2xl border p-2 mb-3 w-[48%] overflow-hidden"
+    >
       <ShimmerBlock style={{ height: 128, borderRadius: 16, width: "100%" }} />
       <View className="p-2">
         <ShimmerBlock
@@ -170,7 +173,7 @@ export default function EnterpriseFavoritesScreen() {
     >
       {/* Header Skeleton */}
       <LinearGradient
-        colors={["#10B981", "#34D399"]}
+        colors={[colors.brandGradientStart, colors.brandGradientEnd]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         className="rounded-b-3xl shadow-md"
@@ -217,14 +220,16 @@ export default function EnterpriseFavoritesScreen() {
 
     return (
       <TouchableOpacity
-        className="bg-white mx-4 mb-4 rounded-2xl overflow-hidden border border-neutral-100"
         style={{
+          backgroundColor: colors.card,
+          borderColor: colors.border,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 1 },
           shadowOpacity: 0.03,
           shadowRadius: 4,
           elevation: 1,
         }}
+        className="mx-4 mb-4 rounded-2xl overflow-hidden border"
         onPress={() => {
           router.push(`/(app)/(enterprise)/product/${favoriteItem.product._id}`);
         }}
@@ -232,7 +237,10 @@ export default function EnterpriseFavoritesScreen() {
         <View className="flex-row p-4">
           {/* Image du produit */}
           <View className="relative">
-            <View className="w-28 h-28 rounded-2xl overflow-hidden bg-gray-50">
+            <View
+              style={{ backgroundColor: colors.tertiary }}
+              className="w-28 h-28 rounded-2xl overflow-hidden"
+            >
               {favoriteItem.product.images &&
                 favoriteItem.product.images.length > 0 ? (
                 <Image
@@ -242,7 +250,7 @@ export default function EnterpriseFavoritesScreen() {
                 />
               ) : (
                 <View className="w-full h-full justify-center items-center">
-                  <Ionicons name="image-outline" size={36} color="#D1D5DB" />
+                  <Ionicons name="image-outline" size={36} color={colors.textTertiary} />
                 </View>
               )}
             </View>
@@ -253,14 +261,16 @@ export default function EnterpriseFavoritesScreen() {
           <View className="flex-1 justify-between ml-4">
             <View>
               <Text
-                className="text-lg font-quicksand-bold text-neutral-800"
+                style={{ color: colors.textPrimary }}
+                className="text-lg font-quicksand-bold"
                 numberOfLines={2}
               >
                 {favoriteItem.product.name}
               </Text>
               {favoriteItem.product.description && (
                 <Text
-                  className="text-sm font-quicksand text-neutral-500 mt-1"
+                  style={{ color: colors.textSecondary }}
+                  className="text-sm font-quicksand mt-1"
                   numberOfLines={1}
                 >
                   {favoriteItem.product.description}
@@ -271,11 +281,11 @@ export default function EnterpriseFavoritesScreen() {
             {/* Prix et infos */}
             <View className="mt-2">
               <View className="flex-row items-center justify-between">
-                <Text className="text-xl font-quicksand-bold text-primary">
+                <Text style={{ color: colors.brandPrimary }} className="text-xl font-quicksand-bold">
                   {favoriteItem.product.price.toLocaleString("fr-FR")} FCFA
                 </Text>
               </View>
-              <Text className="text-[10px] font-quicksand text-gray-400 mt-1">
+              <Text style={{ color: colors.textTertiary }} className="text-[10px] font-quicksand mt-1">
                 {i18n.t("enterprise.favorites.labels.addedOn")}{" "}
                 {new Date(favoriteItem.createdAt).toLocaleDateString("fr-FR", {
                   day: "2-digit",
@@ -288,13 +298,14 @@ export default function EnterpriseFavoritesScreen() {
 
           {/* Bouton supprimer */}
           <TouchableOpacity
-            className="ml-2 self-start bg-red-50 p-2.5 rounded-xl"
+            style={{ backgroundColor: isDark ? colors.tertiary : '#FEF2F2' }}
+            className="ml-2 self-start p-2.5 rounded-xl"
             onPress={(e) => {
               e.stopPropagation();
               handleRemoveFavorite(favoriteItem.product._id);
             }}
           >
-            <Ionicons name="heart" size={22} color="#EF4444" />
+            <Ionicons name="heart" size={22} color={colors.error} />
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -304,7 +315,7 @@ export default function EnterpriseFavoritesScreen() {
   // État de chargement avec skeleton
   if (loading) {
     return (
-      <View className="flex-1 bg-background-secondary">
+      <View style={{ flex: 1, backgroundColor: colors.secondary }}>
         {renderSkeletonFavorites()}
       </View>
     );
@@ -313,12 +324,12 @@ export default function EnterpriseFavoritesScreen() {
   // État d'erreur
   if (error) {
     return (
-      <View className="flex-1 bg-background-secondary justify-center items-center p-6">
-        <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
-        <Text className="text-xl font-quicksand-bold text-neutral-800 mt-4 text-center">
+      <View style={{ flex: 1, backgroundColor: colors.secondary }} className="justify-center items-center p-6">
+        <Ionicons name="alert-circle-outline" size={64} color={colors.error} />
+        <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold mt-4 text-center">
           {i18n.t("enterprise.favorites.error.title")}
         </Text>
-        <Text className="text-base font-quicksand text-neutral-600 mt-2 text-center">
+        <Text style={{ color: colors.textSecondary }} className="text-base font-quicksand mt-2 text-center">
           {error}
         </Text>
         <TouchableOpacity
@@ -332,8 +343,8 @@ export default function EnterpriseFavoritesScreen() {
   }
 
   return (
-    <View className="flex-1 bg-background-secondary">
-      <ExpoStatusBar style="light" translucent />
+    <View style={{ flex: 1, backgroundColor: colors.secondary }}>
+      <ExpoStatusBar style={isDark ? "light" : "light"} translucent />
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
@@ -342,13 +353,13 @@ export default function EnterpriseFavoritesScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={["#10B981"]}
+            colors={[colors.brandPrimary]}
           />
         }
       >
         {/* Header */}
         <LinearGradient
-          colors={["#047857", "#10B981"]}
+          colors={[colors.brandGradientStart, colors.brandGradientEnd]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           className="rounded-b-3xl shadow-md"
@@ -385,15 +396,18 @@ export default function EnterpriseFavoritesScreen() {
         {/* Contenu principal */}
         {favoriteItems.length === 0 ? (
           <View className="flex-1 justify-center items-center py-20 px-6">
-            <Ionicons name="heart-outline" size={64} color="#CBD5E1" />
-            <Text className="text-xl font-quicksand-bold text-neutral-800 mt-4 text-center">
+            <Ionicons name="heart-outline" size={64} color={colors.textTertiary} />
+            <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold mt-4 text-center">
               {i18n.t("enterprise.favorites.empty.title")}
             </Text>
-            <Text className="text-base font-quicksand text-neutral-600 mt-2 text-center">
+            <Text style={{ color: colors.textSecondary }} className="text-base font-quicksand mt-2 text-center">
               {i18n.t("enterprise.favorites.empty.message")}
             </Text>
-            <TouchableOpacity className="mt-6 bg-primary rounded-2xl px-6 py-3">
-              <Text className="text-white font-quicksand-bold">
+            <TouchableOpacity
+              style={{ backgroundColor: colors.brandPrimary }}
+              className="mt-6 rounded-2xl px-6 py-3"
+            >
+              <Text style={{ color: colors.textOnBrand }} className="font-quicksand-bold">
                 {i18n.t("enterprise.favorites.empty.exploreButton")}
               </Text>
             </TouchableOpacity>
@@ -422,26 +436,31 @@ export default function EnterpriseFavoritesScreen() {
         <TouchableOpacity
           activeOpacity={1}
           onPress={() => setDeleteModal({ visible: false, productId: null })}
-          className="flex-1 bg-black/50 justify-center items-center px-6"
+          style={{ backgroundColor: colors.overlay }}
+          className="flex-1 justify-center items-center px-6"
         >
           <TouchableOpacity
             activeOpacity={1}
-            className="bg-white rounded-3xl p-6 w-full max-w-sm"
+            style={{ backgroundColor: colors.card }}
+            className="rounded-3xl p-6 w-full max-w-sm"
           >
             {/* Icon de coeur */}
             <View className="items-center mb-4">
-              <View className="w-16 h-16 bg-red-100 rounded-full justify-center items-center">
-                <Ionicons name="heart-dislike" size={32} color="#EF4444" />
+              <View
+                style={{ backgroundColor: isDark ? colors.tertiary : '#FEE2E2' }}
+                className="w-16 h-16 rounded-full justify-center items-center"
+              >
+                <Ionicons name="heart-dislike" size={32} color={colors.error} />
               </View>
             </View>
 
             {/* Titre */}
-            <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+            <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold text-center mb-2">
               {i18n.t("enterprise.favorites.deleteModal.title")}
             </Text>
 
             {/* Message */}
-            <Text className="text-base font-quicksand-medium text-neutral-600 text-center mb-6">
+            <Text style={{ color: colors.textSecondary }} className="text-base font-quicksand-medium text-center mb-6">
               {i18n.t("enterprise.favorites.deleteModal.message")}
             </Text>
 
@@ -451,19 +470,21 @@ export default function EnterpriseFavoritesScreen() {
                 onPress={() =>
                   setDeleteModal({ visible: false, productId: null })
                 }
-                className="flex-1 bg-neutral-100 py-3 rounded-xl"
+                style={{ backgroundColor: colors.tertiary }}
+                className="flex-1 py-3 rounded-xl"
                 activeOpacity={0.7}
               >
-                <Text className="text-neutral-700 font-quicksand-bold text-center">
+                <Text style={{ color: colors.textPrimary }} className="font-quicksand-bold text-center">
                   {i18n.t("enterprise.favorites.deleteModal.cancel")}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={confirmRemoveFavorite}
-                className="flex-1 bg-red-500 py-3 rounded-xl"
+                style={{ backgroundColor: colors.error }}
+                className="flex-1 py-3 rounded-xl"
                 activeOpacity={0.7}
               >
-                <Text className="text-white font-quicksand-bold text-center">
+                <Text style={{ color: colors.textOnBrand }} className="font-quicksand-bold text-center">
                   {i18n.t("enterprise.favorites.deleteModal.confirm")}
                 </Text>
               </TouchableOpacity>
@@ -482,36 +503,42 @@ export default function EnterpriseFavoritesScreen() {
         <TouchableOpacity
           activeOpacity={1}
           onPress={() => setErrorModal({ visible: false, message: "" })}
-          className="flex-1 bg-black/50 justify-center items-center px-6"
+          style={{ backgroundColor: colors.overlay }}
+          className="flex-1 justify-center items-center px-6"
         >
           <TouchableOpacity
             activeOpacity={1}
-            className="bg-white rounded-3xl p-6 w-full max-w-sm"
+            style={{ backgroundColor: colors.card }}
+            className="rounded-3xl p-6 w-full max-w-sm"
           >
             {/* Icon d'erreur */}
             <View className="items-center mb-4">
-              <View className="w-16 h-16 bg-red-100 rounded-full justify-center items-center">
-                <Ionicons name="alert-circle" size={32} color="#EF4444" />
+              <View
+                style={{ backgroundColor: isDark ? colors.tertiary : '#FEE2E2' }}
+                className="w-16 h-16 rounded-full justify-center items-center"
+              >
+                <Ionicons name="alert-circle" size={32} color={colors.error} />
               </View>
             </View>
 
             {/* Titre */}
-            <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+            <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold text-center mb-2">
               {i18n.t("enterprise.favorites.errorModal.title")}
             </Text>
 
             {/* Message */}
-            <Text className="text-base font-quicksand-medium text-neutral-600 text-center mb-6">
+            <Text style={{ color: colors.textSecondary }} className="text-base font-quicksand-medium text-center mb-6">
               {errorModal.message}
             </Text>
 
             {/* Bouton OK */}
             <TouchableOpacity
               onPress={() => setErrorModal({ visible: false, message: "" })}
-              className="bg-primary py-3 rounded-xl"
+              style={{ backgroundColor: colors.brandPrimary }}
+              className="py-3 rounded-xl"
               activeOpacity={0.7}
             >
-              <Text className="text-white font-quicksand-bold text-center">
+              <Text style={{ color: colors.textOnBrand }} className="font-quicksand-bold text-center">
                 {i18n.t("enterprise.favorites.errorModal.ok")}
               </Text>
             </TouchableOpacity>

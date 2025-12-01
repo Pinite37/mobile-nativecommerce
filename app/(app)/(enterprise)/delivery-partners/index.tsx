@@ -7,6 +7,7 @@ import { ActivityIndicator, Animated, Easing, FlatList, Image, RefreshControl, T
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useToast } from '../../../../components/ui/ToastManager';
 import { useLocale } from '../../../../contexts/LocaleContext';
+import { useTheme } from '../../../../contexts/ThemeContext';
 import i18n from '../../../../i18n/i18n';
 import EnterpriseService, { DeliveryPartnerStatus, DeliveryPartnersWithStatusResponse, Enterprise } from '../../../../services/api/EnterpriseService';
 
@@ -18,6 +19,7 @@ export default function DeliveryPartnersScreen() {
 	const toast = useToast();
 	const insets = useSafeAreaInsets();
 	const { locale } = useLocale();
+	const { colors, isDark } = useTheme();
 	const [partners, setPartners] = useState<DeliveryPartnerStatus[]>([]);
 	const [filtered, setFiltered] = useState<DeliveryPartnerStatus[]>([]);
 	const [search, setSearch] = useState('');
@@ -44,7 +46,7 @@ export default function DeliveryPartnersScreen() {
 		}, [shimmer]);
 		const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
 		return (
-			<View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
+			<View style={[{ backgroundColor: colors.border, overflow: 'hidden' }, style]}>
 				<Animated.View style={{
 					position: 'absolute', top: 0, bottom: 0, width: 120,
 					transform: [{ translateX }],
@@ -57,8 +59,9 @@ export default function DeliveryPartnersScreen() {
 
 	const SkeletonPartnerCard = () => (
 		<View
-			className="bg-white rounded-2xl mb-4"
+			className="rounded-2xl mb-4"
 			style={{
+				backgroundColor: colors.card,
 				shadowColor: "#000",
 				shadowOffset: { width: 0, height: 2 },
 				shadowOpacity: 0.1,
@@ -233,8 +236,9 @@ export default function DeliveryPartnersScreen() {
 			<TouchableOpacity
 				onPress={openDetail}
 				activeOpacity={0.9}
-				className="bg-white mx-4 mb-4 rounded-2xl overflow-hidden"
+				className="mx-4 mb-4 rounded-2xl overflow-hidden"
 				style={{
+					backgroundColor: colors.card,
 					shadowColor: "#000",
 					shadowOffset: { width: 0, height: 2 },
 					shadowOpacity: 0.1,
@@ -251,15 +255,15 @@ export default function DeliveryPartnersScreen() {
 						</View>
 
 						<View className="flex-1">
-							<Text className="text-neutral-800 font-quicksand-semibold text-base" numberOfLines={1}>
+							<Text className="font-quicksand-semibold text-base" style={{ color: colors.textPrimary }} numberOfLines={1}>
 								{item.firstName} {item.lastName}
 							</Text>
 							<View className="flex-row items-center mt-1">
-								<Text className="text-sm font-quicksand-medium text-neutral-600">
+								<Text className="text-sm font-quicksand-medium" style={{ color: colors.textSecondary }}>
 									{item.availability ? i18n.t("enterprise.deliveryPartners.status.available") : i18n.t("enterprise.deliveryPartners.status.unavailable")}
 								</Text>
 								{item.vehicleType && (
-									<Text className="text-sm font-quicksand-medium text-neutral-500 ml-2">
+									<Text className="text-sm font-quicksand-medium ml-2" style={{ color: colors.textTertiary }}>
 										• {item.vehicleType}
 									</Text>
 								)}
@@ -294,19 +298,19 @@ export default function DeliveryPartnersScreen() {
 
 					{/* Informations de contact - responsive */}
 					{(item.phone || item.email) && (
-						<View className="mb-3 pt-3 border-t border-neutral-100">
+						<View className="mb-3 pt-3" style={{ borderTopColor: colors.borderLight }}>
 							{item.phone && (
 								<View className="flex-row items-center mb-2">
-									<Ionicons name="call" size={14} color="#6B7280" />
-									<Text className="text-sm font-quicksand-medium text-neutral-600 ml-2 flex-1" numberOfLines={1}>
+									<Ionicons name="call" size={14} color={colors.textTertiary} />
+									<Text className="text-sm font-quicksand-medium ml-2 flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
 										{item.phone}
 									</Text>
 								</View>
 							)}
 							{item.email && (
 								<View className="flex-row items-center">
-									<Ionicons name="mail" size={14} color="#6B7280" />
-									<Text className="text-sm font-quicksand-medium text-neutral-600 ml-2 flex-1" numberOfLines={1}>
+									<Ionicons name="mail" size={14} color={colors.textTertiary} />
+									<Text className="text-sm font-quicksand-medium ml-2 flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
 										{item.email}
 									</Text>
 								</View>
@@ -315,12 +319,12 @@ export default function DeliveryPartnersScreen() {
 					)}
 
 					{/* Bouton d'action */}
-					<View className="pt-3 border-t border-neutral-100">
+					<View className="pt-3" style={{ borderTopColor: colors.borderLight }}>
 						{alreadyAssociated ? (
-							<View className="bg-neutral-100 rounded-xl px-4 py-3 items-center">
+							<View className="rounded-xl px-4 py-3 items-center" style={{ backgroundColor: colors.tertiary }}>
 								<View className="flex-row items-center">
-									<Ionicons name="checkmark-circle" size={16} color="#6B7280" />
-									<Text className="font-quicksand-semibold text-sm text-neutral-600 ml-2">
+									<Ionicons name="checkmark-circle" size={16} color={colors.textSecondary} />
+									<Text className="font-quicksand-semibold text-sm ml-2" style={{ color: colors.textSecondary }}>
 										{i18n.t("enterprise.deliveryPartners.actions.alreadyAssociated")}
 									</Text>
 								</View>
@@ -363,8 +367,8 @@ export default function DeliveryPartnersScreen() {
 	};
 
 	return (
-		<View className="flex-1 bg-background-secondary">
-			<ExpoStatusBar style="light" translucent />
+		<View className="flex-1" style={{ backgroundColor: colors.secondary }}>
+			<ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
 
 			{loading ? (
 				renderSkeletonPartners()
@@ -440,7 +444,7 @@ export default function DeliveryPartnersScreen() {
 					</LinearGradient>
 
 					{/* Contenu principal */}
-					<View className="flex-1 -mt-6 rounded-t-[32px] bg-background-secondary">
+					<View className="flex-1 -mt-6 rounded-t-[32px]" style={{ backgroundColor: colors.secondary }}>
 						<FlatList
 							data={filtered}
 							keyExtractor={(item) => item._id}
@@ -448,13 +452,13 @@ export default function DeliveryPartnersScreen() {
 							renderItem={renderItem}
 							ListEmptyComponent={
 								<View className="items-center pt-20 px-6">
-									<View className="w-20 h-20 rounded-full bg-neutral-100 items-center justify-center mb-4">
-										<Ionicons name="people" size={32} color="#9CA3AF" />
+									<View className="w-20 h-20 rounded-full items-center justify-center mb-4" style={{ backgroundColor: colors.tertiary }}>
+										<Ionicons name="people" size={32} color={colors.textTertiary} />
 									</View>
-									<Text className="text-neutral-700 font-quicksand-semibold text-lg text-center mb-2">
+									<Text className="font-quicksand-semibold text-lg text-center mb-2" style={{ color: colors.textPrimary }}>
 										{i18n.t("enterprise.deliveryPartners.empty.title")}
 									</Text>
-									<Text className="text-neutral-500 font-quicksand-regular text-center">
+									<Text className="font-quicksand-regular text-center" style={{ color: colors.textSecondary }}>
 										{i18n.t("enterprise.deliveryPartners.empty.message")}
 									</Text>
 								</View>

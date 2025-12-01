@@ -25,6 +25,7 @@ import NotificationModal, {
   useNotification,
 } from "../../../../components/ui/NotificationModal";
 import { useLocale } from "../../../../contexts/LocaleContext";
+import { useTheme } from "../../../../contexts/ThemeContext";
 import i18n from "../../../../i18n/i18n";
 import AdvertisementService, {
   CreateAdvertisementPayload,
@@ -44,6 +45,7 @@ function ImagePickerModal({
   onTakePhoto,
   onPickImage,
 }: ImagePickerModalProps) {
+  const { colors } = useTheme();
   return (
     <Modal
       visible={visible}
@@ -58,21 +60,22 @@ function ImagePickerModal({
       >
         <View className="flex-1 justify-end">
           <TouchableOpacity
-            className="bg-white rounded-t-3xl"
+            style={{ backgroundColor: colors.card }}
+            className="rounded-t-3xl"
             activeOpacity={1}
             onPress={() => {}}
           >
             {/* Handle bar */}
             <View className="w-full items-center pt-3 pb-2">
-              <View className="w-12 h-1 bg-neutral-300 rounded-full" />
+              <View style={{ backgroundColor: colors.border }} className="w-12 h-1 rounded-full" />
             </View>
 
             {/* Header */}
-            <View className="px-6 pb-4 border-b border-neutral-100">
-              <Text className="text-lg font-quicksand-bold text-neutral-800">
+            <View style={{ borderBottomColor: colors.border }} className="px-6 pb-4 border-b">
+              <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold">
                 {i18n.t("enterprise.advertisementsCreate.imagePicker.title")}
               </Text>
-              <Text className="text-sm text-neutral-500 font-quicksand-medium mt-1">
+              <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand-medium mt-1">
                 {i18n.t("enterprise.advertisementsCreate.imagePicker.subtitle")}
               </Text>
             </View>
@@ -113,18 +116,18 @@ function ImagePickerModal({
                 }}
                 className="flex-row items-center py-4"
               >
-                <View className="w-10 h-10 rounded-full bg-green-50 items-center justify-center mr-4">
-                  <Ionicons name="images" size={20} color="#10B981" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-base font-quicksand-semibold text-neutral-800">
-                    {i18n.t("enterprise.advertisementsCreate.imagePicker.pickFromGallery")}
-                  </Text>
-                  <Text className="text-sm text-neutral-500 font-quicksand-medium">
-                    {i18n.t("enterprise.advertisementsCreate.imagePicker.pickFromGalleryDescription")}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+              <View className="w-10 h-10 rounded-full bg-green-50 items-center justify-center mr-4">
+                <Ionicons name="images" size={20} color="#10B981" />
+              </View>
+              <View className="flex-1">
+                <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-semibold">
+                  {i18n.t("enterprise.advertisementsCreate.imagePicker.pickFromGallery")}
+                </Text>
+                <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand-medium">
+                  {i18n.t("enterprise.advertisementsCreate.imagePicker.pickFromGalleryDescription")}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
@@ -132,9 +135,10 @@ function ImagePickerModal({
             <View className="px-6 pb-6 pt-2">
               <TouchableOpacity
                 onPress={onClose}
-                className="w-full bg-neutral-100 py-4 rounded-2xl items-center"
+                style={{ backgroundColor: colors.secondary }}
+                className="w-full py-4 rounded-2xl items-center"
               >
-                <Text className="text-base font-quicksand-semibold text-neutral-700">
+                <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-semibold">
                   {i18n.t("enterprise.advertisementsCreate.imagePicker.cancel")}
                 </Text>
               </TouchableOpacity>
@@ -151,6 +155,7 @@ export default function CreateAdvertisement() {
   const params = useLocalSearchParams<{ id?: string }>();
   const isEditing = !!params.id;
   const { locale } = useLocale();
+  const { colors, isDark } = useTheme();
   const { notification, showNotification, hideNotification } =
     useNotification();
 
@@ -355,8 +360,8 @@ export default function CreateAdvertisement() {
   };
 
   return (
-    <View className="flex-1 bg-background-secondary">
-      <ExpoStatusBar style="light" translucent />
+    <View style={{ flex: 1, backgroundColor: colors.secondary }}>
+      <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
 
       {/* Header */}
       <LinearGradient
@@ -390,13 +395,14 @@ export default function CreateAdvertisement() {
         className="flex-1"
       >
         <ScrollView
-          className="-mt-6 rounded-t-[32px] bg-background-secondary flex-1 px-4 pt-8"
+          style={{ backgroundColor: colors.secondary }}
+          className="-mt-6 rounded-t-[32px] flex-1 px-4 pt-8"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
         >
           {/* Image Section */}
           <View>
-            <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">
+            <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-semibold mb-3">
               {i18n.t("enterprise.advertisementsCreate.sections.images")}
             </Text>
 
@@ -412,7 +418,8 @@ export default function CreateAdvertisement() {
                     <View key={index} className="relative mr-3">
                       <Image
                         source={{ uri: imgUri }}
-                        className="w-24 h-24 rounded-2xl border border-neutral-200"
+                        style={{ borderColor: colors.border }}
+                        className="w-24 h-24 rounded-2xl border"
                         resizeMode="cover"
                       />
                       <TouchableOpacity
@@ -446,18 +453,19 @@ export default function CreateAdvertisement() {
             {images.length < 4 && (
               <TouchableOpacity
                 onPress={showImagePickerOptions}
-                className="w-full h-24 bg-white rounded-2xl items-center justify-center border border-dashed border-neutral-300 shadow-sm"
+                style={{ backgroundColor: colors.card, borderColor: colors.border }}
+                className="w-full h-24 rounded-2xl items-center justify-center border border-dashed shadow-sm"
                 activeOpacity={0.7}
               >
-                <Ionicons name="add" size={32} color="#9CA3AF" />
-                <Text className="text-neutral-500 font-quicksand-medium mt-2 text-sm">
+                <Ionicons name="add" size={32} color={colors.textSecondary} />
+                <Text style={{ color: colors.textSecondary }} className="font-quicksand-medium mt-2 text-sm">
                   {i18n.t("enterprise.advertisementsCreate.labels.addImage")} ({images.length}/4)
                 </Text>
               </TouchableOpacity>
             )}
 
             {images.length === 0 && (
-              <Text className="text-neutral-400 font-quicksand-medium text-xs mt-2 text-center">
+              <Text style={{ color: colors.textSecondary }} className="font-quicksand-medium text-xs mt-2 text-center">
                 {i18n.t("enterprise.advertisementsCreate.labels.requiredImage")}
               </Text>
             )}
@@ -465,40 +473,42 @@ export default function CreateAdvertisement() {
 
           {/* Title Section */}
           <View className="mt-6">
-            <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">
+            <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-semibold mb-3">
               {i18n.t("enterprise.advertisementsCreate.sections.title")}
             </Text>
             <TextInput
               value={title}
               onChangeText={setTitle}
               placeholder={i18n.t("enterprise.advertisementsCreate.placeholders.title")}
-              className="bg-white rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border border-neutral-200 shadow-sm"
-              placeholderTextColor="#9CA3AF"
+              style={{ backgroundColor: colors.card, color: colors.textPrimary, borderColor: colors.border }}
+              className="rounded-2xl px-4 py-4 font-quicksand-medium border shadow-sm"
+              placeholderTextColor={colors.textSecondary}
               maxLength={100}
               multiline
               numberOfLines={2}
             />
-            <Text className="text-xs text-neutral-500 font-quicksand-medium mt-2 text-right">
+            <Text style={{ color: colors.textSecondary }} className="text-xs font-quicksand-medium mt-2 text-right">
               {title.length}/{i18n.t("enterprise.advertisementsCreate.limits.titleMax")} {i18n.t("enterprise.advertisementsCreate.labels.characters")}
             </Text>
           </View>
 
           {/* Description */}
           <View className="mt-6">
-            <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">
+            <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-semibold mb-3">
               {i18n.t("enterprise.advertisementsCreate.sections.description")}
             </Text>
             <TextInput
               value={description}
               onChangeText={setDescription}
               placeholder={i18n.t("enterprise.advertisementsCreate.placeholders.description")}
-              className="bg-white rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border border-neutral-200 shadow-sm"
-              placeholderTextColor="#9CA3AF"
+              style={{ backgroundColor: colors.card, color: colors.textPrimary, borderColor: colors.border }}
+              className="rounded-2xl px-4 py-4 font-quicksand-medium border shadow-sm"
+              placeholderTextColor={colors.textSecondary}
               multiline
               numberOfLines={4}
               maxLength={500}
             />
-            <Text className="text-xs text-neutral-500 font-quicksand-medium mt-2 text-right">
+            <Text style={{ color: colors.textSecondary }} className="text-xs font-quicksand-medium mt-2 text-right">
               {description.length}/{i18n.t("enterprise.advertisementsCreate.limits.descriptionMax")}
             </Text>
           </View>
@@ -506,7 +516,7 @@ export default function CreateAdvertisement() {
           {/* Type & Audience */}
           <View className="mt-6 flex-row gap-3">
             <View className="flex-1">
-              <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">
+              <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-semibold mb-3">
                 {i18n.t("enterprise.advertisementsCreate.sections.type")}
               </Text>
               <View className="flex-row flex-wrap gap-2">
@@ -514,17 +524,18 @@ export default function CreateAdvertisement() {
                   <TouchableOpacity
                     key={t}
                     onPress={() => setType(t as any)}
-                    className={`px-3 py-2 rounded-xl border shadow-sm ${
-                      type === t
-                        ? "bg-emerald-500 border-emerald-500"
-                        : "bg-white border-neutral-200"
-                    }`}
+                    style={{
+                      backgroundColor: type === t ? "#10B981" : colors.card,
+                      borderColor: type === t ? "#10B981" : colors.border
+                    }}
+                    className="px-3 py-2 rounded-xl border shadow-sm"
                     activeOpacity={1}
                   >
                     <Text
-                      className={`text-xs font-quicksand-semibold ${
-                        type === t ? "text-white" : "text-neutral-700"
-                      }`}
+                      style={{
+                        color: type === t ? "#FFFFFF" : colors.textPrimary
+                      }}
+                      className="text-xs font-quicksand-semibold"
                     >
                       {t}
                     </Text>
@@ -533,7 +544,7 @@ export default function CreateAdvertisement() {
               </View>
             </View>
             <View className="flex-1">
-              <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">
+              <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-semibold mb-3">
                 {i18n.t("enterprise.advertisementsCreate.sections.audience")}
               </Text>
               <View className="flex-row flex-wrap gap-2">
@@ -541,17 +552,18 @@ export default function CreateAdvertisement() {
                   <TouchableOpacity
                     key={a}
                     onPress={() => setAudience(a as any)}
-                    className={`px-3 py-2 rounded-xl border shadow-sm ${
-                      audience === a
-                        ? "bg-emerald-500 border-emerald-500"
-                        : "bg-white border-neutral-200"
-                    }`}
+                    style={{
+                      backgroundColor: audience === a ? "#10B981" : colors.card,
+                      borderColor: audience === a ? "#10B981" : colors.border
+                    }}
+                    className="px-3 py-2 rounded-xl border shadow-sm"
                     activeOpacity={1}
                   >
                     <Text
-                      className={`text-xs font-quicksand-semibold ${
-                        audience === a ? "text-white" : "text-neutral-700"
-                      }`}
+                      style={{
+                        color: audience === a ? "#FFFFFF" : colors.textPrimary
+                      }}
+                      className="text-xs font-quicksand-semibold"
                     >
                       {a}
                     </Text>
@@ -563,7 +575,7 @@ export default function CreateAdvertisement() {
 
           {/* Dates */}
           <View className="mt-6">
-            <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">
+            <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-semibold mb-3">
               {i18n.t("enterprise.advertisementsCreate.sections.period")}
             </Text>
             <View className="flex-row gap-3">
@@ -575,13 +587,14 @@ export default function CreateAdvertisement() {
                     setShowStartPicker(true);
                   }
                 }}
-                className="flex-1 bg-white rounded-2xl px-4 py-4 border border-neutral-200 shadow-sm"
+                style={{ backgroundColor: colors.card, borderColor: colors.border }}
+                className="flex-1 rounded-2xl px-4 py-4 border shadow-sm"
                 activeOpacity={0.7}
               >
-                <Text className="text-xs text-neutral-500 font-quicksand-medium mb-1">
+                <Text style={{ color: colors.textSecondary }} className="text-xs font-quicksand-medium mb-1">
                   {i18n.t("enterprise.advertisementsCreate.labels.start")}
                 </Text>
-                <Text className="text-neutral-800 font-quicksand-semibold text-sm">
+                <Text style={{ color: colors.textPrimary }} className="font-quicksand-semibold text-sm">
                   {startDate.toLocaleString(locale === "fr" ? "fr-FR" : "en-US")}
                 </Text>
               </TouchableOpacity>
@@ -593,13 +606,14 @@ export default function CreateAdvertisement() {
                     setShowEndPicker(true);
                   }
                 }}
-                className="flex-1 bg-white rounded-2xl px-4 py-4 border border-neutral-200 shadow-sm"
+                style={{ backgroundColor: colors.card, borderColor: colors.border }}
+                className="flex-1 rounded-2xl px-4 py-4 border shadow-sm"
                 activeOpacity={0.7}
               >
-                <Text className="text-xs text-neutral-500 font-quicksand-medium mb-1">
+                <Text style={{ color: colors.textSecondary }} className="text-xs font-quicksand-medium mb-1">
                   {i18n.t("enterprise.advertisementsCreate.labels.end")}
                 </Text>
-                <Text className="text-neutral-800 font-quicksand-semibold text-sm">
+                <Text style={{ color: colors.textPrimary }} className="font-quicksand-semibold text-sm">
                   {endDate.toLocaleString(locale === "fr" ? "fr-FR" : "en-US")}
                 </Text>
               </TouchableOpacity>
@@ -746,10 +760,10 @@ export default function CreateAdvertisement() {
           {/* Preview Section */}
           {(title.trim() || images.length > 0) && (
             <View className="mt-8">
-              <Text className="text-base font-quicksand-semibold text-neutral-800 mb-3">
+              <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-semibold mb-3">
                 {i18n.t("enterprise.advertisementsCreate.sections.preview")}
               </Text>
-              <View className="bg-white rounded-2xl overflow-hidden border border-neutral-100 shadow-sm">
+              <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="rounded-2xl overflow-hidden border shadow-sm">
                 {images.length > 0 ? (
                   <View className="relative">
                     <Image
@@ -773,8 +787,8 @@ export default function CreateAdvertisement() {
                     </View>
                   </View>
                 ) : (
-                  <View className="w-full h-32 bg-neutral-100 items-center justify-center">
-                    <Text className="text-neutral-600 font-quicksand-medium">
+                  <View style={{ backgroundColor: colors.secondary }} className="w-full h-32 items-center justify-center">
+                    <Text style={{ color: colors.textSecondary }} className="font-quicksand-medium">
                       {title.trim() || i18n.t("enterprise.advertisementsCreate.preview.defaultText")}
                     </Text>
                   </View>
@@ -786,8 +800,8 @@ export default function CreateAdvertisement() {
 
         {/* Bottom Actions */}
         <View
-          className="absolute bottom-0 left-0 right-0 bg-white border-t border-neutral-100 px-4 py-4"
-          style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+          style={{ backgroundColor: colors.card, borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 16) }}
+          className="absolute bottom-0 left-0 right-0 border-t px-4 py-4"
         >
           <View className="flex-row gap-3">
             <TouchableOpacity

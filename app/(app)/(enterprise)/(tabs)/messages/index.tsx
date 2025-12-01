@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocale } from "../../../../../contexts/LocaleContext";
+import { useTheme } from "../../../../../contexts/ThemeContext";
 import { useSocket } from "../../../../../hooks/useSocket";
 import i18n from "../../../../../i18n/i18n";
 import MessagingService, {
@@ -28,6 +29,7 @@ export default function MessagesPage() {
   const insets = useSafeAreaInsets();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { locale } = useLocale(); // Écoute les changements de langue pour re-render automatiquement
+  const { colors, isDark } = useTheme();
   const { onNewMessage, onMessagesRead } = useSocket();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -287,15 +289,15 @@ export default function MessagesPage() {
 
     return (
       <TouchableOpacity
-        className={`rounded-2xl mx-4 my-2 p-4 bg-white`}
         style={{
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 1 },
           shadowOpacity: 0.03,
           shadowRadius: 4,
-          elevation: 1, // Reduced elevation
-          backgroundColor: isUnread ? "#ECFDF5" : "#FFFFFF",
+          elevation: 1,
+          backgroundColor: isUnread ? (isDark ? colors.tertiary : "#ECFDF5") : colors.card,
         }}
+        className="rounded-2xl mx-4 my-2 p-4"
         activeOpacity={0.7}
         onPress={() => {
           router.push(
@@ -323,7 +325,7 @@ export default function MessagesPage() {
                       : "person"
                   }
                   size={24}
-                  color="#10B981"
+                  color={colors.brandPrimary}
                 />
               </View>
             )}
@@ -342,7 +344,8 @@ export default function MessagesPage() {
           <View className="ml-4 flex-1">
             <View className="flex-row items-center justify-between mb-1">
               <Text
-                className="text-lg font-quicksand-bold text-neutral-900"
+                style={{ color: colors.textPrimary }}
+                className="text-lg font-quicksand-bold"
                 numberOfLines={1}
               >
                 {otherParticipant
@@ -351,9 +354,14 @@ export default function MessagesPage() {
                   : i18n.t("enterprise.messages.conversation.unknownUser")}
               </Text>
               <Text
+                style={{
+                  color: isUnread
+                    ? colors.brandPrimary
+                    : colors.textTertiary
+                }}
                 className={`text-xs ${isUnread
-                  ? "text-primary-600 font-quicksand-bold"
-                  : "text-neutral-400 font-quicksand-medium"
+                  ? "font-quicksand-bold"
+                  : "font-quicksand-medium"
                   }`}
               >
                 {String(lastMessageTime)}
@@ -372,12 +380,13 @@ export default function MessagesPage() {
                 <Ionicons
                   name="cube-outline"
                   size={14}
-                  color="#9CA3AF"
+                  color={colors.textTertiary}
                   style={{ marginRight: 4 }}
                 />
               )}
               <Text
-                className="text-xs text-neutral-500 font-quicksand-medium"
+                style={{ color: colors.textSecondary }}
+                className="text-xs font-quicksand-medium"
                 numberOfLines={1}
               >
                 {conversation?.product?.name && conversation?.product?.price
@@ -390,9 +399,14 @@ export default function MessagesPage() {
 
             {/* Dernier message */}
             <Text
+              style={{
+                color: isUnread
+                  ? colors.textPrimary
+                  : colors.textSecondary
+              }}
               className={`text-sm ${isUnread
-                ? "text-neutral-800 font-quicksand-bold"
-                : "text-neutral-500 font-quicksand-medium"
+                ? "font-quicksand-bold"
+                : "font-quicksand-medium"
                 }`}
               numberOfLines={2}
             >
@@ -402,7 +416,7 @@ export default function MessagesPage() {
 
           {/* Indicateur */}
           <View className="ml-2">
-            <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
+            <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
           </View>
         </View>
       </TouchableOpacity>
@@ -438,7 +452,7 @@ export default function MessagesPage() {
       outputRange: [-150, 150],
     });
     return (
-      <View style={[{ backgroundColor: "#F3F4F6", overflow: "hidden" }, style]}>
+      <View style={[{ backgroundColor: isDark ? colors.tertiary : "#F3F4F6", overflow: "hidden" }, style]}>
         <Animated.View
           style={{
             position: "absolute",
@@ -446,7 +460,7 @@ export default function MessagesPage() {
             bottom: 0,
             width: 120,
             transform: [{ translateX }],
-            backgroundColor: "rgba(255,255,255,0.5)",
+            backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.5)",
             opacity: 0.7,
           }}
         />
@@ -455,7 +469,18 @@ export default function MessagesPage() {
   };
 
   const SkeletonCard = () => (
-    <View className="rounded-2xl mx-4 my-2 p-4 bg-white shadow-sm border border-neutral-50">
+    <View 
+      style={{ 
+        backgroundColor: colors.card,
+        borderColor: colors.border,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.03,
+        shadowRadius: 4,
+        elevation: 1
+      }}
+      className="rounded-2xl mx-4 my-2 p-4 border"
+    >
       <View className="flex-row items-center">
         {/* Avatar skeleton */}
         <ShimmerBlock style={{ width: 56, height: 56, borderRadius: 28 }} />
@@ -510,15 +535,15 @@ export default function MessagesPage() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-neutral-50">
+      <View style={{ flex: 1, backgroundColor: colors.secondary }}>
         <StatusBar
-          backgroundColor="#047857"
+          backgroundColor={isDark ? colors.brandGradientStart : "#047857"}
           barStyle="light-content"
           translucent
         />
         {/* Header avec gradient */}
         <LinearGradient
-          colors={["#047857", "#10B981"]}
+          colors={[colors.brandGradientStart, colors.brandGradientEnd]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{
@@ -546,21 +571,21 @@ export default function MessagesPage() {
         </LinearGradient>
 
         {/* Conteneur du contenu */}
-        <View className="flex-1 bg-neutral-50 pt-4">{renderSkeletons()}</View>
+        <View style={{ flex: 1, backgroundColor: colors.primary, paddingTop: 4 }}>{renderSkeletons()}</View>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-neutral-50">
+    <View style={{ flex: 1, backgroundColor: colors.secondary }}>
       <StatusBar
-        backgroundColor="#047857"
+        backgroundColor={isDark ? colors.brandGradientStart : "#047857"}
         barStyle="light-content"
         translucent
       />
       {/* Header avec gradient */}
       <LinearGradient
-        colors={["#047857", "#10B981"]}
+        colors={[colors.brandGradientStart, colors.brandGradientEnd]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{
@@ -595,15 +620,17 @@ export default function MessagesPage() {
             value={searchQuery}
             onChangeText={handleSearch}
             placeholder={i18n.t("enterprise.messages.search.placeholder")}
-            className="bg-white rounded-2xl pl-11 pr-4 py-3.5 text-neutral-800 font-quicksand-medium text-base"
-            placeholderTextColor="#9CA3AF"
             style={{
+              backgroundColor: isDark ? colors.card : '#FFFFFF',
+              color: colors.textPrimary,
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.05,
               shadowRadius: 4,
               elevation: 2,
             }}
+            className="rounded-2xl pl-11 pr-4 py-3.5 font-quicksand-medium text-base"
+            placeholderTextColor={colors.textTertiary}
           />
           {searching && (
             <View className="absolute right-4 top-3.5">
@@ -616,24 +643,26 @@ export default function MessagesPage() {
       {/* Filtres et Stats */}
       <View className="flex-row justify-between items-center px-6 py-4">
         <View className="flex-row gap-2">
-          {/* Bouton Tous */}
           <TouchableOpacity
             activeOpacity={1}
             onPress={() => setShowUnreadOnly(false)}
-            className={`flex-row items-center px-4 py-2 rounded-full border ${!showUnreadOnly
-              ? "bg-primary-50 border-primary-200"
-              : "bg-white border-neutral-200"
-              }`}
+            style={{
+              backgroundColor: !showUnreadOnly ? (isDark ? colors.tertiary : '#ECFDF5') : (isDark ? colors.card : '#FFFFFF'),
+              borderColor: !showUnreadOnly ? colors.brandPrimary : colors.border
+            }}
+            className="flex-row items-center px-4 py-2 rounded-full border"
           >
             <Ionicons
               name="mail-outline"
               size={16}
-              color={!showUnreadOnly ? "#10B981" : "#6B7280"}
+              color={!showUnreadOnly ? colors.brandPrimary : colors.textSecondary}
               style={{ marginRight: 6 }}
             />
             <Text
-              className={`font-quicksand-bold text-xs ${!showUnreadOnly ? "text-primary-700" : "text-neutral-600"
-                }`}
+              style={{
+                color: !showUnreadOnly ? colors.brandPrimary : colors.textSecondary
+              }}
+              className="font-quicksand-bold text-xs"
             >
               {i18n.t("enterprise.messages.filters.all")}
             </Text>
@@ -643,33 +672,36 @@ export default function MessagesPage() {
           <TouchableOpacity
             activeOpacity={1}
             onPress={() => setShowUnreadOnly(true)}
-            className={`flex-row items-center px-4 py-2 rounded-full border ${showUnreadOnly
-              ? "bg-primary-50 border-primary-200"
-              : "bg-white border-neutral-200"
-              }`}
+            style={{
+              backgroundColor: showUnreadOnly ? (isDark ? colors.tertiary : '#ECFDF5') : (isDark ? colors.card : '#FFFFFF'),
+              borderColor: showUnreadOnly ? colors.brandPrimary : colors.border
+            }}
+            className="flex-row items-center px-4 py-2 rounded-full border"
           >
             <Ionicons
               name="mail-unread"
               size={16}
-              color={showUnreadOnly ? "#10B981" : "#6B7280"}
+              color={showUnreadOnly ? colors.brandPrimary : colors.textSecondary}
               style={{ marginRight: 6 }}
             />
             <Text
-              className={`font-quicksand-bold text-xs ${showUnreadOnly ? "text-primary-700" : "text-neutral-600"
-                }`}
+              style={{
+                color: showUnreadOnly ? colors.brandPrimary : colors.textSecondary
+              }}
+              className="font-quicksand-bold text-xs"
             >
               {i18n.t("enterprise.messages.filters.unread")}
             </Text>
           </TouchableOpacity>
         </View>
 
-        <Text className="text-neutral-400 font-quicksand-medium text-xs">
+        <Text style={{ color: colors.textTertiary }} className="font-quicksand-medium text-xs">
           {displayedConversations.length} {displayedConversations.length !== 1 ? i18n.t("enterprise.messages.count.conversationsPlural") : i18n.t("enterprise.messages.count.conversations")}
         </Text>
       </View>
 
       {/* Conteneur du contenu */}
-      <View className="flex-1">
+      <View style={{ flex: 1, backgroundColor: colors.primary }}>
         {/* Liste des conversations */}
         <FlatList
           data={displayedConversations}
@@ -680,37 +712,41 @@ export default function MessagesPage() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={["#10B981"]}
-              tintColor="#10B981"
+              colors={[colors.brandPrimary]}
+              tintColor={colors.brandPrimary}
             />
           }
           ListEmptyComponent={
             <View className="flex-1 justify-center items-center py-20 px-8">
-              <View className="bg-white p-6 rounded-full shadow-sm mb-6">
+              <View 
+                style={{ backgroundColor: colors.card }}
+                className="p-6 rounded-full shadow-sm mb-6"
+              >
                 <Ionicons
                   name="chatbubbles-outline"
                   size={48}
-                  color="#D1D5DB"
+                  color={colors.textTertiary}
                 />
               </View>
-              <Text className="text-xl font-quicksand-bold text-neutral-800 mb-2 text-center">
+              <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold mb-2 text-center">
                 {searchQuery.trim().length >= 2
                   ? i18n.t("enterprise.messages.empty.noResults")
                   : i18n.t("enterprise.messages.empty.noConversations")}
               </Text>
-              <Text className="text-neutral-500 font-quicksand-medium text-center leading-6">
+              <Text style={{ color: colors.textSecondary }} className="font-quicksand-medium text-center leading-6">
                 {searchQuery.trim().length >= 2
                   ? i18n.t("enterprise.messages.empty.noResultsMessage", { query: searchQuery })
                   : i18n.t("enterprise.messages.empty.noConversationsMessage")}
               </Text>
               {searchQuery.trim().length === 0 && (
                 <TouchableOpacity
-                  className="mt-8 bg-primary-600 rounded-2xl px-8 py-3.5 shadow-lg shadow-primary-500/30"
+                  style={{ backgroundColor: colors.brandPrimary }}
+                  className="mt-8 rounded-2xl px-8 py-3.5 shadow-lg shadow-primary-500/30"
                   onPress={() =>
                     router.push("/(app)/(enterprise)/(tabs)/" as any)
                   }
                 >
-                  <Text className="text-white font-quicksand-bold text-base">
+                  <Text style={{ color: colors.textOnBrand }} className="font-quicksand-bold text-base">
                     {i18n.t("enterprise.messages.empty.discoverProducts")}
                   </Text>
                 </TouchableOpacity>
@@ -733,7 +769,7 @@ export default function MessagesPage() {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.4)",
+            backgroundColor: colors.overlay,
             justifyContent: "center",
             alignItems: "center",
             zIndex: 9999,
@@ -753,7 +789,7 @@ export default function MessagesPage() {
 
           <View
             style={{
-              backgroundColor: "white",
+              backgroundColor: colors.card,
               borderRadius: 24,
               padding: 8,
               width: "80%",
@@ -766,12 +802,12 @@ export default function MessagesPage() {
           >
             {/* Titre */}
             <View style={{ paddingHorizontal: 20, paddingVertical: 16 }}>
-              <Text className="font-quicksand-bold text-neutral-900 text-lg text-center">
+              <Text style={{ color: colors.textPrimary }} className="font-quicksand-bold text-lg text-center">
                 {i18n.t("enterprise.messages.contextMenu.options")}
               </Text>
             </View>
 
-            <View style={{ height: 1, backgroundColor: "#F3F4F6" }} />
+            <View style={{ height: 1, backgroundColor: colors.border }} />
 
             {/* Options */}
             <TouchableOpacity
@@ -786,10 +822,10 @@ export default function MessagesPage() {
               }}
               disabled={contextMenuLoading}
             >
-              <View className="w-10 h-10 rounded-full bg-neutral-100 justify-center items-center mr-4">
-                <Ionicons name="archive-outline" size={20} color="#4B5563" />
+              <View style={{ backgroundColor: colors.tertiary }} className="w-10 h-10 rounded-full justify-center items-center mr-4">
+                <Ionicons name="archive-outline" size={20} color={colors.textSecondary} />
               </View>
-              <Text className="font-quicksand-semibold text-neutral-700 text-base">
+              <Text style={{ color: colors.textPrimary }} className="font-quicksand-semibold text-base">
                 {i18n.t("enterprise.messages.contextMenu.archive")}
               </Text>
             </TouchableOpacity>
@@ -806,16 +842,18 @@ export default function MessagesPage() {
               }}
               disabled={contextMenuLoading}
             >
-              <View className="w-10 h-10 rounded-full bg-red-50 justify-center items-center mr-4">
+              <View style={{ backgroundColor: isDark ? colors.tertiary : '#FEF2F2' }} className="w-10 h-10 rounded-full justify-center items-center mr-4">
                 {contextMenuLoading ? (
-                  <ActivityIndicator size="small" color="#EF4444" />
+                  <ActivityIndicator size="small" color={colors.error} />
                 ) : (
-                  <Ionicons name="trash-outline" size={20} color="#EF4444" />
+                  <Ionicons name="trash-outline" size={20} color={colors.error} />
                 )}
               </View>
               <Text
-                className={`font-quicksand-semibold text-base ${contextMenuLoading ? "text-neutral-400" : "text-red-600"
-                  }`}
+                style={{
+                  color: contextMenuLoading ? colors.textTertiary : colors.error
+                }}
+                className="font-quicksand-semibold text-base"
               >
                 {contextMenuLoading
                   ? i18n.t("enterprise.messages.contextMenu.deleting")

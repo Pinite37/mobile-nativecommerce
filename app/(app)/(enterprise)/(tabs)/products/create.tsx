@@ -22,6 +22,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import NotificationModal, { useNotification } from "../../../../../components/ui/NotificationModal";
 import { useToast } from "../../../../../components/ui/ToastManager";
 import { useLocale } from "../../../../../contexts/LocaleContext";
+import { useTheme } from "../../../../../contexts/ThemeContext";
 import i18n from "../../../../../i18n/i18n";
 
 import { useSubscription } from "../../../../../contexts/SubscriptionContext";
@@ -105,6 +106,7 @@ export default function CreateProduct() {
   const { locale } = useLocale(); // Écoute les changements de langue pour re-render automatiquement
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [loading, setLoading] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -551,15 +553,15 @@ export default function CreateProduct() {
   };
 
   return (
-    <View className="flex-1 bg-background-secondary">
-      <ExpoStatusBar style="light" translucent />
+    <View style={{ flex: 1, backgroundColor: colors.secondary }}>
+      <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         {/* Header */}
         <LinearGradient
-          colors={['#10B981', '#34D399']}
+          colors={['#047857', '#10B981']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={{
@@ -602,7 +604,7 @@ export default function CreateProduct() {
         </LinearGradient>
 
         {/* Step Indicator + Progress */}
-        <View className="bg-white px-6 pt-5 pb-6 border-b border-neutral-100">
+        <View style={{ backgroundColor: colors.card, paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24, borderBottomWidth: 1, borderBottomColor: colors.border }}>
           <View className="h-2.5 w-full rounded-full bg-neutral-200 overflow-hidden mb-5">
             <View
               style={{
@@ -614,7 +616,7 @@ export default function CreateProduct() {
             />
           </View>
           <View className="flex-row items-center justify-center mb-4">
-            <Text className="text-sm text-neutral-600 font-quicksand-medium">
+            <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 14 }}>
               {i18n.t("enterprise.products.create.progress.step")} {currentStepIndex + 1} {i18n.t("enterprise.products.create.progress.of")} {steps.length} • {Math.round(progress * 100)}% {i18n.t("enterprise.products.create.progress.completed")}
             </Text>
           </View>
@@ -635,20 +637,26 @@ export default function CreateProduct() {
                     className="items-center flex-1"
                   >
                     <View
-                      className={`w-10 h-10 rounded-full items-center justify-center ${currentStep === step.id
-                        ? "bg-primary-500"
-                        : steps.findIndex(s => s.id === currentStep) > index
-                          ? "bg-success-500"
-                          : hasErr ? 'bg-red-200' : "bg-neutral-200"
-                        }`}
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 20,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: currentStep === step.id
+                          ? '#10B981'
+                          : steps.findIndex(s => s.id === currentStep) > index
+                            ? '#10B981'
+                            : hasErr ? '#EF4444' : colors.border
+                      }}
                     >
                       <Ionicons
                         name={step.icon as any}
                         size={16}
                         color={
                           currentStep === step.id || steps.findIndex(s => s.id === currentStep) > index
-                            ? "white"
-                            : hasErr ? '#B91C1C' : "#9CA3AF"
+                            ? "#FFFFFF"
+                            : hasErr ? '#FFFFFF' : colors.textSecondary
                         }
                       />
                       {hasErr && (
@@ -658,12 +666,17 @@ export default function CreateProduct() {
                       )}
                     </View>
                     <Text
-                      className={`text-xs font-quicksand-medium mt-1 text-center ${currentStep === step.id
-                        ? "text-primary-500"
-                        : steps.findIndex(s => s.id === currentStep) > index
-                          ? "text-success-500"
-                          : hasErr ? 'text-red-500' : "text-neutral-500"
-                        }`}
+                      style={{
+                        fontSize: 12,
+                        fontFamily: 'Quicksand-Medium',
+                        marginTop: 4,
+                        textAlign: 'center',
+                        color: currentStep === step.id
+                          ? '#10B981'
+                          : steps.findIndex(s => s.id === currentStep) > index
+                            ? '#10B981'
+                            : hasErr ? '#EF4444' : colors.textSecondary
+                      }}
                       numberOfLines={1}
                     >
                       {step.title}
@@ -671,10 +684,14 @@ export default function CreateProduct() {
                   </TouchableOpacity>
                   {index < steps.length - 1 && (
                     <View
-                      className={`flex-1 h-0.5 mx-2 ${steps.findIndex(s => s.id === currentStep) > index
-                        ? "bg-success-500"
-                        : "bg-neutral-200"
-                        }`}
+                      style={{
+                        flex: 1,
+                        height: 1,
+                        marginHorizontal: 8,
+                        backgroundColor: steps.findIndex(s => s.id === currentStep) > index
+                          ? '#10B981'
+                          : colors.border
+                      }}
                     />
                   )}
                 </React.Fragment>
@@ -693,36 +710,36 @@ export default function CreateProduct() {
             <View className="px-5 py-6 space-y-6">
               {/* Subscription Limits Info */}
               {subscription && (
-                <View className="bg-gradient-to-r from-primary-50 to-emerald-50 rounded-2xl p-4 border border-primary-100">
+                <View style={{ backgroundColor: colors.secondary, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.border }}>
                   <View className="flex-row items-center mb-3">
-                    <View className="w-8 h-8 rounded-full bg-primary-500 items-center justify-center mr-3">
+                    <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#10B981', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
                       <Ionicons name="information" size={16} color="#FFFFFF" />
                     </View>
-                    <Text className="text-primary-700 font-quicksand-bold text-sm">
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 14 }}>
                       {i18n.t("enterprise.products.create.limits.planTitle")} {subscription.plan.name}
                     </Text>
                   </View>
                   <View className="space-y-2">
                     <View className="flex-row items-center justify-between">
-                      <Text className="text-neutral-600 font-quicksand-medium text-xs">
+                      <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 12 }}>
                         {i18n.t("enterprise.products.create.limits.products")}
                       </Text>
-                      <Text className="text-neutral-800 font-quicksand-bold text-sm">
+                      <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 14 }}>
                         {totalProducts} / {subscription.plan.features.maxProducts}
                       </Text>
                     </View>
                     <View className="flex-row items-center justify-between">
-                      <Text className="text-neutral-600 font-quicksand-medium text-xs">
+                      <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 12 }}>
                         {i18n.t("enterprise.products.create.limits.imagesPerProduct")}
                       </Text>
-                      <Text className="text-neutral-800 font-quicksand-bold text-sm">
+                      <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 14 }}>
                         {subscription.plan.features.maxImagesPerProduct}
                       </Text>
                     </View>
                   </View>
                   {hasReachedLimit('maxProducts', totalProducts) && (
-                    <View className="mt-3 pt-3 border-t border-primary-200">
-                      <Text className="text-amber-700 font-quicksand-semibold text-xs">
+                    <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border }}>
+                      <Text style={{ color: '#F59E0B', fontFamily: 'Quicksand-SemiBold', fontSize: 12 }}>
                         {i18n.t("enterprise.products.create.limits.limitReached")}
                       </Text>
                     </View>
@@ -731,23 +748,23 @@ export default function CreateProduct() {
               )}
 
               {/* Images */}
-              <View className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-100">
+              <View style={{ backgroundColor: colors.card, borderRadius: 24, padding: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2, borderWidth: 1, borderColor: colors.border }}>
                 <View className="flex-row items-center mb-5">
-                  <View className="w-12 h-12 rounded-2xl bg-primary-100 items-center justify-center">
+                  <View style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: '#EEF2FF', alignItems: 'center', justifyContent: 'center' }}>
                     <Ionicons name="camera" size={24} color="#6366F1" />
                   </View>
                   <View className="flex-1 ml-4">
                     <View className="flex-row items-center justify-between">
-                      <Text className="text-lg font-quicksand-bold text-neutral-800">
+                      <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 18 }}>
                         {i18n.t("enterprise.products.create.fields.photosTitle")}
                       </Text>
                       {subscription && (
-                        <Text className="text-xs font-quicksand-semibold text-primary-600">
+                        <Text style={{ color: '#10B981', fontFamily: 'Quicksand-SemiBold', fontSize: 12 }}>
                           {form.images.filter(img => !img.loading).length}/{subscription.plan.features.maxImagesPerProduct}
                         </Text>
                       )}
                     </View>
-                    <Text className="text-xs text-neutral-500 font-quicksand-medium mt-0.5">
+                    <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 12, marginTop: 2 }}>
                       {subscription
                         ? (subscription.plan.features.maxImagesPerProduct > 1
                           ? `Maximum ${subscription.plan.features.maxImagesPerProduct} images selon votre plan`
@@ -833,16 +850,16 @@ export default function CreateProduct() {
               </View>
 
               {/* Basic Information */}
-              <View className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-100">
+              <View style={{ backgroundColor: colors.card, borderRadius: 24, padding: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2, borderWidth: 1, borderColor: colors.border }}>
                 <View className="flex-row items-center mb-5">
-                  <View className="w-12 h-12 rounded-2xl bg-primary-100 items-center justify-center">
+                  <View style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: '#EEF2FF', alignItems: 'center', justifyContent: 'center' }}>
                     <Ionicons name="information-circle" size={24} color="#6366F1" />
                   </View>
                   <View className="flex-1 ml-4">
-                    <Text className="text-lg font-quicksand-bold text-neutral-800">
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 18 }}>
                       Informations de base *
                     </Text>
-                    <Text className="text-xs text-neutral-500 font-quicksand-medium mt-0.5">
+                    <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 12, marginTop: 2 }}>
                       Détails essentiels du produit
                     </Text>
                   </View>
@@ -850,13 +867,13 @@ export default function CreateProduct() {
 
                 <View className="space-y-5">
                   <View>
-                    <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-2">
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 14, marginBottom: 8 }}>
                       {i18n.t("enterprise.products.create.fields.nameTitle")}
                     </Text>
                     <TextInput
-                      className="bg-neutral-50 rounded-xl px-4 py-3.5 text-neutral-800 font-quicksand-medium border border-neutral-200"
+                      style={{ backgroundColor: colors.secondary, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', borderWidth: 1, borderColor: colors.border }}
                       placeholder={i18n.t("enterprise.products.create.fields.namePlaceholder")}
-                      placeholderTextColor="#9CA3AF"
+                      placeholderTextColor={colors.textSecondary}
                       value={form.name}
                       onChangeText={(text) => setForm(prev => ({ ...prev, name: text }))}
                     />
@@ -869,19 +886,18 @@ export default function CreateProduct() {
                   </View>
 
                   <View>
-                    <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-2">
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 14, marginBottom: 8 }}>
                       {i18n.t("enterprise.products.create.fields.descriptionTitle")}
                     </Text>
                     <TextInput
-                      className="bg-neutral-50 rounded-xl px-4 py-3.5 text-neutral-800 font-quicksand-medium border border-neutral-200"
+                      style={{ backgroundColor: colors.secondary, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', borderWidth: 1, borderColor: colors.border, minHeight: 100 }}
                       placeholder={i18n.t("enterprise.products.create.fields.descriptionPlaceholder")}
-                      placeholderTextColor="#9CA3AF"
+                      placeholderTextColor={colors.textSecondary}
                       value={form.description}
                       onChangeText={(text) => setForm(prev => ({ ...prev, description: text }))}
                       multiline
                       numberOfLines={4}
                       textAlignVertical="top"
-                      style={{ minHeight: 100 }}
                     />
                     {errors.description && (
                       <View className="flex-row items-center bg-red-50 rounded-lg p-2 mt-2">
@@ -893,17 +909,17 @@ export default function CreateProduct() {
 
                   <View className="flex-row gap-3">
                     <View className="flex-1">
-                      <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-2">
+                      <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 14, marginBottom: 8 }}>
                         {i18n.t("enterprise.products.create.fields.priceTitle")}
                       </Text>
-                      <View className="flex-row items-center bg-neutral-50 rounded-xl border border-neutral-200">
+                      <View className="flex-row items-center" style={{ backgroundColor: colors.secondary, borderRadius: 12, borderWidth: 1, borderColor: colors.border }}>
                         <View className="pl-4 pr-2">
-                          <Ionicons name="cash-outline" size={20} color="#6B7280" />
+                          <Ionicons name="cash-outline" size={20} color={colors.textSecondary} />
                         </View>
                         <TextInput
-                          className="flex-1 py-3.5 pr-4 text-neutral-800 font-quicksand-medium"
+                          style={{ flex: 1, paddingVertical: 14, paddingRight: 16, color: colors.textPrimary, fontFamily: 'Quicksand-Medium' }}
                           placeholder={i18n.t("enterprise.products.create.fields.pricePlaceholder")}
-                          placeholderTextColor="#9CA3AF"
+                          placeholderTextColor={colors.textSecondary}
                           value={form.price}
                           onChangeText={(text) => setForm(prev => ({ ...prev, price: text }))}
                           keyboardType="numeric"
@@ -918,17 +934,17 @@ export default function CreateProduct() {
                     </View>
 
                     <View className="flex-1">
-                      <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-2">
+                      <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 14, marginBottom: 8 }}>
                         {i18n.t("enterprise.products.create.fields.stockTitle")}
                       </Text>
-                      <View className="flex-row items-center bg-neutral-50 rounded-xl border border-neutral-200">
+                      <View className="flex-row items-center" style={{ backgroundColor: colors.secondary, borderRadius: 12, borderWidth: 1, borderColor: colors.border }}>
                         <View className="pl-4 pr-2">
-                          <Ionicons name="cube-outline" size={20} color="#6B7280" />
+                          <Ionicons name="cube-outline" size={20} color={colors.textSecondary} />
                         </View>
                         <TextInput
-                          className="flex-1 py-3.5 pr-4 text-neutral-800 font-quicksand-medium"
+                          style={{ flex: 1, paddingVertical: 14, paddingRight: 16, color: colors.textPrimary, fontFamily: 'Quicksand-Medium' }}
                           placeholder={i18n.t("enterprise.products.create.fields.stockPlaceholder")}
-                          placeholderTextColor="#9CA3AF"
+                          placeholderTextColor={colors.textSecondary}
                           value={form.stock}
                           onChangeText={(text) => setForm(prev => ({ ...prev, stock: text }))}
                           keyboardType="numeric"
@@ -946,16 +962,16 @@ export default function CreateProduct() {
               </View>
 
               {/* Category Selection */}
-              <View className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-100">
+              <View style={{ backgroundColor: colors.card, borderRadius: 24, padding: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4, borderWidth: 1, borderColor: colors.border }}>
                 <View className="flex-row items-center mb-5">
                   <View className="w-12 h-12 rounded-2xl bg-primary-100 items-center justify-center">
                     <Ionicons name="grid" size={24} color="#6366F1" />
                   </View>
                   <View className="flex-1 ml-4">
-                    <Text className="text-lg font-quicksand-bold text-neutral-800">
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 18 }}>
                       Catégorie *
                     </Text>
-                    <Text className="text-xs text-neutral-500 font-quicksand-medium mt-0.5">
+                    <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 12, marginTop: 2 }}>
                       Sélectionnez une catégorie
                     </Text>
                   </View>
@@ -964,7 +980,7 @@ export default function CreateProduct() {
                 {loadingCategories ? (
                   <View className="py-12 items-center">
                     <ActivityIndicator size="large" color="#6366F1" />
-                    <Text className="text-neutral-500 font-quicksand-medium mt-3">
+                    <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', marginTop: 12 }}>
                       Chargement des catégories...
                     </Text>
                   </View>
@@ -974,10 +990,14 @@ export default function CreateProduct() {
                       {categories.map((category) => (
                         <TouchableOpacity
                           key={category._id}
-                          className={`px-5 py-3 rounded-xl border ${form.category === category._id
-                            ? "bg-primary-500 border-primary-500"
-                            : "bg-neutral-50 border-neutral-200"
-                            }`}
+                          style={{
+                            paddingHorizontal: 20,
+                            paddingVertical: 12,
+                            borderRadius: 12,
+                            borderWidth: 1,
+                            backgroundColor: form.category === category._id ? '#6366F1' : colors.secondary,
+                            borderColor: form.category === category._id ? '#6366F1' : colors.border
+                          }}
                           onPress={() => {
                             setForm(prev => ({ ...prev, category: category._id }));
                             if (errors.category) {
@@ -991,8 +1011,11 @@ export default function CreateProduct() {
                               <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
                             )}
                             <Text
-                              className={`font-quicksand-semibold text-sm ${form.category === category._id ? "text-white" : "text-neutral-700"
-                                }`}
+                              style={{
+                                fontFamily: 'Quicksand-SemiBold',
+                                fontSize: 14,
+                                color: form.category === category._id ? '#FFFFFF' : colors.textPrimary
+                              }}
                             >
                               {category.name}
                             </Text>
@@ -1015,16 +1038,16 @@ export default function CreateProduct() {
           {currentStep === 'details' && (
             <View className="px-5 py-6 space-y-6">
               {/* Product Details */}
-              <View className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-100">
+              <View style={{ backgroundColor: colors.card, borderRadius: 24, padding: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4, borderWidth: 1, borderColor: colors.border }}>
                 <View className="flex-row items-center mb-5">
                   <View className="w-12 h-12 rounded-2xl bg-primary-100 items-center justify-center">
                     <Ionicons name="document-text" size={24} color="#6366F1" />
                   </View>
                   <View className="flex-1 ml-4">
-                    <Text className="text-lg font-quicksand-bold text-neutral-800">
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 18 }}>
                       Détails du produit
                     </Text>
-                    <Text className="text-xs text-neutral-500 font-quicksand-medium mt-0.5">
+                    <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 12, marginTop: 2 }}>
                       Informations complémentaires
                     </Text>
                   </View>
@@ -1033,26 +1056,26 @@ export default function CreateProduct() {
                 <View className="space-y-5">
                   <View className="flex-row gap-3">
                     <View className="flex-1">
-                      <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-2">
+                      <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 14, marginBottom: 8 }}>
                         Marque
                       </Text>
                       <TextInput
-                        className="bg-neutral-50 rounded-xl px-4 py-3.5 text-neutral-800 font-quicksand-medium border border-neutral-200"
+                        style={{ backgroundColor: colors.secondary, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', borderWidth: 1, borderColor: colors.border }}
                         placeholder="Apple, Samsung..."
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor={colors.textSecondary}
                         value={form.brand}
                         onChangeText={(text) => setForm(prev => ({ ...prev, brand: text }))}
                       />
                     </View>
 
                     <View className="flex-1">
-                      <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-2">
+                      <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 14, marginBottom: 8 }}>
                         Modèle
                       </Text>
                       <TextInput
-                        className="bg-neutral-50 rounded-xl px-4 py-3.5 text-neutral-800 font-quicksand-medium border border-neutral-200"
+                        style={{ backgroundColor: colors.secondary, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', borderWidth: 1, borderColor: colors.border }}
                         placeholder="iPhone 15 Pro"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor={colors.textSecondary}
                         value={form.model}
                         onChangeText={(text) => setForm(prev => ({ ...prev, model: text }))}
                       />
@@ -1061,13 +1084,13 @@ export default function CreateProduct() {
 
                   <View className="flex-row gap-3">
                     <View className="flex-1">
-                      <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-2">
+                      <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 14, marginBottom: 8 }}>
                         SKU (Référence)
                       </Text>
                       <TextInput
-                        className="bg-neutral-50 rounded-xl px-4 py-3.5 text-neutral-800 font-quicksand-medium border border-neutral-200"
+                        style={{ backgroundColor: colors.secondary, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', borderWidth: 1, borderColor: colors.border }}
                         placeholder="IPH15P-256-BLK"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor={colors.textSecondary}
                         value={form.sku}
                         onChangeText={(text) => setForm(prev => ({ ...prev, sku: text }))}
                       />
@@ -1080,13 +1103,13 @@ export default function CreateProduct() {
                     </View>
 
                     <View className="flex-1">
-                      <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-2">
+                      <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 14, marginBottom: 8 }}>
                         Code-barres
                       </Text>
                       <TextInput
-                        className="bg-neutral-50 rounded-xl px-4 py-3.5 text-neutral-800 font-quicksand-medium border border-neutral-200"
+                        style={{ backgroundColor: colors.secondary, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', borderWidth: 1, borderColor: colors.border }}
                         placeholder="123456789012"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor={colors.textSecondary}
                         value={form.barcode}
                         onChangeText={(text) => setForm(prev => ({ ...prev, barcode: text }))}
                         keyboardType="numeric"
@@ -1095,17 +1118,17 @@ export default function CreateProduct() {
                   </View>
 
                   <View>
-                    <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-2">
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 14, marginBottom: 8 }}>
                       Poids (kg)
                     </Text>
-                    <View className="flex-row items-center bg-neutral-50 rounded-xl border border-neutral-200">
+                    <View className="flex-row items-center" style={{ backgroundColor: colors.secondary, borderRadius: 12, borderWidth: 1, borderColor: colors.border }}>
                       <View className="pl-4 pr-2">
-                        <Ionicons name="barbell-outline" size={20} color="#6B7280" />
+                        <Ionicons name="barbell-outline" size={20} color={colors.textSecondary} />
                       </View>
                       <TextInput
-                        className="flex-1 py-3.5 pr-4 text-neutral-800 font-quicksand-medium"
+                        style={{ flex: 1, paddingVertical: 14, paddingRight: 16, color: colors.textPrimary, fontFamily: 'Quicksand-Medium' }}
                         placeholder="0.5"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor={colors.textSecondary}
                         value={form.weight}
                         onChangeText={(text) => setForm(prev => ({ ...prev, weight: text }))}
                         keyboardType="decimal-pad"
@@ -1120,15 +1143,15 @@ export default function CreateProduct() {
                   </View>
 
                   <View>
-                    <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-2">
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 14, marginBottom: 8 }}>
                       Dimensions (cm)
                     </Text>
                     <View className="flex-row gap-2">
                       <View className="flex-1">
                         <TextInput
-                          className="bg-neutral-50 rounded-xl px-3 py-3.5 text-neutral-800 font-quicksand-medium border border-neutral-200 text-center"
+                          style={{ backgroundColor: colors.secondary, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 14, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', borderWidth: 1, borderColor: colors.border, textAlign: 'center' }}
                           placeholder="L"
-                          placeholderTextColor="#9CA3AF"
+                          placeholderTextColor={colors.textSecondary}
                           value={form.dimensions.length}
                           onChangeText={(text) => setForm(prev => ({
                             ...prev,
@@ -1136,15 +1159,15 @@ export default function CreateProduct() {
                           }))}
                           keyboardType="decimal-pad"
                         />
-                        <Text className="text-xs text-neutral-500 font-quicksand text-center mt-1">
+                        <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand', fontSize: 12, textAlign: 'center', marginTop: 4 }}>
                           Longueur
                         </Text>
                       </View>
                       <View className="flex-1">
                         <TextInput
-                          className="bg-neutral-50 rounded-xl px-3 py-3.5 text-neutral-800 font-quicksand-medium border border-neutral-200 text-center"
+                          style={{ backgroundColor: colors.secondary, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 14, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', borderWidth: 1, borderColor: colors.border, textAlign: 'center' }}
                           placeholder="l"
-                          placeholderTextColor="#9CA3AF"
+                          placeholderTextColor={colors.textSecondary}
                           value={form.dimensions.width}
                           onChangeText={(text) => setForm(prev => ({
                             ...prev,
@@ -1152,15 +1175,15 @@ export default function CreateProduct() {
                           }))}
                           keyboardType="decimal-pad"
                         />
-                        <Text className="text-xs text-neutral-500 font-quicksand text-center mt-1">
+                        <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand', fontSize: 12, textAlign: 'center', marginTop: 4 }}>
                           Largeur
                         </Text>
                       </View>
                       <View className="flex-1">
                         <TextInput
-                          className="bg-neutral-50 rounded-xl px-3 py-3.5 text-neutral-800 font-quicksand-medium border border-neutral-200 text-center"
+                          style={{ backgroundColor: colors.secondary, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 14, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', borderWidth: 1, borderColor: colors.border, textAlign: 'center' }}
                           placeholder="H"
-                          placeholderTextColor="#9CA3AF"
+                          placeholderTextColor={colors.textSecondary}
                           value={form.dimensions.height}
                           onChangeText={(text) => setForm(prev => ({
                             ...prev,
@@ -1168,7 +1191,7 @@ export default function CreateProduct() {
                           }))}
                           keyboardType="decimal-pad"
                         />
-                        <Text className="text-xs text-neutral-500 font-quicksand text-center mt-1">
+                        <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand', fontSize: 12, textAlign: 'center', marginTop: 4 }}>
                           Hauteur
                         </Text>
                       </View>
@@ -1178,11 +1201,11 @@ export default function CreateProduct() {
               </View>
 
               {/* Specifications */}
-              <View className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-100">
+              <View style={{ backgroundColor: colors.card, borderRadius: 24, padding: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4, borderWidth: 1, borderColor: colors.border }}>
                 <View className="flex-row items-center justify-between mb-4">
                   <View className="flex-row items-center">
                     <Ionicons name="list" size={24} color="#6366F1" />
-                    <Text className="text-xl font-quicksand-bold text-neutral-800 ml-3">
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 20, marginLeft: 12 }}>
                       Spécifications
                     </Text>
                   </View>
@@ -1197,10 +1220,10 @@ export default function CreateProduct() {
                 {form.specifications.length > 0 ? (
                   <View className="space-y-3">
                     {form.specifications.map((spec, index) => (
-                      <View key={index} className="flex-row items-center justify-between bg-neutral-50 rounded-2xl p-4">
+                      <View key={index} className="flex-row items-center justify-between" style={{ backgroundColor: colors.secondary, borderRadius: 16, padding: 16 }}>
                         <View className="flex-1">
-                          <Text className="font-quicksand-semibold text-neutral-800">{spec.key}</Text>
-                          <Text className="font-quicksand text-neutral-600">{spec.value}</Text>
+                          <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold' }}>{spec.key}</Text>
+                          <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand' }}>{spec.value}</Text>
                         </View>
                         <TouchableOpacity
                           onPress={() => removeSpecification(index)}
@@ -1212,18 +1235,18 @@ export default function CreateProduct() {
                     ))}
                   </View>
                 ) : (
-                  <Text className="text-neutral-500 font-quicksand text-center py-8">
+                  <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand', textAlign: 'center', paddingVertical: 32 }}>
                     Aucune spécification ajoutée
                   </Text>
                 )}
               </View>
 
               {/* Tags */}
-              <View className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-100">
+              <View style={{ backgroundColor: colors.card, borderRadius: 24, padding: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4, borderWidth: 1, borderColor: colors.border }}>
                 <View className="flex-row items-center justify-between mb-4">
                   <View className="flex-row items-center">
                     <Ionicons name="pricetag" size={24} color="#6366F1" />
-                    <Text className="text-xl font-quicksand-bold text-neutral-800 ml-3">
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 20, marginLeft: 12 }}>
                       Tags
                     </Text>
                   </View>
@@ -1252,7 +1275,7 @@ export default function CreateProduct() {
                     </View>
                   </ScrollView>
                 ) : (
-                  <Text className="text-neutral-500 font-quicksand text-center py-8">
+                  <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand', textAlign: 'center', paddingVertical: 32 }}>
                     Aucun tag ajouté
                   </Text>
                 )}
@@ -1262,7 +1285,7 @@ export default function CreateProduct() {
         </ScrollView>
 
         {/* Fixed Bottom Buttons */}
-        <View className="bg-white border-t border-neutral-100 px-4 py-4" style={{ paddingBottom: Platform.OS === 'ios' ? 34 : 16 }}>
+        <View style={{ backgroundColor: colors.card, borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: 16, paddingVertical: 16, paddingBottom: Platform.OS === 'ios' ? 34 : 16 }}>
           {/* Error Summary */}
           {showErrorSummary && (
             <View className="mb-4 bg-red-50 border border-red-200 rounded-2xl p-4">
@@ -1357,14 +1380,14 @@ export default function CreateProduct() {
             activeOpacity={1}
             onPress={() => setShowTagModal(false)}
           >
-            <View className="bg-white rounded-2xl p-6 mx-6 w-full max-w-sm">
-              <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4">
+            <View style={{ backgroundColor: colors.card, borderRadius: 16, padding: 24, marginHorizontal: 24, width: '100%', maxWidth: 400 }}>
+              <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 18, marginBottom: 16 }}>
                 {i18n.t("enterprise.products.create.modals.addTag")}
               </Text>
               <TextInput
-                className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200 mb-4 focus:border-primary-500"
+                style={{ backgroundColor: colors.secondary, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 16, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', borderWidth: 2, borderColor: colors.border, marginBottom: 16 }}
                 placeholder={i18n.t("enterprise.products.create.modals.tagPlaceholder")}
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.textSecondary}
                 value={newTag}
                 onChangeText={setNewTag}
                 autoFocus
@@ -1403,21 +1426,21 @@ export default function CreateProduct() {
             activeOpacity={1}
             onPress={() => setShowSpecModal(false)}
           >
-            <View className="bg-white rounded-2xl p-6 mx-6 w-full max-w-sm">
-              <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4">
+            <View style={{ backgroundColor: colors.card, borderRadius: 16, padding: 24, marginHorizontal: 24, width: '100%', maxWidth: 400 }}>
+              <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 18, marginBottom: 16 }}>
                 {i18n.t("enterprise.products.create.modals.addSpecification")}
               </Text>
               <TextInput
-                className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200 mb-3 focus:border-primary-500"
+                style={{ backgroundColor: colors.secondary, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 16, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', borderWidth: 2, borderColor: colors.border, marginBottom: 12 }}
                 placeholder={i18n.t("enterprise.products.create.modals.specKeyPlaceholder")}
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.textSecondary}
                 value={newSpec.key}
                 onChangeText={(text) => setNewSpec(prev => ({ ...prev, key: text }))}
               />
               <TextInput
-                className="bg-neutral-50 rounded-2xl px-4 py-4 text-neutral-800 font-quicksand-medium border-2 border-neutral-200 mb-4 focus:border-primary-500"
+                style={{ backgroundColor: colors.secondary, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 16, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', borderWidth: 2, borderColor: colors.border, marginBottom: 16 }}
                 placeholder={i18n.t("enterprise.products.create.modals.specValuePlaceholder")}
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.textSecondary}
                 value={newSpec.value}
                 onChangeText={(text) => setNewSpec(prev => ({ ...prev, value: text }))}
               />

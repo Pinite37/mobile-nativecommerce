@@ -29,6 +29,8 @@ import NotificationModal, {
 } from "../../../../components/ui/NotificationModal";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useSocket } from "../../../../hooks/useSocket";
+import { useTheme } from "../../../../contexts/ThemeContext";
+import i18n from "../../../../i18n/i18n";
 import DeliveryService, {
   CreateOfferPayload,
   UrgencyLevel,
@@ -49,9 +51,11 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes en millisecondes
 const IOSLightDateTimePicker = ({
   value,
   onChange,
+  colors,
 }: {
   value: Date;
   onChange: (date: Date) => void;
+  colors: any;
 }) => {
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const minutes = [0, 15, 30, 45];
@@ -73,7 +77,7 @@ const IOSLightDateTimePicker = ({
   return (
     <View
       style={{
-        backgroundColor: "#FFFFFF",
+        backgroundColor: colors.card,
         paddingVertical: 16,
         paddingHorizontal: 12,
       }}
@@ -102,7 +106,7 @@ const IOSLightDateTimePicker = ({
       <View
         style={{
           marginBottom: 16,
-          backgroundColor: "#FFFFFF",
+          backgroundColor: colors.card,
           borderRadius: 16,
           padding: 16,
         }}
@@ -291,7 +295,7 @@ const IOSLightDateTimePicker = ({
               marginBottom: 8,
             }}
           >
-            Heure
+            {i18n.t("enterprise.messages.conversationDetail.hour")}
           </Text>
           <View
             style={{
@@ -299,7 +303,7 @@ const IOSLightDateTimePicker = ({
               width: 80,
               borderRadius: 16,
               borderWidth: 1,
-              borderColor: "#E5E7EB",
+              borderColor: colors.border,
               overflow: "hidden",
             }}
           >
@@ -348,7 +352,7 @@ const IOSLightDateTimePicker = ({
               marginBottom: 8,
             }}
           >
-            Minutes
+            {i18n.t("enterprise.messages.conversationDetail.minutes")}
           </Text>
           <View
             style={{
@@ -356,7 +360,7 @@ const IOSLightDateTimePicker = ({
               width: 80,
               borderRadius: 16,
               borderWidth: 1,
-              borderColor: "#E5E7EB",
+              borderColor: colors.border,
               overflow: "hidden",
             }}
           >
@@ -414,6 +418,7 @@ export default function ConversationDetails() {
   } = useSocket();
   const { notification, showNotification, hideNotification } =
     useNotification();
+  const { colors, isDark } = useTheme();
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
 
   // Récupération sécurisée des paramètres
@@ -622,14 +627,30 @@ export default function ConversationDetails() {
       outputRange: [-300, 300],
     });
 
+    // Couleurs adaptées au thème
+    const baseColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)';
+    const shimmerColor = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.04)';
+
     return (
       <View
-        className="bg-gray-200 overflow-hidden"
-        style={{ width: width as any, height, borderRadius }}
+        style={{ 
+          width: width as any, 
+          height, 
+          borderRadius,
+          backgroundColor: baseColor,
+          overflow: 'hidden'
+        }}
       >
         <RNAnimated.View
-          className="bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 absolute inset-0"
-          style={{ transform: [{ translateX }] }}
+          style={{ 
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: shimmerColor,
+            transform: [{ translateX }] 
+          }}
         />
       </View>
     );
@@ -676,8 +697,8 @@ export default function ConversationDetails() {
 
   // Fonction pour rendre les skeletons de conversation
   const renderSkeletonConversation = () => (
-    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
-      <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
+    <View style={{ flex: 1, backgroundColor: colors.card }}>
+      <ExpoStatusBar style={isDark ? "light" : "dark"} translucent backgroundColor="transparent" />
       {/* Header skeleton */}
       <LinearGradient
         colors={["#047857", "#10B981"]}
@@ -707,7 +728,7 @@ export default function ConversationDetails() {
       </LinearGradient>
 
       {/* Product info skeleton */}
-      <View className="mx-4 mt-4 bg-neutral-50 rounded-2xl p-4 flex-row items-center">
+      <View className="mx-4 mt-4 rounded-2xl p-4 flex-row items-center" style={{ backgroundColor: colors.card }}>
         <ShimmerBlock width={48} height={48} borderRadius={12} />
         <View className="ml-3 flex-1">
           <ShimmerBlock width="70%" height={14} borderRadius={4} />
@@ -925,8 +946,8 @@ export default function ConversationDetails() {
         console.error("❌ Erreur chargement conversation:", error);
         showNotification(
           "error",
-          "Erreur",
-          "Impossible de charger la conversation"
+          i18n.t("messages.error"),
+          i18n.t("enterprise.messages.conversationDetail.errors.loadConversation")
         );
       } finally {
         setLoading(false);
@@ -1626,7 +1647,7 @@ export default function ConversationDetails() {
                   resizeMode="cover"
                 />
               ) : (
-                <View className="w-8 h-8 bg-neutral-200 rounded-full justify-center items-center">
+                <View className="w-8 h-8 rounded-full justify-center items-center" style={{ backgroundColor: colors.secondary }}>
                   <Ionicons
                     name={
                       message.sender.role === "ENTERPRISE"
@@ -1702,16 +1723,19 @@ export default function ConversationDetails() {
                     paddingHorizontal: 16,
                     paddingVertical: 12,
                     borderRadius: 16,
-                    backgroundColor: "#F9FAFB",
+                    backgroundColor: colors.secondary,
                     borderWidth: 1,
-                    borderColor: "#E5E7EB",
+                    borderColor: colors.border,
                   }}
                 >
                   <Text
-                    className={`font-quicksand-medium ${
-                      isDeleted ? "text-neutral-600 italic" : "text-neutral-800"
-                    }`}
-                    style={{ fontSize: 15, lineHeight: 20 }}
+                    className="font-quicksand-medium"
+                    style={{ 
+                      fontSize: 15, 
+                      lineHeight: 20,
+                      color: isDeleted ? "#9CA3AF" : colors.textPrimary,
+                      fontStyle: isDeleted ? "italic" : "normal"
+                    }}
                   >
                     {isDeleted ? "[Message supprimé]" : message.text}
                   </Text>
@@ -1747,7 +1771,7 @@ export default function ConversationDetails() {
                   resizeMode="cover"
                 />
               ) : (
-                <View className="w-8 h-8 bg-neutral-200 rounded-full justify-center items-center">
+                <View className="w-8 h-8 rounded-full justify-center items-center" style={{ backgroundColor: colors.secondary }}>
                   <Ionicons
                     name={
                       message.sender.role === "ENTERPRISE"
@@ -1821,7 +1845,7 @@ export default function ConversationDetails() {
         >
           <View
             style={{
-              backgroundColor: "#FFFFFF",
+              backgroundColor: colors.card,
               borderRadius: 16,
               paddingHorizontal: 20,
               paddingVertical: 16,
@@ -2009,11 +2033,11 @@ export default function ConversationDetails() {
   if (!conversationId) {
     return (
       <View
-        style={{ flex: 1, backgroundColor: "#FFFFFF", paddingTop: insets.top }}
+        style={{ flex: 1, backgroundColor: colors.card, paddingTop: insets.top }}
       >
         <View className="flex-1 justify-center items-center">
           <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
-          <Text className="mt-4 text-xl font-quicksand-bold text-neutral-800">
+          <Text className="mt-4 text-xl font-quicksand-bold" style={{ color: colors.textPrimary }}>
             Paramètre manquant
           </Text>
           <Text className="mt-2 text-neutral-600 font-quicksand-medium text-center px-6">
@@ -2034,11 +2058,11 @@ export default function ConversationDetails() {
   if (!conversation) {
     return (
       <View
-        style={{ flex: 1, backgroundColor: "#FFFFFF", paddingTop: insets.top }}
+        style={{ flex: 1, backgroundColor: colors.card, paddingTop: insets.top }}
       >
         <View className="flex-1 justify-center items-center">
           <Ionicons name="chatbubble-outline" size={64} color="#EF4444" />
-          <Text className="mt-4 text-xl font-quicksand-bold text-neutral-800">
+          <Text className="mt-4 text-xl font-quicksand-bold text-textPrimary">
             Conversation introuvable
           </Text>
           <Text className="mt-2 text-neutral-600 font-quicksand-medium text-center px-6">
@@ -2119,8 +2143,8 @@ export default function ConversationDetails() {
       : null,
   });
   return (
-    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
-      <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
+    <View style={{ flex: 1, backgroundColor: colors.card }}>
+      <ExpoStatusBar style={isDark ? "light" : "dark"} translucent backgroundColor="transparent" />
       {/* Header */}
       <LinearGradient
         colors={["#047857", "#10B981"]}
@@ -2143,7 +2167,7 @@ export default function ConversationDetails() {
           <View className="flex-row items-center flex-1">
             <TouchableOpacity
               onPress={() => router.back()}
-              className="w-10 h-10 bg-white/20 rounded-full justify-center items-center mr-3"
+              className="w-10 h-10 bg-card/20 rounded-full justify-center items-center mr-3"
             >
               <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
             </TouchableOpacity>
@@ -2155,7 +2179,7 @@ export default function ConversationDetails() {
                 resizeMode="cover"
               />
             ) : (
-              <View className="w-10 h-10 bg-white/25 rounded-full justify-center items-center mr-3">
+              <View className="w-10 h-10 bg-card/25 rounded-full justify-center items-center mr-3">
                 <Ionicons
                   name={
                     otherParticipant?.role === "ENTERPRISE"
@@ -2189,20 +2213,20 @@ export default function ConversationDetails() {
           <View className="flex-row items-center">
             {isCurrentUserProductOwner(conversation, user?._id) && (
               <TouchableOpacity
-                className="w-10 h-10 bg-white/20 rounded-full justify-center items-center mr-2"
+                className="w-10 h-10 bg-card/20 rounded-full justify-center items-center mr-2"
                 onPress={openOfferModal}
               >
                 <Ionicons name="bicycle" size={18} color="#FFFFFF" />
               </TouchableOpacity>
             )}
             <TouchableOpacity
-              className="w-10 h-10 bg-white/20 rounded-full justify-center items-center"
+              className="w-10 h-10 bg-card/20 rounded-full justify-center items-center"
               onPress={() => {
                 const productId =
                   typeof conversation.product === "string"
                     ? conversation.product
                     : conversation.product._id;
-                router.push(`/(app)/(enterprise)/(tabs)/product/${productId}`);
+                router.push(`/(app)/(enterprise)/product/${productId}`);
               }}
             >
               <Ionicons name="cube" size={18} color="#FFFFFF" />
@@ -2239,7 +2263,7 @@ export default function ConversationDetails() {
           <View className="flex-row items-center flex-1">
             <TouchableOpacity
               onPress={() => router.back()}
-              className="w-10 h-10 bg-white/20 rounded-full justify-center items-center mr-3"
+              className="w-10 h-10 bg-card/20 rounded-full justify-center items-center mr-3"
             >
               <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
             </TouchableOpacity>
@@ -2251,7 +2275,7 @@ export default function ConversationDetails() {
                 resizeMode="cover"
               />
             ) : (
-              <View className="w-10 h-10 bg-white/25 rounded-full justify-center items-center mr-3">
+              <View className="w-10 h-10 bg-card/25 rounded-full justify-center items-center mr-3">
                 <Ionicons
                   name={
                     otherParticipant?.role === "ENTERPRISE"
@@ -2285,20 +2309,20 @@ export default function ConversationDetails() {
           <View className="flex-row items-center">
             {isCurrentUserProductOwner(conversation, user?._id) && (
               <TouchableOpacity
-                className="w-10 h-10 bg-white/20 rounded-full justify-center items-center mr-2"
+                className="w-10 h-10 bg-card/20 rounded-full justify-center items-center mr-2"
                 onPress={openOfferModal}
               >
                 <Ionicons name="bicycle" size={18} color="#FFFFFF" />
               </TouchableOpacity>
             )}
             <TouchableOpacity
-              className="w-10 h-10 bg-white/20 rounded-full justify-center items-center"
+              className="w-10 h-10 bg-card/20 rounded-full justify-center items-center"
               onPress={() => {
                 const productId =
                   typeof conversation.product === "string"
                     ? conversation.product
                     : conversation.product._id;
-                router.push(`/(app)/(enterprise)/(tabs)/product/${productId}`);
+                router.push(`/(app)/(enterprise)/product/${productId}`);
               }}
             >
               <Ionicons name="cube" size={18} color="#FFFFFF" />
@@ -2333,7 +2357,7 @@ export default function ConversationDetails() {
                     shadowRadius: 4,
                     elevation: 1,
                     borderWidth: 1,
-                    borderColor: "#F3F4F6",
+                    borderColor: colors.border,
                   }}
                   onPress={() => {
                     const productId =
@@ -2341,7 +2365,7 @@ export default function ConversationDetails() {
                         ? conversation.product
                         : conversation.product._id;
                     router.push(
-                      `/(app)/(enterprise)/(tabs)/product/${productId}`
+                      `/(app)/(enterprise)/product/${productId}`
                     );
                   }}
                 >
@@ -2356,7 +2380,7 @@ export default function ConversationDetails() {
                   />
                   <View className="ml-3 flex-1">
                     <Text
-                      className="text-sm font-quicksand-semibold text-neutral-800"
+                      className="text-sm font-quicksand-semibold text-textPrimary"
                       numberOfLines={1}
                     >
                       {conversation.product.name || "Produit"}
@@ -2437,7 +2461,7 @@ export default function ConversationDetails() {
                 </View>
                 <TouchableOpacity
                   onPress={() => setReplyingTo(null)}
-                  className="ml-3 w-8 h-8 bg-white rounded-full justify-center items-center shadow-sm"
+                  className="ml-3 w-8 h-8 bg-card rounded-full justify-center items-center shadow-sm"
                 >
                   <Ionicons name="close" size={16} color="#9CA3AF" />
                 </TouchableOpacity>
@@ -2447,24 +2471,26 @@ export default function ConversationDetails() {
 
           {/* Zone de saisie Android */}
           <View
-            className="px-4 bg-white"
+            className="px-4"
             style={{
+              backgroundColor: colors.card,
               borderTopWidth: 1,
-              borderTopColor: "#F3F4F6",
+              borderTopColor: colors.border,
               paddingTop: 12,
               paddingBottom: Math.max(insets.bottom, 2),
             }}
           >
             <View
-              className="flex-row items-center rounded-3xl p-2 bg-white"
+              className="flex-row items-center rounded-3xl p-2"
               style={{
+                backgroundColor: colors.secondary,
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.08,
                 shadowRadius: 12,
                 elevation: 4,
                 borderWidth: 1,
-                borderColor: "#F3F4F6",
+                borderColor: colors.border,
               }}
             >
               {/* Zone de texte */}
@@ -2473,7 +2499,7 @@ export default function ConversationDetails() {
                   ref={textInputRef}
                   value={newMessage}
                   onChangeText={setNewMessage}
-                  placeholder="Tapez votre message..."
+                  placeholder={i18n.t("enterprise.messages.conversationDetail.placeholder")}
                   multiline
                   maxLength={2000}
                   onContentSizeChange={(e) => {
@@ -2483,11 +2509,12 @@ export default function ConversationDetails() {
                     );
                     setInputHeight(height);
                   }}
-                  className="text-neutral-800 font-quicksand-medium text-base px-4 py-2"
+                  className="font-quicksand-medium text-base px-4 py-2"
                   placeholderTextColor="#9CA3AF"
                   style={{
                     height: Math.max(40, inputHeight),
                     opacity: sending ? 0.95 : 1,
+                    color: colors.textPrimary,
                   }}
                   editable={!sending}
                   textAlignVertical="center"
@@ -2496,7 +2523,7 @@ export default function ConversationDetails() {
 
               {/* Compteur de caractères */}
               {newMessage.length > 1800 && (
-                <View className="absolute top-1 right-20 bg-white rounded-full px-2 py-1">
+                <View className="absolute top-1 right-20 bg-card rounded-full px-2 py-1">
                   <Text
                     className={`text-xs font-quicksand-medium ${
                       newMessage.length > 1950
@@ -2580,7 +2607,7 @@ export default function ConversationDetails() {
                     shadowRadius: 4,
                     elevation: 1,
                     borderWidth: 1,
-                    borderColor: "#F3F4F6",
+                    borderColor: colors.border,
                   }}
                   onPress={() => {
                     const productId =
@@ -2588,7 +2615,7 @@ export default function ConversationDetails() {
                         ? conversation.product
                         : conversation.product._id;
                     router.push(
-                      `/(app)/(enterprise)/(tabs)/product/${productId}`
+                      `/(app)/(enterprise)/product/${productId}`
                     );
                   }}
                 >
@@ -2603,7 +2630,7 @@ export default function ConversationDetails() {
                   />
                   <View className="ml-3 flex-1">
                     <Text
-                      className="text-sm font-quicksand-semibold text-neutral-800"
+                      className="text-sm font-quicksand-semibold text-textPrimary"
                       numberOfLines={1}
                     >
                       {conversation.product.name || "Produit"}
@@ -2683,7 +2710,7 @@ export default function ConversationDetails() {
                 </View>
                 <TouchableOpacity
                   onPress={() => setReplyingTo(null)}
-                  className="ml-3 w-8 h-8 bg-white rounded-full justify-center items-center shadow-sm"
+                  className="ml-3 w-8 h-8 bg-card rounded-full justify-center items-center shadow-sm"
                 >
                   <Ionicons name="close" size={16} color="#9CA3AF" />
                 </TouchableOpacity>
@@ -2693,24 +2720,26 @@ export default function ConversationDetails() {
 
           {/* Zone de saisie iOS */}
           <View
-            className="px-4 bg-white"
+            className="px-4"
             style={{
+              backgroundColor: colors.card,
               borderTopWidth: 1,
-              borderTopColor: "#F3F4F6",
+              borderTopColor: colors.border,
               paddingTop: 12,
               paddingBottom: Math.max(insets.bottom, 12),
             }}
           >
             <View
-              className="flex-row items-center rounded-3xl p-2 bg-white"
+              className="flex-row items-center rounded-3xl p-2"
               style={{
+                backgroundColor: colors.secondary,
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.08,
                 shadowRadius: 12,
                 elevation: 4,
                 borderWidth: 1,
-                borderColor: "#F3F4F6",
+                borderColor: colors.border,
               }}
             >
               {/* Zone de texte */}
@@ -2719,7 +2748,7 @@ export default function ConversationDetails() {
                   ref={textInputRef}
                   value={newMessage}
                   onChangeText={setNewMessage}
-                  placeholder="Tapez votre message..."
+                  placeholder={i18n.t("enterprise.messages.conversationDetail.placeholder")}
                   multiline
                   maxLength={2000}
                   onContentSizeChange={(e) => {
@@ -2729,11 +2758,12 @@ export default function ConversationDetails() {
                     );
                     setInputHeight(height);
                   }}
-                  className="text-neutral-800 font-quicksand-medium text-base px-4 py-2"
+                  className="font-quicksand-medium text-base px-4 py-2"
                   placeholderTextColor="#9CA3AF"
                   style={{
                     height: Math.max(40, inputHeight),
                     opacity: sending ? 0.95 : 1,
+                    color: colors.textPrimary,
                   }}
                   editable={!sending}
                   textAlignVertical="center"
@@ -2742,7 +2772,7 @@ export default function ConversationDetails() {
 
               {/* Compteur de caractères */}
               {newMessage.length > 1800 && (
-                <View className="absolute top-1 right-20 bg-white rounded-full px-2 py-1">
+                <View className="absolute top-1 right-20 bg-card rounded-full px-2 py-1">
                   <Text
                     className={`text-xs font-quicksand-medium ${
                       newMessage.length > 1950
@@ -2803,7 +2833,7 @@ export default function ConversationDetails() {
 
             {/* Compteur de caractères */}
             {newMessage.length > 1800 && (
-              <View className="absolute top-1 right-20 bg-white rounded-full px-2 py-1">
+              <View className="absolute top-1 right-20 bg-card rounded-full px-2 py-1">
                 <Text
                   className={`text-xs font-quicksand-medium ${
                     newMessage.length > 1950
@@ -2853,7 +2883,7 @@ export default function ConversationDetails() {
         >
           <View className="flex-1 justify-center items-center px-6">
             <TouchableOpacity
-              className="bg-white rounded-3xl w-full max-w-sm"
+              className="bg-card rounded-3xl w-full max-w-sm"
               activeOpacity={1}
               onPress={() => {}}
             >
@@ -2875,7 +2905,7 @@ export default function ConversationDetails() {
 
               {/* Content */}
               <View className="px-6 pb-6">
-                <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+                <Text className="text-xl font-quicksand-bold text-textPrimary text-center mb-2">
                   {confirmationAction?.title}
                 </Text>
                 <Text className="text-base text-neutral-600 font-quicksand-medium text-center leading-5">
@@ -2942,7 +2972,7 @@ export default function ConversationDetails() {
             style={{ maxHeight: "85%" }}
           >
             <View
-              className="bg-white rounded-t-[32px] shadow-2xl"
+              className="bg-card rounded-t-[32px] shadow-2xl"
               style={{ height: "100%" }}
             >
               {/* Header avec dégradé - FIXE */}
@@ -2960,7 +2990,7 @@ export default function ConversationDetails() {
               >
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row items-center flex-1">
-                    <View className="w-10 h-10 bg-white/20 rounded-full justify-center items-center mr-3">
+                    <View className="w-10 h-10 bg-card/20 rounded-full justify-center items-center mr-3">
                       <Ionicons name="bicycle" size={20} color="#FFFFFF" />
                     </View>
                     <Text className="text-xl font-quicksand-bold text-white flex-1">
@@ -2969,7 +2999,7 @@ export default function ConversationDetails() {
                   </View>
                   <TouchableOpacity
                     onPress={closeOfferModal}
-                    className="w-10 h-10 bg-white/20 rounded-full justify-center items-center"
+                    className="w-10 h-10 bg-card/20 rounded-full justify-center items-center"
                   >
                     <Ionicons name="close" size={22} color="#FFFFFF" />
                   </TouchableOpacity>
@@ -2999,7 +3029,7 @@ export default function ConversationDetails() {
                         setOfferForm({ ...offerForm, deliveryZone: text })
                       }
                       placeholder="Ex: Cocody, Angré 8ème tranche"
-                      className="px-4 py-3 text-neutral-800 font-quicksand-medium text-base"
+                      className="px-4 py-3 text-textPrimary font-quicksand-medium text-base"
                       placeholderTextColor="#9CA3AF"
                       returnKeyType="next"
                     />
@@ -3022,7 +3052,7 @@ export default function ConversationDetails() {
                       }
                       placeholder="0"
                       keyboardType="numeric"
-                      className="flex-1 px-4 py-3 text-neutral-800 font-quicksand-semibold text-base"
+                      className="flex-1 px-4 py-3 text-textPrimary font-quicksand-semibold text-base"
                       placeholderTextColor="#9CA3AF"
                       returnKeyType="next"
                     />
@@ -3155,7 +3185,7 @@ export default function ConversationDetails() {
                     <Text
                       className={`font-quicksand-medium text-base ${
                         offerForm.expiresAt
-                          ? "text-neutral-800"
+                          ? "text-textPrimary"
                           : "text-neutral-400"
                       }`}
                     >
@@ -3244,7 +3274,7 @@ export default function ConversationDetails() {
                         })
                       }
                       placeholder="Ex: Livraison en mains propres uniquement, Appeler 30 min avant..."
-                      className="px-4 py-3 text-neutral-800 font-quicksand-medium text-base min-h-[100px]"
+                      className="px-4 py-3 text-textPrimary font-quicksand-medium text-base min-h-[100px]"
                       placeholderTextColor="#9CA3AF"
                       multiline
                       textAlignVertical="top"
@@ -3256,7 +3286,7 @@ export default function ConversationDetails() {
 
               {/* Actions - Fixés en bas avec safe area */}
               <View
-                className="px-6 py-4 border-t border-neutral-100 flex-row gap-3 bg-white"
+                className="px-6 py-4 border-t border-neutral-100 flex-row gap-3 bg-card"
                 style={{ paddingBottom: Math.max(insets.bottom, 16) }}
               >
                 <TouchableOpacity
@@ -3326,7 +3356,7 @@ export default function ConversationDetails() {
         >
           <View className="flex-1 bg-black/60 justify-center items-center px-6">
             <View
-              className="bg-white rounded-3xl w-full"
+              className="bg-card rounded-3xl w-full"
               style={{
                 maxWidth: 400,
                 shadowColor: "#000",
@@ -3338,7 +3368,7 @@ export default function ConversationDetails() {
             >
               {/* Header */}
               <View className="px-6 pt-6 pb-4">
-                <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+                <Text className="text-xl font-quicksand-bold text-textPrimary text-center mb-2">
                   Date d&apos;expiration
                 </Text>
                 <Text className="text-sm font-quicksand-medium text-neutral-500 text-center">
@@ -3353,11 +3383,12 @@ export default function ConversationDetails() {
                   marginHorizontal: 16,
                   borderRadius: 16,
                   overflow: "hidden",
-                  backgroundColor: "#FFFFFF",
+                  backgroundColor: colors.card,
                 }}
               >
                 <IOSLightDateTimePicker
                   value={tempPickerDate}
+                  colors={colors}
                   onChange={(nextDate) => {
                     // Empêcher la sélection d'une date passée
                     const now = new Date();
@@ -3419,7 +3450,7 @@ export default function ConversationDetails() {
         >
           <TouchableOpacity
             activeOpacity={1}
-            className="bg-white rounded-3xl p-6 w-full max-w-sm"
+            className="bg-card rounded-3xl p-6 w-full max-w-sm"
           >
             {/* Icon d'alerte */}
             <View className="items-center mb-4">
@@ -3429,7 +3460,7 @@ export default function ConversationDetails() {
             </View>
 
             {/* Titre */}
-            <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+            <Text className="text-xl font-quicksand-bold text-textPrimary text-center mb-2">
               Échec d&apos;envoi
             </Text>
 
@@ -3487,14 +3518,14 @@ export default function ConversationDetails() {
         >
           <TouchableOpacity
             activeOpacity={1}
-            className="bg-white rounded-t-3xl p-6"
+            className="bg-card rounded-t-3xl p-6"
           >
             {/* Barre de handle */}
             <View className="w-12 h-1.5 bg-neutral-300 rounded-full self-center mb-6" />
 
             {/* Titre */}
-            <Text className="text-xl font-quicksand-bold text-neutral-800 mb-4">
-              Actions
+            <Text className="text-xl font-quicksand-bold text-textPrimary mb-4">
+              {i18n.t("enterprise.messages.conversationDetail.messageActions.title")}
             </Text>
 
             {/* Options */}
@@ -3513,8 +3544,8 @@ export default function ConversationDetails() {
                 <View className="w-10 h-10 bg-primary-100 rounded-full justify-center items-center mr-3">
                   <Ionicons name="arrow-undo" size={20} color="#10B981" />
                 </View>
-                <Text className="text-neutral-800 font-quicksand-semibold flex-1">
-                  Répondre
+                <Text className="text-textPrimary font-quicksand-semibold flex-1">
+                  {i18n.t("enterprise.messages.conversationDetail.messageActions.reply")}
                 </Text>
               </TouchableOpacity>
 
@@ -3542,8 +3573,8 @@ export default function ConversationDetails() {
                   <View className="w-10 h-10 bg-red-100 rounded-full justify-center items-center mr-3">
                     <Ionicons name="trash" size={20} color="#EF4444" />
                   </View>
-                  <Text className="text-neutral-800 font-quicksand-semibold flex-1">
-                    Supprimer
+                  <Text className="text-textPrimary font-quicksand-semibold flex-1">
+                    {i18n.t("enterprise.messages.conversationDetail.messageActions.delete")}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -3558,7 +3589,7 @@ export default function ConversationDetails() {
               activeOpacity={0.7}
             >
               <Text className="text-neutral-700 font-quicksand-bold text-center">
-                Annuler
+                {i18n.t("enterprise.messages.conversationDetail.cancel")}
               </Text>
             </TouchableOpacity>
           </TouchableOpacity>
@@ -3583,14 +3614,14 @@ export default function ConversationDetails() {
         >
           <TouchableOpacity
             activeOpacity={1}
-            className="bg-white rounded-t-3xl p-6"
+            className="bg-card rounded-t-3xl p-6"
           >
             {/* Barre de handle */}
             <View className="w-12 h-1.5 bg-neutral-300 rounded-full self-center mb-6" />
 
             {/* Titre */}
-            <Text className="text-xl font-quicksand-bold text-neutral-800 mb-2">
-              Supprimer le message
+            <Text className="text-xl font-quicksand-bold text-textPrimary mb-2">
+              {i18n.t("enterprise.messages.conversationDetail.deleteOptions.title")}
             </Text>
             <Text className="text-neutral-600 font-quicksand-medium mb-4">
               Choisissez comment supprimer le message
@@ -3612,8 +3643,8 @@ export default function ConversationDetails() {
                 <View className="w-10 h-10 bg-orange-100 rounded-full justify-center items-center mr-3">
                   <Ionicons name="eye-off" size={20} color="#F97316" />
                 </View>
-                <Text className="text-neutral-800 font-quicksand-semibold flex-1">
-                  Pour moi seulement
+                <Text className="text-textPrimary font-quicksand-semibold flex-1">
+                  {i18n.t("enterprise.messages.conversationDetail.deleteOptions.forMe")}
                 </Text>
               </TouchableOpacity>
 
@@ -3631,8 +3662,8 @@ export default function ConversationDetails() {
                 <View className="w-10 h-10 bg-red-100 rounded-full justify-center items-center mr-3">
                   <Ionicons name="trash" size={20} color="#EF4444" />
                 </View>
-                <Text className="text-neutral-800 font-quicksand-semibold flex-1">
-                  Pour tout le monde
+                <Text className="text-textPrimary font-quicksand-semibold flex-1">
+                  {i18n.t("enterprise.messages.conversationDetail.deleteOptions.forEveryone")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -3667,14 +3698,14 @@ export default function ConversationDetails() {
         >
           <TouchableOpacity
             activeOpacity={1}
-            className="bg-white rounded-t-3xl p-6"
+            className="bg-card rounded-t-3xl p-6"
           >
             {/* Barre de handle */}
             <View className="w-12 h-1.5 bg-neutral-300 rounded-full self-center mb-6" />
 
             {/* Titre */}
-            <Text className="text-xl font-quicksand-bold text-neutral-800 mb-4">
-              Ajouter une pièce jointe
+            <Text className="text-xl font-quicksand-bold text-textPrimary mb-4">
+              {i18n.t("enterprise.messages.conversationDetail.attachmentOptions.title")}
             </Text>
 
             {/* Options */}
@@ -3691,8 +3722,8 @@ export default function ConversationDetails() {
                 <View className="w-10 h-10 bg-primary-100 rounded-full justify-center items-center mr-3">
                   <Ionicons name="camera" size={20} color="#10B981" />
                 </View>
-                <Text className="text-neutral-800 font-quicksand-semibold flex-1">
-                  Prendre une photo
+                <Text className="text-textPrimary font-quicksand-semibold flex-1">
+                  {i18n.t("enterprise.messages.conversationDetail.attachmentOptions.camera")}
                 </Text>
               </TouchableOpacity>
 
@@ -3708,8 +3739,8 @@ export default function ConversationDetails() {
                 <View className="w-10 h-10 bg-green-100 rounded-full justify-center items-center mr-3">
                   <Ionicons name="images" size={20} color="#22C55E" />
                 </View>
-                <Text className="text-neutral-800 font-quicksand-semibold flex-1">
-                  Choisir depuis la galerie
+                <Text className="text-textPrimary font-quicksand-semibold flex-1">
+                  {i18n.t("enterprise.messages.conversationDetail.attachmentOptions.gallery")}
                 </Text>
               </TouchableOpacity>
             </View>

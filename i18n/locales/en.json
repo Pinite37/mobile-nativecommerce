@@ -311,6 +311,93 @@
                 "archive": "Archive conversation",
                 "delete": "Delete conversation",
                 "deleting": "Deleting..."
+            },
+            "conversationDetail": {
+                "placeholder": "Type your message...",
+                "send": "Send",
+                "reply": "Reply to",
+                "hour": "Hour",
+                "minutes": "Minutes",
+                "createOffer": "Create offer",
+                "deliveryOffer": "Delivery offer",
+                "deliveryZone": "Delivery zone",
+                "deliveryFee": "Delivery fee",
+                "urgency": "Urgency",
+                "urgencyLevels": {
+                    "LOW": "Low",
+                    "MEDIUM": "Medium",
+                    "HIGH": "High",
+                    "URGENT": "Urgent"
+                },
+                "specialInstructions": "Special instructions",
+                "expiration": "Expiration date",
+                "selectDate": "Select",
+                "selectTime": "Select",
+                "validate": "Validate",
+                "cancel": "Cancel",
+                "publish": "Publish offer",
+                "publishing": "Publishing...",
+                "messageActions": {
+                    "title": "Actions",
+                    "reply": "Reply",
+                    "copy": "Copy",
+                    "delete": "Delete"
+                },
+                "deleteOptions": {
+                    "title": "Delete message",
+                    "forMe": "Delete for me",
+                    "forEveryone": "Delete for everyone"
+                },
+                "attachmentOptions": {
+                    "title": "Add attachment",
+                    "gallery": "Gallery",
+                    "camera": "Camera"
+                },
+                "retry": {
+                    "title": "Send failed",
+                    "message": "The message could not be sent",
+                    "retry": "Retry",
+                    "cancel": "Cancel"
+                },
+                "errors": {
+                    "loadConversation": "Unable to load conversation",
+                    "noConversationId": "Conversation ID missing",
+                    "conversationNotFound": "Conversation not found",
+                    "missingData": "Missing data",
+                    "productOrCustomerNotFound": "Product or customer not found to create offer",
+                    "fieldsRequired": "Required fields",
+                    "zoneFeesExpirationRequired": "Zone, fees and expiration are required",
+                    "invalidFee": "Invalid fee",
+                    "feePositive": "Delivery fee must be a positive number",
+                    "invalidExpiration": "Invalid expiration",
+                    "expirationFuture": "Expiration date must be in the future",
+                    "productUnauthorized": "Unauthorized product",
+                    "cannotCreateOffer": "You can only create offers for your own products",
+                    "invalidProduct": "Invalid product",
+                    "cannotCreateOfferGeneric": "Unable to create offer",
+                    "deleteMessage": "Unable to delete message"
+                },
+                "success": {
+                    "offerPublished": "Offer published",
+                    "offerCreated": "Your delivery offer has been created"
+                },
+                "empty": {
+                    "title": "No messages yet",
+                    "message": "Start the conversation by sending a message"
+                },
+                "messageDeleted": "[Message deleted]",
+                "today": "Today",
+                "yesterday": "Yesterday",
+                "permissions": {
+                    "galleryTitle": "Permission required",
+                    "galleryMessage": "We need permission to access your photos.",
+                    "cameraTitle": "Permission required",
+                    "cameraMessage": "We need permission to use your camera."
+                },
+                "attachmentErrors": {
+                    "selectImage": "Unable to select image",
+                    "takePhoto": "Unable to take photo"
+                }
             }
         },
         "subscription": {

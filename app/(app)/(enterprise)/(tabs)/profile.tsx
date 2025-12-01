@@ -27,6 +27,7 @@ import { useToast as useReanimatedToast } from "../../../../components/ui/Reanim
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useLocale } from "../../../../contexts/LocaleContext";
 import { useSubscription } from "../../../../contexts/SubscriptionContext";
+import { useTheme } from "../../../../contexts/ThemeContext";
 import i18n from "../../../../i18n/i18n";
 import EnterpriseService, {
   Enterprise,
@@ -40,6 +41,8 @@ interface EditProfileModalProps {
   onSave: (userData: any, imageBase64?: string) => void;
   initialData: EnterpriseProfile;
   loading: boolean;
+  colors: any;
+  isDark: boolean;
 }
 
 interface EditEnterpriseModalProps {
@@ -48,6 +51,8 @@ interface EditEnterpriseModalProps {
   onSave: (enterpriseData: any, logoBase64?: string) => void;
   initialData: Enterprise;
   loading: boolean;
+  colors: any;
+  isDark: boolean;
 }
 
 interface AddPartnerModalProps {
@@ -61,6 +66,8 @@ interface EnterpriseDetailsModalProps {
   visible: boolean;
   onClose: () => void;
   enterprise: Enterprise;
+  colors: any;
+  isDark: boolean;
 }
 
 // Composant pour éditer le profil utilisateur
@@ -70,6 +77,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   onSave,
   initialData,
   loading,
+  colors,
+  isDark,
 }) => {
   const { showToast: showReToast } = useReanimatedToast();
   const [firstName, setFirstName] = useState(initialData.user.firstName || "");
@@ -122,26 +131,26 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       animationType="slide"
       presentationStyle="pageSheet"
     >
-      <View className="flex-1 bg-white">
+      <View className="flex-1" style={{ backgroundColor: colors.card }}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           className="flex-1"
         >
-          <View className="px-6 pt-14 pb-4 border-b border-neutral-200">
+          <View className="px-6 pt-14 pb-4" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
             <View className="flex-row items-center justify-between">
               <TouchableOpacity onPress={onClose}>
-                <Text className="text-primary-500 font-quicksand-medium">
+                <Text className="font-quicksand-medium" style={{ color: colors.brandPrimary }}>
                   {i18n.t("enterprise.profile.modals.editProfile.cancel")}
                 </Text>
               </TouchableOpacity>
-              <Text className="text-lg font-quicksand-bold">
+              <Text className="text-lg font-quicksand-bold" style={{ color: colors.textPrimary }}>
                 {i18n.t("enterprise.profile.modals.editProfile.title")}
               </Text>
               <TouchableOpacity onPress={handleSave} disabled={loading}>
                 {loading ? (
-                  <ActivityIndicator size="small" color="#10B981" />
+                  <ActivityIndicator size="small" color={colors.brandPrimary} />
                 ) : (
-                  <Text className="text-primary-500 font-quicksand-medium">
+                  <Text className="font-quicksand-medium" style={{ color: colors.brandPrimary }}>
                     {i18n.t("enterprise.profile.modals.editProfile.save")}
                   </Text>
                 )}
@@ -173,7 +182,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   <Ionicons name="camera" size={16} color="#FFFFFF" />
                 </View>
               </TouchableOpacity>
-              <Text className="text-neutral-600 text-sm mt-2">
+              <Text className="text-sm mt-2" style={{ color: colors.textSecondary }}>
                 {i18n.t("enterprise.profile.modals.editProfile.changePhoto")}
               </Text>
             </View>
@@ -181,51 +190,59 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
             {/* Formulaire */}
             <View className="space-y-4">
               <View>
-                <Text className="text-neutral-700 font-quicksand-medium mb-2">
+                <Text className="font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
                   {i18n.t("enterprise.profile.modals.editProfile.firstName")}
                 </Text>
                 <TextInput
                   value={firstName}
                   onChangeText={setFirstName}
-                  className="bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 font-quicksand-regular"
+                  className="rounded-xl px-4 py-3 font-quicksand-regular"
+                  style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, color: colors.textPrimary }}
                   placeholder={i18n.t("enterprise.profile.modals.editProfile.placeholders.firstName")}
+                  placeholderTextColor={colors.textTertiary}
                 />
               </View>
 
               <View>
-                <Text className="text-neutral-700 font-quicksand-medium mb-2">
+                <Text className="font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
                   {i18n.t("enterprise.profile.modals.editProfile.lastName")}
                 </Text>
                 <TextInput
                   value={lastName}
                   onChangeText={setLastName}
-                  className="bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 font-quicksand-regular"
+                  className="rounded-xl px-4 py-3 font-quicksand-regular"
+                  style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, color: colors.textPrimary }}
                   placeholder={i18n.t("enterprise.profile.modals.editProfile.placeholders.lastName")}
+                  placeholderTextColor={colors.textTertiary}
                 />
               </View>
 
               <View>
-                <Text className="text-neutral-700 font-quicksand-medium mb-2">
+                <Text className="font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
                   {i18n.t("enterprise.profile.modals.editProfile.phone")}
                 </Text>
                 <TextInput
                   value={phone}
                   onChangeText={setPhone}
-                  className="bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 font-quicksand-regular"
+                  className="rounded-xl px-4 py-3 font-quicksand-regular"
+                  style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, color: colors.textPrimary }}
                   placeholder={i18n.t("enterprise.profile.modals.editProfile.placeholders.phone")}
+                  placeholderTextColor={colors.textTertiary}
                   keyboardType="phone-pad"
                 />
               </View>
 
               <View>
-                <Text className="text-neutral-700 font-quicksand-medium mb-2">
+                <Text className="font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
                   {i18n.t("enterprise.profile.modals.editProfile.address")}
                 </Text>
                 <TextInput
                   value={address}
                   onChangeText={setAddress}
-                  className="bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 font-quicksand-regular"
+                  className="rounded-xl px-4 py-3 font-quicksand-regular"
+                  style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, color: colors.textPrimary }}
                   placeholder={i18n.t("enterprise.profile.modals.editProfile.placeholders.address")}
+                  placeholderTextColor={colors.textTertiary}
                   multiline
                   numberOfLines={3}
                 />
@@ -245,6 +262,8 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({
   onSave,
   initialData,
   loading,
+  colors,
+  isDark,
 }) => {
   const { showToast: showReToast } = useReanimatedToast();
   const [companyName, setCompanyName] = useState(initialData.companyName || "");
@@ -338,26 +357,26 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({
       animationType="slide"
       presentationStyle="pageSheet"
     >
-      <View className="flex-1 bg-white">
+      <View className="flex-1" style={{ backgroundColor: colors.card }}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           className="flex-1"
         >
-          <View className="px-6 pt-14 pb-4 border-b border-neutral-200">
+          <View className="px-6 pt-14 pb-4" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
             <View className="flex-row items-center justify-between">
               <TouchableOpacity onPress={onClose}>
-                <Text className="text-primary-500 font-quicksand-medium">
+                <Text className="font-quicksand-medium" style={{ color: colors.brandPrimary }}>
                   {i18n.t("enterprise.profile.modals.editEnterprise.cancel")}
                 </Text>
               </TouchableOpacity>
-              <Text className="text-lg font-quicksand-bold">
+              <Text className="text-lg font-quicksand-bold" style={{ color: colors.textPrimary }}>
                 {i18n.t("enterprise.profile.modals.editEnterprise.title")}
               </Text>
               <TouchableOpacity onPress={handleSave} disabled={loading}>
                 {loading ? (
-                  <ActivityIndicator size="small" color="#10B981" />
+                  <ActivityIndicator size="small" color={colors.brandPrimary} />
                 ) : (
-                  <Text className="text-primary-500 font-quicksand-medium">
+                  <Text className="font-quicksand-medium" style={{ color: colors.brandPrimary }}>
                     {i18n.t("enterprise.profile.modals.editEnterprise.save")}
                   </Text>
                 )}
@@ -382,11 +401,11 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({
                     </Text>
                   </View>
                 )}
-                <View className="absolute bottom-0 right-0 w-8 h-8 bg-primary-500 rounded-full items-center justify-center border-2 border-white">
+                <View className="absolute bottom-0 right-0 w-8 h-8 bg-primary-500 rounded-full items-center justify-center" style={{ borderWidth: 2, borderColor: colors.card }}>
                   <Ionicons name="camera-outline" size={16} color="#FFFFFF" />
                 </View>
               </TouchableOpacity>
-              <Text className="text-primary-600 font-quicksand-medium mt-2">
+              <Text className="font-quicksand-medium mt-2" style={{ color: colors.brandPrimary }}>
                 {i18n.t("enterprise.profile.modals.editEnterprise.changeLogo")}
               </Text>
             </View>
@@ -395,88 +414,100 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({
             <View className="space-y-4">
               {/* Nom de l'entreprise */}
               <View>
-                <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
+                <Text className="font-quicksand-semibold mb-2 pl-1" style={{ color: colors.textPrimary }}>
                   {i18n.t("enterprise.profile.modals.editEnterprise.companyName")}
                 </Text>
                 <TextInput
                   value={companyName}
                   onChangeText={setCompanyName}
-                  className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
+                  className="rounded-xl px-4 py-3 font-quicksand-regular"
+                  style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, color: colors.textPrimary }}
                   placeholder={i18n.t("enterprise.profile.modals.editEnterprise.placeholders.companyName")}
+                  placeholderTextColor={colors.textTertiary}
                 />
               </View>
 
               {/* Description */}
               <View>
-                <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
+                <Text className="font-quicksand-semibold mb-2 pl-1" style={{ color: colors.textPrimary }}>
                   {i18n.t("enterprise.profile.modals.editEnterprise.description")}
                 </Text>
                 <TextInput
                   value={description}
                   onChangeText={setDescription}
                   placeholder={i18n.t("enterprise.profile.modals.editEnterprise.placeholders.description")}
+                  placeholderTextColor={colors.textTertiary}
                   multiline
                   numberOfLines={4}
-                  className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
+                  className="rounded-xl px-4 py-3 font-quicksand-regular"
+                  style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, color: colors.textPrimary }}
                   textAlignVertical="top"
                 />
               </View>
 
               {/* Coordonnées */}
               <View className="pt-2">
-                <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3 pl-1">
+                <Text className="text-lg font-quicksand-bold mb-3 pl-1" style={{ color: colors.textPrimary }}>
                   {i18n.t("enterprise.profile.modals.editEnterprise.contactInfo")}
                 </Text>
 
                 <View className="mb-4">
-                  <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
+                  <Text className="font-quicksand-semibold mb-2 pl-1" style={{ color: colors.textPrimary }}>
                     {i18n.t("enterprise.profile.modals.editEnterprise.website")}
                   </Text>
                   <TextInput
                     value={website}
                     onChangeText={setWebsite}
                     placeholder={i18n.t("enterprise.profile.modals.editEnterprise.placeholders.website")}
-                    className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
+                    placeholderTextColor={colors.textTertiary}
+                    className="rounded-xl px-4 py-3 font-quicksand-regular"
+                    style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, color: colors.textPrimary }}
                   />
                 </View>
 
                 <View className="mb-4">
-                  <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
+                  <Text className="font-quicksand-semibold mb-2 pl-1" style={{ color: colors.textPrimary }}>
                     {i18n.t("enterprise.profile.modals.editEnterprise.phone")}
                   </Text>
                   <TextInput
                     value={phone}
                     onChangeText={setPhone}
                     placeholder={i18n.t("enterprise.profile.modals.editEnterprise.placeholders.phone")}
+                    placeholderTextColor={colors.textTertiary}
                     keyboardType="phone-pad"
-                    className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
+                    className="rounded-xl px-4 py-3 font-quicksand-regular"
+                    style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, color: colors.textPrimary }}
                   />
                 </View>
 
                 <View className="mb-4">
-                  <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
+                  <Text className="font-quicksand-semibold mb-2 pl-1" style={{ color: colors.textPrimary }}>
                     {i18n.t("enterprise.profile.modals.editEnterprise.email")}
                   </Text>
                   <TextInput
                     value={email}
                     onChangeText={setEmail}
                     placeholder={i18n.t("enterprise.profile.modals.editEnterprise.placeholders.email")}
+                    placeholderTextColor={colors.textTertiary}
                     keyboardType="email-address"
                     autoCapitalize="none"
-                    className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
+                    className="rounded-xl px-4 py-3 font-quicksand-regular"
+                    style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, color: colors.textPrimary }}
                   />
                 </View>
 
                 <View className="mb-4">
-                  <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
+                  <Text className="font-quicksand-semibold mb-2 pl-1" style={{ color: colors.textPrimary }}>
                     {i18n.t("enterprise.profile.modals.editEnterprise.whatsapp")}
                   </Text>
                   <TextInput
                     value={whatsapp}
                     onChangeText={setWhatsapp}
                     placeholder={i18n.t("enterprise.profile.modals.editEnterprise.placeholders.whatsapp")}
+                    placeholderTextColor={colors.textTertiary}
                     keyboardType="phone-pad"
-                    className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
+                    className="rounded-xl px-4 py-3 font-quicksand-regular"
+                    style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, color: colors.textPrimary }}
                   />
                 </View>
               </View>
@@ -484,15 +515,15 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({
               {/* Liens sociaux */}
               <View className="pt-2">
                 <View className="flex-row items-center justify-between mb-3">
-                  <Text className="text-lg font-quicksand-bold text-neutral-800 pl-1">
+                  <Text className="text-lg font-quicksand-bold pl-1" style={{ color: colors.textPrimary }}>
                     {i18n.t("enterprise.profile.modals.editEnterprise.socialNetworks")}
                   </Text>
                   <TouchableOpacity
                     onPress={addSocialLink}
                     className="flex-row items-center"
                   >
-                    <Ionicons name="add-circle" size={20} color="#10B981" />
-                    <Text className="text-primary-500 font-quicksand-medium ml-1">
+                    <Ionicons name="add-circle" size={20} color={colors.brandPrimary} />
+                    <Text className="font-quicksand-medium ml-1" style={{ color: colors.brandPrimary }}>
                       {i18n.t("enterprise.profile.modals.editEnterprise.addSocial")}
                     </Text>
                   </TouchableOpacity>
@@ -506,7 +537,9 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({
                         updateSocialLink(index, "platform", value)
                       }
                       placeholder={i18n.t("enterprise.profile.modals.editEnterprise.placeholders.platform")}
-                      className="flex-1 bg-white border border-neutral-200 rounded-l-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
+                      placeholderTextColor={colors.textTertiary}
+                      className="flex-1 rounded-l-xl px-4 py-3 font-quicksand-regular"
+                      style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, color: colors.textPrimary }}
                     />
                     <TextInput
                       value={link.url}
@@ -514,20 +547,22 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({
                         updateSocialLink(index, "url", value)
                       }
                       placeholder={i18n.t("enterprise.profile.modals.editEnterprise.placeholders.url")}
-                      className="flex-2 bg-white border-t border-r border-b border-neutral-200 rounded-r-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
-                      style={{ flex: 2 }}
+                      placeholderTextColor={colors.textTertiary}
+                      className="flex-2 rounded-r-xl px-4 py-3 font-quicksand-regular"
+                      style={{ flex: 2, backgroundColor: colors.card, borderTopWidth: 1, borderRightWidth: 1, borderBottomWidth: 1, borderColor: colors.border, color: colors.textPrimary }}
                     />
                     <TouchableOpacity
                       onPress={() => removeSocialLink(index)}
-                      className="ml-2 w-8 h-8 bg-error-100 rounded-full justify-center items-center"
+                      className="ml-2 w-8 h-8 rounded-full justify-center items-center"
+                      style={{ backgroundColor: isDark ? colors.error + '20' : '#FEE2E2' }}
                     >
-                      <Ionicons name="close" size={16} color="#EF4444" />
+                      <Ionicons name="close" size={16} color={colors.error} />
                     </TouchableOpacity>
                   </View>
                 ))}
 
                 {socialLinks.length === 0 && (
-                  <Text className="text-neutral-500 font-quicksand-regular italic pl-1 mb-4">
+                  <Text className="font-quicksand-regular italic pl-1 mb-4" style={{ color: colors.textTertiary }}>
                     {i18n.t("enterprise.profile.modals.editEnterprise.noSocial")}
                   </Text>
                 )}
@@ -545,6 +580,8 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
   visible,
   onClose,
   enterprise,
+  colors,
+  isDark,
 }) => {
   return (
     <Modal
@@ -552,15 +589,15 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
       animationType="slide"
       presentationStyle="pageSheet"
     >
-      <View className="flex-1 bg-white">
-        <View className="px-6 pt-14 pb-4 border-b border-neutral-200">
+      <View className="flex-1" style={{ backgroundColor: colors.card }}>
+        <View className="px-6 pt-14 pb-4" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
           <View className="flex-row items-center justify-between">
             <TouchableOpacity onPress={onClose}>
-              <Text className="text-primary-500 font-quicksand-medium">
+              <Text className="font-quicksand-medium" style={{ color: colors.brandPrimary }}>
                 {i18n.t("enterprise.profile.modals.enterpriseDetails.close")}
               </Text>
             </TouchableOpacity>
-            <Text className="text-lg font-quicksand-bold">
+            <Text className="text-lg font-quicksand-bold" style={{ color: colors.textPrimary }}>
               {i18n.t("enterprise.profile.modals.enterpriseDetails.title")}
             </Text>
             <View style={{ width: 70 }} />
@@ -583,7 +620,7 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
                 </Text>
               </View>
             )}
-            <Text className="text-xl font-quicksand-bold text-neutral-800 text-center">
+            <Text className="text-xl font-quicksand-bold text-center" style={{ color: colors.textPrimary }}>
               {enterprise.companyName}
             </Text>
             <View className="flex-row items-center mt-2">
@@ -604,11 +641,11 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
 
           {/* Informations */}
           <View className="mb-6">
-            <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3">
+            <Text className="text-lg font-quicksand-bold mb-3" style={{ color: colors.textPrimary }}>
               {i18n.t("enterprise.profile.modals.enterpriseDetails.about")}
             </Text>
-            <View className="bg-neutral-50 rounded-xl p-4">
-              <Text className="text-neutral-700 font-quicksand-regular">
+            <View className="rounded-xl p-4" style={{ backgroundColor: colors.tertiary }}>
+              <Text className="font-quicksand-regular" style={{ color: colors.textPrimary }}>
                 {enterprise.description ||
                   i18n.t("enterprise.profile.modals.enterpriseDetails.noDescription")}
               </Text>
@@ -617,14 +654,14 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
 
           {/* Coordonnées */}
           <View className="mb-6">
-            <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3">
+            <Text className="text-lg font-quicksand-bold mb-3" style={{ color: colors.textPrimary }}>
               {i18n.t("enterprise.profile.modals.enterpriseDetails.contact")}
             </Text>
-            <View className="bg-neutral-50 rounded-xl p-4 space-y-3">
+            <View className="rounded-xl p-4 space-y-3" style={{ backgroundColor: colors.tertiary }}>
               {enterprise.contactInfo?.website && (
                 <View className="flex-row items-center">
-                  <Ionicons name="globe-outline" size={20} color="#10B981" />
-                  <Text className="text-neutral-700 font-quicksand-medium ml-3">
+                  <Ionicons name="globe-outline" size={20} color={colors.brandPrimary} />
+                  <Text className="font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
                     {enterprise.contactInfo.website}
                   </Text>
                 </View>
@@ -632,8 +669,8 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
 
               {enterprise.contactInfo?.phone && (
                 <View className="flex-row items-center">
-                  <Ionicons name="call-outline" size={20} color="#10B981" />
-                  <Text className="text-neutral-700 font-quicksand-medium ml-3">
+                  <Ionicons name="call-outline" size={20} color={colors.brandPrimary} />
+                  <Text className="font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
                     {enterprise.contactInfo.phone}
                   </Text>
                 </View>
@@ -641,7 +678,7 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
 
               {!enterprise.contactInfo?.website &&
                 !enterprise.contactInfo?.phone && (
-                  <Text className="text-neutral-600 font-quicksand-regular italic">
+                  <Text className="font-quicksand-regular italic" style={{ color: colors.textSecondary }}>
                     {i18n.t("enterprise.profile.modals.enterpriseDetails.noContact")}
                   </Text>
                 )}
@@ -650,12 +687,12 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
 
           {/* Statistiques */}
           <View className="mb-6">
-            <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3">
+            <Text className="text-lg font-quicksand-bold mb-3" style={{ color: colors.textPrimary }}>
               {i18n.t("enterprise.profile.modals.enterpriseDetails.stats")}
             </Text>
-            <View className="bg-neutral-50 rounded-xl p-4 space-y-3">
+            <View className="rounded-xl p-4 space-y-3" style={{ backgroundColor: colors.tertiary }}>
               <View className="flex-row justify-between">
-                <Text className="text-neutral-600 font-quicksand-medium">
+                <Text className="font-quicksand-medium" style={{ color: colors.textSecondary }}>
                   {i18n.t("enterprise.profile.modals.enterpriseDetails.totalSales")}
                 </Text>
                 <Text className="text-primary-500 font-quicksand-bold">
@@ -667,7 +704,7 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
                 </Text>
               </View>
               <View className="flex-row justify-between">
-                <Text className="text-neutral-600 font-quicksand-medium">
+                <Text className="font-quicksand-medium" style={{ color: colors.textSecondary }}>
                   {i18n.t("enterprise.profile.modals.enterpriseDetails.orders")}
                 </Text>
                 <Text className="text-success-500 font-quicksand-bold">
@@ -675,7 +712,7 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
                 </Text>
               </View>
               <View className="flex-row justify-between">
-                <Text className="text-neutral-600 font-quicksand-medium">
+                <Text className="font-quicksand-medium" style={{ color: colors.textSecondary }}>
                   {i18n.t("enterprise.profile.modals.enterpriseDetails.averageRating")}
                 </Text>
                 <View className="flex-row items-center">
@@ -686,7 +723,7 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
                 </View>
               </View>
               <View className="flex-row justify-between">
-                <Text className="text-neutral-600 font-quicksand-medium">
+                <Text className="font-quicksand-medium" style={{ color: colors.textSecondary }}>
                   {i18n.t("enterprise.profile.modals.enterpriseDetails.reviews")}
                 </Text>
                 <Text className="text-secondary-500 font-quicksand-bold">
@@ -699,16 +736,16 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
           {/* Liens sociaux */}
           {enterprise.socialLinks && enterprise.socialLinks.length > 0 && (
             <View className="mb-6">
-              <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3">
+              <Text className="text-lg font-quicksand-bold mb-3" style={{ color: colors.textPrimary }}>
                 {i18n.t("enterprise.profile.modals.enterpriseDetails.socialLinks")}
               </Text>
-              <View className="bg-neutral-50 rounded-xl p-4 space-y-3">
+              <View className="rounded-xl p-4 space-y-3" style={{ backgroundColor: colors.tertiary }}>
                 {enterprise.socialLinks.map((link, index) => (
                   <View key={index} className="flex-row justify-between">
-                    <Text className="text-neutral-600 font-quicksand-medium">
+                    <Text className="font-quicksand-medium" style={{ color: colors.textSecondary }}>
                       {link.platform}
                     </Text>
-                    <Text className="text-primary-500 font-quicksand-medium">
+                    <Text className="font-quicksand-medium" style={{ color: colors.brandPrimary }}>
                       {link.url}
                     </Text>
                   </View>
@@ -719,15 +756,15 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
 
           {/* Date de création */}
           <View className="mb-6">
-            <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3">
+            <Text className="text-lg font-quicksand-bold mb-3" style={{ color: colors.textPrimary }}>
               {i18n.t("enterprise.profile.modals.enterpriseDetails.additionalInfo")}
             </Text>
-            <View className="bg-neutral-50 rounded-xl p-4 space-y-3">
+            <View className="rounded-xl p-4 space-y-3" style={{ backgroundColor: colors.tertiary }}>
               <View className="flex-row justify-between">
-                <Text className="text-neutral-600 font-quicksand-medium">
+                <Text className="font-quicksand-medium" style={{ color: colors.textSecondary }}>
                   {i18n.t("enterprise.profile.modals.enterpriseDetails.creationDate")}
                 </Text>
-                <Text className="text-neutral-700 font-quicksand-medium">
+                <Text className="font-quicksand-medium" style={{ color: colors.textPrimary }}>
                   {new Date(enterprise.createdAt).toLocaleDateString("fr-FR", {
                     day: "numeric",
                     month: "long",
@@ -736,10 +773,10 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
                 </Text>
               </View>
               <View className="flex-row justify-between">
-                <Text className="text-neutral-600 font-quicksand-medium">
+                <Text className="font-quicksand-medium" style={{ color: colors.textSecondary }}>
                   {i18n.t("enterprise.profile.modals.enterpriseDetails.enterpriseId")}
                 </Text>
-                <Text className="text-neutral-700 font-quicksand-medium">
+                <Text className="font-quicksand-medium" style={{ color: colors.textPrimary }}>
                   {enterprise._id?.substring(0, 8) || "N/A"}
                 </Text>
               </View>
@@ -833,6 +870,7 @@ function EnterpriseProfilePage() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { locale } = useLocale(); // Écoute les changements de langue pour re-render automatiquement
   const { showToast: showReToast } = useReanimatedToast();
+  const { colors, isDark } = useTheme();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [profileData, setProfileData] = useState<EnterpriseProfile | null>(
@@ -929,7 +967,7 @@ function EnterpriseProfilePage() {
       outputRange: [-150, 150],
     });
     return (
-      <View style={[{ backgroundColor: "#E5E7EB", overflow: "hidden" }, style]}>
+      <View style={[{ backgroundColor: isDark ? colors.tertiary : "#E5E7EB", overflow: "hidden" }, style]}>
         <Animated.View
           style={{
             position: "absolute",
@@ -938,7 +976,7 @@ function EnterpriseProfilePage() {
             width: 120,
             transform: [{ translateX }],
             backgroundColor: "rgba(255,255,255,0.35)",
-            opacity: 0.7,
+            opacity: isDark ? 0.15 : 0.7,
           }}
         />
       </View>
@@ -947,8 +985,8 @@ function EnterpriseProfilePage() {
 
   const SkeletonCard = ({ style }: { style?: any }) => (
     <View
-      className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden"
-      style={style}
+      className="rounded-2xl shadow-sm overflow-hidden"
+      style={[{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }, style]}
     >
       <ShimmerBlock style={{ height: 120, borderRadius: 16, width: "100%" }} />
     </View>
@@ -1013,8 +1051,9 @@ function EnterpriseProfilePage() {
       {/* Overlay Card Skeleton */}
       <View className="px-4" style={{ marginTop: overlayLift }}>
         <View
-          className="bg-white rounded-2xl p-4"
+          className="rounded-2xl p-4"
           style={{
+            backgroundColor: colors.card,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.03,
@@ -1382,8 +1421,8 @@ function EnterpriseProfilePage() {
 
   if (loading && !profileData) {
     return (
-      <View className="flex-1 bg-background-secondary">
-        <ExpoStatusBar style="light" translucent />
+      <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
+        <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
         {renderSkeletonProfile()}
       </View>
     );
@@ -1391,20 +1430,21 @@ function EnterpriseProfilePage() {
 
   if (!profileData) {
     return (
-      <View className="flex-1 bg-background-secondary">
+      <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
         <View className="flex-1 justify-center items-center px-6">
-          <Ionicons name="alert-circle" size={48} color="#EF4444" />
-          <Text className="mt-4 text-neutral-800 font-quicksand-bold text-lg text-center">
+          <Ionicons name="alert-circle" size={48} color={colors.error} />
+          <Text className="mt-4 font-quicksand-bold text-lg text-center" style={{ color: colors.textPrimary }}>
             {i18n.t("enterprise.profile.messages.loadError")}
           </Text>
-          <Text className="mt-2 text-neutral-600 font-quicksand-medium text-center">
+          <Text className="mt-2 font-quicksand-medium text-center" style={{ color: colors.textSecondary }}>
             {i18n.t("enterprise.profile.messages.loadErrorMessage")}
           </Text>
           <TouchableOpacity
             onPress={loadProfile}
-            className="mt-6 bg-primary-500 px-6 py-3 rounded-xl"
+            className="mt-6 px-6 py-3 rounded-xl"
+            style={{ backgroundColor: colors.brandPrimary }}
           >
-            <Text className="text-white font-quicksand-semibold">
+            <Text className="font-quicksand-semibold" style={{ color: colors.textOnBrand }}>
               {i18n.t("enterprise.profile.actions.retry")}
             </Text>
           </TouchableOpacity>
@@ -1414,7 +1454,7 @@ function EnterpriseProfilePage() {
   }
 
   return (
-    <View className="flex-1 bg-background-secondary">
+    <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
       <ExpoStatusBar style="light" translucent />
 
       {/* Fixed Gradient Header */}
@@ -1471,8 +1511,8 @@ function EnterpriseProfilePage() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={refreshProfile}
-            colors={["#10B981"]}
-            tintColor="#10B981"
+            colors={[colors.brandPrimary]}
+            tintColor={colors.brandPrimary}
             progressViewOffset={insets.top + 80}
           />
         }
@@ -1481,8 +1521,9 @@ function EnterpriseProfilePage() {
         {/* Overlay Card */}
         <View className="px-4 pt-4">
           <View
-            className="bg-white rounded-2xl p-4 flex-row items-start"
+            className="rounded-2xl p-4 flex-row items-start"
             style={{
+              backgroundColor: colors.card,
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.1,
@@ -1522,13 +1563,14 @@ function EnterpriseProfilePage() {
             >
               {profileData.enterprise.description ? (
                 <Text
-                  className="text-neutral-700 font-quicksand-medium text-sm"
+                  className="font-quicksand-medium text-sm"
+                  style={{ color: colors.textPrimary }}
                   numberOfLines={3}
                 >
                   {profileData.enterprise.description}
                 </Text>
               ) : (
-                <Text className="text-neutral-400 font-quicksand-regular text-sm italic">
+                <Text className="font-quicksand-regular text-sm italic" style={{ color: colors.textTertiary }}>
                   {i18n.t("enterprise.profile.placeholders.noDescription")}
                 </Text>
               )}
@@ -1538,45 +1580,48 @@ function EnterpriseProfilePage() {
               >
                 <TouchableOpacity
                   onPress={() => setShowEditProfile(true)}
-                  className="px-3 py-2 bg-primary-50 rounded-xl flex-row items-center"
+                  className="px-3 py-2 rounded-xl flex-row items-center"
                   style={{
                     marginBottom: wrapOverlayChips ? 8 : 0,
                     flexShrink: 1,
+                    backgroundColor: isDark ? colors.brandPrimary + '20' : '#D1FAE5',
                   }}
                 >
-                  <Ionicons name="person" size={14} color="#10B981" />
-                  <Text className="text-primary-500 font-quicksand-semibold text-xs ml-1">
+                  <Ionicons name="person" size={14} color={colors.brandPrimary} />
+                  <Text className="font-quicksand-semibold text-xs ml-1" style={{ color: colors.brandPrimary }}>
                     {i18n.t("enterprise.profile.actions.profile")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   // Ancien bouton modal d'ajout partenaire retiré : redirection uniquement depuis la section gestion
                   onPress={handleNavigateToPartners}
-                  className="px-3 py-2 bg-secondary-50 rounded-xl flex-row items-center"
+                  className="px-3 py-2 rounded-xl flex-row items-center"
                   style={{
                     marginBottom: wrapOverlayChips ? 8 : 0,
                     flexShrink: 1,
+                    backgroundColor: isDark ? '#8B5CF620' : '#EDE9FE',
                   }}
                 >
                   <Ionicons name="people" size={14} color="#8B5CF6" />
-                  <Text className="text-purple-600 font-quicksand-semibold text-xs ml-1">
+                  <Text className="font-quicksand-semibold text-xs ml-1" style={{ color: '#8B5CF6' }}>
                     {i18n.t("enterprise.profile.actions.partners")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => setShowEnterpriseDetails(true)}
-                  className="px-3 py-2 bg-neutral-100 rounded-xl flex-row items-center"
+                  className="px-3 py-2 rounded-xl flex-row items-center"
                   style={{
                     marginBottom: wrapOverlayChips ? 8 : 0,
+                    backgroundColor: colors.tertiary,
                     flexShrink: 1,
                   }}
                 >
                   <Ionicons
                     name="information-circle"
                     size={14}
-                    color="#4B5563"
+                    color={colors.textSecondary}
                   />
-                  <Text className="text-neutral-700 font-quicksand-semibold text-xs ml-1">
+                  <Text className="font-quicksand-semibold text-xs ml-1" style={{ color: colors.textSecondary }}>
                     {i18n.t("enterprise.profile.actions.details")}
                   </Text>
                 </TouchableOpacity>
@@ -1587,7 +1632,7 @@ function EnterpriseProfilePage() {
 
         {/* Marketing & Abonnements (UI Only) */}
         <View className="px-4 pt-6">
-          <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4 pl-1">
+          <Text className="text-lg font-quicksand-bold mb-4 pl-1" style={{ color: colors.textPrimary }}>
             {i18n.t("enterprise.profile.sections.marketing")}
           </Text>
           <View
@@ -1673,29 +1718,31 @@ function EnterpriseProfilePage() {
                         </View>
                       </View>
                       <Text
-                        className="text-neutral-500 font-quicksand-medium text-[12px] mt-1"
+                        className="font-quicksand-medium text-[12px] mt-1"
+                        style={{ color: colors.textTertiary }}
                         numberOfLines={2}
                       >
                         {i18n.t("enterprise.profile.features.advertisements.notAvailable")}
                       </Text>
                     </View>
-                    <View className="w-10 h-10 rounded-xl bg-neutral-200 items-center justify-center">
-                      <Ionicons name="lock-closed" size={20} color="#9CA3AF" />
+                    <View className="w-10 h-10 rounded-xl items-center justify-center" style={{ backgroundColor: colors.tertiary }}>
+                      <Ionicons name="lock-closed" size={20} color={colors.textTertiary} />
                     </View>
                   </View>
                   <TouchableOpacity
                     onPress={() =>
                       router.push("/(app)/(enterprise)/subscriptions" as any)
                     }
-                    className="bg-white border border-neutral-200 rounded-xl py-2 px-3"
+                    className="rounded-xl py-2 px-3"
+                    style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}
                   >
                     <View className="flex-row items-center justify-center">
                       <Ionicons
                         name="arrow-up-circle"
                         size={14}
-                        color="#10B981"
+                        color={colors.brandPrimary}
                       />
-                      <Text className="text-primary-600 font-quicksand-bold text-xs ml-1.5">
+                      <Text className="font-quicksand-bold text-xs ml-1.5" style={{ color: colors.brandPrimary }}>
                         {i18n.t("enterprise.profile.features.advertisements.upgrade")}
                       </Text>
                     </View>
@@ -1706,11 +1753,14 @@ function EnterpriseProfilePage() {
 
             {/* Card Abonnements */}
             <TouchableOpacity
-              className="flex-1 bg-white border border-neutral-200 rounded-2xl shadow-sm"
+              className="flex-1 rounded-2xl shadow-sm"
               style={{
                 marginLeft: stackMarketing ? 0 : 8,
                 marginTop: stackMarketing ? 8 : 0,
                 padding: 20,
+                backgroundColor: colors.card,
+                borderWidth: 1,
+                borderColor: colors.border,
               }}
               activeOpacity={0.85}
               onPress={() =>
@@ -1720,13 +1770,15 @@ function EnterpriseProfilePage() {
               <View className="flex-row items-center justify-between">
                 <View className="mr-3 flex-1">
                   <Text
-                    className="text-neutral-800 font-quicksand-semibold text-base"
+                    className="font-quicksand-semibold text-base"
+                    style={{ color: colors.textPrimary }}
                     numberOfLines={1}
                   >
                     {i18n.t("enterprise.profile.features.subscriptions.title")}
                   </Text>
                   <Text
-                    className="text-neutral-500 font-quicksand-medium text-[12px] mt-1"
+                    className="font-quicksand-medium text-[12px] mt-1"
+                    style={{ color: colors.textSecondary }}
                     numberOfLines={2}
                   >
                     {subscription
@@ -1755,18 +1807,19 @@ function EnterpriseProfilePage() {
 
         {/* Contact & Owner Cards */}
         <View className="px-4 pt-6 space-y-4">
-          <View className="bg-white rounded-2xl p-5 shadow-sm border border-neutral-100">
-            <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-4">
+          <View className="rounded-2xl p-5 shadow-sm" style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
+            <Text className="text-sm font-quicksand-semibold mb-4" style={{ color: colors.textPrimary }}>
               {i18n.t("enterprise.profile.sections.contact")}
             </Text>
             <View className="space-y-3">
               {profileData.enterprise.contactInfo?.email && (
                 <View className="flex-row items-center py-2">
-                  <View className="w-9 h-9 rounded-xl bg-primary-100 items-center justify-center">
-                    <Ionicons name="mail" size={18} color="#FE8C00" />
+                  <View className="w-9 h-9 rounded-xl items-center justify-center" style={{ backgroundColor: isDark ? colors.brandSecondary + '20' : '#FFF4E5' }}>
+                    <Ionicons name="mail" size={18} color={colors.brandSecondary} />
                   </View>
                   <Text
-                    className="text-sm text-neutral-700 ml-4 font-quicksand-medium flex-1"
+                    className="text-sm ml-4 font-quicksand-medium flex-1"
+                    style={{ color: colors.textPrimary }}
                     numberOfLines={1}
                   >
                     {profileData.enterprise.contactInfo.email}
@@ -1775,11 +1828,12 @@ function EnterpriseProfilePage() {
               )}
               {profileData.enterprise.contactInfo?.phone && (
                 <View className="flex-row items-center py-2">
-                  <View className="w-9 h-9 rounded-xl bg-primary-100 items-center justify-center">
-                    <Ionicons name="call" size={18} color="#FE8C00" />
+                  <View className="w-9 h-9 rounded-xl items-center justify-center" style={{ backgroundColor: isDark ? colors.brandSecondary + '20' : '#FFF4E5' }}>
+                    <Ionicons name="call" size={18} color={colors.brandSecondary} />
                   </View>
                   <Text
-                    className="text-sm text-neutral-700 ml-4 font-quicksand-medium flex-1"
+                    className="text-sm ml-4 font-quicksand-medium flex-1"
+                    style={{ color: colors.textPrimary }}
                     numberOfLines={1}
                   >
                     {profileData.enterprise.contactInfo.phone}
@@ -1788,11 +1842,12 @@ function EnterpriseProfilePage() {
               )}
               {profileData.enterprise.contactInfo?.whatsapp && (
                 <View className="flex-row items-center py-2">
-                  <View className="w-9 h-9 rounded-xl bg-success-100 items-center justify-center">
+                  <View className="w-9 h-9 rounded-xl items-center justify-center" style={{ backgroundColor: isDark ? '#10B98120' : '#D1FAE5' }}>
                     <Ionicons name="logo-whatsapp" size={18} color="#10B981" />
                   </View>
                   <Text
-                    className="text-sm text-neutral-700 ml-4 font-quicksand-medium flex-1"
+                    className="text-sm ml-4 font-quicksand-medium flex-1"
+                    style={{ color: colors.textPrimary }}
                     numberOfLines={1}
                   >
                     {profileData.enterprise.contactInfo.whatsapp}
@@ -1801,11 +1856,12 @@ function EnterpriseProfilePage() {
               )}
               {profileData.enterprise.contactInfo?.website && (
                 <View className="flex-row items-center py-2">
-                  <View className="w-9 h-9 rounded-xl bg-blue-100 items-center justify-center">
+                  <View className="w-9 h-9 rounded-xl items-center justify-center" style={{ backgroundColor: isDark ? '#2563EB20' : '#DBEAFE' }}>
                     <Ionicons name="globe" size={18} color="#2563EB" />
                   </View>
                   <Text
-                    className="text-sm text-neutral-700 ml-4 font-quicksand-medium flex-1"
+                    className="text-sm ml-4 font-quicksand-medium flex-1"
+                    style={{ color: colors.textPrimary }}
                     numberOfLines={1}
                   >
                     {profileData.enterprise.contactInfo.website}
@@ -1816,24 +1872,24 @@ function EnterpriseProfilePage() {
                 !profileData.enterprise.contactInfo?.phone &&
                 !profileData.enterprise.contactInfo?.whatsapp &&
                 !profileData.enterprise.contactInfo?.website && (
-                  <Text className="text-neutral-400 text-sm font-quicksand-regular italic">
+                  <Text className="text-sm font-quicksand-regular italic" style={{ color: colors.textTertiary }}>
                     {i18n.t("enterprise.profile.contact.noInfo")}
                   </Text>
                 )}
             </View>
           </View>
 
-          <View className="bg-white rounded-2xl p-5 shadow-sm border border-neutral-100">
+          <View className="rounded-2xl p-5 shadow-sm" style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
             <View className="flex-row items-center justify-between mb-3">
-              <Text className="text-sm font-quicksand-semibold text-neutral-700">
+              <Text className="text-sm font-quicksand-semibold" style={{ color: colors.textPrimary }}>
                 {i18n.t("enterprise.profile.sections.owner")}
               </Text>
               <TouchableOpacity
                 onPress={() => setShowEditProfile(true)}
                 className="flex-row items-center"
               >
-                <Ionicons name="create-outline" size={16} color="#6B7280" />
-                <Text className="text-neutral-600 text-xs font-quicksand-medium ml-1">
+                <Ionicons name="create-outline" size={16} color={colors.textSecondary} />
+                <Text className="text-xs font-quicksand-medium ml-1" style={{ color: colors.textSecondary }}>
                   {i18n.t("enterprise.profile.actions.edit")}
                 </Text>
               </TouchableOpacity>
@@ -1845,8 +1901,8 @@ function EnterpriseProfilePage() {
                   className="w-12 h-12 rounded-full"
                 />
               ) : (
-                <View className="w-12 h-12 rounded-full bg-neutral-200 items-center justify-center">
-                  <Text className="text-neutral-600 font-quicksand-bold text-sm">
+                <View className="w-12 h-12 rounded-full items-center justify-center" style={{ backgroundColor: colors.tertiary }}>
+                  <Text className="font-quicksand-bold text-sm" style={{ color: colors.textSecondary }}>
                     {`${profileData.user.firstName?.[0] || ""}${profileData.user.lastName?.[0] || ""
                       }`.toUpperCase()}
                   </Text>
@@ -1854,13 +1910,15 @@ function EnterpriseProfilePage() {
               )}
               <View className="ml-4 flex-1">
                 <Text
-                  className="text-base font-quicksand-semibold text-neutral-800"
+                  className="text-base font-quicksand-semibold"
+                  style={{ color: colors.textPrimary }}
                   numberOfLines={1}
                 >
                   {profileData.user.firstName} {profileData.user.lastName}
                 </Text>
                 <Text
-                  className="text-sm text-neutral-600 font-quicksand-light"
+                  className="text-sm font-quicksand-light"
+                  style={{ color: colors.textSecondary }}
                   numberOfLines={1}
                 >
                   {profileData.user.email}
@@ -1872,33 +1930,34 @@ function EnterpriseProfilePage() {
 
         {/* Menu de gestion */}
         <View className="px-4 py-4">
-          <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4 pl-1">
+          <Text className="text-lg font-quicksand-bold mb-4 pl-1" style={{ color: colors.textPrimary }}>
             {i18n.t("enterprise.profile.management.title")}
           </Text>
-          <View className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden">
+          <View className="rounded-2xl shadow-sm overflow-hidden" style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
             {/* Partenaires de livraison */}
             <TouchableOpacity
               onPress={handleNavigateToPartners}
-              className="flex-row items-center justify-between px-4 py-5 border-b border-neutral-100"
+              className="flex-row items-center justify-between px-4 py-5"
+              style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
             >
               <View className="flex-row items-center">
-                <View className="w-10 h-10 bg-indigo-100 rounded-full justify-center items-center">
+                <View className="w-10 h-10 rounded-full justify-center items-center" style={{ backgroundColor: isDark ? '#6366F120' : '#E0E7FF' }}>
                   <Ionicons name="people-outline" size={20} color="#6366F1" />
                 </View>
                 <View className="ml-4">
-                  <Text className="text-base font-quicksand-medium text-neutral-800">
+                  <Text className="text-base font-quicksand-medium" style={{ color: colors.textPrimary }}>
                     {i18n.t("enterprise.profile.management.partners")}
                   </Text>
                   {profileData.enterprise.deliveryPartners &&
                     profileData.enterprise.deliveryPartners.length > 0 && (
-                      <Text className="text-sm text-neutral-600 font-quicksand-light">
+                      <Text className="text-sm font-quicksand-light" style={{ color: colors.textSecondary }}>
                         {i18n.t("enterprise.profile.management.partnersCount", { count: profileData.enterprise.deliveryPartners.length })}
                       </Text>
                     )}
                 </View>
               </View>
 
-              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+              <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
             </TouchableOpacity>
 
             {/* Paramètres */}
@@ -1909,20 +1968,20 @@ function EnterpriseProfilePage() {
               className="flex-row items-center justify-between px-4 py-5"
             >
               <View className="flex-row items-center">
-                <View className="w-10 h-10 bg-primary-100 rounded-full justify-center items-center">
-                  <Ionicons name="settings-outline" size={20} color="#10B981" />
+                <View className="w-10 h-10 rounded-full justify-center items-center" style={{ backgroundColor: isDark ? colors.brandPrimary + '20' : '#D1FAE5' }}>
+                  <Ionicons name="settings-outline" size={20} color={colors.brandPrimary} />
                 </View>
                 <View className="ml-4">
-                  <Text className="text-base font-quicksand-medium text-neutral-800">
+                  <Text className="text-base font-quicksand-medium" style={{ color: colors.textPrimary }}>
                     {i18n.t("enterprise.profile.management.settings")}
                   </Text>
-                  <Text className="text-sm text-neutral-600 font-quicksand-light">
+                  <Text className="text-sm font-quicksand-light" style={{ color: colors.textSecondary }}>
                     {i18n.t("enterprise.profile.management.settingsDescription")}
                   </Text>
                 </View>
               </View>
 
-              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+              <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -1930,12 +1989,13 @@ function EnterpriseProfilePage() {
         {/* Bouton de déconnexion */}
         <View className="px-4 py-6">
           <TouchableOpacity
-            className="bg-white rounded-2xl py-4 border border-neutral-200"
+            className="rounded-2xl py-4"
+            style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}
             onPress={handleLogout}
           >
             <View className="flex-row items-center justify-center">
-              <Ionicons name="log-out-outline" size={20} color="#EF4444" />
-              <Text className="text-error-500 font-quicksand-semibold ml-2">
+              <Ionicons name="log-out-outline" size={20} color={colors.error} />
+              <Text className="font-quicksand-semibold ml-2" style={{ color: colors.error }}>
                 {i18n.t("enterprise.profile.management.logout")}
               </Text>
             </View>
@@ -1944,7 +2004,7 @@ function EnterpriseProfilePage() {
 
         {/* App Info */}
         <View className="px-6 py-4">
-          <Text className="text-center text-xs text-neutral-500 font-quicksand-medium">
+          <Text className="text-center text-xs font-quicksand-medium" style={{ color: colors.textTertiary }}>
             {i18n.t("enterprise.profile.appInfo")}
           </Text>
         </View>
@@ -1962,6 +2022,8 @@ function EnterpriseProfilePage() {
             onSave={handleUpdateProfile}
             initialData={profileData}
             loading={editLoading}
+            colors={colors}
+            isDark={isDark}
           />
 
           <EditEnterpriseModal
@@ -1970,6 +2032,8 @@ function EnterpriseProfilePage() {
             onSave={handleUpdateEnterprise}
             initialData={profileData.enterprise}
             loading={editLoading}
+            colors={colors}
+            isDark={isDark}
           />
 
           <AddPartnerModal
@@ -1984,6 +2048,8 @@ function EnterpriseProfilePage() {
             visible={showEnterpriseDetails}
             onClose={() => setShowEnterpriseDetails(false)}
             enterprise={profileData.enterprise}
+            colors={colors}
+            isDark={isDark}
           />
 
           {/* Modal de confirmation */}
@@ -1993,20 +2059,21 @@ function EnterpriseProfilePage() {
             animationType="fade"
             onRequestClose={closeConfirmation}
           >
-            <View className="flex-1 justify-center items-center bg-black/50 px-4">
-              <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
-                <Text className="text-xl font-quicksand-bold text-neutral-800 mb-2">
+            <View className="flex-1 justify-center items-center px-4" style={{ backgroundColor: colors.overlay }}>
+              <View className="rounded-2xl p-6 w-full max-w-sm" style={{ backgroundColor: colors.card }}>
+                <Text className="text-xl font-quicksand-bold mb-2" style={{ color: colors.textPrimary }}>
                   {confirmationAction?.title}
                 </Text>
-                <Text className="text-base text-neutral-600 font-quicksand-medium mb-6">
+                <Text className="text-base font-quicksand-medium mb-6" style={{ color: colors.textSecondary }}>
                   {confirmationAction?.message}
                 </Text>
                 <View className="flex-row space-x-3">
                   <TouchableOpacity
-                    className="flex-1 bg-neutral-100 rounded-xl py-3"
+                    className="flex-1 rounded-xl py-3"
+                    style={{ backgroundColor: colors.tertiary }}
                     onPress={closeConfirmation}
                   >
-                    <Text className="text-neutral-700 font-quicksand-semibold text-center">
+                    <Text className="font-quicksand-semibold text-center" style={{ color: colors.textPrimary }}>
                       Annuler
                     </Text>
                   </TouchableOpacity>
@@ -2017,7 +2084,7 @@ function EnterpriseProfilePage() {
                     }}
                     onPress={executeConfirmedAction}
                   >
-                    <Text className="text-white font-quicksand-semibold text-center">
+                    <Text className="font-quicksand-semibold text-center" style={{ color: colors.textOnBrand }}>
                       {confirmationAction?.confirmText}
                     </Text>
                   </TouchableOpacity>

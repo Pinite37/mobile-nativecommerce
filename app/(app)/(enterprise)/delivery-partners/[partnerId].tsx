@@ -7,6 +7,7 @@ import { ActivityIndicator, Animated, Easing, Image, Modal, RefreshControl, Scro
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useToast } from '../../../../components/ui/ToastManager';
 import { useLocale } from '../../../../contexts/LocaleContext';
+import { useTheme } from '../../../../contexts/ThemeContext';
 import i18n from '../../../../i18n/i18n';
 import EnterpriseService, { DeliveryPartnerStatus } from '../../../../services/api/EnterpriseService';
 
@@ -18,6 +19,7 @@ export default function DeliveryPartnerDetailScreen() {
 	const toast = useToast();
 	const insets = useSafeAreaInsets();
 	const { locale } = useLocale();
+	const { colors, isDark } = useTheme();
 	const { partnerId } = useLocalSearchParams<{ partnerId: string }>();
 
 	const [partner, setPartner] = useState<DeliveryPartnerStatus | null>(null);
@@ -46,7 +48,7 @@ export default function DeliveryPartnerDetailScreen() {
 		}, [shimmer]);
 		const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
 		return (
-			<View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
+			<View style={[{ backgroundColor: colors.border, overflow: 'hidden' }, style]}>
 				<Animated.View style={{
 					position: 'absolute', top: 0, bottom: 0, width: 120,
 					transform: [{ translateX }],
@@ -177,12 +179,13 @@ export default function DeliveryPartnerDetailScreen() {
 			</LinearGradient>
 
 			{/* Contenu skeleton */}
-			<View className="px-6 pt-6 -mt-6 rounded-t-[32px] bg-background-secondary">
+			<View className="px-6 pt-6 -mt-6 rounded-t-[32px]" style={{ backgroundColor: colors.secondary }}>
 				{Array.from({ length: 4 }).map((_, index) => (
 					<View
 						key={index}
-						className="bg-white rounded-2xl p-4 mb-4"
+						className="rounded-2xl p-4 mb-4"
 						style={{
+							backgroundColor: colors.card,
 							shadowColor: "#000",
 							shadowOffset: { width: 0, height: 2 },
 							shadowOpacity: 0.1,
@@ -257,8 +260,8 @@ export default function DeliveryPartnerDetailScreen() {
 
 	if (loading) {
 		return (
-			<View className="flex-1 bg-background-secondary">
-				<ExpoStatusBar style="light" translucent />
+			<View className="flex-1" style={{ backgroundColor: colors.secondary }}>
+				<ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
 				{renderSkeletonDetail()}
 			</View>
 		);
@@ -266,8 +269,8 @@ export default function DeliveryPartnerDetailScreen() {
 
 	if (!partner) {
 		return (
-			<View className="flex-1 bg-background-secondary">
-				<ExpoStatusBar style="light" translucent />
+			<View className="flex-1" style={{ backgroundColor: colors.secondary }}>
+				<ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
 
 				{/* Header avec gradient */}
 				<LinearGradient
@@ -296,20 +299,21 @@ export default function DeliveryPartnerDetailScreen() {
 
 				{/* Message d'erreur */}
 				<View className="flex-1 items-center justify-center px-6">
-					<View className="w-20 h-20 rounded-full bg-neutral-100 items-center justify-center mb-4">
-						<Ionicons name="alert-circle" size={32} color="#EF4444" />
+					<View className="w-20 h-20 rounded-full items-center justify-center mb-4" style={{ backgroundColor: colors.tertiary }}>
+						<Ionicons name="alert-circle" size={32} color={colors.error} />
 					</View>
-					<Text className="text-neutral-700 font-quicksand-semibold text-lg text-center mb-2">
+					<Text className="font-quicksand-semibold text-lg text-center mb-2" style={{ color: colors.textPrimary }}>
 						{i18n.t("enterprise.deliveryPartners.detail.notFound.message")}
 					</Text>
-					<Text className="text-neutral-500 font-quicksand-regular text-center mb-6">
+					<Text className="font-quicksand-regular text-center mb-6" style={{ color: colors.textSecondary }}>
 						{i18n.t("enterprise.deliveryPartners.detail.notFound.description")}
 					</Text>
 					<TouchableOpacity
 						onPress={() => router.back()}
-						className="bg-primary-500 rounded-xl px-6 py-3"
+						className="rounded-xl px-6 py-3"
+						style={{ backgroundColor: colors.brandPrimary }}
 					>
-						<Text className="text-white font-quicksand-semibold">{i18n.t("enterprise.deliveryPartners.detail.notFound.backButton")}</Text>
+						<Text className="font-quicksand-semibold text-white">{i18n.t("enterprise.deliveryPartners.detail.notFound.backButton")}</Text>
 					</TouchableOpacity>
 				</View>
 			</View>
@@ -317,8 +321,8 @@ export default function DeliveryPartnerDetailScreen() {
 	}
 
 	return (
-		<View className="flex-1 bg-background-secondary">
-			<ExpoStatusBar style="light" translucent />
+		<View className="flex-1" style={{ backgroundColor: colors.secondary }}>
+			<ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
 
 			{/* Header fixe avec gradient moderne */}
 			<LinearGradient
@@ -376,7 +380,7 @@ export default function DeliveryPartnerDetailScreen() {
 						{/* Photo de profil */}
 						<View className="relative mb-4">
 							<Avatar uri={partner.profileImage} firstName={partner.firstName} lastName={partner.lastName} size={100} />
-							<View className={`absolute -bottom-2 -right-2 w-6 h-6 rounded-full border-3 border-white ${partner.availability ? 'bg-success-500' : 'bg-neutral-400'}`} />
+							<View className={`absolute -bottom-2 -right-2 w-6 h-6 rounded-full border-3`} style={{ backgroundColor: partner.availability ? colors.success : colors.textSecondary, borderColor: 'rgba(255,255,255,0.2)' }} />
 						</View>
 
 						{/* Nom et statut */}
@@ -385,15 +389,15 @@ export default function DeliveryPartnerDetailScreen() {
 						</Text>
 
 						<View className="flex-row items-center space-x-3">
-							<View className={`px-3 py-1 rounded-full ${partner.availability ? 'bg-success-500/20' : 'bg-neutral-500/20'}`}>
-								<Text className={`font-quicksand-semibold text-sm ${partner.availability ? 'text-success-100' : 'text-neutral-100'}`}>
+							<View className={`px-3 py-1 rounded-full ${partner.availability ? '' : ''}`} style={{ backgroundColor: partner.availability ? colors.success + '20' : colors.textSecondary + '20' }}>
+								<Text className={`font-quicksand-semibold text-sm`} style={{ color: partner.availability ? colors.success : colors.textSecondary }}>
 									{partner.availability ? i18n.t("enterprise.deliveryPartners.status.available") : i18n.t("enterprise.deliveryPartners.status.unavailable")}
 								</Text>
 							</View>
 
 							{partner.isVerified && (
-								<View className="px-3 py-1 rounded-full bg-blue-500/20">
-									<Text className="font-quicksand-semibold text-sm text-blue-100">✓ {i18n.t("enterprise.deliveryPartners.badges.verified")}</Text>
+								<View className="px-3 py-1 rounded-full" style={{ backgroundColor: colors.info + '20' }}>
+									<Text className="font-quicksand-semibold text-sm" style={{ color: colors.info }}>✓ {i18n.t("enterprise.deliveryPartners.badges.verified")}</Text>
 								</View>
 							)}
 						</View>
@@ -401,11 +405,12 @@ export default function DeliveryPartnerDetailScreen() {
 				</LinearGradient>
 
 				{/* Contenu principal */}
-				<View className="px-6 pt-6 -mt-6 rounded-t-[32px] bg-background-secondary">
+				<View className="px-6 pt-6 -mt-6 rounded-t-[32px]" style={{ backgroundColor: colors.secondary }}>
 					{/* Section informations générales */}
 					<View
-						className="bg-white rounded-2xl p-4 mb-4"
+						className="rounded-2xl p-4 mb-4"
 						style={{
+							backgroundColor: colors.card,
 							shadowColor: "#000",
 							shadowOffset: { width: 0, height: 2 },
 							shadowOpacity: 0.1,
@@ -413,19 +418,19 @@ export default function DeliveryPartnerDetailScreen() {
 							elevation: 3,
 						}}
 					>
-						<Text className="text-neutral-800 font-quicksand-bold text-lg mb-4">
+						<Text className="font-quicksand-bold text-lg mb-4" style={{ color: colors.textPrimary }}>
 							{i18n.t("enterprise.deliveryPartners.detail.sections.generalInfo")}
 						</Text>
 
 						{/* Email */}
 						{partner.email && (
 							<View className="flex-row items-center mb-3">
-								<View className="w-10 h-10 rounded-full bg-primary-100 items-center justify-center mr-3">
-									<Ionicons name="mail" size={16} color="#10B981" />
+								<View className="w-10 h-10 rounded-full items-center justify-center mr-3" style={{ backgroundColor: colors.brandPrimary + '20' }}>
+									<Ionicons name="mail" size={16} color={colors.brandPrimary} />
 								</View>
 								<View className="flex-1">
-									<Text className="text-neutral-500 font-quicksand-medium text-sm">{i18n.t("enterprise.deliveryPartners.detail.labels.email")}</Text>
-									<Text className="text-neutral-800 font-quicksand-semibold">{partner.email}</Text>
+									<Text className="font-quicksand-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.email")}</Text>
+									<Text className="font-quicksand-semibold" style={{ color: colors.textPrimary }}>{partner.email}</Text>
 								</View>
 							</View>
 						)}
@@ -433,12 +438,12 @@ export default function DeliveryPartnerDetailScreen() {
 						{/* Téléphone */}
 						{partner.phone && (
 							<View className="flex-row items-center mb-3">
-								<View className="w-10 h-10 rounded-full bg-primary-100 items-center justify-center mr-3">
-									<Ionicons name="call" size={16} color="#10B981" />
+								<View className="w-10 h-10 rounded-full items-center justify-center mr-3" style={{ backgroundColor: colors.brandPrimary + '20' }}>
+									<Ionicons name="call" size={16} color={colors.brandPrimary} />
 								</View>
 								<View className="flex-1">
-									<Text className="text-neutral-500 font-quicksand-medium text-sm">{i18n.t("enterprise.deliveryPartners.detail.labels.phone")}</Text>
-									<Text className="text-neutral-800 font-quicksand-semibold">{partner.phone}</Text>
+									<Text className="font-quicksand-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.phone")}</Text>
+									<Text className="font-quicksand-semibold" style={{ color: colors.textPrimary }}>{partner.phone}</Text>
 								</View>
 							</View>
 						)}
@@ -446,12 +451,12 @@ export default function DeliveryPartnerDetailScreen() {
 						{/* Type de véhicule */}
 						{partner.vehicleType && (
 							<View className="flex-row items-center">
-								<View className="w-10 h-10 rounded-full bg-primary-100 items-center justify-center mr-3">
-									<Ionicons name="bicycle" size={16} color="#10B981" />
+								<View className="w-10 h-10 rounded-full items-center justify-center mr-3" style={{ backgroundColor: colors.brandPrimary + '20' }}>
+									<Ionicons name="bicycle" size={16} color={colors.brandPrimary} />
 								</View>
 								<View className="flex-1">
-									<Text className="text-neutral-500 font-quicksand-medium text-sm">{i18n.t("enterprise.deliveryPartners.detail.labels.vehicle")}</Text>
-									<Text className="text-neutral-800 font-quicksand-semibold">{partner.vehicleType}</Text>
+									<Text className="font-quicksand-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.vehicle")}</Text>
+									<Text className="font-quicksand-semibold" style={{ color: colors.textPrimary }}>{partner.vehicleType}</Text>
 								</View>
 							</View>
 						)}
@@ -460,8 +465,9 @@ export default function DeliveryPartnerDetailScreen() {
 					{/* Section horaires de travail */}
 					{(partner as any).workingHours && (
 						<View
-							className="bg-white rounded-2xl p-4 mb-4"
+							className="rounded-2xl p-4 mb-4"
 							style={{
+								backgroundColor: colors.card,
 								shadowColor: "#000",
 								shadowOffset: { width: 0, height: 2 },
 								shadowOpacity: 0.1,
@@ -469,17 +475,17 @@ export default function DeliveryPartnerDetailScreen() {
 								elevation: 3,
 							}}
 						>
-							<Text className="text-neutral-800 font-quicksand-bold text-lg mb-4">
+							<Text className="font-quicksand-bold text-lg mb-4" style={{ color: colors.textPrimary }}>
 								{i18n.t("enterprise.deliveryPartners.detail.sections.workingHours")}
 							</Text>
 
 							<View className="flex-row items-center">
-								<View className="w-10 h-10 rounded-full bg-warning-100 items-center justify-center mr-3">
-									<Ionicons name="time" size={16} color="#F59E0B" />
+								<View className="w-10 h-10 rounded-full items-center justify-center mr-3" style={{ backgroundColor: colors.warning + '20' }}>
+									<Ionicons name="time" size={16} color={colors.warning} />
 								</View>
 								<View className="flex-1">
-									<Text className="text-neutral-500 font-quicksand-medium text-sm">{i18n.t("enterprise.deliveryPartners.detail.labels.timeRange")}</Text>
-									<Text className="text-neutral-800 font-quicksand-semibold">
+									<Text className="font-quicksand-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.timeRange")}</Text>
+									<Text className="font-quicksand-semibold" style={{ color: colors.textPrimary }}>
 										{(partner as any).workingHours.start} - {(partner as any).workingHours.end}
 									</Text>
 								</View>
@@ -490,8 +496,9 @@ export default function DeliveryPartnerDetailScreen() {
 					{/* Section rating et statistiques */}
 					{(partner.rating !== undefined || (partner as any).stats) && (
 						<View
-							className="bg-white rounded-2xl p-4 mb-4"
+							className="rounded-2xl p-4 mb-4"
 							style={{
+								backgroundColor: colors.card,
 								shadowColor: "#000",
 								shadowOffset: { width: 0, height: 2 },
 								shadowOpacity: 0.1,
@@ -499,18 +506,18 @@ export default function DeliveryPartnerDetailScreen() {
 								elevation: 3,
 							}}
 						>
-							<Text className="text-neutral-800 font-quicksand-bold text-lg mb-4">
+							<Text className="font-quicksand-bold text-lg mb-4" style={{ color: colors.textPrimary }}>
 								{i18n.t("enterprise.deliveryPartners.detail.sections.performance")}
 							</Text>
 
 							{partner.rating !== undefined && (
 								<View className="flex-row items-center mb-3">
-									<View className="w-10 h-10 rounded-full bg-warning-100 items-center justify-center mr-3">
-										<Ionicons name="star" size={16} color="#F59E0B" />
+									<View className="w-10 h-10 rounded-full items-center justify-center mr-3" style={{ backgroundColor: colors.warning + '20' }}>
+										<Ionicons name="star" size={16} color={colors.warning} />
 									</View>
 									<View className="flex-1">
-										<Text className="text-neutral-500 font-quicksand-medium text-sm">{i18n.t("enterprise.deliveryPartners.detail.labels.averageRating")}</Text>
-										<Text className="text-neutral-800 font-quicksand-semibold">
+										<Text className="font-quicksand-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.averageRating")}</Text>
+										<Text className="font-quicksand-semibold" style={{ color: colors.textPrimary }}>
 											{partner.rating.toFixed(1)} / 5
 										</Text>
 									</View>
@@ -519,8 +526,8 @@ export default function DeliveryPartnerDetailScreen() {
 
 							{/* Statistiques supplémentaires si disponibles */}
 							{(partner as any).stats && Object.keys((partner as any).stats).length > 0 && (
-								<View className="pt-3 border-t border-neutral-100">
-									<Text className="text-neutral-600 font-quicksand-medium text-sm mb-2">
+								<View className="pt-3" style={{ borderTopColor: colors.borderLight }}>
+									<Text className="font-quicksand-medium text-sm mb-2" style={{ color: colors.textSecondary }}>
 										{i18n.t("enterprise.deliveryPartners.detail.labels.detailedStats")}
 									</Text>
 								</View>
@@ -530,8 +537,9 @@ export default function DeliveryPartnerDetailScreen() {
 
 					{/* Section statut d'association */}
 					<View
-						className="bg-white rounded-2xl p-4 mb-6"
+						className="rounded-2xl p-4 mb-6"
 						style={{
+							backgroundColor: colors.card,
 							shadowColor: "#000",
 							shadowOffset: { width: 0, height: 2 },
 							shadowOpacity: 0.1,
@@ -539,27 +547,27 @@ export default function DeliveryPartnerDetailScreen() {
 							elevation: 3,
 						}}
 					>
-						<Text className="text-neutral-800 font-quicksand-bold text-lg mb-4">
+						<Text className="font-quicksand-bold text-lg mb-4" style={{ color: colors.textPrimary }}>
 							{i18n.t("enterprise.deliveryPartners.detail.sections.associationStatus")}
 						</Text>
 
 						{isAssociated === null || checkingAssociation ? (
 							// Loading state for association check
 							<View className="items-center py-4">
-								<ActivityIndicator size="small" color="#10B981" />
-								<Text className="text-neutral-500 font-quicksand-medium text-sm mt-2">
+								<ActivityIndicator size="small" color={colors.brandPrimary} />
+								<Text className="font-quicksand-medium text-sm mt-2" style={{ color: colors.textSecondary }}>
 									{i18n.t("enterprise.deliveryPartners.detail.status.checking")}
 								</Text>
 							</View>
 						) : isAssociated ? (
-							<View className="bg-success-50 rounded-xl p-4 border border-success-200">
+							<View className="rounded-xl p-4 mb-4" style={{ backgroundColor: colors.success + '20', borderColor: colors.success + '40', borderWidth: 1 }}>
 								<View className="flex-row items-center justify-center mb-2">
-									<Ionicons name="checkmark-circle" size={24} color="#10B981" />
-									<Text className="text-success-700 font-quicksand-bold text-lg ml-2">
+									<Ionicons name="checkmark-circle" size={24} color={colors.success} />
+									<Text className="font-quicksand-bold text-lg ml-2" style={{ color: colors.success }}>
 										{i18n.t("enterprise.deliveryPartners.detail.status.associated.title")}
 									</Text>
 								</View>
-								<Text className="text-success-600 font-quicksand-medium text-center mb-4">
+								<Text className="font-quicksand-medium text-center mb-4" style={{ color: colors.success }}>
 									{i18n.t("enterprise.deliveryPartners.detail.status.associated.description")}
 								</Text>
 
@@ -584,14 +592,14 @@ export default function DeliveryPartnerDetailScreen() {
 							</View>
 						) : (
 							<View>
-								<View className="bg-neutral-50 rounded-xl p-4 border border-neutral-200 mb-4">
+								<View className="rounded-xl p-4 mb-4" style={{ backgroundColor: colors.tertiary, borderColor: colors.border, borderWidth: 1 }}>
 								<View className="flex-row items-center justify-center mb-2">
-									<Ionicons name="information-circle" size={24} color="#6B7280" />
-									<Text className="text-neutral-700 font-quicksand-bold text-lg ml-2">
+									<Ionicons name="information-circle" size={24} color={colors.textSecondary} />
+									<Text className="font-quicksand-bold text-lg ml-2" style={{ color: colors.textPrimary }}>
 										{i18n.t("enterprise.deliveryPartners.detail.status.notAssociated.title")}
 									</Text>
 								</View>
-									<Text className="text-neutral-600 font-quicksand-medium text-center">
+									<Text className="font-quicksand-medium text-center" style={{ color: colors.textSecondary }}>
 										{i18n.t("enterprise.deliveryPartners.detail.status.notAssociated.description")}
 									</Text>
 								</View>
@@ -639,23 +647,24 @@ export default function DeliveryPartnerDetailScreen() {
 				>
 					<View className="flex-1 justify-center items-center px-6">
 						<TouchableOpacity
-							className="bg-white rounded-3xl w-full max-w-sm"
+							className="rounded-3xl w-full max-w-sm"
+							style={{ backgroundColor: colors.card }}
 							activeOpacity={1}
 							onPress={() => { }}
 						>
 							{/* Icon */}
 							<View className="items-center pt-8 pb-4">
-								<View className="w-16 h-16 rounded-full bg-red-100 items-center justify-center">
-									<Ionicons name="remove-circle" size={28} color="#EF4444" />
+								<View className="w-16 h-16 rounded-full items-center justify-center" style={{ backgroundColor: colors.error + '20' }}>
+									<Ionicons name="remove-circle" size={28} color={colors.error} />
 								</View>
 							</View>
 
 							{/* Content */}
 							<View className="px-6 pb-6">
-								<Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+								<Text className="text-xl font-quicksand-bold text-center mb-2" style={{ color: colors.textPrimary }}>
 									{i18n.t("enterprise.deliveryPartners.detail.modal.dissociate.title")}
 								</Text>
-								<Text className="text-base text-neutral-600 font-quicksand-medium text-center leading-5">
+								<Text className="text-base font-quicksand-medium text-center leading-5" style={{ color: colors.textSecondary }}>
 									{i18n.t("enterprise.deliveryPartners.detail.modal.dissociate.message", { name: `${partner?.firstName} ${partner?.lastName}` })}
 								</Text>
 							</View>
@@ -664,15 +673,17 @@ export default function DeliveryPartnerDetailScreen() {
 							<View className="flex-row px-6 pb-6 gap-3">
 								<TouchableOpacity
 									onPress={closeDissociateConfirmation}
-									className="flex-1 bg-neutral-100 py-4 rounded-2xl items-center"
+									className="flex-1 py-4 rounded-2xl items-center"
+									style={{ backgroundColor: colors.tertiary }}
 								>
-									<Text className="text-base font-quicksand-semibold text-neutral-700">
+									<Text className="text-base font-quicksand-semibold" style={{ color: colors.textPrimary }}>
 										{i18n.t("enterprise.deliveryPartners.detail.modal.dissociate.cancel")}
 									</Text>
 								</TouchableOpacity>
 								<TouchableOpacity
 									onPress={handleDissociate}
-									className="flex-1 bg-red-500 py-4 rounded-2xl items-center"
+									className="flex-1 py-4 rounded-2xl items-center"
+									style={{ backgroundColor: colors.error }}
 								>
 									<Text className="text-base font-quicksand-semibold text-white">
 										{i18n.t("enterprise.deliveryPartners.detail.modal.dissociate.confirm")}

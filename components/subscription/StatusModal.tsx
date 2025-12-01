@@ -3,7 +3,7 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Modal, Text, TouchableOpacity, View } from 'react-native';
-import { useLocale } from '../../contexts/LocaleContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import i18n from '../../i18n/i18n';
 
 interface StatusModalProps {
@@ -22,7 +22,7 @@ export default function StatusModal({
   onClose,
 }: StatusModalProps) {
   const isSuccess = type === 'success';
-  const { locale } = useLocale();
+  const { colors } = useTheme();
 
   return (
     <Modal
@@ -34,7 +34,7 @@ export default function StatusModal({
       <View className="flex-1 bg-black/50 justify-center items-center px-6">
         <BlurView intensity={20} className="absolute inset-0" />
         
-        <View className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
+        <View style={{ backgroundColor: colors.card, borderRadius: 24, width: '100%', maxWidth: 400, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 10 }}>
           {/* Animated Header */}
           <LinearGradient
             colors={isSuccess ? ['#10B981', '#059669'] : ['#EF4444', '#DC2626']}
@@ -75,14 +75,14 @@ export default function StatusModal({
                 />
               </View>
             </View>
-            <Text className="text-white font-quicksand-bold text-2xl text-center">
+            <Text style={{ color: '#FFFFFF', fontFamily: 'Quicksand-Bold', fontSize: 24, textAlign: 'center' }}>
               {title}
             </Text>
           </LinearGradient>
 
           {/* Message Content */}
           <View className="p-6 pt-5">
-            <Text className="text-neutral-700 font-quicksand-medium text-base text-center leading-6 mb-6">
+            <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 16, textAlign: 'center', lineHeight: 24, marginBottom: 24 }}>
               {message}
             </Text>
 
@@ -92,7 +92,7 @@ export default function StatusModal({
               className="rounded-xl py-4 items-center justify-center shadow-sm"
               style={{ backgroundColor: isSuccess ? '#10B981' : '#EF4444' }}
             >
-              <Text className="text-white font-quicksand-bold text-base">
+              <Text style={{ color: '#FFFFFF', fontFamily: 'Quicksand-Bold', fontSize: 16 }}>
                 {isSuccess ? i18n.t('common.actions.great') : i18n.t('common.actions.understood')}
               </Text>
             </TouchableOpacity>

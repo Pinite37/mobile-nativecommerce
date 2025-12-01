@@ -19,6 +19,7 @@ import NotificationModal, {
   useNotification,
 } from "../../../../../components/ui/NotificationModal";
 import { useLocale } from "../../../../../contexts/LocaleContext";
+import { useTheme } from "../../../../../contexts/ThemeContext";
 import i18n from "../../../../../i18n/i18n";
 import DeliveryService, {
   DeliveryOffer,
@@ -50,6 +51,7 @@ function formatDateTime(iso?: string) {
 export default function EnterpriseOffersScreen() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { locale } = useLocale(); // Écoute les changements de langue pour re-render automatiquement
+  const { colors, isDark } = useTheme();
   const FILTERS = getFilters();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -125,7 +127,7 @@ export default function EnterpriseOffersScreen() {
       outputRange: [-150, 150],
     });
     return (
-      <View style={[{ backgroundColor: "#E5E7EB", overflow: "hidden" }, style]}>
+      <View style={[{ backgroundColor: isDark ? colors.tertiary : "#E5E7EB", overflow: "hidden" }, style]}>
         <Animated.View
           style={{
             position: "absolute",
@@ -133,7 +135,7 @@ export default function EnterpriseOffersScreen() {
             bottom: 0,
             width: 120,
             transform: [{ translateX }],
-            backgroundColor: "rgba(255,255,255,0.35)",
+            backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.35)",
             opacity: 0.7,
           }}
         />
@@ -142,7 +144,18 @@ export default function EnterpriseOffersScreen() {
   };
 
   const SkeletonCard = () => (
-    <View className="bg-white rounded-2xl p-4 mx-4 mb-4 shadow-sm border border-neutral-100">
+    <View 
+      style={{ 
+        backgroundColor: colors.card,
+        borderColor: colors.border,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.03,
+        shadowRadius: 4,
+        elevation: 1
+      }}
+      className="rounded-2xl p-4 mx-4 mb-4 border"
+    >
       <View className="flex-row items-center justify-between mb-3">
         <View className="flex-row items-center">
           <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 8 }} />
@@ -176,7 +189,10 @@ export default function EnterpriseOffersScreen() {
         </View>
       </View>
 
-      <View className="flex-row items-center justify-between mt-4 pt-3 border-t border-neutral-100">
+      <View 
+        style={{ borderTopColor: colors.border }}
+        className="flex-row items-center justify-between mt-4 pt-3 border-t"
+      >
         <ShimmerBlock style={{ height: 18, borderRadius: 8, width: 100 }} />
         <View className="flex-row">
           <ShimmerBlock
@@ -242,14 +258,15 @@ export default function EnterpriseOffersScreen() {
 
     return (
       <View
-        className="bg-white rounded-2xl p-4 mx-4 mb-4"
         style={{
+          backgroundColor: colors.card,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 1 },
           shadowOpacity: 0.03,
           shadowRadius: 4,
           elevation: 1,
         }}
+        className="rounded-2xl p-4 mx-4 mb-4"
       >
         {/* Header */}
         <View className="flex-row items-center justify-between mb-3">
@@ -264,12 +281,13 @@ export default function EnterpriseOffersScreen() {
             />
             <View className="ml-3">
               <Text
-                className="text-sm font-quicksand-semibold text-neutral-800"
+                style={{ color: colors.textPrimary }}
+                className="text-sm font-quicksand-semibold"
                 numberOfLines={1}
               >
                 {productData.name || i18n.t("enterprise.offers.labels.product")}
               </Text>
-              <Text className="text-xs text-neutral-600">
+              <Text style={{ color: colors.textSecondary }} className="text-xs">
                 {formatPrice(productData.price)}
               </Text>
             </View>
@@ -295,9 +313,10 @@ export default function EnterpriseOffersScreen() {
         {/* Details */}
         <View className="flex-row items-center justify-between">
           <View className="flex-1 mr-3">
-            <Text className="text-xs text-neutral-500">{i18n.t("enterprise.offers.labels.client")}</Text>
+            <Text style={{ color: colors.textTertiary }} className="text-xs">{i18n.t("enterprise.offers.labels.client")}</Text>
             <Text
-              className="text-sm font-quicksand-medium text-neutral-800"
+              style={{ color: colors.textPrimary }}
+              className="text-sm font-quicksand-medium"
               numberOfLines={1}
             >
               {customer.firstName || customer.lastName
@@ -307,16 +326,19 @@ export default function EnterpriseOffersScreen() {
             </Text>
           </View>
           <View className="items-end">
-            <Text className="text-xs text-neutral-500">{i18n.t("enterprise.offers.labels.expires")}</Text>
-            <Text className="text-sm font-quicksand-semibold text-neutral-800">
+            <Text style={{ color: colors.textTertiary }} className="text-xs">{i18n.t("enterprise.offers.labels.expires")}</Text>
+            <Text style={{ color: colors.textPrimary }} className="text-sm font-quicksand-semibold">
               {formatDateTime(item.expiresAt)}
             </Text>
           </View>
         </View>
 
         {/* Footer */}
-        <View className="flex-row items-center justify-between mt-4 pt-3 border-t border-neutral-100">
-          <Text className="text-base font-quicksand-bold text-primary-600">
+        <View 
+          style={{ borderTopColor: colors.border }}
+          className="flex-row items-center justify-between mt-4 pt-3 border-t"
+        >
+          <Text style={{ color: colors.brandPrimary }} className="text-base font-quicksand-bold">
             {formatPrice(item.deliveryFee)}
           </Text>
           <View
@@ -325,7 +347,8 @@ export default function EnterpriseOffersScreen() {
           >
             {status === "OPEN" && (
               <TouchableOpacity
-                className="bg-red-50 rounded-lg px-3 py-2 mb-2"
+                style={{ backgroundColor: isDark ? colors.tertiary : '#FEF2F2' }}
+                className="rounded-lg px-3 py-2 mb-2"
                 activeOpacity={0.8}
                 onPress={() => {
                   console.log(
@@ -340,7 +363,7 @@ export default function EnterpriseOffersScreen() {
               >
                 <Text
                   className="text-sm font-quicksand-semibold"
-                  style={{ color: "#EF4444" }}
+                  style={{ color: colors.error }}
                 >
                   Supprimer
                 </Text>
@@ -354,7 +377,7 @@ export default function EnterpriseOffersScreen() {
 
   const renderHeader = () => (
     <LinearGradient
-      colors={["#047857", "#10B981"]}
+      colors={[colors.brandGradientStart, colors.brandGradientEnd]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       className="rounded-b-3xl shadow-md"
@@ -381,11 +404,15 @@ export default function EnterpriseOffersScreen() {
           <TouchableOpacity
             key={f.id}
             onPress={() => setFilter(f.id)}
-            className={`mr-2 px-4 py-2 rounded-full ${filter === f.id ? "bg-white/30" : "bg-white/20"
-              }`}
+            style={{
+              backgroundColor: filter === f.id 
+                ? (isDark ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.30)')
+                : (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.20)')
+            }}
+            className="mr-2 px-4 py-2 rounded-full"
             activeOpacity={0.8}
           >
-            <Text className={`text-sm font-quicksand-medium text-white`}>
+            <Text className="text-sm font-quicksand-medium text-white">
               {f.label}
             </Text>
           </TouchableOpacity>
@@ -402,11 +429,11 @@ export default function EnterpriseOffersScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-white">
-        <ExpoStatusBar style="light" translucent />
+      <View style={{ flex: 1, backgroundColor: colors.secondary }}>
+        <ExpoStatusBar style={isDark ? "light" : "light"} translucent />
         {/* Header avec gradient */}
         <LinearGradient
-          colors={["#047857", "#10B981"]}
+          colors={[colors.brandGradientStart, colors.brandGradientEnd]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           className="rounded-b-3xl shadow-md"
@@ -445,30 +472,31 @@ export default function EnterpriseOffersScreen() {
           </View>
         </LinearGradient>
 
-        {/* Conteneur du contenu avec fond blanc */}
-        <View className="flex-1 bg-white">{renderSkeletons()}</View>
+        {/* Conteneur du contenu */}
+        <View style={{ flex: 1, backgroundColor: colors.primary }}>{renderSkeletons()}</View>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View className="flex-1 bg-white">
-        <ExpoStatusBar style="light" translucent />
+      <View style={{ flex: 1, backgroundColor: colors.secondary }}>
+        <ExpoStatusBar style={isDark ? "light" : "light"} translucent />
         {renderHeader()}
-        <View className="flex-1 bg-white justify-center items-center px-6">
-          <Ionicons name="warning" size={80} color="#EF4444" />
-          <Text className="text-neutral-800 font-quicksand-bold text-lg mt-4 mb-2">
+        <View style={{ flex: 1, backgroundColor: colors.primary }} className="justify-center items-center px-6">
+          <Ionicons name="warning" size={80} color={colors.error} />
+          <Text style={{ color: colors.textPrimary }} className="font-quicksand-bold text-lg mt-4 mb-2">
             {i18n.t("enterprise.offers.error.title")}
           </Text>
-          <Text className="text-neutral-600 font-quicksand-medium text-center mt-1">
+          <Text style={{ color: colors.textSecondary }} className="font-quicksand-medium text-center mt-1">
             {error}
           </Text>
           <TouchableOpacity
             onPress={() => fetchOffers(true)}
-            className="mt-4 bg-primary-500 rounded-xl px-4 py-2"
+            style={{ backgroundColor: colors.brandPrimary }}
+            className="mt-4 rounded-xl px-4 py-2"
           >
-            <Text className="text-white font-quicksand-semibold">
+            <Text style={{ color: colors.textOnBrand }} className="font-quicksand-semibold">
               {i18n.t("enterprise.offers.error.retry")}
             </Text>
           </TouchableOpacity>
@@ -478,11 +506,11 @@ export default function EnterpriseOffersScreen() {
   }
 
   return (
-    <View className="flex-1 bg-white">
-      <ExpoStatusBar style="light" translucent />
+    <View style={{ flex: 1, backgroundColor: colors.secondary }}>
+      <ExpoStatusBar style={isDark ? "light" : "light"} translucent />
       {renderHeader()}
 
-      <View className="flex-1 bg-white">
+      <View style={{ flex: 1, backgroundColor: colors.primary }}>
         <FlatList
           data={offers}
           keyExtractor={(item) => item._id}
@@ -491,7 +519,8 @@ export default function EnterpriseOffersScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={["#10B981"]}
+              colors={[colors.brandPrimary]}
+              tintColor={colors.brandPrimary}
             />
           }
           ListFooterComponent={
@@ -499,11 +528,11 @@ export default function EnterpriseOffersScreen() {
           }
           ListEmptyComponent={
             <View className="flex-1 justify-center items-center px-6 mt-20">
-              <Ionicons name="bicycle" size={80} color="#D1D5DB" />
-              <Text className="text-xl font-quicksand-bold text-neutral-800 mt-4 mb-2">
+              <Ionicons name="bicycle" size={80} color={colors.textTertiary} />
+              <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold mt-4 mb-2">
                 {i18n.t("enterprise.offers.empty.title")}
               </Text>
-              <Text className="text-center text-neutral-600 font-quicksand-medium">
+              <Text style={{ color: colors.textSecondary }} className="text-center font-quicksand-medium">
                 {i18n.t("enterprise.offers.empty.message")}
               </Text>
             </View>
@@ -526,7 +555,7 @@ export default function EnterpriseOffersScreen() {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            backgroundColor: colors.overlay,
             justifyContent: "center",
             alignItems: "center",
             zIndex: 9999,
@@ -534,7 +563,7 @@ export default function EnterpriseOffersScreen() {
         >
           <View
             style={{
-              backgroundColor: "white",
+              backgroundColor: colors.card,
               borderRadius: 20,
               padding: 24,
               margin: 20,
@@ -549,35 +578,37 @@ export default function EnterpriseOffersScreen() {
                   width: 60,
                   height: 60,
                   borderRadius: 30,
-                  backgroundColor: "#FEE2E2",
+                  backgroundColor: isDark ? colors.tertiary : "#FEE2E2",
                   justifyContent: "center",
                   alignItems: "center",
                 }}
               >
-                <Ionicons name="warning" size={32} color="#EF4444" />
+                <Ionicons name="warning" size={32} color={colors.error} />
               </View>
             </View>
 
             {/* Titre */}
             <Text
-              className="font-quicksand-bold text-neutral-800"
               style={{
+                color: colors.textPrimary,
                 fontSize: 20,
                 textAlign: "center",
                 marginBottom: 8,
               }}
+              className="font-quicksand-bold"
             >
               {i18n.t("enterprise.offers.deleteModal.title")}
             </Text>
 
             {/* Message */}
             <Text
-              className="font-quicksand-medium text-neutral-600"
               style={{
+                color: colors.textSecondary,
                 fontSize: 14,
                 textAlign: "center",
                 marginBottom: 24,
               }}
+              className="font-quicksand-medium"
             >
               {i18n.t("enterprise.offers.deleteModal.message")}
             </Text>
@@ -592,14 +623,14 @@ export default function EnterpriseOffersScreen() {
                 }}
                 style={{
                   flex: 1,
-                  backgroundColor: "#F3F4F6",
+                  backgroundColor: colors.tertiary,
                   paddingVertical: 14,
                   borderRadius: 12,
                   alignItems: "center",
                 }}
                 disabled={confirmLoading}
               >
-                <Text className="font-quicksand-semibold text-neutral-700">
+                <Text style={{ color: colors.textPrimary }} className="font-quicksand-semibold">
                   {i18n.t("enterprise.offers.deleteModal.cancel")}
                 </Text>
               </TouchableOpacity>
@@ -639,7 +670,7 @@ export default function EnterpriseOffersScreen() {
                 }}
                 style={{
                   flex: 1,
-                  backgroundColor: confirmLoading ? "#FCA5A5" : "#EF4444",
+                  backgroundColor: confirmLoading ? (isDark ? "#DC2626" : "#FCA5A5") : colors.error,
                   paddingVertical: 14,
                   borderRadius: 12,
                   alignItems: "center",
@@ -647,11 +678,11 @@ export default function EnterpriseOffersScreen() {
                 disabled={confirmLoading}
               >
                 {confirmLoading ? (
-                  <Text className="font-quicksand-semibold text-white">
+                  <Text style={{ color: colors.textOnBrand }} className="font-quicksand-semibold">
                     {i18n.t("enterprise.offers.deleteModal.deleting")}
                   </Text>
                 ) : (
-                  <Text className="font-quicksand-semibold text-white">
+                  <Text style={{ color: colors.textOnBrand }} className="font-quicksand-semibold">
                     {i18n.t("enterprise.offers.deleteModal.confirm")}
                   </Text>
                 )}

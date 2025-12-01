@@ -22,6 +22,7 @@ import NotificationModal, {
   useNotification,
 } from "../../../../../components/ui/NotificationModal";
 import { useLocale } from "../../../../../contexts/LocaleContext";
+import { useTheme } from "../../../../../contexts/ThemeContext";
 import i18n from "../../../../../i18n/i18n";
 import CategoryService from "../../../../../services/api/CategoryService";
 import ProductService from "../../../../../services/api/ProductService";
@@ -41,6 +42,7 @@ const getSortOptions = () => [
 export default function EnterpriseProducts() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { locale } = useLocale(); // Écoute les changements de langue pour re-render automatiquement
+  const { colors, isDark } = useTheme();
   const sortOptions = getSortOptions();
   const params = useLocalSearchParams();
   const { notification, showNotification, hideNotification } =
@@ -352,24 +354,28 @@ export default function EnterpriseProducts() {
     if (isGrid) {
       return (
         <View
-          className="bg-white rounded-2xl p-3 mb-4 mx-2 flex-1 relative"
           style={{
+            backgroundColor: colors.card,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.03,
             shadowRadius: 4,
             elevation: 1,
           }}
+          className="rounded-2xl p-3 mb-4 mx-2 flex-1 relative"
         >
           <TouchableOpacity
-            className="absolute top-2 right-2 z-10 bg-white/90 rounded-full w-7 h-7 items-center justify-center shadow-sm"
-            style={{ elevation: 2 }}
+            style={{ 
+              backgroundColor: isDark ? colors.tertiary : 'rgba(255,255,255,0.9)',
+              elevation: 2 
+            }}
+            className="absolute top-2 right-2 z-10 rounded-full w-7 h-7 items-center justify-center shadow-sm"
             onPress={() => {
               setSelectedProductForMenu(item);
               setMenuModalVisible(true);
             }}
           >
-            <Ionicons name="ellipsis-horizontal" size={16} color="#6B7280" />
+            <Ionicons name="ellipsis-horizontal" size={16} color={colors.textSecondary} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -389,17 +395,18 @@ export default function EnterpriseProducts() {
             />
             <View className="mt-3">
               <Text
-                className="text-sm font-quicksand-semibold text-neutral-800"
+                style={{ color: colors.textPrimary }}
+                className="text-sm font-quicksand-semibold"
                 numberOfLines={1}
               >
                 {item.name}
               </Text>
-              <Text className="text-xs font-quicksand-medium text-primary-500 mt-1">
+              <Text style={{ color: colors.brandPrimary }} className="text-xs font-quicksand-medium mt-1">
                 {formatPrice(item.price)}
               </Text>
               <View className="flex-row items-center mt-1">
-                <Ionicons name="star" size={12} color="#10B981" />
-                <Text className="text-[10px] text-neutral-600 ml-1">
+                <Ionicons name="star" size={12} color={colors.brandPrimary} />
+                <Text style={{ color: colors.textSecondary }} className="text-[10px] ml-1">
                   {item.stats.averageRating.toFixed(1)} (
                   {item.stats.totalReviews})
                 </Text>
@@ -431,14 +438,15 @@ export default function EnterpriseProducts() {
 
     return (
       <TouchableOpacity
-        className="bg-white rounded-2xl p-4 mx-4 mb-4"
         style={{
+          backgroundColor: colors.card,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 1 },
           shadowOpacity: 0.03,
           shadowRadius: 4,
           elevation: 1,
         }}
+        className="rounded-2xl p-4 mx-4 mb-4"
         onPress={() => {
           (global as any).__CURRENT_PRODUCT_ID__ = item._id;
           router.push(`/(app)/(enterprise)/(tabs)/products/${item._id}`);
@@ -457,11 +465,11 @@ export default function EnterpriseProducts() {
           <View className="ml-4 flex-1">
             <View className="flex-row items-start justify-between mb-2">
               <View className="flex-1 pr-2">
-                <Text className="text-base font-quicksand-semibold text-neutral-800">
+                <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-semibold">
                   {item.name}
                 </Text>
                 {typeof item.category === "object" && (
-                  <Text className="text-sm text-neutral-600 font-quicksand-medium">
+                  <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand-medium">
                     {item.category.name}
                   </Text>
                 )}
@@ -493,14 +501,14 @@ export default function EnterpriseProducts() {
               </View>
             </View>
             <View className="flex-row items-center mb-3">
-              <Ionicons name="star" size={14} color="#10B981" />
-              <Text className="text-xs text-neutral-600 ml-1 font-quicksand-light">
+              <Ionicons name="star" size={14} color={colors.brandPrimary} />
+              <Text style={{ color: colors.textSecondary }} className="text-xs ml-1 font-quicksand-light">
                 {item.stats.averageRating.toFixed(1)} ({item.stats.totalReviews}{" "}
                 {i18n.t("enterprise.products.reviews")})
               </Text>
             </View>
             <View className="flex-row items-center justify-between">
-              <Text className="text-lg font-quicksand-bold text-primary-500">
+              <Text style={{ color: colors.brandPrimary }} className="text-lg font-quicksand-bold">
                 {formatPrice(item.price)}
               </Text>
               <View
@@ -517,15 +525,16 @@ export default function EnterpriseProducts() {
             </View>
           </View>
         </View>
-        <View className="mt-4 pt-4 border-t border-neutral-100">
+        <View style={{ borderTopColor: colors.border }} className="mt-4 pt-4 border-t">
           <TouchableOpacity
-            className="bg-red-50 rounded-xl py-3.5 flex-row items-center justify-center"
+            style={{ backgroundColor: isDark ? colors.tertiary : '#FEF2F2' }}
+            className="rounded-xl py-3.5 flex-row items-center justify-center"
             onPress={() => {
               handleDeleteProduct(item);
             }}
           >
-            <Ionicons name="trash-outline" size={18} color="#EF4444" />
-            <Text className="text-red-600 font-quicksand-semibold ml-2">
+            <Ionicons name="trash-outline" size={18} color={colors.error} />
+            <Text style={{ color: colors.error }} className="font-quicksand-semibold ml-2">
               {i18n.t("enterprise.products.actions.delete")}
             </Text>
           </TouchableOpacity>
@@ -538,29 +547,31 @@ export default function EnterpriseProducts() {
     if (error) {
       return (
         <View className="flex-1 justify-center items-center px-6">
-          <Ionicons name="alert-circle-outline" size={80} color="#EF4444" />
-          <Text className="text-xl font-quicksand-bold text-neutral-800 mt-4 mb-2">
+          <Ionicons name="alert-circle-outline" size={80} color={colors.error} />
+          <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold mt-4 mb-2">
             {i18n.t("enterprise.products.empty.error.title")}
           </Text>
-          <Text className="text-center text-neutral-600 font-quicksand-medium mb-6">
+          <Text style={{ color: colors.textSecondary }} className="text-center font-quicksand-medium mb-6">
             {error}
           </Text>
           <View className="flex-row space-x-3">
             <TouchableOpacity
-              className="bg-primary-500 rounded-xl py-4 px-6"
+              style={{ backgroundColor: colors.brandPrimary }}
+              className="rounded-xl py-4 px-6"
               onPress={loadInitialData}
             >
-              <Text className="text-white font-quicksand-semibold">
+              <Text style={{ color: colors.textOnBrand }} className="font-quicksand-semibold">
                 {i18n.t("enterprise.products.empty.error.retry")}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              className="bg-neutral-200 rounded-xl py-4 px-6"
+              style={{ backgroundColor: colors.tertiary }}
+              className="rounded-xl py-4 px-6"
               onPress={() => {
                 router.push("/(app)/(enterprise)/(tabs)/products/create");
               }}
             >
-              <Text className="text-neutral-700 font-quicksand-semibold">
+              <Text style={{ color: colors.textPrimary }} className="font-quicksand-semibold">
                 {i18n.t("enterprise.products.addProduct")}
               </Text>
             </TouchableOpacity>
@@ -572,24 +583,25 @@ export default function EnterpriseProducts() {
     // No error, just empty state
     return (
       <View className="flex-1 justify-center items-center px-6">
-        <Ionicons name="cube-outline" size={80} color="#D1D5DB" />
-        <Text className="text-xl font-quicksand-bold text-neutral-800 mt-4 mb-2">
+        <Ionicons name="cube-outline" size={80} color={colors.textTertiary} />
+        <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold mt-4 mb-2">
           {searchQuery.trim() || selectedCategory !== "all"
             ? i18n.t("enterprise.products.empty.noProductsFound")
             : i18n.t("enterprise.products.empty.noProducts")}
         </Text>
-        <Text className="text-center text-neutral-600 font-quicksand-medium mb-6">
+        <Text style={{ color: colors.textSecondary }} className="text-center font-quicksand-medium mb-6">
           {searchQuery.trim() || selectedCategory !== "all"
             ? i18n.t("enterprise.products.empty.noProductsFoundMessage")
             : i18n.t("enterprise.products.empty.noProductsMessage")}
         </Text>
         <TouchableOpacity
-          className="bg-primary-500 rounded-xl py-4 px-8"
+          style={{ backgroundColor: colors.brandPrimary }}
+          className="rounded-xl py-4 px-8"
           onPress={() => {
             router.push("/(app)/(enterprise)/(tabs)/products/create");
           }}
         >
-          <Text className="text-white font-quicksand-semibold">
+          <Text style={{ color: colors.textOnBrand }} className="font-quicksand-semibold">
             {i18n.t("enterprise.products.addProduct")}
           </Text>
         </TouchableOpacity>
@@ -605,33 +617,34 @@ export default function EnterpriseProducts() {
       onRequestClose={() => setShowSortModal(false)}
     >
       <TouchableOpacity
-        className="flex-1 bg-black/50"
+        style={{ backgroundColor: colors.overlay }}
+        className="flex-1"
         activeOpacity={1}
         onPress={() => setShowSortModal(false)}
       >
         <View className="flex-1 justify-center items-center px-6">
-          <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
-            <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4">
+          <View style={{ backgroundColor: colors.card }} className="rounded-2xl p-6 w-full max-w-sm">
+            <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold mb-4">
               {i18n.t("enterprise.products.sort.title")}
             </Text>
 
             {sortOptions.map((option) => (
               <TouchableOpacity
                 key={option.id}
-                className={`py-3 px-4 rounded-xl mb-2 ${selectedSort === option.id
-                  ? "bg-primary-500"
-                  : "bg-neutral-50"
-                  }`}
+                style={{
+                  backgroundColor: selectedSort === option.id ? colors.brandPrimary : colors.tertiary
+                }}
+                className="py-3 px-4 rounded-xl mb-2"
                 onPress={() => {
                   setSelectedSort(option.id);
                   setShowSortModal(false);
                 }}
               >
                 <Text
-                  className={`font-quicksand-medium ${selectedSort === option.id
-                    ? "text-white"
-                    : "text-neutral-700"
-                    }`}
+                  style={{
+                    color: selectedSort === option.id ? colors.textOnBrand : colors.textPrimary
+                  }}
+                  className="font-quicksand-medium"
                 >
                   {option.name}
                 </Text>
@@ -639,10 +652,11 @@ export default function EnterpriseProducts() {
             ))}
 
             <TouchableOpacity
-              className="mt-4 py-3 px-4 rounded-xl bg-neutral-100"
+              style={{ backgroundColor: colors.tertiary }}
+              className="mt-4 py-3 px-4 rounded-xl"
               onPress={() => setShowSortModal(false)}
             >
-              <Text className="text-neutral-700 font-quicksand-medium text-center">
+              <Text style={{ color: colors.textPrimary }} className="font-quicksand-medium text-center">
                 {i18n.t("enterprise.products.sort.cancel")}
               </Text>
             </TouchableOpacity>
@@ -672,7 +686,7 @@ export default function EnterpriseProducts() {
       outputRange: [-150, 150],
     });
     return (
-      <View style={[{ backgroundColor: "#E5E7EB", overflow: "hidden" }, style]}>
+      <View style={[{ backgroundColor: isDark ? colors.tertiary : "#E5E7EB", overflow: "hidden" }, style]}>
         <Animated.View
           style={{
             position: "absolute",
@@ -680,7 +694,7 @@ export default function EnterpriseProducts() {
             bottom: 0,
             width: 120,
             transform: [{ translateX }],
-            backgroundColor: "rgba(255,255,255,0.35)",
+            backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.35)",
             opacity: 0.7,
           }}
         />
@@ -690,7 +704,10 @@ export default function EnterpriseProducts() {
 
   const SkeletonCard = ({ grid = false }: { grid?: boolean }) => (
     <View className={`${grid ? "w-1/2 px-2" : "w-full px-4"} mb-4`}>
-      <View className="rounded-2xl bg-white p-4 border border-neutral-100 overflow-hidden">
+      <View 
+        style={{ backgroundColor: colors.card, borderColor: colors.border }}
+        className="rounded-2xl p-4 border overflow-hidden"
+      >
         <ShimmerBlock
           style={{ height: grid ? 110 : 80, borderRadius: 16, width: "100%" }}
         />
@@ -734,7 +751,7 @@ export default function EnterpriseProducts() {
 
   const Header = () => (
     <LinearGradient
-      colors={["#047857", "#10B981"]}
+      colors={[colors.brandGradientStart, colors.brandGradientEnd]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       className="rounded-b-[32px] shadow-lg"
@@ -756,7 +773,11 @@ export default function EnterpriseProducts() {
               onPress={() =>
                 setViewMode((prev) => (prev === "list" ? "grid" : "list"))
               }
-              className="bg-white/20 backdrop-blur-sm rounded-2xl p-3 border border-white/30"
+              style={{ 
+                backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.20)',
+                borderColor: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.30)'
+              }}
+              className="backdrop-blur-sm rounded-2xl p-3 border"
             >
               <Ionicons
                 name={viewMode === "list" ? "grid" : "list"}
@@ -768,11 +789,14 @@ export default function EnterpriseProducts() {
               onPress={() =>
                 router.push("/(app)/(enterprise)/(tabs)/products/create")
               }
-              className="bg-white rounded-2xl px-5 py-3 flex-row items-center shadow-md"
-              style={{ elevation: 3 }}
+              style={{ 
+                backgroundColor: isDark ? colors.card : '#FFFFFF',
+                elevation: 3 
+              }}
+              className="rounded-2xl px-5 py-3 flex-row items-center shadow-md"
             >
-              <Ionicons name="add-circle" size={20} color="#10B981" />
-              <Text className="text-primary-600 font-quicksand-bold ml-2 text-sm">
+              <Ionicons name="add-circle" size={20} color={colors.brandPrimary} />
+              <Text style={{ color: colors.brandPrimary }} className="font-quicksand-bold ml-2 text-sm">
                 {i18n.t("enterprise.products.addButton")}
               </Text>
             </TouchableOpacity>
@@ -791,17 +815,24 @@ export default function EnterpriseProducts() {
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholder={i18n.t("enterprise.products.searchPlaceholder")}
-            className="bg-white rounded-2xl pl-12 pr-12 py-3.5 text-neutral-800 font-quicksand-medium shadow-sm"
-            placeholderTextColor="#9CA3AF"
-            style={{ elevation: 2 }}
+            style={{ 
+              backgroundColor: isDark ? colors.card : '#FFFFFF',
+              color: colors.textPrimary,
+              elevation: 2 
+            }}
+            className="rounded-2xl pl-12 pr-12 py-3.5 font-quicksand-medium shadow-sm"
+            placeholderTextColor={colors.textTertiary}
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity
-              className="absolute right-4 top-1/2 -translate-y-1/2 bg-neutral-100 rounded-full p-1"
-              style={{ transform: [{ translateY: -10 }] }}
+              style={{ 
+                backgroundColor: isDark ? colors.tertiary : '#F3F4F6',
+                transform: [{ translateY: -10 }] 
+              }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-1"
               onPress={() => setSearchQuery("")}
             >
-              <Ionicons name="close" size={16} color="#6B7280" />
+              <Ionicons name="close" size={16} color={colors.textSecondary} />
             </TouchableOpacity>
           )}
         </View>
@@ -817,18 +848,24 @@ export default function EnterpriseProducts() {
           contentContainerStyle={{ paddingHorizontal: 24 }}
           renderItem={({ item }: any) => (
             <TouchableOpacity
+              style={selectedCategory === item._id ? {
+                backgroundColor: isDark ? colors.card : '#FFFFFF',
+                elevation: 3
+              } : {
+                backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.20)',
+                borderColor: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.30)'
+              }}
               className={`px-5 py-2.5 mr-2 rounded-full ${selectedCategory === item._id
-                ? "bg-white shadow-md"
-                : "bg-white/20 backdrop-blur-sm border border-white/30"
+                ? "shadow-md"
+                : "backdrop-blur-sm border"
                 }`}
-              style={selectedCategory === item._id ? { elevation: 3 } : {}}
               onPress={() => setSelectedCategory(item._id)}
             >
               <Text
-                className={`text-sm font-quicksand-bold ${selectedCategory === item._id
-                  ? "text-primary-600"
-                  : "text-white"
-                  }`}
+                style={{ 
+                  color: selectedCategory === item._id ? colors.brandPrimary : '#FFFFFF'
+                }}
+                className="text-sm font-quicksand-bold"
               >
                 {item.name}
               </Text>
@@ -841,22 +878,31 @@ export default function EnterpriseProducts() {
       <View className="flex-row items-center justify-between px-6 pt-2">
         <TouchableOpacity
           onPress={() => setShowSortModal(true)}
-          className="flex-row items-center bg-white/95 backdrop-blur-sm rounded-full px-4 py-2.5 shadow-sm"
-          style={{ elevation: 2 }}
+          style={{ 
+            backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.95)',
+            elevation: 2 
+          }}
+          className="flex-row items-center backdrop-blur-sm rounded-full px-4 py-2.5 shadow-sm"
         >
-          <Ionicons name="swap-vertical" size={16} color="#10B981" />
-          <Text className="text-neutral-700 font-quicksand-semibold ml-2 text-sm">
+          <Ionicons name="swap-vertical" size={16} color={isDark ? '#FFFFFF' : colors.brandPrimary} />
+          <Text style={{ color: isDark ? '#FFFFFF' : colors.textPrimary }} className="font-quicksand-semibold ml-2 text-sm">
             {sortOptions.find((o) => o.id === selectedSort)?.name}
           </Text>
           <Ionicons
             name="chevron-down"
             size={14}
-            color="#6B7280"
+            color={isDark ? '#FFFFFF' : colors.textSecondary}
             style={{ marginLeft: 4 }}
           />
         </TouchableOpacity>
         {searchQuery.trim().length > 0 && (
-          <View className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
+          <View 
+            style={{ 
+              backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.20)',
+              borderColor: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.30)'
+            }}
+            className="backdrop-blur-sm rounded-full px-4 py-2 border"
+          >
             <Text className="text-white font-quicksand-semibold text-sm">
               {products.length} {products.length !== 1 ? i18n.t("enterprise.products.resultsPlural") : i18n.t("enterprise.products.results")}
             </Text>
@@ -868,20 +914,20 @@ export default function EnterpriseProducts() {
 
   if (initialLoading) {
     return (
-      <View className="flex-1 bg-background-secondary">
-        <ExpoStatusBar style="light" translucent />
+      <View style={{ flex: 1, backgroundColor: colors.secondary }}>
+        <ExpoStatusBar style={isDark ? "light" : "light"} translucent />
         <Header />
-        <View className="flex-1 bg-white">{renderSkeletons()}</View>
+        <View style={{ flex: 1, backgroundColor: colors.primary }}>{renderSkeletons()}</View>
         {renderSortModal()}
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-background-secondary">
-      <ExpoStatusBar style="light" translucent />
+    <View style={{ flex: 1, backgroundColor: colors.secondary }}>
+      <ExpoStatusBar style={isDark ? "light" : "light"} translucent />
       <Header />
-      <View className="flex-1 bg-white">
+      <View style={{ flex: 1, backgroundColor: colors.primary }}>
         {products.length > 0 ? (
           <FlatList
             data={products}
@@ -898,8 +944,8 @@ export default function EnterpriseProducts() {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
-                colors={["#10B981"]}
-                tintColor="#10B981"
+                colors={[colors.brandPrimary]}
+                tintColor={colors.brandPrimary}
               />
             }
             onEndReached={loadMoreProducts}
@@ -907,7 +953,7 @@ export default function EnterpriseProducts() {
             ListFooterComponent={
               loadingMore ? (
                 <View className="py-4">
-                  <ActivityIndicator size="small" color="#10B981" />
+                  <ActivityIndicator size="small" color={colors.brandPrimary} />
                 </View>
               ) : null
             }
@@ -926,13 +972,15 @@ export default function EnterpriseProducts() {
         onRequestClose={closeConfirmation}
       >
         <TouchableOpacity
-          className="flex-1 bg-black/50"
+          style={{ backgroundColor: colors.overlay }}
+          className="flex-1"
           activeOpacity={1}
           onPress={closeConfirmation}
         >
           <View className="flex-1 justify-center items-center px-6">
             <TouchableOpacity
-              className="bg-white rounded-3xl w-full max-w-sm"
+              style={{ backgroundColor: colors.card }}
+              className="rounded-3xl w-full max-w-sm"
               activeOpacity={1}
               onPress={() => { }}
             >
@@ -962,10 +1010,10 @@ export default function EnterpriseProducts() {
 
               {/* Content */}
               <View className="px-6 pb-6">
-                <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+                <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold text-center mb-2">
                   {confirmationAction?.title}
                 </Text>
-                <Text className="text-base text-neutral-600 font-quicksand-medium text-center leading-5">
+                <Text style={{ color: colors.textSecondary }} className="text-base font-quicksand-medium text-center leading-5">
                   {confirmationAction?.message}
                 </Text>
               </View>
@@ -974,9 +1022,10 @@ export default function EnterpriseProducts() {
               <View className="flex-row px-6 pb-6 gap-3">
                 <TouchableOpacity
                   onPress={closeConfirmation}
-                  className="flex-1 bg-neutral-100 py-4 rounded-2xl items-center"
+                  style={{ backgroundColor: colors.tertiary }}
+                  className="flex-1 py-4 rounded-2xl items-center"
                 >
-                  <Text className="text-base font-quicksand-semibold text-neutral-700">
+                  <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-semibold">
                     {i18n.t("enterprise.products.actions.cancel")}
                   </Text>
                 </TouchableOpacity>
@@ -985,7 +1034,7 @@ export default function EnterpriseProducts() {
                   className="flex-1 py-4 rounded-2xl items-center"
                   style={{ backgroundColor: confirmationAction?.confirmColor }}
                 >
-                  <Text className="text-base font-quicksand-semibold text-white">
+                  <Text style={{ color: colors.textOnBrand }} className="text-base font-quicksand-semibold">
                     {confirmationAction?.confirmText}
                   </Text>
                 </TouchableOpacity>
@@ -1006,7 +1055,8 @@ export default function EnterpriseProducts() {
         }}
       >
         <TouchableOpacity
-          className="flex-1 bg-black/50"
+          style={{ backgroundColor: colors.overlay }}
+          className="flex-1"
           activeOpacity={1}
           onPress={() => {
             setMenuModalVisible(false);
@@ -1015,13 +1065,14 @@ export default function EnterpriseProducts() {
         >
           <View className="flex-1 justify-center items-center px-6">
             <TouchableOpacity
-              className="bg-white rounded-3xl w-full max-w-sm overflow-hidden"
+              style={{ backgroundColor: colors.card }}
+              className="rounded-3xl w-full max-w-sm overflow-hidden"
               activeOpacity={1}
               onPress={() => { }}
             >
               {/* Header du produit */}
               {selectedProductForMenu && (
-                <View className="p-5 border-b border-neutral-100">
+                <View style={{ borderBottomColor: colors.border }} className="p-5 border-b">
                   <View className="flex-row items-center">
                     <Image
                       source={{
@@ -1034,12 +1085,13 @@ export default function EnterpriseProducts() {
                     />
                     <View className="flex-1">
                       <Text
-                        className="text-base font-quicksand-bold text-neutral-800"
+                        style={{ color: colors.textPrimary }}
+                        className="text-base font-quicksand-bold"
                         numberOfLines={2}
                       >
                         {selectedProductForMenu.name}
                       </Text>
-                      <Text className="text-sm font-quicksand-medium text-primary-500 mt-1">
+                      <Text style={{ color: colors.brandPrimary }} className="text-sm font-quicksand-medium mt-1">
                         {formatPrice(selectedProductForMenu.price)}
                       </Text>
                     </View>
@@ -1051,7 +1103,8 @@ export default function EnterpriseProducts() {
               <View className="p-3">
                 {/* Voir les détails */}
                 <TouchableOpacity
-                  className="flex-row items-center py-4 px-4 rounded-2xl mb-2 bg-neutral-50"
+                  style={{ backgroundColor: colors.tertiary }}
+                  className="flex-row items-center py-4 px-4 rounded-2xl mb-2"
                   onPress={() => {
                     setMenuModalVisible(false);
                     if (selectedProductForMenu) {
@@ -1064,19 +1117,23 @@ export default function EnterpriseProducts() {
                     setSelectedProductForMenu(null);
                   }}
                 >
-                  <View className="w-10 h-10 bg-primary-100 rounded-full items-center justify-center mr-3">
-                    <Ionicons name="eye" size={20} color="#10B981" />
+                  <View 
+                    style={{ backgroundColor: isDark ? colors.tertiary : '#D1FAE5' }}
+                    className="w-10 h-10 rounded-full items-center justify-center mr-3"
+                  >
+                    <Ionicons name="eye" size={20} color={colors.brandPrimary} />
                   </View>
-                  <Text className="text-base font-quicksand-semibold text-neutral-800 flex-1">
+                  <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-semibold flex-1">
                     {i18n.t("enterprise.products.actions.viewDetails")}
                   </Text>
-                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                  <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
                 </TouchableOpacity>
 
                 {/* Changer le statut */}
                 {selectedProductForMenu && (
                   <TouchableOpacity
-                    className="flex-row items-center py-4 px-4 rounded-2xl mb-2 bg-neutral-50"
+                    style={{ backgroundColor: colors.tertiary }}
+                    className="flex-row items-center py-4 px-4 rounded-2xl mb-2"
                     onPress={() => {
                       setMenuModalVisible(false);
                       if (selectedProductForMenu) {
@@ -1103,7 +1160,7 @@ export default function EnterpriseProducts() {
                         }
                       />
                     </View>
-                    <Text className="text-base font-quicksand-semibold text-neutral-800 flex-1">
+                    <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-semibold flex-1">
                       {selectedProductForMenu.isActive
                         ? i18n.t("enterprise.products.actions.deactivate")
                         : i18n.t("enterprise.products.actions.activate")}
@@ -1111,14 +1168,15 @@ export default function EnterpriseProducts() {
                     <Ionicons
                       name="chevron-forward"
                       size={20}
-                      color="#9CA3AF"
+                      color={colors.textTertiary}
                     />
                   </TouchableOpacity>
                 )}
 
                 {/* Supprimer */}
                 <TouchableOpacity
-                  className="flex-row items-center py-4 px-4 rounded-2xl bg-red-50"
+                  style={{ backgroundColor: isDark ? colors.tertiary : '#FEF2F2' }}
+                  className="flex-row items-center py-4 px-4 rounded-2xl"
                   onPress={() => {
                     setMenuModalVisible(false);
                     if (selectedProductForMenu) {
@@ -1127,26 +1185,30 @@ export default function EnterpriseProducts() {
                     setSelectedProductForMenu(null);
                   }}
                 >
-                  <View className="w-10 h-10 bg-red-100 rounded-full items-center justify-center mr-3">
-                    <Ionicons name="trash" size={20} color="#EF4444" />
+                  <View 
+                    style={{ backgroundColor: isDark ? colors.tertiary : '#FEE2E2' }}
+                    className="w-10 h-10 rounded-full items-center justify-center mr-3"
+                  >
+                    <Ionicons name="trash" size={20} color={colors.error} />
                   </View>
-                  <Text className="text-base font-quicksand-semibold text-red-600 flex-1">
+                  <Text style={{ color: colors.error }} className="text-base font-quicksand-semibold flex-1">
                     {i18n.t("enterprise.products.actions.delete")}
                   </Text>
-                  <Ionicons name="chevron-forward" size={20} color="#EF4444" />
+                  <Ionicons name="chevron-forward" size={20} color={colors.error} />
                 </TouchableOpacity>
               </View>
 
               {/* Bouton Annuler */}
               <View className="p-3 pt-0">
                 <TouchableOpacity
-                  className="bg-neutral-100 py-4 rounded-2xl items-center"
+                  style={{ backgroundColor: colors.tertiary }}
+                  className="py-4 rounded-2xl items-center"
                   onPress={() => {
                     setMenuModalVisible(false);
                     setSelectedProductForMenu(null);
                   }}
                 >
-                  <Text className="text-base font-quicksand-semibold text-neutral-700">
+                  <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-semibold">
                     {i18n.t("enterprise.products.actions.cancel")}
                   </Text>
                 </TouchableOpacity>

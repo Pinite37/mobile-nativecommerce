@@ -27,6 +27,7 @@ import NotificationModal, {
   useNotification,
 } from "../../../../components/ui/NotificationModal";
 import { useLocale } from "../../../../contexts/LocaleContext";
+import { useTheme } from "../../../../contexts/ThemeContext";
 import i18n from "../../../../i18n/i18n";
 import MessagingService from "../../../../services/api/MessagingService";
 import ProductService from "../../../../services/api/ProductService";
@@ -46,6 +47,7 @@ export default function ProductDetails() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { locale } = useLocale();
+  const { colors, isDark } = useTheme();
   const { notification, showNotification, hideNotification } =
     useNotification();
   const imagesListRef = useRef<FlatList<string>>(null);
@@ -150,9 +152,12 @@ export default function ProductDetails() {
     product: Product;
   }) => (
     <TouchableOpacity
-      className="bg-white rounded-xl mr-4 overflow-hidden"
+      className="rounded-xl mr-4 overflow-hidden"
       style={{
         width: 140,
+        backgroundColor: colors.card,
+        borderWidth: 1,
+        borderColor: colors.border,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
@@ -188,7 +193,8 @@ export default function ProductDetails() {
       <View className="p-3">
         <Text
           numberOfLines={2}
-          className="text-sm font-quicksand-semibold text-neutral-800 mb-2 leading-5"
+          style={{ color: colors.textPrimary }}
+          className="text-sm font-quicksand-semibold mb-2 leading-5"
         >
           {similarProduct.name}
         </Text>
@@ -290,7 +296,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
       outputRange: [-150, 150],
     });
     return (
-      <View style={[{ backgroundColor: "#E5E7EB", overflow: "hidden" }, style]}>
+      <View style={[{ backgroundColor: colors.border, overflow: "hidden" }, style]}>
         <Animated.View
           style={{
             position: "absolute",
@@ -298,7 +304,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
             bottom: 0,
             width: 120,
             transform: [{ translateX }],
-            backgroundColor: "rgba(255,255,255,0.35)",
+            backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.35)",
             opacity: 0.7,
           }}
         />
@@ -339,7 +345,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         className="flex-1"
         showsVerticalScrollIndicator={false}
         style={{
-          backgroundColor: "transparent",
+          backgroundColor: colors.card,
           marginTop: HEADER_HEIGHT * 0.6,
         }}
         contentInsetAdjustmentBehavior="never"
@@ -350,7 +356,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         </View>
 
         {/* Content Skeleton */}
-        <View className="px-6 py-6 bg-white rounded-t-3xl -mt-6">
+        <View style={{ backgroundColor: colors.card }} className="px-6 py-6 rounded-t-3xl -mt-6">
           {/* ... skeleton content ... */}
           <ShimmerBlock
             style={{
@@ -387,18 +393,18 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
 
   if (!product) {
     return (
-      <View className="flex-1 bg-white">
+      <View style={{ flex: 1, backgroundColor: colors.card }}>
         <ExpoStatusBar
-          style="light"
+          style={isDark ? "light" : "dark"}
           translucent
           backgroundColor="transparent"
         />
         <View className="flex-1 justify-center items-center px-6">
           <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
-          <Text className="mt-4 text-xl font-quicksand-bold text-neutral-800">
+          <Text style={{ color: colors.textPrimary }} className="mt-4 text-xl font-quicksand-bold">
             {i18n.t('enterprise.productDetails.notFound.title')}
           </Text>
-          <Text className="mt-2 text-neutral-600 font-quicksand-medium text-center">
+          <Text style={{ color: colors.textSecondary }} className="mt-2 font-quicksand-medium text-center">
             {i18n.t('enterprise.productDetails.notFound.message')}
           </Text>
           <TouchableOpacity
@@ -413,8 +419,8 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
   }
 
   return (
-    <View style={styles.safe}>
-      <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
+    <View style={[styles.safe, { backgroundColor: colors.card }]}>
+      <ExpoStatusBar style={isDark ? "light" : "dark"} translucent backgroundColor="transparent" />
 
       {/* Compact Header (Appears on scroll) */}
       <Animated.View
@@ -586,7 +592,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
           { useNativeDriver: false }
         )}
       >
-        <View style={styles.contentContainer}>
+        <View style={[styles.contentContainer, { backgroundColor: colors.card }]}>
           {/* Thumbnails */}
           {product.images.length > 1 && (
             <View className="mt-4 mb-6">
@@ -634,14 +640,14 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
             <Text className="text-3xl font-quicksand-bold text-primary-600 mb-2">
               {formatPrice(product.price)}
             </Text>
-            <Text className="text-neutral-600 font-quicksand-medium leading-6">
+            <Text style={{ color: colors.textSecondary }} className="font-quicksand-medium leading-6">
               {product.description}
             </Text>
           </View>
 
           {/* Enterprise Section */}
-          <View className="p-4 border border-neutral-100 rounded-2xl mb-6 bg-neutral-50">
-            <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3">
+          <View style={{ backgroundColor: colors.secondary, borderColor: colors.border }} className="p-4 border rounded-2xl mb-6">
+            <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold mb-3">
               {i18n.t('enterprise.productDetails.store.title')}
             </Text>
             <TouchableOpacity
@@ -670,28 +676,28 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                 </View>
               )}
               <View className="ml-4 flex-1">
-                <Text className="text-lg font-quicksand-bold text-neutral-800">
+                <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold">
                   {typeof product.enterprise === "object"
                     ? product.enterprise.companyName
                     : product.enterprise}
                 </Text>
                 {typeof product.enterprise === "object" &&
                   product.enterprise.location && (
-                    <Text className="text-sm text-neutral-500 mt-1">
+                    <Text style={{ color: colors.textSecondary }} className="text-sm mt-1">
                       📍 {product.enterprise.location.city},{" "}
                       {product.enterprise.location.district}
                     </Text>
                   )}
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
 
             {/* Contact Options */}
             {typeof product.enterprise === "object" &&
               (product.enterprise.contactInfo?.phone ||
                 product.enterprise.contactInfo?.website) && (
-                <View className="mt-4 pt-4 border-t border-neutral-200">
-                  <Text className="text-sm font-quicksand-bold text-neutral-500 mb-3 uppercase tracking-wider">
+                <View style={{ borderTopColor: colors.border }} className="mt-4 pt-4 border-t">
+                  <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand-bold mb-3 uppercase tracking-wider">
                     {i18n.t('enterprise.productDetails.store.contact')}
                   </Text>
                   <View className="flex-row flex-wrap -mx-1">
@@ -707,14 +713,15 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                                 )
                                 : undefined
                             }
-                            className="flex-1 bg-white rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border border-neutral-200 shadow-sm"
+                            style={{ backgroundColor: colors.card, borderColor: colors.border }}
+                            className="flex-1 rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border shadow-sm"
                           >
                             <Ionicons
                               name="logo-whatsapp"
                               size={18}
                               color="#10B981"
                             />
-                            <Text className="ml-2 text-neutral-700 font-quicksand-bold text-sm">
+                            <Text style={{ color: colors.textPrimary }} className="ml-2 font-quicksand-bold text-sm">
                               {i18n.t('enterprise.productDetails.store.whatsapp')}
                             </Text>
                           </TouchableOpacity>
@@ -727,10 +734,11 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                                 )
                                 : undefined
                             }
-                            className="flex-1 bg-white rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border border-neutral-200 shadow-sm"
+                            style={{ backgroundColor: colors.card, borderColor: colors.border }}
+                            className="flex-1 rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border shadow-sm"
                           >
                             <Ionicons name="call" size={18} color="#FE8C00" />
-                            <Text className="ml-2 text-neutral-700 font-quicksand-bold text-sm">
+                            <Text style={{ color: colors.textPrimary }} className="ml-2 font-quicksand-bold text-sm">
                               {i18n.t('enterprise.productDetails.store.call')}
                             </Text>
                           </TouchableOpacity>
@@ -769,9 +777,9 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
 
           {/* Similar Products */}
           {(similarProducts.length > 0 || loadingSimilar) && (
-            <View className="py-4 border-t border-neutral-100">
+            <View style={{ borderTopColor: colors.border }} className="py-4 border-t">
               <View className="flex-row justify-between items-center mb-4">
-                <Text className="text-xl font-quicksand-bold text-neutral-800">
+                <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold">
                   {i18n.t('enterprise.productDetails.similar.title')}
                 </Text>
               </View>
@@ -874,7 +882,6 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#fff",
   },
   compactHeaderContainer: {
     position: "absolute",
@@ -950,7 +957,6 @@ const styles = StyleSheet.create({
   contentContainer: {
     paddingHorizontal: 20,
     paddingTop: 20,
-    backgroundColor: "#fff",
     minHeight: screenHeight,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocale } from '../../../../contexts/LocaleContext';
+import { useTheme } from '../../../../contexts/ThemeContext';
 import i18n from '../../../../i18n/i18n';
 import CategoryService from '../../../../services/api/CategoryService';
 
@@ -19,6 +20,7 @@ export default function AllCategoriesPage() {
     const insets = useSafeAreaInsets();
     const router = useRouter();
     const { locale } = useLocale();
+    const { colors, isDark } = useTheme();
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -42,7 +44,7 @@ export default function AllCategoriesPage() {
         router.push(`/(app)/(enterprise)/category/${categoryId}`);
     };
 
-    const colors = ["#FF6B35", "#3B82F6", "#8B5CF6", "#EC4899", "#10B981", "#6366F1", "#EF4444", "#F59E0B"];
+    const categoryColors = ["#FF6B35", "#3B82F6", "#8B5CF6", "#EC4899", "#10B981", "#6366F1", "#EF4444", "#F59E0B"];
     const icons = ["flame", "car-sport", "home", "phone-portrait", "laptop", "bed", "shirt", "construct"];
 
     // Détecte tous les types d'emojis
@@ -52,8 +54,8 @@ export default function AllCategoriesPage() {
     };
 
     return (
-        <View className="flex-1 bg-background-secondary">
-            <ExpoStatusBar style="light" translucent />
+        <View style={{ flex: 1, backgroundColor: colors.secondary }}>
+            <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
 
             {/* Header avec gradient */}
             <LinearGradient
@@ -95,8 +97,8 @@ export default function AllCategoriesPage() {
                 </View>
             ) : categories.length === 0 ? (
                 <View className="flex-1 items-center justify-center px-6">
-                    <Ionicons name="file-tray-outline" size={64} color="#D1D5DB" />
-                    <Text className="text-neutral-600 text-lg font-quicksand-bold mt-4">
+                    <Ionicons name="file-tray-outline" size={64} color={colors.textSecondary} />
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 18, marginTop: 16 }}>
                         {i18n.t("enterprise.categories.empty.title")}
                     </Text>
                 </View>
@@ -106,20 +108,28 @@ export default function AllCategoriesPage() {
                     contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 80 }}
                 >
                     {categories.map((category: any, index: number) => {
-                        const categoryColor = category.color || colors[index % colors.length];
+                        const categoryColor = category.color || categoryColors[index % categoryColors.length];
                         const categoryIcon = category.icon || icons[index % icons.length];
 
                         return (
                             <TouchableOpacity
                                 key={category._id}
                                 onPress={() => handleCategoryPress(category._id)}
-                                className="bg-white rounded-2xl overflow-hidden mb-4 flex-row items-center p-4"
                                 style={{
-                                    shadowColor: "#000",
+                                    backgroundColor: colors.card,
+                                    borderRadius: 16,
+                                    overflow: 'hidden',
+                                    marginBottom: 16,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    padding: 16,
+                                    shadowColor: '#000',
                                     shadowOffset: { width: 0, height: 2 },
                                     shadowOpacity: 0.1,
                                     shadowRadius: 4,
                                     elevation: 3,
+                                    borderWidth: 1,
+                                    borderColor: colors.border
                                 }}
                             >
                                 {/* Icône de la catégorie */}
@@ -144,23 +154,23 @@ export default function AllCategoriesPage() {
 
                                 {/* Informations de la catégorie */}
                                 <View className="flex-1">
-                                    <Text className="text-neutral-800 text-base font-quicksand-bold mb-1">
+                                    <Text style={{ color: colors.textPrimary, fontSize: 16, fontFamily: 'Quicksand-Bold', marginBottom: 4 }}>
                                         {category.name}
                                     </Text>
                                     {category.description && (
-                                        <Text className="text-neutral-500 text-xs font-quicksand-medium" numberOfLines={1}>
+                                        <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Quicksand-Medium' }} numberOfLines={1}>
                                             {category.description}
                                         </Text>
                                     )}
                                     {category.productCount !== undefined && (
-                                        <Text className="text-neutral-400 text-xs font-quicksand-medium mt-1">
+                                        <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Quicksand-Medium', marginTop: 4 }}>
                                             {category.productCount} {category.productCount > 1 ? i18n.t("enterprise.categories.products.plural") : i18n.t("enterprise.categories.products.singular")}
                                         </Text>
                                     )}
                                 </View>
 
                                 {/* Flèche de navigation */}
-                                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                                <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
                             </TouchableOpacity>
                         );
                     })}

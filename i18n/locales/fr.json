@@ -311,6 +311,93 @@
                 "archive": "Archiver la conversation",
                 "delete": "Supprimer la conversation",
                 "deleting": "Suppression..."
+            },
+            "conversationDetail": {
+                "placeholder": "Tapez votre message...",
+                "send": "Envoyer",
+                "reply": "Réponse à",
+                "hour": "Heure",
+                "minutes": "Minutes",
+                "createOffer": "Créer une offre",
+                "deliveryOffer": "Offre de livraison",
+                "deliveryZone": "Zone de livraison",
+                "deliveryFee": "Frais de livraison",
+                "urgency": "Urgence",
+                "urgencyLevels": {
+                    "LOW": "Faible",
+                    "MEDIUM": "Moyenne",
+                    "HIGH": "Élevée",
+                    "URGENT": "Urgente"
+                },
+                "specialInstructions": "Instructions spéciales",
+                "expiration": "Date d'expiration",
+                "selectDate": "Sélectionner",
+                "selectTime": "Sélectionner",
+                "validate": "Valider",
+                "cancel": "Annuler",
+                "publish": "Publier l'offre",
+                "publishing": "Publication...",
+                "messageActions": {
+                    "title": "Actions",
+                    "reply": "Répondre",
+                    "copy": "Copier",
+                    "delete": "Supprimer"
+                },
+                "deleteOptions": {
+                    "title": "Supprimer le message",
+                    "forMe": "Supprimer pour moi",
+                    "forEveryone": "Supprimer pour tout le monde"
+                },
+                "attachmentOptions": {
+                    "title": "Ajouter une pièce jointe",
+                    "gallery": "Galerie",
+                    "camera": "Caméra"
+                },
+                "retry": {
+                    "title": "Échec de l'envoi",
+                    "message": "Le message n'a pas pu être envoyé",
+                    "retry": "Réessayer",
+                    "cancel": "Annuler"
+                },
+                "errors": {
+                    "loadConversation": "Impossible de charger la conversation",
+                    "noConversationId": "ID de conversation manquant",
+                    "conversationNotFound": "Conversation introuvable",
+                    "missingData": "Données manquantes",
+                    "productOrCustomerNotFound": "Produit ou client introuvable pour créer l'offre",
+                    "fieldsRequired": "Champs requis",
+                    "zoneFeesExpirationRequired": "Zone, frais et expiration sont requis",
+                    "invalidFee": "Frais invalide",
+                    "feePositive": "Le frais de livraison doit être un nombre positif",
+                    "invalidExpiration": "Expiration invalide",
+                    "expirationFuture": "La date d'expiration doit être future",
+                    "productUnauthorized": "Produit non autorisé",
+                    "cannotCreateOffer": "Vous ne pouvez créer une offre que pour vos propres produits",
+                    "invalidProduct": "Produit invalide",
+                    "cannotCreateOfferGeneric": "Impossible de créer l'offre",
+                    "deleteMessage": "Impossible de supprimer le message"
+                },
+                "success": {
+                    "offerPublished": "Offre publiée",
+                    "offerCreated": "Votre offre de livraison a été créée"
+                },
+                "empty": {
+                    "title": "Aucun message pour le moment",
+                    "message": "Commencez la conversation en envoyant un message"
+                },
+                "messageDeleted": "[Message supprimé]",
+                "today": "Aujourd'hui",
+                "yesterday": "Hier",
+                "permissions": {
+                    "galleryTitle": "Permission requise",
+                    "galleryMessage": "Nous avons besoin de l'autorisation pour accéder à vos photos.",
+                    "cameraTitle": "Permission requise",
+                    "cameraMessage": "Nous avons besoin de l'autorisation pour utiliser votre caméra."
+                },
+                "attachmentErrors": {
+                    "selectImage": "Impossible de sélectionner l'image",
+                    "takePhoto": "Impossible de prendre la photo"
+                }
             }
         },
         "subscription": {

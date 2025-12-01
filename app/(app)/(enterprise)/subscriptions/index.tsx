@@ -16,7 +16,7 @@ import KkiapayPayment from "../../../../components/subscription/KkiapayPayment";
 import StatusModal from "../../../../components/subscription/StatusModal";
 import UpgradeConfirmationModal from "../../../../components/subscription/UpgradeConfirmationModal";
 import { useAuth } from "../../../../contexts/AuthContext";
-import { useLocale } from "../../../../contexts/LocaleContext";
+import { useTheme } from "../../../../contexts/ThemeContext";
 import { useSubscription } from "../../../../contexts/SubscriptionContext";
 import i18n from "../../../../i18n/i18n";
 import PaymentService from "../../../../services/api/PaymentService";
@@ -25,7 +25,7 @@ import SubscriptionService, {
 } from "../../../../services/api/SubscriptionService";
 
 // Skeleton Loader Component
-const ShimmerBlock = ({ style }: { style?: any }) => {
+const ShimmerBlock = ({ style, colors }: { style?: any; colors: any }) => {
   const shimmer = React.useRef(new Animated.Value(0)).current;
   useEffect(() => {
     const loop = Animated.loop(
@@ -44,7 +44,7 @@ const ShimmerBlock = ({ style }: { style?: any }) => {
     outputRange: [-150, 150],
   });
   return (
-    <View style={[{ backgroundColor: "#E5E7EB", overflow: "hidden" }, style]}>
+    <View style={[{ backgroundColor: colors.border, overflow: "hidden" }, style]}>
       <Animated.View
         style={{
           position: "absolute",
@@ -60,21 +60,23 @@ const ShimmerBlock = ({ style }: { style?: any }) => {
   );
 };
 
-const SkeletonCard = () => (
-  <View className="bg-white rounded-3xl p-5 mb-5 border border-neutral-100 shadow-sm">
+const SkeletonCard = ({ colors }: { colors: any }) => (
+  <View style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 24, padding: 20, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 }}>
     <View className="flex-row items-start justify-between mb-3">
       <View className="flex-1 mr-3">
         <ShimmerBlock
+          colors={colors}
           style={{ height: 20, borderRadius: 8, width: "40%", marginBottom: 8 }}
         />
-        <ShimmerBlock style={{ height: 24, borderRadius: 8, width: "60%" }} />
+        <ShimmerBlock colors={colors} style={{ height: 24, borderRadius: 8, width: "60%" }} />
       </View>
-      <ShimmerBlock style={{ height: 24, borderRadius: 12, width: 80 }} />
+      <ShimmerBlock colors={colors} style={{ height: 24, borderRadius: 12, width: 80 }} />
     </View>
     <View className="mb-4">
       {[1, 2, 3, 4].map((i) => (
         <View key={i} className="flex-row items-start mb-2">
           <ShimmerBlock
+            colors={colors}
             style={{
               width: 18,
               height: 18,
@@ -83,11 +85,11 @@ const SkeletonCard = () => (
               marginTop: 1,
             }}
           />
-          <ShimmerBlock style={{ height: 14, borderRadius: 6, width: "80%" }} />
+          <ShimmerBlock colors={colors} style={{ height: 14, borderRadius: 6, width: "80%" }} />
         </View>
       ))}
     </View>
-    <ShimmerBlock style={{ height: 44, borderRadius: 22, width: "100%" }} />
+    <ShimmerBlock colors={colors} style={{ height: 44, borderRadius: 22, width: "100%" }} />
   </View>
 );
 
@@ -98,7 +100,7 @@ function EnterpriseSubscriptionsContent() {
   const [error, setError] = useState<string | null>(null);
   const { subscription, loadSubscription } = useSubscription();
   const { user } = useAuth();
-  const { locale } = useLocale();
+  const { colors, isDark } = useTheme();
 
   // Modal state
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -362,10 +364,10 @@ function EnterpriseSubscriptionsContent() {
     return (
       <View
         key={plan.id}
-        className="bg-white rounded-3xl mb-5 overflow-hidden border border-neutral-100 shadow-sm"
+        style={{ backgroundColor: colors.card, borderRadius: 24, marginBottom: 20, overflow: 'hidden', borderWidth: 1, borderColor: colors.border, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 }}
       >
         {/* Plan Header */}
-        <View className="p-6 pb-4 border-b border-neutral-50">
+        <View style={{ padding: 24, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}>
           <View className="flex-row items-center justify-between mb-3">
             <View className="flex-row items-center flex-1">
               <View
@@ -380,7 +382,7 @@ function EnterpriseSubscriptionsContent() {
               </View>
               <View className="flex-1">
                 <View className="flex-row items-center mb-1">
-                  <Text className="text-xl font-quicksand-bold text-neutral-900">
+                  <Text style={{ fontSize: 20, fontFamily: 'Quicksand-Bold', color: colors.textPrimary }}>
                     {plan.name}
                   </Text>
                   {isCurrentPlan && (
@@ -399,7 +401,7 @@ function EnterpriseSubscriptionsContent() {
                     {plan.price}
                   </Text>
                   {plan.period && (
-                    <Text className="text-sm font-quicksand-semibold ml-1.5 text-neutral-500">
+                    <Text style={{ fontSize: 14, fontFamily: 'Quicksand-SemiBold', marginLeft: 6, color: colors.textSecondary }}>
                       {plan.period}
                     </Text>
                   )}
@@ -433,7 +435,7 @@ function EnterpriseSubscriptionsContent() {
                   style={{ fontWeight: "bold" }}
                 />
               </View>
-              <Text className="flex-1 text-sm font-quicksand-medium text-neutral-600 leading-5">
+              <Text style={{ flex: 1, fontSize: 14, fontFamily: 'Quicksand-Medium', color: colors.textSecondary, lineHeight: 20 }}>
                 {f}
               </Text>
             </View>
@@ -443,20 +445,19 @@ function EnterpriseSubscriptionsContent() {
         {/* Action Button */}
         <View className="px-6 pb-6">
           {isCurrentPlan && !isTrialExpired ? (
-            <View className="rounded-2xl py-4 items-center flex-row justify-center bg-green-50 border border-green-100">
+            <View style={{ borderRadius: 16, paddingVertical: 16, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#D1FAE5' }}>
               <Ionicons name="checkmark-circle" size={20} color="#059669" />
-              <Text className="text-green-700 font-quicksand-bold text-sm ml-2.5">
+              <Text style={{ color: '#047857', fontFamily: 'Quicksand-Bold', fontSize: 14, marginLeft: 10 }}>
                 {i18n.t("enterprise.subscriptions.plans.current")}
               </Text>
             </View>
           ) : (
             <TouchableOpacity
-              className="rounded-2xl py-4 items-center flex-row justify-center shadow-md shadow-primary-500/20"
-              style={{ backgroundColor: plan.color }}
+              style={{ borderRadius: 16, paddingVertical: 16, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', backgroundColor: plan.color, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 3, elevation: 3 }}
               onPress={() => handleSelectPlan(plan)}
               activeOpacity={0.8}
             >
-              <Text className="text-white font-quicksand-bold text-base">
+              <Text style={{ color: '#FFFFFF', fontFamily: 'Quicksand-Bold', fontSize: 16 }}>
                 {isTrialExpired
                   ? i18n.t("enterprise.subscriptions.plans.renew")
                   : `${i18n.t("enterprise.subscriptions.plans.choose")} ${plan.name}`}
@@ -510,8 +511,8 @@ function EnterpriseSubscriptionsContent() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <View className="flex-1 bg-neutral-50">
-        <ExpoStatusBar style="light" translucent />
+      <View style={{ flex: 1, backgroundColor: colors.secondary }}>
+        <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
 
         {/* Dynamic Header */}
         <LinearGradient
@@ -548,11 +549,11 @@ function EnterpriseSubscriptionsContent() {
           contentContainerStyle={{ paddingBottom: 24 + insets.bottom }}
           showsVerticalScrollIndicator={false}
         >
-          <View className="bg-neutral-50 pt-6 px-5">
+          <View style={{ backgroundColor: colors.secondary, paddingTop: 24, paddingHorizontal: 20 }}>
             {/* Active Subscription Card - Moved to content */}
             {subscription && subscription.isActive && (
               <View className="mb-6">
-                <View className="bg-white rounded-2xl p-5 border border-neutral-100 shadow-sm">
+                <View style={{ backgroundColor: colors.card, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: colors.border, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 }}>
                   {/* Status Badge */}
                   <View className="flex-row items-center justify-between mb-3">
                     <View className="flex-row items-center">
@@ -565,7 +566,7 @@ function EnterpriseSubscriptionsContent() {
                             : "bg-green-400"
                         }`}
                       />
-                      <Text className="text-neutral-700 font-quicksand-semibold text-xs uppercase tracking-wide">
+                      <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5 }}>
                         {isExpired()
                           ? i18n.t("enterprise.subscriptions.plans.expired")
                           : isExpiringSoon()
@@ -583,37 +584,37 @@ function EnterpriseSubscriptionsContent() {
                   </View>
 
                   {/* Plan Name */}
-                  <Text className="text-neutral-800 font-quicksand-bold text-2xl mb-2">
+                  <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 24, marginBottom: 8 }}>
                     {subscription.plan.name}
                   </Text>
-                  <Text className="text-neutral-600 font-quicksand-medium text-sm mb-4 leading-5">
+                  <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 14, marginBottom: 16, lineHeight: 20 }}>
                     {subscription.plan.description}
                   </Text>
 
                   {/* Stats Grid */}
                   <View className="flex-row mb-4">
-                    <View className="flex-1 bg-primary-50 rounded-xl p-3 mr-2 border border-primary-100">
+                    <View style={{ flex: 1, backgroundColor: colors.secondary, borderRadius: 12, padding: 12, marginRight: 8, borderWidth: 1, borderColor: colors.border }}>
                       <View className="flex-row items-center justify-between mb-1">
-                        <Text className="text-primary-700 font-quicksand-medium text-[11px]">
+                        <Text style={{ color: '#10B981', fontFamily: 'Quicksand-Medium', fontSize: 11 }}>
                           {i18n.t("enterprise.subscriptions.plans.products")}
                         </Text>
                         <Ionicons
                           name="cube-outline"
                           size={14}
-                          color="#059669"
+                          color="#10B981"
                         />
                       </View>
-                      <Text className="text-neutral-800 font-quicksand-bold text-lg">
+                      <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 18 }}>
                         {subscription.usage.currentProducts}
                       </Text>
-                      <Text className="text-neutral-500 font-quicksand-medium text-[10px]">
+                      <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 10 }}>
                         {i18n.t("enterprise.subscriptions.plans.on")} {subscription.plan.features.maxProducts}
                       </Text>
                     </View>
 
-                    <View className="flex-1 bg-blue-50 rounded-xl p-3 ml-2 border border-blue-100">
+                    <View style={{ flex: 1, backgroundColor: colors.secondary, borderRadius: 12, padding: 12, marginLeft: 8, borderWidth: 1, borderColor: colors.border }}>
                       <View className="flex-row items-center justify-between mb-1">
-                        <Text className="text-blue-700 font-quicksand-medium text-[11px]">
+                        <Text style={{ color: '#3B82F6', fontFamily: 'Quicksand-Medium', fontSize: 11 }}>
                           {i18n.t("enterprise.subscriptions.plans.expiration")}
                         </Text>
                         <Ionicons
@@ -622,13 +623,13 @@ function EnterpriseSubscriptionsContent() {
                           color="#3B82F6"
                         />
                       </View>
-                      <Text className="text-neutral-800 font-quicksand-bold text-sm">
+                      <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 14 }}>
                         {formatDate(subscription.endDate)
                           .split(" ")
                           .slice(0, 2)
                           .join(" ")}
                       </Text>
-                      <Text className="text-neutral-500 font-quicksand-medium text-[10px]">
+                      <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 10 }}>
                         {getDaysRemaining()! > 0
                           ? `${getDaysRemaining()} ${i18n.t("enterprise.subscriptions.plans.days")}`
                           : i18n.t("enterprise.subscriptions.plans.expired")}
@@ -662,10 +663,10 @@ function EnterpriseSubscriptionsContent() {
 
             {/* Section Title */}
             <View className="mb-5">
-              <Text className="text-neutral-400 font-quicksand-semibold text-xs uppercase tracking-wider mb-1">
+              <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 4 }}>
                 {subscription ? i18n.t("enterprise.subscriptions.sections.otherPlans") : i18n.t("enterprise.subscriptions.sections.ourPlans")}
               </Text>
-              <Text className="text-neutral-800 font-quicksand-bold text-2xl">
+              <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 24 }}>
                 {subscription && isExpired()
                   ? i18n.t("enterprise.subscriptions.sections.renewSubscription")
                   : i18n.t("enterprise.subscriptions.sections.choosePlan")}
@@ -677,25 +678,25 @@ function EnterpriseSubscriptionsContent() {
               // Afficher les skeletons pendant le chargement
               <>
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <SkeletonCard key={i} />
+                  <SkeletonCard key={i} colors={colors} />
                 ))}
               </>
             ) : error ? (
-              <View className="flex-1 justify-center items-center py-16 bg-white rounded-2xl">
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 64, backgroundColor: colors.card, borderRadius: 16 }}>
                 <View className="w-20 h-20 rounded-full bg-red-50 items-center justify-center mb-4">
                   <Ionicons name="alert-circle" size={40} color="#EF4444" />
                 </View>
-                <Text className="text-red-600 font-quicksand-bold text-base mb-2">
+                <Text style={{ color: '#DC2626', fontFamily: 'Quicksand-Bold', fontSize: 16, marginBottom: 8 }}>
                   {i18n.t("enterprise.subscriptions.sections.loadingError")}
                 </Text>
-                <Text className="text-neutral-500 font-quicksand-medium text-sm text-center px-8 mb-6">
+                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 14, textAlign: 'center', paddingHorizontal: 32, marginBottom: 24 }}>
                   {error}
                 </Text>
                 <TouchableOpacity
                   onPress={loadData}
                   className="bg-primary-500 px-8 py-3 rounded-xl shadow-sm"
                 >
-                  <Text className="text-white font-quicksand-bold text-sm">
+                  <Text style={{ color: '#FFFFFF', fontFamily: 'Quicksand-Bold', fontSize: 14 }}>
                     {i18n.t("enterprise.subscriptions.sections.retry")}
                   </Text>
                 </TouchableOpacity>
@@ -707,30 +708,30 @@ function EnterpriseSubscriptionsContent() {
             {/* Subscription Details Section */}
             {subscription && (
               <View className="mt-2 mb-4">
-                <View className="bg-white rounded-2xl p-5 border border-neutral-100 shadow-sm">
+                <View style={{ backgroundColor: colors.card, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: colors.border, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 }}>
                   <View className="flex-row items-center mb-4">
-                    <View className="w-10 h-10 rounded-full bg-primary-50 items-center justify-center mr-3">
+                    <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
                       <Ionicons
                         name="information-circle"
                         size={24}
                         color="#10B981"
                       />
                     </View>
-                    <Text className="text-neutral-800 font-quicksand-bold text-lg">
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 18 }}>
                       {i18n.t("enterprise.subscriptions.details.title")}
                     </Text>
                   </View>
 
                   {/* Payment Info */}
-                  <View className="bg-gradient-to-br from-neutral-50 to-neutral-100 rounded-xl p-4 mb-4">
-                    <Text className="text-neutral-700 font-quicksand-bold text-sm mb-3">
+                  <View style={{ backgroundColor: colors.secondary, borderRadius: 12, padding: 16, marginBottom: 16 }}>
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 14, marginBottom: 12 }}>
                       {i18n.t("enterprise.subscriptions.details.paymentInfo")}
                     </Text>
                     <View className="flex-row items-center justify-between mb-2.5">
-                      <Text className="text-neutral-600 font-quicksand-medium text-xs">
+                      <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 12 }}>
                         {i18n.t("enterprise.subscriptions.details.amount")}
                       </Text>
-                      <Text className="text-neutral-900 font-quicksand-bold text-base">
+                      <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 16 }}>
                         {subscription.payment.amount
                           ? `${subscription.payment.amount.toLocaleString()} ${
                               subscription.plan.price.currency
@@ -739,11 +740,11 @@ function EnterpriseSubscriptionsContent() {
                       </Text>
                     </View>
                     <View className="flex-row items-center justify-between mb-2.5">
-                      <Text className="text-neutral-600 font-quicksand-medium text-xs">
+                      <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 12 }}>
                         {i18n.t("enterprise.subscriptions.details.method")}
                       </Text>
-                      <View className="bg-white px-3 py-1 rounded-lg">
-                        <Text className="text-neutral-800 font-quicksand-semibold text-xs">
+                      <View style={{ backgroundColor: colors.card, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 8 }}>
+                        <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 12 }}>
                           {subscription.payment.method === "TRIAL"
                             ? i18n.t("enterprise.subscriptions.details.trial")
                             : subscription.payment.method}
@@ -752,10 +753,10 @@ function EnterpriseSubscriptionsContent() {
                     </View>
                     {subscription.payment.reference && (
                       <View className="flex-row items-center justify-between">
-                        <Text className="text-neutral-600 font-quicksand-medium text-xs">
+                        <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 12 }}>
                           {i18n.t("enterprise.subscriptions.details.reference")}
                         </Text>
-                        <Text className="text-neutral-700 font-quicksand-medium text-xs font-mono">
+                        <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Medium', fontSize: 12 }}>
                           {subscription.payment.reference}
                         </Text>
                       </View>
@@ -763,8 +764,8 @@ function EnterpriseSubscriptionsContent() {
                   </View>
 
                   {/* Features Grid */}
-                  <View className="bg-gradient-to-br from-primary-50 to-emerald-50 rounded-xl p-4">
-                    <Text className="text-neutral-700 font-quicksand-bold text-sm mb-3">
+                  <View style={{ backgroundColor: colors.secondary, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: colors.border }}>
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 14, marginBottom: 12 }}>
                       {i18n.t("enterprise.subscriptions.details.features")}
                     </Text>
                     <View className="flex-row flex-wrap">
@@ -782,39 +783,42 @@ function EnterpriseSubscriptionsContent() {
                           label: i18n.t("enterprise.subscriptions.details.featuresList.advertisements"),
                           icon: "megaphone",
                         },
-                      ].map(({ key, label, icon }) => (
-                        <View
-                          key={key}
-                          className={`flex-row items-center px-3 py-2 rounded-lg mr-2 mb-2 ${
-                            subscription.plan.features[key]
-                              ? "bg-green-100"
-                              : "bg-neutral-100"
-                          }`}
-                        >
-                          <Ionicons
-                            name={
-                              subscription.plan.features[key]
-                                ? "checkmark-circle"
-                                : "close-circle"
-                            }
-                            size={14}
-                            color={
-                              subscription.plan.features[key]
-                                ? "#059669"
-                                : "#737373"
-                            }
-                          />
-                          <Text
-                            className={`ml-1.5 font-quicksand-semibold text-xs ${
-                              subscription.plan.features[key]
-                                ? "text-green-800"
-                                : "text-neutral-500"
-                            }`}
+                      ].map(({ key, label, icon }) => {
+                        const isEnabled = subscription.plan.features[key];
+                        return (
+                          <View
+                            key={key}
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              paddingHorizontal: 12,
+                              paddingVertical: 8,
+                              borderRadius: 8,
+                              marginRight: 8,
+                              marginBottom: 8,
+                              backgroundColor: isEnabled ? '#ECFDF5' : colors.card,
+                              borderWidth: 1,
+                              borderColor: isEnabled ? '#D1FAE5' : colors.border,
+                            }}
                           >
-                            {label}
-                          </Text>
-                        </View>
-                      ))}
+                            <Ionicons
+                              name={isEnabled ? "checkmark-circle" : "close-circle"}
+                              size={14}
+                              color={isEnabled ? "#10B981" : colors.textSecondary}
+                            />
+                            <Text
+                              style={{
+                                marginLeft: 6,
+                                fontFamily: 'Quicksand-SemiBold',
+                                fontSize: 12,
+                                color: isEnabled ? '#059669' : colors.textSecondary,
+                              }}
+                            >
+                              {label}
+                            </Text>
+                          </View>
+                        );
+                      })}
                     </View>
                   </View>
                 </View>
@@ -822,20 +826,20 @@ function EnterpriseSubscriptionsContent() {
             )}
 
             {/* Help Section */}
-            <View className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-5 mb-4 border border-blue-100">
+            <View style={{ backgroundColor: colors.card, borderRadius: 16, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: colors.border, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 }}>
               <View className="flex-row items-start">
-                <View className="w-10 h-10 rounded-full bg-blue-100 items-center justify-center mr-3">
+                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#EFF6FF', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
                   <Ionicons name="help-circle" size={24} color="#3B82F6" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-neutral-800 font-quicksand-bold text-base mb-1">
+                  <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 16, marginBottom: 4 }}>
                     {i18n.t("enterprise.subscriptions.help.title")}
                   </Text>
-                  <Text className="text-neutral-600 font-quicksand-medium text-xs mb-3 leading-5">
+                  <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 12, marginBottom: 12, lineHeight: 18 }}>
                     {i18n.t("enterprise.subscriptions.help.message")}
                   </Text>
-                  <TouchableOpacity className="bg-blue-500 self-start px-4 py-2 rounded-lg shadow-sm">
-                    <Text className="text-white font-quicksand-semibold text-xs">
+                  <TouchableOpacity style={{ backgroundColor: '#3B82F6', alignSelf: 'flex-start', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 }}>
+                    <Text style={{ color: '#FFFFFF', fontFamily: 'Quicksand-SemiBold', fontSize: 12 }}>
                       {i18n.t("enterprise.subscriptions.help.contact")}
                     </Text>
                   </TouchableOpacity>
