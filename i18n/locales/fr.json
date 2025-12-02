@@ -1188,8 +1188,8 @@
                 "comeBack": "Revenez bientôt pour découvrir nos dernières offres"
             },
             "categories": {
-                "title": "Services Business",
-                "subtitle": "Découvrez nos catégories de services professionnels",
+                "title": "Catégories",
+                "subtitle": "Explorez nos catégories",
                 "loading": "Chargement des catégories...",
                 "viewAll": "Voir tout"
             },

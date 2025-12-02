@@ -46,10 +46,10 @@ export default function ProductDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { locale } = useLocale();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { locale } = useLocale(); // Écoute les changements de langue pour re-render automatiquement
   const { colors, isDark } = useTheme();
-  const { notification, showNotification, hideNotification } =
-    useNotification();
+  const { notification, showNotification, hideNotification } = useNotification();
   const imagesListRef = useRef<FlatList<string>>(null);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -57,6 +57,7 @@ export default function ProductDetails() {
   const [similarProducts, setSimilarProducts] = useState<Product[]>([]);
   const [loadingSimilar, setLoadingSimilar] = useState(false);
   const [imageModalVisible, setImageModalVisible] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -110,6 +111,10 @@ export default function ProductDetails() {
         console.log("✅ Produit chargé:", JSON.stringify(productData, null, 2));
         setProduct(productData);
 
+        // Vérifier si le produit est en favori
+        const favoriteStatus = await ProductService.checkIfProductIsFavorite(id!);
+        setIsFavorite(favoriteStatus);
+
         // Charger les produits similaires après avoir chargé le produit principal
         loadSimilarProducts(id!);
       } catch (error) {
@@ -129,15 +134,27 @@ export default function ProductDetails() {
       setLoadingSimilar(true);
       const response = await ProductService.getSimilarProducts(productId, 6);
       setSimilarProducts(response.similarProducts);
-      console.log(
-        "✅ Produits similaires chargés:",
-        response.similarProducts.length
-      );
     } catch (error) {
       console.error("❌ Erreur chargement produits similaires:", error);
       setSimilarProducts([]);
     } finally {
       setLoadingSimilar(false);
+    }
+  };
+
+  const toggleFavorite = async () => {
+    try {
+      if (isFavorite) {
+        await ProductService.removeProductFromFavorites(id!);
+        showNotification("info", i18n.t("client.product.favorites.title"), i18n.t("client.product.favorites.removed"));
+      } else {
+        await ProductService.addProductToFavorites(id!);
+        showNotification("success", i18n.t("client.product.favorites.title"), i18n.t("client.product.favorites.added"));
+      }
+      setIsFavorite(!isFavorite);
+    } catch (error) {
+      console.error('❌ Erreur lors de la mise à jour des favoris:', error);
+      showNotification("error", "Erreur", i18n.t("client.product.favorites.error"));
     }
   };
 
@@ -152,20 +169,10 @@ export default function ProductDetails() {
     product: Product;
   }) => (
     <TouchableOpacity
-      className="rounded-xl mr-4 overflow-hidden"
-      style={{
-        width: 140,
-        backgroundColor: colors.card,
-        borderWidth: 1,
-        borderColor: colors.border,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-      }}
+      className="rounded-xl mr-4 border shadow-sm"
+      style={{ width: 140, backgroundColor: colors.card || colors.background, borderColor: colors.border }}
       onPress={() => {
-        router.push(`/(app)/(enterprise)/product/${similarProduct._id}`);
+        router.push(`/(app)/(client)/product/${similarProduct._id}`);
       }}
     >
       <View className="relative">
@@ -175,16 +182,17 @@ export default function ProductDetails() {
               similarProduct.images[0] ||
               "https://via.placeholder.com/140x100/CCCCCC/FFFFFF?text=No+Image",
           }}
-          style={{ width: 140, height: 140 }}
+          style={{ width: 140, height: 100 }}
           contentFit="cover"
           transition={200}
           cachePolicy="memory-disk"
+          className="rounded-t-xl"
         />
         {/* Badge stock si faible */}
         {similarProduct.stock <= 5 && similarProduct.stock > 0 && (
           <View className="absolute top-2 left-2 bg-warning-500 rounded-full px-2 py-1">
             <Text className="text-white text-xs font-quicksand-bold">
-              {similarProduct.stock} {i18n.t('enterprise.productDetails.stock.remaining')}
+              {i18n.t("client.product.stock.remaining", { count: similarProduct.stock })}
             </Text>
           </View>
         )}
@@ -193,28 +201,24 @@ export default function ProductDetails() {
       <View className="p-3">
         <Text
           numberOfLines={2}
-          style={{ color: colors.textPrimary }}
           className="text-sm font-quicksand-semibold mb-2 leading-5"
+          style={{color: colors.text}}
         >
           {similarProduct.name}
         </Text>
 
-        <Text className="text-base font-quicksand-bold text-emerald-600">
+        <Text className="text-base font-quicksand-bold" style={{color: '#FE8C00'}}>
           {formatPrice(similarProduct.price)}
         </Text>
       </View>
     </TouchableOpacity>
   );
 
-
-
   const openWhatsApp = (phone: string) => {
-    const message = `Bonjour ! Je suis intéressé(e) par votre produit "${product?.name
-      }" sur Axi. 
-    
-Prix affiché : ${product ? formatPrice(product.price) : ""}
-
-Pouvez-vous me donner plus d'informations ? Merci !`;
+    const message = i18n.t("client.product.whatsapp.message", {
+      productName: product?.name,
+      price: product ? formatPrice(product.price) : ""
+    });
 
     const whatsappUrl = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(
       message
@@ -227,14 +231,14 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         } else {
           showNotification(
             "warning",
-            i18n.t('enterprise.productDetails.notifications.whatsappNotAvailable'),
-            i18n.t('enterprise.productDetails.notifications.whatsappNotAvailableMessage')
+            i18n.t("client.product.whatsapp.notAvailable"),
+            i18n.t("client.product.whatsapp.notAvailableMessage")
           );
           makePhoneCall(phone);
         }
       })
       .catch(() => {
-        showNotification("error", "Erreur", "Impossible d'ouvrir WhatsApp");
+        showNotification("error", "Erreur", i18n.t("client.product.whatsapp.error"));
       });
   };
 
@@ -245,11 +249,11 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         if (supported) {
           return Linking.openURL(phoneUrl);
         } else {
-          showNotification("error", i18n.t('enterprise.productDetails.notifications.callError'), i18n.t('enterprise.productDetails.notifications.callErrorMessage'));
+          showNotification("error", "Erreur", i18n.t("client.product.contact.callError"));
         }
       })
       .catch(() => {
-        showNotification("error", "Erreur", "Impossible de passer l'appel");
+        showNotification("error", "Erreur", i18n.t("client.product.contact.callError"));
       });
   };
 
@@ -267,12 +271,12 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
           showNotification(
             "error",
             "Erreur",
-            "Impossible d'ouvrir le site web"
+            i18n.t("client.product.contact.websiteError")
           );
         }
       })
       .catch(() => {
-        showNotification("error", "Erreur", "Impossible d'ouvrir le site web");
+        showNotification("error", "Erreur", i18n.t("client.product.contact.websiteError"));
       });
   };
 
@@ -357,31 +361,67 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
 
         {/* Content Skeleton */}
         <View style={{ backgroundColor: colors.card }} className="px-6 py-6 rounded-t-3xl -mt-6">
-          {/* ... skeleton content ... */}
+          {/* Thumbnails Skeleton */}
+          <View className="flex-row mb-6">
+            <ShimmerBlock style={{ width: 64, height: 64, borderRadius: 12, marginRight: 12 }} />
+            <ShimmerBlock style={{ width: 64, height: 64, borderRadius: 12, marginRight: 12 }} />
+            <ShimmerBlock style={{ width: 64, height: 64, borderRadius: 12, marginRight: 12 }} />
+          </View>
+
+          {/* Price Skeleton */}
           <ShimmerBlock
             style={{
-              width: "30%",
-              height: 32,
-              borderRadius: 16,
+              width: "40%",
+              height: 36,
+              borderRadius: 8,
               marginBottom: 12,
             }}
           />
-          <ShimmerBlock
-            style={{
-              width: "80%",
-              height: 28,
-              borderRadius: 14,
-              marginBottom: 8,
-            }}
-          />
+
+          {/* Description Skeleton */}
           <ShimmerBlock
             style={{
               width: "100%",
               height: 16,
               borderRadius: 8,
-              marginBottom: 4,
+              marginBottom: 8,
             }}
           />
+          <ShimmerBlock
+            style={{
+              width: "95%",
+              height: 16,
+              borderRadius: 8,
+              marginBottom: 8,
+            }}
+          />
+          <ShimmerBlock
+            style={{
+              width: "80%",
+              height: 16,
+              borderRadius: 8,
+              marginBottom: 24,
+            }}
+          />
+
+          {/* Enterprise Section Skeleton */}
+          <View className="p-4 border rounded-2xl mb-6" style={{backgroundColor: isDark ? colors.surface || '#1f2937' : '#f9fafb', borderColor: colors.border}}>
+            <ShimmerBlock style={{ width: "50%", height: 20, borderRadius: 8, marginBottom: 16 }} />
+            <View className="flex-row items-center">
+              <ShimmerBlock style={{ width: 56, height: 56, borderRadius: 16 }} />
+              <View className="ml-4 flex-1">
+                <ShimmerBlock style={{ width: "70%", height: 18, borderRadius: 8, marginBottom: 8 }} />
+                <ShimmerBlock style={{ width: "50%", height: 14, borderRadius: 8 }} />
+              </View>
+            </View>
+          </View>
+
+          {/* Similar Products Skeleton */}
+          <ShimmerBlock style={{ width: "60%", height: 24, borderRadius: 8, marginBottom: 16 }} />
+          <View className="flex-row">
+            <ShimmerBlock style={{ width: 140, height: 200, borderRadius: 12, marginRight: 16 }} />
+            <ShimmerBlock style={{ width: 140, height: 200, borderRadius: 12, marginRight: 16 }} />
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -402,16 +442,16 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         <View className="flex-1 justify-center items-center px-6">
           <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
           <Text style={{ color: colors.textPrimary }} className="mt-4 text-xl font-quicksand-bold">
-            {i18n.t('enterprise.productDetails.notFound.title')}
+            {i18n.t("client.product.error.notFound")}
           </Text>
           <Text style={{ color: colors.textSecondary }} className="mt-2 font-quicksand-medium text-center">
-            {i18n.t('enterprise.productDetails.notFound.message')}
+            {i18n.t("client.product.error.notFoundMessage")}
           </Text>
           <TouchableOpacity
             className="mt-6 bg-primary-500 rounded-2xl px-6 py-3"
             onPress={() => router.back()}
           >
-            <Text className="text-white font-quicksand-semibold">{i18n.t('enterprise.productDetails.notFound.backButton')}</Text>
+            <Text className="text-white font-quicksand-semibold">{i18n.t("client.product.error.back")}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -458,31 +498,33 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
               onPress={async () => {
                 try {
                   await Share.share({
-                    message: product && product.name
-                      ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ""}`
-                      : i18n.t('enterprise.productDetails.share.defaultMessage') ?? 'Voir ce produit',
+                    message: product
+                      ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ""
+                      }`
+                      : i18n.t("client.product.share.message") || "Voir ce produit",
                   });
                 } catch { }
               }}
-              className="w-10 h-10 justify-center items-center mr-1"
+              className="w-10 h-10 justify-center items-center mr-2"
             >
               <Ionicons name="share-social-outline" size={22} color="#000" />
             </TouchableOpacity>
+
             <TouchableOpacity
+              onPress={toggleFavorite}
               className="w-10 h-10 justify-center items-center"
-              onPress={() => setImageModalVisible(true)}
             >
-              <Ionicons name="images-outline" size={22} color="#000" />
+              <Ionicons
+                name={isFavorite ? "heart" : "heart-outline"}
+                size={22}
+                color={isFavorite ? "#EF4444" : "#000"}
+              />
             </TouchableOpacity>
           </View>
         </View>
       </Animated.View>
 
-      {/* Fixed Back Button (Always visible initially, fades out or stays?) 
-          Actually, the design usually has a back button that stays or transforms. 
-          In the user's snippet, there is a back button in the compact header and one likely in the big header.
-          Let's keep a back button always accessible or cross-fade.
-      */}
+      {/* Fixed Back Button (Initially visible) */}
       <Animated.View
         style={{
           position: "absolute",
@@ -504,6 +546,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         </TouchableOpacity>
       </Animated.View>
 
+      {/* Fixed Right Actions (Initially visible) */}
       <Animated.View
         style={{
           position: "absolute",
@@ -525,7 +568,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                 message: product
                   ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ""
                   }`
-                  : i18n.t('enterprise.productDetails.share.defaultMessage') ?? 'Voir ce produit',
+                  : i18n.t("client.product.share.message") || "Voir ce produit",
               });
             } catch { }
           }}
@@ -533,6 +576,18 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         >
           <Ionicons name="share-social-outline" size={20} color="#FFFFFF" />
         </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={toggleFavorite}
+          className="w-10 h-10 bg-black/30 rounded-full justify-center items-center mr-2"
+        >
+          <Ionicons
+            name={isFavorite ? "heart" : "heart-outline"}
+            size={20}
+            color={isFavorite ? "#EF4444" : "#FFFFFF"}
+          />
+        </TouchableOpacity>
+
         <TouchableOpacity
           className="w-10 h-10 bg-black/30 rounded-full justify-center items-center"
           onPress={() => setImageModalVisible(true)}
@@ -544,7 +599,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
       {/* Parallax Header Background */}
       <View style={styles.headerWrapper} pointerEvents="none">
         <AnimatedImage
-          source={{ uri: product.images?.[0] }}
+          source={{ uri: product.images?.[0] || 'https://via.placeholder.com/800x800/CCCCCC/FFFFFF?text=No+Image' }}
           style={[
             styles.headerImage,
             {
@@ -576,7 +631,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
           <Text style={styles.subTitle} className="font-quicksand-medium">
             {typeof product.category === "object" && product.category?.name
               ? product.category.name
-              : i18n.t('enterprise.productDetails.category.default')}{" "}
+              : "Produit"}{" "}
             • {formatPrice(product.price)}
           </Text>
         </Animated.View>
@@ -622,7 +677,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                           height: 64,
                           borderRadius: 12,
                           borderWidth: active ? 2 : 1,
-                          borderColor: active ? "#FE8C00" : "#E5E7EB",
+                          borderColor: active ? "#FE8C00" : colors.border,
                         }}
                         contentFit="cover"
                         transition={200}
@@ -637,18 +692,18 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
 
           {/* Price and Description */}
           <View className="mb-6">
-            <Text className="text-3xl font-quicksand-bold text-primary-600 mb-2">
+            <Text className="text-3xl font-quicksand-bold mb-2" style={{color: '#FE8C00'}}>
               {formatPrice(product.price)}
             </Text>
-            <Text style={{ color: colors.textSecondary }} className="font-quicksand-medium leading-6">
+            <Text className="font-quicksand-medium leading-6" style={{color: colors.textSecondary}}>
               {product.description}
             </Text>
           </View>
 
           {/* Enterprise Section */}
-          <View style={{ backgroundColor: colors.secondary, borderColor: colors.border }} className="p-4 border rounded-2xl mb-6">
-            <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold mb-3">
-              {i18n.t('enterprise.productDetails.store.title')}
+          <View className="p-4 border rounded-2xl mb-6" style={{backgroundColor: isDark ? colors.surface || '#1f2937' : '#f9fafb', borderColor: colors.border}}>
+            <Text className="text-lg font-quicksand-bold mb-3" style={{color: colors.text}}>
+              {i18n.t("client.product.enterprise.title")}
             </Text>
             <TouchableOpacity
               className="flex-row items-center"
@@ -658,7 +713,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                   product.enterprise._id
                 ) {
                   router.push(
-                    `/(app)/(enterprise)/(tabs)/enterprise/${product.enterprise._id}`
+                    `/(app)/(client)/enterprise/${product.enterprise._id}`
                   );
                 }
               }}
@@ -676,14 +731,14 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                 </View>
               )}
               <View className="ml-4 flex-1">
-                <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold">
+                <Text className="text-lg font-quicksand-bold" style={{color: colors.text}}>
                   {typeof product.enterprise === "object"
                     ? product.enterprise.companyName
                     : product.enterprise}
                 </Text>
                 {typeof product.enterprise === "object" &&
                   product.enterprise.location && (
-                    <Text style={{ color: colors.textSecondary }} className="text-sm mt-1">
+                    <Text className="text-sm mt-1" style={{color: colors.textSecondary}}>
                       📍 {product.enterprise.location.city},{" "}
                       {product.enterprise.location.district}
                     </Text>
@@ -692,95 +747,83 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
               <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
 
-            {/* Contact Options */}
+            {/* Contact Options (Website) */}
             {typeof product.enterprise === "object" &&
-              (product.enterprise.contactInfo?.phone ||
-                product.enterprise.contactInfo?.website) && (
-                <View style={{ borderTopColor: colors.border }} className="mt-4 pt-4 border-t">
-                  <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand-bold mb-3 uppercase tracking-wider">
-                    {i18n.t('enterprise.productDetails.store.contact')}
-                  </Text>
-                  <View className="flex-row flex-wrap -mx-1">
-                    {typeof product.enterprise === "object" &&
-                      product.enterprise.contactInfo?.phone && (
-                        <>
-                          <TouchableOpacity
-                            onPress={() =>
-                              typeof product.enterprise === "object" &&
-                                product.enterprise.contactInfo?.phone
-                                ? openWhatsApp(
-                                  product.enterprise.contactInfo.phone
-                                )
-                                : undefined
-                            }
-                            style={{ backgroundColor: colors.card, borderColor: colors.border }}
-                            className="flex-1 rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border shadow-sm"
-                          >
-                            <Ionicons
-                              name="logo-whatsapp"
-                              size={18}
-                              color="#10B981"
-                            />
-                            <Text style={{ color: colors.textPrimary }} className="ml-2 font-quicksand-bold text-sm">
-                              {i18n.t('enterprise.productDetails.store.whatsapp')}
-                            </Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            onPress={() =>
-                              typeof product.enterprise === "object" &&
-                                product.enterprise.contactInfo?.phone
-                                ? makePhoneCall(
-                                  product.enterprise.contactInfo.phone
-                                )
-                                : undefined
-                            }
-                            style={{ backgroundColor: colors.card, borderColor: colors.border }}
-                            className="flex-1 rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border shadow-sm"
-                          >
-                            <Ionicons name="call" size={18} color="#FE8C00" />
-                            <Text style={{ color: colors.textPrimary }} className="ml-2 font-quicksand-bold text-sm">
-                              {i18n.t('enterprise.productDetails.store.call')}
-                            </Text>
-                          </TouchableOpacity>
-                        </>
-                      )}
-                  </View>
+              product.enterprise.contactInfo?.website && (
+                <View className="mt-4 pt-4 border-t" style={{borderColor: colors.border}}>
+                  <TouchableOpacity
+                    onPress={() =>
+                      typeof product.enterprise === "object" &&
+                        product.enterprise.contactInfo?.website
+                        ? openWebsite(product.enterprise.contactInfo.website)
+                        : undefined
+                    }
+                    className="flex-row items-center"
+                  >
+                    <Ionicons name="globe-outline" size={18} color="#3B82F6" />
+                    <Text className="ml-2 text-blue-600 font-quicksand-bold text-sm">
+                      {i18n.t("client.product.enterprise.visitWebsite")}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               )}
+            {/* Actions: Discuter & WhatsApp */}
+            <View className="flex-row mt-4 items-center">
+              {/* WhatsApp Button */}
+              {typeof product.enterprise === "object" &&
+                product.enterprise.contactInfo?.phone ? (
+                <TouchableOpacity
+                  onPress={() => {
+                    const enterprise = product.enterprise;
+                    if (
+                      typeof enterprise === "object" &&
+                      enterprise.contactInfo?.phone
+                    ) {
+                      openWhatsApp(enterprise.contactInfo.phone);
+                    }
+                  }}
+                  className="w-14 h-14 rounded-xl justify-center items-center mr-3 border"
+                  style={{backgroundColor: isDark ? '#064E3B' : '#ECFDF5', borderColor: isDark ? '#059669' : '#A7F3D0'}}
+                >
+                  <Ionicons name="logo-whatsapp" size={24} color={isDark ? '#34D399' : '#10B981'} />
+                </TouchableOpacity>
+              ) : null}
 
-            {/* Faire une offre */}
-            <TouchableOpacity
-              onPress={async () => {
-                try {
-                  const conversation =
-                    await MessagingService.createConversationForProduct(id!);
-                  router.push(
-                    `/(app)/(enterprise)/conversation/${conversation._id}`
-                  );
-                } catch (error) {
-                  console.error("Erreur création conversation:", error);
-                  showNotification(
-                    "error",
-                    "Erreur",
-                    "Impossible de créer la conversation"
-                  );
-                }
-              }}
-              className="bg-amber-100 rounded-xl py-3 flex-row items-center justify-center mt-4"
-            >
-              <Ionicons name="chatbubbles" size={18} color="#D97706" />
-              <Text className="ml-2 text-amber-800 font-quicksand-bold text-sm">
-                {i18n.t('enterprise.productDetails.store.negotiate')}
-              </Text>
-            </TouchableOpacity>
+              {/* Faire une offre / Discuter */}
+              <TouchableOpacity
+                onPress={async () => {
+                  try {
+                    const conversation =
+                      await MessagingService.createConversationForProduct(id!);
+                    router.push(
+                      `/(app)/(client)/conversation/${conversation._id}`
+                    );
+                  } catch (error) {
+                    console.error("Erreur création conversation:", error);
+                    showNotification(
+                      "error",
+                      "Erreur",
+                      i18n.t("client.product.actions.conversationError")
+                    );
+                  }
+                }}
+                className="flex-1 rounded-xl h-14 flex-row items-center justify-center"
+                style={{backgroundColor: isDark ? '#78350F' : '#FEF3C7'}}
+              >
+                <Ionicons name="chatbubbles" size={18} color={isDark ? '#FCD34D' : '#D97706'} />
+                <Text className="ml-2 font-quicksand-bold text-sm" style={{color: isDark ? '#FCD34D' : '#92400E'}}>
+                  {i18n.t("client.product.actions.negotiate")}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Similar Products */}
           {(similarProducts.length > 0 || loadingSimilar) && (
-            <View style={{ borderTopColor: colors.border }} className="py-4 border-t">
+            <View className="py-4 border-t" style={{borderColor: colors.border}}>
               <View className="flex-row justify-between items-center mb-4">
-                <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold">
-                  {i18n.t('enterprise.productDetails.similar.title')}
+                <Text className="text-xl font-quicksand-bold" style={{color: colors.text}}>
+                  {i18n.t("client.product.similar.title")}
                 </Text>
               </View>
               {loadingSimilar ? (
@@ -800,9 +843,11 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
             </View>
           )}
 
-          <View style={{ height: 40 }} />
+          <View style={{ height: 100 }} />
         </View>
       </Animated.ScrollView>
+
+
 
       {/* Image Viewer Modal */}
       <Modal
@@ -910,7 +955,6 @@ const styles = StyleSheet.create({
   compactTitle: {
     color: "#fff",
     fontSize: 18,
-    // fontWeight: "700", // Removed in favor of font-quicksand-bold
     flex: 1,
     textAlign: "center",
     marginHorizontal: 10,
@@ -939,7 +983,6 @@ const styles = StyleSheet.create({
   bigTitle: {
     color: "#fff",
     fontSize: 32,
-    // fontWeight: "900", // Removed in favor of font-quicksand-bold
     textShadowColor: "rgba(0,0,0,0.7)",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 10,
@@ -948,7 +991,6 @@ const styles = StyleSheet.create({
   subTitle: {
     color: "#eee",
     fontSize: 16,
-    // fontWeight: '600', // Removed in favor of font-quicksand-medium
     opacity: 0.9,
     textShadowColor: "rgba(0,0,0,0.5)",
     textShadowOffset: { width: 0, height: 1 },

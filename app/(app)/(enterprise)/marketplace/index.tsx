@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -55,6 +55,10 @@ export default function MarketplacePage() {
 
   // Favoris (simulé)
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+
+  // Refs pour accéder aux valeurs dans le listener de scroll
+  const loadingMoreRef = useRef(false);
+  const hasNextPageRef = useRef(false);
 
   // Charger les données initiales
   useEffect(() => {
@@ -129,7 +133,10 @@ export default function MarketplacePage() {
       setCurrentPage(response.pagination?.page || page);
       setTotalPages(response.pagination?.pages || 1);
       setTotalProducts(response.pagination?.total || response.products.length);
-      setHasNextPage((response.products || []).length === 20);
+      const hasMore = (response.products || []).length === 20;
+      setHasNextPage(hasMore);
+      hasNextPageRef.current = hasMore;
+      loadingMoreRef.current = false;
 
       console.log('✅ Produits marketplace chargés:', response.products.length);
     } catch (error) {
@@ -148,7 +155,9 @@ export default function MarketplacePage() {
   };
 
   const handleLoadMore = () => {
-    if (hasNextPage && !loadingMore) {
+    if (hasNextPageRef.current && !loadingMoreRef.current) {
+      console.log('🔄 Chargement page suivante...', currentPage + 1);
+      loadingMoreRef.current = true;
       loadMarketplaceProducts(currentPage + 1, true);
     }
   };
@@ -222,12 +231,12 @@ export default function MarketplacePage() {
     });
 
     return (
-      <View style={[{ backgroundColor: colors.border, overflow: 'hidden' }, style]}>
+      <View style={[{ backgroundColor: isDark ? colors.tertiary : colors.border, overflow: 'hidden' }, style]}>
         <Animated.View
           style={{
             width: 150,
             height: '100%',
-            backgroundColor: 'rgba(255, 255, 255, 0.5)',
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.5)',
             transform: [{ translateX }],
           }}
         />
@@ -543,13 +552,16 @@ export default function MarketplacePage() {
           }
           onScroll={({ nativeEvent }) => {
             const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
-            const isCloseToBottom =
-              layoutMeasurement.height + contentOffset.y >= contentSize.height - 50;
-            if (isCloseToBottom) {
+            const paddingToBottom = 300; // Déclenche 300px avant la fin
+            const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
+            
+            // Charger plus de produits si on est proche du bas
+            if (isCloseToBottom && !loadingMoreRef.current && hasNextPageRef.current) {
+              console.log('🎯 Déclenchement chargement automatique marketplace');
               handleLoadMore();
             }
           }}
-          scrollEventThrottle={400}
+          scrollEventThrottle={16}
         >
           <View className={viewMode === 'grid' ? 'flex-row flex-wrap justify-between' : ''}>
             {products.map((product) =>

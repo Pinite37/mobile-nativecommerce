@@ -2,9 +2,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { Image as ExpoImage } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
@@ -70,7 +70,7 @@ const ShimmerBlock = ({ style, isDark }: { style?: any; isDark?: boolean }) => {
 const SkeletonProduct = ({ colors, isDark }: { colors: any; isDark: boolean }) => (
   <View style={{ flex: 1, backgroundColor: colors.secondary }}>
     <ExpoStatusBar style={isDark ? "light" : "dark"} translucent backgroundColor="transparent" />
-    
+
     {/* Header Skeleton */}
     <LinearGradient
       colors={['rgba(0,0,0,0.6)', 'transparent']}
@@ -93,14 +93,14 @@ const SkeletonProduct = ({ colors, isDark }: { colors: any; isDark: boolean }) =
       {/* Image Skeleton */}
       <View style={{ marginTop: Platform.OS === 'ios' ? 100 : 80 }}>
         <ShimmerBlock isDark={isDark} style={{ width: '100%', height: 350 }} />
-        
+
         {/* Indicators Skeleton */}
         <View className="absolute bottom-4 left-0 right-0 flex-row justify-center">
           {[1, 2, 3].map((i) => (
             <ShimmerBlock isDark={isDark} key={i} style={{ width: 8, height: 8, borderRadius: 4, marginHorizontal: 4 }} />
           ))}
         </View>
-        
+
         {/* Counter Skeleton */}
         <View className="absolute top-3 right-3">
           <ShimmerBlock isDark={isDark} style={{ width: 60, height: 24, borderRadius: 12 }} />
@@ -137,7 +137,7 @@ const SkeletonProduct = ({ colors, isDark }: { colors: any; isDark: boolean }) =
             <ShimmerBlock isDark={isDark} style={{ width: 6, height: 24, borderRadius: 3, marginRight: 12 }} />
             <ShimmerBlock isDark={isDark} style={{ width: '30%', height: 24, borderRadius: 12 }} />
           </View>
-          
+
           <View style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 24, padding: 20, marginBottom: 16 }}>
             <View className="flex-row items-center mb-4">
               <ShimmerBlock isDark={isDark} style={{ width: 48, height: 48, borderRadius: 24, marginRight: 16 }} />
@@ -147,7 +147,7 @@ const SkeletonProduct = ({ colors, isDark }: { colors: any; isDark: boolean }) =
               </View>
               <ShimmerBlock isDark={isDark} style={{ width: 60, height: 24, borderRadius: 12 }} />
             </View>
-            
+
             <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 16 }}>
               <View className="flex-row flex-wrap -mx-2">
                 {[1, 2, 3, 4].map((i) => (
@@ -170,11 +170,11 @@ const SkeletonProduct = ({ colors, isDark }: { colors: any; isDark: boolean }) =
             <ShimmerBlock isDark={isDark} style={{ width: 6, height: 24, borderRadius: 3, marginRight: 12 }} />
             <ShimmerBlock isDark={isDark} style={{ width: '35%', height: 24, borderRadius: 12 }} />
           </View>
-          
+
           <View className="rounded-3xl overflow-hidden" style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
             {[1, 2, 3].map((i) => (
-              <View 
-                key={i} 
+              <View
+                key={i}
                 className="flex-row items-center py-4 px-5"
                 style={i !== 3 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : {}}
               >
@@ -192,7 +192,7 @@ const SkeletonProduct = ({ colors, isDark }: { colors: any; isDark: boolean }) =
             <ShimmerBlock isDark={isDark} style={{ width: 6, height: 24, borderRadius: 3, marginRight: 12 }} />
             <ShimmerBlock isDark={isDark} style={{ width: '40%', height: 24, borderRadius: 12 }} />
           </View>
-          
+
           <View style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 24, padding: 20 }}>
             <View className="flex-row items-center mb-5">
               <ShimmerBlock isDark={isDark} style={{ width: 64, height: 64, borderRadius: 16, marginRight: 16 }} />
@@ -222,6 +222,7 @@ const SkeletonProduct = ({ colors, isDark }: { colors: any; isDark: boolean }) =
 
 export default function ProductDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const navigation = useNavigation();
   const { notification, hideNotification } = useNotification();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -230,6 +231,20 @@ export default function ProductDetails() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [imageModalVisible, setImageModalVisible] = useState(false);
+
+  // Cacher la tab bar
+  useLayoutEffect(() => {
+    navigation.getParent()?.setOptions({
+      tabBarStyle: { display: "none" },
+    });
+
+    return () => {
+      navigation.getParent()?.setOptions({
+        tabBarStyle: undefined,
+      });
+    };
+  }, [navigation]);
+
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [confirmationAction, setConfirmationAction] = useState<{
     type: 'toggle_status' | 'delete';
@@ -241,10 +256,10 @@ export default function ProductDetails() {
   } | null>(null);
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
-  
+
   // Référence et variables pour le carrousel d'images
   const imagesListRef = useRef<FlatList<string>>(null);
-  
+
   // Animation pour le parallax
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -297,19 +312,19 @@ export default function ProductDetails() {
       setLoading(true);
       setError(null);
       console.log('📡 Chargement du produit:', id);
-      
+
       const response: any = await ProductService.getProductById(id);
       console.log("✅ Réponse API complète:", JSON.stringify(response, null, 2));
-      
+
       // Extraire les données du produit de la réponse API
       const productData = response.product || response;
       const enterpriseData = response.enterprise;
-      
+
       // Si l'enterprise est fournie séparément, l'attacher au produit
       if (enterpriseData && typeof productData.enterprise === 'string') {
         productData.enterprise = enterpriseData;
       }
-      
+
       console.log('✅ Produit traité:', productData.name);
       console.log('📊 Enterprise data:', typeof productData.enterprise === 'object' ? JSON.stringify(productData.enterprise) : 'ID only');
       setProduct(productData);
@@ -340,7 +355,7 @@ export default function ProductDetails() {
 
   const showConfirmation = (type: 'toggle_status' | 'delete', onConfirm: () => void) => {
     if (!product) return;
-    
+
     let title = '';
     let message = '';
     let confirmText = '';
@@ -406,26 +421,17 @@ export default function ProductDetails() {
     });
   };
 
-  const handleEditProduct = () => {
-    console.log('✏️ Édition du produit à implémenter:', product?._id);
-    showInfo(i18n.t("enterprise.productsDetails.actions.editComingSoon"), i18n.t("enterprise.productsDetails.actions.editComingSoonMessage"));
-  };
+
 
   // Hook pour les toasts
-  const { showSuccess, showError, showInfo } = useToast();
+  const { showSuccess, showError } = useToast();
 
   // Utilitaires
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
+
 
   // États d'affichage
   if (loading) {
@@ -460,9 +466,9 @@ export default function ProductDetails() {
             onPress={() => router.back()}
             className="mt-4"
           >
-          <Text style={{ color: colors.textSecondary, fontWeight: '500' }}>
-            {i18n.t("enterprise.productsDetails.error.back")}
-          </Text>
+            <Text style={{ color: colors.textSecondary, fontWeight: '500' }}>
+              {i18n.t("enterprise.productsDetails.error.back")}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -509,9 +515,9 @@ export default function ProductDetails() {
               onPress={async () => {
                 try {
                   await Share.share({
-                    message: product ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ''}` : i18n.t("enterprise.productsDetails.share.defaultMessage"),
+                    message: (product ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ''}` : i18n.t("enterprise.productsDetails.share.defaultMessage")) as string,
                   });
-                } catch {}
+                } catch { }
               }}
               className="w-10 h-10 justify-center items-center mr-1"
             >
@@ -567,9 +573,9 @@ export default function ProductDetails() {
           onPress={async () => {
             try {
               await Share.share({
-                message: product ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ''}` : 'Voir ce produit',
+                message: (product ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ''}` : 'Voir ce produit') as string,
               });
-            } catch {}
+            } catch { }
           }}
           className="w-10 h-10 bg-black/30 rounded-full justify-center items-center mr-2"
         >
@@ -645,7 +651,7 @@ export default function ProductDetails() {
         <View style={[styles.contentContainer, { backgroundColor: colors.card }]}>
           {/* Thumbnails */}
           {product.images.length > 1 && (
-            <View className="mt-4 mb-6">
+            <View className="mt-6 mb-2">
               <FlatList
                 ref={imagesListRef}
                 data={product.images}
@@ -660,16 +666,18 @@ export default function ProductDetails() {
                         setCurrentImageIndex(index);
                       }}
                       className="mr-3"
+                      activeOpacity={0.8}
                     >
                       <ExpoImage
                         source={{ uri: item }}
                         style={{
-                          width: 64,
-                          height: 64,
-                          borderRadius: 12,
-                          borderWidth: active ? 2 : 1,
-                          borderColor: active ? colors.primary : colors.border,
+                          width: 70,
+                          height: 70,
+                          borderRadius: 16,
+                          borderWidth: active ? 2 : 0,
+                          borderColor: active ? "#10B981" : "transparent",
                         }}
+                        className={!active ? "opacity-70" : ""}
                         contentFit="cover"
                         transition={200}
                       />
@@ -681,361 +689,203 @@ export default function ProductDetails() {
             </View>
           )}
 
-          {/* Price and Description */}
-          <View className="mb-6">
-            <View className="flex-row items-center justify-between mb-3">
-              <Text className="text-3xl font-quicksand-bold" style={{ color: '#FE8C00' }}>
+          {/* Price & Status Section */}
+          <View className="mt-4 mb-6 flex-row items-center justify-between">
+            <View>
+              <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand-medium mb-1">
+                Prix de vente
+              </Text>
+              <Text className="text-3xl font-quicksand-bold text-emerald-600">
                 {formatPrice(product.price)}
               </Text>
-              <TouchableOpacity
-                onPress={handleToggleStatus}
-                style={{
-                  backgroundColor: product.isActive ? colors.success + '20' : colors.error + '20',
-                  paddingHorizontal: 16,
-                  paddingVertical: 8,
-                  borderRadius: 16,
-                }}
-              >
-                <Text style={{
-                  color: product.isActive ? colors.success : colors.error,
-                  fontWeight: '600',
-                  fontSize: 14,
-                }}>
-                  {product.isActive ? i18n.t("enterprise.productsDetails.status.active") : i18n.t("enterprise.productsDetails.status.inactive")}
-                </Text>
-              </TouchableOpacity>
             </View>
-            {product.description && (
-              <Text className="font-quicksand-medium leading-6" style={{ color: colors.textSecondary }} numberOfLines={showFullDescription ? undefined : 3}>
-                {product.description}
+
+            <TouchableOpacity
+              onPress={handleToggleStatus}
+              style={{
+                backgroundColor: product.isActive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: product.isActive ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              }}
+              className="flex-row items-center"
+            >
+              <View className={`w-2 h-2 rounded-full mr-2 ${product.isActive ? 'bg-emerald-500' : 'bg-red-500'}`} />
+              <Text style={{
+                color: product.isActive ? '#10B981' : '#EF4444',
+                fontWeight: '700',
+                fontSize: 14,
+              }}>
+                {product.isActive ? i18n.t("enterprise.productsDetails.status.active") : i18n.t("enterprise.productsDetails.status.inactive")}
               </Text>
-            )}
-            {product.description && product.description.length > 150 && (
-              <TouchableOpacity onPress={() => setShowFullDescription(!showFullDescription)}>
-                <Text style={{ color: colors.primary, fontWeight: '600', fontSize: 14, marginTop: 8 }}>
-                  {showFullDescription ? i18n.t("enterprise.productsDetails.description.seeLess") : i18n.t("enterprise.productsDetails.description.seeMore")}
-                </Text>
-              </TouchableOpacity>
-            )}
+            </TouchableOpacity>
           </View>
 
-        {/* Product Details */}
-        <View className="px-6 py-6">
-
-          {/* Informations du produit - Temporairement commenté pour debug */}
-          {/* <View className="mb-6">
-            <View className="flex-row items-center mb-4">
-              <View className="w-1 h-6 bg-primary-500 rounded-full mr-3" />
-              <Text className="text-xl font-quicksand-bold text-neutral-800">Informations</Text>
-            </View>
-            
-            <View className="bg-gradient-to-br from-primary-50 to-white border border-primary-100 rounded-3xl p-5 mb-4">
-              <View className="flex-row items-center mb-4">
-                <View className="w-12 h-12 bg-primary-500 rounded-2xl items-center justify-center mr-4">
-                  <Ionicons name="cube-outline" size={24} color="#FFFFFF" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-xs font-quicksand-medium text-neutral-500 mb-1">Stock disponible</Text>
-                  <Text className="text-2xl font-quicksand-bold text-neutral-800">
-                    {String(product.stock || 0)} <Text className="text-base font-quicksand-semibold text-neutral-500">unités</Text>
+          {/* Description Section */}
+          <View className="mb-8">
+            <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold mb-3">
+              Description
+            </Text>
+            <View style={{ backgroundColor: isDark ? colors.tertiary : colors.secondary }} className="p-5 rounded-2xl">
+              <Text
+                style={{ color: colors.textSecondary }}
+                className="font-quicksand-medium leading-7 text-base"
+                numberOfLines={showFullDescription ? undefined : 4}
+              >
+                {product.description}
+              </Text>
+              {product.description && product.description.length > 150 && (
+                <TouchableOpacity
+                  onPress={() => setShowFullDescription(!showFullDescription)}
+                  className="mt-3 self-start"
+                >
+                  <Text style={{ color: colors.primary, fontWeight: '700' }}>
+                    {showFullDescription ? i18n.t("enterprise.productsDetails.description.seeLess") : i18n.t("enterprise.productsDetails.description.seeMore")}
                   </Text>
-                </View>
-                <View className={`px-3 py-1 rounded-full ${product.stock > 10 ? 'bg-success-100' : product.stock > 0 ? 'bg-warning-100' : 'bg-error-100'}`}>
-                  <Text className={`text-xs font-quicksand-bold ${product.stock > 10 ? 'text-success-700' : product.stock > 0 ? 'text-warning-700' : 'text-error-700'}`}>
-                    {product.stock > 10 ? 'En stock' : product.stock > 0 ? 'Stock faible' : 'Épuisé'}
-                  </Text>
-                </View>
-              </View>
-              
-              <View className="border-t border-primary-100 pt-4">
-                <View className="flex-row flex-wrap -mx-2">
-                  {typeof product.category === 'object' && product.category?.name && (
-                    <View className="w-1/2 px-2 mb-3">
-                      <View className="flex-row items-center">
-                        <Ionicons name="pricetag" size={16} color="#FE8C00" />
-                        <Text className="ml-2 text-xs font-quicksand-medium text-neutral-500">Catégorie</Text>
-                      </View>
-                      <Text className="mt-1 text-sm font-quicksand-semibold text-neutral-800">{String(product.category.name)}</Text>
-                    </View>
-                  )}
-                  
-                  {product.weight && (
-                    <View className="w-1/2 px-2 mb-3">
-                      <View className="flex-row items-center">
-                        <Ionicons name="barbell" size={16} color="#FE8C00" />
-                        <Text className="ml-2 text-xs font-quicksand-medium text-neutral-500">Poids</Text>
-                      </View>
-                      <Text className="mt-1 text-sm font-quicksand-semibold text-neutral-800">{`${product.weight} kg`}</Text>
-                    </View>
-                  )}
-                  
-                  <View className="w-1/2 px-2 mb-3">
-                    <View className="flex-row items-center">
-                      <Ionicons name="calendar" size={16} color="#FE8C00" />
-                      <Text className="ml-2 text-xs font-quicksand-medium text-neutral-500">Créé le</Text>
-                    </View>
-                    <Text className="mt-1 text-sm font-quicksand-semibold text-neutral-800">{formatDate(product.createdAt)}</Text>
-                  </View>
-                  
-                  <View className="w-1/2 px-2 mb-3">
-                    <View className="flex-row items-center">
-                      <Ionicons name="sync" size={16} color="#FE8C00" />
-                      <Text className="ml-2 text-xs font-quicksand-medium text-neutral-500">Mis à jour</Text>
-                    </View>
-                    <Text className="mt-1 text-sm font-quicksand-semibold text-neutral-800">{formatDate(product.updatedAt)}</Text>
-                  </View>
-                </View>
-              </View>
+                </TouchableOpacity>
+              )}
             </View>
-          </View> */}
+          </View>
 
-          {/* Spécifications techniques */}
+          {/* Specifications Section */}
           {product.specifications && product.specifications.length > 0 && (
-            <View className="mb-6">
-              <View className="flex-row items-center mb-4">
-                <View className="w-1 h-6 bg-primary-500 rounded-full mr-3" />
-                <Text className="text-xl font-quicksand-bold" style={{ color: colors.textPrimary }}>{i18n.t("enterprise.productsDetails.sections.specifications")}</Text>
-              </View>
-              
-              <View className="rounded-3xl overflow-hidden" style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
+            <View className="mb-8">
+              <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold mb-4">
+                {i18n.t("enterprise.productsDetails.sections.specifications")}
+              </Text>
+
+              <View
+                style={{
+                  backgroundColor: colors.card,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 8,
+                  elevation: 3,
+                  borderWidth: 1,
+                  borderColor: colors.border
+                }}
+                className="rounded-3xl overflow-hidden"
+              >
                 {product.specifications.map((spec: any, index: number) => (
-                  <View 
-                    key={index} 
+                  <View
+                    key={index}
                     className="flex-row items-center py-4 px-5"
-                    style={index !== product.specifications.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : {}}
+                    style={{
+                      borderBottomWidth: index !== product.specifications.length - 1 ? 1 : 0,
+                      borderBottomColor: colors.border,
+                      backgroundColor: index % 2 === 0 ? 'transparent' : (isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)')
+                    }}
                   >
-                    <View className="w-2 h-2 bg-primary-500 rounded-full mr-3" style={{ backgroundColor: colors.primary }} />
-                    <Text className="flex-1 font-quicksand-semibold" style={{ color: colors.textSecondary }}>{String(spec.key)}</Text>
-                    <Text className="font-quicksand-bold" style={{ color: colors.textPrimary }}>{String(spec.value)}</Text>
+                    <Text className="flex-1 font-quicksand-medium text-base" style={{ color: colors.textSecondary }}>
+                      {String(spec.key)}
+                    </Text>
+                    <Text className="font-quicksand-bold text-base" style={{ color: colors.textPrimary }}>
+                      {String(spec.value)}
+                    </Text>
                   </View>
                 ))}
               </View>
             </View>
           )}
-        </View>
 
-        {/* Informations sur l'entreprise */}
-        <View className="px-6 mb-6">
-          <View className="flex-row items-center mb-4">
-            <View className="w-1 h-6 bg-primary-500 rounded-full mr-3" />
-            <Text className="text-xl font-quicksand-bold" style={{ color: colors.textPrimary }}>{i18n.t("enterprise.productsDetails.sections.enterprise")}</Text>
-          </View>
-          
-          <LinearGradient
-            colors={isDark ? [colors.secondary, colors.card] : ['#FFFBEB', '#FFFFFF']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{
-              borderWidth: 1,
-              borderColor: isDark ? colors.border : '#FEF3C7',
-              borderRadius: 24,
-              padding: 20,
-            }}
-          >
-            <View className="flex-row items-center mb-5">
-              {typeof product.enterprise === 'object' && product.enterprise.logo ? (
-                <Image 
-                  source={{ uri: product.enterprise.logo }}
-                  className="w-16 h-16 rounded-2xl mr-4"
-                  style={{ borderWidth: 2, borderColor: colors.primary }}
-                />
-              ) : (
-                <View className="w-16 h-16 rounded-2xl bg-primary-500 items-center justify-center mr-4" style={{ borderWidth: 2, borderColor: colors.primary }}>
-                  <Text className="text-white font-quicksand-bold text-2xl">
+          {/* Enterprise Info (Preview) */}
+          <View className="mb-8">
+            <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold mb-4">
+              {i18n.t("enterprise.productsDetails.sections.enterprise")}
+            </Text>
+
+            <View
+              style={{
+                backgroundColor: isDark ? colors.tertiary : colors.secondary,
+                borderRadius: 24,
+                padding: 20,
+              }}
+            >
+              <View className="flex-row items-center mb-5">
+                <View className="p-1 rounded-2xl bg-white dark:bg-neutral-800 shadow-sm">
+                  {typeof product.enterprise === 'object' && product.enterprise.logo ? (
+                    <Image
+                      source={{ uri: product.enterprise.logo }}
+                      className="w-14 h-14 rounded-xl"
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View className="w-14 h-14 rounded-xl bg-emerald-50 items-center justify-center">
+                      <Ionicons name="storefront" size={24} color="#10B981" />
+                    </View>
+                  )}
+                </View>
+
+                <View className="flex-1 ml-4">
+                  <Text className="font-quicksand-bold text-lg mb-1" style={{ color: colors.textPrimary }}>
                     {typeof product.enterprise === 'object' && product.enterprise.companyName
-                      ? product.enterprise.companyName.charAt(0)
-                      : "E"}
+                      ? product.enterprise.companyName
+                      : "Votre Entreprise"}
                   </Text>
-                </View>
-              )}
-              <View className="flex-1">
-                <Text className="font-quicksand-bold text-lg mb-1" style={{ color: colors.textPrimary }}>
-                  {typeof product.enterprise === 'object' && product.enterprise.companyName 
-                    ? product.enterprise.companyName 
-                    : "Votre Entreprise"}
-                </Text>
-                <View style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  paddingHorizontal: 12,
-                  paddingVertical: 4,
-                  borderRadius: 20,
-                  alignSelf: 'flex-start',
-                  backgroundColor: typeof product.enterprise === 'object' && product.enterprise.isActive ? colors.success + '20' : colors.secondary,
-                }}>
-                  <Ionicons name="shield-checkmark" size={14} color={typeof product.enterprise === 'object' && product.enterprise.isActive ? colors.success : colors.textSecondary} />
-                  <Text style={{
-                    fontWeight: '700',
-                    fontSize: 12,
-                    marginLeft: 4,
-                    color: typeof product.enterprise === 'object' && product.enterprise.isActive ? colors.success : colors.textSecondary,
-                  }}>
-                    {typeof product.enterprise === 'object' && product.enterprise.isActive ? i18n.t("enterprise.productsDetails.enterpriseInfo.active") : i18n.t("enterprise.productsDetails.enterpriseInfo.inactive")}
-                  </Text>
+                  <View className="flex-row items-center">
+                    <Ionicons name="location-sharp" size={12} color="#10B981" />
+                    <Text style={{ color: colors.textSecondary }} className="text-xs ml-1 font-quicksand-medium">
+                      {typeof product.enterprise === 'object' && product.enterprise.location
+                        ? `${product.enterprise.location.city}, ${product.enterprise.location.district}`
+                        : i18n.t("enterprise.productsDetails.enterpriseInfo.notSpecified")}
+                    </Text>
+                  </View>
                 </View>
               </View>
+
+
             </View>
+          </View>
 
-            {/* Statistiques de l'entreprise */}
-            <View className="space-y-3">
-              <View className="flex-row items-center py-3">
-                <View style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 12,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginRight: 12,
-                  backgroundColor: isDark ? 'rgba(254, 140, 0, 0.15)' : '#FFF7ED',
-                }}>
-                  <Ionicons name="location" size={18} color="#FE8C00" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-xs font-quicksand-medium mb-1" style={{ color: colors.textSecondary }}>{i18n.t("enterprise.productsDetails.enterpriseInfo.location")}</Text>
-                  <Text className="text-sm font-quicksand-bold" style={{ color: colors.textPrimary }}>
-                    {typeof product.enterprise === 'object' && product.enterprise.location 
-                      ? `${product.enterprise.location.district}, ${product.enterprise.location.city}` 
-                      : i18n.t("enterprise.productsDetails.enterpriseInfo.notSpecified")}
-                  </Text>
-                </View>
-              </View>
+          {/* Action Buttons - Fixed at bottom or inline? Inline is better for scrolling content */}
+          <View className="pb-8 pt-2">
+            <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold mb-4">
+              Actions rapides
+            </Text>
 
-              <View className="flex-row items-center py-3">
-                <View style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 12,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginRight: 12,
-                  backgroundColor: isDark ? 'rgba(59, 130, 246, 0.15)' : '#DBEAFE',
-                }}>
-                  <Ionicons name="calendar" size={18} color="#3B82F6" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-xs font-quicksand-medium mb-1" style={{ color: colors.textSecondary }}>{i18n.t("enterprise.productsDetails.enterpriseInfo.memberSince")}</Text>
-                  <Text className="text-sm font-quicksand-bold" style={{ color: colors.textPrimary }}>
-                    {(() => {
-                      if (typeof product.enterprise === 'object') {
-                        const dateToFormat = product.enterprise.createdAt || product.enterprise.lastActiveDate;
-                        if (dateToFormat) {
-                          const dateString = typeof dateToFormat === 'string' ? dateToFormat : dateToFormat.toISOString();
-                          return formatDate(dateString);
-                        }
-                      }
-                      return i18n.t("enterprise.productsDetails.enterpriseInfo.notAvailable");
-                    })()}
-                  </Text>
-                </View>
-              </View>
-              
-              <View className="flex-row items-center py-3">
-                <View style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 12,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginRight: 12,
-                  backgroundColor: isDark ? 'rgba(16, 185, 129, 0.15)' : '#D1FAE5',
-                }}>
-                  <Ionicons name="cart" size={18} color="#10B981" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-xs font-quicksand-medium mb-1" style={{ color: colors.textSecondary }}>{i18n.t("enterprise.productsDetails.enterpriseInfo.ordersProcessed")}</Text>
-                  <Text className="text-sm font-quicksand-bold" style={{ color: colors.textPrimary }}>
-                    {typeof product.enterprise === 'object' && product.enterprise.stats?.totalOrders 
-                      ? `${String(product.enterprise.stats.totalOrders)} commandes` 
-                      : i18n.t("enterprise.productsDetails.enterpriseInfo.noOrders")}
-                  </Text>
-                </View>
-              </View>
-
-              <View className="flex-row items-center py-3">
-                <View style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 12,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginRight: 12,
-                  backgroundColor: isDark ? 'rgba(251, 191, 36, 0.15)' : '#FEF3C7',
-                }}>
-                  <Ionicons name="star" size={18} color="#FBBF24" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-xs font-quicksand-medium mb-1" style={{ color: colors.textSecondary }}>{i18n.t("enterprise.productsDetails.enterpriseInfo.averageRating")}</Text>
-                  <Text className="text-sm font-quicksand-bold" style={{ color: colors.textPrimary }}>
-                    {typeof product.enterprise === 'object' && product.enterprise.stats?.averageRating 
-                      ? `${product.enterprise.stats?.averageRating?.toFixed(1)} ⭐ (${product.enterprise.stats?.totalReviews ? String(product.enterprise.stats.totalReviews) : '0'} ${i18n.t("enterprise.productsDetails.enterpriseInfo.reviews")})` 
-                      : i18n.t("enterprise.productsDetails.enterpriseInfo.notRated")}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </LinearGradient>
-        </View>
-
-        {/* (Section Informations supplémentaires intégrée plus haut dans Détails / Performance) */}
-        
-          {/* Actions Buttons */}
-          <View className="px-6 pb-8 pt-4">
-            <View className="flex-row" style={{ gap: 12 }}>
-              {/* Bouton Activer/Désactiver */}
-              <TouchableOpacity 
+            <View className="flex-row gap-3">
+              {/* Status Toggle Button */}
+              <TouchableOpacity
                 onPress={handleToggleStatus}
-                style={{
-                  flex: 1,
-                  backgroundColor: product.isActive ? '#F59E0B' : '#10B981',
-                  paddingVertical: 14,
-                  borderRadius: 16,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
+                className={`flex-1 py-4 rounded-2xl flex-row items-center justify-center border ${product.isActive
+                  ? 'bg-emerald-50 border-emerald-100 dark:bg-emerald-900/10 dark:border-emerald-900/30'
+                  : 'bg-neutral-50 border-neutral-200 dark:bg-neutral-800 dark:border-neutral-700'
+                  }`}
+                activeOpacity={0.8}
               >
-                <Ionicons 
-                  name={product.isActive ? "pause-circle" : "checkmark-circle"} 
-                  size={20} 
-                  color="white"
+                <Ionicons
+                  name={product.isActive ? "eye" : "eye-off"}
+                  size={20}
+                  color={product.isActive ? "#10B981" : colors.textSecondary}
                 />
-                <Text style={{ color: 'white', fontWeight: '700', marginLeft: 8, fontSize: 14 }}>
-                  {product.isActive ? i18n.t("enterprise.productsDetails.status.deactivate") : i18n.t("enterprise.productsDetails.status.activate")}
+                <Text
+                  style={{
+                    color: product.isActive ? "#10B981" : colors.textSecondary,
+                  }}
+                  className="ml-2 text-base font-quicksand-bold"
+                >
+                  {product.isActive
+                    ? "Produit visible"
+                    : "Produit masqué"}
                 </Text>
               </TouchableOpacity>
-              
-              {/* Bouton Modifier */}
-              <TouchableOpacity 
-                onPress={handleEditProduct}
-                style={{
-                  flex: 1,
-                  backgroundColor: '#FE8C00',
-                  paddingVertical: 14,
-                  borderRadius: 16,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Ionicons name="create-outline" size={20} color="white" />
-                <Text style={{ color: 'white', fontWeight: '700', marginLeft: 8, fontSize: 14 }}>
-                  {i18n.t("enterprise.productsDetails.actions.edit")}
-                </Text>
-              </TouchableOpacity>
-              
-              {/* Bouton Supprimer */}
-              <TouchableOpacity 
+
+              {/* Delete Button */}
+              <TouchableOpacity
                 onPress={handleDeleteProduct}
                 style={{
-                  width: 54,
-                  height: 54,
+                  width: 60,
                   backgroundColor: '#EF4444',
                   borderRadius: 16,
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
+                activeOpacity={0.8}
               >
-                <Ionicons name="trash-outline" size={22} color="white" />
+                <Ionicons name="trash-outline" size={24} color="white" />
               </TouchableOpacity>
             </View>
           </View>
@@ -1057,7 +907,7 @@ export default function ProductDetails() {
                   // Petit délai pour éviter les conflits de gestes sur iOS
                   setTimeout(() => setImageModalVisible(false), 50);
                 }}
-                onPressIn={() => {}}
+                onPressIn={() => { }}
                 activeOpacity={0.7}
                 className="w-12 h-12 bg-white/20 rounded-full justify-center items-center"
                 style={{ zIndex: 60 }}
@@ -1093,7 +943,7 @@ export default function ProductDetails() {
               setCurrentImageIndex(newIndex);
             }}
             onScrollToIndexFailed={({ index }) => {
-              setTimeout(() => {}, 100);
+              setTimeout(() => { }, 100);
             }}
           />
         </View>
@@ -1109,25 +959,25 @@ export default function ProductDetails() {
         <View className="flex-1 justify-center items-center bg-black/60 px-6">
           <View className="rounded-3xl p-6 w-full max-w-sm" style={{ backgroundColor: colors.card }}>
             <View className="items-center mb-4">
-              <View 
+              <View
                 className="w-16 h-16 rounded-full items-center justify-center mb-3"
                 style={{ backgroundColor: confirmationAction?.confirmColor + '20' }}
               >
-                <Ionicons 
-                  name={confirmationAction?.type === 'delete' ? 'trash' : 'power'} 
-                  size={28} 
-                  color={confirmationAction?.confirmColor} 
+                <Ionicons
+                  name={confirmationAction?.type === 'delete' ? 'trash' : 'power'}
+                  size={28}
+                  color={confirmationAction?.confirmColor}
                 />
               </View>
               <Text className="text-xl font-quicksand-bold text-center" style={{ color: colors.textPrimary }}>
                 {confirmationAction?.title}
               </Text>
             </View>
-            
+
             <Text className="text-base font-quicksand-medium mb-6 text-center" style={{ color: colors.textSecondary }}>
               {confirmationAction?.message}
             </Text>
-            
+
             <View className="flex-row space-x-3">
               <TouchableOpacity
                 className="flex-1 rounded-2xl py-4"

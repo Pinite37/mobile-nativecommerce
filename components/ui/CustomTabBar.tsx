@@ -155,7 +155,7 @@ export const CustomTabBar: React.FC<TabBarProps> = ({
                   width: 48,
                   height: 48,
                   borderRadius: 24, // Force circle (half of size)
-                  backgroundColor: isFocused ? (isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5") : "transparent",
+                  backgroundColor: "transparent",
                 }}
               >
                 {!!IconComponent && (

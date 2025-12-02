@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -17,6 +17,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../../../../contexts/ThemeContext';
 import i18n from '../../../../i18n/i18n';
 import ProductService from '../../../../services/api/ProductService';
 import { Product } from '../../../../types/product';
@@ -27,6 +28,7 @@ type ViewMode = 'grid' | 'list';
 
 export default function ClientMarketplacePage() {
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
 
   // États principaux
   const [products, setProducts] = useState<Product[]>([]);
@@ -51,6 +53,10 @@ export default function ClientMarketplacePage() {
 
   // Favoris (simulé)
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+
+  // Refs pour accéder aux valeurs dans le listener de scroll
+  const loadingMoreRef = useRef(false);
+  const hasNextPageRef = useRef(false);
 
   // Charger les données initiales
   useEffect(() => {
@@ -125,7 +131,10 @@ export default function ClientMarketplacePage() {
       setCurrentPage(response.pagination?.page || page);
       setTotalPages(response.pagination?.pages || 1);
       setTotalProducts(response.pagination?.total || response.products.length);
-      setHasNextPage((response.products || []).length === 20);
+      const hasMore = (response.products || []).length === 20;
+      setHasNextPage(hasMore);
+      hasNextPageRef.current = hasMore;
+      loadingMoreRef.current = false;
 
       console.log('✅ Produits marketplace chargés:', response.products.length);
     } catch (error) {
@@ -144,7 +153,9 @@ export default function ClientMarketplacePage() {
   };
 
   const handleLoadMore = () => {
-    if (hasNextPage && !loadingMore) {
+    if (hasNextPageRef.current && !loadingMoreRef.current) {
+      console.log('🔄 Chargement page suivante...', currentPage + 1);
+      loadingMoreRef.current = true;
       loadMarketplaceProducts(currentPage + 1, true);
     }
   };
@@ -218,12 +229,12 @@ export default function ClientMarketplacePage() {
     });
 
     return (
-      <View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
+      <View style={[{ backgroundColor: isDark ? colors.tertiary : '#E5E7EB', overflow: 'hidden' }, style]}>
         <Animated.View
           style={{
             width: 150,
             height: '100%',
-            backgroundColor: 'rgba(255, 255, 255, 0.5)',
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.5)',
             transform: [{ translateX }],
           }}
         />
@@ -233,9 +244,10 @@ export default function ClientMarketplacePage() {
 
   const SkeletonProduct = () => (
     <View className="bg-white rounded-2xl overflow-hidden p-2 mb-3 w-[48%]" style={{
+      backgroundColor: colors.card,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
+      shadowOpacity: isDark ? 0.3 : 0.1,
       shadowRadius: 4,
       elevation: 3,
     }}>
@@ -255,11 +267,12 @@ export default function ClientMarketplacePage() {
     return (
       <TouchableOpacity
         key={item._id}
-        className="bg-white rounded-2xl overflow-hidden p-2 mb-3 w-[48%]"
+        className="rounded-2xl overflow-hidden p-2 mb-3 w-[48%]"
         style={{
+          backgroundColor: colors.card,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
+          shadowOpacity: isDark ? 0.3 : 0.1,
           shadowRadius: 4,
           elevation: 3,
         }}
@@ -272,13 +285,14 @@ export default function ClientMarketplacePage() {
             resizeMode="cover"
           />
           <TouchableOpacity
-            className="absolute top-2 right-2 bg-white/90 rounded-full p-1.5"
+            className="absolute top-2 right-2 rounded-full p-1.5"
+            style={{ backgroundColor: isDark ? colors.surface + '90' : 'rgba(255, 255, 255, 0.9)' }}
             onPress={() => toggleFavorite(item._id)}
           >
             <Ionicons
               name={isFavorite ? 'heart' : 'heart-outline'}
               size={20}
-              color={isFavorite ? '#EF4444' : '#6B7280'}
+              color={isFavorite ? '#EF4444' : (isDark ? colors.textTertiary : '#6B7280')}
             />
           </TouchableOpacity>
           {item.stock === 0 && (
@@ -288,20 +302,20 @@ export default function ClientMarketplacePage() {
           )}
         </View>
         <View className="mt-2">
-          <Text className="text-sm font-quicksand-semibold text-neutral-800" numberOfLines={2}>
+          <Text className="text-sm font-quicksand-semibold" style={{ color: colors.text }} numberOfLines={2}>
             {item.name}
           </Text>
-          <Text className="text-lg font-quicksand-bold text-[#10b981] mt-1">
+          <Text className="text-lg font-quicksand-bold mt-1" style={{ color: colors.brandPrimary }}>
             {formatPrice(item.price)}
           </Text>
           {enterprise && (
-            <Text className="text-xs font-quicksand-medium text-neutral-500 mt-1" numberOfLines={1}>
+            <Text className="text-xs font-quicksand-medium mt-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
               {enterprise.companyName}
             </Text>
           )}
           <View className="flex-row items-center mt-1">
             <Ionicons name="star" size={14} color="#FBBF24" />
-            <Text className="text-xs font-quicksand-medium text-neutral-600 ml-1">
+            <Text className="text-xs font-quicksand-medium ml-1" style={{ color: colors.textSecondary }}>
               {item.stats?.averageRating?.toFixed(1) || '0.0'}
             </Text>
           </View>
@@ -318,11 +332,12 @@ export default function ClientMarketplacePage() {
     return (
       <TouchableOpacity
         key={item._id}
-        className="bg-white rounded-2xl overflow-hidden p-3 mb-3 flex-row"
+        className="rounded-2xl overflow-hidden p-3 mb-3 flex-row"
         style={{
+          backgroundColor: colors.card,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
+          shadowOpacity: isDark ? 0.3 : 0.1,
           shadowRadius: 4,
           elevation: 3,
         }}
@@ -335,35 +350,35 @@ export default function ClientMarketplacePage() {
             resizeMode="cover"
           />
           {item.stock === 0 && (
-            <View className="absolute inset-0 bg-black/50 rounded-xl items-center justify-center">
+            <View className="absolute inset-0 rounded-xl items-center justify-center" style={{ backgroundColor: isDark ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.5)' }}>
               <Text className="text-white text-xs font-quicksand-bold">{i18n.t("client.marketplace.product.outOfStock")}</Text>
             </View>
           )}
         </View>
         <View className="flex-1">
           <View className="flex-row justify-between items-start">
-            <Text className="text-sm font-quicksand-semibold text-neutral-800 flex-1" numberOfLines={2}>
+            <Text className="text-sm font-quicksand-semibold flex-1" style={{ color: colors.text }} numberOfLines={2}>
               {item.name}
             </Text>
             <TouchableOpacity onPress={() => toggleFavorite(item._id)} className="ml-2">
               <Ionicons
                 name={isFavorite ? 'heart' : 'heart-outline'}
                 size={20}
-                color={isFavorite ? '#EF4444' : '#6B7280'}
+                color={isFavorite ? '#EF4444' : (isDark ? colors.textTertiary : '#6B7280')}
               />
             </TouchableOpacity>
           </View>
-          <Text className="text-lg font-quicksand-bold text-[#10b981] mt-1">
+          <Text className="text-lg font-quicksand-bold mt-1" style={{ color: colors.brandPrimary }}>
             {formatPrice(item.price)}
           </Text>
           {enterprise && (
-            <Text className="text-xs font-quicksand-medium text-neutral-500 mt-1" numberOfLines={1}>
+            <Text className="text-xs font-quicksand-medium mt-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
               {enterprise.companyName}
             </Text>
           )}
           <View className="flex-row items-center mt-1">
             <Ionicons name="star" size={14} color="#FBBF24" />
-            <Text className="text-xs font-quicksand-medium text-neutral-600 ml-1">
+            <Text className="text-xs font-quicksand-medium ml-1" style={{ color: colors.textSecondary }}>
               {item.stats?.averageRating?.toFixed(1) || '0.0'}
             </Text>
           </View>
@@ -373,8 +388,8 @@ export default function ClientMarketplacePage() {
   };
 
   return (
-    <View className="flex-1 bg-neutral-50">
-      <ExpoStatusBar style="light" translucent />
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
+      <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
 
       {/* Header vert conventionnel avec gradient */}
       <LinearGradient
@@ -424,12 +439,13 @@ export default function ClientMarketplacePage() {
         </View>
 
         {/* Barre de recherche */}
-        <View className="flex-row items-center bg-white rounded-xl px-3 py-2 mb-3">
-          <Ionicons name="search" size={20} color="#6B7280" />
+        <View className="flex-row items-center rounded-xl px-3 py-2 mb-3" style={{ backgroundColor: colors.card }}>
+          <Ionicons name="search" size={20} color={isDark ? colors.textTertiary : "#6B7280"} />
           <TextInput
-            className="flex-1 ml-2 text-neutral-800 font-quicksand-medium"
+            className="flex-1 ml-2 font-quicksand-medium"
+            style={{ color: colors.text }}
             placeholder={i18n.t("client.marketplace.search.placeholder")}
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.textTertiary}
             value={searchQuery}
             onChangeText={setSearchQuery}
             onSubmitEditing={handleSearch}
@@ -439,7 +455,8 @@ export default function ClientMarketplacePage() {
             <>
               <TouchableOpacity
                 onPress={handleSearch}
-                className="mr-2 bg-[#10b981] rounded-lg px-3 py-1"
+                className="mr-2 rounded-lg px-3 py-1"
+                style={{ backgroundColor: colors.brandPrimary }}
               >
                 <Ionicons name="search" size={16} color="white" />
               </TouchableOpacity>
@@ -448,7 +465,7 @@ export default function ClientMarketplacePage() {
                 setCurrentPage(1);
                 loadMarketplaceProducts(1, false);
               }}>
-                <Ionicons name="close-circle" size={20} color="#6B7280" />
+                <Ionicons name="close-circle" size={20} color={isDark ? colors.textTertiary : "#6B7280"} />
               </TouchableOpacity>
             </>
           ) : null}
@@ -469,17 +486,19 @@ export default function ClientMarketplacePage() {
             <TouchableOpacity
               key={sort.value}
               onPress={() => setSortBy(sort.value as SortOption)}
-              className={`flex-row items-center px-3 py-1.5 rounded-lg ${sortBy === sort.value ? 'bg-white' : 'bg-white/20'
-                }`}
+              className="flex-row items-center px-3 py-1.5 rounded-lg"
+              style={{
+                backgroundColor: sortBy === sort.value ? colors.card : (isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.2)')
+              }}
             >
               <Ionicons
                 name={sort.icon as any}
                 size={14}
-                color={sortBy === sort.value ? '#10b981' : 'white'}
+                color={sortBy === sort.value ? colors.brandPrimary : 'white'}
               />
               <Text
-                className={`ml-1 text-xs font-quicksand-semibold ${sortBy === sort.value ? 'text-[#10b981]' : 'text-white'
-                  }`}
+                className="ml-1 text-xs font-quicksand-semibold"
+                style={{ color: sortBy === sort.value ? colors.brandPrimary : 'white' }}
               >
                 {sort.label}
               </Text>
@@ -502,17 +521,18 @@ export default function ClientMarketplacePage() {
         </ScrollView>
       ) : products.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
-          <Ionicons name="cube-outline" size={64} color="#D1D5DB" />
-          <Text className="text-neutral-600 text-lg font-quicksand-bold mt-4">
+          <Ionicons name="cube-outline" size={64} color={isDark ? colors.textTertiary : "#D1D5DB"} />
+          <Text className="text-lg font-quicksand-bold mt-4" style={{ color: colors.textSecondary }}>
             {i18n.t("client.marketplace.empty.title")}
           </Text>
-          <Text className="text-neutral-500 font-quicksand-medium text-center mt-2">
+          <Text className="font-quicksand-medium text-center mt-2" style={{ color: colors.textSecondary }}>
             {i18n.t("client.marketplace.empty.message")}
           </Text>
           {(minPrice || maxPrice || inStockOnly || searchQuery) && (
             <TouchableOpacity
               onPress={handleResetFilters}
-              className="mt-4 bg-[#10b981] px-6 py-3 rounded-xl"
+              className="mt-4 px-6 py-3 rounded-xl"
+              style={{ backgroundColor: colors.brandPrimary }}
             >
               <Text className="text-white font-quicksand-semibold">{i18n.t("client.marketplace.empty.resetFilters")}</Text>
             </TouchableOpacity>
@@ -527,13 +547,16 @@ export default function ClientMarketplacePage() {
           }
           onScroll={({ nativeEvent }) => {
             const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
-            const isCloseToBottom =
-              layoutMeasurement.height + contentOffset.y >= contentSize.height - 50;
-            if (isCloseToBottom) {
+            const paddingToBottom = 300; // Déclenche 300px avant la fin
+            const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
+            
+            // Charger plus de produits si on est proche du bas
+            if (isCloseToBottom && !loadingMoreRef.current && hasNextPageRef.current) {
+              console.log('🎯 Déclenchement chargement automatique marketplace');
               handleLoadMore();
             }
           }}
-          scrollEventThrottle={400}
+          scrollEventThrottle={16}
         >
           <View className={viewMode === 'grid' ? 'flex-row flex-wrap justify-between' : ''}>
             {products.map((product) =>
@@ -544,13 +567,13 @@ export default function ClientMarketplacePage() {
           {/* Indicateur de chargement supplémentaire */}
           {loadingMore && (
             <View className="py-4 items-center">
-              <ActivityIndicator size="small" color="#10b981" />
+              <ActivityIndicator size="small" color={colors.brandPrimary} />
             </View>
           )}
 
           {/* Pagination info */}
           {!loadingMore && products.length > 0 && (
-            <Text className="text-center text-neutral-500 font-quicksand-medium text-sm mt-4">
+            <Text className="text-center font-quicksand-medium text-sm mt-4" style={{ color: colors.textSecondary }}>
               {i18n.t("client.marketplace.pagination", { current: currentPage, total: totalPages })}
             </Text>
           )}
@@ -559,33 +582,35 @@ export default function ClientMarketplacePage() {
 
       {/* Modal de filtres */}
       {showFilters && (
-        <View className="absolute inset-0 bg-black/50" style={{ paddingTop: insets.top }}>
-          <View className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 max-h-[80%]">
+        <View className="absolute inset-0" style={{ backgroundColor: colors.overlay, paddingTop: insets.top }}>
+          <View className="absolute bottom-0 left-0 right-0 rounded-t-3xl p-6 max-h-[80%]" style={{ backgroundColor: colors.card }}>
             <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-xl font-quicksand-bold text-neutral-800">{i18n.t("client.marketplace.filters.title")}</Text>
+              <Text className="text-xl font-quicksand-bold" style={{ color: colors.text }}>{i18n.t("client.marketplace.filters.title")}</Text>
               <TouchableOpacity onPress={() => setShowFilters(false)}>
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Ionicons name="close" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
               {/* Filtre de prix */}
               <View className="mb-4">
-                <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-2">{i18n.t("client.marketplace.filters.price.label")}</Text>
+                <Text className="text-sm font-quicksand-semibold mb-2" style={{ color: colors.text }}>{i18n.t("client.marketplace.filters.price.label")}</Text>
                 <View className="flex-row items-center">
                   <TextInput
-                    className="flex-1 bg-neutral-100 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-medium"
+                    className="flex-1 rounded-xl px-4 py-3 font-quicksand-medium"
+                    style={{ backgroundColor: colors.surface, color: colors.text }}
                     placeholder={i18n.t("client.marketplace.filters.price.min")}
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={colors.textTertiary}
                     keyboardType="numeric"
                     value={minPrice}
                     onChangeText={setMinPrice}
                   />
-                  <Text className="mx-2 text-neutral-600">-</Text>
+                  <Text className="mx-2" style={{ color: colors.textSecondary }}>-</Text>
                   <TextInput
-                    className="flex-1 bg-neutral-100 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-medium"
+                    className="flex-1 rounded-xl px-4 py-3 font-quicksand-medium"
+                    style={{ backgroundColor: colors.surface, color: colors.text }}
                     placeholder={i18n.t("client.marketplace.filters.price.max")}
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={colors.textTertiary}
                     keyboardType="numeric"
                     value={maxPrice}
                     onChangeText={setMaxPrice}
@@ -598,16 +623,16 @@ export default function ClientMarketplacePage() {
                 onPress={() => setInStockOnly(!inStockOnly)}
                 className="flex-row items-center justify-between py-3 mb-4"
               >
-                <Text className="text-sm font-quicksand-semibold text-neutral-700">
+                <Text className="text-sm font-quicksand-semibold" style={{ color: colors.text }}>
                   {i18n.t("client.marketplace.filters.stock")}
                 </Text>
                 <View
-                  className={`w-12 h-6 rounded-full ${inStockOnly ? 'bg-[#10b981]' : 'bg-neutral-300'
-                    } justify-center`}
+                  className="w-12 h-6 rounded-full justify-center"
+                  style={{ backgroundColor: inStockOnly ? colors.brandPrimary : colors.borderLight }}
                 >
                   <View
-                    className={`w-5 h-5 bg-white rounded-full ${inStockOnly ? 'ml-6' : 'ml-1'
-                      }`}
+                    className="w-5 h-5 bg-white rounded-full"
+                    style={{ marginLeft: inStockOnly ? 24 : 4 }}
                   />
                 </View>
               </TouchableOpacity>
@@ -615,15 +640,17 @@ export default function ClientMarketplacePage() {
               {/* Boutons d'action */}
               <View className="flex-row mt-4 gap-3">
                 <TouchableOpacity
-                  className="flex-1 bg-neutral-200 py-3 rounded-xl"
+                  className="flex-1 py-3 rounded-xl"
+                  style={{ backgroundColor: colors.surface }}
                   onPress={handleResetFilters}
                 >
-                  <Text className="text-neutral-700 font-quicksand-semibold text-center">
+                  <Text className="font-quicksand-semibold text-center" style={{ color: colors.text }}>
                     {i18n.t("client.marketplace.filters.reset")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className="flex-1 bg-[#10b981] py-3 rounded-xl"
+                  className="flex-1 py-3 rounded-xl"
+                  style={{ backgroundColor: colors.brandPrimary }}
                   onPress={handleApplyFilters}
                 >
                   <Text className="text-white font-quicksand-semibold text-center">

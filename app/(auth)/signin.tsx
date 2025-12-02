@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useToast } from '../../components/ui/ReanimatedToast/context';
@@ -15,7 +15,24 @@ export default function SignInScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
-  const { checkAuthStatus, redirectToRoleBasedHome, logout } = useAuth();
+  const { checkAuthStatus, redirectToRoleBasedHome, logout, isAuthenticated, userRole, isLoading: authLoading } = useAuth();
+
+  // Bloquer l'accès si déjà connecté
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && userRole) {
+      console.log('🚫 Utilisateur déjà connecté, redirection depuis signin');
+      if (userRole === 'CLIENT') {
+        router.replace('/(app)/(client)/(tabs)');
+      } else if (userRole === 'ENTERPRISE') {
+        router.replace('/(app)/(enterprise)/(tabs)');
+      }
+    }
+  }, [authLoading, isAuthenticated, userRole]);
+
+  // Ne rien afficher pendant le chargement ou si déjà connecté
+  if (authLoading || isAuthenticated) {
+    return null;
+  }
 
   const handleSignIn = async () => {
     if (!email || !password) {

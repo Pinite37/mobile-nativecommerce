@@ -1,11 +1,30 @@
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function WelcomeScreen() {
   const insets = useSafeAreaInsets();
+  const { isAuthenticated, userRole, isLoading } = useAuth();
+
+  // Bloquer l'accès si déjà connecté
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && userRole) {
+      console.log('🚫 Utilisateur déjà connecté, redirection depuis welcome');
+      if (userRole === 'CLIENT') {
+        router.replace('/(app)/(client)/(tabs)');
+      } else if (userRole === 'ENTERPRISE') {
+        router.replace('/(app)/(enterprise)/(tabs)');
+      }
+    }
+  }, [isLoading, isAuthenticated, userRole]);
+
+  // Ne rien afficher pendant le chargement ou si déjà connecté
+  if (isLoading || isAuthenticated) {
+    return null;
+  }
   const handleEmailAuth = () => {
     router.push('/(auth)/signin');
   };

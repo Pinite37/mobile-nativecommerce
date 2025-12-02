@@ -255,21 +255,25 @@ export default function EnterpriseDashboard() {
     setSelectedNeighborhood("");
   }, [selectedCity]);
 
-  // Gestion du bouton retour matériel pour fermer résultats/suggestions (parité client)
+  // Gestion du bouton retour matériel
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
+        // Si on affiche les résultats de recherche, les masquer
         if (showSearchResults) {
           hideSearchResults();
           return true; // Empêche la navigation arrière par défaut
         }
+        // Si on affiche les suggestions, les masquer
         if (showSuggestions) {
           setShowSuggestions(false);
           setSuggestions([]);
           return true; // Empêche la navigation arrière par défaut
         }
-        return false; // Comportement par défaut
+        // Sinon, on est sur la page d'accueil : quitter l'app au lieu de retourner aux pages d'auth
+        BackHandler.exitApp();
+        return true;
       }
     );
 
@@ -1141,13 +1145,13 @@ export default function EnterpriseDashboard() {
               {user ? user.firstName : "Entreprise"}
             </Text>
           </View>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             className="bg-white/20 p-2 rounded-full backdrop-blur-sm border border-white/30"
             onPress={() => { }}
           >
             <Ionicons name="notifications-outline" size={24} color="white" />
             <View className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-emerald-600" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </LinearGradient>
 

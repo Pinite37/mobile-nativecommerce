@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { Image as ExpoImage } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
@@ -45,12 +46,11 @@ export default function ProductDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { locale } = useLocale(); // Écoute les changements de langue pour re-render automatiquement
+  const { locale } = useLocale();
   const { colors, isDark } = useTheme();
-  const { notification, showNotification, hideNotification } = useNotification();
+  const { notification, showNotification, hideNotification } =
+    useNotification();
   const imagesListRef = useRef<FlatList<string>>(null);
-  const imageViewerRef = useRef<FlatList<string>>(null);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -129,24 +129,15 @@ export default function ProductDetails() {
     }
   }, [id]);
 
-  // Scroll to current image when modal opens
-  useEffect(() => {
-    if (imageModalVisible && currentImageIndex > 0 && imageViewerRef.current) {
-      // Use setTimeout to ensure FlatList is mounted
-      setTimeout(() => {
-        imageViewerRef.current?.scrollToIndex({
-          index: currentImageIndex,
-          animated: false,
-        });
-      }, 100);
-    }
-  }, [imageModalVisible, currentImageIndex]);
-
   const loadSimilarProducts = async (productId: string) => {
     try {
       setLoadingSimilar(true);
       const response = await ProductService.getSimilarProducts(productId, 6);
       setSimilarProducts(response.similarProducts);
+      console.log(
+        "✅ Produits similaires chargés:",
+        response.similarProducts.length
+      );
     } catch (error) {
       console.error("❌ Erreur chargement produits similaires:", error);
       setSimilarProducts([]);
@@ -182,8 +173,18 @@ export default function ProductDetails() {
     product: Product;
   }) => (
     <TouchableOpacity
-      className="rounded-xl mr-4 border shadow-sm"
-      style={{ width: 140, backgroundColor: colors.card || colors.background, borderColor: colors.border }}
+      className="rounded-xl mr-4 overflow-hidden"
+      style={{
+        width: 140,
+        backgroundColor: colors.card,
+        borderWidth: 1,
+        borderColor: colors.border,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+      }}
       onPress={() => {
         router.push(`/(app)/(client)/product/${similarProduct._id}`);
       }}
@@ -195,17 +196,16 @@ export default function ProductDetails() {
               similarProduct.images[0] ||
               "https://via.placeholder.com/140x100/CCCCCC/FFFFFF?text=No+Image",
           }}
-          style={{ width: 140, height: 100 }}
+          style={{ width: 140, height: 140 }}
           contentFit="cover"
           transition={200}
           cachePolicy="memory-disk"
-          className="rounded-t-xl"
         />
         {/* Badge stock si faible */}
         {similarProduct.stock <= 5 && similarProduct.stock > 0 && (
           <View className="absolute top-2 left-2 bg-warning-500 rounded-full px-2 py-1">
             <Text className="text-white text-xs font-quicksand-bold">
-              {i18n.t("client.product.stock.remaining", { count: similarProduct.stock })}
+              {similarProduct.stock} {i18n.t('client.product.stock.remaining')}
             </Text>
           </View>
         )}
@@ -214,18 +214,20 @@ export default function ProductDetails() {
       <View className="p-3">
         <Text
           numberOfLines={2}
+          style={{ color: colors.textPrimary }}
           className="text-sm font-quicksand-semibold mb-2 leading-5"
-          style={{color: colors.text}}
         >
           {similarProduct.name}
         </Text>
 
-        <Text className="text-base font-quicksand-bold" style={{color: '#FE8C00'}}>
+        <Text className="text-base font-quicksand-bold text-emerald-600">
           {formatPrice(similarProduct.price)}
         </Text>
       </View>
     </TouchableOpacity>
   );
+
+
 
   const openWhatsApp = (phone: string) => {
     const message = i18n.t("client.product.whatsapp.message", {
@@ -244,14 +246,14 @@ export default function ProductDetails() {
         } else {
           showNotification(
             "warning",
-            i18n.t("client.product.whatsapp.notAvailable"),
-            i18n.t("client.product.whatsapp.notAvailableMessage")
+            i18n.t('client.product.whatsapp.notAvailable'),
+            i18n.t('client.product.whatsapp.notAvailableMessage')
           );
           makePhoneCall(phone);
         }
       })
       .catch(() => {
-        showNotification("error", "Erreur", i18n.t("client.product.whatsapp.error"));
+        showNotification("error", "Erreur", "Impossible d'ouvrir WhatsApp");
       });
   };
 
@@ -266,7 +268,7 @@ export default function ProductDetails() {
         }
       })
       .catch(() => {
-        showNotification("error", "Erreur", i18n.t("client.product.contact.callError"));
+        showNotification("error", "Erreur", "Impossible de passer l'appel");
       });
   };
 
@@ -284,12 +286,12 @@ export default function ProductDetails() {
           showNotification(
             "error",
             "Erreur",
-            i18n.t("client.product.contact.websiteError")
+            "Impossible d'ouvrir le site web"
           );
         }
       })
       .catch(() => {
-        showNotification("error", "Erreur", i18n.t("client.product.contact.websiteError"));
+        showNotification("error", "Erreur", "Impossible d'ouvrir le site web");
       });
   };
 
@@ -313,7 +315,7 @@ export default function ProductDetails() {
       outputRange: [-150, 150],
     });
     return (
-      <View style={[{ backgroundColor: isDark ? '#374151' : '#E5E7EB', overflow: "hidden" }, style]}>
+      <View style={[{ backgroundColor: colors.border, overflow: "hidden" }, style]}>
         <Animated.View
           style={{
             position: "absolute",
@@ -321,7 +323,7 @@ export default function ProductDetails() {
             bottom: 0,
             width: 120,
             transform: [{ translateX }],
-            backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.5)",
+            backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.35)",
             opacity: 0.7,
           }}
         />
@@ -330,13 +332,16 @@ export default function ProductDetails() {
   };
 
   const SkeletonProduct = () => (
-    <View className="flex-1" style={{ backgroundColor: colors.background }}>
+    <View className="flex-1" style={{ backgroundColor: "transparent" }}>
       <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
 
       {/* Header Skeleton */}
-      <View
+      <LinearGradient
+        colors={["rgba(0,0,0,0.6)", "transparent"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
         className="absolute top-0 left-0 right-0 z-10"
-        style={{ paddingTop: insets.top + 16, paddingBottom: 16, backgroundColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.6)' }}
+        style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}
       >
         <View className="flex-row items-center justify-between px-4 pb-3">
           <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
@@ -353,85 +358,49 @@ export default function ProductDetails() {
             <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
           </View>
         </View>
-      </View>
+      </LinearGradient>
 
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
         style={{
-          backgroundColor: colors.background,
+          backgroundColor: colors.card,
           marginTop: HEADER_HEIGHT * 0.6,
         }}
         contentInsetAdjustmentBehavior="never"
       >
         {/* Image Skeleton */}
         <View style={{ marginTop: 0 }}>
-          <ShimmerBlock style={{ width: "100%", height: HEADER_HEIGHT * 0.5 }} />
+          <ShimmerBlock style={{ width: "100%", height: 200 }} />
         </View>
 
         {/* Content Skeleton */}
-        <View className="px-6 py-6 rounded-t-3xl -mt-6" style={{backgroundColor: colors.background}}>
-          {/* Thumbnails Skeleton */}
-          <View className="flex-row mb-6">
-            <ShimmerBlock style={{ width: 64, height: 64, borderRadius: 12, marginRight: 12 }} />
-            <ShimmerBlock style={{ width: 64, height: 64, borderRadius: 12, marginRight: 12 }} />
-            <ShimmerBlock style={{ width: 64, height: 64, borderRadius: 12, marginRight: 12 }} />
-          </View>
-
-          {/* Price Skeleton */}
+        <View style={{ backgroundColor: colors.card }} className="px-6 py-6 rounded-t-3xl -mt-6">
+          {/* ... skeleton content ... */}
           <ShimmerBlock
             style={{
-              width: "40%",
-              height: 36,
-              borderRadius: 8,
+              width: "30%",
+              height: 32,
+              borderRadius: 16,
               marginBottom: 12,
-            }}
-          />
-
-          {/* Description Skeleton */}
-          <ShimmerBlock
-            style={{
-              width: "100%",
-              height: 16,
-              borderRadius: 8,
-              marginBottom: 8,
-            }}
-          />
-          <ShimmerBlock
-            style={{
-              width: "95%",
-              height: 16,
-              borderRadius: 8,
-              marginBottom: 8,
             }}
           />
           <ShimmerBlock
             style={{
               width: "80%",
-              height: 16,
-              borderRadius: 8,
-              marginBottom: 24,
+              height: 28,
+              borderRadius: 14,
+              marginBottom: 8,
             }}
           />
-
-          {/* Enterprise Section Skeleton */}
-          <View className="p-4 border rounded-2xl mb-6" style={{backgroundColor: isDark ? colors.surface || '#1f2937' : '#f9fafb', borderColor: colors.border}}>
-            <ShimmerBlock style={{ width: "50%", height: 20, borderRadius: 8, marginBottom: 16 }} />
-            <View className="flex-row items-center">
-              <ShimmerBlock style={{ width: 56, height: 56, borderRadius: 16 }} />
-              <View className="ml-4 flex-1">
-                <ShimmerBlock style={{ width: "70%", height: 18, borderRadius: 8, marginBottom: 8 }} />
-                <ShimmerBlock style={{ width: "50%", height: 14, borderRadius: 8 }} />
-              </View>
-            </View>
-          </View>
-
-          {/* Similar Products Skeleton */}
-          <ShimmerBlock style={{ width: "60%", height: 24, borderRadius: 8, marginBottom: 16 }} />
-          <View className="flex-row">
-            <ShimmerBlock style={{ width: 140, height: 200, borderRadius: 12, marginRight: 16 }} />
-            <ShimmerBlock style={{ width: 140, height: 200, borderRadius: 12, marginRight: 16 }} />
-          </View>
+          <ShimmerBlock
+            style={{
+              width: "100%",
+              height: 16,
+              borderRadius: 8,
+              marginBottom: 4,
+            }}
+          />
         </View>
       </ScrollView>
     </View>
@@ -443,25 +412,25 @@ export default function ProductDetails() {
 
   if (!product) {
     return (
-      <View className="flex-1" style={{backgroundColor: colors.background}}>
+      <View style={{ flex: 1, backgroundColor: colors.card }}>
         <ExpoStatusBar
-          style="light"
+          style={isDark ? "light" : "dark"}
           translucent
           backgroundColor="transparent"
         />
         <View className="flex-1 justify-center items-center px-6">
           <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
-          <Text className="mt-4 text-xl font-quicksand-bold" style={{color: colors.text}}>
-            {i18n.t("client.product.error.notFound")}
+          <Text style={{ color: colors.textPrimary }} className="mt-4 text-xl font-quicksand-bold">
+            {i18n.t('client.product.error.notFound')}
           </Text>
-          <Text className="mt-2 font-quicksand-medium text-center" style={{color: colors.textSecondary}}>
-            {i18n.t("client.product.error.notFoundMessage")}
+          <Text style={{ color: colors.textSecondary }} className="mt-2 font-quicksand-medium text-center">
+            {i18n.t('client.product.error.notFoundMessage')}
           </Text>
           <TouchableOpacity
             className="mt-6 bg-primary-500 rounded-2xl px-6 py-3"
             onPress={() => router.back()}
           >
-            <Text className="text-white font-quicksand-semibold">{i18n.t("client.product.error.back")}</Text>
+            <Text className="text-white font-quicksand-semibold">{i18n.t('client.product.error.back')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -469,8 +438,8 @@ export default function ProductDetails() {
   }
 
   return (
-    <View style={[styles.safe, {backgroundColor: colors.background}]}>
-      <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
+    <View style={[styles.safe, { backgroundColor: colors.card }]}>
+      <ExpoStatusBar style={isDark ? "light" : "dark"} translucent backgroundColor="transparent" />
 
       {/* Compact Header (Appears on scroll) */}
       <Animated.View
@@ -485,22 +454,22 @@ export default function ProductDetails() {
         ]}
         pointerEvents="box-none"
       >
-        <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill} />
+        <BlurView intensity={100} tint="light" style={StyleSheet.absoluteFill} />
 
         <View style={styles.compactHeaderContent}>
           <TouchableOpacity
             onPress={() => router.back()}
             className="w-10 h-10 justify-center items-center"
           >
-            <Ionicons name="arrow-back" size={24} color="#fff" />
+            <Ionicons name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
 
           <Text
-            style={styles.compactTitle}
+            style={[styles.compactTitle, { color: "#000" }]}
             className="font-quicksand-bold"
             numberOfLines={1}
           >
-            {product.name}
+            {product.name} 
           </Text>
 
           <View style={{ flexDirection: "row" }}>
@@ -508,33 +477,41 @@ export default function ProductDetails() {
               onPress={async () => {
                 try {
                   await Share.share({
-                    message: product
-                      ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ""
-                      }`
-                      : i18n.t("client.product.share.message") || "Voir ce produit",
+                    message: product && product.name
+                      ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ""}`
+                      : i18n.t('client.product.share.message') ?? 'Voir ce produit',
                   });
                 } catch { }
               }}
-              className="w-10 h-10 justify-center items-center mr-2"
+              className="w-10 h-10 justify-center items-center mr-1"
             >
-              <Ionicons name="share-social-outline" size={22} color="#FFFFFF" />
+              <Ionicons name="share-social-outline" size={22} color="#000" />
             </TouchableOpacity>
-
             <TouchableOpacity
               onPress={toggleFavorite}
-              className="w-10 h-10 justify-center items-center"
+              className="w-10 h-10 justify-center items-center mr-1"
             >
               <Ionicons
                 name={isFavorite ? "heart" : "heart-outline"}
                 size={22}
-                color={isFavorite ? "#EF4444" : "#FFFFFF"}
+                color={isFavorite ? "#EF4444" : "#000"}
               />
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="w-10 h-10 justify-center items-center"
+              onPress={() => setImageModalVisible(true)}
+            >
+              <Ionicons name="images-outline" size={22} color="#000" />
             </TouchableOpacity>
           </View>
         </View>
       </Animated.View>
 
-      {/* Fixed Back Button (Initially visible) */}
+      {/* Fixed Back Button (Always visible initially, fades out or stays?) 
+          Actually, the design usually has a back button that stays or transforms. 
+          In the user's snippet, there is a back button in the compact header and one likely in the big header.
+          Let's keep a back button always accessible or cross-fade.
+      */}
       <Animated.View
         style={{
           position: "absolute",
@@ -556,7 +533,6 @@ export default function ProductDetails() {
         </TouchableOpacity>
       </Animated.View>
 
-      {/* Fixed Right Actions (Initially visible) */}
       <Animated.View
         style={{
           position: "absolute",
@@ -578,7 +554,7 @@ export default function ProductDetails() {
                 message: product
                   ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ""
                   }`
-                  : i18n.t("client.product.share.message") || "Voir ce produit",
+                  : i18n.t('enterprise.productDetails.share.defaultMessage') ?? 'Voir ce produit',
               });
             } catch { }
           }}
@@ -586,7 +562,6 @@ export default function ProductDetails() {
         >
           <Ionicons name="share-social-outline" size={20} color="#FFFFFF" />
         </TouchableOpacity>
-
         <TouchableOpacity
           onPress={toggleFavorite}
           className="w-10 h-10 bg-black/30 rounded-full justify-center items-center mr-2"
@@ -597,7 +572,6 @@ export default function ProductDetails() {
             color={isFavorite ? "#EF4444" : "#FFFFFF"}
           />
         </TouchableOpacity>
-
         <TouchableOpacity
           className="w-10 h-10 bg-black/30 rounded-full justify-center items-center"
           onPress={() => setImageModalVisible(true)}
@@ -609,7 +583,7 @@ export default function ProductDetails() {
       {/* Parallax Header Background */}
       <View style={styles.headerWrapper} pointerEvents="none">
         <AnimatedImage
-          source={{ uri: product.images?.[0] || 'https://via.placeholder.com/800x800/CCCCCC/FFFFFF?text=No+Image' }}
+          source={{ uri: product.images?.[0] }}
           style={[
             styles.headerImage,
             {
@@ -657,7 +631,7 @@ export default function ProductDetails() {
           { useNativeDriver: false }
         )}
       >
-        <View style={[styles.contentContainer, {backgroundColor: colors.background}]}>
+        <View style={[styles.contentContainer, { backgroundColor: colors.card }]}>
           {/* Thumbnails */}
           {product.images.length > 1 && (
             <View className="mt-4 mb-6">
@@ -687,7 +661,7 @@ export default function ProductDetails() {
                           height: 64,
                           borderRadius: 12,
                           borderWidth: active ? 2 : 1,
-                          borderColor: active ? "#FE8C00" : colors.border,
+                          borderColor: active ? "#FE8C00" : "#E5E7EB",
                         }}
                         contentFit="cover"
                         transition={200}
@@ -702,18 +676,18 @@ export default function ProductDetails() {
 
           {/* Price and Description */}
           <View className="mb-6">
-            <Text className="text-3xl font-quicksand-bold mb-2" style={{color: '#FE8C00'}}>
+            <Text className="text-3xl font-quicksand-bold text-primary-600 mb-2">
               {formatPrice(product.price)}
             </Text>
-            <Text className="font-quicksand-medium leading-6" style={{color: colors.textSecondary}}>
+            <Text style={{ color: colors.textSecondary }} className="font-quicksand-medium leading-6">
               {product.description}
             </Text>
           </View>
 
           {/* Enterprise Section */}
-          <View className="p-4 border rounded-2xl mb-6" style={{backgroundColor: isDark ? colors.surface || '#1f2937' : '#f9fafb', borderColor: colors.border}}>
-            <Text className="text-lg font-quicksand-bold mb-3" style={{color: colors.text}}>
-              {i18n.t("client.product.enterprise.title")}
+          <View style={{ backgroundColor: colors.secondary, borderColor: colors.border }} className="p-4 border rounded-2xl mb-6">
+            <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold mb-3">
+              {i18n.t('client.product.enterprise.title')}
             </Text>
             <TouchableOpacity
               className="flex-row items-center"
@@ -741,14 +715,14 @@ export default function ProductDetails() {
                 </View>
               )}
               <View className="ml-4 flex-1">
-                <Text className="text-lg font-quicksand-bold" style={{color: colors.text}}>
+                <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold">
                   {typeof product.enterprise === "object"
                     ? product.enterprise.companyName
                     : product.enterprise}
                 </Text>
                 {typeof product.enterprise === "object" &&
                   product.enterprise.location && (
-                    <Text className="text-sm mt-1" style={{color: colors.textSecondary}}>
+                    <Text style={{ color: colors.textSecondary }} className="text-sm mt-1">
                       📍 {product.enterprise.location.city},{" "}
                       {product.enterprise.location.district}
                     </Text>
@@ -757,83 +731,95 @@ export default function ProductDetails() {
               <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
 
-            {/* Contact Options (Website) */}
+            {/* Contact Options */}
             {typeof product.enterprise === "object" &&
-              product.enterprise.contactInfo?.website && (
-                <View className="mt-4 pt-4 border-t" style={{borderColor: colors.border}}>
-                  <TouchableOpacity
-                    onPress={() =>
-                      typeof product.enterprise === "object" &&
-                        product.enterprise.contactInfo?.website
-                        ? openWebsite(product.enterprise.contactInfo.website)
-                        : undefined
-                    }
-                    className="flex-row items-center"
-                  >
-                    <Ionicons name="globe-outline" size={18} color="#3B82F6" />
-                    <Text className="ml-2 text-blue-600 font-quicksand-bold text-sm">
-                      {i18n.t("client.product.enterprise.visitWebsite")}
-                    </Text>
-                  </TouchableOpacity>
+              (product.enterprise.contactInfo?.phone ||
+                product.enterprise.contactInfo?.website) && (
+                <View style={{ borderTopColor: colors.border }} className="mt-4 pt-4 border-t">
+                  <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand-bold mb-3 uppercase tracking-wider">
+                    {i18n.t('client.enterprise.contact.title' )}
+                  </Text>
+                  <View className="flex-row flex-wrap -mx-1">
+                    {typeof product.enterprise === "object" &&
+                      product.enterprise.contactInfo?.phone && (
+                        <>
+                          <TouchableOpacity
+                            onPress={() =>
+                              typeof product.enterprise === "object" &&
+                                product.enterprise.contactInfo?.phone
+                                ? openWhatsApp(
+                                  product.enterprise.contactInfo.phone
+                                )
+                                : undefined
+                            }
+                            style={{ backgroundColor: colors.card, borderColor: colors.border }}
+                            className="flex-1 rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border shadow-sm"
+                          >
+                            <Ionicons
+                              name="logo-whatsapp"
+                              size={18}
+                              color="#10B981"
+                            />
+                            <Text style={{ color: colors.textPrimary }} className="ml-2 font-quicksand-bold text-sm">
+                              WhatsApp
+                            </Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={() =>
+                              typeof product.enterprise === "object" &&
+                                product.enterprise.contactInfo?.phone
+                                ? makePhoneCall(
+                                  product.enterprise.contactInfo.phone
+                                )
+                                : undefined
+                            }
+                            style={{ backgroundColor: colors.card, borderColor: colors.border }}
+                            className="flex-1 rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border shadow-sm"
+                          >
+                            <Ionicons name="call" size={18} color="#FE8C00" />
+                            <Text style={{ color: colors.textPrimary }} className="ml-2 font-quicksand-bold text-sm">
+                              {i18n.t('client.enterprise.contact.call')}
+                            </Text>
+                          </TouchableOpacity>
+                        </>
+                      )}
+                  </View>
                 </View>
               )}
-            {/* Actions: Discuter & WhatsApp */}
-            <View className="flex-row mt-4 items-center">
-              {/* WhatsApp Button */}
-              {typeof product.enterprise === "object" &&
-                product.enterprise.contactInfo?.phone ? (
-                <TouchableOpacity
-                  onPress={() => {
-                    const enterprise = product.enterprise;
-                    if (
-                      typeof enterprise === "object" &&
-                      enterprise.contactInfo?.phone
-                    ) {
-                      openWhatsApp(enterprise.contactInfo.phone);
-                    }
-                  }}
-                  className="w-14 h-14 rounded-xl justify-center items-center mr-3 border"
-                  style={{backgroundColor: isDark ? '#064E3B' : '#ECFDF5', borderColor: isDark ? '#059669' : '#A7F3D0'}}
-                >
-                  <Ionicons name="logo-whatsapp" size={24} color={isDark ? '#34D399' : '#10B981'} />
-                </TouchableOpacity>
-              ) : null}
 
-              {/* Faire une offre / Discuter */}
-              <TouchableOpacity
-                onPress={async () => {
-                  try {
-                    const conversation =
-                      await MessagingService.createConversationForProduct(id!);
-                    router.push(
-                      `/(app)/(client)/conversation/${conversation._id}`
-                    );
-                  } catch (error) {
-                    console.error("Erreur création conversation:", error);
-                    showNotification(
-                      "error",
-                      "Erreur",
-                      i18n.t("client.product.actions.conversationError")
-                    );
-                  }
-                }}
-                className="flex-1 rounded-xl h-14 flex-row items-center justify-center"
-                style={{backgroundColor: isDark ? '#78350F' : '#FEF3C7'}}
-              >
-                <Ionicons name="chatbubbles" size={18} color={isDark ? '#FCD34D' : '#D97706'} />
-                <Text className="ml-2 font-quicksand-bold text-sm" style={{color: isDark ? '#FCD34D' : '#92400E'}}>
-                  {i18n.t("client.product.actions.negotiate")}
-                </Text>
-              </TouchableOpacity>
-            </View>
+            {/* Faire une offre */}
+            <TouchableOpacity
+              onPress={async () => {
+                try {
+                  const conversation =
+                    await MessagingService.createConversationForProduct(id!);
+                  router.push(
+                    `/(app)/(client)/conversation/${conversation._id}`
+                  );
+                } catch (error) {
+                  console.error("Erreur création conversation:", error);
+                  showNotification(
+                    "error",
+                    "Erreur",
+                    "Impossible de créer la conversation"
+                  );
+                }
+              }}
+              className="bg-amber-100 rounded-xl py-3 flex-row items-center justify-center mt-4"
+            >
+              <Ionicons name="chatbubbles" size={18} color="#D97706" />
+              <Text className="ml-2 text-amber-800 font-quicksand-bold text-sm">
+                {i18n.t('client.product.actions.negotiate')}
+              </Text>
+            </TouchableOpacity>
           </View>
 
           {/* Similar Products */}
           {(similarProducts.length > 0 || loadingSimilar) && (
-            <View className="py-4 border-t" style={{borderColor: colors.border}}>
+            <View style={{ borderTopColor: colors.border }} className="py-4 border-t">
               <View className="flex-row justify-between items-center mb-4">
-                <Text className="text-xl font-quicksand-bold" style={{color: colors.text}}>
-                  {i18n.t("client.product.similar.title")}
+                <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold">
+                  {i18n.t('client.product.similar.title')}
                 </Text>
               </View>
               {loadingSimilar ? (
@@ -853,11 +839,9 @@ export default function ProductDetails() {
             </View>
           )}
 
-          <View style={{ height: 100 }} />
+          <View style={{ height: 40 }} />
         </View>
       </Animated.ScrollView>
-
-
 
       {/* Image Viewer Modal */}
       <Modal
@@ -887,7 +871,6 @@ export default function ProductDetails() {
           </View>
 
           <FlatList
-            ref={imageViewerRef}
             data={product.images}
             renderItem={({ item }) => (
               <View
@@ -910,6 +893,7 @@ export default function ProductDetails() {
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
+            initialScrollIndex={currentImageIndex}
             onMomentumScrollEnd={(e) => {
               const newIndex = Math.round(
                 e.nativeEvent.contentOffset.x / screenWidth
@@ -949,12 +933,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 }, // Pour iOS
     shadowOpacity: 0.3, // Pour iOS
     shadowRadius: 4, // Pour iOS
-    backgroundColor: "rgba(0,0,0,0.85)", // Fallback si BlurView ne marche pas bien
+    backgroundColor: "rgba(255,255,255,0.8)", // Fallback plus clair
     justifyContent: "flex-end",
     paddingBottom: 10,
     overflow: "hidden",
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.1)",
+    borderBottomColor: "rgba(0,0,0,0.05)",
   },
   compactHeaderContent: {
     flexDirection: "row",
@@ -965,6 +949,7 @@ const styles = StyleSheet.create({
   compactTitle: {
     color: "#fff",
     fontSize: 18,
+    // fontWeight: "700", // Removed in favor of font-quicksand-bold
     flex: 1,
     textAlign: "center",
     marginHorizontal: 10,
@@ -993,6 +978,7 @@ const styles = StyleSheet.create({
   bigTitle: {
     color: "#fff",
     fontSize: 32,
+    // fontWeight: "900", // Removed in favor of font-quicksand-bold
     textShadowColor: "rgba(0,0,0,0.7)",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 10,
@@ -1001,6 +987,7 @@ const styles = StyleSheet.create({
   subTitle: {
     color: "#eee",
     fontSize: 16,
+    // fontWeight: '600', // Removed in favor of font-quicksand-medium
     opacity: 0.9,
     textShadowColor: "rgba(0,0,0,0.5)",
     textShadowOffset: { width: 0, height: 1 },

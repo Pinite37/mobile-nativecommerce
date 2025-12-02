@@ -985,13 +985,13 @@ export default function ClientHome() {
                             {user ? user.firstName : "Invité"}
                         </Text>
                     </View>
-                    <TouchableOpacity
+                    {/* <TouchableOpacity
                         className="bg-white/20 p-2 rounded-full backdrop-blur-sm border border-white/30"
                         onPress={() => { }}
                     >
                         <Ionicons name="notifications-outline" size={24} color="white" />
                         <View className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-emerald-600" />
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
                 </View>
             </LinearGradient>
 
@@ -1027,7 +1027,7 @@ export default function ClientHome() {
                             style={{ backgroundColor: isDark ? 'rgba(16, 185, 129, 0.15)' : '#D1FAE5' }}
                         >
                             <Ionicons name="location" size={14} color="#059669" />
-                            <Text numberOfLines={1} className="ml-1.5 text-xs font-quicksand-bold text-emerald-800">
+                            <Text style={{ color: colors.brandSecondary }} numberOfLines={1} className="ml-1.5 text-xs font-quicksand-bold">
                                 {selectedCity}
                             </Text>
                         </TouchableOpacity>
@@ -1650,69 +1650,11 @@ export default function ClientHome() {
                             )}
                         </View>
 
-                        {/* Featured Stores */}
-                        <View style={{ backgroundColor: colors.card }} className="py-6">
-                            <View className="px-6 mb-4 flex-row justify-between items-end">
-                                <View>
-                                    <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold">
-                                        {i18n.t('client.home.featuredStores.title')}
-                                    </Text>
-                                    <Text style={{ color: colors.textSecondary }} className="text-xs font-quicksand">
-                                        {i18n.t('client.home.featuredStores.subtitle')}
-                                    </Text>
-                                </View>
-                                <TouchableOpacity
-                                    onPress={() => navigateTo('/(app)/(client)/stores')}
-                                    style={{ backgroundColor: isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5" }}
-                                    className="flex-row items-center rounded-xl px-3 py-2 ml-2"
-                                >
-                                    <Text style={{ color: colors.brandPrimary }} className="font-quicksand-semibold text-sm mr-1">
-                                        {i18n.t('client.home.featuredStores.viewAll')}
-                                    </Text>
-                                    <Ionicons name="chevron-forward" size={14} color={colors.brandPrimary} />
-                                </TouchableOpacity>
-                            </View>
-
-                            {loadingStores ? (
-                                <ActivityIndicator size="small" color="#10B981" />
-                            ) : (
-                                <ScrollView
-                                    horizontal
-                                    showsHorizontalScrollIndicator={false}
-                                    contentContainerStyle={{ paddingHorizontal: 20 }}
-                                >
-                                    {featuredStores.map((store, index) => (
-                                        <TouchableOpacity
-                                            key={store._id || index}
-                                            onPress={() => navigateTo(`/(app)/(client)/store/${store._id}`)}
-                                            className="mr-4 items-center"
-                                        >
-                                            <View className="w-20 h-20 rounded-full border-2 border-emerald-100 p-0.5 mb-2">
-                                                <Image
-                                                    source={{ uri: store.logo || "https://via.placeholder.com/80" }}
-                                                    className="w-full h-full rounded-full"
-                                                    resizeMode="cover"
-                                                />
-                                            </View>
-                                            <Text className="text-xs font-quicksand-bold text-neutral-800 text-center w-20" numberOfLines={1}>
-                                                {store.companyName}
-                                            </Text>
-                                            <View className="flex-row items-center mt-1">
-                                                <Ionicons name="star" size={10} color="#F59E0B" />
-                                                <Text className="text-[10px] text-neutral-500 ml-1">
-                                                    {store.stats?.averageRating?.toFixed(1) || "5.0"}
-                                                </Text>
-                                            </View>
-                                        </TouchableOpacity>
-                                    ))}
-                                </ScrollView>
-                            )}
-                        </View>
 
                         {/* Featured Products (changé en vertical avec 2 colonnes) */}
-                        <View className="py-4 px-4">
+                        <View className="py-4 px-6">
                             <View className="mb-4 flex-row justify-between items-center">
-                                <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-bold">
+                                <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold">
                                     {i18n.t('client.home.featuredProducts.title')}
                                 </Text>
                                 <TouchableOpacity
