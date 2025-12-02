@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { Image as ExpoImage } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
@@ -26,6 +25,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import NotificationModal, {
   useNotification,
 } from "../../../../components/ui/NotificationModal";
+import { useLocale } from "../../../../contexts/LocaleContext";
+import { useTheme } from "../../../../contexts/ThemeContext";
 import i18n from "../../../../i18n/i18n";
 import MessagingService from "../../../../services/api/MessagingService";
 import ProductService from "../../../../services/api/ProductService";
@@ -44,8 +45,12 @@ export default function ProductDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { locale } = useLocale(); // Écoute les changements de langue pour re-render automatiquement
+  const { colors, isDark } = useTheme();
   const { notification, showNotification, hideNotification } = useNotification();
   const imagesListRef = useRef<FlatList<string>>(null);
+  const imageViewerRef = useRef<FlatList<string>>(null);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -124,6 +129,19 @@ export default function ProductDetails() {
     }
   }, [id]);
 
+  // Scroll to current image when modal opens
+  useEffect(() => {
+    if (imageModalVisible && currentImageIndex > 0 && imageViewerRef.current) {
+      // Use setTimeout to ensure FlatList is mounted
+      setTimeout(() => {
+        imageViewerRef.current?.scrollToIndex({
+          index: currentImageIndex,
+          animated: false,
+        });
+      }, 100);
+    }
+  }, [imageModalVisible, currentImageIndex]);
+
   const loadSimilarProducts = async (productId: string) => {
     try {
       setLoadingSimilar(true);
@@ -164,8 +182,8 @@ export default function ProductDetails() {
     product: Product;
   }) => (
     <TouchableOpacity
-      className="bg-white rounded-xl mr-4 border border-neutral-100 shadow-sm"
-      style={{ width: 140 }}
+      className="rounded-xl mr-4 border shadow-sm"
+      style={{ width: 140, backgroundColor: colors.card || colors.background, borderColor: colors.border }}
       onPress={() => {
         router.push(`/(app)/(client)/product/${similarProduct._id}`);
       }}
@@ -196,12 +214,13 @@ export default function ProductDetails() {
       <View className="p-3">
         <Text
           numberOfLines={2}
-          className="text-sm font-quicksand-semibold text-neutral-800 mb-2 leading-5"
+          className="text-sm font-quicksand-semibold mb-2 leading-5"
+          style={{color: colors.text}}
         >
           {similarProduct.name}
         </Text>
 
-        <Text className="text-base font-quicksand-bold text-primary-600">
+        <Text className="text-base font-quicksand-bold" style={{color: '#FE8C00'}}>
           {formatPrice(similarProduct.price)}
         </Text>
       </View>
@@ -294,7 +313,7 @@ export default function ProductDetails() {
       outputRange: [-150, 150],
     });
     return (
-      <View style={[{ backgroundColor: "#E5E7EB", overflow: "hidden" }, style]}>
+      <View style={[{ backgroundColor: isDark ? '#374151' : '#E5E7EB', overflow: "hidden" }, style]}>
         <Animated.View
           style={{
             position: "absolute",
@@ -302,7 +321,7 @@ export default function ProductDetails() {
             bottom: 0,
             width: 120,
             transform: [{ translateX }],
-            backgroundColor: "rgba(255,255,255,0.35)",
+            backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.5)",
             opacity: 0.7,
           }}
         />
@@ -311,16 +330,13 @@ export default function ProductDetails() {
   };
 
   const SkeletonProduct = () => (
-    <View className="flex-1" style={{ backgroundColor: "transparent" }}>
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
       <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
 
       {/* Header Skeleton */}
-      <LinearGradient
-        colors={["rgba(0,0,0,0.6)", "transparent"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+      <View
         className="absolute top-0 left-0 right-0 z-10"
-        style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}
+        style={{ paddingTop: insets.top + 16, paddingBottom: 16, backgroundColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.6)' }}
       >
         <View className="flex-row items-center justify-between px-4 pb-3">
           <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
@@ -337,49 +353,85 @@ export default function ProductDetails() {
             <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
           </View>
         </View>
-      </LinearGradient>
+      </View>
 
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
         style={{
-          backgroundColor: "transparent",
+          backgroundColor: colors.background,
           marginTop: HEADER_HEIGHT * 0.6,
         }}
         contentInsetAdjustmentBehavior="never"
       >
         {/* Image Skeleton */}
         <View style={{ marginTop: 0 }}>
-          <ShimmerBlock style={{ width: "100%", height: 200 }} />
+          <ShimmerBlock style={{ width: "100%", height: HEADER_HEIGHT * 0.5 }} />
         </View>
 
         {/* Content Skeleton */}
-        <View className="px-6 py-6 bg-white rounded-t-3xl -mt-6">
-          {/* ... skeleton content ... */}
+        <View className="px-6 py-6 rounded-t-3xl -mt-6" style={{backgroundColor: colors.background}}>
+          {/* Thumbnails Skeleton */}
+          <View className="flex-row mb-6">
+            <ShimmerBlock style={{ width: 64, height: 64, borderRadius: 12, marginRight: 12 }} />
+            <ShimmerBlock style={{ width: 64, height: 64, borderRadius: 12, marginRight: 12 }} />
+            <ShimmerBlock style={{ width: 64, height: 64, borderRadius: 12, marginRight: 12 }} />
+          </View>
+
+          {/* Price Skeleton */}
           <ShimmerBlock
             style={{
-              width: "30%",
-              height: 32,
-              borderRadius: 16,
+              width: "40%",
+              height: 36,
+              borderRadius: 8,
               marginBottom: 12,
             }}
           />
-          <ShimmerBlock
-            style={{
-              width: "80%",
-              height: 28,
-              borderRadius: 14,
-              marginBottom: 8,
-            }}
-          />
+
+          {/* Description Skeleton */}
           <ShimmerBlock
             style={{
               width: "100%",
               height: 16,
               borderRadius: 8,
-              marginBottom: 4,
+              marginBottom: 8,
             }}
           />
+          <ShimmerBlock
+            style={{
+              width: "95%",
+              height: 16,
+              borderRadius: 8,
+              marginBottom: 8,
+            }}
+          />
+          <ShimmerBlock
+            style={{
+              width: "80%",
+              height: 16,
+              borderRadius: 8,
+              marginBottom: 24,
+            }}
+          />
+
+          {/* Enterprise Section Skeleton */}
+          <View className="p-4 border rounded-2xl mb-6" style={{backgroundColor: isDark ? colors.surface || '#1f2937' : '#f9fafb', borderColor: colors.border}}>
+            <ShimmerBlock style={{ width: "50%", height: 20, borderRadius: 8, marginBottom: 16 }} />
+            <View className="flex-row items-center">
+              <ShimmerBlock style={{ width: 56, height: 56, borderRadius: 16 }} />
+              <View className="ml-4 flex-1">
+                <ShimmerBlock style={{ width: "70%", height: 18, borderRadius: 8, marginBottom: 8 }} />
+                <ShimmerBlock style={{ width: "50%", height: 14, borderRadius: 8 }} />
+              </View>
+            </View>
+          </View>
+
+          {/* Similar Products Skeleton */}
+          <ShimmerBlock style={{ width: "60%", height: 24, borderRadius: 8, marginBottom: 16 }} />
+          <View className="flex-row">
+            <ShimmerBlock style={{ width: 140, height: 200, borderRadius: 12, marginRight: 16 }} />
+            <ShimmerBlock style={{ width: 140, height: 200, borderRadius: 12, marginRight: 16 }} />
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -391,7 +443,7 @@ export default function ProductDetails() {
 
   if (!product) {
     return (
-      <View className="flex-1 bg-white">
+      <View className="flex-1" style={{backgroundColor: colors.background}}>
         <ExpoStatusBar
           style="light"
           translucent
@@ -399,10 +451,10 @@ export default function ProductDetails() {
         />
         <View className="flex-1 justify-center items-center px-6">
           <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
-          <Text className="mt-4 text-xl font-quicksand-bold text-neutral-800">
+          <Text className="mt-4 text-xl font-quicksand-bold" style={{color: colors.text}}>
             {i18n.t("client.product.error.notFound")}
           </Text>
-          <Text className="mt-2 text-neutral-600 font-quicksand-medium text-center">
+          <Text className="mt-2 font-quicksand-medium text-center" style={{color: colors.textSecondary}}>
             {i18n.t("client.product.error.notFoundMessage")}
           </Text>
           <TouchableOpacity
@@ -417,7 +469,7 @@ export default function ProductDetails() {
   }
 
   return (
-    <View style={styles.safe}>
+    <View style={[styles.safe, {backgroundColor: colors.background}]}>
       <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
 
       {/* Compact Header (Appears on scroll) */}
@@ -557,7 +609,7 @@ export default function ProductDetails() {
       {/* Parallax Header Background */}
       <View style={styles.headerWrapper} pointerEvents="none">
         <AnimatedImage
-          source={{ uri: product.images?.[0] }}
+          source={{ uri: product.images?.[0] || 'https://via.placeholder.com/800x800/CCCCCC/FFFFFF?text=No+Image' }}
           style={[
             styles.headerImage,
             {
@@ -605,7 +657,7 @@ export default function ProductDetails() {
           { useNativeDriver: false }
         )}
       >
-        <View style={styles.contentContainer}>
+        <View style={[styles.contentContainer, {backgroundColor: colors.background}]}>
           {/* Thumbnails */}
           {product.images.length > 1 && (
             <View className="mt-4 mb-6">
@@ -635,7 +687,7 @@ export default function ProductDetails() {
                           height: 64,
                           borderRadius: 12,
                           borderWidth: active ? 2 : 1,
-                          borderColor: active ? "#FE8C00" : "#E5E7EB",
+                          borderColor: active ? "#FE8C00" : colors.border,
                         }}
                         contentFit="cover"
                         transition={200}
@@ -650,17 +702,17 @@ export default function ProductDetails() {
 
           {/* Price and Description */}
           <View className="mb-6">
-            <Text className="text-3xl font-quicksand-bold text-primary-600 mb-2">
+            <Text className="text-3xl font-quicksand-bold mb-2" style={{color: '#FE8C00'}}>
               {formatPrice(product.price)}
             </Text>
-            <Text className="text-neutral-600 font-quicksand-medium leading-6">
+            <Text className="font-quicksand-medium leading-6" style={{color: colors.textSecondary}}>
               {product.description}
             </Text>
           </View>
 
           {/* Enterprise Section */}
-          <View className="p-4 border border-neutral-100 rounded-2xl mb-6 bg-neutral-50">
-            <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3">
+          <View className="p-4 border rounded-2xl mb-6" style={{backgroundColor: isDark ? colors.surface || '#1f2937' : '#f9fafb', borderColor: colors.border}}>
+            <Text className="text-lg font-quicksand-bold mb-3" style={{color: colors.text}}>
               {i18n.t("client.product.enterprise.title")}
             </Text>
             <TouchableOpacity
@@ -689,26 +741,26 @@ export default function ProductDetails() {
                 </View>
               )}
               <View className="ml-4 flex-1">
-                <Text className="text-lg font-quicksand-bold text-neutral-800">
+                <Text className="text-lg font-quicksand-bold" style={{color: colors.text}}>
                   {typeof product.enterprise === "object"
                     ? product.enterprise.companyName
                     : product.enterprise}
                 </Text>
                 {typeof product.enterprise === "object" &&
                   product.enterprise.location && (
-                    <Text className="text-sm text-neutral-500 mt-1">
+                    <Text className="text-sm mt-1" style={{color: colors.textSecondary}}>
                       📍 {product.enterprise.location.city},{" "}
                       {product.enterprise.location.district}
                     </Text>
                   )}
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
 
             {/* Contact Options (Website) */}
             {typeof product.enterprise === "object" &&
               product.enterprise.contactInfo?.website && (
-                <View className="mt-4 pt-4 border-t border-neutral-200">
+                <View className="mt-4 pt-4 border-t" style={{borderColor: colors.border}}>
                   <TouchableOpacity
                     onPress={() =>
                       typeof product.enterprise === "object" &&
@@ -740,9 +792,10 @@ export default function ProductDetails() {
                       openWhatsApp(enterprise.contactInfo.phone);
                     }
                   }}
-                  className="w-14 h-14 bg-success-50 rounded-xl justify-center items-center mr-3 border border-success-100"
+                  className="w-14 h-14 rounded-xl justify-center items-center mr-3 border"
+                  style={{backgroundColor: isDark ? '#064E3B' : '#ECFDF5', borderColor: isDark ? '#059669' : '#A7F3D0'}}
                 >
-                  <Ionicons name="logo-whatsapp" size={24} color="#10B981" />
+                  <Ionicons name="logo-whatsapp" size={24} color={isDark ? '#34D399' : '#10B981'} />
                 </TouchableOpacity>
               ) : null}
 
@@ -764,10 +817,11 @@ export default function ProductDetails() {
                     );
                   }
                 }}
-                className="flex-1 bg-amber-100 rounded-xl h-14 flex-row items-center justify-center"
+                className="flex-1 rounded-xl h-14 flex-row items-center justify-center"
+                style={{backgroundColor: isDark ? '#78350F' : '#FEF3C7'}}
               >
-                <Ionicons name="chatbubbles" size={18} color="#D97706" />
-                <Text className="ml-2 text-amber-800 font-quicksand-bold text-sm">
+                <Ionicons name="chatbubbles" size={18} color={isDark ? '#FCD34D' : '#D97706'} />
+                <Text className="ml-2 font-quicksand-bold text-sm" style={{color: isDark ? '#FCD34D' : '#92400E'}}>
                   {i18n.t("client.product.actions.negotiate")}
                 </Text>
               </TouchableOpacity>
@@ -776,9 +830,9 @@ export default function ProductDetails() {
 
           {/* Similar Products */}
           {(similarProducts.length > 0 || loadingSimilar) && (
-            <View className="py-4 border-t border-neutral-100">
+            <View className="py-4 border-t" style={{borderColor: colors.border}}>
               <View className="flex-row justify-between items-center mb-4">
-                <Text className="text-xl font-quicksand-bold text-neutral-800">
+                <Text className="text-xl font-quicksand-bold" style={{color: colors.text}}>
                   {i18n.t("client.product.similar.title")}
                 </Text>
               </View>
@@ -833,6 +887,7 @@ export default function ProductDetails() {
           </View>
 
           <FlatList
+            ref={imageViewerRef}
             data={product.images}
             renderItem={({ item }) => (
               <View
@@ -855,7 +910,6 @@ export default function ProductDetails() {
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
-            initialScrollIndex={currentImageIndex}
             onMomentumScrollEnd={(e) => {
               const newIndex = Math.round(
                 e.nativeEvent.contentOffset.x / screenWidth
@@ -883,7 +937,6 @@ export default function ProductDetails() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#fff",
   },
   compactHeaderContainer: {
     position: "absolute",
@@ -956,7 +1009,6 @@ const styles = StyleSheet.create({
   contentContainer: {
     paddingHorizontal: 20,
     paddingTop: 20,
-    backgroundColor: "#fff",
     minHeight: screenHeight,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,

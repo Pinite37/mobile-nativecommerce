@@ -145,7 +145,17 @@
                     "socialLinks": "Social Links",
                     "additionalInfo": "Additional Information",
                     "creationDate": "Creation Date",
-                    "enterpriseId": "Enterprise ID"
+                    "enterpriseId": "Enterprise ID",
+                    "locationNotAvailable": "Location not available",
+                    "contactEnterprise": "Contact the enterprise",
+                    "whatsapp": "WhatsApp",
+                    "call": "Call",
+                    "website": "Website",
+                    "enterpriseProducts": "Enterprise products",
+                    "products": "products",
+                    "loading": "Loading...",
+                    "noProductsAvailable": "No products available",
+                    "noProductsMessage": "This enterprise doesn't have any products online yet."
                 },
                 "addPartner": {
                     "title": "Add Partner",
@@ -385,7 +395,14 @@
                     "title": "No messages yet",
                     "message": "Start the conversation by sending a message"
                 },
+                "emptyConversation": {
+                    "title": "Start of conversation",
+                    "subtitle": "Start the discussion about this product"
+                },
                 "messageDeleted": "[Message deleted]",
+                "replyTo": "Reply to",
+                "productFallback": "Product",
+                "priceUnavailable": "Price unavailable",
                 "today": "Today",
                 "yesterday": "Yesterday",
                 "permissions": {
@@ -529,6 +546,91 @@
             "noCategory": "No category",
             "createComingSoon": "Feature coming soon",
             "createComingSoonMessage": "Product creation will be available soon"
+        },
+        "productsDetails": {
+            "loading": "Loading...",
+            "error": {
+                "title": "Loading error",
+                "message": "Product not found",
+                "retry": "Retry",
+                "back": "Back"
+            },
+            "share": {
+                "defaultMessage": "See this product"
+            },
+            "description": {
+                "seeMore": "See more",
+                "seeLess": "See less"
+            },
+            "sections": {
+                "information": "Information",
+                "specifications": "Specifications",
+                "enterprise": "Your Enterprise"
+            },
+            "status": {
+                "active": "Active",
+                "inactive": "Inactive",
+                "activate": "Activate",
+                "deactivate": "Deactivate"
+            },
+            "actions": {
+                "edit": "Edit",
+                "delete": "Delete",
+                "editComingSoon": "Coming soon",
+                "editComingSoonMessage": "Product editing will be available soon"
+            },
+            "stock": {
+                "units": "units",
+                "inStock": "In stock",
+                "lowStock": "Low stock",
+                "outOfStock": "Out of stock"
+            },
+            "details": {
+                "category": "Category",
+                "weight": "Weight",
+                "createdAt": "Created on",
+                "updatedAt": "Updated"
+            },
+            "enterpriseInfo": {
+                "location": "Location",
+                "memberSince": "Member since",
+                "ordersProcessed": "Orders processed",
+                "averageRating": "Average rating",
+                "active": "Active enterprise",
+                "inactive": "Inactive",
+                "notSpecified": "Not specified",
+                "notAvailable": "Not available",
+                "noOrders": "No orders",
+                "notRated": "Not rated",
+                "reviews": "reviews"
+            },
+            "modals": {
+                "confirmation": {
+                    "delete": {
+                        "title": "Delete product",
+                        "message": "Are you sure you want to delete this product? This action is irreversible.",
+                        "confirm": "Delete",
+                        "cancel": "Cancel"
+                    },
+                    "activate": {
+                        "title": "Activate product",
+                        "message": "Do you really want to activate this product?",
+                        "confirm": "Activate"
+                    },
+                    "deactivate": {
+                        "title": "Deactivate product",
+                        "message": "Do you really want to deactivate this product?",
+                        "confirm": "Deactivate"
+                    }
+                }
+            },
+            "toasts": {
+                "deleteSuccess": "Product deleted successfully",
+                "activateSuccess": "Product activated successfully",
+                "deactivateSuccess": "Product deactivated successfully",
+                "error": "Error",
+                "errorMessage": "An error occurred"
+            }
         },
         "advertisementsCreate": {
             "title": {
@@ -1338,6 +1440,21 @@
                     "title": "Synchronization error",
                     "message": "Unable to update read status."
                 }
+            },
+            "conversationDetail": {
+                "placeholder": "Type your message...",
+                "send": "Send",
+                "reply": "Reply to",
+                "messageDeleted": "[Message deleted]",
+                "replyTo": "Reply to",
+                "productFallback": "Product",
+                "priceUnavailable": "Price unavailable",
+                "emptyConversation": {
+                    "title": "Start of conversation",
+                    "subtitle": "Start the discussion about this product"
+                },
+                "today": "Today",
+                "yesterday": "Yesterday"
             }
         },
         "settings": {
@@ -1411,7 +1528,43 @@
         "details": {
             "title": "My Information",
             "photo": {
-                "change": "Change my photo"
+                "change": "Change my photo",
+                "modal": {
+                    "title": "Profile Photo",
+                    "permissions": {
+                        "title": "Permission Required",
+                        "gallery": "We need permission to access your photos.",
+                        "camera": "We need permission to use your camera."
+                    },
+                    "errors": {
+                        "pickImage": "Error",
+                        "pickImageMessage": "Unable to select the image",
+                        "takePhoto": "Error",
+                        "takePhotoMessage": "Unable to take the photo",
+                        "upload": "Error",
+                        "uploadMessage": "Unable to upload the image",
+                        "remove": "Error",
+                        "removeMessage": "Unable to remove the image"
+                    },
+                    "success": {
+                        "title": "Success",
+                        "message": "Profile photo updated"
+                    },
+                    "remove": {
+                        "title": "Remove Photo",
+                        "message": "Are you sure you want to remove your profile photo?",
+                        "cancel": "Cancel",
+                        "confirm": "Remove",
+                        "success": "Profile photo removed"
+                    },
+                    "uploading": "Uploading...",
+                    "takePhoto": "Take a photo",
+                    "takePhotoDescription": "Use the camera",
+                    "pickFromGallery": "Choose from gallery",
+                    "pickFromGalleryDescription": "Select an existing photo",
+                    "removePhoto": "Remove photo",
+                    "removePhotoDescription": "Remove current profile photo"
+                }
             },
             "sections": {
                 "personal": "Personal Information",

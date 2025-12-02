@@ -147,6 +147,13 @@ export default function EnterpriseDashboard() {
   const [popularProducts, setPopularProducts] = useState<Product[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [loadingPopular, setLoadingPopular] = useState(false);
+  const [loadingMorePopular, setLoadingMorePopular] = useState(false);
+  const [popularPage, setPopularPage] = useState(1);
+  const [hasMorePopular, setHasMorePopular] = useState(true);
+
+  // Refs pour accéder aux valeurs dans le listener de scroll
+  const loadingMorePopularRef = useRef(false);
+  const hasMorePopularRef = useRef(true);
 
   // Références
 
@@ -305,20 +312,100 @@ export default function EnterpriseDashboard() {
     }
   };
 
-  const loadPopularProducts = async () => {
+  const loadPopularProducts = async (reset = false) => {
     try {
       setLoadingPopular(true);
+      const pageToLoad = 1; // Toujours commencer par la page 1 pour le chargement initial
+
       // Récupérer tous les produits publics pour que les entreprises voient tout le marketplace
       const response = await ProductService.getAllPublicProducts({
         limit: 6,
         sort: "popular",
-        page: 1,
+        page: pageToLoad,
       });
+
+      // Toujours remplacer les produits lors du chargement initial
       setPopularProducts(response.products || []);
+      setPopularPage(1);
+
+      // Vérifier s'il y a plus de produits disponibles
+      const hasMore = response.pagination
+        ? response.pagination.page < response.pagination.pages
+        : false;
+      setHasMorePopular(hasMore);
+      hasMorePopularRef.current = hasMore;
+      loadingMorePopularRef.current = false;
+
+      console.log("📊 Pagination populaire:", {
+        currentPage: response.pagination?.page,
+        totalPages: response.pagination?.pages,
+        hasMore,
+        productsCount: response.products?.length
+      });
     } catch (error) {
       console.error("❌ Erreur chargement produits populaires:", error);
     } finally {
       setLoadingPopular(false);
+    }
+  };
+
+  const loadMorePopularProducts = async () => {
+    if (loadingMorePopularRef.current || !hasMorePopularRef.current) {
+      console.log("🚫 Chargement bloqué:", {
+        loading: loadingMorePopularRef.current,
+        hasMore: hasMorePopularRef.current,
+        currentPage: popularPage,
+        totalProducts: popularProducts.length
+      });
+      return;
+    }
+
+    try {
+      console.log("🔄 Début chargement page suivante...");
+      loadingMorePopularRef.current = true;
+      setLoadingMorePopular(true);
+
+      const nextPage = popularPage + 1;
+      console.log("📄 Chargement page:", nextPage, "| Produits actuels:", popularProducts.length);
+
+      const response = await ProductService.getAllPublicProducts({
+        limit: 6,
+        sort: "popular",
+        page: nextPage,
+      });
+
+      // Ajouter les nouveaux produits aux existants en évitant les doublons
+      setPopularProducts((prev) => {
+        const existingIds = new Set(prev.map(p => p._id));
+        const uniqueNewProducts = (response.products || []).filter(p => !existingIds.has(p._id));
+        const newProducts = [...prev, ...uniqueNewProducts];
+        console.log("📦 Produits après ajout:", newProducts.length, "| Nouveaux uniques:", uniqueNewProducts.length);
+        return newProducts;
+      });
+
+      setPopularPage(nextPage);
+
+      // Vérifier s'il y a encore plus de produits
+      const hasMore = response.pagination
+        ? response.pagination.page < response.pagination.pages
+        : false;
+
+      setHasMorePopular(hasMore);
+      hasMorePopularRef.current = hasMore;
+
+      console.log("📊 Chargement page suivante:", {
+        page: nextPage,
+        currentPage: response.pagination?.page,
+        totalPages: response.pagination?.pages,
+        hasMore,
+        newProductsCount: response.products?.length,
+        totalProductsNow: popularProducts.length + (response.products?.length || 0)
+      });
+    } catch (error) {
+      console.error("❌ Erreur chargement plus de produits populaires:", error);
+    } finally {
+      loadingMorePopularRef.current = false;
+      setLoadingMorePopular(false);
     }
   };
 
@@ -822,7 +909,6 @@ export default function EnterpriseDashboard() {
 
   const renderProduct = (item: Product) => (
     <TouchableOpacity
-      key={item._id}
       style={{
         backgroundColor: colors.card,
         borderColor: colors.border,
@@ -832,7 +918,7 @@ export default function EnterpriseDashboard() {
         shadowRadius: 4,
         elevation: 3,
       }}
-      className="rounded-2xl p-2 mb-3 w-[48%] overflow-hidden border"
+      className="rounded-2xl p-2 mb-3 overflow-hidden border"
       onPress={() => {
         try {
           router.push(`/(app)/(enterprise)/product/${item._id}`);
@@ -895,7 +981,6 @@ export default function EnterpriseDashboard() {
 
   const renderProductListItem = (item: Product) => (
     <TouchableOpacity
-      key={item._id}
       style={{
         backgroundColor: colors.card,
         borderColor: colors.border,
@@ -1142,12 +1227,16 @@ export default function EnterpriseDashboard() {
               style={{
                 backgroundColor: colors.card,
                 borderColor: colors.border,
-                top: insets.top + 10 + 80 - 56 + 125,
-                left: 0,
-                right: 0,
+                // Header: insets.top + 10 + 80 (paddingBottom)
+                // Search card: -mt-14 (-56px) 
+                // Search card height: ~130px (p-2 + input + chips)
+                // Total: insets.top + 90 - 56 + 130 + 10 (spacing) = insets.top + 174
+                top: insets.top + 174,
+                left: 16,
+                right: 16,
                 maxHeight: 400
               }}
-              className="absolute rounded-b-2xl shadow-lg border-t mx-4 z-40"
+              className="absolute rounded-b-2xl shadow-lg border-t z-40"
             >
               <ScrollView showsVerticalScrollIndicator={false}>
                 {showSuggestions && searchSuggestions.length > 0 && (
@@ -1219,11 +1308,24 @@ export default function EnterpriseDashboard() {
               paddingTop: 10,
               paddingBottom: 90 + insets.bottom,
             }}
-            scrollEventThrottle={16}
             onScroll={Animated.event(
               [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-              { useNativeDriver: false }
+              {
+                useNativeDriver: false,
+                listener: (event: any) => {
+                  const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+                  const paddingToBottom = 300; // Déclenche 300px avant la fin
+                  const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
+
+                  // Charger plus de produits populaires si on est proche du bas
+                  if (isCloseToBottom && !loadingMorePopularRef.current && hasMorePopularRef.current) {
+                    console.log("🎯 Déclenchement chargement automatique");
+                    loadMorePopularProducts();
+                  }
+                }
+              }
             )}
+            scrollEventThrottle={400}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -1431,10 +1533,20 @@ export default function EnterpriseDashboard() {
                 ) : searchResults.length > 0 ? (
                   resultsView === "grid" ? (
                     <View className="flex-row flex-wrap justify-between">
-                      {searchResults.map(renderProduct)}
+                      {searchResults.map((item, index) => (
+                        <View key={`search-${item._id}-${index}`} className="w-[48%]">
+                          {renderProduct(item)}
+                        </View>
+                      ))}
                     </View>
                   ) : (
-                    <View>{searchResults.map(renderProductListItem)}</View>
+                    <View>
+                      {searchResults.map((item, index) => (
+                        <View key={`search-list-${item._id}-${index}`} className="w-full">
+                          {renderProductListItem(item)}
+                        </View>
+                      ))}
+                    </View>
                   )
                 ) : (
                   <View className="items-center justify-center py-8">
@@ -1679,7 +1791,11 @@ export default function EnterpriseDashboard() {
                 </View>
               ) : featuredProducts.length > 0 ? (
                 <View className="flex-row flex-wrap justify-between px-4">
-                  {featuredProducts.map((item) => renderProduct(item))}
+                  {featuredProducts.map((item, index) => (
+                    <View key={`featured-${item._id}-${index}`} className="w-[48%]">
+                      {renderProduct(item)}
+                    </View>
+                  ))}
                 </View>
               ) : (
                 <View className="flex-1 justify-center items-center py-8">
@@ -1728,9 +1844,39 @@ export default function EnterpriseDashboard() {
                   </Text>
                 </View>
               ) : popularProducts.length > 0 ? (
-                <View className="flex-row flex-wrap justify-between px-4">
-                  {popularProducts.map((item) => renderProduct(item))}
-                </View>
+                <>
+                  <View className="flex-row flex-wrap justify-between px-4">
+                    {popularProducts.map((item, index) => (
+                      <View key={`${item._id}-${index}`} className="w-[48%]">
+                        {renderProduct(item)}
+                      </View>
+                    ))}
+                  </View>
+                  {/* Indicateur de chargement automatique */}
+                  {loadingMorePopular && (
+                    <View className="py-4 items-center">
+                      <ActivityIndicator size="small" color={colors.brandPrimary} />
+                      <Text style={{ color: colors.textSecondary }} className="mt-2 text-sm font-quicksand-medium">
+                        Chargement de plus de tendances...
+                      </Text>
+                    </View>
+                  )}
+                  {/* Informations de pagination en mode développement */}
+                  {__DEV__ && hasMorePopular && !loadingMorePopular && (
+                    <View className="px-4 py-2">
+                      <Text style={{ color: colors.textTertiary }} className="text-xs text-center font-quicksand-light">
+                        Page {popularPage} • {popularProducts.length} produits • Faites défiler pour plus
+                      </Text>
+                    </View>
+                  )}
+                  {__DEV__ && !hasMorePopular && popularProducts.length > 6 && (
+                    <View className="px-4 py-2">
+                      <Text style={{ color: colors.textTertiary }} className="text-xs text-center font-quicksand-light">
+                        Toutes les tendances affichées ({popularProducts.length} produits)
+                      </Text>
+                    </View>
+                  )}
+                </>
               ) : (
                 <View className="flex-1 justify-center items-center py-8">
                   <Text style={{ color: colors.textSecondary }} className="font-quicksand-medium">

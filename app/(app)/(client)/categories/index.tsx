@@ -11,12 +11,14 @@ import {
     View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../../../../contexts/ThemeContext';
 import i18n from '../../../../i18n/i18n';
 import CategoryService from '../../../../services/api/CategoryService';
 
 export default function AllCategoriesPage() {
     const insets = useSafeAreaInsets();
     const router = useRouter();
+    const { colors } = useTheme();
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -40,7 +42,7 @@ export default function AllCategoriesPage() {
         router.push(`/(app)/(client)/category/${categoryId}`);
     };
 
-    const colors = ["#FF6B35", "#3B82F6", "#8B5CF6", "#EC4899", "#10B981", "#6366F1", "#EF4444", "#F59E0B"];
+    const categoryColors = ["#FF6B35", "#3B82F6", "#8B5CF6", "#EC4899", "#10B981", "#6366F1", "#EF4444", "#F59E0B"];
     const icons = ["flame", "car-sport", "home", "phone-portrait", "laptop", "bed", "shirt", "construct"];
 
     // Détecte tous les types d'emojis
@@ -50,7 +52,7 @@ export default function AllCategoriesPage() {
     };
 
     return (
-        <View className="flex-1 bg-neutral-50">
+        <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
             <ExpoStatusBar style="light" translucent />
 
             {/* Header avec gradient */}
@@ -89,12 +91,12 @@ export default function AllCategoriesPage() {
             {/* Contenu */}
             {loading ? (
                 <View className="flex-1 items-center justify-center">
-                    <ActivityIndicator size="large" color="#10B981" />
+                    <ActivityIndicator size="large" color={colors.brandPrimary} />
                 </View>
             ) : categories.length === 0 ? (
                 <View className="flex-1 items-center justify-center px-6">
-                    <Ionicons name="file-tray-outline" size={64} color="#D1D5DB" />
-                    <Text className="text-neutral-600 text-lg font-quicksand-bold mt-4">
+                    <Ionicons name="file-tray-outline" size={64} color={colors.textSecondary} />
+                    <Text className="text-lg font-quicksand-bold mt-4" style={{ color: colors.textPrimary }}>
                         {i18n.t("client.categories.empty")}
                     </Text>
                 </View>
@@ -104,20 +106,23 @@ export default function AllCategoriesPage() {
                     contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 80 }}
                 >
                     {categories.map((category: any, index: number) => {
-                        const categoryColor = category.color || colors[index % colors.length];
+                        const categoryColor = category.color || categoryColors[index % categoryColors.length];
                         const categoryIcon = category.icon || icons[index % icons.length];
 
                         return (
                             <TouchableOpacity
                                 key={category._id}
                                 onPress={() => handleCategoryPress(category._id)}
-                                className="bg-white rounded-2xl overflow-hidden mb-4 flex-row items-center p-4"
+                                className="rounded-2xl overflow-hidden mb-4 flex-row items-center p-4"
                                 style={{
+                                    backgroundColor: colors.card,
                                     shadowColor: "#000",
                                     shadowOffset: { width: 0, height: 2 },
                                     shadowOpacity: 0.1,
                                     shadowRadius: 4,
                                     elevation: 3,
+                                    borderWidth: 1,
+                                    borderColor: colors.border,
                                 }}
                             >
                                 {/* Icône de la catégorie */}
@@ -142,23 +147,23 @@ export default function AllCategoriesPage() {
 
                                 {/* Informations de la catégorie */}
                                 <View className="flex-1">
-                                    <Text className="text-neutral-800 text-base font-quicksand-bold mb-1">
+                                    <Text className="text-base font-quicksand-bold mb-1" style={{ color: colors.textPrimary }}>
                                         {category.name}
                                     </Text>
                                     {category.description && (
-                                        <Text className="text-neutral-500 text-xs font-quicksand-medium" numberOfLines={1}>
+                                        <Text className="text-xs font-quicksand-medium" numberOfLines={1} style={{ color: colors.textSecondary }}>
                                             {category.description}
                                         </Text>
                                     )}
                                     {category.productCount !== undefined && (
-                                        <Text className="text-neutral-400 text-xs font-quicksand-medium mt-1">
+                                        <Text className="text-xs font-quicksand-medium mt-1" style={{ color: colors.textSecondary }}>
                                             {i18n.t(category.productCount === 1 ? "client.categories.productCount.singular" : "client.categories.productCount.plural", { count: category.productCount })}
                                         </Text>
                                     )}
                                 </View>
 
                                 {/* Flèche de navigation */}
-                                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                                <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
                             </TouchableOpacity>
                         );
                     })}

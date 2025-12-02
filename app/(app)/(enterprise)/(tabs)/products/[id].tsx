@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
 import { Image as ExpoImage } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from "expo-router";
@@ -15,6 +16,7 @@ import {
   RefreshControl,
   ScrollView,
   Share,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View
@@ -23,13 +25,22 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import NotificationModal, { useNotification } from "../../../../../components/ui/NotificationModal";
 import { useToast } from "../../../../../components/ui/ToastManager";
+import { useTheme } from "../../../../../contexts/ThemeContext";
+import i18n from "../../../../../i18n/i18n";
 import ProductService from "../../../../../services/api/ProductService";
 import { Product } from "../../../../../types/product";
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+const HEADER_HEIGHT = Math.round(screenHeight * 0.45);
+const COMPACT_HEADER_HEIGHT = 100;
+const TITLE_APPEAR_OFFSET = HEADER_HEIGHT - COMPACT_HEADER_HEIGHT - 50;
+
+const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
+const AnimatedImage = Animated.createAnimatedComponent(ExpoImage);
 
 // Skeleton Loader Component
-const ShimmerBlock = ({ style }: { style?: any }) => {
+const ShimmerBlock = ({ style, isDark }: { style?: any; isDark?: boolean }) => {
   const shimmer = React.useRef(new Animated.Value(0)).current;
   useEffect(() => {
     const loop = Animated.loop(
@@ -45,20 +56,20 @@ const ShimmerBlock = ({ style }: { style?: any }) => {
   }, [shimmer]);
   const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
   return (
-    <View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
+    <View style={[{ backgroundColor: isDark ? '#374151' : '#E5E7EB', overflow: 'hidden' }, style]}>
       <Animated.View style={{
         position: 'absolute', top: 0, bottom: 0, width: 120,
         transform: [{ translateX }],
-        backgroundColor: 'rgba(255,255,255,0.35)',
+        backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.35)',
         opacity: 0.7,
       }} />
     </View>
   );
 };
 
-const SkeletonProduct = () => (
-  <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
-    <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
+const SkeletonProduct = ({ colors, isDark }: { colors: any; isDark: boolean }) => (
+  <View style={{ flex: 1, backgroundColor: colors.secondary }}>
+    <ExpoStatusBar style={isDark ? "light" : "dark"} translucent backgroundColor="transparent" />
     
     {/* Header Skeleton */}
     <LinearGradient
@@ -69,11 +80,11 @@ const SkeletonProduct = () => (
       style={{ paddingTop: Platform.OS === 'ios' ? 66 : 16 }}
     >
       <View className="flex-row items-center justify-between px-4 pb-3">
-        <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
-        <ShimmerBlock style={{ width: 120, height: 16, borderRadius: 8 }} />
+        <ShimmerBlock isDark={isDark} style={{ width: 40, height: 40, borderRadius: 20 }} />
+        <ShimmerBlock isDark={isDark} style={{ width: 120, height: 16, borderRadius: 8 }} />
         <View className="flex-row">
-          <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20, marginRight: 8 }} />
-          <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
+          <ShimmerBlock isDark={isDark} style={{ width: 40, height: 40, borderRadius: 20, marginRight: 8 }} />
+          <ShimmerBlock isDark={isDark} style={{ width: 40, height: 40, borderRadius: 20 }} />
         </View>
       </View>
     </LinearGradient>
@@ -81,18 +92,18 @@ const SkeletonProduct = () => (
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
       {/* Image Skeleton */}
       <View style={{ marginTop: Platform.OS === 'ios' ? 100 : 80 }}>
-        <ShimmerBlock style={{ width: '100%', height: 350 }} />
+        <ShimmerBlock isDark={isDark} style={{ width: '100%', height: 350 }} />
         
         {/* Indicators Skeleton */}
         <View className="absolute bottom-4 left-0 right-0 flex-row justify-center">
           {[1, 2, 3].map((i) => (
-            <ShimmerBlock key={i} style={{ width: 8, height: 8, borderRadius: 4, marginHorizontal: 4 }} />
+            <ShimmerBlock isDark={isDark} key={i} style={{ width: 8, height: 8, borderRadius: 4, marginHorizontal: 4 }} />
           ))}
         </View>
         
         {/* Counter Skeleton */}
         <View className="absolute top-3 right-3">
-          <ShimmerBlock style={{ width: 60, height: 24, borderRadius: 12 }} />
+          <ShimmerBlock isDark={isDark} style={{ width: 60, height: 24, borderRadius: 12 }} />
         </View>
       </View>
 
@@ -100,7 +111,7 @@ const SkeletonProduct = () => (
       <View className="px-6 mt-3">
         <View className="flex-row">
           {[1, 2, 3, 4].map((i) => (
-            <ShimmerBlock key={i} style={{ width: 64, height: 64, borderRadius: 12, marginRight: 12 }} />
+            <ShimmerBlock isDark={isDark} key={i} style={{ width: 64, height: 64, borderRadius: 12, marginRight: 12 }} />
           ))}
         </View>
       </View>
@@ -109,43 +120,43 @@ const SkeletonProduct = () => (
       <View className="px-6 py-6">
         {/* Price and Name */}
         <View className="mb-4">
-          <ShimmerBlock style={{ width: '30%', height: 32, borderRadius: 16, marginBottom: 12 }} />
-          <ShimmerBlock style={{ width: '80%', height: 28, borderRadius: 14, marginBottom: 8 }} />
-          <ShimmerBlock style={{ width: '100%', height: 16, borderRadius: 8, marginBottom: 4 }} />
-          <ShimmerBlock style={{ width: '60%', height: 16, borderRadius: 8 }} />
+          <ShimmerBlock isDark={isDark} style={{ width: '30%', height: 32, borderRadius: 16, marginBottom: 12 }} />
+          <ShimmerBlock isDark={isDark} style={{ width: '80%', height: 28, borderRadius: 14, marginBottom: 8 }} />
+          <ShimmerBlock isDark={isDark} style={{ width: '100%', height: 16, borderRadius: 8, marginBottom: 4 }} />
+          <ShimmerBlock isDark={isDark} style={{ width: '60%', height: 16, borderRadius: 8 }} />
         </View>
 
         {/* Status Button Skeleton */}
         <View className="mb-6">
-          <ShimmerBlock style={{ width: 80, height: 32, borderRadius: 16, alignSelf: 'flex-start' }} />
+          <ShimmerBlock isDark={isDark} style={{ width: 80, height: 32, borderRadius: 16, alignSelf: 'flex-start' }} />
         </View>
 
         {/* Informations Section Skeleton */}
         <View className="mb-6">
           <View className="flex-row items-center mb-4">
-            <ShimmerBlock style={{ width: 6, height: 24, borderRadius: 3, marginRight: 12 }} />
-            <ShimmerBlock style={{ width: '30%', height: 24, borderRadius: 12 }} />
+            <ShimmerBlock isDark={isDark} style={{ width: 6, height: 24, borderRadius: 3, marginRight: 12 }} />
+            <ShimmerBlock isDark={isDark} style={{ width: '30%', height: 24, borderRadius: 12 }} />
           </View>
           
-          <View className="bg-gradient-to-br from-primary-50 to-white border border-primary-100 rounded-3xl p-5 mb-4">
+          <View style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 24, padding: 20, marginBottom: 16 }}>
             <View className="flex-row items-center mb-4">
-              <ShimmerBlock style={{ width: 48, height: 48, borderRadius: 24, marginRight: 16 }} />
+              <ShimmerBlock isDark={isDark} style={{ width: 48, height: 48, borderRadius: 24, marginRight: 16 }} />
               <View className="flex-1">
-                <ShimmerBlock style={{ width: '60%', height: 20, borderRadius: 10, marginBottom: 8 }} />
-                <ShimmerBlock style={{ width: '40%', height: 16, borderRadius: 8 }} />
+                <ShimmerBlock isDark={isDark} style={{ width: '60%', height: 20, borderRadius: 10, marginBottom: 8 }} />
+                <ShimmerBlock isDark={isDark} style={{ width: '40%', height: 16, borderRadius: 8 }} />
               </View>
-              <ShimmerBlock style={{ width: 60, height: 24, borderRadius: 12 }} />
+              <ShimmerBlock isDark={isDark} style={{ width: 60, height: 24, borderRadius: 12 }} />
             </View>
             
-            <View className="border-t border-primary-100 pt-4">
+            <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 16 }}>
               <View className="flex-row flex-wrap -mx-2">
                 {[1, 2, 3, 4].map((i) => (
                   <View key={i} className="w-1/2 px-2 mb-3">
                     <View className="flex-row items-center">
-                      <ShimmerBlock style={{ width: 16, height: 16, borderRadius: 8, marginRight: 8 }} />
-                      <ShimmerBlock style={{ width: '60%', height: 12, borderRadius: 6 }} />
+                      <ShimmerBlock isDark={isDark} style={{ width: 16, height: 16, borderRadius: 8, marginRight: 8 }} />
+                      <ShimmerBlock isDark={isDark} style={{ width: '60%', height: 12, borderRadius: 6 }} />
                     </View>
-                    <ShimmerBlock style={{ width: '80%', height: 14, borderRadius: 7, marginTop: 4 }} />
+                    <ShimmerBlock isDark={isDark} style={{ width: '80%', height: 14, borderRadius: 7, marginTop: 4 }} />
                   </View>
                 ))}
               </View>
@@ -156,19 +167,20 @@ const SkeletonProduct = () => (
         {/* Specifications Skeleton */}
         <View className="mb-6">
           <View className="flex-row items-center mb-4">
-            <ShimmerBlock style={{ width: 6, height: 24, borderRadius: 3, marginRight: 12 }} />
-            <ShimmerBlock style={{ width: '35%', height: 24, borderRadius: 12 }} />
+            <ShimmerBlock isDark={isDark} style={{ width: 6, height: 24, borderRadius: 3, marginRight: 12 }} />
+            <ShimmerBlock isDark={isDark} style={{ width: '35%', height: 24, borderRadius: 12 }} />
           </View>
           
-          <View className="bg-white border border-neutral-200 rounded-3xl overflow-hidden">
+          <View className="rounded-3xl overflow-hidden" style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
             {[1, 2, 3].map((i) => (
               <View 
                 key={i} 
-                className={`flex-row items-center py-4 px-5 ${i !== 3 ? 'border-b border-neutral-100' : ''}`}
+                className="flex-row items-center py-4 px-5"
+                style={i !== 3 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : {}}
               >
-                <ShimmerBlock style={{ width: 8, height: 8, borderRadius: 4, marginRight: 12 }} />
-                <ShimmerBlock style={{ width: '40%', height: 16, borderRadius: 8, marginRight: 16 }} />
-                <ShimmerBlock style={{ width: '30%', height: 16, borderRadius: 8 }} />
+                <ShimmerBlock isDark={isDark} style={{ width: 8, height: 8, borderRadius: 4, marginRight: 12 }} />
+                <ShimmerBlock isDark={isDark} style={{ width: '40%', height: 16, borderRadius: 8, marginRight: 16 }} />
+                <ShimmerBlock isDark={isDark} style={{ width: '30%', height: 16, borderRadius: 8 }} />
               </View>
             ))}
           </View>
@@ -177,26 +189,26 @@ const SkeletonProduct = () => (
         {/* Enterprise Section Skeleton */}
         <View className="px-6 mb-6">
           <View className="flex-row items-center mb-4">
-            <ShimmerBlock style={{ width: 6, height: 24, borderRadius: 3, marginRight: 12 }} />
-            <ShimmerBlock style={{ width: '40%', height: 24, borderRadius: 12 }} />
+            <ShimmerBlock isDark={isDark} style={{ width: 6, height: 24, borderRadius: 3, marginRight: 12 }} />
+            <ShimmerBlock isDark={isDark} style={{ width: '40%', height: 24, borderRadius: 12 }} />
           </View>
           
-          <View className="bg-gradient-to-br from-amber-50 to-white border border-amber-100 rounded-3xl p-5">
+          <View style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 24, padding: 20 }}>
             <View className="flex-row items-center mb-5">
-              <ShimmerBlock style={{ width: 64, height: 64, borderRadius: 16, marginRight: 16 }} />
+              <ShimmerBlock isDark={isDark} style={{ width: 64, height: 64, borderRadius: 16, marginRight: 16 }} />
               <View className="flex-1">
-                <ShimmerBlock style={{ width: '70%', height: 20, borderRadius: 10, marginBottom: 8 }} />
-                <ShimmerBlock style={{ width: '50%', height: 16, borderRadius: 8 }} />
+                <ShimmerBlock isDark={isDark} style={{ width: '70%', height: 20, borderRadius: 10, marginBottom: 8 }} />
+                <ShimmerBlock isDark={isDark} style={{ width: '50%', height: 16, borderRadius: 8 }} />
               </View>
             </View>
 
             <View className="space-y-3">
               {[1, 2, 3, 4].map((i) => (
                 <View key={i} className="flex-row items-center py-3">
-                  <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 12, marginRight: 12 }} />
+                  <ShimmerBlock isDark={isDark} style={{ width: 40, height: 40, borderRadius: 12, marginRight: 12 }} />
                   <View className="flex-1">
-                    <ShimmerBlock style={{ width: '30%', height: 12, borderRadius: 6, marginBottom: 6 }} />
-                    <ShimmerBlock style={{ width: '60%', height: 14, borderRadius: 7 }} />
+                    <ShimmerBlock isDark={isDark} style={{ width: '30%', height: 12, borderRadius: 6, marginBottom: 6 }} />
+                    <ShimmerBlock isDark={isDark} style={{ width: '60%', height: 14, borderRadius: 7 }} />
                   </View>
                 </View>
               ))}
@@ -228,9 +240,55 @@ export default function ProductDetails() {
     onConfirm: () => void;
   } | null>(null);
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   
   // Référence et variables pour le carrousel d'images
   const imagesListRef = useRef<FlatList<string>>(null);
+  
+  // Animation pour le parallax
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  const imageOpacity = scrollY.interpolate({
+    inputRange: [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
+
+  const imageTranslateY = scrollY.interpolate({
+    inputRange: [0, HEADER_HEIGHT],
+    outputRange: [0, -HEADER_HEIGHT * 0.6],
+    extrapolate: "clamp",
+  });
+
+  const imageScale = scrollY.interpolate({
+    inputRange: [-HEADER_HEIGHT, 0],
+    outputRange: [2, 1],
+    extrapolate: "clamp",
+  });
+
+  const blurIntensity = scrollY.interpolate({
+    inputRange: [0, HEADER_HEIGHT * 0.7],
+    outputRange: [0, 50],
+    extrapolate: "clamp",
+  });
+
+  const compactHeaderTranslateY = scrollY.interpolate({
+    inputRange: [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT],
+    outputRange: [-100, 0],
+    extrapolate: "clamp",
+  });
+
+  const compactHeaderOpacity = scrollY.interpolate({
+    inputRange: [TITLE_APPEAR_OFFSET, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT],
+    outputRange: [0, 1],
+    extrapolate: "clamp",
+  });
+
+  const bigTitleOpacity = scrollY.interpolate({
+    inputRange: [0, HEADER_HEIGHT * 0.5],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
 
   console.log('🚀 ProductDetails - Product ID:', id);
 
@@ -280,7 +338,6 @@ export default function ProductDetails() {
     }
   };
 
-  // Fonctions de confirmation modal
   const showConfirmation = (type: 'toggle_status' | 'delete', onConfirm: () => void) => {
     if (!product) return;
     
@@ -291,16 +348,16 @@ export default function ProductDetails() {
 
     switch (type) {
       case 'toggle_status':
-        const action = product.isActive ? 'désactiver' : 'activer';
-        title = `${action.charAt(0).toUpperCase() + action.slice(1)} le produit`;
-        message = `Voulez-vous vraiment ${action} ce produit ?`;
+        const action = product.isActive ? i18n.t("enterprise.productsDetails.status.deactivate") : i18n.t("enterprise.productsDetails.status.activate");
+        title = `${action.charAt(0).toUpperCase() + action.slice(1)} ${i18n.t("enterprise.productsDetails.sections.enterprise").toLowerCase()}`;
+        message = product.isActive ? i18n.t("enterprise.productsDetails.modals.confirmation.deactivate.message") : i18n.t("enterprise.productsDetails.modals.confirmation.activate.message");
         confirmText = action.charAt(0).toUpperCase() + action.slice(1);
         confirmColor = product.isActive ? '#F59E0B' : '#10B981';
         break;
       case 'delete':
-        title = 'Supprimer le produit';
-        message = 'Êtes-vous sûr de vouloir supprimer ce produit ? Cette action est irréversible.';
-        confirmText = 'Supprimer';
+        title = i18n.t("enterprise.productsDetails.modals.confirmation.delete.title");
+        message = i18n.t("enterprise.productsDetails.modals.confirmation.delete.message");
+        confirmText = i18n.t("enterprise.productsDetails.modals.confirmation.delete.confirm");
         confirmColor = '#EF4444';
         break;
     }
@@ -327,10 +384,10 @@ export default function ProductDetails() {
         console.log('🔄 Changement de statut:', product!._id, !product!.isActive);
         await ProductService.toggleProductStatus(product!._id, !product!.isActive);
         setProduct(prev => prev ? { ...prev, isActive: !prev.isActive } : null);
-        showSuccess(`Produit ${product!.isActive ? 'désactivé' : 'activé'} avec succès`);
+        showSuccess(product!.isActive ? i18n.t("enterprise.productsDetails.toasts.deactivateSuccess") : i18n.t("enterprise.productsDetails.toasts.activateSuccess"));
       } catch (error: any) {
         console.error('❌ Erreur changement statut:', error);
-        showError('Erreur', error.message || 'Une erreur est survenue');
+        showError(i18n.t("enterprise.productsDetails.toasts.error"), error.message || i18n.t("enterprise.productsDetails.toasts.errorMessage"));
       }
     });
   };
@@ -340,18 +397,18 @@ export default function ProductDetails() {
       try {
         console.log('🗑️ Suppression du produit:', product!._id);
         await ProductService.deleteProduct(product!._id);
-        showSuccess("Produit supprimé avec succès");
+        showSuccess(i18n.t("enterprise.productsDetails.toasts.deleteSuccess"));
         router.back();
       } catch (error: any) {
         console.error('❌ Erreur suppression:', error);
-        showError('Erreur', error.message || 'Une erreur est survenue');
+        showError(i18n.t("enterprise.productsDetails.toasts.error"), error.message || i18n.t("enterprise.productsDetails.toasts.errorMessage"));
       }
     });
   };
 
   const handleEditProduct = () => {
     console.log('✏️ Édition du produit à implémenter:', product?._id);
-    showInfo("Fonctionnalité à venir", "L'édition de produit sera bientôt disponible");
+    showInfo(i18n.t("enterprise.productsDetails.actions.editComingSoon"), i18n.t("enterprise.productsDetails.actions.editComingSoonMessage"));
   };
 
   // Hook pour les toasts
@@ -369,172 +426,228 @@ export default function ProductDetails() {
       day: 'numeric'
     });
   };
-  
-  // Gestion du défilement des images
-  const renderImage = ({ item, index }: { item: string; index: number }) => (
-    <View style={{ width: screenWidth }}>
-      <TouchableOpacity activeOpacity={0.9} onPress={() => { setCurrentImageIndex(index); setImageModalVisible(true); }}>
-        <ExpoImage
-          source={{ uri: item }}
-            style={{ width: screenWidth, height: 350 }}
-            contentFit="cover"
-            transition={300}
-            cachePolicy="memory-disk"
-          />
-        </TouchableOpacity>
-      </View>
-  );
 
   // États d'affichage
   if (loading) {
-    return <SkeletonProduct />;
+    return <SkeletonProduct colors={colors} isDark={isDark} />;
   }
 
   if (error || !product) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#FFFFFF', paddingTop: insets.top }}>
+      <View style={{ flex: 1, backgroundColor: colors.secondary, paddingTop: insets.top }}>
         <View className="flex-1 justify-center items-center px-6">
           <Ionicons name="warning" size={64} color="#EF4444" />
-          <Text className="text-xl font-quicksand-bold text-neutral-800 mt-4 text-center">
-            Erreur de chargement
+          <Text className="text-xl font-quicksand-bold mt-4 text-center" style={{ color: colors.textPrimary }}>
+            {i18n.t("enterprise.productsDetails.error.title")}
           </Text>
-          <Text className="text-neutral-600 font-quicksand-regular mt-2 text-center">
-            {error || 'Produit non trouvé'}
+          <Text className="font-quicksand-regular mt-2 text-center" style={{ color: colors.textSecondary }}>
+            {i18n.t("enterprise.productsDetails.error.message")}
           </Text>
           <TouchableOpacity
             onPress={loadProduct}
-            className="bg-primary-500 py-3 px-6 rounded-2xl mt-6"
+            style={{
+              backgroundColor: colors.primary,
+              paddingHorizontal: 24,
+              paddingVertical: 12,
+              borderRadius: 16
+            }}
           >
             <Text className="text-white font-quicksand-semibold">
-              Réessayer
+              {i18n.t("enterprise.productsDetails.error.retry")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => router.back()}
             className="mt-4"
           >
-          <Text className="text-neutral-500 font-quicksand-medium">
-            Retour
+          <Text style={{ color: colors.textSecondary, fontWeight: '500' }}>
+            {i18n.t("enterprise.productsDetails.error.back")}
           </Text>
           </TouchableOpacity>
         </View>
       </View>
     );
-  }  return (
-    <View style={{ flex: 1, backgroundColor: 'transparent' }}>
-      <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
-      {/* Header overlay */}
-      <LinearGradient
-        colors={['rgba(0,0,0,0.6)', 'transparent']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        className="absolute top-0 left-0 right-0 z-10"
-        style={{ paddingTop: insets.top + 8 }}
+  }
+
+  return (
+    <View style={[styles.safe, { backgroundColor: colors.card }]}>
+      <ExpoStatusBar style={isDark ? "light" : "dark"} translucent backgroundColor="transparent" />
+
+      {/* Compact Header (Appears on scroll) */}
+      <Animated.View
+        style={[
+          styles.compactHeaderContainer,
+          {
+            paddingTop: insets.top,
+            height: COMPACT_HEADER_HEIGHT,
+            opacity: compactHeaderOpacity,
+            transform: [{ translateY: compactHeaderTranslateY }],
+          },
+        ]}
+        pointerEvents="box-none"
       >
-        <View className="flex-row items-center justify-between px-4 pb-3">
+        <BlurView intensity={100} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFill} />
+
+        <View style={styles.compactHeaderContent}>
           <TouchableOpacity
             onPress={() => router.back()}
-            className="w-10 h-10 bg-black/25 rounded-full justify-center items-center"
+            className="w-10 h-10 justify-center items-center"
           >
-            <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
+            <Ionicons name="arrow-back" size={24} color={isDark ? "#FFF" : "#000"} />
           </TouchableOpacity>
-          <View className="flex-1 items-center">
-            <Text numberOfLines={1} className="text-white font-quicksand-semibold">
-              Gestion produit
-            </Text>
-          </View>
-          <View className="flex-row">
+
+          <Text
+            style={[styles.compactTitle, { color: isDark ? "#FFF" : "#000" }]}
+            className="font-quicksand-bold"
+            numberOfLines={1}
+          >
+            {product.name}
+          </Text>
+
+          <View style={{ flexDirection: "row" }}>
             <TouchableOpacity
               onPress={async () => {
                 try {
                   await Share.share({
-                    message: product ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ''}` : 'Voir ce produit',
+                    message: product ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ''}` : i18n.t("enterprise.productsDetails.share.defaultMessage"),
                   });
                 } catch {}
               }}
-              className="w-10 h-10 bg-black/25 rounded-full justify-center items-center mr-2"
+              className="w-10 h-10 justify-center items-center mr-1"
             >
-              <Ionicons name="share-social-outline" size={18} color="#FFFFFF" />
+              <Ionicons name="share-social-outline" size={22} color={isDark ? "#FFF" : "#000"} />
             </TouchableOpacity>
-            <TouchableOpacity 
-              className="w-10 h-10 bg-black/25 rounded-full justify-center items-center"
+            <TouchableOpacity
+              className="w-10 h-10 justify-center items-center"
               onPress={() => setImageModalVisible(true)}
             >
-              <Ionicons name="images-outline" size={18} color="#FFFFFF" />
+              <Ionicons name="images-outline" size={22} color={isDark ? "#FFF" : "#000"} />
             </TouchableOpacity>
           </View>
         </View>
-      </LinearGradient>
+      </Animated.View>
 
-      <ScrollView 
-        className="flex-1"
-        style={{ backgroundColor: '#FFFFFF' }}
+      {/* Fixed Back Button (visible initially) */}
+      <Animated.View
+        style={{
+          position: "absolute",
+          top: insets.top + 10,
+          left: 16,
+          zIndex: 900,
+          opacity: scrollY.interpolate({
+            inputRange: [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT - 20],
+            outputRange: [1, 0],
+            extrapolate: "clamp",
+          }),
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className="w-10 h-10 bg-black/30 rounded-full justify-center items-center"
+        >
+          <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+      </Animated.View>
+
+      <Animated.View
+        style={{
+          position: "absolute",
+          top: insets.top + 10,
+          right: 16,
+          zIndex: 900,
+          flexDirection: "row",
+          opacity: scrollY.interpolate({
+            inputRange: [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT - 20],
+            outputRange: [1, 0],
+            extrapolate: "clamp",
+          }),
+        }}
+      >
+        <TouchableOpacity
+          onPress={async () => {
+            try {
+              await Share.share({
+                message: product ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ''}` : 'Voir ce produit',
+              });
+            } catch {}
+          }}
+          className="w-10 h-10 bg-black/30 rounded-full justify-center items-center mr-2"
+        >
+          <Ionicons name="share-social-outline" size={20} color="#FFFFFF" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          className="w-10 h-10 bg-black/30 rounded-full justify-center items-center"
+          onPress={() => setImageModalVisible(true)}
+        >
+          <Ionicons name="images-outline" size={20} color="#FFFFFF" />
+        </TouchableOpacity>
+      </Animated.View>
+
+      {/* Parallax Header Background */}
+      <View style={styles.headerWrapper} pointerEvents="none">
+        <AnimatedImage
+          source={{ uri: product.images?.[0] }}
+          style={[
+            styles.headerImage,
+            {
+              opacity: imageOpacity,
+              transform: [
+                { translateY: imageTranslateY },
+                { scale: imageScale },
+              ],
+            },
+          ]}
+          contentFit="cover"
+        />
+
+        <AnimatedBlurView
+          intensity={blurIntensity}
+          tint="dark"
+          style={StyleSheet.absoluteFillObject}
+        />
+
+        <Animated.View
+          style={[
+            styles.bigTitleContainer,
+            { opacity: bigTitleOpacity, paddingBottom: 40 },
+          ]}
+        >
+          <Text style={styles.bigTitle} className="font-quicksand-bold">
+            {product.name}
+          </Text>
+          <Text style={styles.subTitle} className="font-quicksand-medium">
+            {typeof product.category === "object" && product.category?.name
+              ? product.category.name
+              : "Produit"}{" "}
+            • {formatPrice(product.price)}
+          </Text>
+        </Animated.View>
+      </View>
+
+      {/* Scrollable Content */}
+      <Animated.ScrollView
+        scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: HEADER_HEIGHT }}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#FE8C00']}
+            colors={[colors.primary]}
+            progressViewOffset={HEADER_HEIGHT}
           />
         }
       >
-        {/* Images Carousel */}
-        <View style={{ marginTop: 0 }}>
-          {product.images && product.images.length > 0 ? (
-            <View className="relative">
+        <View style={[styles.contentContainer, { backgroundColor: colors.card }]}>
+          {/* Thumbnails */}
+          {product.images.length > 1 && (
+            <View className="mt-4 mb-6">
               <FlatList
                 ref={imagesListRef}
-                data={product.images}
-                renderItem={renderImage}
-                keyExtractor={(item, index) => index.toString()}
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                onMomentumScrollEnd={(event) => {
-                  const newIndex = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
-                  setCurrentImageIndex(newIndex);
-                }}
-                onScrollToIndexFailed={({ index }) => {
-                  setTimeout(() => {
-                    imagesListRef.current?.scrollToIndex({ index, animated: true });
-                  }, 100);
-                }}
-              />
-              {product.images.length > 1 && (
-                <View className="absolute bottom-4 left-0 right-0 flex-row justify-center">
-                  {product.images.map((_, index) => {
-                    const active = index === currentImageIndex;
-                    return (
-                      <View
-                        key={index}
-                        style={{
-                          width: active ? 16 : 8,
-                          height: 8,
-                          borderRadius: 9999,
-                          backgroundColor: 'rgba(255,255,255,0.95)',
-                          opacity: active ? 1 : 0.5,
-                          marginHorizontal: 4,
-                        }}
-                      />
-                    );
-                  })}
-                </View>
-              )}
-              <View className="absolute top-3 right-3 bg-black/40 px-3 py-1 rounded-full">
-                <Text className="text-white text-xs font-quicksand-medium">
-                  {currentImageIndex + 1}/{product.images.length}
-                </Text>
-              </View>
-            </View>
-          ) : (
-            <View className="w-full h-[320px] bg-neutral-100 items-center justify-center">
-              <Ionicons name="image" size={48} color="#9CA3AF" />
-              <Text className="mt-2 text-neutral-500 font-quicksand-medium">Aucune image</Text>
-            </View>
-          )}
-          {product.images.length > 1 && (
-            <View className="px-6 mt-3">
-              <FlatList
                 data={product.images}
                 horizontal
                 keyExtractor={(item, index) => `thumb-${index}`}
@@ -545,7 +658,6 @@ export default function ProductDetails() {
                     <TouchableOpacity
                       onPress={() => {
                         setCurrentImageIndex(index);
-                        imagesListRef.current?.scrollToIndex({ index, animated: true });
                       }}
                       className="mr-3"
                     >
@@ -556,7 +668,7 @@ export default function ProductDetails() {
                           height: 64,
                           borderRadius: 12,
                           borderWidth: active ? 2 : 1,
-                          borderColor: active ? '#FE8C00' : '#E5E7EB',
+                          borderColor: active ? colors.primary : colors.border,
                         }}
                         contentFit="cover"
                         transition={200}
@@ -568,42 +680,47 @@ export default function ProductDetails() {
               />
             </View>
           )}
-        </View>
 
-        {/* Product Main Card */}
-        <View className="px-6 py-6">
-          <View className="mb-4">
-            <View className="flex-row items-start justify-between">
-              <View className="flex-1 pr-3">
-                <Text className="text-2xl font-quicksand-bold text-primary-500 mb-2">
-                  {formatPrice(product.price)}
-                </Text>
-                <Text className="text-xl font-quicksand-bold text-neutral-800 mb-2">
-                  {product.name}
-                </Text>
-              </View>
+          {/* Price and Description */}
+          <View className="mb-6">
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-3xl font-quicksand-bold" style={{ color: '#FE8C00' }}>
+                {formatPrice(product.price)}
+              </Text>
               <TouchableOpacity
                 onPress={handleToggleStatus}
-                className={`px-4 py-2 rounded-2xl ${product.isActive ? 'bg-success-100' : 'bg-error-100'}`}
+                style={{
+                  backgroundColor: product.isActive ? colors.success + '20' : colors.error + '20',
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  borderRadius: 16,
+                }}
               >
-                <Text className={`font-quicksand-semibold text-sm ${product.isActive ? 'text-success-700' : 'text-error-700'}`}>
-                  {product.isActive ? 'Actif' : 'Inactif'}
+                <Text style={{
+                  color: product.isActive ? colors.success : colors.error,
+                  fontWeight: '600',
+                  fontSize: 14,
+                }}>
+                  {product.isActive ? i18n.t("enterprise.productsDetails.status.active") : i18n.t("enterprise.productsDetails.status.inactive")}
                 </Text>
               </TouchableOpacity>
             </View>
             {product.description && (
-              <Text className="text-neutral-600 font-quicksand-medium mt-2" numberOfLines={showFullDescription ? undefined : 3}>
+              <Text className="font-quicksand-medium leading-6" style={{ color: colors.textSecondary }} numberOfLines={showFullDescription ? undefined : 3}>
                 {product.description}
               </Text>
             )}
             {product.description && product.description.length > 150 && (
               <TouchableOpacity onPress={() => setShowFullDescription(!showFullDescription)}>
-                <Text className="text-primary-500 font-quicksand-semibold mt-1">
-                  {showFullDescription ? 'Voir moins' : 'Voir plus'}
+                <Text style={{ color: colors.primary, fontWeight: '600', fontSize: 14, marginTop: 8 }}>
+                  {showFullDescription ? i18n.t("enterprise.productsDetails.description.seeLess") : i18n.t("enterprise.productsDetails.description.seeMore")}
                 </Text>
               </TouchableOpacity>
             )}
           </View>
+
+        {/* Product Details */}
+        <View className="px-6 py-6">
 
           {/* Informations du produit - Temporairement commenté pour debug */}
           {/* <View className="mb-6">
@@ -677,18 +794,19 @@ export default function ProductDetails() {
             <View className="mb-6">
               <View className="flex-row items-center mb-4">
                 <View className="w-1 h-6 bg-primary-500 rounded-full mr-3" />
-                <Text className="text-xl font-quicksand-bold text-neutral-800">Spécifications</Text>
+                <Text className="text-xl font-quicksand-bold" style={{ color: colors.textPrimary }}>{i18n.t("enterprise.productsDetails.sections.specifications")}</Text>
               </View>
               
-              <View className="bg-white border border-neutral-200 rounded-3xl overflow-hidden">
+              <View className="rounded-3xl overflow-hidden" style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
                 {product.specifications.map((spec: any, index: number) => (
                   <View 
                     key={index} 
-                    className={`flex-row items-center py-4 px-5 ${index !== product.specifications.length - 1 ? 'border-b border-neutral-100' : ''}`}
+                    className="flex-row items-center py-4 px-5"
+                    style={index !== product.specifications.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : {}}
                   >
-                    <View className="w-2 h-2 bg-primary-500 rounded-full mr-3" />
-                    <Text className="flex-1 font-quicksand-semibold text-neutral-600">{String(spec.key)}</Text>
-                    <Text className="font-quicksand-bold text-neutral-800">{String(spec.value)}</Text>
+                    <View className="w-2 h-2 bg-primary-500 rounded-full mr-3" style={{ backgroundColor: colors.primary }} />
+                    <Text className="flex-1 font-quicksand-semibold" style={{ color: colors.textSecondary }}>{String(spec.key)}</Text>
+                    <Text className="font-quicksand-bold" style={{ color: colors.textPrimary }}>{String(spec.value)}</Text>
                   </View>
                 ))}
               </View>
@@ -700,19 +818,29 @@ export default function ProductDetails() {
         <View className="px-6 mb-6">
           <View className="flex-row items-center mb-4">
             <View className="w-1 h-6 bg-primary-500 rounded-full mr-3" />
-            <Text className="text-xl font-quicksand-bold text-neutral-800">Votre Entreprise</Text>
+            <Text className="text-xl font-quicksand-bold" style={{ color: colors.textPrimary }}>{i18n.t("enterprise.productsDetails.sections.enterprise")}</Text>
           </View>
           
-          <View className="bg-gradient-to-br from-amber-50 to-white border border-amber-100 rounded-3xl p-5">
+          <LinearGradient
+            colors={isDark ? [colors.secondary, colors.card] : ['#FFFBEB', '#FFFFFF']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              borderWidth: 1,
+              borderColor: isDark ? colors.border : '#FEF3C7',
+              borderRadius: 24,
+              padding: 20,
+            }}
+          >
             <View className="flex-row items-center mb-5">
               {typeof product.enterprise === 'object' && product.enterprise.logo ? (
                 <Image 
                   source={{ uri: product.enterprise.logo }}
                   className="w-16 h-16 rounded-2xl mr-4"
-                  style={{ borderWidth: 2, borderColor: '#FE8C00' }}
+                  style={{ borderWidth: 2, borderColor: colors.primary }}
                 />
               ) : (
-                <View className="w-16 h-16 rounded-2xl bg-primary-500 items-center justify-center mr-4" style={{ borderWidth: 2, borderColor: '#FE8C00' }}>
+                <View className="w-16 h-16 rounded-2xl bg-primary-500 items-center justify-center mr-4" style={{ borderWidth: 2, borderColor: colors.primary }}>
                   <Text className="text-white font-quicksand-bold text-2xl">
                     {typeof product.enterprise === 'object' && product.enterprise.companyName
                       ? product.enterprise.companyName.charAt(0)
@@ -721,15 +849,28 @@ export default function ProductDetails() {
                 </View>
               )}
               <View className="flex-1">
-                <Text className="text-neutral-800 font-quicksand-bold text-lg mb-1">
+                <Text className="font-quicksand-bold text-lg mb-1" style={{ color: colors.textPrimary }}>
                   {typeof product.enterprise === 'object' && product.enterprise.companyName 
                     ? product.enterprise.companyName 
                     : "Votre Entreprise"}
                 </Text>
-                <View className={`flex-row items-center px-3 py-1 rounded-full self-start ${typeof product.enterprise === 'object' && product.enterprise.isActive ? 'bg-success-100' : 'bg-neutral-100'}`}>
-                  <Ionicons name="shield-checkmark" size={14} color={typeof product.enterprise === 'object' && product.enterprise.isActive ? '#10B981' : '#64748B'} />
-                  <Text className={`font-quicksand-bold ml-1 text-xs ${typeof product.enterprise === 'object' && product.enterprise.isActive ? 'text-success-700' : 'text-neutral-600'}`}>
-                    {typeof product.enterprise === 'object' && product.enterprise.isActive ? 'Entreprise active' : 'Inactive'}
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingHorizontal: 12,
+                  paddingVertical: 4,
+                  borderRadius: 20,
+                  alignSelf: 'flex-start',
+                  backgroundColor: typeof product.enterprise === 'object' && product.enterprise.isActive ? colors.success + '20' : colors.secondary,
+                }}>
+                  <Ionicons name="shield-checkmark" size={14} color={typeof product.enterprise === 'object' && product.enterprise.isActive ? colors.success : colors.textSecondary} />
+                  <Text style={{
+                    fontWeight: '700',
+                    fontSize: 12,
+                    marginLeft: 4,
+                    color: typeof product.enterprise === 'object' && product.enterprise.isActive ? colors.success : colors.textSecondary,
+                  }}>
+                    {typeof product.enterprise === 'object' && product.enterprise.isActive ? i18n.t("enterprise.productsDetails.enterpriseInfo.active") : i18n.t("enterprise.productsDetails.enterpriseInfo.inactive")}
                   </Text>
                 </View>
               </View>
@@ -738,26 +879,42 @@ export default function ProductDetails() {
             {/* Statistiques de l'entreprise */}
             <View className="space-y-3">
               <View className="flex-row items-center py-3">
-                <View className="w-10 h-10 bg-amber-100 rounded-xl items-center justify-center mr-3">
-                  <Ionicons name="location" size={18} color="#F59E0B" />
+                <View style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 12,
+                  backgroundColor: isDark ? 'rgba(254, 140, 0, 0.15)' : '#FFF7ED',
+                }}>
+                  <Ionicons name="location" size={18} color="#FE8C00" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-xs font-quicksand-medium text-neutral-500 mb-1">Localisation</Text>
-                  <Text className="text-sm font-quicksand-bold text-neutral-800">
+                  <Text className="text-xs font-quicksand-medium mb-1" style={{ color: colors.textSecondary }}>{i18n.t("enterprise.productsDetails.enterpriseInfo.location")}</Text>
+                  <Text className="text-sm font-quicksand-bold" style={{ color: colors.textPrimary }}>
                     {typeof product.enterprise === 'object' && product.enterprise.location 
                       ? `${product.enterprise.location.district}, ${product.enterprise.location.city}` 
-                      : "Non spécifiée"}
+                      : i18n.t("enterprise.productsDetails.enterpriseInfo.notSpecified")}
                   </Text>
                 </View>
               </View>
 
               <View className="flex-row items-center py-3">
-                <View className="w-10 h-10 bg-blue-100 rounded-xl items-center justify-center mr-3">
+                <View style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 12,
+                  backgroundColor: isDark ? 'rgba(59, 130, 246, 0.15)' : '#DBEAFE',
+                }}>
                   <Ionicons name="calendar" size={18} color="#3B82F6" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-xs font-quicksand-medium text-neutral-500 mb-1">Membre depuis</Text>
-                  <Text className="text-sm font-quicksand-bold text-neutral-800">
+                  <Text className="text-xs font-quicksand-medium mb-1" style={{ color: colors.textSecondary }}>{i18n.t("enterprise.productsDetails.enterpriseInfo.memberSince")}</Text>
+                  <Text className="text-sm font-quicksand-bold" style={{ color: colors.textPrimary }}>
                     {(() => {
                       if (typeof product.enterprise === 'object') {
                         const dateToFormat = product.enterprise.createdAt || product.enterprise.lastActiveDate;
@@ -766,45 +923,124 @@ export default function ProductDetails() {
                           return formatDate(dateString);
                         }
                       }
-                      return "Non disponible";
+                      return i18n.t("enterprise.productsDetails.enterpriseInfo.notAvailable");
                     })()}
                   </Text>
                 </View>
               </View>
               
               <View className="flex-row items-center py-3">
-                <View className="w-10 h-10 bg-green-100 rounded-xl items-center justify-center mr-3">
+                <View style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 12,
+                  backgroundColor: isDark ? 'rgba(16, 185, 129, 0.15)' : '#D1FAE5',
+                }}>
                   <Ionicons name="cart" size={18} color="#10B981" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-xs font-quicksand-medium text-neutral-500 mb-1">Commandes traitées</Text>
-                  <Text className="text-sm font-quicksand-bold text-neutral-800">
+                  <Text className="text-xs font-quicksand-medium mb-1" style={{ color: colors.textSecondary }}>{i18n.t("enterprise.productsDetails.enterpriseInfo.ordersProcessed")}</Text>
+                  <Text className="text-sm font-quicksand-bold" style={{ color: colors.textPrimary }}>
                     {typeof product.enterprise === 'object' && product.enterprise.stats?.totalOrders 
                       ? `${String(product.enterprise.stats.totalOrders)} commandes` 
-                      : "Aucune commande"}
+                      : i18n.t("enterprise.productsDetails.enterpriseInfo.noOrders")}
                   </Text>
                 </View>
               </View>
 
               <View className="flex-row items-center py-3">
-                <View className="w-10 h-10 bg-yellow-100 rounded-xl items-center justify-center mr-3">
-                  <Ionicons name="star" size={18} color="#F59E0B" />
+                <View style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 12,
+                  backgroundColor: isDark ? 'rgba(251, 191, 36, 0.15)' : '#FEF3C7',
+                }}>
+                  <Ionicons name="star" size={18} color="#FBBF24" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-xs font-quicksand-medium text-neutral-500 mb-1">Note moyenne</Text>
-                  <Text className="text-sm font-quicksand-bold text-neutral-800">
+                  <Text className="text-xs font-quicksand-medium mb-1" style={{ color: colors.textSecondary }}>{i18n.t("enterprise.productsDetails.enterpriseInfo.averageRating")}</Text>
+                  <Text className="text-sm font-quicksand-bold" style={{ color: colors.textPrimary }}>
                     {typeof product.enterprise === 'object' && product.enterprise.stats?.averageRating 
-                      ? `${product.enterprise.stats?.averageRating?.toFixed(1)} ⭐ (${product.enterprise.stats?.totalReviews ? String(product.enterprise.stats.totalReviews) : '0'} avis)` 
-                      : "Non évalué"}
+                      ? `${product.enterprise.stats?.averageRating?.toFixed(1)} ⭐ (${product.enterprise.stats?.totalReviews ? String(product.enterprise.stats.totalReviews) : '0'} ${i18n.t("enterprise.productsDetails.enterpriseInfo.reviews")})` 
+                      : i18n.t("enterprise.productsDetails.enterpriseInfo.notRated")}
                   </Text>
                 </View>
               </View>
             </View>
-          </View>
+          </LinearGradient>
         </View>
 
         {/* (Section Informations supplémentaires intégrée plus haut dans Détails / Performance) */}
-      </ScrollView>
+        
+          {/* Actions Buttons */}
+          <View className="px-6 pb-8 pt-4">
+            <View className="flex-row" style={{ gap: 12 }}>
+              {/* Bouton Activer/Désactiver */}
+              <TouchableOpacity 
+                onPress={handleToggleStatus}
+                style={{
+                  flex: 1,
+                  backgroundColor: product.isActive ? '#F59E0B' : '#10B981',
+                  paddingVertical: 14,
+                  borderRadius: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Ionicons 
+                  name={product.isActive ? "pause-circle" : "checkmark-circle"} 
+                  size={20} 
+                  color="white"
+                />
+                <Text style={{ color: 'white', fontWeight: '700', marginLeft: 8, fontSize: 14 }}>
+                  {product.isActive ? i18n.t("enterprise.productsDetails.status.deactivate") : i18n.t("enterprise.productsDetails.status.activate")}
+                </Text>
+              </TouchableOpacity>
+              
+              {/* Bouton Modifier */}
+              <TouchableOpacity 
+                onPress={handleEditProduct}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#FE8C00',
+                  paddingVertical: 14,
+                  borderRadius: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Ionicons name="create-outline" size={20} color="white" />
+                <Text style={{ color: 'white', fontWeight: '700', marginLeft: 8, fontSize: 14 }}>
+                  {i18n.t("enterprise.productsDetails.actions.edit")}
+                </Text>
+              </TouchableOpacity>
+              
+              {/* Bouton Supprimer */}
+              <TouchableOpacity 
+                onPress={handleDeleteProduct}
+                style={{
+                  width: 54,
+                  height: 54,
+                  backgroundColor: '#EF4444',
+                  borderRadius: 16,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Ionicons name="trash-outline" size={22} color="white" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Animated.ScrollView>
 
       {/* Image Viewer Modal */}
       <Modal
@@ -863,63 +1099,6 @@ export default function ProductDetails() {
         </View>
       </Modal>
 
-      {/* Boutons d'action fixes en bas */}
-      <View className="bg-white px-6 py-4 border-t border-neutral-100">
-        <View className="flex-row space-x-3">
-          <TouchableOpacity
-            onPress={handleToggleStatus}
-            className={`flex-1 py-4 rounded-2xl flex-row items-center justify-center ${product.isActive ? 'bg-warning-500' : 'bg-success-500'}`}
-            style={{ 
-              shadowColor: product.isActive ? '#F59E0B' : '#10B981',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 5
-            }}
-          >
-            <Ionicons 
-              name={product.isActive ? "power" : "checkmark-circle"} 
-              size={22} 
-              color="white"
-            />
-            <Text className="text-white font-quicksand-bold ml-2 text-base">
-              {product.isActive ? 'Désactiver' : 'Activer'}
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            onPress={handleEditProduct}
-            className="flex-1 bg-primary-500 py-4 rounded-2xl flex-row items-center justify-center"
-            style={{ 
-              shadowColor: '#FE8C00',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 5
-            }}
-          >
-            <Ionicons name="pencil" size={20} color="white" />
-            <Text className="text-white font-quicksand-bold ml-2 text-base">
-              Modifier
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            onPress={handleDeleteProduct}
-            className="bg-error-500 w-14 h-14 rounded-2xl items-center justify-center"
-            style={{ 
-              shadowColor: '#EF4444',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 5
-            }}
-          >
-            <Ionicons name="trash" size={22} color="white" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
       {/* Modal de confirmation */}
       <Modal
         visible={confirmationVisible}
@@ -928,7 +1107,7 @@ export default function ProductDetails() {
         onRequestClose={closeConfirmation}
       >
         <View className="flex-1 justify-center items-center bg-black/60 px-6">
-          <View className="bg-white rounded-3xl p-6 w-full max-w-sm">
+          <View className="rounded-3xl p-6 w-full max-w-sm" style={{ backgroundColor: colors.card }}>
             <View className="items-center mb-4">
               <View 
                 className="w-16 h-16 rounded-full items-center justify-center mb-3"
@@ -940,21 +1119,22 @@ export default function ProductDetails() {
                   color={confirmationAction?.confirmColor} 
                 />
               </View>
-              <Text className="text-xl font-quicksand-bold text-neutral-800 text-center">
+              <Text className="text-xl font-quicksand-bold text-center" style={{ color: colors.textPrimary }}>
                 {confirmationAction?.title}
               </Text>
             </View>
             
-            <Text className="text-base text-neutral-600 font-quicksand-medium mb-6 text-center">
+            <Text className="text-base font-quicksand-medium mb-6 text-center" style={{ color: colors.textSecondary }}>
               {confirmationAction?.message}
             </Text>
             
             <View className="flex-row space-x-3">
               <TouchableOpacity
-                className="flex-1 bg-neutral-100 rounded-2xl py-4"
+                className="flex-1 rounded-2xl py-4"
+                style={{ backgroundColor: colors.secondary }}
                 onPress={closeConfirmation}
               >
-                <Text className="text-neutral-700 font-quicksand-bold text-center text-base">Annuler</Text>
+                <Text className="font-quicksand-bold text-center text-base" style={{ color: colors.textPrimary }}>{i18n.t("enterprise.productsDetails.modals.confirmation.delete.cancel")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 className="flex-1 rounded-2xl py-4"
@@ -980,3 +1160,85 @@ export default function ProductDetails() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+  },
+  compactHeaderContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+    elevation: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    backgroundColor: "rgba(255,255,255,0.8)",
+    justifyContent: "flex-end",
+    paddingBottom: 10,
+    overflow: "hidden",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0,0,0,0.05)",
+  },
+  compactHeaderContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+  },
+  compactTitle: {
+    color: "#fff",
+    fontSize: 18,
+    flex: 1,
+    textAlign: "center",
+    marginHorizontal: 10,
+  },
+  headerWrapper: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: HEADER_HEIGHT,
+    overflow: "hidden",
+    backgroundColor: "#000",
+  },
+  headerImage: {
+    width: screenWidth,
+    height: HEADER_HEIGHT + 100,
+    position: "absolute",
+  },
+  bigTitleContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 20,
+    right: 20,
+    justifyContent: "flex-end",
+  },
+  bigTitle: {
+    color: "#fff",
+    fontSize: 32,
+    textShadowColor: "rgba(0,0,0,0.7)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 10,
+    marginBottom: 4,
+  },
+  subTitle: {
+    color: "#eee",
+    fontSize: 16,
+    opacity: 0.9,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  contentContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    minHeight: screenHeight,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    marginTop: -20,
+  },
+});

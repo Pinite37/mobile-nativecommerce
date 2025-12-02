@@ -145,7 +145,17 @@
                     "socialLinks": "Liens sociaux",
                     "additionalInfo": "Informations supplémentaires",
                     "creationDate": "Date de création",
-                    "enterpriseId": "ID de l'entreprise"
+                    "enterpriseId": "ID de l'entreprise",
+                    "locationNotAvailable": "Localisation non disponible",
+                    "contactEnterprise": "Contacter l'entreprise",
+                    "whatsapp": "WhatsApp",
+                    "call": "Appeler",
+                    "website": "Site web",
+                    "enterpriseProducts": "Produits de l'entreprise",
+                    "products": "produits",
+                    "loading": "Chargement...",
+                    "noProductsAvailable": "Aucun produit disponible",
+                    "noProductsMessage": "Cette entreprise n'a pas encore de produits en ligne."
                 },
                 "addPartner": {
                     "title": "Ajouter un partenaire",
@@ -385,7 +395,14 @@
                     "title": "Aucun message pour le moment",
                     "message": "Commencez la conversation en envoyant un message"
                 },
+                "emptyConversation": {
+                    "title": "Début de la conversation",
+                    "subtitle": "Commencez la discussion à propos de ce produit"
+                },
                 "messageDeleted": "[Message supprimé]",
+                "replyTo": "Réponse à",
+                "productFallback": "Produit",
+                "priceUnavailable": "Prix non disponible",
                 "today": "Aujourd'hui",
                 "yesterday": "Hier",
                 "permissions": {
@@ -529,6 +546,91 @@
             "noCategory": "Sans catégorie",
             "createComingSoon": "Fonctionnalité à venir",
             "createComingSoonMessage": "La création de produit sera disponible prochainement"
+        },
+        "productsDetails": {
+            "loading": "Chargement...",
+            "error": {
+                "title": "Erreur de chargement",
+                "message": "Produit non trouvé",
+                "retry": "Réessayer",
+                "back": "Retour"
+            },
+            "share": {
+                "defaultMessage": "Voir ce produit"
+            },
+            "description": {
+                "seeMore": "Voir plus",
+                "seeLess": "Voir moins"
+            },
+            "sections": {
+                "information": "Informations",
+                "specifications": "Spécifications",
+                "enterprise": "Votre Entreprise"
+            },
+            "status": {
+                "active": "Actif",
+                "inactive": "Inactif",
+                "activate": "Activer",
+                "deactivate": "Désactiver"
+            },
+            "actions": {
+                "edit": "Modifier",
+                "delete": "Supprimer",
+                "editComingSoon": "Fonctionnalité à venir",
+                "editComingSoonMessage": "L'édition de produit sera bientôt disponible"
+            },
+            "stock": {
+                "units": "unités",
+                "inStock": "En stock",
+                "lowStock": "Stock faible",
+                "outOfStock": "Épuisé"
+            },
+            "details": {
+                "category": "Catégorie",
+                "weight": "Poids",
+                "createdAt": "Créé le",
+                "updatedAt": "Mis à jour"
+            },
+            "enterpriseInfo": {
+                "location": "Localisation",
+                "memberSince": "Membre depuis",
+                "ordersProcessed": "Commandes traitées",
+                "averageRating": "Note moyenne",
+                "active": "Entreprise active",
+                "inactive": "Inactive",
+                "notSpecified": "Non spécifiée",
+                "notAvailable": "Non disponible",
+                "noOrders": "Aucune commande",
+                "notRated": "Non évalué",
+                "reviews": "avis"
+            },
+            "modals": {
+                "confirmation": {
+                    "delete": {
+                        "title": "Supprimer le produit",
+                        "message": "Êtes-vous sûr de vouloir supprimer ce produit ? Cette action est irréversible.",
+                        "confirm": "Supprimer",
+                        "cancel": "Annuler"
+                    },
+                    "activate": {
+                        "title": "Activer le produit",
+                        "message": "Voulez-vous vraiment activer ce produit ?",
+                        "confirm": "Activer"
+                    },
+                    "deactivate": {
+                        "title": "Désactiver le produit",
+                        "message": "Voulez-vous vraiment désactiver ce produit ?",
+                        "confirm": "Désactiver"
+                    }
+                }
+            },
+            "toasts": {
+                "deleteSuccess": "Produit supprimé avec succès",
+                "activateSuccess": "Produit activé avec succès",
+                "deactivateSuccess": "Produit désactivé avec succès",
+                "error": "Erreur",
+                "errorMessage": "Une erreur est survenue"
+            }
         },
         "advertisementsCreate": {
             "title": {
@@ -1338,6 +1440,21 @@
                     "title": "Erreur de synchronisation",
                     "message": "Impossible de mettre à jour le statut de lecture."
                 }
+            },
+            "conversationDetail": {
+                "placeholder": "Tapez votre message...",
+                "send": "Envoyer",
+                "reply": "Réponse à",
+                "messageDeleted": "[Message supprimé]",
+                "replyTo": "Réponse à",
+                "productFallback": "Produit",
+                "priceUnavailable": "Prix non disponible",
+                "emptyConversation": {
+                    "title": "Début de la conversation",
+                    "subtitle": "Commencez la discussion à propos de ce produit"
+                },
+                "today": "Aujourd'hui",
+                "yesterday": "Hier"
             }
         },
         "settings": {
@@ -1411,7 +1528,43 @@
         "details": {
             "title": "Mes informations",
             "photo": {
-                "change": "Modifier ma photo"
+                "change": "Modifier ma photo",
+                "modal": {
+                    "title": "Photo de profil",
+                    "permissions": {
+                        "title": "Permission requise",
+                        "gallery": "Nous avons besoin de l'autorisation pour accéder à vos photos.",
+                        "camera": "Nous avons besoin de l'autorisation pour utiliser votre caméra."
+                    },
+                    "errors": {
+                        "pickImage": "Erreur",
+                        "pickImageMessage": "Impossible de sélectionner l'image",
+                        "takePhoto": "Erreur",
+                        "takePhotoMessage": "Impossible de prendre la photo",
+                        "upload": "Erreur",
+                        "uploadMessage": "Impossible de télécharger l'image",
+                        "remove": "Erreur",
+                        "removeMessage": "Impossible de supprimer l'image"
+                    },
+                    "success": {
+                        "title": "Succès",
+                        "message": "Photo de profil mise à jour"
+                    },
+                    "remove": {
+                        "title": "Supprimer la photo",
+                        "message": "Êtes-vous sûr de vouloir supprimer votre photo de profil ?",
+                        "cancel": "Annuler",
+                        "confirm": "Supprimer",
+                        "success": "Photo de profil supprimée"
+                    },
+                    "uploading": "Téléchargement en cours...",
+                    "takePhoto": "Prendre une photo",
+                    "takePhotoDescription": "Utiliser la caméra",
+                    "pickFromGallery": "Choisir dans la galerie",
+                    "pickFromGalleryDescription": "Sélectionner une photo existante",
+                    "removePhoto": "Supprimer la photo",
+                    "removePhotoDescription": "Retirer la photo de profil actuelle"
+                }
             },
             "sections": {
                 "personal": "Informations personnelles",

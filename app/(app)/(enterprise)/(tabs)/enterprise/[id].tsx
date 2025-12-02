@@ -18,6 +18,8 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from "../../../../../contexts/ThemeContext";
+import i18n from "../../../../../i18n/i18n";
 import EnterpriseService, { Enterprise } from "../../../../../services/api/EnterpriseService";
 import { Product } from "../../../../../types/product";
 
@@ -27,6 +29,7 @@ export default function EnterpriseDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [enterprise, setEnterprise] = useState<Enterprise | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,8 +85,8 @@ export default function EnterpriseDetails() {
       console.error('❌ Erreur chargement entreprise:', error);
       setErrorModal({
         visible: true,
-        title: 'Erreur',
-        message: 'Impossible de charger les informations de l\'entreprise'
+        title: i18n.t("messages.error"),
+        message: i18n.t("enterprise.profile.messages.loadErrorMessage")
       });
     } finally {
       setLoading(false);
@@ -134,11 +137,11 @@ export default function EnterpriseDetails() {
     }, [shimmer]);
     const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
     return (
-      <View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
+      <View style={[{ backgroundColor: isDark ? '#374151' : '#E5E7EB', overflow: 'hidden' }, style]}>
         <Animated.View style={{
           position: 'absolute', top: 0, bottom: 0, width: 120,
           transform: [{ translateX }],
-          backgroundColor: 'rgba(255,255,255,0.35)',
+          backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.35)',
           opacity: 0.7,
         }} />
       </View>
@@ -146,7 +149,7 @@ export default function EnterpriseDetails() {
   };
 
   const SkeletonEnterprise = () => (
-    <View className="flex-1 bg-neutral-50">
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
       <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
 
       {/* Header Skeleton */}
@@ -172,8 +175,11 @@ export default function EnterpriseDetails() {
       <View className="flex-1">
         {/* Enterprise Info Skeleton */}
         <View
-          className="bg-white mx-4 rounded-2xl mt-6 mb-6"
+          className="mx-4 rounded-2xl mt-6 mb-6"
           style={{
+            backgroundColor: colors.card || colors.background,
+            borderColor: colors.border,
+            borderWidth: 1,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.1,
@@ -253,7 +259,7 @@ export default function EnterpriseDetails() {
         } else {
           setErrorModal({
             visible: true,
-            title: 'WhatsApp non disponible',
+            title: i18n.t("messages.error"),
             message: 'WhatsApp n\'est pas installé sur votre appareil.'
           });
         }
@@ -276,7 +282,7 @@ export default function EnterpriseDetails() {
         } else {
           setErrorModal({
             visible: true,
-            title: 'Erreur',
+            title: i18n.t("messages.error"),
             message: 'Impossible de passer l\'appel'
           });
         }
@@ -303,8 +309,8 @@ export default function EnterpriseDetails() {
         } else {
           setErrorModal({
             visible: true,
-            title: 'Erreur',
-            message: 'Impossible d\'ouvrir le site web'
+            title: i18n.t("messages.error"),
+            message: 'Impossible d\'ouvrir WhatsApp'
           });
         }
       })
@@ -320,9 +326,12 @@ export default function EnterpriseDetails() {
   // Composant pour une carte de produit
   const ProductCard = ({ product }: { product: Product }) => (
     <TouchableOpacity
-      className="bg-white rounded-2xl mb-3 overflow-hidden"
+      className="rounded-2xl mb-3 overflow-hidden"
       style={{
         width: (screenWidth - 48) / 2,
+        backgroundColor: colors.card || colors.background,
+        borderColor: colors.border,
+        borderWidth: 1,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
@@ -344,18 +353,18 @@ export default function EnterpriseDetails() {
         {product.stock <= 5 && product.stock > 0 && (
           <View className="absolute top-2 right-2 bg-warning-500 rounded-full px-2 py-1">
             <Text className="text-white text-xs font-quicksand-bold">
-              {product.stock} restants
+              {i18n.t("client.enterprise.stock.remaining", { count: product.stock })}
             </Text>
           </View>
         )}
       </View>
 
       <View className="p-3">
-        <Text numberOfLines={2} className="text-sm font-quicksand-semibold text-neutral-800 mb-2 h-10">
+        <Text numberOfLines={2} className="text-sm font-quicksand-semibold mb-2 h-10" style={{color: colors.text}}>
           {product.name}
         </Text>
 
-        <Text className="text-base font-quicksand-bold text-primary-600 mb-2">
+        <Text className="text-base font-quicksand-bold mb-2" style={{color: '#FE8C00'}}>
           {formatPrice(product.price)}
         </Text>
 
@@ -363,12 +372,12 @@ export default function EnterpriseDetails() {
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center">
               <Ionicons name="star" size={12} color="#FFD700" />
-              <Text className="text-xs text-neutral-600 ml-1">
+              <Text className="text-xs ml-1" style={{color: colors.textSecondary}}>
                 {product.stats.averageRating?.toFixed(1) || '0.0'}
               </Text>
             </View>
-            <Text className="text-xs text-neutral-400">
-              {product.stats.totalSales || 0} vendus
+            <Text className="text-xs" style={{color: colors.textSecondary}}>
+              {i18n.t("client.enterprise.stats.sold", { count: product.stats.totalSales || 0 })}
             </Text>
           </View>
         )}
@@ -382,20 +391,20 @@ export default function EnterpriseDetails() {
 
   if (!enterprise) {
     return (
-      <View className="flex-1 bg-white">
+      <View className="flex-1" style={{backgroundColor: colors.background}}>
         <View className="flex-1 justify-center items-center">
           <Ionicons name="business-outline" size={64} color="#EF4444" />
-          <Text className="mt-4 text-xl font-quicksand-bold text-neutral-800">
-            Entreprise introuvable
+          <Text className="mt-4 text-xl font-quicksand-bold" style={{color: colors.text}}>
+            {i18n.t("enterprise.profile.messages.loadError")}
           </Text>
-          <Text className="mt-2 text-neutral-600 font-quicksand-medium text-center px-6">
+          <Text className="mt-2 font-quicksand-medium text-center px-6" style={{color: colors.textSecondary}}>
             L&apos;entreprise que vous recherchez n&apos;existe pas ou n&apos;est plus active.
           </Text>
           <TouchableOpacity
             className="mt-6 bg-primary-500 rounded-2xl px-6 py-3"
             onPress={() => router.back()}
           >
-            <Text className="text-white font-quicksand-semibold">Retour</Text>
+            <Text className="text-white font-quicksand-semibold">{i18n.t("common.actions.cancel")}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -403,7 +412,7 @@ export default function EnterpriseDetails() {
   }
 
   return (
-    <View className="flex-1 bg-neutral-50">
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
       <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
 
       {/* Header vert commun */}
@@ -455,8 +464,11 @@ export default function EnterpriseDetails() {
           <View>
             {/* Informations de l'entreprise */}
             <View
-              className="bg-white mx-4 rounded-2xl mb-6"
+              className="mx-4 rounded-2xl mb-6"
               style={{
+                backgroundColor: colors.card || colors.background,
+                borderColor: colors.border,
+                borderWidth: 1,
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.1,
@@ -480,25 +492,25 @@ export default function EnterpriseDetails() {
                   )}
 
                   <View className="ml-4 flex-1">
-                    <Text className="text-xl font-quicksand-bold text-neutral-800 mb-1">
+                    <Text className="text-xl font-quicksand-bold mb-1" style={{color: colors.text}}>
                       {enterprise.companyName}
                     </Text>
                     <View className="flex-row items-center mb-2">
-                      <Ionicons name="location" size={14} color="#9CA3AF" />
+                      <Ionicons name="location" size={14} color={colors.textSecondary} />
                       {enterprise.location && enterprise.location.city && enterprise.location.district ? (
-                        <Text className="text-sm text-neutral-600 ml-1">
+                        <Text className="text-sm ml-1" style={{color: colors.textSecondary}}>
                           {enterprise.location.city}, {enterprise.location.district}
                         </Text>
                       ) : (
-                        <Text className="text-sm text-neutral-600 ml-1">
-                          Localisation non disponible
+                        <Text className="text-sm ml-1" style={{color: colors.textSecondary}}>
+                          {i18n.t("enterprise.enterpriseDetails.locationNotAvailable")}
                         </Text>
                       )}
                     </View>
                     <View className="flex-row items-center">
                       <View className="w-2 h-2 bg-success-500 rounded-full mr-2" />
                       <Text className="text-sm text-success-600 font-quicksand-medium">
-                        Entreprise active
+                        {i18n.t("enterprise.profile.modals.enterpriseDetails.active")}
                       </Text>
                     </View>
                   </View>
@@ -507,7 +519,7 @@ export default function EnterpriseDetails() {
                 {/* Description */}
                 {enterprise.description && (
                   <View className="mb-4">
-                    <Text className="text-neutral-700 font-quicksand-medium leading-5">
+                    <Text className="font-quicksand-medium leading-5" style={{color: colors.textSecondary}}>
                       {enterprise.description}
                     </Text>
                   </View>
@@ -515,47 +527,47 @@ export default function EnterpriseDetails() {
 
                 {/* Statistiques */}
                 <View className="flex-row justify-between mb-4">
-                  <View className="flex-1 bg-neutral-50 rounded-xl p-3 mr-2">
+                  <View className="flex-1 rounded-xl p-3 mr-2" style={{backgroundColor: isDark ? colors.surface || '#1f2937' : '#f9fafb'}}>
                     <View className="flex-row items-center mb-1">
                       <Ionicons name="star" size={16} color="#FE8C00" />
-                      <Text className="text-base font-quicksand-bold text-neutral-800 ml-1">
+                      <Text className="text-base font-quicksand-bold ml-1" style={{color: colors.text}}>
                         {enterprise.stats.averageRating?.toFixed(1) || '0.0'}
                       </Text>
                     </View>
-                    <Text className="text-xs text-neutral-600">
-                      {enterprise.stats.totalReviews || 0} avis
+                    <Text className="text-xs" style={{color: colors.textSecondary}}>
+                      {i18n.t("client.enterprise.stats.reviews", { count: enterprise.stats.totalReviews || 0 })}
                     </Text>
                   </View>
 
-                  <View className="flex-1 bg-neutral-50 rounded-xl p-3 mx-1">
+                  <View className="flex-1 rounded-xl p-3 mx-1" style={{backgroundColor: isDark ? colors.surface || '#1f2937' : '#f9fafb'}}>
                     <View className="flex-row items-center mb-1">
                       <Ionicons name="cube" size={16} color="#10B981" />
-                      <Text className="text-base font-quicksand-bold text-neutral-800 ml-1">
+                      <Text className="text-base font-quicksand-bold ml-1" style={{color: colors.text}}>
                         {(enterprise as any).totalActiveProducts || products.length}
                       </Text>
                     </View>
-                    <Text className="text-xs text-neutral-600">
-                      produits
+                    <Text className="text-xs" style={{color: colors.textSecondary}}>
+                      {i18n.t("enterprise.profile.modals.enterpriseDetails.products")}
                     </Text>
                   </View>
 
-                  <View className="flex-1 bg-neutral-50 rounded-xl p-3 ml-2">
+                  <View className="flex-1 rounded-xl p-3 ml-2" style={{backgroundColor: isDark ? colors.surface || '#1f2937' : '#f9fafb'}}>
                     <View className="flex-row items-center mb-1">
                       <Ionicons name="people" size={16} color="#8B5CF6" />
-                      <Text className="text-base font-quicksand-bold text-neutral-800 ml-1">
+                      <Text className="text-base font-quicksand-bold ml-1" style={{color: colors.text}}>
                         {enterprise.stats.totalOrders || 0}
                       </Text>
                     </View>
-                    <Text className="text-xs text-neutral-600">
-                      commandes
+                    <Text className="text-xs" style={{color: colors.textSecondary}}>
+                      {i18n.t("enterprise.profile.modals.enterpriseDetails.orders")}
                     </Text>
                   </View>
                 </View>
 
                 {/* Actions de contact */}
                 <View>
-                  <Text className="text-sm font-quicksand-semibold text-neutral-800 mb-3">
-                    Contacter l&apos;entreprise
+                  <Text className="text-sm font-quicksand-semibold mb-3" style={{color: colors.text}}>
+                    {i18n.t("enterprise.profile.modals.enterpriseDetails.contact")}
                   </Text>
                   <View className="flex-row flex-wrap">
                     {enterprise.contactInfo.phone && (
@@ -566,7 +578,7 @@ export default function EnterpriseDetails() {
                         >
                           <Ionicons name="logo-whatsapp" size={16} color="#10B981" />
                           <Text className="ml-2 text-success-700 font-quicksand-medium text-sm">
-                            WhatsApp
+                            {i18n.t("enterprise.profile.modals.enterpriseDetails.whatsapp")}
                           </Text>
                         </TouchableOpacity>
 
@@ -576,7 +588,7 @@ export default function EnterpriseDetails() {
                         >
                           <Ionicons name="call" size={16} color="#FE8C00" />
                           <Text className="ml-2 text-primary-700 font-quicksand-medium text-sm">
-                            Appeler
+                            {i18n.t("enterprise.profile.modals.enterpriseDetails.call")}
                           </Text>
                         </TouchableOpacity>
                       </>
@@ -589,7 +601,7 @@ export default function EnterpriseDetails() {
                       >
                         <Ionicons name="globe" size={16} color="#3B82F6" />
                         <Text className="ml-2 text-blue-700 font-quicksand-medium text-sm">
-                          Site web
+                          {i18n.t("enterprise.profile.modals.enterpriseDetails.website")}
                         </Text>
                       </TouchableOpacity>
                     )}
@@ -601,11 +613,14 @@ export default function EnterpriseDetails() {
             {/* Header produits */}
             <View className="px-4 mb-4">
               <View className="flex-row items-center justify-between">
-                <Text className="text-lg font-quicksand-bold text-neutral-800">
-                  Produits de l&apos;entreprise
+                <Text className="text-lg font-quicksand-bold" style={{color: colors.text}}>
+                  {i18n.t("enterprise.profile.modals.enterpriseDetails.enterpriseProducts")}
                 </Text>
-                <Text className="text-sm text-neutral-500 bg-neutral-100 px-3 py-1 rounded-full">
-                  {pagination.total} produits
+                <Text className="text-sm px-3 py-1 rounded-full" style={{
+                  color: colors.textSecondary,
+                  backgroundColor: isDark ? colors.surface || '#1f2937' : '#f9fafb'
+                }}>
+                  {pagination.total} {i18n.t("enterprise.profile.modals.enterpriseDetails.products")}
                 </Text>
               </View>
             </View>
@@ -615,8 +630,8 @@ export default function EnterpriseDetails() {
           loadingProducts ? (
             <View className="py-4 items-center">
               <ActivityIndicator size="small" color="#FE8C00" />
-              <Text className="mt-2 text-neutral-600 font-quicksand-medium text-sm">
-                Chargement...
+              <Text className="mt-2 font-quicksand-medium text-sm" style={{color: colors.textSecondary}}>
+                {i18n.t("enterprise.settings.loading")}
               </Text>
             </View>
           ) : null
@@ -624,17 +639,17 @@ export default function EnterpriseDetails() {
         ListEmptyComponent={
           !loading ? (
             <View className="flex-1 justify-center items-center py-20">
-              <Ionicons name="cube-outline" size={64} color="#9CA3AF" />
-              <Text className="mt-4 text-lg font-quicksand-bold text-neutral-600">
-                Aucun produit disponible
+              <Ionicons name="cube-outline" size={64} color={colors.textSecondary} />
+              <Text className="mt-4 text-lg font-quicksand-bold" style={{color: colors.textSecondary}}>
+                {i18n.t("enterprise.profile.modals.enterpriseDetails.noProductsAvailable")}
               </Text>
-              <Text className="mt-2 text-neutral-500 font-quicksand-medium text-center px-6">
-                Cette entreprise n&apos;a pas encore de produits en ligne.
+              <Text className="mt-2 font-quicksand-medium text-center px-6" style={{color: colors.textSecondary}}>
+                {i18n.t("enterprise.profile.modals.enterpriseDetails.noProductsMessage")}
               </Text>
             </View>
           ) : null
         }
-        contentContainerStyle={{ paddingBottom: 20, paddingTop: 20 }}
+        contentContainerStyle={{ paddingBottom: 120, paddingTop: 20 }}
       />
 
       {/* Modal d'erreur */}
@@ -649,7 +664,7 @@ export default function EnterpriseDetails() {
           onPress={() => setErrorModal({ visible: false, title: '', message: '' })}
           className="flex-1 bg-black/50 justify-center items-center px-6"
         >
-          <TouchableOpacity activeOpacity={1} className="bg-white rounded-3xl p-6 w-full max-w-sm">
+          <TouchableOpacity activeOpacity={1} className="rounded-3xl p-6 w-full max-w-sm" style={{backgroundColor: colors.card || colors.background}}>
             {/* Icon d'erreur */}
             <View className="items-center mb-4">
               <View className="w-16 h-16 bg-red-100 rounded-full justify-center items-center">
@@ -658,12 +673,12 @@ export default function EnterpriseDetails() {
             </View>
 
             {/* Titre */}
-            <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+            <Text className="text-xl font-quicksand-bold text-center mb-2" style={{color: colors.text}}>
               {errorModal.title}
             </Text>
 
             {/* Message */}
-            <Text className="text-base font-quicksand-medium text-neutral-600 text-center mb-6">
+            <Text className="text-base font-quicksand-medium text-center mb-6" style={{color: colors.textSecondary}}>
               {errorModal.message}
             </Text>
 
@@ -674,7 +689,7 @@ export default function EnterpriseDetails() {
               activeOpacity={0.7}
             >
               <Text className="text-white font-quicksand-bold text-center">
-                OK
+                {i18n.t("common.actions.understood")}
               </Text>
             </TouchableOpacity>
           </TouchableOpacity>

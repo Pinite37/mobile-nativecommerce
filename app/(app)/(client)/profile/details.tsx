@@ -1,3 +1,4 @@
+import { useTheme } from "@/contexts/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRouter } from "expo-router";
@@ -28,6 +29,7 @@ export default function ProfileDetailsScreen() {
   const navigation = useNavigation();
   const { user, refreshUserData } = useAuth();
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   const [loading, setLoading] = useState(true); // Commencer avec loading = true
   const [saving, setSaving] = useState(false);
   const [imagePickerVisible, setImagePickerVisible] = useState(false);
@@ -136,7 +138,7 @@ export default function ProfileDetailsScreen() {
     }, [shimmer]);
     const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
     return (
-      <View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
+      <View style={[{ backgroundColor: colors.card, overflow: 'hidden' }, style]}>
         <Animated.View style={{
           position: 'absolute', top: 0, bottom: 0, width: 120,
           transform: [{ translateX }],
@@ -150,13 +152,13 @@ export default function ProfileDetailsScreen() {
   const SkeletonForm = () => (
     <ScrollView className="flex-1 px-4">
       {/* Photo de profil skeleton */}
-      <View className="bg-white rounded-2xl mt-6 p-4 items-center">
+      <View className="rounded-2xl mt-6 p-4 items-center" style={{ backgroundColor: colors.card }}>
         <ShimmerBlock style={{ width: 96, height: 96, borderRadius: 48, marginBottom: 16 }} />
         <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '40%' }} />
       </View>
 
       {/* Informations personnelles skeleton */}
-      <View className="bg-white rounded-2xl mt-6 p-4">
+      <View className="rounded-2xl mt-6 p-4" style={{ backgroundColor: colors.card }}>
         <ShimmerBlock style={{ height: 20, borderRadius: 10, width: '60%', marginBottom: 16 }} />
 
         {/* Champs skeleton */}
@@ -169,11 +171,11 @@ export default function ProfileDetailsScreen() {
       </View>
 
       {/* Sécurité skeleton */}
-      <View className="bg-white rounded-2xl mt-6 p-4">
+      <View className="rounded-2xl mt-6 p-4" style={{ backgroundColor: colors.card }}>
         <ShimmerBlock style={{ height: 20, borderRadius: 10, width: '30%', marginBottom: 16 }} />
 
         {[1, 2, 3].map((i) => (
-          <View key={i} className="py-3 border-b border-gray-100">
+          <View key={i} className="py-3" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
             <View className="flex-row items-center">
               <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 12, marginRight: 12 }} />
               <View className="flex-1">
@@ -193,7 +195,7 @@ export default function ProfileDetailsScreen() {
   );
 
   return (
-    <View className="flex-1 bg-background-secondary">
+    <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
       <ExpoStatusBar style="light" translucent />
       {/* Header vert */}
       <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="pb-6 rounded-b-3xl shadow-md" style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}>
@@ -235,7 +237,7 @@ export default function ProfileDetailsScreen() {
 
           <ScrollView className="flex-1 px-4">
           {/* Photo de profil */}
-          <View className="bg-white rounded-2xl mt-6 p-4 items-center">
+          <View className="rounded-2xl mt-6 p-4 items-center" style={{ backgroundColor: colors.card }}>
             <TouchableOpacity 
               onPress={() => setImagePickerVisible(true)}
               className="mb-4"
@@ -244,14 +246,14 @@ export default function ProfileDetailsScreen() {
                 <Image 
                   source={{ uri: profile.profileImage }} 
                   className="w-24 h-24 rounded-full"
-                  style={{ borderWidth: 2, borderColor: '#FE8C00' }}
+                  style={{ borderWidth: 2, borderColor: colors.brandPrimary }}
                 />
               ) : (
                 <View 
-                  className="w-24 h-24 rounded-full bg-primary-100 justify-center items-center"
-                  style={{ borderWidth: 2, borderColor: '#FE8C00' }}
+                  className="w-24 h-24 rounded-full justify-center items-center"
+                  style={{ backgroundColor: colors.secondary, borderWidth: 2, borderColor: colors.brandPrimary }}
                 >
-                  <Ionicons name="person" size={40} color="#FE8C00" />
+                  <Ionicons name="person" size={40} color={colors.brandPrimary} />
                 </View>
               )}
               
@@ -259,52 +261,55 @@ export default function ProfileDetailsScreen() {
                 <Ionicons name="camera" size={16} color="#FFFFFF" />
               </View>
             </TouchableOpacity>
-            <Text className="text-center font-quicksand-semibold text-primary-500">
+            <Text className="text-center font-quicksand-semibold" style={{ color: colors.brandPrimary }}>
               {i18n.t("client.details.photo.change")}
             </Text>
           </View>
 
           {/* Informations personnelles */}
-          <View className="bg-white rounded-2xl mt-6 p-4">
-            <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4">
+          <View className="rounded-2xl mt-6 p-4" style={{ backgroundColor: colors.card }}>
+            <Text className="text-lg font-quicksand-bold mb-4" style={{ color: colors.textPrimary }}>
               {i18n.t("client.details.sections.personal")}
             </Text>
             
             {/* Prénom */}
             <View className="mb-4">
-              <Text className="text-sm font-quicksand-medium text-neutral-600 mb-2">
+              <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textSecondary }}>
                 {i18n.t("client.details.fields.firstName")}
               </Text>
               <TextInput
                 value={profile.firstName}
                 onChangeText={(text) => handleChange("firstName", text)}
-                className="border border-gray-200 rounded-xl p-3 font-quicksand"
+                className="border rounded-xl p-3 font-quicksand"
+                style={{ borderColor: colors.border, backgroundColor: colors.secondary, color: colors.textPrimary }}
                 placeholder={i18n.t("client.details.placeholders.firstName")}
               />
             </View>
 
             {/* Nom */}
             <View className="mb-4">
-              <Text className="text-sm font-quicksand-medium text-neutral-600 mb-2">
+              <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textSecondary }}>
                 {i18n.t("client.details.fields.lastName")}
               </Text>
               <TextInput
                 value={profile.lastName}
                 onChangeText={(text) => handleChange("lastName", text)}
-                className="border border-gray-200 rounded-xl p-3 font-quicksand"
+                className="border rounded-xl p-3 font-quicksand"
+                style={{ borderColor: colors.border, backgroundColor: colors.secondary, color: colors.textPrimary }}
                 placeholder={i18n.t("client.details.placeholders.lastName")}
               />
             </View>
 
             {/* Email */}
             <View className="mb-4">
-              <Text className="text-sm font-quicksand-medium text-neutral-600 mb-2">
+              <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textSecondary }}>
                 {i18n.t("client.details.fields.email")}
               </Text>
               <TextInput
                 value={profile.email}
                 onChangeText={(text) => handleChange("email", text)}
-                className="border border-gray-200 rounded-xl p-3 font-quicksand"
+                className="border rounded-xl p-3 font-quicksand"
+                style={{ borderColor: colors.border, backgroundColor: colors.secondary, color: colors.textPrimary }}
                 placeholder={i18n.t("client.details.placeholders.email")}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -313,13 +318,14 @@ export default function ProfileDetailsScreen() {
 
             {/* Téléphone */}
             <View className="mb-4">
-              <Text className="text-sm font-quicksand-medium text-neutral-600 mb-2">
+              <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textSecondary }}>
                 {i18n.t("client.details.fields.phone")}
               </Text>
               <TextInput
                 value={profile.phone}
                 onChangeText={(text) => handleChange("phone", text)}
-                className="border border-gray-200 rounded-xl p-3 font-quicksand"
+                className="border rounded-xl p-3 font-quicksand"
+                style={{ borderColor: colors.border, backgroundColor: colors.secondary, color: colors.textPrimary }}
                 placeholder={i18n.t("client.details.placeholders.phone")}
                 keyboardType="phone-pad"
               />
@@ -327,29 +333,31 @@ export default function ProfileDetailsScreen() {
           </View>
 
           {/* Sécurité */}
-          <View className="bg-white rounded-2xl mt-6 p-4">
-            <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4">
+          <View className="rounded-2xl mt-6 p-4" style={{ backgroundColor: colors.card }}>
+            <Text className="text-lg font-quicksand-bold mb-4" style={{ color: colors.textPrimary }}>
               {i18n.t("client.details.sections.security")}
             </Text>
             
             <TouchableOpacity
-              className="flex-row items-center justify-between py-3 border-b border-gray-100"
+              className="flex-row items-center justify-between py-3"
+              style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}
             >
               <View className="flex-row items-center">
-                <Ionicons name="lock-closed-outline" size={20} color="#374151" />
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
+                <Ionicons name="lock-closed-outline" size={20} color={colors.textSecondary} />
+                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.details.security.changePassword")}
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
 
             <TouchableOpacity
-              className="flex-row items-center justify-between py-3 border-b border-gray-100"
+              className="flex-row items-center justify-between py-3"
+              style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}
             >
               <View className="flex-row items-center">
-                <Ionicons name="finger-print-outline" size={20} color="#374151" />
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
+                <Ionicons name="finger-print-outline" size={20} color={colors.textSecondary} />
+                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.details.security.biometric")}
                 </Text>
               </View>
@@ -362,8 +370,8 @@ export default function ProfileDetailsScreen() {
               className="flex-row items-center justify-between py-3"
             >
               <View className="flex-row items-center">
-                <Ionicons name="notifications-outline" size={20} color="#374151" />
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
+                <Ionicons name="notifications-outline" size={20} color={colors.textSecondary} />
+                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.details.security.loginNotifications")}
                 </Text>
               </View>

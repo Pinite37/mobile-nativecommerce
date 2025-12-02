@@ -23,7 +23,7 @@ export default function SettingsScreen() {
   const navigation = useNavigation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { toggleTheme, isDark } = useTheme();
+  const { toggleTheme, isDark, colors } = useTheme();
   const { locale, changeLocale } = useLocale();
 
   useLayoutEffect(() => {
@@ -269,7 +269,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background-secondary">
+    <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
       <ExpoStatusBar style="light" translucent />
       {/* Header vert */}
       <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="pb-6 rounded-b-3xl shadow-md" style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}>
@@ -298,18 +298,18 @@ export default function SettingsScreen() {
       <ScrollView className="flex-1">
         {/* Section GÉNÉRAL */}
         <View className="mt-6 mx-4">
-          <Text className="text-sm font-quicksand-semibold text-neutral-500 mb-2">
+          <Text className="text-sm font-quicksand-semibold mb-2" style={{ color: colors.textSecondary }}>
             {i18n.t("client.settings.sections.general")}
           </Text>
-          <View className="bg-white rounded-2xl">
+          <View className="rounded-2xl" style={{ backgroundColor: colors.card }}>
             <View className="px-4 py-4 flex-row justify-between items-center">
               <View className="flex-row items-center">
                 <Ionicons
                   name={isDark ? "moon" : "sunny"}
                   size={20}
-                  color="#374151"
+                  color={colors.textSecondary}
                 />
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
+                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.general.darkMode")}
                 </Text>
               </View>
@@ -326,14 +326,14 @@ export default function SettingsScreen() {
 
         {/* Paramètres des notifications */}
         <View className="mt-6 mx-4">
-          <Text className="text-sm font-quicksand-semibold text-neutral-500 mb-2">
+          <Text className="text-sm font-quicksand-semibold mb-2" style={{ color: colors.textSecondary }}>
             {i18n.t("client.settings.sections.notifications")}
           </Text>
-          <View className="bg-white rounded-2xl">
-            <View className="px-4 py-4 flex-row justify-between items-center border-b border-gray-100">
+          <View className="rounded-2xl" style={{ backgroundColor: colors.card }}>
+            <View className="px-4 py-4 flex-row justify-between items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
               <View className="flex-row items-center">
-                <Ionicons name="notifications-outline" size={20} color="#374151" />
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
+                <Ionicons name="notifications-outline" size={20} color={colors.textSecondary} />
+                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.notifications.pushEnabled")}
                 </Text>
               </View>
@@ -344,10 +344,10 @@ export default function SettingsScreen() {
                 thumbColor={settings.pushEnabled ? "#10B981" : "#9CA3AF"}
               />
             </View>
-            <View className="px-4 py-4 flex-row justify-between items-center border-b border-gray-100">
+            <View className="px-4 py-4 flex-row justify-between items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
               <View className="flex-row items-center">
-                <Ionicons name="cube-outline" size={20} color="#374151" />
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
+                <Ionicons name="cube-outline" size={20} color={colors.textSecondary} />
+                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.notifications.delivery")}
                 </Text>
               </View>
@@ -358,10 +358,10 @@ export default function SettingsScreen() {
                 thumbColor={settings.notifDelivery ? "#10B981" : "#9CA3AF"}
               />
             </View>
-            <View className="px-4 py-4 flex-row justify-between items-center border-b border-gray-100">
+            <View className="px-4 py-4 flex-row justify-between items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
               <View className="flex-row items-center">
-                <Ionicons name="chatbubble-outline" size={20} color="#374151" />
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
+                <Ionicons name="chatbubble-outline" size={20} color={colors.textSecondary} />
+                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.notifications.messages")}
                 </Text>
               </View>
@@ -372,10 +372,10 @@ export default function SettingsScreen() {
                 thumbColor={settings.notifMessages ? "#10B981" : "#9CA3AF"}
               />
             </View>
-            <View className="px-4 py-4 flex-row justify-between items-center border-b border-gray-100">
+            <View className="px-4 py-4 flex-row justify-between items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
               <View className="flex-row items-center">
-                <Ionicons name="sparkles-outline" size={20} color="#374151" />
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
+                <Ionicons name="sparkles-outline" size={20} color={colors.textSecondary} />
+                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.notifications.newProducts")}
                 </Text>
               </View>
@@ -386,10 +386,10 @@ export default function SettingsScreen() {
                 thumbColor={settings.notifNewProducts ? "#10B981" : "#9CA3AF"}
               />
             </View>
-            <View className="px-4 py-4 flex-row justify-between items-center border-b border-gray-100">
+            <View className="px-4 py-4 flex-row justify-between items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
               <View className="flex-row items-center">
-                <Ionicons name="megaphone-outline" size={20} color="#374151" />
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
+                <Ionicons name="megaphone-outline" size={20} color={colors.textSecondary} />
+                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.notifications.advertisements")}
                 </Text>
               </View>
@@ -402,8 +402,8 @@ export default function SettingsScreen() {
             </View>
             <View className="px-4 py-4 flex-row justify-between items-center">
               <View className="flex-row items-center">
-                <Ionicons name="sync-outline" size={20} color="#374151" />
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
+                <Ionicons name="sync-outline" size={20} color={colors.textSecondary} />
+                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.notifications.systemUpdates")}
                 </Text>
               </View>
@@ -419,14 +419,14 @@ export default function SettingsScreen() {
 
         {/* Paramètres d'affichage */}
         <View className="mt-6 mx-4">
-          <Text className="text-sm font-quicksand-semibold text-neutral-500 mb-2">
+          <Text className="text-sm font-quicksand-semibold mb-2" style={{ color: colors.textSecondary }}>
             {i18n.t("client.settings.sections.display")}
           </Text>
-          <View className="bg-white rounded-2xl">
-            <View className="px-4 py-4 flex-row justify-between items-center border-b border-gray-100">
+          <View className="rounded-2xl" style={{ backgroundColor: colors.card }}>
+            <View className="px-4 py-4 flex-row justify-between items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
               <View className="flex-row items-center">
-                <Ionicons name="grid-outline" size={20} color="#374151" />
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
+                <Ionicons name="grid-outline" size={20} color={colors.textSecondary} />
+                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.display.gridView")}
                 </Text>
               </View>
@@ -437,10 +437,10 @@ export default function SettingsScreen() {
                 thumbColor={settings.productView === 'grid' ? "#10B981" : "#9CA3AF"}
               />
             </View>
-            <View className="px-4 py-4 flex-row justify-between items-center border-b border-gray-100">
+            <View className="px-4 py-4 flex-row justify-between items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
               <View className="flex-row items-center">
-                <Ionicons name="image-outline" size={20} color="#374151" />
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
+                <Ionicons name="image-outline" size={20} color={colors.textSecondary} />
+                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.display.highQualityImages")}
                 </Text>
               </View>
@@ -456,16 +456,16 @@ export default function SettingsScreen() {
               onPress={() => setLanguageModal(true)}
             >
               <View className="flex-row items-center">
-                <Ionicons name="language-outline" size={20} color="#374151" />
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
+                <Ionicons name="language-outline" size={20} color={colors.textSecondary} />
+                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.display.language")}
                 </Text>
               </View>
               <View className="flex-row items-center">
-                <Text className="text-base font-quicksand text-neutral-500 mr-2">
+                <Text className="text-base font-quicksand mr-2" style={{ color: colors.textSecondary }}>
                   {settings.language}
                 </Text>
-                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
               </View>
             </TouchableOpacity>
           </View>
@@ -473,14 +473,14 @@ export default function SettingsScreen() {
 
         {/* Paramètres de confidentialité */}
         <View className="mt-6 mx-4">
-          <Text className="text-sm font-quicksand-semibold text-neutral-500 mb-2">
+          <Text className="text-sm font-quicksand-semibold mb-2" style={{ color: colors.textSecondary }}>
             {i18n.t("client.settings.sections.privacy")}
           </Text>
-          <View className="bg-white rounded-2xl">
-            <View className="px-4 py-4 flex-row justify-between items-center border-b border-gray-100">
+          <View className="rounded-2xl" style={{ backgroundColor: colors.card }}>
+            <View className="px-4 py-4 flex-row justify-between items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
               <View className="flex-row items-center">
-                <Ionicons name="eye-outline" size={20} color="#374151" />
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
+                <Ionicons name="eye-outline" size={20} color={colors.textSecondary} />
+                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.privacy.publicProfile")}
                 </Text>
               </View>
@@ -491,10 +491,10 @@ export default function SettingsScreen() {
                 thumbColor={settings.publicProfile ? "#10B981" : "#9CA3AF"}
               />
             </View>
-            <View className="px-4 py-4 flex-row justify-between items-center border-b border-gray-100">
+            <View className="px-4 py-4 flex-row justify-between items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
               <View className="flex-row items-center">
-                <Ionicons name="analytics-outline" size={20} color="#374151" />
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
+                <Ionicons name="analytics-outline" size={20} color={colors.textSecondary} />
+                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.privacy.dataAnalytics")}
                 </Text>
               </View>
@@ -507,8 +507,8 @@ export default function SettingsScreen() {
             </View>
             <TouchableOpacity className="px-4 py-4">
               <View className="flex-row items-center">
-                <Ionicons name="document-text-outline" size={20} color="#374151" />
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
+                <Ionicons name="document-text-outline" size={20} color={colors.textSecondary} />
+                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.privacy.privacyPolicy")}
                 </Text>
               </View>
@@ -540,7 +540,7 @@ export default function SettingsScreen() {
 
         {/* Version de l'application */}
         <View className="mb-12 mt-9 items-center">
-          <Text className="text-sm font-quicksand text-neutral-400">
+          <Text className="text-sm font-quicksand" style={{ color: colors.textSecondary }}>
             {i18n.t("client.settings.appVersion")}
           </Text>
         </View>
@@ -554,33 +554,36 @@ export default function SettingsScreen() {
         onRequestClose={() => setLanguageModal(false)}
       >
         <TouchableOpacity
-          className="flex-1 bg-black/50 justify-center items-center px-4"
+          className="flex-1 justify-center items-center px-4"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
           activeOpacity={1}
           onPress={() => setLanguageModal(false)}
         >
           <TouchableOpacity
-            className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-xl"
+            className="w-full max-w-sm p-6 shadow-xl rounded-3xl"
+            style={{ backgroundColor: colors.card }}
             activeOpacity={1}
             onPress={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <View className="flex-row items-center justify-between mb-6">
-              <Text className="text-xl font-quicksand-bold text-neutral-800">
+              <Text className="text-xl font-quicksand-bold" style={{ color: colors.textPrimary }}>
                 {i18n.t("client.settings.languageModal.title")}
               </Text>
               <TouchableOpacity
                 onPress={() => setLanguageModal(false)}
-                className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center"
+                className="w-8 h-8 rounded-full items-center justify-center"
+                style={{ backgroundColor: colors.secondary }}
               >
-                <Ionicons name="close" size={20} color="#6B7280" />
+                <Ionicons name="close" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
             {/* Options de langue */}
             <TouchableOpacity
               onPress={() => handleLanguageChange("fr")}
-              className={`flex-row items-center p-4 rounded-2xl mb-3 border ${locale === 'fr' ? 'bg-emerald-50 border-emerald-500' : 'bg-gray-50 border-transparent'
-                }`}
+              className="flex-row items-center p-4 rounded-2xl mb-3"
+              style={{ backgroundColor: locale === 'fr' ? '#ECFDF5' : colors.secondary, borderColor: locale === 'fr' ? '#10B981' : 'transparent', borderWidth: locale === 'fr' ? 1 : 0 }}
             >
               <View className="w-8 h-8 rounded-full bg-emerald-500 items-center justify-center mr-4">
                 <Text className="text-white text-xs font-quicksand-bold">
@@ -588,10 +591,10 @@ export default function SettingsScreen() {
                 </Text>
               </View>
               <View className="flex-1">
-                <Text className="text-base font-quicksand-bold text-neutral-800">
+                <Text className="text-base font-quicksand-bold" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.languageModal.french")}
                 </Text>
-                <Text className="text-sm font-quicksand-medium text-neutral-600">
+                <Text className="text-sm font-quicksand-medium" style={{ color: colors.textSecondary }}>
                   {i18n.t("client.settings.languageModal.frenchDescription")}
                 </Text>
               </View>
@@ -602,19 +605,19 @@ export default function SettingsScreen() {
 
             <TouchableOpacity
               onPress={() => handleLanguageChange("en")}
-              className={`flex-row items-center p-4 rounded-2xl border ${locale === 'en' ? 'bg-emerald-50 border-emerald-500' : 'bg-gray-50 border-transparent'
-                }`}
+              className="flex-row items-center p-4 rounded-2xl mb-3"
+              style={{ backgroundColor: locale === 'en' ? '#ECFDF5' : colors.secondary, borderColor: locale === 'en' ? '#10B981' : 'transparent', borderWidth: locale === 'en' ? 1 : 0 }}
             >
-              <View className="w-8 h-8 rounded-full bg-emerald-500 items-center justify-center mr-4">
+              <View className="w-8 h-8 rounded-full bg-blue-500 items-center justify-center mr-4">
                 <Text className="text-white text-xs font-quicksand-bold">
                   EN
                 </Text>
               </View>
               <View className="flex-1">
-                <Text className="text-base font-quicksand-bold text-neutral-800">
+                <Text className="text-base font-quicksand-bold" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.languageModal.english")}
                 </Text>
-                <Text className="text-sm font-quicksand-medium text-neutral-600">
+                <Text className="text-sm font-quicksand-medium" style={{ color: colors.textSecondary }}>
                   {i18n.t("client.settings.languageModal.englishDescription")}
                 </Text>
               </View>
@@ -641,7 +644,7 @@ export default function SettingsScreen() {
           paddingHorizontal: 20,
         }}>
           <View style={{
-            backgroundColor: 'white',
+            backgroundColor: colors.card,
             borderRadius: 16,
             padding: 24,
             width: '100%',
@@ -665,7 +668,7 @@ export default function SettingsScreen() {
             <Text style={{
               fontSize: 20,
               fontFamily: 'Quicksand-Bold',
-              color: '#333',
+              color: colors.textPrimary,
               marginBottom: 8,
               textAlign: 'center',
             }}>
@@ -676,7 +679,7 @@ export default function SettingsScreen() {
             <Text style={{
               fontSize: 14,
               fontFamily: 'Quicksand-Regular',
-              color: '#666',
+              color: colors.textSecondary,
               textAlign: 'center',
               marginBottom: 24,
               lineHeight: 20,
@@ -691,7 +694,7 @@ export default function SettingsScreen() {
                 onPress={() => setClearDataModal(false)}
                 style={{
                   flex: 1,
-                  backgroundColor: '#F3F4F6',
+                  backgroundColor: colors.secondary,
                   paddingVertical: 12,
                   borderRadius: 8,
                   alignItems: 'center',
@@ -699,7 +702,7 @@ export default function SettingsScreen() {
                 activeOpacity={0.7}
               >
                 <Text style={{
-                  color: '#666',
+                  color: colors.textPrimary,
                   fontSize: 16,
                   fontFamily: 'Quicksand-SemiBold',
                 }}>

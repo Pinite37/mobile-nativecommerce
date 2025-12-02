@@ -26,10 +26,10 @@ export default function SignInScreen() {
     setIsLoading(true);
     try {
       const response = await AuthService.login({ email, password });
-      
+
       if (response.success) {
         const userRole = response.data.user.role;
-        
+
         // Check if role is supported
         if ((userRole as string) === 'DELIVER') {
           console.log('🚚 DELIVER role detected - showing error toast');
@@ -52,12 +52,12 @@ export default function SignInScreen() {
           }, 6500);
 
           return;
-        }        const successMessage = ErrorHandler.getSuccessMessage('login');
+        } const successMessage = ErrorHandler.getSuccessMessage('login');
         toast.showToast({ title: successMessage.title, subtitle: successMessage.message });
-        
+
         // Refresh auth status and redirect
         await checkAuthStatus();
-        
+
         setTimeout(() => {
           redirectToRoleBasedHome(userRole);
         }, 1000);
@@ -81,7 +81,7 @@ export default function SignInScreen() {
   return (
     <View className="flex-1 bg-white">
       <StatusBar style="dark" />
-      
+
       {/* Fixed Header with Back Button */}
       <View className="absolute top-0 left-0 right-0 z-10 bg-white px-6 pt-16 pb-4">
         <TouchableOpacity
@@ -91,9 +91,9 @@ export default function SignInScreen() {
           <Ionicons name="arrow-back" size={20} color="#374151" />
         </TouchableOpacity>
       </View>
-      
-      <KeyboardAwareScrollView 
-        className="flex-1 pt-28" 
+
+      <KeyboardAwareScrollView
+        className="flex-1 pt-28"
         showsVerticalScrollIndicator={false}
         enableOnAndroid={true}
         keyboardShouldPersistTaps="handled"
@@ -177,9 +177,8 @@ export default function SignInScreen() {
             onPress={handleSignIn}
             disabled={isLoading}
             activeOpacity={1}
-            className={`rounded-xl py-4 mb-6 flex-row items-center justify-center ${
-              isLoading ? 'bg-primary/70' : 'bg-primary'
-            }`}
+            className={`rounded-xl py-4 mb-6 flex-row items-center justify-center ${isLoading ? 'bg-primary/70' : 'bg-primary'
+              }`}
           >
             {isLoading && (
               <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 8 }} />

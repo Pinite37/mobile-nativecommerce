@@ -20,6 +20,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import i18n from "../../../../i18n/i18n";
+import { useTheme } from "../../../../contexts/ThemeContext";
 import EnterpriseService, { Enterprise } from "../../../../services/api/EnterpriseService";
 import { Product } from "../../../../types/product";
 
@@ -29,6 +30,7 @@ export default function EnterpriseDetails() {
     const router = useRouter();
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
+    const { colors, isDark } = useTheme();
     const [enterprise, setEnterprise] = useState<Enterprise | null>(null);
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
@@ -214,8 +216,13 @@ export default function EnterpriseDetails() {
     // Composant pour une carte de produit
     const ProductCard = ({ product }: { product: Product }) => (
         <TouchableOpacity
-            className="bg-white rounded-2xl shadow-sm border border-neutral-100 mb-3"
-            style={{ width: (screenWidth - 48) / 2 }}
+            className="rounded-2xl shadow-sm mb-3"
+            style={{
+                width: (screenWidth - 48) / 2,
+                backgroundColor: colors.card || colors.background,
+                borderColor: colors.border,
+                borderWidth: 1
+            }}
             onPress={() => {
                 router.push(`/(app)/(enterprise)/product/${product._id}`);
             }}
@@ -239,11 +246,11 @@ export default function EnterpriseDetails() {
             </View>
 
             <View className="p-3">
-                <Text numberOfLines={2} className="text-sm font-quicksand-semibold text-neutral-800 mb-2 h-10">
+                <Text numberOfLines={2} className="text-sm font-quicksand-semibold mb-2 h-10" style={{color: colors.text}}>
                     {product.name}
                 </Text>
 
-                <Text className="text-base font-quicksand-bold text-primary-600 mb-2">
+                <Text className="text-base font-quicksand-bold mb-2" style={{color: '#FE8C00'}}>
                     {formatPrice(product.price)}
                 </Text>
 
@@ -281,11 +288,11 @@ export default function EnterpriseDetails() {
         }, [shimmer]);
         const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
         return (
-            <View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
+            <View style={[{ backgroundColor: isDark ? '#374151' : '#E5E7EB', overflow: 'hidden' }, style]}>
                 <Animated.View style={{
                     position: 'absolute', top: 0, bottom: 0, width: 120,
                     transform: [{ translateX }],
-                    backgroundColor: 'rgba(255,255,255,0.35)',
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.35)',
                     opacity: 0.7,
                 }} />
             </View>
@@ -293,7 +300,12 @@ export default function EnterpriseDetails() {
     };
 
     const SkeletonProductCard = () => (
-        <View className="bg-white rounded-2xl shadow-sm border border-neutral-100 mb-3 overflow-hidden" style={{ width: (screenWidth - 48) / 2 }}>
+        <View className="rounded-2xl shadow-sm mb-3 overflow-hidden" style={{
+            width: (screenWidth - 48) / 2,
+            backgroundColor: colors.card || colors.background,
+            borderColor: colors.border,
+            borderWidth: 1
+        }}>
             <ShimmerBlock style={{ height: 112, borderRadius: 16, width: '100%' }} />
             <View className="p-3">
                 <ShimmerBlock style={{ height: 14, borderRadius: 7, width: '85%', marginBottom: 8 }} />
@@ -307,7 +319,11 @@ export default function EnterpriseDetails() {
     );
 
     const SkeletonEnterpriseInfo = () => (
-        <View className="bg-white mx-4 rounded-2xl shadow-sm border border-neutral-100 mb-6">
+        <View className="mx-4 rounded-2xl shadow-sm mb-6" style={{
+            backgroundColor: colors.card || colors.background,
+            borderColor: colors.border,
+            borderWidth: 1
+        }}>
             <View className="p-6">
                 <View className="flex-row items-center mb-4">
                     <ShimmerBlock style={{ width: 80, height: 80, borderRadius: 16 }} />
@@ -320,15 +336,15 @@ export default function EnterpriseDetails() {
                 <ShimmerBlock style={{ height: 14, borderRadius: 7, width: '90%', marginBottom: 6 }} />
                 <ShimmerBlock style={{ height: 14, borderRadius: 7, width: '75%', marginBottom: 16 }} />
                 <View className="flex-row justify-between mb-4">
-                    <View className="flex-1 bg-neutral-50 rounded-xl p-3 mr-2">
+                    <View className="flex-1 rounded-xl p-3 mr-2" style={{backgroundColor: isDark ? colors.surface || '#1f2937' : '#f9fafb'}}>
                         <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '60%', marginBottom: 4 }} />
                         <ShimmerBlock style={{ height: 12, borderRadius: 6, width: '40%' }} />
                     </View>
-                    <View className="flex-1 bg-neutral-50 rounded-xl p-3 mx-1">
+                    <View className="flex-1 rounded-xl p-3 mx-1" style={{backgroundColor: isDark ? colors.surface || '#1f2937' : '#f9fafb'}}>
                         <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '50%', marginBottom: 4 }} />
                         <ShimmerBlock style={{ height: 12, borderRadius: 6, width: '35%' }} />
                     </View>
-                    <View className="flex-1 bg-neutral-50 rounded-xl p-3 ml-2">
+                    <View className="flex-1 rounded-xl p-3 ml-2" style={{backgroundColor: isDark ? colors.surface || '#1f2937' : '#f9fafb'}}>
                         <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '55%', marginBottom: 4 }} />
                         <ShimmerBlock style={{ height: 12, borderRadius: 6, width: '45%' }} />
                     </View>
@@ -344,7 +360,7 @@ export default function EnterpriseDetails() {
     );
 
     const renderSkeletonEnterprise = () => (
-        <View className="flex-1 bg-background-secondary">
+        <View className="flex-1" style={{ backgroundColor: colors.background }}>
             <ExpoStatusBar style="light" translucent />
             {/* Header Skeleton */}
             <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="pb-6 rounded-b-3xl shadow-md" style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}>
@@ -386,13 +402,13 @@ export default function EnterpriseDetails() {
 
     if (!enterprise) {
         return (
-            <View className="flex-1 bg-white">
+            <View className="flex-1" style={{backgroundColor: colors.background}}>
                 <View className="flex-1 justify-center items-center">
                     <Ionicons name="business-outline" size={64} color="#EF4444" />
-                    <Text className="mt-4 text-xl font-quicksand-bold text-neutral-800">
+                    <Text className="mt-4 text-xl font-quicksand-bold" style={{color: colors.text}}>
                         {i18n.t("client.enterprise.error.notFound")}
                     </Text>
-                    <Text className="mt-2 text-neutral-600 font-quicksand-medium text-center px-6">
+                    <Text className="mt-2 font-quicksand-medium text-center px-6" style={{color: colors.textSecondary}}>
                         {i18n.t("client.enterprise.error.notFoundMessage")}
                     </Text>
                     <TouchableOpacity
@@ -407,7 +423,7 @@ export default function EnterpriseDetails() {
     }
 
     return (
-        <View className="flex-1 bg-background-secondary">
+        <View className="flex-1" style={{ backgroundColor: colors.background }}>
             <ExpoStatusBar style="light" translucent />
             {/* Header vert */}
             <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="pb-6 rounded-b-3xl shadow-md" style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}>
@@ -451,7 +467,11 @@ export default function EnterpriseDetails() {
                 ListHeaderComponent={
                     <View>
                         {/* Informations de l'entreprise */}
-                        <View className="bg-white mx-4 rounded-2xl shadow-sm border border-neutral-100 mb-6">
+                        <View className="mx-4 rounded-2xl shadow-sm mb-6" style={{
+                            backgroundColor: colors.card || colors.background,
+                            borderColor: colors.border,
+                            borderWidth: 1
+                        }}>
                             {/* Logo et infos principales */}
                             <View className="p-6">
                                 <View className="flex-row items-center mb-4">
@@ -468,12 +488,12 @@ export default function EnterpriseDetails() {
                                     )}
 
                                     <View className="ml-4 flex-1">
-                                        <Text className="text-xl font-quicksand-bold text-neutral-800 mb-1">
+                                        <Text className="text-xl font-quicksand-bold mb-1" style={{color: colors.text}}>
                                             {enterprise.companyName}
                                         </Text>
                                         <View className="flex-row items-center mb-2">
-                                            <Ionicons name="location" size={14} color="#9CA3AF" />
-                                            <Text className="text-sm text-neutral-600 ml-1">
+                                            <Ionicons name="location" size={14} color={colors.textSecondary} />
+                                            <Text className="text-sm ml-1" style={{color: colors.textSecondary}}>
                                                 {enterprise.location.city}, {enterprise.location.district}
                                             </Text>
                                         </View>
@@ -489,7 +509,7 @@ export default function EnterpriseDetails() {
                                 {/* Description */}
                                 {enterprise.description && (
                                     <View className="mb-4">
-                                        <Text className="text-neutral-700 font-quicksand-medium leading-5">
+                                        <Text className="font-quicksand-medium leading-5" style={{color: colors.textSecondary}}>
                                             {enterprise.description}
                                         </Text>
                                     </View>
@@ -497,40 +517,48 @@ export default function EnterpriseDetails() {
 
                                 {/* Statistiques */}
                                 <View className="flex-row justify-between mb-6">
-                                    <View className="flex-1 bg-gradient-to-br from-neutral-50 to-neutral-100 rounded-xl p-4 mr-2 border border-neutral-200/50">
+                                    <View className="flex-1 rounded-xl p-4 mr-2" style={{
+                                        backgroundColor: isDark ? colors.surface || '#1f2937' : '#f9fafb',
+                                        borderColor: colors.border,
+                                        borderWidth: 1
+                                    }}>
                                         <View className="flex-row items-center mb-2">
                                             <View className="w-8 h-8 bg-amber-100 rounded-full justify-center items-center mr-2">
                                                 <Ionicons name="star" size={14} color="#F59E0B" />
                                             </View>
-                                            <Text className="text-lg font-quicksand-bold text-neutral-800">
+                                            <Text className="text-lg font-quicksand-bold" style={{color: colors.text}}>
                                                 {enterprise.stats.averageRating?.toFixed(1) || '0.0'}
                                             </Text>
                                         </View>
-                                        <Text className="text-xs text-neutral-600 font-quicksand-medium">
+                                        <Text className="text-xs font-quicksand-medium" style={{color: colors.textSecondary}}>
                                             {i18n.t("client.enterprise.stats.reviews", { count: enterprise.stats.totalReviews || 0 })}
                                         </Text>
                                     </View>
 
-                                    <View className="flex-1 bg-gradient-to-br from-neutral-50 to-neutral-100 rounded-xl p-4 mx-1 border border-neutral-200/50">
+                                    <View className="flex-1 rounded-xl p-4 mx-1" style={{
+                                        backgroundColor: isDark ? colors.surface || '#1f2937' : '#f9fafb',
+                                        borderColor: colors.border,
+                                        borderWidth: 1
+                                    }}>
                                         <View className="flex-row items-center mb-2">
                                             <View className="w-8 h-8 bg-emerald-100 rounded-full justify-center items-center mr-2">
                                                 <Ionicons name="cube" size={14} color="#10B981" />
                                             </View>
-                                            <Text className="text-lg font-quicksand-bold text-neutral-800">
+                                            <Text className="text-lg font-quicksand-bold" style={{color: colors.text}}>
                                                 {(enterprise as any).totalActiveProducts || products.length}
                                             </Text>
                                         </View>
-                                        <Text className="text-xs text-neutral-600 font-quicksand-medium">
+                                        <Text className="text-xs font-quicksand-medium" style={{color: colors.textSecondary}}>
                                             {i18n.t("client.enterprise.stats.products")}
                                         </Text>
                                     </View>
 
-                                    
+
                                 </View>
 
                                 {/* Actions de contact */}
                                 <View className="mt-2">
-                                    <Text className="text-sm font-quicksand-semibold text-neutral-800 mb-4">
+                                    <Text className="text-sm font-quicksand-semibold mb-4" style={{color: colors.text}}>
                                         {i18n.t("client.enterprise.contact.title")}
                                     </Text>
                                     <View className="flex-row flex-wrap gap-3">
@@ -591,7 +619,7 @@ export default function EnterpriseDetails() {
                     loadingProducts ? (
                         <View className="py-4 items-center">
                             <ActivityIndicator size="small" color="#FE8C00" />
-                            <Text className="mt-2 text-neutral-600 font-quicksand-medium text-sm">
+                            <Text className="mt-2 font-quicksand-medium text-sm" style={{color: colors.textSecondary}}>
                                 {i18n.t("client.enterprise.loading")}
                             </Text>
                         </View>
@@ -600,11 +628,11 @@ export default function EnterpriseDetails() {
                 ListEmptyComponent={
                     !loading ? (
                         <View className="flex-1 justify-center items-center py-20">
-                            <Ionicons name="cube-outline" size={64} color="#9CA3AF" />
-                            <Text className="mt-4 text-lg font-quicksand-bold text-neutral-600">
+                            <Ionicons name="cube-outline" size={64} color={colors.textSecondary} />
+                            <Text className="mt-4 text-lg font-quicksand-bold" style={{color: colors.textSecondary}}>
                                 {i18n.t("client.enterprise.empty.title")}
                             </Text>
-                            <Text className="mt-2 text-neutral-500 font-quicksand-medium text-center px-6">
+                            <Text className="mt-2 font-quicksand-medium text-center px-6" style={{color: colors.textSecondary}}>
                                 {i18n.t("client.enterprise.empty.message")}
                             </Text>
                         </View>
@@ -625,7 +653,7 @@ export default function EnterpriseDetails() {
                     onPress={() => setErrorModal({ visible: false, title: '', message: '' })}
                     className="flex-1 bg-black/50 justify-center items-center px-6"
                 >
-                    <TouchableOpacity activeOpacity={1} className="bg-white rounded-3xl p-6 w-full max-w-sm">
+                    <TouchableOpacity activeOpacity={1} className="rounded-3xl p-6 w-full max-w-sm" style={{backgroundColor: colors.card || colors.background}}>
                         {/* Icon d'erreur */}
                         <View className="items-center mb-4">
                             <View className="w-16 h-16 bg-red-100 rounded-full justify-center items-center">
@@ -634,12 +662,12 @@ export default function EnterpriseDetails() {
                         </View>
 
                         {/* Titre */}
-                        <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+                        <Text className="text-xl font-quicksand-bold text-center mb-2" style={{color: colors.text}}>
                             {errorModal.title}
                         </Text>
 
                         {/* Message */}
-                        <Text className="text-base font-quicksand-medium text-neutral-600 text-center mb-6">
+                        <Text className="text-base font-quicksand-medium text-center mb-6" style={{color: colors.textSecondary}}>
                             {errorModal.message}
                         </Text>
 

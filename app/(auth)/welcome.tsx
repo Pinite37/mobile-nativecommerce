@@ -17,11 +17,11 @@ export default function WelcomeScreen() {
   return (
     <View className="flex-1 bg-white">
       <StatusBar style="dark" />
-      
+
       {/* Main Content */}
-      <View 
+      <View
         className="flex-1 justify-between px-6"
-        style={{ 
+        style={{
           paddingTop: Math.max(insets.top, 48),
           paddingBottom: Math.max(insets.bottom, 16)
         }}
@@ -33,11 +33,11 @@ export default function WelcomeScreen() {
             className="w-64 h-48"
             resizeMode="contain"
           />
-          
+
           <Text className="text-3xl font-quicksand-bold text-center text-neutral-900 mb-3 mt-4">
             Connectez-vous
           </Text>
-          
+
           <Text className="text-sm font-quicksand text-center text-neutral-600 px-8">
             Bienvenue ! Veuillez vous connecter à votre compte
           </Text>

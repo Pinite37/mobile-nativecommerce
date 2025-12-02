@@ -450,7 +450,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
             className="font-quicksand-bold"
             numberOfLines={1}
           >
-            {product.name}
+            {product.name} 
           </Text>
 
           <View style={{ flexDirection: "row" }}>

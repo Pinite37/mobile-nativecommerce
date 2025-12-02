@@ -7,9 +7,19 @@ export type Theme = "light" | "dark";
 
 export interface Colors {
     // Backgrounds
+    background: string;
+    surface: string;
     primary: string;
     secondary: string;
     tertiary: string;
+
+    // Text
+    text: string;
+    textSecondary: string;
+    textPrimary: string;
+    textTertiary: string;
+    textInverse: string;
+    textOnBrand: string;
 
     // Brand Colors
     brandPrimary: string;
@@ -17,13 +27,6 @@ export interface Colors {
     brandLight: string;
     brandGradientStart: string;
     brandGradientEnd: string;
-
-    // Text
-    textPrimary: string;
-    textSecondary: string;
-    textTertiary: string;
-    textInverse: string;
-    textOnBrand: string;
 
     // Borders
     border: string;
@@ -43,9 +46,19 @@ export interface Colors {
 
 export const lightColors: Colors = {
     // Backgrounds
+    background: "#FFFFFF",
+    surface: "#F9FAFB",
     primary: "#FFFFFF",
     secondary: "#F9FAFB", // gray-50
     tertiary: "#F3F4F6", // gray-100
+
+    // Text
+    text: "#1F2937",
+    textSecondary: "#6B7280",
+    textPrimary: "#1F2937", // gray-800
+    textTertiary: "#9CA3AF", // gray-400
+    textInverse: "#FFFFFF",
+    textOnBrand: "#FFFFFF",
 
     // Brand Colors
     brandPrimary: "#10B981", // Emerald-500
@@ -53,13 +66,6 @@ export const lightColors: Colors = {
     brandLight: "#D1FAE5", // Emerald-100
     brandGradientStart: "#047857",
     brandGradientEnd: "#10B981",
-
-    // Text
-    textPrimary: "#1F2937", // gray-800
-    textSecondary: "#6B7280", // gray-500
-    textTertiary: "#9CA3AF", // gray-400
-    textInverse: "#FFFFFF",
-    textOnBrand: "#FFFFFF",
 
     // Borders
     border: "#E5E7EB", // gray-200
@@ -79,9 +85,19 @@ export const lightColors: Colors = {
 
 export const darkColors: Colors = {
     // Backgrounds
+    background: "#111827",
+    surface: "#1F2937",
     primary: "#111827", // gray-900
     secondary: "#1F2937", // gray-800
     tertiary: "#374151", // gray-700
+
+    // Text
+    text: "#F9FAFB",
+    textSecondary: "#D1D5DB",
+    textPrimary: "#F9FAFB", // gray-50
+    textTertiary: "#9CA3AF", // gray-400
+    textInverse: "#1F2937",
+    textOnBrand: "#FFFFFF",
 
     // Brand Colors (brighter for contrast)
     brandPrimary: "#34D399", // Emerald-400
@@ -89,13 +105,6 @@ export const darkColors: Colors = {
     brandLight: "#064E3B", // Emerald-900
     brandGradientStart: "#065F46", // Slightly darker emerald
     brandGradientEnd: "#10B981",
-
-    // Text
-    textPrimary: "#F9FAFB", // gray-50
-    textSecondary: "#D1D5DB", // gray-300
-    textTertiary: "#9CA3AF", // gray-400
-    textInverse: "#1F2937",
-    textOnBrand: "#FFFFFF",
 
     // Borders
     border: "#374151", // gray-700

@@ -17,6 +17,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../../../../contexts/ThemeContext';
 import i18n from '../../../../i18n/i18n';
 import CategoryService from '../../../../services/api/CategoryService';
 import { Category, Product } from '../../../../types/product';
@@ -29,6 +30,7 @@ export default function CategoryProductsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
+  const { colors, isDark } = useTheme();
 
   // États principaux
   const [category, setCategory] = useState<Category | null>(null);
@@ -232,12 +234,12 @@ export default function CategoryProductsScreen() {
     });
 
     return (
-      <View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
+      <View style={[{ backgroundColor: colors.border, overflow: 'hidden' }, style]}>
         <Animated.View
           style={{
             width: 150,
             height: '100%',
-            backgroundColor: 'rgba(255, 255, 255, 0.5)',
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.35)',
             transform: [{ translateX }],
           }}
         />
@@ -246,12 +248,15 @@ export default function CategoryProductsScreen() {
   };
 
   const SkeletonProduct = () => (
-    <View className="bg-white rounded-2xl overflow-hidden p-2 mb-3 w-[48%]" style={{
+    <View className="rounded-2xl overflow-hidden p-2 mb-3 w-[48%]" style={{
+      backgroundColor: colors.card,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
       elevation: 3,
+      borderWidth: 1,
+      borderColor: colors.border,
     }}>
       <ShimmerBlock style={{ height: 128, borderRadius: 16, width: '100%' }} />
       <View className="mt-2">
@@ -269,13 +274,16 @@ export default function CategoryProductsScreen() {
     return (
       <TouchableOpacity
         key={item._id}
-        className="bg-white rounded-2xl overflow-hidden p-2 mb-3 w-[48%]"
+        className="rounded-2xl overflow-hidden p-2 mb-3 w-[48%]"
         style={{
+          backgroundColor: colors.card,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: 0.1,
           shadowRadius: 4,
           elevation: 3,
+          borderWidth: 1,
+          borderColor: colors.border,
         }}
         onPress={() => router.push(`/(app)/(client)/product/${item._id}`)}
       >
@@ -286,7 +294,8 @@ export default function CategoryProductsScreen() {
             resizeMode="cover"
           />
           <TouchableOpacity
-            className="absolute top-2 right-2 bg-white/90 rounded-full p-1.5"
+            className="absolute top-2 right-2 rounded-full p-1.5"
+            style={{ backgroundColor: colors.card + 'E6' }}
             onPress={() => toggleFavorite(item._id)}
           >
             <Ionicons
@@ -302,20 +311,20 @@ export default function CategoryProductsScreen() {
           )}
         </View>
         <View className="mt-2">
-          <Text className="text-sm font-quicksand-semibold text-neutral-800" numberOfLines={2}>
+          <Text className="text-sm font-quicksand-semibold" style={{ color: colors.textPrimary }} numberOfLines={2}>
             {item.name}
           </Text>
-          <Text className="text-lg font-quicksand-bold text-[#10b981] mt-1">
+          <Text className="text-lg font-quicksand-bold mt-1" style={{ color: colors.brandPrimary }}>
             {formatPrice(item.price)}
           </Text>
           {enterprise && (
-            <Text className="text-xs font-quicksand-medium text-neutral-500 mt-1" numberOfLines={1}>
+            <Text className="text-xs font-quicksand-medium mt-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
               {enterprise.companyName}
             </Text>
           )}
           <View className="flex-row items-center mt-1">
             <Ionicons name="star" size={14} color="#FBBF24" />
-            <Text className="text-xs font-quicksand-medium text-neutral-600 ml-1">
+            <Text className="text-xs font-quicksand-medium ml-1" style={{ color: colors.textSecondary }}>
               {item.stats?.averageRating?.toFixed(1) || '0.0'} ({item.stats?.totalReviews || 0})
             </Text>
           </View>
@@ -332,13 +341,16 @@ export default function CategoryProductsScreen() {
     return (
       <TouchableOpacity
         key={item._id}
-        className="bg-white rounded-2xl overflow-hidden p-3 mb-3 flex-row"
+        className="rounded-2xl overflow-hidden p-3 mb-3 flex-row"
         style={{
+          backgroundColor: colors.card,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: 0.1,
           shadowRadius: 4,
           elevation: 3,
+          borderWidth: 1,
+          borderColor: colors.border,
         }}
         onPress={() => router.push(`/(app)/(client)/product/${item._id}`)}
       >
@@ -356,28 +368,28 @@ export default function CategoryProductsScreen() {
         </View>
         <View className="flex-1">
           <View className="flex-row justify-between items-start">
-            <Text className="text-sm font-quicksand-semibold text-neutral-800 flex-1" numberOfLines={2}>
+            <Text className="text-sm font-quicksand-semibold flex-1" style={{ color: colors.textPrimary }} numberOfLines={2}>
               {item.name}
             </Text>
             <TouchableOpacity onPress={() => toggleFavorite(item._id)} className="ml-2">
               <Ionicons
                 name={isFavorite ? 'heart' : 'heart-outline'}
                 size={20}
-                color={isFavorite ? '#EF4444' : '#6B7280'}
+                color={isFavorite ? '#EF4444' : colors.textSecondary}
               />
             </TouchableOpacity>
           </View>
-          <Text className="text-lg font-quicksand-bold text-[#10b981] mt-1">
+          <Text className="text-lg font-quicksand-bold mt-1" style={{ color: colors.brandPrimary }}>
             {formatPrice(item.price)}
           </Text>
           {enterprise && (
-            <Text className="text-xs font-quicksand-medium text-neutral-500 mt-1" numberOfLines={1}>
+            <Text className="text-xs font-quicksand-medium mt-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
               {enterprise.companyName}
             </Text>
           )}
           <View className="flex-row items-center mt-1">
             <Ionicons name="star" size={14} color="#FBBF24" />
-            <Text className="text-xs font-quicksand-medium text-neutral-600 ml-1">
+            <Text className="text-xs font-quicksand-medium ml-1" style={{ color: colors.textSecondary }}>
               {item.stats?.averageRating?.toFixed(1) || '0.0'} ({item.stats?.totalReviews || 0})
             </Text>
           </View>
@@ -387,7 +399,7 @@ export default function CategoryProductsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-neutral-50">
+    <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
       <ExpoStatusBar style="light" translucent />
 
       {/* Header vert conventionnel avec gradient */}
@@ -443,12 +455,13 @@ export default function CategoryProductsScreen() {
         </View>
 
         {/* Barre de recherche */}
-        <View className="flex-row items-center bg-white rounded-xl px-3 py-2 mb-3">
-          <Ionicons name="search" size={20} color="#6B7280" />
+        <View className="flex-row items-center rounded-xl px-3 py-2 mb-3" style={{ backgroundColor: colors.card }}>
+          <Ionicons name="search" size={20} color={colors.textSecondary} />
           <TextInput
-            className="flex-1 ml-2 text-neutral-800 font-quicksand-medium"
+            className="flex-1 ml-2 font-quicksand-medium"
+            style={{ color: colors.textPrimary }}
             placeholder={i18n.t("client.category.search.placeholder")}
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
             onSubmitEditing={handleSearch}
@@ -458,7 +471,8 @@ export default function CategoryProductsScreen() {
             <>
               <TouchableOpacity
                 onPress={handleSearch}
-                className="mr-2 bg-[#10b981] rounded-lg px-3 py-1"
+                className="mr-2 rounded-lg px-3 py-1"
+                style={{ backgroundColor: colors.brandPrimary }}
               >
                 <Text className="text-white text-xs font-quicksand-semibold">{i18n.t("client.category.search.button")}</Text>
               </TouchableOpacity>
@@ -467,7 +481,7 @@ export default function CategoryProductsScreen() {
                 setCurrentPage(1);
                 loadCategoryProducts(1, false);
               }}>
-                <Ionicons name="close-circle" size={20} color="#6B7280" />
+                <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             </>
           ) : null}
@@ -488,17 +502,21 @@ export default function CategoryProductsScreen() {
             <TouchableOpacity
               key={sort.value}
               onPress={() => setSortBy(sort.value as SortOption)}
-              className={`flex-row items-center px-3 py-1.5 rounded-lg ${sortBy === sort.value ? 'bg-white' : 'bg-white/20'
-                }`}
+              className="flex-row items-center px-3 py-1.5 rounded-lg"
+              style={{
+                backgroundColor: sortBy === sort.value ? colors.card : 'rgba(255, 255, 255, 0.2)'
+              }}
             >
               <Ionicons
                 name={sort.icon as any}
                 size={14}
-                color={sortBy === sort.value ? '#10b981' : 'white'}
+                color={sortBy === sort.value ? colors.brandPrimary : 'white'}
               />
               <Text
-                className={`ml-1 text-xs font-quicksand-semibold ${sortBy === sort.value ? 'text-[#10b981]' : 'text-white'
-                  }`}
+                className="ml-1 text-xs font-quicksand-semibold"
+                style={{
+                  color: sortBy === sort.value ? colors.brandPrimary : 'white'
+                }}
               >
                 {sort.label}
               </Text>
@@ -521,11 +539,11 @@ export default function CategoryProductsScreen() {
         </ScrollView>
       ) : products.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
-          <Ionicons name="cube-outline" size={64} color="#D1D5DB" />
-          <Text className="text-neutral-600 text-lg font-quicksand-bold mt-4">
+          <Ionicons name="cube-outline" size={64} color={colors.textSecondary} />
+          <Text className="text-lg font-quicksand-bold mt-4" style={{ color: colors.textPrimary }}>
             {i18n.t("client.category.empty.title")}
           </Text>
-          <Text className="text-neutral-500 font-quicksand-medium text-center mt-2">
+          <Text className="font-quicksand-medium text-center mt-2" style={{ color: colors.textSecondary }}>
             {i18n.t("client.category.empty.message")}
           </Text>
           {(minPrice || maxPrice || inStockOnly || searchQuery) && (
@@ -569,7 +587,7 @@ export default function CategoryProductsScreen() {
 
           {/* Pagination info */}
           {!loadingMore && products.length > 0 && (
-            <Text className="text-center text-neutral-500 font-quicksand-medium text-sm mt-4">
+            <Text className="text-center font-quicksand-medium text-sm mt-4" style={{ color: colors.textSecondary }}>
               {i18n.t("client.category.pagination", { current: currentPage, total: totalPages })}
             </Text>
           )}
@@ -579,32 +597,34 @@ export default function CategoryProductsScreen() {
       {/* Modal de filtres */}
       {showFilters && (
         <View className="absolute inset-0 bg-black/50" style={{ paddingTop: insets.top }}>
-          <View className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 max-h-[80%]">
+          <View className="absolute bottom-0 left-0 right-0 rounded-t-3xl p-6 max-h-[80%]" style={{ backgroundColor: colors.card }}>
             <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-xl font-quicksand-bold text-neutral-800">{i18n.t("client.category.filters.title")}</Text>
+              <Text className="text-xl font-quicksand-bold" style={{ color: colors.textPrimary }}>{i18n.t("client.category.filters.title")}</Text>
               <TouchableOpacity onPress={() => setShowFilters(false)}>
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Ionicons name="close" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
               {/* Filtre de prix */}
               <View className="mb-4">
-                <Text className="text-sm font-quicksand-semibold text-neutral-700 mb-2">{i18n.t("client.category.filters.price.label")}</Text>
+                <Text className="text-sm font-quicksand-semibold mb-2" style={{ color: colors.textPrimary }}>{i18n.t("client.category.filters.price.label")}</Text>
                 <View className="flex-row items-center">
                   <TextInput
-                    className="flex-1 bg-neutral-100 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-medium"
+                    className="flex-1 rounded-xl px-4 py-3 font-quicksand-medium"
+                    style={{ backgroundColor: colors.secondary, color: colors.textPrimary }}
                     placeholder={i18n.t("client.category.filters.price.min")}
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={colors.textSecondary}
                     keyboardType="numeric"
                     value={minPrice}
                     onChangeText={setMinPrice}
                   />
-                  <Text className="mx-2 text-neutral-500 font-quicksand-medium">-</Text>
+                  <Text className="mx-2 font-quicksand-medium" style={{ color: colors.textSecondary }}>-</Text>
                   <TextInput
-                    className="flex-1 bg-neutral-100 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-medium"
+                    className="flex-1 rounded-xl px-4 py-3 font-quicksand-medium"
+                    style={{ backgroundColor: colors.secondary, color: colors.textPrimary }}
                     placeholder={i18n.t("client.category.filters.price.max")}
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={colors.textSecondary}
                     keyboardType="numeric"
                     value={maxPrice}
                     onChangeText={setMaxPrice}
@@ -617,16 +637,19 @@ export default function CategoryProductsScreen() {
                 onPress={() => setInStockOnly(!inStockOnly)}
                 className="flex-row items-center justify-between py-3 mb-4"
               >
-                <Text className="text-sm font-quicksand-semibold text-neutral-700">
+                <Text className="text-sm font-quicksand-semibold" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.category.filters.stock")}
                 </Text>
                 <View
-                  className={`w-12 h-6 rounded-full ${inStockOnly ? 'bg-[#10b981]' : 'bg-neutral-300'
-                    } justify-center`}
+                  className="w-12 h-6 rounded-full justify-center"
+                  style={{ backgroundColor: inStockOnly ? colors.brandPrimary : colors.border }}
                 >
                   <View
-                    className={`w-5 h-5 bg-white rounded-full ${inStockOnly ? 'ml-6' : 'ml-1'
-                      }`}
+                    className="w-5 h-5 rounded-full"
+                    style={{
+                      backgroundColor: colors.card,
+                      marginLeft: inStockOnly ? 22 : 2
+                    }}
                   />
                 </View>
               </TouchableOpacity>
@@ -635,15 +658,17 @@ export default function CategoryProductsScreen() {
               <View className="flex-row mt-4 gap-3">
                 <TouchableOpacity
                   onPress={handleResetFilters}
-                  className="flex-1 bg-neutral-200 py-3 rounded-xl"
+                  className="flex-1 py-3 rounded-xl"
+                  style={{ backgroundColor: colors.secondary }}
                 >
-                  <Text className="text-neutral-700 font-quicksand-semibold text-center">
+                  <Text className="font-quicksand-semibold text-center" style={{ color: colors.textPrimary }}>
                     {i18n.t("client.category.filters.reset")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={handleApplyFilters}
-                  className="flex-1 bg-[#10b981] py-3 rounded-xl"
+                  className="flex-1 py-3 rounded-xl"
+                  style={{ backgroundColor: colors.brandPrimary }}
                 >
                   <Text className="text-white font-quicksand-semibold text-center">
                     {i18n.t("client.category.filters.apply")}

@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -49,6 +49,7 @@ export default function EnterpriseProducts() {
     useNotification();
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedSort, setSelectedSort] = useState("createdAt");
 
@@ -111,9 +112,9 @@ export default function EnterpriseProducts() {
         }
 
         let response: ProductsResponse;
-        if (searchQuery.trim()) {
-          response = await ProductService.searchProducts(
-            searchQuery.trim(),
+        if (debouncedSearchQuery.trim()) {
+          response = await ProductService.searchEnterpriseProducts(
+            debouncedSearchQuery.trim(),
             page,
             10,
             filters
@@ -144,7 +145,7 @@ export default function EnterpriseProducts() {
         console.error("Error loading products:", err);
       }
     },
-    [searchQuery, selectedCategory, selectedSort, currentPage]
+    [debouncedSearchQuery, selectedCategory, selectedSort, currentPage]
   );
 
   // Load initial data
@@ -209,16 +210,23 @@ export default function EnterpriseProducts() {
       router.replace("/(app)/(enterprise)/(tabs)/products");
       loadInitialData();
     }
+
   }, [params.refresh, loadInitialData]);
+
+  // Debounce search query
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 2000); // Wait 2 seconds after user stops typing
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
 
   // Reload products when search/filter changes
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      loadProducts(true);
-    }, 500); // Debounce search
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, selectedCategory, selectedSort, loadProducts]);
+    loadProducts(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearchQuery, selectedCategory, selectedSort]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -365,9 +373,9 @@ export default function EnterpriseProducts() {
           className="rounded-2xl p-3 mb-4 mx-2 flex-1 relative"
         >
           <TouchableOpacity
-            style={{ 
+            style={{
               backgroundColor: isDark ? colors.tertiary : 'rgba(255,255,255,0.9)',
-              elevation: 2 
+              elevation: 2
             }}
             className="absolute top-2 right-2 z-10 rounded-full w-7 h-7 items-center justify-center shadow-sm"
             onPress={() => {
@@ -704,7 +712,7 @@ export default function EnterpriseProducts() {
 
   const SkeletonCard = ({ grid = false }: { grid?: boolean }) => (
     <View className={`${grid ? "w-1/2 px-2" : "w-full px-4"} mb-4`}>
-      <View 
+      <View
         style={{ backgroundColor: colors.card, borderColor: colors.border }}
         className="rounded-2xl p-4 border overflow-hidden"
       >
@@ -749,7 +757,7 @@ export default function EnterpriseProducts() {
     );
   };
 
-  const Header = () => (
+  const Header = useMemo(() => (
     <LinearGradient
       colors={[colors.brandGradientStart, colors.brandGradientEnd]}
       start={{ x: 0, y: 0 }}
@@ -773,7 +781,7 @@ export default function EnterpriseProducts() {
               onPress={() =>
                 setViewMode((prev) => (prev === "list" ? "grid" : "list"))
               }
-              style={{ 
+              style={{
                 backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.20)',
                 borderColor: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.30)'
               }}
@@ -789,9 +797,9 @@ export default function EnterpriseProducts() {
               onPress={() =>
                 router.push("/(app)/(enterprise)/(tabs)/products/create")
               }
-              style={{ 
+              style={{
                 backgroundColor: isDark ? colors.card : '#FFFFFF',
-                elevation: 3 
+                elevation: 3
               }}
               className="rounded-2xl px-5 py-3 flex-row items-center shadow-md"
             >
@@ -815,19 +823,22 @@ export default function EnterpriseProducts() {
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholder={i18n.t("enterprise.products.searchPlaceholder")}
-            style={{ 
+            style={{
               backgroundColor: isDark ? colors.card : '#FFFFFF',
               color: colors.textPrimary,
-              elevation: 2 
+              elevation: 2
             }}
             className="rounded-2xl pl-12 pr-12 py-3.5 font-quicksand-medium shadow-sm"
             placeholderTextColor={colors.textTertiary}
+            blurOnSubmit={false}
+            returnKeyType="search"
+            autoCorrect={false}
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity
-              style={{ 
+              style={{
                 backgroundColor: isDark ? colors.tertiary : '#F3F4F6',
-                transform: [{ translateY: -10 }] 
+                transform: [{ translateY: -10 }]
               }}
               className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-1"
               onPress={() => setSearchQuery("")}
@@ -862,7 +873,7 @@ export default function EnterpriseProducts() {
               onPress={() => setSelectedCategory(item._id)}
             >
               <Text
-                style={{ 
+                style={{
                   color: selectedCategory === item._id ? colors.brandPrimary : '#FFFFFF'
                 }}
                 className="text-sm font-quicksand-bold"
@@ -878,9 +889,9 @@ export default function EnterpriseProducts() {
       <View className="flex-row items-center justify-between px-6 pt-2">
         <TouchableOpacity
           onPress={() => setShowSortModal(true)}
-          style={{ 
+          style={{
             backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.95)',
-            elevation: 2 
+            elevation: 2
           }}
           className="flex-row items-center backdrop-blur-sm rounded-full px-4 py-2.5 shadow-sm"
         >
@@ -896,8 +907,8 @@ export default function EnterpriseProducts() {
           />
         </TouchableOpacity>
         {searchQuery.trim().length > 0 && (
-          <View 
-            style={{ 
+          <View
+            style={{
               backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.20)',
               borderColor: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.30)'
             }}
@@ -910,13 +921,13 @@ export default function EnterpriseProducts() {
         )}
       </View>
     </LinearGradient>
-  );
+  ), [searchQuery, categories, selectedCategory, viewMode, selectedSort, products.length, colors, isDark, insets.top, sortOptions]);
 
   if (initialLoading) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.secondary }}>
         <ExpoStatusBar style={isDark ? "light" : "light"} translucent />
-        <Header />
+        {Header}
         <View style={{ flex: 1, backgroundColor: colors.primary }}>{renderSkeletons()}</View>
         {renderSortModal()}
       </View>
@@ -926,7 +937,7 @@ export default function EnterpriseProducts() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.secondary }}>
       <ExpoStatusBar style={isDark ? "light" : "light"} translucent />
-      <Header />
+      {Header}
       <View style={{ flex: 1, backgroundColor: colors.primary }}>
         {products.length > 0 ? (
           <FlatList
@@ -939,7 +950,7 @@ export default function EnterpriseProducts() {
               viewMode === "grid" ? { paddingHorizontal: 8 } : undefined
             }
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingTop: 28, paddingBottom: 28 }}
+            contentContainerStyle={{ paddingTop: 28, paddingBottom: 120 }}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -1117,7 +1128,7 @@ export default function EnterpriseProducts() {
                     setSelectedProductForMenu(null);
                   }}
                 >
-                  <View 
+                  <View
                     style={{ backgroundColor: isDark ? colors.tertiary : '#D1FAE5' }}
                     className="w-10 h-10 rounded-full items-center justify-center mr-3"
                   >
@@ -1185,7 +1196,7 @@ export default function EnterpriseProducts() {
                     setSelectedProductForMenu(null);
                   }}
                 >
-                  <View 
+                  <View
                     style={{ backgroundColor: isDark ? colors.tertiary : '#FEE2E2' }}
                     className="w-10 h-10 rounded-full items-center justify-center mr-3"
                   >

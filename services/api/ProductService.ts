@@ -16,14 +16,14 @@ class ProductService {
   async createProduct(productData: CreateProductRequest): Promise<Product> {
     try {
       console.log('🚀 ProductService - Création produit:', productData.name);
-      
+
       const response = await ApiService.post<Product>(`${this.BASE_URL}/create`, productData);
-      
+
       if (response.success && response.data) {
         console.log('✅ Produit créé avec succès');
         return response.data;
       }
-      
+
       throw new Error('Échec de la création du produit');
     } catch (error: any) {
       console.error('❌ Erreur création produit:', error);
@@ -35,7 +35,7 @@ class ProductService {
   async getEnterpriseProducts(page = 1, limit = 10, filters: ProductFilters = {}): Promise<ProductsResponse> {
     try {
       console.log('🚀 ProductService - Récupération produits entreprise');
-      
+
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
@@ -45,22 +45,22 @@ class ProductService {
       });
 
       const response = await ApiService.get<any>(`${this.BASE_URL}/enterprise/my-products?${params}`);
-      
+
       console.log('🔍 Raw API Response:', JSON.stringify(response, null, 2));
-      
+
       if (response.success && response.data !== undefined) {
         const products = Array.isArray(response.data) ? response.data : [];
         const pagination = (response as any).pagination || { page: 1, limit: 10, total: 0, pages: 0 };
-        
+
         console.log('✅ Produits entreprise récupérés:', products.length);
         console.log('📄 Pagination:', pagination);
-        
+
         return {
           products: products,
           pagination: pagination
         };
       }
-      
+
       throw new Error('Échec de la récupération des produits');
     } catch (error: any) {
       console.error('❌ Erreur récupération produits entreprise:', error);
@@ -72,14 +72,14 @@ class ProductService {
   async getProductById(productId: string): Promise<Product> {
     try {
       console.log('🚀 ProductService - Récupération produit:', productId);
-      
+
       const response = await ApiService.get<Product>(`${this.BASE_URL}/${productId}`);
-      
+
       if (response.success && response.data) {
         console.log('✅ Produit récupéré avec succès');
         return response.data;
       }
-      
+
       throw new Error('Produit non trouvé');
     } catch (error: any) {
       console.error('❌ Erreur récupération produit:', error);
@@ -91,14 +91,14 @@ class ProductService {
   async updateProduct(productId: string, productData: UpdateProductRequest): Promise<Product> {
     try {
       console.log('🚀 ProductService - Mise à jour produit:', productId);
-      
+
       const response = await ApiService.put<Product>(`${this.BASE_URL}/${productId}`, productData);
-      
+
       if (response.success && response.data) {
         console.log('✅ Produit mis à jour avec succès');
         return response.data;
       }
-      
+
       throw new Error('Échec de la mise à jour du produit');
     } catch (error: any) {
       console.error('❌ Erreur mise à jour produit:', error);
@@ -110,14 +110,14 @@ class ProductService {
   async toggleProductStatus(productId: string, isActive: boolean): Promise<Product> {
     try {
       console.log('🚀 ProductService - Changement statut produit:', productId, isActive);
-      
+
       const response = await ApiService.put<Product>(`${this.BASE_URL}/${productId}/status`, { isActive });
-      
+
       if (response.success && response.data) {
         console.log('✅ Statut produit mis à jour avec succès');
         return response.data;
       }
-      
+
       throw new Error('Échec du changement de statut du produit');
     } catch (error: any) {
       console.error('❌ Erreur changement statut produit:', error);
@@ -129,15 +129,15 @@ class ProductService {
   async removeProductImage(productId: string, imageUrl: string): Promise<Product> {
     try {
       console.log('🚀 ProductService - Suppression image produit:', productId);
-      
+
       const requestData: RemoveImageRequest = { imageUrl };
       const response = await ApiService.delete<Product>(`${this.BASE_URL}/${productId}/image`, { data: requestData });
-      
+
       if (response.success && response.data) {
         console.log('✅ Image supprimée avec succès');
         return response.data;
       }
-      
+
       throw new Error('Échec de la suppression de l\'image');
     } catch (error: any) {
       console.error('❌ Erreur suppression image:', error);
@@ -183,15 +183,15 @@ class ProductService {
     try {
       console.log('🚀 ProductService - Récupération produits favoris');
       const response = await ApiService.get(`${this.BASE_URL}/favorites/list`);
-      
+
       console.log('📦 Response complète:', response); // Pour débugger
-      
+
       if (response.success && response.data) {
         const favorites = Array.isArray(response.data) ? response.data : [];
         console.log('✅ Produits favoris récupérés:', favorites.length);
         return favorites; // Retourner un tableau typé
       }
-      
+
       throw new Error('Échec de la récupération des produits favoris');
     } catch (error: any) {
       console.error('❌ Erreur récupération produits favoris:', error);
@@ -204,13 +204,13 @@ class ProductService {
     try {
       console.log('🚀 ProductService - Vérification si produit est favori:', productId);
       const response = await ApiService.get<{ isFavorite: boolean }>(`${this.BASE_URL}/${productId}/favorites/check`);
-      
-      
+
+
       if (response.success && response.data) {
         console.log('✅ Vérification terminée, est favori:', response.data.isFavorite);
         return response.data.isFavorite;
       }
-      
+
       throw new Error('Échec de la vérification du statut favori');
     } catch (error: any) {
       console.error('❌ Erreur vérification produit favori:', error);
@@ -222,14 +222,14 @@ class ProductService {
   async deleteProduct(productId: string): Promise<void> {
     try {
       console.log('🚀 ProductService - Suppression produit:', productId);
-      
+
       const response = await ApiService.delete(`${this.BASE_URL}/${productId}`);
-      
+
       if (response.success) {
         console.log('✅ Produit supprimé avec succès');
         return;
       }
-      
+
       throw new Error('Échec de la suppression du produit');
     } catch (error: any) {
       console.error('❌ Erreur suppression produit:', error);
@@ -241,7 +241,7 @@ class ProductService {
   async getAllProducts(page = 1, limit = 20, filters: ProductFilters = {}): Promise<ProductsResponse> {
     try {
       console.log('🚀 ProductService - Récupération tous produits');
-      
+
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
@@ -251,7 +251,7 @@ class ProductService {
       });
 
       const response = await ApiService.get<{ products: Product[]; pagination: any }>(`${this.BASE_URL}?${params}`);
-      
+
       if (response.success && response.data) {
         console.log('✅ Produits publics récupérés:', response.data.products.length);
         return {
@@ -259,7 +259,7 @@ class ProductService {
           pagination: response.data.pagination
         };
       }
-      
+
       throw new Error('Échec de la récupération des produits');
     } catch (error: any) {
       console.error('❌ Erreur récupération produits publics:', error);
@@ -271,7 +271,7 @@ class ProductService {
   async searchProducts(searchTerm: string, page = 1, limit = 20, filters: ProductFilters = {}): Promise<ProductsResponse> {
     try {
       console.log('🚀 ProductService - Recherche produits:', searchTerm);
-      
+
       const params = new URLSearchParams({
         search: searchTerm,
         page: page.toString(),
@@ -282,22 +282,22 @@ class ProductService {
       });
 
       const response = await ApiService.get<any>(`${this.BASE_URL}/search?${params}`);
-      
+
       console.log('🔍 Raw Search Response:', JSON.stringify(response, null, 2));
-      
+
       if (response.success && response.data !== undefined) {
         const products = Array.isArray(response.data) ? response.data : [];
         const pagination = (response as any).pagination || { page: 1, limit: 20, total: 0, pages: 0 };
-        
+
         console.log('✅ Recherche produits terminée:', products.length);
         console.log('📄 Search Pagination:', pagination);
-        
+
         return {
           products: products,
           pagination: pagination
         };
       }
-      
+
       throw new Error('Échec de la recherche');
     } catch (error: any) {
       console.error('❌ Erreur recherche produits:', error);
@@ -305,11 +305,49 @@ class ProductService {
     }
   }
 
+  // Rechercher des produits de l'entreprise
+  async searchEnterpriseProducts(searchTerm: string, page = 1, limit = 10, filters: ProductFilters = {}): Promise<ProductsResponse> {
+    try {
+      console.log('🔥 ProductService - Recherche produits entreprise:', searchTerm);
+
+      const params = new URLSearchParams({
+        search: searchTerm,
+        page: page.toString(),
+        limit: limit.toString(),
+        ...Object.fromEntries(
+          Object.entries(filters).filter(([_, value]) => value !== undefined && value !== '')
+        ),
+      });
+
+      const response = await ApiService.get<any>(`${this.BASE_URL}/enterprise/search?${params}`);
+
+      console.log('🔍 Raw Enterprise Search Response:', JSON.stringify(response, null, 2));
+
+      if (response.success && response.data !== undefined) {
+        const products = Array.isArray(response.data) ? response.data : [];
+        const pagination = (response as any).pagination || { page: 1, limit: 10, total: 0, pages: 0 };
+
+        console.log('✅ Recherche produits entreprise terminée:', products.length);
+        console.log('📄 Enterprise Search Pagination:', pagination);
+
+        return {
+          products: products,
+          pagination: pagination
+        };
+      }
+
+      throw new Error('Échec de la recherche des produits entreprise');
+    } catch (error: any) {
+      console.error('❌ Erreur recherche produits entreprise:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Recherche des produits entreprise échouée');
+    }
+  }
+
   // Récupérer les produits par catégorie
   async getProductsByCategory(categoryId: string, page = 1, limit = 20, filters: ProductFilters = {}): Promise<ProductsResponse> {
     try {
       console.log('🚀 ProductService - Produits par catégorie:', categoryId);
-      
+
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
@@ -319,7 +357,7 @@ class ProductService {
       });
 
       const response = await ApiService.get<{ products: Product[]; pagination: any }>(`${this.BASE_URL}/category/${categoryId}?${params}`);
-      
+
       if (response.success && response.data) {
         console.log('✅ Produits par catégorie récupérés:', response.data.products.length);
         return {
@@ -327,7 +365,7 @@ class ProductService {
           pagination: response.data.pagination
         };
       }
-      
+
       throw new Error('Échec de la récupération des produits par catégorie');
     } catch (error: any) {
       console.error('❌ Erreur produits par catégorie:', error);
@@ -339,14 +377,14 @@ class ProductService {
   async updateProductStats(productId: string, stats: Partial<Product['stats']>): Promise<Product> {
     try {
       console.log('🚀 ProductService - Mise à jour stats produit:', productId);
-      
+
       const response = await ApiService.put<Product>(`${this.BASE_URL}/${productId}/stats`, stats);
-      
+
       if (response.success && response.data) {
         console.log('✅ Stats produit mises à jour');
         return response.data;
       }
-      
+
       throw new Error('Échec de la mise à jour des statistiques');
     } catch (error: any) {
       console.error('❌ Erreur mise à jour stats:', error);
@@ -362,9 +400,9 @@ class ProductService {
   async getAllPublicProducts(filters: ProductFilters = {}): Promise<ProductsResponse> {
     try {
       console.log('🔥 PRODUCT SERVICE - Récupération produits publics avec filtres:', filters);
-      
+
       const queryParams = new URLSearchParams();
-      
+
       // Ajouter les paramètres de filtrage
       if (filters.page) queryParams.append('page', filters.page.toString());
       if (filters.limit) queryParams.append('limit', filters.limit.toString());
@@ -376,7 +414,7 @@ class ProductService {
 
       const url = `${this.BASE_URL}?${queryParams.toString()}`;
       const response = await ApiService.get<any>(url);
-      
+
       if (response.success && response.data) {
         console.log('✅ PRODUCT SERVICE - Produits publics récupérés:', response.data.length);
         return {
@@ -389,7 +427,7 @@ class ProductService {
           }
         };
       }
-      
+
       throw new Error('Échec de la récupération des produits publics');
     } catch (error: any) {
       console.error('❌ PRODUCT SERVICE - Erreur récupération produits publics:', error);
@@ -403,24 +441,24 @@ class ProductService {
   async getPublicProductById(productId: string): Promise<Product> {
     try {
       console.log('🔥 PRODUCT SERVICE - Récupération détails produit public:', productId);
-      
+
       const response = await ApiService.get<any>(`${this.BASE_URL}/${productId}`);
-      
+
       if (response.success && response.data) {
         // Le backend renvoie maintenant { product: {...}, enterprise: {...} }
         const productData = response.data.product;
         const enterpriseData = response.data.enterprise;
-        
+
         // Fusionner les données du produit avec les infos de l'entreprise
         const completeProduct = {
           ...productData,
           enterprise: enterpriseData
         };
-        
+
         console.log('✅ PRODUCT SERVICE - Détails produit public récupérés:', completeProduct.name);
         return completeProduct;
       }
-      
+
       throw new Error('Échec de la récupération des détails du produit');
     } catch (error: any) {
       console.error('❌ PRODUCT SERVICE - Erreur récupération détails produit public:', error);
@@ -434,7 +472,7 @@ class ProductService {
   async searchPublicProducts(query: string, filters: Omit<ProductFilters, 'search'> = {}): Promise<ProductsResponse> {
     try {
       console.log('🔍 PRODUCT SERVICE - Recherche produits publics:', query);
-      
+
       return this.getAllPublicProducts({
         ...filters,
         search: query
@@ -451,7 +489,7 @@ class ProductService {
   async getPopularProducts(limit: number = 10): Promise<ProductsResponse> {
     try {
       console.log('🔥 PRODUCT SERVICE - Produits populaires, limite:', limit);
-      
+
       return this.getAllPublicProducts({
         limit,
         sort: 'popular'
@@ -468,7 +506,7 @@ class ProductService {
   async getNewProducts(limit: number = 10): Promise<ProductsResponse> {
     try {
       console.log('🆕 PRODUCT SERVICE - Nouveaux produits, limite:', limit);
-      
+
       return this.getAllPublicProducts({
         limit,
         sort: 'newest'
@@ -494,7 +532,7 @@ class ProductService {
     try {
       console.log('🔄 PRODUCT SERVICE - Produits similaires pour:', productId);
       console.log('📊 Limite:', limit);
-      
+
       const response = await ApiService.get<{
         referenceProduct: {
           id: string;
@@ -504,12 +542,12 @@ class ProductService {
         similarProducts: Product[];
         totalFound: number;
       }>(`${this.BASE_URL}/similar/${productId}?limit=${limit}`);
-      
+
       if (response.success && response.data) {
         console.log('✅ Produits similaires récupérés:', response.data.similarProducts.length);
         return response.data;
       }
-      
+
       throw new Error('Échec de récupération des produits similaires');
     } catch (error: any) {
       console.error('❌ PRODUCT SERVICE - Erreur produits similaires:', error);

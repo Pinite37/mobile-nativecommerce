@@ -11,7 +11,7 @@ import { RegistrationHelper } from '../../utils/RegistrationHelper';
 
 export default function SignUpScreen() {
   const { role } = useLocalSearchParams<{ role: string }>();
-  
+
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -61,13 +61,13 @@ export default function SignUpScreen() {
       };
 
       console.log('🚀 Début de l\'inscription...');
-      
+
       // Utiliser l'utilitaire d'inscription avec connexion automatique
       const response = await RegistrationHelper.registerWithAutoLogin(userData, false);
-      
+
       if (response.success && response.data) {
         console.log('✅ Inscription réussie, traitement de l\'état...');
-        
+
         // Check if role is supported
         const userRole = response.data.user.role;
         if ((userRole as string) === 'DELIVER') {
@@ -75,23 +75,23 @@ export default function SignUpScreen() {
             title: 'Profil non supporté',
             subtitle: 'Cette application ne gère que les profils clients et entreprises. Veuillez utiliser l\'application dédiée aux livreurs.'
           });
-          
+
           // Clear any stored session data
           await logout();
           return;
         }
-        
+
         // Afficher l'état d'authentification pour debug
         await RegistrationHelper.logAuthenticationState();
-        
+
         // Mettre à jour l'état d'authentification
         await handlePostRegistration(response.data.user, response.data.user.role);
-        
+
         const successMessage = ErrorHandler.getSuccessMessage('register');
         toast.showToast({ title: successMessage.title, subtitle: successMessage.message });
-        
+
         console.log('🎯 Redirection vers l\'interface utilisateur...');
-        
+
         // Rediriger vers l'interface correspondant au rôle avec un délai optimisé
         setTimeout(() => {
           redirectToRoleBasedHome(response.data.user.role);
@@ -113,7 +113,7 @@ export default function SignUpScreen() {
   return (
     <View className="flex-1 bg-white">
       <StatusBar style="dark" />
-      
+
       {/* Fixed Header with Back Button */}
       <View className="absolute top-0 left-0 right-0 z-10 bg-white px-6 pt-16 pb-4">
         <TouchableOpacity
@@ -123,9 +123,9 @@ export default function SignUpScreen() {
           <Ionicons name="arrow-back" size={20} color="#374151" />
         </TouchableOpacity>
       </View>
-      
-      <KeyboardAwareScrollView 
-        className="flex-1 pt-28" 
+
+      <KeyboardAwareScrollView
+        className="flex-1 pt-28"
         showsVerticalScrollIndicator={false}
         enableOnAndroid={true}
         keyboardShouldPersistTaps="handled"
@@ -303,9 +303,8 @@ export default function SignUpScreen() {
           <TouchableOpacity
             onPress={handleSignUp}
             disabled={isLoading}
-            className={`rounded-xl py-4 mb-6 ${
-              isLoading ? 'bg-primary/70' : 'bg-primary'
-            }`}
+            className={`rounded-xl py-4 mb-6 ${isLoading ? 'bg-primary/70' : 'bg-primary'
+              }`}
           >
             <Text className="text-white font-quicksand-semibold text-base text-center">
               {isLoading ? 'Création du compte...' : 'Créer le compte'}

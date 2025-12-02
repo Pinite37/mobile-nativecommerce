@@ -21,7 +21,9 @@ import NotificationModal, {
   useNotification,
 } from "../../../../components/ui/NotificationModal";
 import { useAuth } from "../../../../contexts/AuthContext";
+import { useTheme } from "../../../../contexts/ThemeContext";
 import { useSocket } from "../../../../hooks/useSocket";
+import i18n from "../../../../i18n/i18n";
 import MessagingService, {
   Conversation,
   Message,
@@ -41,6 +43,7 @@ export default function ConversationDetails() {
   const flatListRef = useRef<FlatList>(null);
   const textInputRef = useRef<TextInput>(null);
   const { user } = useAuth(); // Récupérer l'utilisateur connecté
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
 
@@ -150,12 +153,12 @@ export default function ConversationDetails() {
 
     return (
       <View
-        className="bg-gray-200 overflow-hidden"
-        style={{ width: width as any, height, borderRadius }}
+        className="overflow-hidden"
+        style={{ width: width as any, height, borderRadius, backgroundColor: colors.border }}
       >
         <Animated.View
-          className="bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 absolute inset-0"
-          style={{ transform: [{ translateX }] }}
+          className="absolute inset-0"
+          style={{ transform: [{ translateX }], backgroundColor: colors.secondary }}
         />
       </View>
     );
@@ -202,7 +205,7 @@ export default function ConversationDetails() {
 
   // Fonction pour rendre les skeletons de conversation
   const renderSkeletonConversation = () => (
-    <View className="flex-1 bg-white">
+    <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
       <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
       {/* Header skeleton */}
       <LinearGradient
@@ -227,7 +230,7 @@ export default function ConversationDetails() {
       </LinearGradient>
 
       {/* Product info skeleton */}
-      <View className="bg-neutral-50 px-4 py-3 border-b border-neutral-100 flex-row items-center">
+      <View className="px-4 py-3 flex-row items-center" style={{ backgroundColor: colors.card, borderBottomColor: colors.border, borderBottomWidth: 1 }}>
         <ShimmerBlock width={40} height={40} borderRadius={12} />
         <View className="flex-1 ml-3">
           <ShimmerBlock width="60%" height={14} borderRadius={4} />
@@ -835,7 +838,7 @@ export default function ConversationDetails() {
         >
           <View
             style={{
-              backgroundColor: "#FFFFFF",
+              backgroundColor: colors.card,
               borderRadius: 16,
               paddingHorizontal: 20,
               paddingVertical: 16,
@@ -886,7 +889,7 @@ export default function ConversationDetails() {
                 <Text
                   style={{
                     fontSize: 14,
-                    color: "#262626",
+                    color: colors.textPrimary,
                     fontFamily: "Quicksand-SemiBold",
                     lineHeight: 20,
                   }}
@@ -900,13 +903,13 @@ export default function ConversationDetails() {
                 marginTop: 8,
                 paddingTop: 8,
                 borderTopWidth: 1,
-                borderTopColor: "#F5F5F5",
+                borderTopColor: colors.border,
               }}
             >
               <Text
                 style={{
                   fontSize: 10,
-                  color: "#737373",
+                  color: colors.textSecondary,
                   fontFamily: "Quicksand-Medium",
                   textAlign: "center",
                 }}
@@ -926,18 +929,18 @@ export default function ConversationDetails() {
       <View style={{ paddingVertical: 12, alignItems: "center" }}>
         <View
           style={{
-            backgroundColor: "#F5F5F5",
+            backgroundColor: colors.secondary,
             borderRadius: 999,
             paddingHorizontal: 16,
             paddingVertical: 8,
             borderWidth: 1,
-            borderColor: "#E5E5E5",
+            borderColor: colors.border,
           }}
         >
           <Text
             style={{
               fontSize: 12,
-              color: "#525252",
+              color: colors.textSecondary,
               fontFamily: "Quicksand-Medium",
               textAlign: "center",
             }}
@@ -1047,19 +1050,19 @@ export default function ConversationDetails() {
             {/* Message de réponse */}
             {message.replyTo && !message.replyTo.metadata.deleted && (
               <View
-                className={`mb-2 px-3 py-2 rounded-xl border-l-4 ${
-                  isCurrentUser
-                    ? "bg-primary-50 border-primary-300"
-                    : "bg-neutral-100 border-neutral-300"
-                }`}
+                className="mb-2 px-3 py-2 rounded-xl border-l-4"
+                style={{
+                  backgroundColor: isCurrentUser ? '#ECFDF5' : colors.secondary,
+                  borderLeftColor: isCurrentUser ? '#10B981' : colors.border
+                }}
               >
-                <Text className="text-xs text-neutral-600 font-quicksand-medium mb-1">
-                  Réponse à {message.replyTo.sender.firstName}{" "}
+                <Text className="text-xs font-quicksand-medium mb-1" style={{ color: colors.textSecondary }}>
+                  {i18n.t('client.messages.conversationDetail.replyTo')} {message.replyTo.sender.firstName}{" "}
                   {message.replyTo.sender.lastName}
                 </Text>
-                <Text className="text-sm text-neutral-700" numberOfLines={2}>
+                <Text className="text-sm" numberOfLines={2} style={{ color: colors.textPrimary }}>
                   {message.replyTo.metadata.deleted
-                    ? "[Message supprimé]"
+                    ? i18n.t('client.messages.conversationDetail.messageDeleted')
                     : message.replyTo.text}
                 </Text>
               </View>
@@ -1104,18 +1107,16 @@ export default function ConversationDetails() {
                     paddingHorizontal: 16,
                     paddingVertical: 12,
                     borderRadius: 16,
-                    backgroundColor: "#F9FAFB",
+                    backgroundColor: colors.card,
                     borderWidth: 1,
-                    borderColor: "#E5E7EB",
+                    borderColor: colors.border,
                   }}
                 >
                   <Text
-                    className={`font-quicksand-medium ${
-                      isDeleted ? "text-neutral-600 italic" : "text-neutral-800"
-                    }`}
-                    style={{ fontSize: 15, lineHeight: 20 }}
+                    className="font-quicksand-medium"
+                    style={{ fontSize: 15, lineHeight: 20, color: isDeleted ? colors.textSecondary : colors.textPrimary, fontStyle: isDeleted ? 'italic' : 'normal' }}
                   >
-                    {isDeleted ? "[Message supprimé]" : message.text}
+                    {isDeleted ? i18n.t('client.messages.conversationDetail.messageDeleted') : message.text}
                   </Text>
                 </View>
               )}
@@ -1127,7 +1128,7 @@ export default function ConversationDetails() {
                 isCurrentUser ? "justify-end" : "justify-start"
               }`}
             >
-              <Text className="text-xs text-neutral-400 font-quicksand-medium mr-1">
+              <Text className="text-xs font-quicksand-medium mr-1" style={{ color: colors.textSecondary }}>
                 {formatMessageTime(message.createdAt || message.sentAt || "")}
               </Text>
               {isCurrentUser && <MessageStatusIndicator message={message} />}
@@ -1143,7 +1144,7 @@ export default function ConversationDetails() {
                   resizeMode="cover"
                 />
               ) : (
-                <View className="w-8 h-8 bg-neutral-200 rounded-full justify-center items-center">
+                <View className="w-8 h-8 rounded-full justify-center items-center" style={{ backgroundColor: colors.border }}>
                   <Ionicons
                     name={
                       message.sender.role === "ENTERPRISE"
@@ -1151,7 +1152,7 @@ export default function ConversationDetails() {
                         : "person"
                     }
                     size={14}
-                    color="#9CA3AF"
+                    color={colors.textSecondary}
                   />
                 </View>
               )}
@@ -1172,7 +1173,7 @@ export default function ConversationDetails() {
           msg._id === messageId
             ? {
                 ...msg,
-                text: "[Message supprimé]",
+                text: i18n.t('client.messages.conversationDetail.messageDeleted'),
                 metadata: { ...msg.metadata, deleted: true },
               }
             : msg
@@ -1188,7 +1189,7 @@ export default function ConversationDetails() {
             msg._id === messageId
               ? {
                   ...msg,
-                  text: "[Message supprimé]",
+                  text: i18n.t('client.messages.conversationDetail.messageDeleted'),
                   metadata: { ...msg.metadata, deleted: true },
                 }
               : msg
@@ -1257,8 +1258,8 @@ export default function ConversationDetails() {
       d.getDate()
     ).getTime();
     const diffDays = Math.floor((todayStart - dStart) / (1000 * 60 * 60 * 24));
-    if (diffDays === 0) return "Aujourd'hui";
-    if (diffDays === 1) return "Hier";
+    if (diffDays === 0) return i18n.t('client.messages.conversationDetail.today');
+    if (diffDays === 1) return i18n.t('client.messages.conversationDetail.yesterday');
     return d.toLocaleDateString("fr-FR", {
       day: "2-digit",
       month: "short",
@@ -1312,17 +1313,17 @@ export default function ConversationDetails() {
   // (chargement terminé mais pas de conversation)
   if (!conversation) {
     return (
-      <View className="flex-1 bg-white justify-center items-center">
+      <View className="flex-1 justify-center items-center" style={{ backgroundColor: colors.secondary }}>
         <ExpoStatusBar
           style="light"
           translucent
           backgroundColor="transparent"
         />
         <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
-        <Text className="mt-4 text-lg font-quicksand-bold text-neutral-800">
+        <Text className="mt-4 text-lg font-quicksand-bold" style={{ color: colors.textPrimary }}>
           Conversation non trouvée
         </Text>
-        <Text className="text-neutral-500 font-quicksand-medium mt-2">
+        <Text className="font-quicksand-medium mt-2" style={{ color: colors.textSecondary }}>
           Veuillez réessayer plus tard
         </Text>
         <TouchableOpacity
@@ -1346,7 +1347,7 @@ export default function ConversationDetails() {
       : "Vendeur inconnu";
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
       <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
       {/* Header */}
       <LinearGradient
@@ -1416,15 +1417,16 @@ export default function ConversationDetails() {
             ListHeaderComponent={
               effectiveProduct ? (
                 <TouchableOpacity
-                  className="mb-4 bg-neutral-50 rounded-2xl p-4 flex-row items-center"
+                  className="mb-4 rounded-2xl p-4 flex-row items-center"
                   style={{
+                    backgroundColor: colors.card,
                     shadowColor: "#000",
                     shadowOffset: { width: 0, height: 1 },
                     shadowOpacity: 0.03,
                     shadowRadius: 4,
                     elevation: 1,
                     borderWidth: 1,
-                    borderColor: "#F3F4F6",
+                    borderColor: colors.border,
                   }}
                   onPress={() => {
                     router.push(
@@ -1443,18 +1445,19 @@ export default function ConversationDetails() {
                   />
                   <View className="ml-3 flex-1">
                     <Text
-                      className="text-sm font-quicksand-semibold text-neutral-800"
+                      className="text-sm font-quicksand-semibold"
                       numberOfLines={1}
+                      style={{ color: colors.textPrimary }}
                     >
-                      {effectiveProduct.name || "Produit"}
+                      {effectiveProduct.name || i18n.t('client.messages.conversationDetail.productFallback')}
                     </Text>
                     <Text className="text-base font-quicksand-bold text-primary-600">
                       {effectiveProduct.price
                         ? formatPrice(effectiveProduct.price)
-                        : "Prix non disponible"}
+                        : i18n.t('client.messages.conversationDetail.priceUnavailable')}
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+                  <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
                 </TouchableOpacity>
               ) : null
             }
@@ -1489,10 +1492,10 @@ export default function ConversationDetails() {
                   />
                 </View>
                 <Text className="text-lg font-quicksand-bold text-neutral-600 mb-2">
-                  Début de la conversation
+                  {i18n.t('client.messages.conversationDetail.emptyConversation.title')}
                 </Text>
                 <Text className="text-neutral-500 font-quicksand-medium text-center px-6">
-                  Commencez la discussion à propos de ce produit
+                  {i18n.t('client.messages.conversationDetail.emptyConversation.subtitle')}
                 </Text>
               </View>
             }
@@ -1510,7 +1513,7 @@ export default function ConversationDetails() {
                       color="#10B981"
                     />
                     <Text className="text-xs text-primary-600 font-quicksand-semibold ml-1">
-                      Réponse à {replyingTo.sender.firstName}{" "}
+                      {i18n.t('client.messages.conversationDetail.replyTo')} {replyingTo.sender.firstName}{" "}
                       {replyingTo.sender.lastName}
                     </Text>
                   </View>
@@ -1533,24 +1536,26 @@ export default function ConversationDetails() {
 
           {/* Zone de saisie Android */}
           <View
-            className="px-4 bg-white"
+            className="px-4"
             style={{
+              backgroundColor: colors.secondary,
               borderTopWidth: 1,
-              borderTopColor: "#F3F4F6",
+              borderTopColor: colors.border,
               paddingTop: 12,
               paddingBottom: Math.max(insets.bottom, 2),
             }}
           >
             <View
-              className="flex-row items-center rounded-3xl p-2 bg-white"
+              className="flex-row items-center rounded-3xl p-2"
               style={{
+                backgroundColor: colors.card,
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.08,
                 shadowRadius: 12,
                 elevation: 4,
                 borderWidth: 1,
-                borderColor: "#F3F4F6",
+                borderColor: colors.border,
               }}
             >
               {/* Zone de texte */}
@@ -1559,7 +1564,7 @@ export default function ConversationDetails() {
                   ref={textInputRef}
                   value={newMessage}
                   onChangeText={setNewMessage}
-                  placeholder="Tapez votre message..."
+                  placeholder={i18n.t('client.messages.conversationDetail.placeholder')}
                   multiline
                   maxLength={2000}
                   onContentSizeChange={(e) => {
@@ -1569,9 +1574,10 @@ export default function ConversationDetails() {
                     );
                     setInputHeight(height);
                   }}
-                  className="text-neutral-800 font-quicksand-medium text-base px-4 py-2"
-                  placeholderTextColor="#9CA3AF"
+                  className="font-quicksand-medium text-base px-4 py-2"
+                  placeholderTextColor={colors.textSecondary}
                   style={{
+                    color: colors.textPrimary,
                     height: Math.max(40, inputHeight),
                     opacity: sending ? 0.95 : 1,
                   }}
@@ -1582,7 +1588,7 @@ export default function ConversationDetails() {
 
               {/* Compteur de caractères */}
               {newMessage.length > 1800 && (
-                <View className="absolute top-1 right-20 bg-white rounded-full px-2 py-1">
+                <View className="absolute top-1 right-20 rounded-full px-2 py-1" style={{ backgroundColor: colors.card }}>
                   <Text
                     className={`text-xs font-quicksand-medium ${
                       newMessage.length > 1950
@@ -1658,15 +1664,16 @@ export default function ConversationDetails() {
             ListHeaderComponent={
               effectiveProduct ? (
                 <TouchableOpacity
-                  className="mb-4 bg-neutral-50 rounded-2xl p-4 flex-row items-center"
+                  className="mb-4 rounded-2xl p-4 flex-row items-center"
                   style={{
+                    backgroundColor: colors.card,
                     shadowColor: "#000",
                     shadowOffset: { width: 0, height: 1 },
                     shadowOpacity: 0.03,
                     shadowRadius: 4,
                     elevation: 1,
                     borderWidth: 1,
-                    borderColor: "#F3F4F6",
+                    borderColor: colors.border,
                   }}
                   onPress={() => {
                     router.push(
@@ -1685,18 +1692,19 @@ export default function ConversationDetails() {
                   />
                   <View className="ml-3 flex-1">
                     <Text
-                      className="text-sm font-quicksand-semibold text-neutral-800"
+                      className="text-sm font-quicksand-semibold"
                       numberOfLines={1}
+                      style={{ color: colors.textPrimary }}
                     >
-                      {effectiveProduct.name || "Produit"}
+                      {effectiveProduct.name || i18n.t('client.messages.conversationDetail.productFallback')}
                     </Text>
                     <Text className="text-base font-quicksand-bold text-primary-600">
                       {effectiveProduct.price
                         ? formatPrice(effectiveProduct.price)
-                        : "Prix non disponible"}
+                        : i18n.t('client.messages.conversationDetail.priceUnavailable')}
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+                  <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
                 </TouchableOpacity>
               ) : null
             }
@@ -1731,10 +1739,10 @@ export default function ConversationDetails() {
                   />
                 </View>
                 <Text className="text-lg font-quicksand-bold text-neutral-600 mb-2">
-                  Début de la conversation
+                  {i18n.t('client.messages.conversationDetail.emptyConversation.title')}
                 </Text>
                 <Text className="text-neutral-500 font-quicksand-medium text-center px-6">
-                  Commencez la discussion à propos de ce produit
+                  {i18n.t('client.messages.conversationDetail.emptyConversation.subtitle')}
                 </Text>
               </View>
             }
@@ -1752,7 +1760,7 @@ export default function ConversationDetails() {
                       color="#10B981"
                     />
                     <Text className="text-xs text-primary-600 font-quicksand-semibold ml-1">
-                      Réponse à {replyingTo.sender.firstName}{" "}
+                      {i18n.t('client.messages.conversationDetail.replyTo')} {replyingTo.sender.firstName}{" "}
                       {replyingTo.sender.lastName}
                     </Text>
                   </View>
@@ -1776,24 +1784,26 @@ export default function ConversationDetails() {
           {/* Zone de saisie iOS */}
           {!isUserAloneInConversation() && (
             <View
-              className="px-4 bg-white"
+              className="px-4"
               style={{
+                backgroundColor: colors.secondary,
                 borderTopWidth: 1,
-                borderTopColor: "#F3F4F6",
+                borderTopColor: colors.border,
                 paddingTop: 12,
                 paddingBottom: Math.max(insets.bottom, 12),
               }}
             >
               <View
-                className="flex-row items-center rounded-3xl p-2 bg-white"
+                className="flex-row items-center rounded-3xl p-2"
                 style={{
+                  backgroundColor: colors.card,
                   shadowColor: "#000",
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.08,
                   shadowRadius: 12,
                   elevation: 4,
                   borderWidth: 1,
-                  borderColor: "#F3F4F6",
+                  borderColor: colors.border,
                 }}
               >
                 {/* Zone de texte */}
@@ -1802,7 +1812,7 @@ export default function ConversationDetails() {
                     ref={textInputRef}
                     value={newMessage}
                     onChangeText={setNewMessage}
-                    placeholder="Tapez votre message..."
+                    placeholder={i18n.t('client.messages.conversationDetail.placeholder')}
                     multiline
                     maxLength={2000}
                     onContentSizeChange={(e) => {
@@ -1812,9 +1822,10 @@ export default function ConversationDetails() {
                       );
                       setInputHeight(height);
                     }}
-                    className="text-neutral-800 font-quicksand-medium text-base px-4 py-2"
-                    placeholderTextColor="#9CA3AF"
+                    className="font-quicksand-medium text-base px-4 py-2"
+                    placeholderTextColor={colors.textSecondary}
                     style={{
+                      color: colors.textPrimary,
                       height: Math.max(40, inputHeight),
                       opacity: sending ? 0.95 : 1,
                     }}
@@ -1825,7 +1836,7 @@ export default function ConversationDetails() {
 
                 {/* Compteur de caractères */}
                 {newMessage.length > 1800 && (
-                  <View className="absolute top-1 right-20 bg-white rounded-full px-2 py-1">
+                  <View className="absolute top-1 right-20 rounded-full px-2 py-1" style={{ backgroundColor: colors.card }}>
                     <Text
                       className={`text-xs font-quicksand-medium ${
                         newMessage.length > 1950
@@ -1929,7 +1940,8 @@ export default function ConversationDetails() {
         >
           <View className="flex-1 justify-center items-center px-6">
             <TouchableOpacity
-              className="bg-white rounded-3xl w-full max-w-sm"
+              className="rounded-3xl w-full max-w-sm"
+              style={{ backgroundColor: colors.card }}
               activeOpacity={1}
               onPress={() => {}}
             >
@@ -1951,10 +1963,10 @@ export default function ConversationDetails() {
 
               {/* Content */}
               <View className="px-6 pb-6">
-                <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+                <Text className="text-xl font-quicksand-bold text-center mb-2" style={{ color: colors.textPrimary }}>
                   {confirmationAction?.title}
                 </Text>
-                <Text className="text-base text-neutral-600 font-quicksand-medium text-center leading-5">
+                <Text className="text-base font-quicksand-medium text-center leading-5" style={{ color: colors.textSecondary }}>
                   {confirmationAction?.message}
                 </Text>
               </View>
@@ -1963,9 +1975,10 @@ export default function ConversationDetails() {
               <View className="flex-row px-6 pb-6 gap-3">
                 <TouchableOpacity
                   onPress={closeConfirmation}
-                  className="flex-1 bg-neutral-100 py-4 rounded-2xl items-center"
+                  className="flex-1 py-4 rounded-2xl items-center"
+                  style={{ backgroundColor: colors.secondary }}
                 >
-                  <Text className="text-base font-quicksand-semibold text-neutral-700">
+                  <Text className="text-base font-quicksand-semibold" style={{ color: colors.textPrimary }}>
                     Annuler
                   </Text>
                 </TouchableOpacity>

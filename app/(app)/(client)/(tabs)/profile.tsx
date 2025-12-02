@@ -1,3 +1,6 @@
+import { useLocale } from "@/contexts/LocaleContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import i18n from "@/i18n/i18n";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -15,14 +18,13 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import i18n from "@/i18n/i18n";
-import { useLocale } from "@/contexts/LocaleContext";
 import { useAuth } from "../../../../contexts/AuthContext";
 
 export default function ProfileScreen() {
   const { user, logout, refreshUserData } = useAuth();
   const insets = useSafeAreaInsets();
   const { locale } = useLocale();
+  const { colors } = useTheme();
   const [loading, setLoading] = useState(true);
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [confirmationAction, setConfirmationAction] = useState<{
@@ -97,7 +99,7 @@ export default function ProfileScreen() {
       outputRange: [-150, 150],
     });
     return (
-      <View style={[{ backgroundColor: "#E5E7EB", overflow: "hidden" }, style]}>
+      <View style={[{ backgroundColor: colors.card, overflow: "hidden" }, style]}>
         <Animated.View
           style={{
             position: "absolute",
@@ -114,7 +116,7 @@ export default function ProfileScreen() {
   };
 
   const SkeletonMenuItem = () => (
-    <View className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-4 mb-3">
+    <View className="rounded-2xl shadow-sm p-4 mb-3" style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }}>
       <View className="flex-row items-center">
         <ShimmerBlock style={{ width: 48, height: 48, borderRadius: 12 }} />
         <View className="ml-4 flex-1">
@@ -210,7 +212,7 @@ export default function ProfileScreen() {
 
       {/* User Profile Skeleton */}
       <View className="px-4" style={{ marginTop: overlayLift }}>
-        <View className="bg-white rounded-2xl p-4 flex-row items-start shadow-sm border border-neutral-100">
+        <View className="rounded-2xl p-4 flex-row items-start shadow-sm" style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }}>
           <View className="p-6">
             <View className="flex-row items-center">
               <ShimmerBlock
@@ -299,7 +301,7 @@ export default function ProfileScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-background-secondary">
+      <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
         <ExpoStatusBar style="light" translucent />
         {renderSkeletonProfile()}
       </View>
@@ -307,7 +309,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <View className="flex-1 bg-background-secondary">
+    <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
       <ExpoStatusBar style="light" translucent />
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -353,24 +355,24 @@ export default function ProfileScreen() {
 
         {/* User Profile */}
         <View className="px-4" style={{ marginTop: overlayLift }}>
-          <View className="bg-white rounded-2xl p-4 flex-row items-start shadow-sm border border-neutral-100">
+          <View className="rounded-2xl p-4 flex-row items-start shadow-sm" style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }}>
             <View className="flex-row items-center w-full">
               {user?.profileImage ? (
                 <Image
                   source={{ uri: user.profileImage }}
                   className="w-20 h-20 rounded-full mr-4"
-                  style={{ borderWidth: 3, borderColor: "#10B981" }}
+                  style={{ borderWidth: 3, borderColor: colors.brandPrimary }}
                 />
               ) : (
-                <View className="w-20 h-20 rounded-full bg-primary-100 items-center justify-center mr-4 border-2 border-primary-200">
-                  <Ionicons name="person" size={32} color="#10B981" />
+                <View className="w-20 h-20 rounded-full items-center justify-center mr-4" style={{ backgroundColor: colors.secondary, borderColor: colors.border, borderWidth: 2 }}>
+                  <Ionicons name="person" size={32} color={colors.brandPrimary} />
                 </View>
               )}
               <View className="flex-1">
-                <Text className="text-xl font-quicksand-bold text-neutral-800">
+                <Text className="text-xl font-quicksand-bold" style={{ color: colors.textPrimary }}>
                   {user ? `${user.firstName} ${user.lastName}` : i18n.t("client.profile.placeholders.userName")}
                 </Text>
-                <Text className="text-neutral-500 font-quicksand mt-1">
+                <Text className="font-quicksand mt-1" style={{ color: colors.textSecondary }}>
                   {user?.email || i18n.t("client.profile.placeholders.email")}
                 </Text>
               </View>
@@ -383,18 +385,19 @@ export default function ProfileScreen() {
           {menuItems.map((item, index) => (
             <TouchableOpacity
               key={index}
-              className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-4 mb-2  flex-row items-center"
+              className="rounded-2xl shadow-sm p-4 mb-2 flex-row items-center"
+              style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }}
               onPress={() => router.push(item.route as any)}
             >
-              <View className="w-12 h-12 bg-primary-100 rounded-xl justify-center items-center mr-4">
-                <Ionicons name={item.icon as any} size={24} color="#10B981" />
+              <View className="w-12 h-12 rounded-xl justify-center items-center mr-4" style={{ backgroundColor: colors.secondary }}>
+                <Ionicons name={item.icon as any} size={24} color={colors.brandPrimary} />
               </View>
               <View className="flex-1">
-                <Text className="text-neutral-800 font-quicksand-semibold text-base">
+                <Text className="font-quicksand-semibold text-base" style={{ color: colors.textPrimary }}>
                   {item.title}
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           ))}
         </View>
@@ -428,19 +431,20 @@ export default function ProfileScreen() {
         onRequestClose={closeConfirmation}
       >
         <View className="flex-1 justify-center items-center bg-black/50 px-4">
-          <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
-            <Text className="text-xl font-quicksand-bold text-neutral-800 mb-2">
+          <View className="rounded-2xl p-6 w-full max-w-sm" style={{ backgroundColor: colors.card }}>
+            <Text className="text-xl font-quicksand-bold mb-2" style={{ color: colors.textPrimary }}>
               {confirmationAction?.title}
             </Text>
-            <Text className="text-base text-neutral-600 font-quicksand-medium mb-6">
+            <Text className="text-base font-quicksand-medium mb-6" style={{ color: colors.textSecondary }}>
               {confirmationAction?.message}
             </Text>
             <View className="flex-row space-x-3">
               <TouchableOpacity
-                className="flex-1 bg-neutral-100 rounded-xl py-3"
+                className="flex-1 rounded-xl py-3"
+                style={{ backgroundColor: colors.secondary }}
                 onPress={closeConfirmation}
               >
-                <Text className="text-neutral-700 font-quicksand-semibold text-center">
+                <Text className="font-quicksand-semibold text-center" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.profile.logout.modal.cancel")}
                 </Text>
               </TouchableOpacity>
