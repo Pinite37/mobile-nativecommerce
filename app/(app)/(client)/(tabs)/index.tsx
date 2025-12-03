@@ -3,7 +3,6 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -111,15 +110,6 @@ export default function ClientHome() {
     const screenWidth = Dimensions.get('window').width;
     const isTablet = screenWidth >= 768;
     const productWidth = isTablet ? '31%' : '48%'; // 3 colonnes sur tablette, 2 sur mobile
-
-    const navigateTo = (path: string) => {
-        try {
-            const url = Linking.createURL(path);
-            Linking.openURL(url);
-        } catch (e) {
-            console.warn('Navigation indisponible:', e);
-        }
-    };
 
     const [selectedCity, setSelectedCity] = useState(beninCities[0].name);
     const [selectedNeighborhood, setSelectedNeighborhood] = useState("");
@@ -839,7 +829,7 @@ export default function ClientHome() {
         if (suggestion?.type === 'product') {
             const productId = suggestion?.id || suggestion?.productId || suggestion?._id;
             if (productId) {
-                navigateTo(`/(app)/(client)/product/${productId}`);
+                router.push(`/(app)/(client)/product/${productId}`);
                 return;
             }
         }
@@ -891,7 +881,7 @@ export default function ClientHome() {
         <TouchableOpacity
             style={{ backgroundColor: colors.card, borderColor: colors.border }}
             className="rounded-3xl shadow-sm border mb-4 overflow-hidden"
-            onPress={() => navigateTo(`/(app)/(client)/product/${item._id}`)}
+            onPress={() => router.push(`/(app)/(client)/product/${item._id}`)}
             activeOpacity={0.9}
         >
             <View className="relative">
@@ -1054,7 +1044,7 @@ export default function ClientHome() {
         <TouchableOpacity
             style={{ backgroundColor: colors.card, borderColor: colors.border }}
             className="rounded-2xl shadow-md border p-2 mb-3 overflow-hidden flex-row"
-            onPress={() => navigateTo(`/(app)/(client)/product/${item._id}`)}
+            onPress={() => router.push(`/(app)/(client)/product/${item._id}`)}
         >
             <View className="relative mr-3">
                 <Image
@@ -1583,7 +1573,7 @@ export default function ClientHome() {
                                     </Text>
                                 </View>
                                 <TouchableOpacity
-                                    onPress={() => navigateTo('/(app)/(client)/categories')}
+                                    onPress={() => router.push('/(app)/(client)/categories' as any)}
                                     style={{ backgroundColor: isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5" }}
                                     className="flex-row items-center rounded-xl px-3 py-2 ml-2"
                                 >
@@ -1617,7 +1607,7 @@ export default function ClientHome() {
                                         return (
                                             <TouchableOpacity
                                                 key={categoryId}
-                                                onPress={() => category._id && navigateTo(`/(app)/(client)/category/${category._id}`)}
+                                                onPress={() => category._id && router.push(`/(app)/(client)/category/${category._id}` as any)}
                                                 className="mr-4 items-center"
                                             >
                                                 <View
@@ -1658,7 +1648,7 @@ export default function ClientHome() {
                                     {i18n.t('client.home.featuredProducts.title')}
                                 </Text>
                                 <TouchableOpacity
-                                    onPress={() => navigateTo('/(app)/(client)/marketplace')}
+                                    onPress={() => router.push('/(app)/(client)/marketplace' as any)}
                                     style={{ backgroundColor: isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5" }}
                                     className="flex-row items-center rounded-xl px-3 py-2 ml-2"
                                 >

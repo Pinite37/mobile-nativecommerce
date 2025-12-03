@@ -5,15 +5,15 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
-  Animated,
-  Easing,
-  Image,
-  Modal,
-  RefreshControl,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View
+    Animated,
+    Easing,
+    Image,
+    Modal,
+    RefreshControl,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -185,11 +185,34 @@ export default function FavoritesScreen() {
       return null;
     }
 
+    const handleProductPress = () => {
+      try {
+        const productId = favoriteItem.product._id;
+        console.log('🔍 Navigation vers produit client:', productId);
+        console.log('🔍 Route complète:', `/(app)/(client)/product/${productId}`);
+        
+        if (!productId) {
+          console.error('❌ ID produit manquant');
+          return;
+        }
+        
+        // Utiliser setTimeout pour éviter les problèmes de timing
+        setTimeout(() => {
+          router.push({
+            pathname: `/(app)/(client)/product/[id]`,
+            params: { id: productId }
+          });
+        }, 0);
+      } catch (error) {
+        console.error('❌ Erreur navigation produit:', error);
+      }
+    };
+
     return (
       <TouchableOpacity
         style={{ backgroundColor: colors.card, borderColor: colors.border }}
         className="mx-4 mb-4 rounded-2xl overflow-hidden border"
-        onPress={() => router.push(`/(app)/(client)/product/${favoriteItem.product._id}`)}
+        onPress={handleProductPress}
       >
         <View className="flex-row p-4">
           {/* Image du produit */}

@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
 
-export default function ProductLayout() {
+export default function CategoryLayout() {
   return (
     <Stack
       screenOptions={{
@@ -8,10 +8,10 @@ export default function ProductLayout() {
       }}
     >
       <Stack.Screen 
-        name="[id]" 
+        name="[categoryId]" 
         options={{
           headerShown: false,
-          title: "", // Titre vide
+          title: "",
         }}
       />
     </Stack>
