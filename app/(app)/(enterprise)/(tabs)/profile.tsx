@@ -384,7 +384,7 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({
             </View>
           </View>
 
-          <KeyboardAwareScrollView className="flex-1 px-6 py-6">
+          <KeyboardAwareScrollView className="flex-1 px-6 py-6" contentContainerStyle={{ paddingBottom: 120 }}>
             {/* Logo */}
             <View className="items-center mb-6">
               <TouchableOpacity onPress={pickLogo} className="relative">
@@ -519,6 +519,7 @@ const EditEnterpriseModal: React.FC<EditEnterpriseModalProps> = ({
                     {i18n.t("enterprise.profile.modals.editEnterprise.socialNetworks")}
                   </Text>
                   <TouchableOpacity
+                    activeOpacity={1}
                     onPress={addSocialLink}
                     className="flex-row items-center"
                   >
@@ -925,7 +926,7 @@ function EnterpriseProfilePage() {
   const logoSize = isLargeTablet ? 104 : isTablet ? 88 : isSmallPhone ? 72 : 80;
 
   // Marketing layout (row vs column)
-  const stackMarketing = width < 400;
+  const stackMarketing = true; // Toujours afficher verticalement pour une meilleure lisibilité
 
   // Chips overlay wrapping for small widths
   const wrapOverlayChips = width < 420;
@@ -1656,7 +1657,7 @@ function EnterpriseProfilePage() {
                   colors={["#047857", "#10B981"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
-                  style={{ padding: 20 }}
+                  style={{ padding: isSmallPhone ? 16 : 20 }}
                 >
                   <View className="flex-row items-center justify-between">
                     <View className="mr-3 flex-1">
@@ -1674,7 +1675,7 @@ function EnterpriseProfilePage() {
                       </Text>
                     </View>
                     <View className="w-10 h-10 rounded-xl bg-white/25 items-center justify-center">
-                      <Ionicons name="megaphone" size={20} color="#FFFFFF" />
+                      <Ionicons name="megaphone" size={isSmallPhone ? 18 : 20} color="#FFFFFF" />
                     </View>
                   </View>
                   <View className="mt-4 flex-row items-center">
@@ -1683,7 +1684,7 @@ function EnterpriseProfilePage() {
                     </Text>
                     <Ionicons
                       name="chevron-forward"
-                      size={14}
+                      size={isSmallPhone ? 12 : 14}
                       color="#FFFFFF"
                       style={{ marginLeft: 4 }}
                     />
@@ -1699,7 +1700,7 @@ function EnterpriseProfilePage() {
                 }}
               >
                 <View
-                  style={{ padding: 20 }}
+                  style={{ padding: isSmallPhone ? 16 : 20 }}
                   className="bg-neutral-100 border-2 border-dashed border-neutral-300 rounded-2xl"
                 >
                   <View className="flex-row items-center justify-between mb-3">
@@ -1726,20 +1727,20 @@ function EnterpriseProfilePage() {
                       </Text>
                     </View>
                     <View className="w-10 h-10 rounded-xl items-center justify-center" style={{ backgroundColor: colors.tertiary }}>
-                      <Ionicons name="lock-closed" size={20} color={colors.textTertiary} />
-                    </View>
+                      <Ionicons name="lock-closed" size={isSmallPhone ? 18 : 20} color={colors.textTertiary} />
+                    </View> 
                   </View>
                   <TouchableOpacity
                     onPress={() =>
                       router.push("/(app)/(enterprise)/subscriptions" as any)
                     }
                     className="rounded-xl py-2 px-3"
-                    style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}
+                    style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, width: '100%' }}
                   >
                     <View className="flex-row items-center justify-center">
                       <Ionicons
                         name="arrow-up-circle"
-                        size={14}
+                        size={isSmallPhone ? 12 : 14}
                         color={colors.brandPrimary}
                       />
                       <Text className="font-quicksand-bold text-xs ml-1.5" style={{ color: colors.brandPrimary }}>
@@ -1757,7 +1758,7 @@ function EnterpriseProfilePage() {
               style={{
                 marginLeft: stackMarketing ? 0 : 8,
                 marginTop: stackMarketing ? 8 : 0,
-                padding: 20,
+                padding: isSmallPhone ? 16 : 20,
                 backgroundColor: colors.card,
                 borderWidth: 1,
                 borderColor: colors.border,
@@ -1787,7 +1788,7 @@ function EnterpriseProfilePage() {
                   </Text>
                 </View>
                 <View className="w-10 h-10 rounded-xl bg-primary-100 items-center justify-center">
-                  <Ionicons name="layers" size={20} color="#10B981" />
+                  <Ionicons name="layers" size={isSmallPhone ? 18 : 20} color="#10B981" />
                 </View>
               </View>
               <View className="mt-4 flex-row items-center">
@@ -1796,7 +1797,7 @@ function EnterpriseProfilePage() {
                 </Text>
                 <Ionicons
                   name="chevron-forward"
-                  size={14}
+                  size={isSmallPhone ? 12 : 14}
                   color="#10B981"
                   style={{ marginLeft: 4 }}
                 />

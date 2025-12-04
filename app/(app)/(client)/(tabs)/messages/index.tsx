@@ -1,3 +1,4 @@
+import { useAuth } from "@/contexts/AuthContext";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import i18n from "@/i18n/i18n";
@@ -97,6 +98,7 @@ export default function ClientMessagesPage() {
   const insets = useSafeAreaInsets();
   const { locale } = useLocale();
   const { colors, isDark } = useTheme();
+  const { user } = useAuth();
   const { onNewMessage, onMessagesRead } = useSocket();
   const { showToast } = useToast();
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -106,6 +108,7 @@ export default function ClientMessagesPage() {
   const [searchResults, setSearchResults] = useState<Conversation[]>([]);
   const [searching, setSearching] = useState(false);
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const [animatingConversations, setAnimatingConversations] = useState<Set<string>>(new Set());
 
   // États pour le menu contextuel
   const [contextMenuVisible, setContextMenuVisible] = useState(false);
@@ -441,6 +444,7 @@ export default function ClientMessagesPage() {
   // Charger les conversations au focus de la page
   useFocusEffect(
     useCallback(() => {
+      console.log("🔄 Page messages focusée - rechargement des conversations");
       loadConversations();
     }, [loadConversations])
   );
@@ -453,32 +457,76 @@ export default function ClientMessagesPage() {
           console.warn("⚠️ Socket.IO new_message: données invalides", data);
           return;
         }
-        setConversations((prev) =>
-          prev.map((conv) => {
+        
+        // Vérifier si le message vient de l'utilisateur actuel
+        const isOwnMessage = data.message?.sender?._id === user?._id;
+        
+        console.log("📨 Message reçu sur index:", {
+          conversationId: data.conversation._id,
+          isOwnMessage,
+          messageText: data.message?.text?.substring(0, 30),
+          senderId: data.message?.sender?._id,
+          currentUserId: user?._id,
+        });
+        
+        // Marquer la conversation comme en animation seulement si ce n'est pas son propre message
+        if (!isOwnMessage) {
+          setAnimatingConversations(prev => new Set(prev).add(data.conversation._id));
+          
+          // Retirer l'animation après 500ms
+          setTimeout(() => {
+            setAnimatingConversations(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(data.conversation._id);
+              return newSet;
+            });
+          }, 500);
+        }
+        
+        // Mettre à jour et remonter la conversation en haut
+        setConversations((prev) => {
+          const updatedConversations = prev.map((conv) => {
             if (conv._id === data.conversation._id) {
               return {
                 ...conv,
-                unreadCount: (conv.unreadCount || 0) + 1,
+                // N'incrémenter unreadCount que si ce n'est pas l'utilisateur actuel
+                unreadCount: isOwnMessage ? (conv.unreadCount || 0) : (conv.unreadCount || 0) + 1,
                 lastMessage: data.message,
                 lastActivity: new Date().toISOString(),
               } as any;
             }
             return conv;
-          })
-        );
-        setSearchResults((prev) =>
-          prev.map((conv) => {
+          });
+          
+          // Trier par lastActivity (plus récent en premier)
+          return updatedConversations.sort((a, b) => {
+            const dateA = new Date(a.lastActivity || a.lastMessage?.sentAt || 0).getTime();
+            const dateB = new Date(b.lastActivity || b.lastMessage?.sentAt || 0).getTime();
+            return dateB - dateA;
+          });
+        });
+        
+        setSearchResults((prev) => {
+          const updatedResults = prev.map((conv) => {
             if (conv._id === data.conversation._id) {
               return {
                 ...conv,
-                unreadCount: (conv.unreadCount || 0) + 1,
+                // N'incrémenter unreadCount que si ce n'est pas l'utilisateur actuel
+                unreadCount: isOwnMessage ? (conv.unreadCount || 0) : (conv.unreadCount || 0) + 1,
                 lastMessage: data.message,
                 lastActivity: new Date().toISOString(),
               } as any;
             }
             return conv;
-          })
-        );
+          });
+          
+          // Trier par lastActivity (plus récent en premier)
+          return updatedResults.sort((a, b) => {
+            const dateA = new Date(a.lastActivity || a.lastMessage?.sentAt || 0).getTime();
+            const dateB = new Date(b.lastActivity || b.lastMessage?.sentAt || 0).getTime();
+            return dateB - dateA;
+          });
+        });
       } catch (e) {
         console.error("❌ Erreur critique Socket.IO new_message:", e);
         notifyError(
@@ -497,15 +545,17 @@ export default function ClientMessagesPage() {
           );
           return;
         }
+        
+        console.log("👁️ Messages lus pour conversation:", data.conversationId);
+        
         setConversations((prev) =>
           prev.map((conv) => {
             if (conv._id === data.conversationId) {
+              console.log("✅ Remise à zéro unreadCount pour:", conv._id);
               return {
                 ...conv,
-                unreadCount: Math.max(
-                  0,
-                  (conv.unreadCount || 0) - (data.readCount || 0)
-                ),
+                // Réinitialiser complètement à 0 quand les messages sont lus
+                unreadCount: 0,
               } as any;
             }
             return conv;
@@ -516,10 +566,8 @@ export default function ClientMessagesPage() {
             if (conv._id === data.conversationId) {
               return {
                 ...conv,
-                unreadCount: Math.max(
-                  0,
-                  (conv.unreadCount || 0) - (data.readCount || 0)
-                ),
+                // Réinitialiser complètement à 0 quand les messages sont lus
+                unreadCount: 0,
               } as any;
             }
             return conv;
@@ -538,7 +586,7 @@ export default function ClientMessagesPage() {
       cleanupNewMessage();
       cleanupMessagesRead();
     };
-  }, [onNewMessage, onMessagesRead, notifyError]);
+  }, [onNewMessage, onMessagesRead]);
 
   // Composant pour une conversation
   const ConversationCard = ({
@@ -546,6 +594,30 @@ export default function ClientMessagesPage() {
   }: {
     conversation: Conversation;
   }) => {
+    // Animation pour les nouvelles conversations
+    const scaleAnim = React.useRef(new Animated.Value(1)).current;
+    const isAnimating = animatingConversations.has(conversation._id);
+    
+    React.useEffect(() => {
+      if (isAnimating) {
+        // Animation de pulse
+        Animated.sequence([
+          Animated.timing(scaleAnim, {
+            toValue: 1.02,
+            duration: 150,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(scaleAnim, {
+            toValue: 1,
+            duration: 150,
+            easing: Easing.in(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }
+    }, [isAnimating, scaleAnim]);
+    
     // Déterminer le participant non-utilisateur avec vérification
     const otherParticipant =
       conversation.otherParticipant ||
@@ -647,24 +719,30 @@ export default function ClientMessagesPage() {
     const unreadCount = Number(conversation?.unreadCount) || 0;
 
     return (
-      <TouchableOpacity
+      <Animated.View
         style={{
-          backgroundColor: isUnread ? colors.secondary : colors.card,
-          borderColor: colors.border,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.03,
-          shadowRadius: 4,
-          elevation: 1,
+          transform: [{ scale: scaleAnim }],
         }}
-        className="rounded-2xl mx-4 my-2 p-4 border"
-        onPress={() => {
-          console.log("Navigating to conversation:", conversation._id); // Debug navigation
-          router.push(`/(app)/(client)/conversation/${conversation._id}`);
-        }}
-        onLongPress={() => handleLongPress(conversation)}
-        delayLongPress={500}
       >
+        <TouchableOpacity
+          style={{
+            backgroundColor: isUnread ? colors.secondary : colors.card,
+            borderColor: isAnimating ? colors.brandPrimary : colors.border,
+            borderWidth: isAnimating ? 2 : 1,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.03,
+            shadowRadius: 4,
+            elevation: 1,
+          }}
+          className="rounded-2xl mx-4 my-2 p-4"
+          onPress={() => {
+            console.log("Navigating to conversation:", conversation._id); // Debug navigation
+            router.push(`/(app)/(client)/conversation/${conversation._id}`);
+          }}
+          onLongPress={() => handleLongPress(conversation)}
+          delayLongPress={500}
+        >
         <View className="flex-row items-center">
           {/* Photo de profil */}
           <View className="relative">
@@ -761,6 +839,7 @@ export default function ClientMessagesPage() {
           </View>
         </View>
       </TouchableOpacity>
+      </Animated.View>
     );
   };
 

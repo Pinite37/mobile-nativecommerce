@@ -18,12 +18,16 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import NotificationModal, {
   useNotification,
 } from "../../../../components/ui/NotificationModal";
+import { useLocale } from "../../../../contexts/LocaleContext";
+import { useTheme } from "../../../../contexts/ThemeContext";
+import i18n from "../../../../i18n/i18n";
 import AdvertisementService, {
   Advertisement,
 } from "../../../../services/api/AdvertisementService";
 
 // Shimmer components
 const Shimmer: React.FC<{ style?: any }> = ({ style }) => {
+  const { colors } = useTheme();
   const translateX = React.useRef(new Animated.Value(-150)).current;
   React.useEffect(() => {
     const loop = Animated.loop(
@@ -45,7 +49,7 @@ const Shimmer: React.FC<{ style?: any }> = ({ style }) => {
     return () => loop.stop();
   }, [translateX]);
   return (
-    <View style={[{ backgroundColor: "#E5E7EB", overflow: "hidden" }, style]}>
+    <View style={[{ backgroundColor: colors.border, overflow: "hidden" }, style]}>
       <Animated.View
         style={{
           position: "absolute",
@@ -68,14 +72,16 @@ const Shimmer: React.FC<{ style?: any }> = ({ style }) => {
 
 const SkeletonDetail: React.FC = () => {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   return (
     <ScrollView
-      className="-mt-6 rounded-t-[32px] bg-background-secondary"
+      style={{ backgroundColor: colors.secondary }}
+      className="-mt-6 rounded-t-[32px]"
       contentContainerStyle={{ paddingBottom: insets.bottom + 48 }}
       showsVerticalScrollIndicator={false}
     >
       {/* Hero Image Skeleton */}
-      <View className="mx-4 mt-8 bg-white rounded-3xl overflow-hidden border border-neutral-100 shadow-sm">
+      <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="mx-4 mt-8 rounded-3xl overflow-hidden border shadow-sm">
         <Shimmer style={{ height: 224, width: "100%" }} />
         <View className="p-6 gap-4">
           <Shimmer style={{ height: 24, borderRadius: 8, width: "80%" }} />
@@ -85,7 +91,7 @@ const SkeletonDetail: React.FC = () => {
             <Shimmer style={{ height: 28, borderRadius: 14, width: 80 }} />
             <Shimmer style={{ height: 28, borderRadius: 14, width: 120 }} />
           </View>
-          <View className="border-t border-neutral-100 pt-5 flex-row justify-between mt-2">
+          <View style={{ borderTopColor: colors.border }} className="border-t pt-5 flex-row justify-between mt-2">
             <View className="items-center">
               <Shimmer style={{ height: 12, borderRadius: 4, width: 40 }} />
               <Shimmer
@@ -100,13 +106,13 @@ const SkeletonDetail: React.FC = () => {
             </View>
           </View>
           <View className="flex-row gap-4 mt-2">
-            <View className="flex-1 bg-white rounded-2xl p-4 border border-neutral-100 shadow-sm">
+            <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="flex-1 rounded-2xl p-4 border shadow-sm">
               <Shimmer style={{ height: 12, borderRadius: 4, width: 30 }} />
               <Shimmer
                 style={{ height: 24, borderRadius: 6, width: 40, marginTop: 6 }}
               />
             </View>
-            <View className="flex-1 bg-white rounded-2xl p-4 border border-neutral-100 shadow-sm">
+            <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="flex-1 rounded-2xl p-4 border shadow-sm">
               <Shimmer style={{ height: 12, borderRadius: 4, width: 25 }} />
               <Shimmer
                 style={{ height: 24, borderRadius: 6, width: 35, marginTop: 6 }}
@@ -132,6 +138,8 @@ export default function AdvertisementDetail() {
   const insets = useSafeAreaInsets();
   const { notification, showNotification, hideNotification } =
     useNotification();
+  const { locale } = useLocale();
+  const { colors } = useTheme();
   const [ad, setAd] = useState<Advertisement | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -153,8 +161,8 @@ export default function AdvertisementDetail() {
     } catch (e: any) {
       showNotification(
         "error",
-        "Erreur de chargement",
-        e?.message || "Impossible de charger la publicité"
+        i18n.t("enterprise.advertisementDetail.loading.error"),
+        i18n.t("enterprise.advertisementDetail.loading.message")
       );
       router.back();
     } finally {
@@ -189,24 +197,21 @@ export default function AdvertisementDetail() {
 
     switch (type) {
       case "pause":
-        title = "Couper la publicité";
-        message =
-          "La publicité ne sera plus affichée chez les clients mais pourra être réactivée plus tard.";
-        confirmText = "Couper";
+        title = i18n.t("enterprise.advertisementDetail.confirmations.pause.title");
+        message = i18n.t("enterprise.advertisementDetail.confirmations.pause.message");
+        confirmText = i18n.t("enterprise.advertisementDetail.confirmations.pause.confirm");
         confirmColor = "#F59E0B";
         break;
       case "delete":
-        title = "Supprimer la publicité";
-        message =
-          "Cette action est irréversible. La publicité sera définitivement supprimée.";
-        confirmText = "Supprimer";
+        title = i18n.t("enterprise.advertisementDetail.confirmations.delete.title");
+        message = i18n.t("enterprise.advertisementDetail.confirmations.delete.message");
+        confirmText = i18n.t("enterprise.advertisementDetail.confirmations.delete.confirm");
         confirmColor = "#EF4444";
         break;
       case "activate":
-        title = "Réactiver la publicité";
-        message =
-          "La publicité sera remise en ligne et visible par les clients.";
-        confirmText = "Réactiver";
+        title = i18n.t("enterprise.advertisementDetail.confirmations.activate.title");
+        message = i18n.t("enterprise.advertisementDetail.confirmations.activate.message");
+        confirmText = i18n.t("enterprise.advertisementDetail.confirmations.activate.confirm");
         confirmColor = "#10B981";
         break;
     }
@@ -236,8 +241,8 @@ export default function AdvertisementDetail() {
           await AdvertisementService.delete(ad._id);
           showNotification(
             "success",
-            "Supprimée",
-            "La publicité a été supprimée."
+            i18n.t("enterprise.advertisementDetail.success.deleted"),
+            i18n.t("enterprise.advertisementDetail.success.deletedMessage")
           );
           router.back();
           break;
@@ -247,7 +252,7 @@ export default function AdvertisementDetail() {
           break;
       }
     } catch (err: any) {
-      showNotification("error", "Erreur", err?.message || `Échec de l'action`);
+      showNotification("error", i18n.t("enterprise.advertisementDetail.errors.generic"), err?.message || i18n.t("enterprise.advertisementDetail.errors.actionFailed"));
     }
   };
 
@@ -255,13 +260,13 @@ export default function AdvertisementDetail() {
     if (!ad) return null;
     const now = Date.now();
     const end = new Date(ad.endDate).getTime();
-    let label = "Active";
+    let label = i18n.t("enterprise.advertisementDetail.status.active");
     let color = "#047857";
     if (end < now) {
-      label = "Expirée";
+      label = i18n.t("enterprise.advertisementDetail.status.expired");
       color = "#6B7280";
     } else if (!ad.isActive) {
-      label = "Coupée";
+      label = i18n.t("enterprise.advertisementDetail.status.paused");
       color = "#B45309";
     }
     return { label, color };
@@ -293,7 +298,7 @@ export default function AdvertisementDetail() {
             className="text-xl font-quicksand-bold text-white"
             numberOfLines={1}
           >
-            Détail
+            {i18n.t("enterprise.advertisementDetail.header.title")}
           </Text>
           <View className="w-10 h-10" />
         </View>
@@ -303,7 +308,8 @@ export default function AdvertisementDetail() {
         <SkeletonDetail />
       ) : !ad ? null : (
         <ScrollView
-          className="-mt-6 rounded-t-[32px] bg-background-secondary"
+          style={{ backgroundColor: colors.secondary }}
+          className="-mt-6 rounded-t-[32px]"
           contentContainerStyle={{ paddingBottom: insets.bottom + 48 }}
           refreshControl={
             <RefreshControl
@@ -316,7 +322,7 @@ export default function AdvertisementDetail() {
           showsVerticalScrollIndicator={false}
         >
           {/* Hero Image */}
-          <View className="mx-4 mt-8 bg-white rounded-3xl overflow-hidden border border-neutral-100 shadow-sm">
+          <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="mx-4 mt-8 rounded-3xl overflow-hidden border shadow-sm">
             {ad.images && ad.images.length > 0 ? (
               <View className="relative">
                 <Image
@@ -342,38 +348,39 @@ export default function AdvertisementDetail() {
                 )}
               </View>
             ) : (
-              <View className="w-full h-56 bg-neutral-50 items-center justify-center border-b border-neutral-100">
-                <Ionicons name="image-outline" size={48} color="#9CA3AF" />
+              <View style={{ backgroundColor: colors.secondary, borderBottomColor: colors.border }} className="w-full h-56 items-center justify-center border-b">
+                <Ionicons name="image-outline" size={48} color={colors.textSecondary} />
               </View>
             )}
             <View className="p-6">
               <Text
-                className="text-xl font-quicksand-bold text-neutral-900 leading-7"
+                className="text-xl font-quicksand-bold leading-7"
+                style={{ color: colors.textPrimary }}
                 numberOfLines={3}
               >
                 {ad.title}
               </Text>
-              <Text className="mt-3 text-neutral-600 font-quicksand-medium leading-relaxed text-base">
+              <Text className="mt-3 font-quicksand-medium leading-relaxed text-base" style={{ color: colors.textSecondary }}>
                 {ad.description}
               </Text>
               <View className="mt-6 flex-row flex-wrap gap-2">
-                <View className="px-3.5 py-1.5 bg-primary-50 rounded-full border border-primary-100">
-                  <Text className="text-primary-700 font-quicksand-bold text-xs">
+                <View style={{ backgroundColor: colors.secondary, borderColor: colors.border }} className="px-3.5 py-1.5 rounded-full border">
+                  <Text className="font-quicksand-bold text-xs" style={{ color: colors.textPrimary }}>
                     {ad.type}
                   </Text>
                 </View>
-                <View className="px-3.5 py-1.5 bg-emerald-50 rounded-full border border-emerald-100">
-                  <Text className="text-emerald-700 font-quicksand-bold text-xs">
+                <View style={{ backgroundColor: colors.secondary, borderColor: colors.border }} className="px-3.5 py-1.5 rounded-full border">
+                  <Text className="font-quicksand-bold text-xs" style={{ color: colors.textPrimary }}>
                     Audience: {ad.targetAudience}
                   </Text>
                 </View>
               </View>
-              <View className="mt-6 border-t border-neutral-100 pt-5 flex-row justify-between">
+              <View style={{ borderTopColor: colors.border }} className="mt-6 border-t pt-5 flex-row justify-between">
                 <View>
-                  <Text className="text-xs text-neutral-400 font-quicksand-bold uppercase tracking-wider">
-                    Début
+                  <Text className="text-xs font-quicksand-bold uppercase tracking-wider" style={{ color: colors.textSecondary }}>
+                    {i18n.t("enterprise.advertisementDetail.info.start")}
                   </Text>
-                  <Text className="text-base font-quicksand-bold text-neutral-800 mt-1">
+                  <Text className="text-base font-quicksand-bold mt-1" style={{ color: colors.textPrimary }}>
                     {new Date(ad.startDate).toLocaleString("fr-FR", {
                       dateStyle: "medium",
                       timeStyle: "short",
@@ -381,10 +388,10 @@ export default function AdvertisementDetail() {
                   </Text>
                 </View>
                 <View className="items-end">
-                  <Text className="text-xs text-neutral-400 font-quicksand-bold uppercase tracking-wider">
-                    Fin
+                  <Text className="text-xs font-quicksand-bold uppercase tracking-wider" style={{ color: colors.textSecondary }}>
+                    {i18n.t("enterprise.advertisementDetail.info.end")}
                   </Text>
-                  <Text className="text-base font-quicksand-bold text-neutral-800 mt-1">
+                  <Text className="text-base font-quicksand-bold mt-1" style={{ color: colors.textPrimary }}>
                     {new Date(ad.endDate).toLocaleString("fr-FR", {
                       dateStyle: "medium",
                       timeStyle: "short",
@@ -393,7 +400,7 @@ export default function AdvertisementDetail() {
                 </View>
               </View>
               <View className="mt-6 flex-row gap-4">
-                <View className="flex-1 bg-white rounded-2xl p-4 border border-neutral-100 shadow-sm">
+                <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="flex-1 rounded-2xl p-4 border shadow-sm">
                   <View className="flex-row items-center mb-2">
                     <Ionicons
                       name="eye-outline"
@@ -401,15 +408,15 @@ export default function AdvertisementDetail() {
                       color="#059669"
                       style={{ marginRight: 6 }}
                     />
-                    <Text className="text-xs text-neutral-500 font-quicksand-bold uppercase tracking-wider">
-                      Vues
+                    <Text className="text-xs font-quicksand-bold uppercase tracking-wider" style={{ color: colors.textSecondary }}>
+                      {i18n.t("enterprise.advertisementDetail.info.views")}
                     </Text>
                   </View>
-                  <Text className="text-2xl font-quicksand-bold text-neutral-800">
+                  <Text className="text-2xl font-quicksand-bold" style={{ color: colors.textPrimary }}>
                     {ad.views ?? 0}
                   </Text>
                 </View>
-                <View className="flex-1 bg-white rounded-2xl p-4 border border-neutral-100 shadow-sm">
+                <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="flex-1 rounded-2xl p-4 border shadow-sm">
                   <View className="flex-row items-center mb-2">
                     <Ionicons
                       name="finger-print-outline"
@@ -417,11 +424,11 @@ export default function AdvertisementDetail() {
                       color="#D97706"
                       style={{ marginRight: 6 }}
                     />
-                    <Text className="text-xs text-neutral-500 font-quicksand-bold uppercase tracking-wider">
-                      Clics
+                    <Text className="text-xs font-quicksand-bold uppercase tracking-wider" style={{ color: colors.textSecondary }}>
+                      {i18n.t("enterprise.advertisementDetail.info.clicks")}
                     </Text>
                   </View>
-                  <Text className="text-2xl font-quicksand-bold text-neutral-800">
+                  <Text className="text-2xl font-quicksand-bold" style={{ color: colors.textPrimary }}>
                     {ad.clicks ?? 0}
                   </Text>
                 </View>
@@ -435,7 +442,8 @@ export default function AdvertisementDetail() {
               {ad.isActive ? (
                 <TouchableOpacity
                   onPress={() => showConfirmation("pause")}
-                  className="flex-1 bg-amber-500 rounded-2xl py-4 items-center shadow-lg shadow-amber-500/20"
+                  className="flex-1 rounded-2xl py-4 items-center shadow-lg"
+                  style={{ backgroundColor: "#F59E0B", shadowColor: "#F59E0B" }}
                   activeOpacity={0.8}
                 >
                   <View className="flex-row items-center">
@@ -446,14 +454,15 @@ export default function AdvertisementDetail() {
                       style={{ marginRight: 8 }}
                     />
                     <Text className="text-white font-quicksand-bold text-base">
-                      Couper
+                      {i18n.t("enterprise.advertisementDetail.actions.pause")}
                     </Text>
                   </View>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
                   onPress={() => showConfirmation("activate")}
-                  className="flex-1 bg-emerald-500 rounded-2xl py-4 items-center shadow-lg shadow-emerald-500/20"
+                  className="flex-1 rounded-2xl py-4 items-center shadow-lg"
+                  style={{ backgroundColor: "#10B981", shadowColor: "#10B981" }}
                   activeOpacity={0.8}
                 >
                   <View className="flex-row items-center">
@@ -464,14 +473,15 @@ export default function AdvertisementDetail() {
                       style={{ marginRight: 8 }}
                     />
                     <Text className="text-white font-quicksand-bold text-base">
-                      Activer
+                      {i18n.t("enterprise.advertisementDetail.actions.activate")}
                     </Text>
                   </View>
                 </TouchableOpacity>
               )}
               <TouchableOpacity
                 onPress={() => showConfirmation("delete")}
-                className="w-16 bg-red-500 rounded-2xl items-center justify-center shadow-lg shadow-red-500/20"
+                className="w-16 rounded-2xl items-center justify-center shadow-lg"
+                style={{ backgroundColor: "#EF4444", shadowColor: "#EF4444" }}
                 activeOpacity={0.8}
               >
                 <Ionicons name="trash-outline" size={24} color="#FFFFFF" />
@@ -495,7 +505,8 @@ export default function AdvertisementDetail() {
         >
           <View className="flex-1 justify-center items-center px-6">
             <TouchableOpacity
-              className="bg-white rounded-3xl w-full max-w-sm"
+              style={{ backgroundColor: colors.card }}
+              className="rounded-3xl w-full max-w-sm"
               activeOpacity={1}
               onPress={() => {}}
             >
@@ -523,10 +534,10 @@ export default function AdvertisementDetail() {
 
               {/* Content */}
               <View className="px-6 pb-6">
-                <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+                <Text className="text-xl font-quicksand-bold text-center mb-2" style={{ color: colors.textPrimary }}>
                   {confirmationAction?.title}
                 </Text>
-                <Text className="text-base text-neutral-600 font-quicksand-medium text-center leading-5">
+                <Text className="text-base font-quicksand-medium text-center leading-5" style={{ color: colors.textSecondary }}>
                   {confirmationAction?.message}
                 </Text>
               </View>
@@ -535,10 +546,11 @@ export default function AdvertisementDetail() {
               <View className="flex-row px-6 pb-6 gap-3">
                 <TouchableOpacity
                   onPress={closeConfirmation}
-                  className="flex-1 bg-neutral-100 py-4 rounded-2xl items-center"
+                  style={{ backgroundColor: colors.secondary }}
+                  className="flex-1 py-4 rounded-2xl items-center"
                 >
-                  <Text className="text-base font-quicksand-semibold text-neutral-700">
-                    Annuler
+                  <Text className="text-base font-quicksand-semibold" style={{ color: colors.textPrimary }}>
+                    {i18n.t("enterprise.advertisementDetail.buttons.cancel")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity

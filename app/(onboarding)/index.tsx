@@ -2,8 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import OnboardingService from '../../services/OnboardingService';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -42,7 +43,19 @@ export default function OnboardingScreen() {
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const scrollViewRef = useRef<ScrollView>(null);
 
-	const handleNext = () => {
+	// Guard: Si l'onboarding est déjà complété, rediriger vers welcome
+	useEffect(() => {
+		const checkOnboarding = async () => {
+			const completed = await OnboardingService.hasCompletedOnboarding();
+			if (completed) {
+				console.log('🔒 Onboarding déjà complété, redirection vers welcome');
+				router.replace('/(auth)/welcome');
+			}
+		};
+		checkOnboarding();
+	}, []);
+
+	const handleNext = async () => {
 		if (currentIndex < slides.length - 1) {
 			const nextIndex = currentIndex + 1;
 			setCurrentIndex(nextIndex);
@@ -51,13 +64,17 @@ export default function OnboardingScreen() {
 				animated: true,
 			});
 		} else {
+			// Marquer l'onboarding comme complété
+			await OnboardingService.markOnboardingComplete();
 			// Navigate to auth screens
-			router.push('/(auth)/welcome');
+			router.replace('/(auth)/welcome');
 		}
 	};
 
-	const handleSkip = () => {
-		router.push('/(auth)/welcome');
+	const handleSkip = async () => {
+		// Marquer l'onboarding comme complété même si skip
+		await OnboardingService.markOnboardingComplete();
+		router.replace('/(auth)/welcome');
 	};
 
 	const handleScroll = (event: any) => {
@@ -71,7 +88,7 @@ export default function OnboardingScreen() {
 	return (
 		<View style={styles.container}>
 			<StatusBar style="dark" />
-			
+
 			{/* Header avec logo */}
 			<View style={styles.header}>
 				<Image
@@ -106,7 +123,7 @@ export default function OnboardingScreen() {
 								<Ionicons name={slide.icon} size={80} color="white" />
 							</LinearGradient>
 						</View>
-						
+
 						<Text style={styles.title}>{slide.title}</Text>
 						<Text style={styles.description}>{slide.description}</Text>
 					</View>

@@ -13,7 +13,9 @@ export interface Advertisement {
   isActive: boolean;
   views?: number;
   clicks?: number;
-  createdBy?: string;
+  createdBy?: {
+    enterprise: string;
+  };
   createdAt: string;
   updatedAt?: string;
 }
@@ -62,7 +64,7 @@ class AdvertisementService {
 
   /** List enterprise advertisements */
   async listMine(page = 1, limit = 20): Promise<EnterpriseAdvertisementListResponse> {
-    const res = await ApiService.get<{ data: EnterpriseAdvertisementListResponse }>(`${this.BASE}/my-advertisements?page=${page}&limit=${limit}`);
+    const res = await ApiService.get<any>(`${this.BASE}/my-advertisements?page=${page}&limit=${limit}`);
     console.log('AdvertisementService.listMine', res.data.advertisements);
     if ((res as any).success && (res as any).data) return (res as any).data;
     return (res as any).data || { advertisements: [], pagination: { page: 1, limit, total: 0, pages: 0 } };

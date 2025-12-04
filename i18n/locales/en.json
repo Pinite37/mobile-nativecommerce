@@ -347,6 +347,21 @@
                 "cancel": "Cancel",
                 "publish": "Publish offer",
                 "publishing": "Publishing...",
+                "offerForm": {
+                    "deliveryZone": "Delivery zone",
+                    "deliveryZonePlaceholder": "E.g: Cocody, Angré 8th block",
+                    "deliveryFee": "Delivery fee",
+                    "urgencyLevel": "Urgency level",
+                    "urgencyLow": "Low",
+                    "urgencyMedium": "Medium",
+                    "urgencyHigh": "High",
+                    "expirationDate": "Expiration date",
+                    "chooseDateTime": "Choose date and time",
+                    "chooseDateTimeDescription": "Choose the expiration date and time of the offer",
+                    "specialInstructions": "Special instructions (optional)",
+                    "specialInstructionsPlaceholder": "E.g: Hand delivery only, Call 30 min before...",
+                    "publishOffer": "Publish offer"
+                },
                 "messageActions": {
                     "title": "Actions",
                     "reply": "Reply",
@@ -647,7 +662,7 @@
                 "cancel": "Cancel"
             },
             "sections": {
-                "images": "Banner images * (1-4 images)",
+                "images": "Banner images * (1 image)",
                 "title": "Advertisement title *",
                 "description": "Description *",
                 "type": "Type *",
@@ -703,6 +718,59 @@
             "preview": {
                 "defaultTitle": "Your advertisement title",
                 "defaultText": "Your title will appear here"
+            }
+        },
+        "advertisementDetail": {
+            "header": {
+                "title": "Detail"
+            },
+            "loading": {
+                "error": "Loading error",
+                "message": "Unable to load the advertisement"
+            },
+            "status": {
+                "active": "Active",
+                "expired": "Expired",
+                "paused": "Paused"
+            },
+            "info": {
+                "start": "Start",
+                "end": "End",
+                "views": "Views",
+                "clicks": "Clicks"
+            },
+            "actions": {
+                "pause": "Pause",
+                "activate": "Activate",
+                "delete": "Delete"
+            },
+            "confirmations": {
+                "pause": {
+                    "title": "Pause advertisement",
+                    "message": "The advertisement will no longer be displayed to clients but can be reactivated later.",
+                    "confirm": "Pause"
+                },
+                "delete": {
+                    "title": "Delete advertisement",
+                    "message": "This action is irreversible. The advertisement will be permanently deleted.",
+                    "confirm": "Delete"
+                },
+                "activate": {
+                    "title": "Reactivate advertisement",
+                    "message": "The advertisement will be put back online and visible to clients.",
+                    "confirm": "Reactivate"
+                }
+            },
+            "success": {
+                "deleted": "Deleted",
+                "deletedMessage": "The advertisement has been deleted."
+            },
+            "errors": {
+                "generic": "Error",
+                "actionFailed": "Action failed"
+            },
+            "buttons": {
+                "cancel": "Cancel"
             }
         },
         "offers": {

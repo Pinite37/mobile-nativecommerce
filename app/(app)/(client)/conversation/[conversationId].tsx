@@ -34,7 +34,7 @@ import { Product } from "../../../../types/product";
 // Cache simple pour les conversations et messages
 const conversationCache = new Map<
   string,
-  { conversation: Conversation; messages: Message[]; timestamp: number }
+  { conversation: Conversation; messages: Message[]; participants: any[]; timestamp: number }
 >();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes en millisecondes
 
@@ -72,6 +72,7 @@ export default function ConversationDetails() {
 
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [participants, setParticipants] = useState<any[]>([]);
   const [effectiveProduct, setEffectiveProduct] = useState<Product | null>(
     null
   );
@@ -282,7 +283,11 @@ export default function ConversationDetails() {
         return;
       }
 
-      console.log("✅ CLIENT - Ajout du message reçu");
+      console.log("✅ CLIENT - Ajout du message reçu:", {
+        messageId: data.message._id,
+        text: data.message.text?.substring(0, 50),
+        sender: data.message.sender._id,
+      });
 
       // Ne traiter QUE les messages des AUTRES participants
       try {
@@ -292,15 +297,29 @@ export default function ConversationDetails() {
             (msg) => msg._id === data.message._id
           );
 
+          let updatedMessages;
           if (existingIndex !== -1) {
             // Le message existe déjà, le mettre à jour
-            const updated = [...prev];
-            updated[existingIndex] = data.message;
-            return updated;
+            updatedMessages = [...prev];
+            updatedMessages[existingIndex] = data.message;
+          } else {
+            // Nouveau message d'un autre participant, l'ajouter
+            updatedMessages = [...prev, data.message];
           }
-
-          // Nouveau message d'un autre participant, l'ajouter
-          return [...prev, data.message];
+          
+          // Mettre à jour le cache avec le nouveau message
+          if (conversationId && conversation) {
+            const cached = conversationCache.get(conversationId);
+            if (cached) {
+              conversationCache.set(conversationId, {
+                ...cached,
+                messages: updatedMessages,
+                timestamp: Date.now(),
+              });
+            }
+          }
+          
+          return updatedMessages;
         });
 
         // Marquer comme lu puisque c'est un message d'un autre participant
@@ -379,29 +398,33 @@ export default function ConversationDetails() {
     const load = async () => {
       try {
         setLoading(true);
-        const cached = conversationCache.get(conversationId!);
-        const now = Date.now();
-        if (cached && now - cached.timestamp < CACHE_DURATION) {
-          if (cancelled) return;
-          setConversation(cached.conversation);
-          setMessages(cached.messages);
-          return;
-        }
-
+        
+        // Toujours charger depuis l'API pour avoir les derniers messages
+        console.log("🔄 CLIENT - Chargement conversation depuis l'API:", conversationId);
         const data = await MessagingService.getConversationMessages(
           conversationId!
         );
         if (cancelled) return;
+        console.log("📦 CLIENT - Données reçues de l'API:", {
+          conversationId: data.conversation._id,
+          participantsCount: data.participants?.length,
+          participants: data.participants,
+          messagesCount: data.messages.length,
+        });
         setConversation(data.conversation);
         setMessages(data.messages);
+        setParticipants(data.participants || []);
 
+        // Mettre à jour le cache avec les données fraîches de l'API
         conversationCache.set(conversationId!, {
           conversation: data.conversation,
           messages: data.messages,
+          participants: data.participants || [],
           timestamp: Date.now(),
         });
+        console.log("💾 CLIENT - Cache mis à jour avec", data.messages.length, "messages");
 
-        // Marquer comme lu (fire & forget)
+        // Marquer comme lu immédiatement (fire & forget)
         MessagingService.markMessagesAsRead(conversationId!).catch((e) =>
           console.warn("markMessagesAsRead échoué", e)
         );
@@ -421,6 +444,12 @@ export default function ConversationDetails() {
     load();
     return () => {
       cancelled = true;
+      // Invalider le cache quand on quitte la conversation
+      // pour forcer un rechargement complet la prochaine fois
+      if (conversationId) {
+        conversationCache.delete(conversationId);
+        console.log("🗑️ CLIENT - Cache invalidé pour:", conversationId);
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId]);
@@ -620,6 +649,7 @@ export default function ConversationDetails() {
           conversationCache.set(conversationId!, {
             ...cached,
             messages: updatedMessages,
+            participants: cached.participants || [],
             timestamp: Date.now(),
           });
           console.log("✅ Cache mis à jour avec le nouveau message");
@@ -1194,6 +1224,7 @@ export default function ConversationDetails() {
                 }
               : msg
           ),
+          participants: cached.participants || [],
           timestamp: Date.now(),
         });
       }
@@ -1339,12 +1370,30 @@ export default function ConversationDetails() {
   // Si la conversation existe mais pas le produit, continuer à charger (cas normal)
   if (!effectiveProduct) {
     return renderSkeletonConversation();
-  } // Déterminer le nom du correspondant (entreprise)
-  const correspondentName =
-    typeof effectiveProduct.enterprise === "object" &&
-    effectiveProduct.enterprise?.companyName
-      ? effectiveProduct.enterprise.companyName
-      : "Vendeur inconnu";
+  }
+  
+  // Déterminer le nom du correspondant depuis le tableau participants de l'API
+  const currentUserId = getCurrentUserId();
+  const otherParticipant = participants.find((p) => p._id !== currentUserId);
+  
+  const correspondentName = (() => {
+    // 1. Priorité: utiliser le participant du tableau API
+    if (otherParticipant) {
+      if (otherParticipant.role === "ENTERPRISE") {
+        return otherParticipant.companyName || `${otherParticipant.firstName} ${otherParticipant.lastName}`;
+      }
+      return `${otherParticipant.firstName} ${otherParticipant.lastName}`;
+    }
+    
+    // 2. Fallback: utiliser les infos du produit
+    if (typeof effectiveProduct?.enterprise === "object" && effectiveProduct.enterprise?.companyName) {
+      return effectiveProduct.enterprise.companyName;
+    }
+    
+    // 3. Fallback final
+    console.warn("⚠️ CLIENT - Impossible de déterminer le nom du correspondant");
+    return "Vendeur inconnu";
+  })();
 
   return (
     <View className="flex-1" style={{ backgroundColor: colors.secondary }}>

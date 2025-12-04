@@ -302,7 +302,7 @@ export default function SettingsScreen() {
             {i18n.t("client.settings.sections.general")}
           </Text>
           <View className="rounded-2xl" style={{ backgroundColor: colors.card }}>
-            <View className="px-4 py-4 flex-row justify-between items-center">
+            <View className="px-4 py-4 flex-row justify-between items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
               <View className="flex-row items-center">
                 <Ionicons
                   name={isDark ? "moon" : "sunny"}
@@ -321,11 +321,28 @@ export default function SettingsScreen() {
                 disabled={saving}
               />
             </View>
+            <TouchableOpacity
+              className="px-4 py-4 flex-row justify-between items-center"
+              onPress={() => setLanguageModal(true)}
+            >
+              <View className="flex-row items-center">
+                <Ionicons name="language-outline" size={20} color={colors.textSecondary} />
+                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
+                  {i18n.t("client.settings.display.language")}
+                </Text>
+              </View>
+              <View className="flex-row items-center">
+                <Text className="text-base font-quicksand mr-2" style={{ color: colors.textSecondary }}>
+                  {settings.language}
+                </Text>
+                <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+              </View>
+            </TouchableOpacity>
           </View>
         </View>
 
         {/* Paramètres des notifications */}
-        <View className="mt-6 mx-4">
+        {/* <View className="mt-6 mx-4">
           <Text className="text-sm font-quicksand-semibold mb-2" style={{ color: colors.textSecondary }}>
             {i18n.t("client.settings.sections.notifications")}
           </Text>
@@ -415,10 +432,10 @@ export default function SettingsScreen() {
               />
             </View>
           </View>
-        </View>
+        </View> */}
 
         {/* Paramètres d'affichage */}
-        <View className="mt-6 mx-4">
+        {/* <View className="mt-6 mx-4">
           <Text className="text-sm font-quicksand-semibold mb-2" style={{ color: colors.textSecondary }}>
             {i18n.t("client.settings.sections.display")}
           </Text>
@@ -437,7 +454,7 @@ export default function SettingsScreen() {
                 thumbColor={settings.productView === 'grid' ? "#10B981" : "#9CA3AF"}
               />
             </View>
-            <View className="px-4 py-4 flex-row justify-between items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
+            <View className="px-4 py-4 flex-row justify-between items-center">
               <View className="flex-row items-center">
                 <Ionicons name="image-outline" size={20} color={colors.textSecondary} />
                 <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
@@ -451,25 +468,8 @@ export default function SettingsScreen() {
                 thumbColor={settings.highQualityImages ? "#10B981" : "#9CA3AF"}
               />
             </View>
-            <TouchableOpacity
-              className="px-4 py-4 flex-row justify-between items-center"
-              onPress={() => setLanguageModal(true)}
-            >
-              <View className="flex-row items-center">
-                <Ionicons name="language-outline" size={20} color={colors.textSecondary} />
-                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
-                  {i18n.t("client.settings.display.language")}
-                </Text>
-              </View>
-              <View className="flex-row items-center">
-                <Text className="text-base font-quicksand mr-2" style={{ color: colors.textSecondary }}>
-                  {settings.language}
-                </Text>
-                <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-              </View>
-            </TouchableOpacity>
           </View>
-        </View>
+        </View> */}
 
         {/* Paramètres de confidentialité */}
         <View className="mt-6 mx-4">

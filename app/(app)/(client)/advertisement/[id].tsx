@@ -16,6 +16,8 @@ import {
   View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useLocale } from "../../../../contexts/LocaleContext";
+import { useTheme } from "../../../../contexts/ThemeContext";
 import i18n from "../../../../i18n/i18n";
 import AdvertisementService, { Advertisement } from "../../../../services/api/AdvertisementService";
 
@@ -25,6 +27,8 @@ export default function AdvertisementDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { locale } = useLocale();
+  const { colors } = useTheme();
   const [advertisement, setAdvertisement] = useState<Advertisement | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -52,7 +56,7 @@ export default function AdvertisementDetails() {
   }, [id, router]);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(i18n.locale === 'fr' ? 'fr-FR' : 'en-US', {
+    return new Date(dateString).toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US', {
       day: '2-digit',
       month: 'long',
       year: 'numeric'
@@ -78,11 +82,10 @@ export default function AdvertisementDetails() {
   };
 
   const handleContact = () => {
-    if (!advertisement) return;
+    if (!advertisement || !advertisement.createdBy?.enterprise) return;
 
-    // Here we could open WhatsApp or another contact method
-    // For now, we just open the share
-    handleShare();
+    // Navigate to the enterprise page
+    router.push(`/(app)/(client)/enterprise/${advertisement.createdBy.enterprise}`);
   };
 
   const handleScroll = (event: any) => {
@@ -118,7 +121,7 @@ export default function AdvertisementDetails() {
     }, [shimmer]);
     const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
     return (
-      <View style={[{ backgroundColor: '#E5E7EB', overflow: 'hidden' }, style]}>
+      <View style={[{ backgroundColor: colors.border, overflow: 'hidden' }, style]}>
         <Animated.View style={{
           position: 'absolute', top: 0, bottom: 0, width: 120,
           transform: [{ translateX }],
@@ -132,15 +135,28 @@ export default function AdvertisementDetails() {
   return (
     <>
       {loading ? (
-        <View className="flex-1 bg-white">
+        <View style={{ backgroundColor: colors.background }} className="flex-1">
           <ExpoStatusBar style="light" translucent />
 
           {/* Header Skeleton */}
-          <View className="flex-row items-center justify-between px-4 py-3 border-b border-neutral-100">
-            <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
-            <ShimmerBlock style={{ width: 150, height: 20, borderRadius: 10 }} />
-            <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
-          </View>
+          <LinearGradient
+            colors={['#10B981', '#34D399']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            className="px-6"
+            style={{
+              paddingTop: insets.top + 8,
+              paddingLeft: insets.left + 24,
+              paddingRight: insets.right + 24,
+              paddingBottom: 12
+            }}
+          >
+            <View className="flex-row items-center justify-between">
+              <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
+              <ShimmerBlock style={{ width: 150, height: 20, borderRadius: 10 }} />
+              <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
+            </View>
+          </LinearGradient>
 
           {/* Image Skeleton */}
           <ShimmerBlock style={{ width: '100%', height: 280 }} />
@@ -151,7 +167,7 @@ export default function AdvertisementDetails() {
             <ShimmerBlock style={{ width: '100%', height: 16, borderRadius: 8, marginBottom: 8 }} />
             <ShimmerBlock style={{ width: '60%', height: 16, borderRadius: 8, marginBottom: 24 }} />
 
-            <View className="bg-neutral-50 rounded-2xl p-4 mb-6">
+            <View style={{ backgroundColor: colors.secondary }} className="rounded-2xl p-4 mb-6">
               <ShimmerBlock style={{ width: '40%', height: 20, borderRadius: 10, marginBottom: 16 }} />
               <ShimmerBlock style={{ width: '70%', height: 16, borderRadius: 8, marginBottom: 12 }} />
               <ShimmerBlock style={{ width: '50%', height: 16, borderRadius: 8, marginBottom: 12 }} />
@@ -165,26 +181,26 @@ export default function AdvertisementDetails() {
           </View>
         </View>
       ) : !advertisement ? (
-        <View className="flex-1 bg-white">
+        <View style={{ backgroundColor: colors.background }} className="flex-1">
           <ExpoStatusBar style="light" translucent />
           <View className="flex-1 justify-center items-center px-6">
             <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
-            <Text className="text-lg font-quicksand-bold text-neutral-800 mt-4">
+            <Text className="text-lg font-quicksand-bold mt-4" style={{ color: colors.textPrimary }}>
               {i18n.t('client.advertisement.error.notFound')}
             </Text>
-            <Text className="text-neutral-600 font-quicksand-medium text-center mt-2">
+            <Text className="font-quicksand-medium text-center mt-2" style={{ color: colors.textSecondary }}>
               {i18n.t('client.advertisement.error.notFoundMessage')}
             </Text>
             <TouchableOpacity
               onPress={() => router.back()}
-              className="mt-6 bg-primary-500 px-6 py-3 rounded-full"
+              className="mt-6 bg-primary-500 py-3 rounded-full"
             >
               <Text className="text-white font-quicksand-bold">{i18n.t('client.advertisement.error.back')}</Text>
             </TouchableOpacity>
           </View>
         </View>
       ) : (
-        <View className="flex-1 bg-white">
+        <View style={{ backgroundColor: colors.background }} className="flex-1">
           <ExpoStatusBar style="light" translucent />
 
           {/* Header amélioré */}
@@ -245,9 +261,9 @@ export default function AdvertisementDetails() {
                 />
               ))
             ) : (
-              <View className="w-screen h-64 bg-neutral-100 items-center justify-center">
-                <Ionicons name="image-outline" size={64} color="#9CA3AF" />
-                <Text className="mt-2 text-neutral-500 font-quicksand-medium">
+              <View style={{ backgroundColor: colors.secondary }} className="w-screen h-64 items-center justify-center">
+                <Ionicons name="image-outline" size={64} color={colors.textSecondary} />
+                <Text className="mt-2 font-quicksand-medium" style={{ color: colors.textSecondary }}>
                   {i18n.t('client.advertisement.image.notAvailable')}
                 </Text>
               </View>
@@ -291,52 +307,60 @@ export default function AdvertisementDetails() {
         <View className="px-5 py-6">
           {/* Titre avec design amélioré */}
           <View className="mb-5">
-            <Text className="text-2xl font-quicksand-bold text-neutral-900 leading-tight">
+            <Text className="text-2xl font-quicksand-bold leading-tight" style={{ color: colors.textPrimary }}>
               {advertisement.title}
             </Text>
             <View className="h-1 w-16 bg-primary-500 rounded-full mt-3" />
           </View>
 
           {/* Description avec meilleur espacement */}
-          <Text className="text-base font-quicksand-medium text-neutral-700 leading-7 mb-7">
+          <Text className="text-base font-quicksand-medium leading-7 mb-7" style={{ color: colors.textSecondary }}>
             {advertisement.description}
           </Text>
 
           {/* Informations avec design carte moderne */}
-          <View className="bg-gradient-to-br from-neutral-50 to-neutral-100 rounded-3xl p-5 mb-6 shadow-sm border border-neutral-200/50">
+          <View style={{
+            backgroundColor: colors.secondary,
+            borderColor: colors.border,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            elevation: 3,
+          }} className="rounded-3xl p-5 mb-6 border">
             <View className="flex-row items-center mb-5">
-              <View className="w-10 h-10 bg-primary-500/10 rounded-full items-center justify-center mr-3">
+              <View className="w-10 h-10 rounded-full items-center justify-center mr-3" style={{ backgroundColor: "#10B98120" }}>
                 <Ionicons name="information-circle" size={20} color="#10B981" />
               </View>
-              <Text className="text-lg font-quicksand-bold text-neutral-900">
+              <Text className="text-lg font-quicksand-bold" style={{ color: colors.textPrimary }}>
                 {i18n.t('client.advertisement.info.title')}
               </Text>
             </View>
 
             <View>
-              <View className="flex-row items-center bg-white rounded-xl p-3 shadow-sm mb-3">
-                <View className="w-9 h-9 bg-primary-50 rounded-full items-center justify-center mr-3">
+              <View style={{ backgroundColor: colors.card }} className="flex-row items-center rounded-xl p-3 shadow-sm mb-3">
+                <View className="w-9 h-9 rounded-full items-center justify-center mr-3" style={{ backgroundColor: "#10B98120" }}>
                   <Ionicons name="calendar-outline" size={18} color="#10B981" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-xs font-quicksand-medium text-neutral-500 mb-1">
+                  <Text className="text-xs font-quicksand-medium mb-1" style={{ color: colors.textSecondary }}>
                     {i18n.t('client.advertisement.info.validity')}
                   </Text>
-                  <Text className="text-sm font-quicksand-semibold text-neutral-800" numberOfLines={1}>
+                  <Text className="text-sm font-quicksand-semibold" numberOfLines={1} style={{ color: colors.textPrimary }}>
                     {i18n.t('client.advertisement.info.validUntil', { date: formatDate(advertisement.endDate) })}
                   </Text>
                 </View>
               </View>
 
-              <View className="flex-row items-center bg-white rounded-xl p-3 shadow-sm">
-                <View className="w-9 h-9 bg-blue-50 rounded-full items-center justify-center mr-3">
+              <View style={{ backgroundColor: colors.card }} className="flex-row items-center rounded-xl p-3 shadow-sm">
+                <View className="w-9 h-9 rounded-full items-center justify-center mr-3" style={{ backgroundColor: "#3B82F620" }}>
                   <Ionicons name="eye-outline" size={18} color="#3B82F6" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-xs font-quicksand-medium text-neutral-500 mb-1">
+                  <Text className="text-xs font-quicksand-medium mb-1" style={{ color: colors.textSecondary }}>
                     {i18n.t('client.advertisement.info.views')}
                   </Text>
-                  <Text className="text-sm font-quicksand-semibold text-neutral-800" numberOfLines={1}>
+                  <Text className="text-sm font-quicksand-semibold" numberOfLines={1} style={{ color: colors.textPrimary }}>
                     {i18n.t('client.advertisement.info.viewsCount', { count: advertisement.views || 0 })}
                   </Text>
                 </View>
@@ -362,29 +386,30 @@ export default function AdvertisementDetails() {
 
             <TouchableOpacity
               onPress={handleShare}
-              className="bg-white py-4 rounded-2xl flex-row items-center justify-center border-2 border-primary-500"
+              style={{ backgroundColor: colors.card, borderColor: "#10B981" }}
+              className="py-4 rounded-2xl flex-row items-center justify-center border-2"
               activeOpacity={0.8}
             >
-              <View className="w-8 h-8 bg-primary-50 rounded-full items-center justify-center mr-2">
+              <View className="w-8 h-8 rounded-full items-center justify-center mr-2" style={{ backgroundColor: "#10B98120" }}>
                 <Ionicons name="share-outline" size={16} color="#10B981" />
               </View>
-              <Text className="text-primary-600 font-quicksand-bold text-base">
+              <Text className="font-quicksand-bold text-base" style={{ color: "#10B981" }}>
                 {i18n.t('client.advertisement.actions.shareOffer')}
               </Text>
             </TouchableOpacity>
           </View>
 
           {/* Note avec design élégant */}
-          <View className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-4 border-l-4 border-amber-400 shadow-sm">
+          <View style={{ backgroundColor: colors.secondary, borderLeftColor: "#F59E0B", borderLeftWidth: 4 }} className="rounded-2xl p-4 shadow-sm">
             <View className="flex-row items-start">
-              <View className="w-8 h-8 bg-amber-100 rounded-full items-center justify-center mr-3 mt-0.5">
+              <View className="w-8 h-8 rounded-full items-center justify-center mr-3 mt-0.5" style={{ backgroundColor: "#F59E0B20" }}>
                 <Ionicons name="time-outline" size={16} color="#F59E0B" />
               </View>
               <View className="flex-1 pr-1">
-                <Text className="text-amber-900 font-quicksand-bold text-base mb-2">
+                <Text className="font-quicksand-bold text-base mb-2" style={{ color: colors.textPrimary }}>
                   {i18n.t('client.advertisement.limitedTime.title')}
                 </Text>
-                <Text className="text-amber-800 font-quicksand-medium text-sm leading-6">
+                <Text className="font-quicksand-medium text-sm leading-6" style={{ color: colors.textSecondary }}>
                   {i18n.t('client.advertisement.limitedTime.message')}
                 </Text>
               </View>
@@ -406,7 +431,7 @@ export default function AdvertisementDetails() {
         onRequestClose={() => setShowErrorModal(false)}
       >
         <View className="flex-1 justify-center items-center bg-black/50 px-4">
-          <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
+          <View style={{ backgroundColor: colors.card }} className="rounded-2xl p-6 w-full max-w-sm">
             {/* Icône */}
             <View className="items-center mb-4">
               <View className="w-16 h-16 bg-red-100 rounded-full justify-center items-center">
@@ -415,12 +440,12 @@ export default function AdvertisementDetails() {
             </View>
 
             {/* Titre */}
-            <Text className="text-xl font-quicksand-bold text-neutral-800 mb-2 text-center">
+            <Text className="text-xl font-quicksand-bold mb-2 text-center" style={{ color: colors.textPrimary }}>
               {i18n.t('messages.error')}
             </Text>
 
             {/* Message */}
-            <Text className="text-base text-neutral-600 font-quicksand-medium mb-6 text-center">
+            <Text className="text-base font-quicksand-medium mb-6 text-center" style={{ color: colors.textSecondary }}>
               {i18n.t('client.advertisement.error.loading')}
             </Text>
 

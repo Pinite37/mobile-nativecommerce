@@ -294,7 +294,7 @@ export default function EnterpriseSettingsScreen() {
         </View>
 
         {/* Notifications */}
-        <View className="mt-6 px-4">
+        {/* <View className="mt-6 px-4">
           <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold mb-3 pl-1">
             {i18n.t("enterprise.settings.notifications.title")}
           </Text>
@@ -459,10 +459,10 @@ export default function EnterpriseSettingsScreen() {
               />
             </View>
           </View>
-        </View>
+        </View> */}
 
         {/* Affichage */}
-        <View className="mt-6 px-4">
+        {/* <View className="mt-6 px-4">
           <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold mb-3 pl-1">
             {i18n.t("enterprise.settings.display.title")}
           </Text>
@@ -519,7 +519,7 @@ export default function EnterpriseSettingsScreen() {
               />
             </View>
           </View>
-        </View>
+        </View> */}
 
         {/* Entreprise */}
         <View className="mt-6 px-4">
@@ -587,7 +587,7 @@ export default function EnterpriseSettingsScreen() {
               />
             </View>
 
-            <View style={{ borderColor: colors.border }} className="flex-row items-center justify-between px-4 py-4 border-b">
+            {/* <View style={{ borderColor: colors.border }} className="flex-row items-center justify-between px-4 py-4 border-b">
               <View className="flex-row items-center">
                 <Ionicons name="analytics-outline" size={20} color={colors.brandPrimary} />
                 <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-medium ml-3">
@@ -611,7 +611,7 @@ export default function EnterpriseSettingsScreen() {
                 trackColor={{ false: "#D1D5DB", true: "#C7F4DC" }}
                 thumbColor={allowDataAnalytics ? "#10B981" : "#9CA3AF"}
               />
-            </View>
+            </View> */}
 
             <TouchableOpacity className="flex-row items-center justify-between px-4 py-4">
               <View className="flex-row items-center">

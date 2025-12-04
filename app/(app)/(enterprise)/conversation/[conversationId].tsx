@@ -28,8 +28,8 @@ import NotificationModal, {
   useNotification,
 } from "../../../../components/ui/NotificationModal";
 import { useAuth } from "../../../../contexts/AuthContext";
-import { useSocket } from "../../../../hooks/useSocket";
 import { useTheme } from "../../../../contexts/ThemeContext";
+import { useSocket } from "../../../../hooks/useSocket";
 import i18n from "../../../../i18n/i18n";
 import DeliveryService, {
   CreateOfferPayload,
@@ -43,11 +43,16 @@ import MessagingService, {
 // Cache simple pour les conversations et messages
 const conversationCache = new Map<
   string,
-  { conversation: Conversation; messages: Message[]; timestamp: number }
+  { 
+    conversation: Conversation; 
+    messages: Message[]; 
+    participants: any[]; 
+    timestamp: number 
+  }
 >();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes en millisecondes
 
-// DateTimePicker custom iOS en mode clair (texte noir sur fond blanc)
+// DateTimePicker custom iOS avec support du mode sombre
 const IOSLightDateTimePicker = ({
   value,
   onChange,
@@ -86,7 +91,7 @@ const IOSLightDateTimePicker = ({
       <Text
         style={{
           textAlign: "center",
-          color: "#111827",
+          color: colors.textPrimary,
           fontFamily: "Quicksand-Bold",
           fontSize: 18,
           marginBottom: 12,
@@ -129,13 +134,13 @@ const IOSLightDateTimePicker = ({
             }}
             style={{ padding: 8 }}
           >
-            <Text style={{ fontSize: 18, color: "#111827" }}>‹</Text>
+            <Text style={{ fontSize: 18, color: colors.textPrimary }}>‹</Text>
           </TouchableOpacity>
           <Text
             style={{
               fontSize: 16,
               fontFamily: "Quicksand-Bold",
-              color: "#111827",
+              color: colors.textPrimary,
             }}
           >
             {value.toLocaleDateString("fr-FR", {
@@ -152,7 +157,7 @@ const IOSLightDateTimePicker = ({
             }}
             style={{ padding: 8 }}
           >
-            <Text style={{ fontSize: 18, color: "#111827" }}>›</Text>
+            <Text style={{ fontSize: 18, color: colors.textPrimary }}>›</Text>
           </TouchableOpacity>
         </View>
 
@@ -164,7 +169,7 @@ const IOSLightDateTimePicker = ({
                 style={{
                   fontSize: 12,
                   fontFamily: "Quicksand-Medium",
-                  color: "#6B7280",
+                  color: colors.textSecondary,
                 }}
               >
                 {day}
@@ -232,12 +237,12 @@ const IOSLightDateTimePicker = ({
                       fontSize: 14,
                       fontFamily: "Quicksand-Medium",
                       color: isPast
-                        ? "#D1D5DB"
+                        ? colors.textSecondary + "60"
                         : isSelected
                         ? "#FFFFFF"
                         : isToday
                         ? "#10B981"
-                        : "#111827",
+                        : colors.textPrimary,
                     }}
                   >
                     {day}
@@ -290,7 +295,7 @@ const IOSLightDateTimePicker = ({
           <Text
             style={{
               textAlign: "center",
-              color: "#6B7280",
+              color: colors.textSecondary,
               fontFamily: "Quicksand-Medium",
               marginBottom: 8,
             }}
@@ -320,13 +325,13 @@ const IOSLightDateTimePicker = ({
                     style={{
                       paddingVertical: 6,
                       alignItems: "center",
-                      backgroundColor: selected ? "#ECFDF5" : "transparent",
+                      backgroundColor: selected ? (colors.textPrimary === "#111827" ? "#ECFDF5" : "rgba(16, 185, 129, 0.15)") : "transparent",
                     }}
                     activeOpacity={0.8}
                   >
                     <Text
                       style={{
-                        color: selected ? "#10B981" : "#111827",
+                        color: selected ? "#10B981" : colors.textPrimary,
                         fontFamily: selected
                           ? "Quicksand-Bold"
                           : "Quicksand-Medium",
@@ -347,7 +352,7 @@ const IOSLightDateTimePicker = ({
           <Text
             style={{
               textAlign: "center",
-              color: "#6B7280",
+              color: colors.textSecondary,
               fontFamily: "Quicksand-Medium",
               marginBottom: 8,
             }}
@@ -377,13 +382,13 @@ const IOSLightDateTimePicker = ({
                     style={{
                       paddingVertical: 6,
                       alignItems: "center",
-                      backgroundColor: selected ? "#ECFDF5" : "transparent",
+                      backgroundColor: selected ? (colors.textPrimary === "#111827" ? "#ECFDF5" : "rgba(16, 185, 129, 0.15)") : "transparent",
                     }}
                     activeOpacity={0.8}
                   >
                     <Text
                       style={{
-                        color: selected ? "#10B981" : "#111827",
+                        color: selected ? "#10B981" : colors.textPrimary,
                         fontFamily: selected
                           ? "Quicksand-Bold"
                           : "Quicksand-Medium",
@@ -432,6 +437,7 @@ export default function ConversationDetails() {
 
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [participants, setParticipants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [newMessage, setNewMessage] = useState("");
@@ -781,7 +787,11 @@ export default function ConversationDetails() {
         return;
       }
 
-      console.log("✅ ENTERPRISE - Ajout du message reçu");
+      console.log("✅ ENTERPRISE - Ajout du message reçu:", {
+        messageId: data.message._id,
+        text: data.message.text?.substring(0, 50),
+        sender: data.message.sender._id,
+      });
 
       // Ne traiter QUE les messages des AUTRES participants
       try {
@@ -791,19 +801,32 @@ export default function ConversationDetails() {
             (msg) => msg._id === data.message._id
           );
 
+          let updatedMessages;
           if (existingIndex !== -1) {
             console.log("⚠️ ENTERPRISE - Message existe déjà, mise à jour");
-            const updated = [...prev];
-            updated[existingIndex] = data.message;
-            return updated;
+            updatedMessages = [...prev];
+            updatedMessages[existingIndex] = data.message;
+          } else {
+            // Nouveau message d'un autre participant, l'ajouter
+            updatedMessages = [...prev, data.message];
+            console.log(
+              `📊 ENTERPRISE - Messages avant: ${prev.length}, après: ${updatedMessages.length}`
+            );
           }
-
-          // Nouveau message d'un autre participant, l'ajouter
-          const newList = [...prev, data.message];
-          console.log(
-            `📊 ENTERPRISE - Messages avant: ${prev.length}, après: ${newList.length}`
-          );
-          return newList;
+          
+          // Mettre à jour le cache avec le nouveau message
+          if (conversationId && conversation) {
+            const cached = conversationCache.get(conversationId);
+            if (cached) {
+              conversationCache.set(conversationId, {
+                ...cached,
+                messages: updatedMessages,
+                timestamp: Date.now(),
+              });
+            }
+          }
+          
+          return updatedMessages;
         });
 
         // Marquer comme lu puisque c'est un message d'un autre participant
@@ -905,6 +928,7 @@ export default function ConversationDetails() {
           console.log("💾 ENTERPRISE - Utilisation du cache");
           setConversation(cached.conversation);
           setMessages(cached.messages);
+          setParticipants(cached.participants || []);
           setLoading(false);
           loadedConversationRef.current = conversationId;
           return;
@@ -917,26 +941,21 @@ export default function ConversationDetails() {
 
         console.log("📦 ENTERPRISE - Données reçues de l'API:", {
           conversationId: data.conversation._id,
-          participantsCount: data.conversation.participants?.length,
-          participants: data.conversation.participants?.map((p: any) => ({
-            id: typeof p === "object" ? p._id : p,
-            type: typeof p,
-            firstName: typeof p === "object" ? p.firstName : "N/A",
-            lastName: typeof p === "object" ? p.lastName : "N/A",
-          })),
-          hasOtherParticipant: !!data.conversation.otherParticipant,
-          otherParticipant: data.conversation.otherParticipant,
+          participantsCount: data.participants?.length,
+          participants: data.participants,
           messagesCount: data.messages.length,
         });
 
         setConversation(data.conversation);
         setMessages(data.messages);
+        setParticipants(data.participants || []);
         loadedConversationRef.current = conversationId;
 
         // Mettre en cache
         conversationCache.set(conversationId!, {
           conversation: data.conversation,
           messages: data.messages,
+          participants: data.participants || [],
           timestamp: now,
         });
 
@@ -958,10 +977,15 @@ export default function ConversationDetails() {
       loadConversationData();
     }
 
-    // Cleanup: reset le ref si la conversation change
+    // Cleanup: reset le ref si la conversation change et invalider le cache
     return () => {
       if (loadedConversationRef.current !== conversationId) {
         loadedConversationRef.current = null;
+      }
+      // Invalider le cache quand on quitte la conversation
+      if (conversationId) {
+        conversationCache.delete(conversationId);
+        console.log("🗑️ ENTERPRISE - Cache invalidé pour:", conversationId);
       }
     };
   }, [conversationId, showNotification]);
@@ -1857,7 +1881,7 @@ export default function ConversationDetails() {
               shadowRadius: 4,
               elevation: 3,
               borderWidth: 1,
-              borderColor: "#D1FAE5",
+              borderColor: colors.border,
             }}
           >
             <View
@@ -1872,7 +1896,7 @@ export default function ConversationDetails() {
                   width: 40,
                   height: 40,
                   borderRadius: 20,
-                  backgroundColor: "#D1FAE5",
+                  backgroundColor: "#10B98120",
                   alignItems: "center",
                   justifyContent: "center",
                   marginRight: 12,
@@ -1896,7 +1920,7 @@ export default function ConversationDetails() {
                 <Text
                   style={{
                     fontSize: 14,
-                    color: "#262626",
+                    color: colors.textPrimary,
                     fontFamily: "Quicksand-SemiBold",
                     lineHeight: 20,
                   }}
@@ -1910,13 +1934,13 @@ export default function ConversationDetails() {
                 marginTop: 8,
                 paddingTop: 8,
                 borderTopWidth: 1,
-                borderTopColor: "#F5F5F5",
+                borderTopColor: colors.border,
               }}
             >
               <Text
                 style={{
                   fontSize: 10,
-                  color: "#737373",
+                  color: colors.textSecondary,
                   fontFamily: "Quicksand-Medium",
                   textAlign: "center",
                 }}
@@ -1936,18 +1960,18 @@ export default function ConversationDetails() {
       <View style={{ paddingVertical: 12, alignItems: "center" }}>
         <View
           style={{
-            backgroundColor: "#F5F5F5",
+            backgroundColor: colors.secondary,
             borderRadius: 999,
             paddingHorizontal: 16,
             paddingVertical: 8,
             borderWidth: 1,
-            borderColor: "#E5E5E5",
+            borderColor: colors.border,
           }}
         >
           <Text
             style={{
               fontSize: 12,
-              color: "#525252",
+              color: colors.textSecondary,
               fontFamily: "Quicksand-Medium",
               textAlign: "center",
             }}
@@ -2080,48 +2104,54 @@ export default function ConversationDetails() {
   }
 
   // Gestion sécurisée de otherParticipant
-  // Extraire l'autre participant depuis la liste des participants
+  // Extraire l'autre participant depuis le tableau participants de l'API
   const currentUserId = getCurrentUserId();
   const otherParticipant = (() => {
-    // 1. Vérifier d'abord si otherParticipant est déjà fourni par le backend
-    if (conversation.otherParticipant) {
-      return conversation.otherParticipant;
-    }
-
-    // 2. Si participants sont des objets, extraire l'autre participant
-    if (
-      Array.isArray(conversation.participants) &&
-      conversation.participants.length > 0
-    ) {
-      if (typeof conversation.participants[0] === "object") {
-        const other = (conversation.participants as any[]).find(
-          (p) => p._id !== currentUserId
-        );
-        if (other) {
-          return other;
-        }
+    // 1. PRIORITÉ: Utiliser le tableau participants de l'API (nouveau schéma)
+    if (participants && participants.length > 0) {
+      const other = participants.find((p) => p._id !== currentUserId);
+      if (other) {
+        console.log("✅ Participant extrait depuis le tableau API participants:", other);
+        return other;
       }
     }
 
-    // 3. Si participants sont des IDs (strings), extraire depuis les messages
-    // Les messages contiennent les infos complètes du sender
+    // 2. Fallback: vérifier si otherParticipant est fourni directement (ancien schéma)
+    if (conversation?.otherParticipant) {
+      console.log("✅ Participant extrait depuis conversation.otherParticipant");
+      return conversation.otherParticipant;
+    }
+
+    // 3. Fallback: extraire depuis conversation.participants si ce sont des objets
+    if (
+      Array.isArray(conversation.participants) &&
+      conversation.participants.length > 0 &&
+      typeof conversation.participants[0] === "object"
+    ) {
+      const other = (conversation.participants as any[]).find(
+        (p) => p._id !== currentUserId
+      );
+      if (other) {
+        console.log("✅ Participant extrait depuis conversation.participants");
+        return other;
+      }
+    }
+
+    // 4. Fallback: extraire depuis les messages
     if (messages.length > 0) {
-      // Trouver le premier message d'un autre participant
       const otherMessage = messages.find((msg) => {
         const senderId = msg.sender?._id || (msg as any).senderId;
         return senderId && senderId !== currentUserId;
       });
 
       if (otherMessage?.sender) {
-        console.log(
-          "✅ Participant extrait depuis les messages:",
-          otherMessage.sender
-        );
+        console.log("✅ Participant extrait depuis les messages");
         return otherMessage.sender;
       }
     }
 
-    // 4. Fallback: retourner null
+    // 5. Fallback final: retourner null
+    console.warn("⚠️ Impossible de trouver l'autre participant");
     return null;
   })();
 
@@ -2972,8 +3002,8 @@ export default function ConversationDetails() {
             style={{ maxHeight: "85%" }}
           >
             <View
-              className="bg-card rounded-t-[32px] shadow-2xl"
-              style={{ height: "100%" }}
+              className="rounded-t-[32px] shadow-2xl"
+              style={{ height: "100%", backgroundColor: colors.card }}
             >
               {/* Header avec dégradé - FIXE */}
               <LinearGradient
@@ -2994,7 +3024,7 @@ export default function ConversationDetails() {
                       <Ionicons name="bicycle" size={20} color="#FFFFFF" />
                     </View>
                     <Text className="text-xl font-quicksand-bold text-white flex-1">
-                      Nouvelle offre de livraison
+                      {i18n.t('enterprise.messages.conversationDetail.deliveryOffer')}
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -3018,19 +3048,20 @@ export default function ConversationDetails() {
                 <View className="mb-5">
                   <View className="flex-row items-center mb-2">
                     <Ionicons name="location" size={16} color="#10B981" />
-                    <Text className="text-sm text-neutral-700 font-quicksand-semibold ml-2">
-                      Zone de livraison
+                    <Text style={{ color: colors.textPrimary }} className="text-sm font-quicksand-semibold ml-2">
+                      {i18n.t('enterprise.messages.conversationDetail.offerForm.deliveryZone')}
                     </Text>
                   </View>
-                  <View className="bg-neutral-50 rounded-2xl border-2 border-neutral-200 overflow-hidden">
+                  <View style={{ backgroundColor: colors.secondary, borderColor: colors.border }} className="rounded-2xl border-2 overflow-hidden">
                     <TextInput
                       value={offerForm.deliveryZone}
                       onChangeText={(text) =>
                         setOfferForm({ ...offerForm, deliveryZone: text })
                       }
-                      placeholder="Ex: Cocody, Angré 8ème tranche"
-                      className="px-4 py-3 text-textPrimary font-quicksand-medium text-base"
-                      placeholderTextColor="#9CA3AF"
+                      placeholder={i18n.t('enterprise.messages.conversationDetail.offerForm.deliveryZonePlaceholder')}
+                      className="px-4 py-3 font-quicksand-medium text-base"
+                      style={{ color: colors.textPrimary }}
+                      placeholderTextColor={colors.textSecondary}
                       returnKeyType="next"
                     />
                   </View>
@@ -3040,11 +3071,11 @@ export default function ConversationDetails() {
                 <View className="mb-5">
                   <View className="flex-row items-center mb-2">
                     <Ionicons name="cash" size={16} color="#10B981" />
-                    <Text className="text-sm text-neutral-700 font-quicksand-semibold ml-2">
-                      Frais de livraison
+                    <Text style={{ color: colors.textPrimary }} className="text-sm font-quicksand-semibold ml-2">
+                      {i18n.t('enterprise.messages.conversationDetail.offerForm.deliveryFee')}
                     </Text>
                   </View>
-                  <View className="bg-neutral-50 rounded-2xl border-2 border-neutral-200 overflow-hidden flex-row items-center">
+                  <View style={{ backgroundColor: colors.secondary, borderColor: colors.border }} className="rounded-2xl border-2 overflow-hidden flex-row items-center">
                     <TextInput
                       value={offerForm.deliveryFee}
                       onChangeText={(text) =>
@@ -3052,11 +3083,12 @@ export default function ConversationDetails() {
                       }
                       placeholder="0"
                       keyboardType="numeric"
-                      className="flex-1 px-4 py-3 text-textPrimary font-quicksand-semibold text-base"
-                      placeholderTextColor="#9CA3AF"
+                      className="flex-1 px-4 py-3 font-quicksand-semibold text-base"
+                      style={{ color: colors.textPrimary }}
+                      placeholderTextColor={colors.textSecondary}
                       returnKeyType="next"
                     />
-                    <Text className="text-neutral-500 font-quicksand-medium text-sm pr-4">
+                    <Text style={{ color: colors.textSecondary }} className="font-quicksand-medium text-sm pr-4">
                       FCFA
                     </Text>
                   </View>
@@ -3066,8 +3098,8 @@ export default function ConversationDetails() {
                 <View className="mb-5">
                   <View className="flex-row items-center mb-2">
                     <Ionicons name="speedometer" size={16} color="#10B981" />
-                    <Text className="text-sm text-neutral-700 font-quicksand-semibold ml-2">
-                      Niveau d&apos;urgence
+                    <Text style={{ color: colors.textPrimary }} className="text-sm font-quicksand-semibold ml-2">
+                      {i18n.t('enterprise.messages.conversationDetail.offerForm.urgencyLevel')}
                     </Text>
                   </View>
                   <View className="flex-row gap-2">
@@ -3075,84 +3107,84 @@ export default function ConversationDetails() {
                       onPress={() =>
                         setOfferForm({ ...offerForm, urgency: "LOW" })
                       }
-                      className={`flex-1 rounded-2xl px-4 py-4 justify-center items-center border-2 ${
-                        offerForm.urgency === "LOW"
-                          ? "bg-green-50 border-green-400"
-                          : "bg-neutral-50 border-neutral-200"
-                      }`}
+                      style={{
+                        backgroundColor: offerForm.urgency === "LOW" ? (isDark ? "rgba(16, 185, 129, 0.15)" : "#ECFDF5") : colors.secondary,
+                        borderColor: offerForm.urgency === "LOW" ? "#10B981" : colors.border,
+                        borderWidth: 2
+                      }}
+                      className="flex-1 rounded-2xl px-4 py-4 justify-center items-center"
                       activeOpacity={1}
                     >
                       <Ionicons
                         name="walk"
                         size={20}
                         color={
-                          offerForm.urgency === "LOW" ? "#10B981" : "#9CA3AF"
+                          offerForm.urgency === "LOW" ? "#10B981" : colors.textSecondary
                         }
                       />
                       <Text
-                        className={`font-quicksand-semibold text-xs mt-1 ${
-                          offerForm.urgency === "LOW"
-                            ? "text-green-700"
-                            : "text-neutral-600"
-                        }`}
+                        style={{
+                          color: offerForm.urgency === "LOW" ? "#10B981" : colors.textSecondary
+                        }}
+                        className="font-quicksand-semibold text-xs mt-1"
                       >
-                        Basse
+                        {i18n.t('enterprise.messages.conversationDetail.offerForm.urgencyLow')}
                       </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={() =>
                         setOfferForm({ ...offerForm, urgency: "MEDIUM" })
                       }
-                      className={`flex-1 rounded-2xl px-4 py-4 justify-center items-center border-2 ${
-                        offerForm.urgency === "MEDIUM"
-                          ? "bg-orange-50 border-orange-400"
-                          : "bg-neutral-50 border-neutral-200"
-                      }`}
+                      style={{
+                        backgroundColor: offerForm.urgency === "MEDIUM" ? (isDark ? "rgba(249, 115, 22, 0.15)" : "#FFF7ED") : colors.secondary,
+                        borderColor: offerForm.urgency === "MEDIUM" ? "#F97316" : colors.border,
+                        borderWidth: 2
+                      }}
+                      className="flex-1 rounded-2xl px-4 py-4 justify-center items-center"
                       activeOpacity={1}
                     >
                       <Ionicons
                         name="bicycle"
                         size={20}
                         color={
-                          offerForm.urgency === "MEDIUM" ? "#F97316" : "#9CA3AF"
+                          offerForm.urgency === "MEDIUM" ? "#F97316" : colors.textSecondary
                         }
                       />
                       <Text
-                        className={`font-quicksand-semibold text-xs mt-1 ${
-                          offerForm.urgency === "MEDIUM"
-                            ? "text-orange-700"
-                            : "text-neutral-600"
-                        }`}
+                        style={{
+                          color: offerForm.urgency === "MEDIUM" ? "#F97316" : colors.textSecondary
+                        }}
+                        className="font-quicksand-semibold text-xs mt-1"
                       >
-                        Moyenne
+                        {i18n.t('enterprise.messages.conversationDetail.offerForm.urgencyMedium')}
                       </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={() =>
                         setOfferForm({ ...offerForm, urgency: "HIGH" })
                       }
-                      className={`flex-1 rounded-2xl px-4 py-4 justify-center items-center border-2 ${
-                        offerForm.urgency === "HIGH"
-                          ? "bg-red-50 border-red-400"
-                          : "bg-neutral-50 border-neutral-200"
-                      }`}
+                      style={{
+                        backgroundColor: offerForm.urgency === "HIGH" ? (isDark ? "rgba(239, 68, 68, 0.15)" : "#FEF2F2") : colors.secondary,
+                        borderColor: offerForm.urgency === "HIGH" ? "#EF4444" : colors.border,
+                        borderWidth: 2
+                      }}
+                      className="flex-1 rounded-2xl px-4 py-4 justify-center items-center"
                       activeOpacity={1}
                     >
                       <Ionicons
                         name="rocket"
                         size={20}
                         color={
-                          offerForm.urgency === "HIGH" ? "#EF4444" : "#9CA3AF"
+                          offerForm.urgency === "HIGH" ? "#EF4444" : colors.textSecondary
                         }
                       />
                       <Text
-                        className={`font-quicksand-semibold text-xs mt-1 ${
-                          offerForm.urgency === "HIGH"
-                            ? "text-red-700"
-                            : "text-neutral-600"
-                        }`}
+                        style={{
+                          color: offerForm.urgency === "HIGH" ? "#EF4444" : colors.textSecondary
+                        }}
+                        className="font-quicksand-semibold text-xs mt-1"
                       >
-                        Haute
+                        {i18n.t('enterprise.messages.conversationDetail.offerForm.urgencyHigh')}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -3162,8 +3194,8 @@ export default function ConversationDetails() {
                 <View className="mb-5">
                   <View className="flex-row items-center mb-2">
                     <Ionicons name="time" size={16} color="#10B981" />
-                    <Text className="text-sm text-neutral-700 font-quicksand-semibold ml-2">
-                      Date d&apos;expiration
+                    <Text style={{ color: colors.textPrimary }} className="text-sm font-quicksand-semibold ml-2">
+                      {i18n.t('enterprise.messages.conversationDetail.offerForm.expirationDate')}
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -3180,14 +3212,14 @@ export default function ConversationDetails() {
                         setShowDatePicker(true);
                       }
                     }}
-                    className="bg-neutral-50 rounded-2xl border-2 border-neutral-200 px-4 py-3 flex-row items-center justify-between"
+                    style={{ backgroundColor: colors.secondary, borderColor: colors.border }}
+                    className="rounded-2xl border-2 px-4 py-3 flex-row items-center justify-between"
                   >
                     <Text
-                      className={`font-quicksand-medium text-base ${
-                        offerForm.expiresAt
-                          ? "text-textPrimary"
-                          : "text-neutral-400"
-                      }`}
+                      style={{
+                        color: offerForm.expiresAt ? colors.textPrimary : colors.textSecondary
+                      }}
+                      className="font-quicksand-medium text-base"
                     >
                       {offerForm.expiresAt
                         ? new Date(offerForm.expiresAt).toLocaleString(
@@ -3200,7 +3232,7 @@ export default function ConversationDetails() {
                               minute: "2-digit",
                             }
                           )
-                        : "Choisir la date et l'heure"}
+                        : i18n.t('enterprise.messages.conversationDetail.offerForm.chooseDateTime')}
                     </Text>
                     <Ionicons name="calendar" size={18} color="#10B981" />
                   </TouchableOpacity>
@@ -3260,11 +3292,11 @@ export default function ConversationDetails() {
                 <View className="mb-5">
                   <View className="flex-row items-center mb-2">
                     <Ionicons name="document-text" size={16} color="#10B981" />
-                    <Text className="text-sm text-neutral-700 font-quicksand-semibold ml-2">
-                      Instructions spéciales (optionnel)
+                    <Text style={{ color: colors.textPrimary }} className="text-sm font-quicksand-semibold ml-2">
+                      {i18n.t('enterprise.messages.conversationDetail.offerForm.specialInstructions')}
                     </Text>
                   </View>
-                  <View className="bg-neutral-50 rounded-2xl border-2 border-neutral-200 overflow-hidden">
+                  <View style={{ backgroundColor: colors.secondary, borderColor: colors.border }} className="rounded-2xl border-2 overflow-hidden">
                     <TextInput
                       value={offerForm.specialInstructions}
                       onChangeText={(text) =>
@@ -3273,9 +3305,10 @@ export default function ConversationDetails() {
                           specialInstructions: text,
                         })
                       }
-                      placeholder="Ex: Livraison en mains propres uniquement, Appeler 30 min avant..."
-                      className="px-4 py-3 text-textPrimary font-quicksand-medium text-base min-h-[100px]"
-                      placeholderTextColor="#9CA3AF"
+                      placeholder={i18n.t('enterprise.messages.conversationDetail.offerForm.specialInstructionsPlaceholder')}
+                      className="px-4 py-3 font-quicksand-medium text-base min-h-[100px]"
+                      style={{ color: colors.textPrimary }}
+                      placeholderTextColor={colors.textSecondary}
                       multiline
                       textAlignVertical="top"
                       returnKeyType="done"
@@ -3286,16 +3319,22 @@ export default function ConversationDetails() {
 
               {/* Actions - Fixés en bas avec safe area */}
               <View
-                className="px-6 py-4 border-t border-neutral-100 flex-row gap-3 bg-card"
-                style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+                className="px-6 py-4 flex-row gap-3"
+                style={{ 
+                  paddingBottom: Math.max(insets.bottom, 16),
+                  backgroundColor: colors.card,
+                  borderTopWidth: 1,
+                  borderTopColor: colors.border
+                }}
               >
                 <TouchableOpacity
                   onPress={closeOfferModal}
-                  className="flex-1 bg-neutral-100 py-4 rounded-2xl justify-center items-center"
+                  style={{ backgroundColor: colors.secondary }}
+                  className="flex-1 py-4 rounded-2xl justify-center items-center"
                   disabled={creatingOffer}
                 >
-                  <Text className="text-neutral-700 font-quicksand-bold text-base">
-                    Annuler
+                  <Text style={{ color: colors.textPrimary }} className="font-quicksand-bold text-base">
+                    {i18n.t('enterprise.messages.conversationDetail.cancel')}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -3331,7 +3370,7 @@ export default function ConversationDetails() {
                           color="#FFFFFF"
                         />
                         <Text className="text-white font-quicksand-bold text-base ml-2">
-                          Publier l&apos;offre
+                          {i18n.t('enterprise.messages.conversationDetail.offerForm.publishOffer')}
                         </Text>
                       </View>
                     )}
@@ -3356,8 +3395,9 @@ export default function ConversationDetails() {
         >
           <View className="flex-1 bg-black/60 justify-center items-center px-6">
             <View
-              className="bg-card rounded-3xl w-full"
+              className="rounded-3xl w-full"
               style={{
+                backgroundColor: colors.card,
                 maxWidth: 400,
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 4 },
@@ -3368,12 +3408,11 @@ export default function ConversationDetails() {
             >
               {/* Header */}
               <View className="px-6 pt-6 pb-4">
-                <Text className="text-xl font-quicksand-bold text-textPrimary text-center mb-2">
-                  Date d&apos;expiration
+                <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold text-center mb-2">
+                  {i18n.t('enterprise.messages.conversationDetail.offerForm.expirationDate')}
                 </Text>
-                <Text className="text-sm font-quicksand-medium text-neutral-500 text-center">
-                  Choisissez la date et l&apos;heure d&apos;expiration de
-                  l&apos;offre
+                <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand-medium text-center">
+                  {i18n.t('enterprise.messages.conversationDetail.offerForm.chooseDateTimeDescription')}
                 </Text>
               </View>
 
@@ -3406,11 +3445,12 @@ export default function ConversationDetails() {
                     setShowDatePicker(false);
                     setTimeout(() => setOfferModalVisible(true), 300);
                   }}
-                  className="flex-1 bg-neutral-100 py-4 rounded-2xl"
+                  style={{ backgroundColor: colors.secondary }}
+                  className="flex-1 py-4 rounded-2xl"
                   activeOpacity={0.7}
                 >
-                  <Text className="text-neutral-700 font-quicksand-bold text-base text-center">
-                    Annuler
+                  <Text style={{ color: colors.textPrimary }} className="font-quicksand-bold text-base text-center">
+                    {i18n.t('enterprise.messages.conversationDetail.cancel')}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -3427,7 +3467,7 @@ export default function ConversationDetails() {
                   activeOpacity={0.7}
                 >
                   <Text className="text-white font-quicksand-bold text-base text-center">
-                    OK
+                    {i18n.t('common.actions.understood')}
                   </Text>
                 </TouchableOpacity>
               </View>

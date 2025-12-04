@@ -31,6 +31,362 @@ import AdvertisementService, {
   CreateAdvertisementPayload,
 } from "../../../../services/api/AdvertisementService";
 
+// DateTimePicker custom iOS avec support du mode sombre
+const IOSLightDateTimePicker = ({
+  value,
+  onChange,
+  colors,
+}: {
+  value: Date;
+  onChange: (date: Date) => void;
+  colors: any;
+}) => {
+  const hours = Array.from({ length: 24 }, (_, i) => i);
+  const minutes = [0, 15, 30, 45];
+
+  const formatNumber = (n: number) => n.toString().padStart(2, "0");
+
+  const handleHourChange = (hour: number) => {
+    const next = new Date(value);
+    next.setHours(hour);
+    onChange(next);
+  };
+
+  const handleMinuteChange = (minute: number) => {
+    const next = new Date(value);
+    next.setMinutes(minute);
+    onChange(next);
+  };
+
+  return (
+    <View
+      style={{
+        backgroundColor: colors.card,
+        paddingVertical: 16,
+        paddingHorizontal: 12,
+      }}
+    >
+      {/* Date affichée */}
+      <Text
+        style={{
+          textAlign: "center",
+          color: colors.textPrimary,
+          fontFamily: "Quicksand-Bold",
+          fontSize: 18,
+          marginBottom: 12,
+        }}
+      >
+        {value.toLocaleDateString("fr-FR", {
+          weekday: "short",
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })}
+      </Text>
+
+      {/* Sélecteur date (calendrier) + heures / minutes */}
+
+      {/* Calendrier personnalisé */}
+      <View
+        style={{
+          marginBottom: 16,
+          backgroundColor: colors.card,
+          borderRadius: 16,
+          padding: 16,
+        }}
+      >
+        {/* En-tête du mois */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 16,
+          }}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={() => {
+              const prev = new Date(value);
+              prev.setMonth(prev.getMonth() - 1);
+              onChange(prev);
+            }}
+            style={{ padding: 8 }}
+          >
+            <Text style={{ fontSize: 18, color: colors.textPrimary }}>‹</Text>
+          </TouchableOpacity>
+          <Text
+            style={{
+              fontSize: 16,
+              fontFamily: "Quicksand-Bold",
+              color: colors.textPrimary,
+            }}
+          >
+            {value.toLocaleDateString("fr-FR", {
+              month: "long",
+              year: "numeric",
+            })}
+          </Text>
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={() => {
+              const next = new Date(value);
+              next.setMonth(next.getMonth() + 1);
+              onChange(next);
+            }}
+            style={{ padding: 8 }}
+          >
+            <Text style={{ fontSize: 18, color: colors.textPrimary }}>›</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Jours de la semaine */}
+        <View style={{ flexDirection: "row", marginBottom: 8 }}>
+          {["L", "M", "M", "J", "V", "S", "D"].map((day, i) => (
+            <View key={i} style={{ flex: 1, alignItems: "center" }}>
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontFamily: "Quicksand-Medium",
+                  color: colors.textSecondary,
+                }}
+              >
+                {day}
+              </Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Grille des dates */}
+        <View>
+          {(() => {
+            const year = value.getFullYear();
+            const month = value.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDayOfWeek = (firstDay.getDay() + 6) % 7; // Lundi = 0
+            const daysInMonth = lastDay.getDate();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const weeks = [];
+            let days = [];
+
+            // Jours vides avant le début du mois
+            for (let i = 0; i < startDayOfWeek; i++) {
+              days.push(
+                <View key={`empty-${i}`} style={{ flex: 1, height: 40 }} />
+              );
+            }
+
+            // Jours du mois
+            for (let day = 1; day <= daysInMonth; day++) {
+              const date = new Date(year, month, day);
+              date.setHours(0, 0, 0, 0);
+              const isSelected =
+                date.getDate() === value.getDate() &&
+                date.getMonth() === value.getMonth() &&
+                date.getFullYear() === value.getFullYear();
+              const isPast = date < today;
+              const isToday = date.getTime() === today.getTime();
+
+              days.push(
+                <TouchableOpacity
+                  key={day}
+                  activeOpacity={1}
+                  disabled={isPast}
+                  onPress={() => {
+                    if (!isPast) {
+                      const next = new Date(value);
+                      next.setDate(day);
+                      onChange(next);
+                    }
+                  }}
+                  style={{
+                    flex: 1,
+                    height: 40,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    borderRadius: 8,
+                    backgroundColor: isSelected ? "#10B981" : "transparent",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontFamily: "Quicksand-Medium",
+                      color: isPast
+                        ? colors.textSecondary + "60"
+                        : isSelected
+                        ? "#FFFFFF"
+                        : isToday
+                        ? "#10B981"
+                        : colors.textPrimary,
+                    }}
+                  >
+                    {day}
+                  </Text>
+                </TouchableOpacity>
+              );
+
+              if (days.length === 7) {
+                weeks.push(
+                  <View
+                    key={`week-${weeks.length}`}
+                    style={{ flexDirection: "row", marginBottom: 4 }}
+                  >
+                    {days}
+                  </View>
+                );
+                days = [];
+              }
+            }
+
+            // Compléter la dernière semaine si nécessaire
+            if (days.length > 0) {
+              while (days.length < 7) {
+                days.push(
+                  <View
+                    key={`empty-end-${days.length}`}
+                    style={{ flex: 1, height: 40 }}
+                  />
+                );
+              }
+              weeks.push(
+                <View
+                  key={`week-${weeks.length}`}
+                  style={{ flexDirection: "row", marginBottom: 4 }}
+                >
+                  {days}
+                </View>
+              );
+            }
+
+            return weeks;
+          })()}
+        </View>
+      </View>
+
+      {/* Sélecteur heures / minutes */}
+      <View style={{ flexDirection: "row", justifyContent: "center", gap: 24 }}>
+        {/* Heures */}
+        <View>
+          <Text
+            style={{
+              textAlign: "center",
+              color: colors.textSecondary,
+              fontFamily: "Quicksand-Medium",
+              marginBottom: 8,
+            }}
+          >
+            Heure
+          </Text>
+          <View
+            style={{
+              height: 140,
+              width: 80,
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: colors.border,
+              overflow: "hidden",
+            }}
+          >
+            <ScrollView
+              contentContainerStyle={{ paddingVertical: 8 }}
+              showsVerticalScrollIndicator={false}
+            >
+              {hours.map((h) => {
+                const selected = h === value.getHours();
+                return (
+                  <TouchableOpacity
+                    key={h}
+                    onPress={() => handleHourChange(h)}
+                    style={{
+                      paddingVertical: 6,
+                      alignItems: "center",
+                      backgroundColor: selected ? (colors.textPrimary === "#111827" ? "#ECFDF5" : "rgba(16, 185, 129, 0.15)") : "transparent",
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text
+                      style={{
+                        color: selected ? "#10B981" : colors.textPrimary,
+                        fontFamily: selected
+                          ? "Quicksand-Bold"
+                          : "Quicksand-Medium",
+                        fontSize: 16,
+                      }}
+                    >
+                      {formatNumber(h)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+
+        {/* Minutes */}
+        <View>
+          <Text
+            style={{
+              textAlign: "center",
+              color: colors.textSecondary,
+              fontFamily: "Quicksand-Medium",
+              marginBottom: 8,
+            }}
+          >
+            Minutes
+          </Text>
+          <View
+            style={{
+              height: 140,
+              width: 80,
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: colors.border,
+              overflow: "hidden",
+            }}
+          >
+            <ScrollView
+              contentContainerStyle={{ paddingVertical: 8 }}
+              showsVerticalScrollIndicator={false}
+            >
+              {minutes.map((m) => {
+                const selected = m === value.getMinutes();
+                return (
+                  <TouchableOpacity
+                    key={m}
+                    onPress={() => handleMinuteChange(m)}
+                    style={{
+                      paddingVertical: 6,
+                      alignItems: "center",
+                      backgroundColor: selected ? (colors.textPrimary === "#111827" ? "#ECFDF5" : "rgba(16, 185, 129, 0.15)") : "transparent",
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text
+                      style={{
+                        color: selected ? "#10B981" : colors.textPrimary,
+                        fontFamily: selected
+                          ? "Quicksand-Bold"
+                          : "Quicksand-Medium",
+                        fontSize: 16,
+                      }}
+                    >
+                      {formatNumber(m)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+};
+
 // Image Picker Modal Component (Android uniquement)
 interface ImagePickerModalProps {
   visible: boolean;
@@ -90,20 +446,22 @@ function ImagePickerModal({
                     onTakePhoto();
                   }, 100);
                 }}
-                className="flex-row items-center py-4 border-b border-neutral-50"
+                className="flex-row items-center py-4"
+                style={{ borderBottomColor: colors.border }}
               >
+              
                 <View className="w-10 h-10 rounded-full bg-blue-50 items-center justify-center mr-4">
                   <Ionicons name="camera" size={20} color="#3B82F6" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-base font-quicksand-semibold text-neutral-800">
+                  <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-semibold">
                     {i18n.t("enterprise.advertisementsCreate.imagePicker.takePhoto")}
                   </Text>
-                  <Text className="text-sm text-neutral-500 font-quicksand-medium">
+                  <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand-medium">
                     {i18n.t("enterprise.advertisementsCreate.imagePicker.takePhotoDescription")}
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+                <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -174,10 +532,6 @@ export default function CreateAdvertisement() {
     new Date(Date.now() + 24 * 60 * 60 * 1000)
   ); // +1 day
 
-  // iOS combined pickers
-  const [showStartPicker, setShowStartPicker] = useState(false);
-  const [showEndPicker, setShowEndPicker] = useState(false);
-
   // Android two-phase (date -> time)
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
@@ -189,9 +543,15 @@ export default function CreateAdvertisement() {
   const [submitting, setSubmitting] = useState(false);
   const [imagePickerVisible, setImagePickerVisible] = useState(false);
 
+  // États pour les modals personnalisés iOS
+  const [showCustomStartPicker, setShowCustomStartPicker] = useState(false);
+  const [showCustomEndPicker, setShowCustomEndPicker] = useState(false);
+  const [tempStartDate, setTempStartDate] = useState<Date>(startDate);
+  const [tempEndDate, setTempEndDate] = useState<Date>(endDate);
+
   // Fonction pour afficher le choix d'image (Alert natif sur iOS, Modal custom sur Android)
   const showImagePickerOptions = () => {
-    if (images.length >= 4) {
+    if (images.length >= 1) {
       showNotification(
         "info",
         i18n.t("enterprise.advertisementsCreate.warnings.limitReached"),
@@ -228,7 +588,7 @@ export default function CreateAdvertisement() {
   };
 
   const pickImage = async () => {
-    if (images.length >= 4) {
+    if (images.length >= 1) {
       showNotification(
         "info",
         i18n.t("enterprise.advertisementsCreate.warnings.limitReached"),
@@ -265,15 +625,15 @@ export default function CreateAdvertisement() {
         return;
       }
 
-      setImages((prev) => [...prev, uri]);
+      setImages([uri]);
       const ext = uri.split(".").pop()?.toLowerCase();
       const mime = ext === "png" ? "image/png" : "image/jpeg";
-      setImagesBase64((prev) => [...prev, `data:${mime};base64,${base64Data}`]);
+      setImagesBase64([`data:${mime};base64,${base64Data}`]);
     }
   };
 
   const takePhoto = async () => {
-    if (images.length >= 4) {
+    if (images.length >= 1) {
       showNotification(
         "info",
         i18n.t("enterprise.advertisementsCreate.warnings.limitReached"),
@@ -310,9 +670,8 @@ export default function CreateAdvertisement() {
         return;
       }
 
-      setImages((prev) => [...prev, uri]);
-      setImagesBase64((prev) => [
-        ...prev,
+      setImages([uri]);
+      setImagesBase64([
         `data:image/jpeg;base64,${base64Data}`,
       ]);
     }
@@ -406,60 +765,41 @@ export default function CreateAdvertisement() {
               {i18n.t("enterprise.advertisementsCreate.sections.images")}
             </Text>
 
-            {/* Display selected images */}
+            {/* Display selected image */}
             {images.length > 0 && (
               <View className="mb-4">
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  className="gap-3"
-                >
-                  {images.map((imgUri, index) => (
-                    <View key={index} className="relative mr-3">
-                      <Image
-                        source={{ uri: imgUri }}
-                        style={{ borderColor: colors.border }}
-                        className="w-24 h-24 rounded-2xl border"
-                        resizeMode="cover"
-                      />
-                      <TouchableOpacity
-                        onPress={() => {
-                          setImages((prev) =>
-                            prev.filter((_, i) => i !== index)
-                          );
-                          setImagesBase64((prev) =>
-                            prev.filter((_, i) => i !== index)
-                          );
-                        }}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full items-center justify-center shadow-sm"
-                        activeOpacity={0.7}
-                      >
-                        <Ionicons name="close" size={14} color="#FFFFFF" />
-                      </TouchableOpacity>
-                      {index === 0 && (
-                        <View className="absolute bottom-1 left-1 bg-emerald-500 px-1.5 py-0.5 rounded">
-                          <Text className="text-xs font-quicksand-bold text-white">
-                            {i18n.t("enterprise.advertisementsCreate.labels.principal")}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                  ))}
-                </ScrollView>
+                <View className="relative">
+                  <Image
+                    source={{ uri: images[0] }}
+                    style={{ borderColor: colors.border }}
+                    className="w-full h-48 rounded-2xl border"
+                    resizeMode="cover"
+                  />
+                  <TouchableOpacity
+                    onPress={() => {
+                      setImages([]);
+                      setImagesBase64([]);
+                    }}
+                    className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 rounded-full items-center justify-center shadow-sm"
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="close" size={16} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
 
             {/* Add image button */}
-            {images.length < 4 && (
+            {images.length === 0 && (
               <TouchableOpacity
                 onPress={showImagePickerOptions}
                 style={{ backgroundColor: colors.card, borderColor: colors.border }}
-                className="w-full h-24 rounded-2xl items-center justify-center border border-dashed shadow-sm"
+                className="w-full h-32 rounded-2xl items-center justify-center border border-dashed shadow-sm"
                 activeOpacity={0.7}
               >
                 <Ionicons name="add" size={32} color={colors.textSecondary} />
                 <Text style={{ color: colors.textSecondary }} className="font-quicksand-medium mt-2 text-sm">
-                  {i18n.t("enterprise.advertisementsCreate.labels.addImage")} ({images.length}/4)
+                  {i18n.t("enterprise.advertisementsCreate.labels.addImage")}
                 </Text>
               </TouchableOpacity>
             )}
@@ -584,7 +924,8 @@ export default function CreateAdvertisement() {
                   if (Platform.OS === "android") {
                     setShowStartDatePicker(true);
                   } else {
-                    setShowStartPicker(true);
+                    setTempStartDate(startDate);
+                    setShowCustomStartPicker(true);
                   }
                 }}
                 style={{ backgroundColor: colors.card, borderColor: colors.border }}
@@ -603,7 +944,8 @@ export default function CreateAdvertisement() {
                   if (Platform.OS === "android") {
                     setShowEndDatePicker(true);
                   } else {
-                    setShowEndPicker(true);
+                    setTempEndDate(endDate);
+                    setShowCustomEndPicker(true);
                   }
                 }}
                 style={{ backgroundColor: colors.card, borderColor: colors.border }}
@@ -618,37 +960,176 @@ export default function CreateAdvertisement() {
                 </Text>
               </TouchableOpacity>
             </View>
-            {/* iOS combined pickers */}
-            {Platform.OS === "ios" && showStartPicker && (
-              <DateTimePicker
-                value={startDate}
-                minimumDate={new Date(Date.now() + 30 * 60 * 1000)}
-                mode="datetime"
-                onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
-                  setShowStartPicker(false);
-                  if (event.type === "dismissed") return;
-                  if (selectedDate) {
-                    setStartDate(selectedDate);
-                    if (selectedDate >= endDate) {
-                      setEndDate(
-                        new Date(selectedDate.getTime() + 60 * 60 * 1000)
-                      );
-                    }
-                  }
-                }}
-              />
+            {/* iOS custom start date picker */}
+            {Platform.OS === "ios" && showCustomStartPicker && (
+              <Modal
+                visible={showCustomStartPicker}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setShowCustomStartPicker(false)}
+              >
+                <View className="flex-1 bg-black/60 justify-center items-center px-6">
+                  <View
+                    className="rounded-3xl w-full"
+                    style={{
+                      backgroundColor: colors.card,
+                      maxWidth: 400,
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 8,
+                      elevation: 8,
+                    }}
+                  >
+                    {/* Header */}
+                    <View className="px-6 pt-6 pb-4">
+                      <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold text-center mb-2">
+                        Date de début
+                      </Text>
+                      <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand-medium text-center">
+                        Choisissez la date et l&apos;heure de début
+                      </Text>
+                    </View>
+
+                    {/* DateTimePicker custom iOS */}
+                    <View
+                      style={{
+                        marginHorizontal: 16,
+                        borderRadius: 16,
+                        overflow: "hidden",
+                        backgroundColor: colors.card,
+                      }}
+                    >
+                      <IOSLightDateTimePicker
+                        value={tempStartDate}
+                        colors={colors}
+                        onChange={(nextDate) => {
+                          // Empêcher la sélection d'une date passée
+                          const now = new Date();
+                          if (nextDate > now) {
+                            setTempStartDate(nextDate);
+                          }
+                        }}
+                      />
+                    </View>
+
+                    {/* Actions */}
+                    <View className="flex-row px-6 py-6 gap-3">
+                      <TouchableOpacity
+                        onPress={() => setShowCustomStartPicker(false)}
+                        style={{ backgroundColor: colors.secondary }}
+                        className="flex-1 py-4 rounded-2xl"
+                        activeOpacity={0.7}
+                      >
+                        <Text style={{ color: colors.textPrimary }} className="font-quicksand-bold text-base text-center">
+                          Annuler
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setStartDate(tempStartDate);
+                          if (tempStartDate >= endDate) {
+                            setEndDate(
+                              new Date(tempStartDate.getTime() + 60 * 60 * 1000)
+                            );
+                          }
+                          setShowCustomStartPicker(false);
+                        }}
+                        className="flex-1 py-4 rounded-2xl"
+                        style={{ backgroundColor: "#10B981" }}
+                        activeOpacity={0.7}
+                      >
+                        <Text className="text-white font-quicksand-bold text-base text-center">
+                          Confirmer
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              </Modal>
             )}
-            {Platform.OS === "ios" && showEndPicker && (
-              <DateTimePicker
-                value={endDate}
-                minimumDate={new Date(startDate.getTime() + 30 * 60 * 1000)}
-                mode="datetime"
-                onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
-                  setShowEndPicker(false);
-                  if (event.type === "dismissed") return;
-                  if (selectedDate) setEndDate(selectedDate);
-                }}
-              />
+            {/* iOS custom end date picker */}
+            {Platform.OS === "ios" && showCustomEndPicker && (
+              <Modal
+                visible={showCustomEndPicker}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setShowCustomEndPicker(false)}
+              >
+                <View className="flex-1 bg-black/60 justify-center items-center px-6">
+                  <View
+                    className="rounded-3xl w-full"
+                    style={{
+                      backgroundColor: colors.card,
+                      maxWidth: 400,
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 8,
+                      elevation: 8,
+                    }}
+                  >
+                    {/* Header */}
+                    <View className="px-6 pt-6 pb-4">
+                      <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold text-center mb-2">
+                        Date de fin
+                      </Text>
+                      <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand-medium text-center">
+                        Choisissez la date et l&apos;heure de fin
+                      </Text>
+                    </View>
+
+                    {/* DateTimePicker custom iOS */}
+                    <View
+                      style={{
+                        marginHorizontal: 16,
+                        borderRadius: 16,
+                        overflow: "hidden",
+                        backgroundColor: colors.card,
+                      }}
+                    >
+                      <IOSLightDateTimePicker
+                        value={tempEndDate}
+                        colors={colors}
+                        onChange={(nextDate) => {
+                          // Empêcher la sélection d'une date passée ou avant la date de début
+                          const minDate = new Date(startDate.getTime() + 30 * 60 * 1000);
+                          if (nextDate > minDate) {
+                            setTempEndDate(nextDate);
+                          }
+                        }}
+                      />
+                    </View>
+
+                    {/* Actions */}
+                    <View className="flex-row px-6 py-6 gap-3">
+                      <TouchableOpacity
+                        onPress={() => setShowCustomEndPicker(false)}
+                        style={{ backgroundColor: colors.secondary }}
+                        className="flex-1 py-4 rounded-2xl"
+                        activeOpacity={0.7}
+                      >
+                        <Text style={{ color: colors.textPrimary }} className="font-quicksand-bold text-base text-center">
+                          Annuler
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setEndDate(tempEndDate);
+                          setShowCustomEndPicker(false);
+                        }}
+                        className="flex-1 py-4 rounded-2xl"
+                        style={{ backgroundColor: "#10B981" }}
+                        activeOpacity={0.7}
+                      >
+                        <Text className="text-white font-quicksand-bold text-base text-center">
+                          Confirmer
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              </Modal>
             )}
 
             {/* Android: date -> time sequence for start */}

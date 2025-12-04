@@ -347,6 +347,21 @@
                 "cancel": "Annuler",
                 "publish": "Publier l'offre",
                 "publishing": "Publication...",
+                "offerForm": {
+                    "deliveryZone": "Zone de livraison",
+                    "deliveryZonePlaceholder": "Ex: Cocody, Angré 8ème tranche",
+                    "deliveryFee": "Frais de livraison",
+                    "urgencyLevel": "Niveau d'urgence",
+                    "urgencyLow": "Basse",
+                    "urgencyMedium": "Moyenne",
+                    "urgencyHigh": "Haute",
+                    "expirationDate": "Date d'expiration",
+                    "chooseDateTime": "Choisir la date et l'heure",
+                    "chooseDateTimeDescription": "Choisissez la date et l'heure d'expiration de l'offre",
+                    "specialInstructions": "Instructions spéciales (optionnel)",
+                    "specialInstructionsPlaceholder": "Ex: Livraison en mains propres uniquement, Appeler 30 min avant...",
+                    "publishOffer": "Publier l'offre"
+                },
                 "messageActions": {
                     "title": "Actions",
                     "reply": "Répondre",
@@ -647,7 +662,7 @@
                 "cancel": "Annuler"
             },
             "sections": {
-                "images": "Images de la bannière * (1-4 images)",
+                "images": "Images de la bannière * (1 image)",
                 "title": "Titre de la publicité *",
                 "description": "Description *",
                 "type": "Type *",
@@ -703,6 +718,59 @@
             "preview": {
                 "defaultTitle": "Titre de votre publicité",
                 "defaultText": "Votre titre apparaîtra ici"
+            }
+        },
+        "advertisementDetail": {
+            "header": {
+                "title": "Détail"
+            },
+            "loading": {
+                "error": "Erreur de chargement",
+                "message": "Impossible de charger la publicité"
+            },
+            "status": {
+                "active": "Active",
+                "expired": "Expirée",
+                "paused": "Coupée"
+            },
+            "info": {
+                "start": "Début",
+                "end": "Fin",
+                "views": "Vues",
+                "clicks": "Clics"
+            },
+            "actions": {
+                "pause": "Couper",
+                "activate": "Activer",
+                "delete": "Supprimer"
+            },
+            "confirmations": {
+                "pause": {
+                    "title": "Couper la publicité",
+                    "message": "La publicité ne sera plus affichée chez les clients mais pourra être réactivée plus tard.",
+                    "confirm": "Couper"
+                },
+                "delete": {
+                    "title": "Supprimer la publicité",
+                    "message": "Cette action est irréversible. La publicité sera définitivement supprimée.",
+                    "confirm": "Supprimer"
+                },
+                "activate": {
+                    "title": "Réactiver la publicité",
+                    "message": "La publicité sera remise en ligne et visible par les clients.",
+                    "confirm": "Réactiver"
+                }
+            },
+            "success": {
+                "deleted": "Supprimée",
+                "deletedMessage": "La publicité a été supprimée."
+            },
+            "errors": {
+                "generic": "Erreur",
+                "actionFailed": "Échec de l'action"
+            },
+            "buttons": {
+                "cancel": "Annuler"
             }
         },
         "offers": {

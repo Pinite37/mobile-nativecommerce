@@ -66,12 +66,14 @@ export default function StatusModal({
                   backgroundColor: '#FFFFFF',
                   justifyContent: 'center',
                   alignItems: 'center',
+                  display: 'flex',
                 }}
               >
                 <Ionicons
                   name={isSuccess ? 'checkmark-circle' : 'close-circle'}
                   size={48}
                   color={isSuccess ? '#10B981' : '#EF4444'}
+                  style={{ textAlign: 'center', marginLeft: 0, marginRight: 0 }}
                 />
               </View>
             </View>
