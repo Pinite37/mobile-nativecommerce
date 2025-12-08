@@ -108,6 +108,7 @@ export default function ClientHome() {
 
     // Calcul responsive pour la largeur des produits
     const screenWidth = Dimensions.get('window').width;
+    const isSmallScreen = screenWidth < 380;
     const isTablet = screenWidth >= 768;
     const productWidth = isTablet ? '31%' : '48%'; // 3 colonnes sur tablette, 2 sur mobile
 
@@ -498,7 +499,7 @@ export default function ClientHome() {
                     }}
                     className="shadow-lg"
                 >
-                    <View className="px-6 flex-row justify-between items-center mb-4">
+                    <View className={`${isSmallScreen ? 'px-4' : 'px-6'} flex-row justify-between items-center mb-4`}>
                         <View>
                             <ShimmerBlock style={{ height: 16, borderRadius: 8, width: 80, marginBottom: 8 }} />
                             <ShimmerBlock style={{ height: 24, borderRadius: 12, width: 120 }} />
@@ -542,7 +543,7 @@ export default function ClientHome() {
                         <ShimmerBlock style={{ height: 20, borderRadius: 10, width: 140, marginBottom: 4 }} />
                         <ShimmerBlock style={{ height: 14, borderRadius: 7, width: 200 }} />
                     </View>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: isSmallScreen ? 16 : 20, gap: isSmallScreen ? 8 : 12 }}>
                         {Array.from({ length: 6 }).map((_, index) => (
                             <View key={index} className="items-center">
                                 <ShimmerBlock style={{ width: 70, height: 70, borderRadius: 20, marginBottom: 8 }} />
@@ -966,7 +967,7 @@ export default function ClientHome() {
                 }}
                 className="shadow-lg"
             >
-                <View className="px-6 flex-row justify-between items-center mb-4">
+                <View className={`${isSmallScreen ? 'px-4' : 'px-6'} flex-row justify-between items-center mb-4`}>
                     <View>
                         <Text className="text-emerald-50 text-sm font-quicksand-medium">
                             {greetUser()},
@@ -1013,7 +1014,7 @@ export default function ClientHome() {
                     <View className="flex-row mt-3 px-1 pb-1">
                         <TouchableOpacity
                             onPress={() => setCityModalVisible(true)}
-                            className="flex-1 flex-row items-center justify-center py-2 rounded-xl mr-2"
+                            className={`flex-1 flex-row items-center justify-center py-2 rounded-xl ${isSmallScreen ? 'mr-1' : 'mr-2'}`}
                             style={{ backgroundColor: isDark ? 'rgba(16, 185, 129, 0.15)' : '#D1FAE5' }}
                         >
                             <Ionicons name="location" size={14} color="#059669" />
@@ -1024,7 +1025,7 @@ export default function ClientHome() {
                         <TouchableOpacity
                             onPress={() => selectedCity && setNeighborhoodModalVisible(true)}
                             style={{ backgroundColor: selectedCity ? colors.secondary : colors.border }}
-                            className={`flex-1 flex-row items-center justify-center py-2 rounded-xl ml-2 ${!selectedCity && 'opacity-50'}`}
+                            className={`flex-1 flex-row items-center justify-center py-2 rounded-xl ${isSmallScreen ? 'ml-1' : 'ml-2'} ${!selectedCity && 'opacity-50'}`}
                             disabled={!selectedCity}
                         >
                             <Ionicons name="map" size={14} color={colors.textSecondary} />

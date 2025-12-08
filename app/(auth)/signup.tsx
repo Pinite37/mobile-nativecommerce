@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { Linking, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useToast } from '../../components/ui/ReanimatedToast/context';
 import { useAuth } from '../../contexts/AuthContext';
 import { ErrorHandler } from '../../utils/ErrorHandler';
@@ -24,6 +25,7 @@ export default function SignUpScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const toast = useToast();
+  const insets = useSafeAreaInsets();
   const { redirectToRoleBasedHome, handlePostRegistration, logout, isAuthenticated, userRole, isLoading: authLoading } = useAuth();
 
   // Bloquer l'accès si déjà connecté
@@ -132,7 +134,13 @@ export default function SignUpScreen() {
       <StatusBar style="dark" />
 
       {/* Fixed Header with Back Button */}
-      <View className="absolute top-0 left-0 right-0 z-10 bg-white px-6 pt-16 pb-4">
+      <View
+        className="absolute top-0 left-0 right-0 z-10 bg-white px-6"
+        style={{
+          paddingTop: Math.max(insets.top, 16) + 16,
+          paddingBottom: 16
+        }}
+      >
         <TouchableOpacity
           onPress={() => router.back()}
           className="w-10 h-10 rounded-full bg-neutral-100 items-center justify-center"
@@ -142,7 +150,8 @@ export default function SignUpScreen() {
       </View>
 
       <KeyboardAwareScrollView
-        className="flex-1 pt-28"
+        className="flex-1"
+        style={{ paddingTop: Math.max(insets.top, 16) + 60 }}
         showsVerticalScrollIndicator={false}
         enableOnAndroid={true}
         keyboardShouldPersistTaps="handled"
@@ -151,7 +160,7 @@ export default function SignUpScreen() {
         extraHeight={150}
         resetScrollToCoords={{ x: 0, y: 0 }}
         scrollEnabled={true}
-        contentContainerStyle={{ paddingBottom: 120 }}
+        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 30) + 60 }}
       >
         {/* Header */}
         <View className="px-6 pb-8">

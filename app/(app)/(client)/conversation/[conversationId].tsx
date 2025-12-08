@@ -190,9 +190,8 @@ export default function ConversationDetails() {
             />
           </View>
           <View
-            className={`flex-row items-center mt-1 ${
-              isCurrentUser ? "justify-end" : "justify-start"
-            }`}
+            className={`flex-row items-center mt-1 ${isCurrentUser ? "justify-end" : "justify-start"
+              }`}
           >
             <ShimmerBlock width={40} height={12} borderRadius={6} />
           </View>
@@ -306,7 +305,7 @@ export default function ConversationDetails() {
             // Nouveau message d'un autre participant, l'ajouter
             updatedMessages = [...prev, data.message];
           }
-          
+
           // Mettre à jour le cache avec le nouveau message
           if (conversationId && conversation) {
             const cached = conversationCache.get(conversationId);
@@ -318,7 +317,7 @@ export default function ConversationDetails() {
               });
             }
           }
-          
+
           return updatedMessages;
         });
 
@@ -368,18 +367,18 @@ export default function ConversationDetails() {
               ...msg,
               readBy: msg.readBy
                 ? [
-                    ...msg.readBy,
-                    {
-                      user: data.userId,
-                      readAt: data.readAt,
-                    },
-                  ]
+                  ...msg.readBy,
+                  {
+                    user: data.userId,
+                    readAt: data.readAt,
+                  },
+                ]
                 : [
-                    {
-                      user: data.userId,
-                      readAt: data.readAt,
-                    },
-                  ],
+                  {
+                    user: data.userId,
+                    readAt: data.readAt,
+                  },
+                ],
             };
           });
         });
@@ -398,7 +397,7 @@ export default function ConversationDetails() {
     const load = async () => {
       try {
         setLoading(true);
-        
+
         // Toujours charger depuis l'API pour avoir les derniers messages
         console.log("🔄 CLIENT - Chargement conversation depuis l'API:", conversationId);
         const data = await MessagingService.getConversationMessages(
@@ -665,10 +664,10 @@ export default function ConversationDetails() {
         prev.map((msg) =>
           msg._localId === localId
             ? {
-                ...msg,
-                _sendingStatus: "failed" as const,
-                _sendError: error?.message || "Erreur inconnue",
-              }
+              ...msg,
+              _sendingStatus: "failed" as const,
+              _sendError: error?.message || "Erreur inconnue",
+            }
             : msg
         )
       );
@@ -688,10 +687,10 @@ export default function ConversationDetails() {
       prev.map((msg) =>
         msg._localId === localId
           ? {
-              ...msg,
-              _sendingStatus: "pending" as const,
-              _sendError: undefined,
-            }
+            ...msg,
+            _sendingStatus: "pending" as const,
+            _sendError: undefined,
+          }
           : msg
       )
     );
@@ -732,10 +731,10 @@ export default function ConversationDetails() {
         prev.map((msg) =>
           msg._localId === localId
             ? {
-                ...msg,
-                _sendingStatus: "failed" as const,
-                _sendError: error?.message || "Erreur inconnue",
-              }
+              ...msg,
+              _sendingStatus: "failed" as const,
+              _sendError: error?.message || "Erreur inconnue",
+            }
             : msg
         )
       );
@@ -1154,9 +1153,8 @@ export default function ConversationDetails() {
 
             {/* Heure et statut */}
             <View
-              className={`flex-row items-center mt-1 ${
-                isCurrentUser ? "justify-end" : "justify-start"
-              }`}
+              className={`flex-row items-center mt-1 ${isCurrentUser ? "justify-end" : "justify-start"
+                }`}
             >
               <Text className="text-xs font-quicksand-medium mr-1" style={{ color: colors.textSecondary }}>
                 {formatMessageTime(message.createdAt || message.sentAt || "")}
@@ -1202,10 +1200,10 @@ export default function ConversationDetails() {
         prev.map((msg) =>
           msg._id === messageId
             ? {
-                ...msg,
-                text: i18n.t('client.messages.conversationDetail.messageDeleted'),
-                metadata: { ...msg.metadata, deleted: true },
-              }
+              ...msg,
+              text: i18n.t('client.messages.conversationDetail.messageDeleted'),
+              metadata: { ...msg.metadata, deleted: true },
+            }
             : msg
         )
       );
@@ -1218,10 +1216,10 @@ export default function ConversationDetails() {
           messages: cached.messages.map((msg) =>
             msg._id === messageId
               ? {
-                  ...msg,
-                  text: i18n.t('client.messages.conversationDetail.messageDeleted'),
-                  metadata: { ...msg.metadata, deleted: true },
-                }
+                ...msg,
+                text: i18n.t('client.messages.conversationDetail.messageDeleted'),
+                metadata: { ...msg.metadata, deleted: true },
+              }
               : msg
           ),
           participants: cached.participants || [],
@@ -1230,8 +1228,7 @@ export default function ConversationDetails() {
       }
 
       console.log(
-        `✅ Message supprimé ${
-          forEveryone ? "pour tout le monde" : "pour moi seulement"
+        `✅ Message supprimé ${forEveryone ? "pour tout le monde" : "pour moi seulement"
         }`
       );
     } catch (error) {
@@ -1371,11 +1368,11 @@ export default function ConversationDetails() {
   if (!effectiveProduct) {
     return renderSkeletonConversation();
   }
-  
+
   // Déterminer le nom du correspondant depuis le tableau participants de l'API
   const currentUserId = getCurrentUserId();
   const otherParticipant = participants.find((p) => p._id !== currentUserId);
-  
+
   const correspondentName = (() => {
     // 1. Priorité: utiliser le participant du tableau API
     if (otherParticipant) {
@@ -1384,12 +1381,12 @@ export default function ConversationDetails() {
       }
       return `${otherParticipant.firstName} ${otherParticipant.lastName}`;
     }
-    
+
     // 2. Fallback: utiliser les infos du produit
     if (typeof effectiveProduct?.enterprise === "object" && effectiveProduct.enterprise?.companyName) {
       return effectiveProduct.enterprise.companyName;
     }
-    
+
     // 3. Fallback final
     console.warn("⚠️ CLIENT - Impossible de déterminer le nom du correspondant");
     return "Vendeur inconnu";
@@ -1479,7 +1476,7 @@ export default function ConversationDetails() {
                   }}
                   onPress={() => {
                     router.push(
-                      `/(app)/(client)/(tabs)/product/${effectiveProduct._id}` as any
+                      `/(app)/(client)/product/${effectiveProduct._id}` as any
                     );
                   }}
                 >
@@ -1639,11 +1636,10 @@ export default function ConversationDetails() {
               {newMessage.length > 1800 && (
                 <View className="absolute top-1 right-20 rounded-full px-2 py-1" style={{ backgroundColor: colors.card }}>
                   <Text
-                    className={`text-xs font-quicksand-medium ${
-                      newMessage.length > 1950
+                    className={`text-xs font-quicksand-medium ${newMessage.length > 1950
                         ? "text-red-500"
                         : "text-orange-500"
-                    }`}
+                      }`}
                   >
                     {2000 - newMessage.length}
                   </Text>
@@ -1726,7 +1722,7 @@ export default function ConversationDetails() {
                   }}
                   onPress={() => {
                     router.push(
-                      `/(app)/(client)/(tabs)/product/${effectiveProduct._id}` as any
+                      `/(app)/(client)/product/${effectiveProduct._id}` as any
                     );
                   }}
                 >
@@ -1887,11 +1883,10 @@ export default function ConversationDetails() {
                 {newMessage.length > 1800 && (
                   <View className="absolute top-1 right-20 rounded-full px-2 py-1" style={{ backgroundColor: colors.card }}>
                     <Text
-                      className={`text-xs font-quicksand-medium ${
-                        newMessage.length > 1950
+                      className={`text-xs font-quicksand-medium ${newMessage.length > 1950
                           ? "text-red-500"
                           : "text-orange-500"
-                      }`}
+                        }`}
                     >
                       {2000 - newMessage.length}
                     </Text>
@@ -1992,7 +1987,7 @@ export default function ConversationDetails() {
               className="rounded-3xl w-full max-w-sm"
               style={{ backgroundColor: colors.card }}
               activeOpacity={1}
-              onPress={() => {}}
+              onPress={() => { }}
             >
               {/* Icon */}
               <View className="items-center pt-8 pb-4">
@@ -2083,7 +2078,7 @@ export default function ConversationDetails() {
             <TouchableOpacity
               className="bg-white rounded-t-3xl"
               activeOpacity={1}
-              onPress={() => {}}
+              onPress={() => { }}
             >
               {/* Handle bar */}
               <View className="w-full items-center pt-3 pb-2">
@@ -2193,7 +2188,7 @@ export default function ConversationDetails() {
             <TouchableOpacity
               className="bg-white rounded-t-3xl"
               activeOpacity={1}
-              onPress={() => {}}
+              onPress={() => { }}
             >
               {/* Handle bar */}
               <View className="w-full items-center pt-3 pb-2">
@@ -2286,15 +2281,17 @@ export default function ConversationDetails() {
         onRequestClose={() => setRetryModal({ visible: false, message: null })}
       >
         <TouchableOpacity
-          className="flex-1 bg-black/50"
+          className="flex-1"
+          style={{ backgroundColor: colors.overlay }}
           activeOpacity={1}
           onPress={() => setRetryModal({ visible: false, message: null })}
         >
           <View className="flex-1 justify-center items-center px-6">
             <TouchableOpacity
-              className="bg-white rounded-3xl w-full max-w-sm"
+              className="rounded-3xl w-full max-w-sm"
+              style={{ backgroundColor: colors.card }}
               activeOpacity={1}
-              onPress={() => {}}
+              onPress={() => { }}
             >
               {/* Icon */}
               <View className="items-center pt-8 pb-4">
@@ -2305,10 +2302,10 @@ export default function ConversationDetails() {
 
               {/* Content */}
               <View className="px-6 pb-6">
-                <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+                <Text className="text-xl font-quicksand-bold text-center mb-2" style={{ color: colors.textPrimary }}>
                   Échec d&apos;envoi
                 </Text>
-                <Text className="text-base text-neutral-600 font-quicksand-medium text-center leading-5">
+                <Text className="text-base font-quicksand-medium text-center leading-5" style={{ color: colors.textSecondary }}>
                   {retryModal.message?._sendError ||
                     "Le message n'a pas pu être envoyé"}
                 </Text>
@@ -2320,10 +2317,11 @@ export default function ConversationDetails() {
                   onPress={() =>
                     setRetryModal({ visible: false, message: null })
                   }
-                  className="flex-1 bg-neutral-100 py-4 rounded-2xl items-center"
+                  className="flex-1 py-4 rounded-2xl items-center"
+                  style={{ backgroundColor: colors.tertiary }}
                   activeOpacity={0.7}
                 >
-                  <Text className="text-base font-quicksand-semibold text-neutral-700">
+                  <Text className="text-base font-quicksand-semibold" style={{ color: colors.textPrimary }}>
                     Annuler
                   </Text>
                 </TouchableOpacity>

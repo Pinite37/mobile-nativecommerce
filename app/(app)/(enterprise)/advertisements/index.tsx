@@ -114,11 +114,11 @@ const SkeletonCard: React.FC = () => {
     <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="rounded-3xl overflow-hidden mb-5 border shadow-sm">
       <Shimmer style={{ height: 160, width: "100%" }} />
       <View className="p-5 gap-3">
-      <View className="flex-row justify-between items-center">
-        <Shimmer style={{ height: 20, borderRadius: 6, width: "60%" }} />
-        <Shimmer style={{ height: 32, borderRadius: 16, width: 32 }} />
-      </View>
-      <Shimmer style={{ height: 14, borderRadius: 4, width: "40%" }} />
+        <View className="flex-row justify-between items-center">
+          <Shimmer style={{ height: 20, borderRadius: 6, width: "60%" }} />
+          <Shimmer style={{ height: 32, borderRadius: 16, width: 32 }} />
+        </View>
+        <Shimmer style={{ height: 14, borderRadius: 4, width: "40%" }} />
       </View>
     </View>
   );
@@ -653,7 +653,7 @@ export default function EnterpriseAdvertisements() {
               style={{ backgroundColor: colors.card }}
               className="rounded-t-3xl"
               activeOpacity={1}
-              onPress={() => {}}
+              onPress={() => { }}
             >
               {/* Handle bar */}
               <View className="w-full items-center pt-3 pb-2">
@@ -767,7 +767,10 @@ export default function EnterpriseAdvertisements() {
               </View>
 
               {/* Cancel Button */}
-              <View className="px-6 pb-6 pt-2">
+              <View
+                className="px-6 pt-2"
+                style={{ paddingBottom: Math.max(insets.bottom, 16) + 8 }}
+              >
                 <TouchableOpacity
                   onPress={closeMenu}
                   style={{ backgroundColor: colors.secondary }}
@@ -803,7 +806,7 @@ export default function EnterpriseAdvertisements() {
               style={{ backgroundColor: colors.card }}
               className="rounded-3xl w-full max-w-sm"
               activeOpacity={1}
-              onPress={() => {}}
+              onPress={() => { }}
             >
               {/* Icon */}
               <View className="items-center pt-8 pb-4">
@@ -818,8 +821,8 @@ export default function EnterpriseAdvertisements() {
                       confirmationAction?.type === "delete"
                         ? "trash"
                         : confirmationAction?.type === "pause"
-                        ? "pause"
-                        : "play"
+                          ? "pause"
+                          : "play"
                     }
                     size={28}
                     color={confirmationAction?.confirmColor}

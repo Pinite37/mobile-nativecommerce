@@ -126,6 +126,7 @@ export default function EnterpriseDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
   const { width } = Dimensions.get("window");
+  const isSmallScreen = width < 380;
 
   const FIXED_HEADER_HEIGHT = 120 + insets.top;
   // const [profileData, setProfileData] = useState<EnterpriseProfile | null>(null); // non utilisé pour l'instant
@@ -524,7 +525,7 @@ export default function EnterpriseDashboard() {
           }}
           className="shadow-lg"
         >
-          <View className="px-6 flex-row justify-between items-center mb-4">
+          <View className={`${isSmallScreen ? 'px-4' : 'px-6'} flex-row justify-between items-center mb-4`}>
             <View>
               <ShimmerBlock style={{ height: 16, borderRadius: 8, width: 80, marginBottom: 8 }} />
               <ShimmerBlock style={{ height: 24, borderRadius: 12, width: 120 }} />
@@ -555,7 +556,7 @@ export default function EnterpriseDashboard() {
             <ShimmerBlock style={{ height: 20, borderRadius: 10, width: 140, marginBottom: 4 }} />
             <ShimmerBlock style={{ height: 14, borderRadius: 7, width: 200 }} />
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: isSmallScreen ? 16 : 20, gap: isSmallScreen ? 8 : 12 }}>
             {Array.from({ length: 6 }).map((_, index) => (
               <View key={index} className="items-center">
                 <ShimmerBlock style={{ width: 64, height: 64, borderRadius: 16, marginBottom: 8 }} />
@@ -1136,7 +1137,7 @@ export default function EnterpriseDashboard() {
         }}
         className="shadow-lg"
       >
-        <View className="px-6 flex-row justify-between items-center mb-4">
+        <View className={`${isSmallScreen ? 'px-4' : 'px-6'} flex-row justify-between items-center mb-4`}>
           <View>
             <Text className="text-emerald-50 text-sm font-quicksand-medium">
               {greetUser()},
@@ -1180,11 +1181,11 @@ export default function EnterpriseDashboard() {
           </View>
 
           {/* Location Chips inside Search Card */}
-          <View className="flex-row mt-3 px-1 pb-1">
+          <View className={`flex-row mt-3 ${isSmallScreen ? 'px-0' : 'px-1'} pb-1`}>
             <TouchableOpacity
               onPress={() => setCityModalVisible(true)}
               style={{ backgroundColor: isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5" }}
-              className="flex-1 flex-row items-center justify-center py-2 rounded-xl mr-2"
+              className={`flex-1 flex-row items-center justify-center py-2 rounded-xl ${isSmallScreen ? 'mr-1' : 'mr-2'}`}
             >
               <Ionicons name="location" size={14} color={colors.brandSecondary} />
               <Text style={{ color: colors.brandSecondary }} numberOfLines={1} className="ml-1.5 text-xs font-quicksand-bold">
@@ -1194,7 +1195,7 @@ export default function EnterpriseDashboard() {
             <TouchableOpacity
               onPress={() => selectedCity && setNeighborhoodModalVisible(true)}
               style={{ backgroundColor: selectedCity ? (isDark ? colors.tertiary : "#F3F4F6") : (isDark ? colors.tertiary : "#F9FAFB"), opacity: selectedCity ? 1 : 0.5 }}
-              className={`flex-1 flex-row items-center justify-center py-2 rounded-xl ml-2`}
+              className={`flex-1 flex-row items-center justify-center py-2 rounded-xl ${isSmallScreen ? 'ml-1' : 'ml-2'}`}
               disabled={!selectedCity}
             >
               <Ionicons name="map" size={14} color={colors.textSecondary} />

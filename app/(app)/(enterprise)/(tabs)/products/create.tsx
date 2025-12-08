@@ -703,7 +703,7 @@ export default function CreateProduct() {
         <ScrollView
           className="flex-1"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 140, paddingTop: 8 }}
+          contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 140, paddingTop: 8 }}
           keyboardShouldPersistTaps="handled"
         >
           {currentStep === 'basic' && (
@@ -1285,7 +1285,7 @@ export default function CreateProduct() {
         </ScrollView>
 
         {/* Fixed Bottom Buttons */}
-        <View style={{ backgroundColor: colors.card, borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: 16, paddingVertical: 16, paddingBottom: Platform.OS === 'ios' ? 34 : 16 }}>
+        <View style={{ backgroundColor: colors.card, borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: 16, paddingTop: 16, paddingBottom: Math.max(insets.bottom, 16) + 8 }}>
           {/* Error Summary */}
           {showErrorSummary && (
             <View className="mb-4 bg-red-50 border border-red-200 rounded-2xl p-4">

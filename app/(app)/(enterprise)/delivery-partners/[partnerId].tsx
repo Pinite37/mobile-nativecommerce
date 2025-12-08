@@ -353,6 +353,7 @@ export default function DeliveryPartnerDetailScreen() {
 			<ScrollView
 				className="flex-1"
 				showsVerticalScrollIndicator={false}
+				contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
 				refreshControl={
 					<RefreshControl
 						refreshing={refreshing}
@@ -593,12 +594,12 @@ export default function DeliveryPartnerDetailScreen() {
 						) : (
 							<View>
 								<View className="rounded-xl p-4 mb-4" style={{ backgroundColor: colors.tertiary, borderColor: colors.border, borderWidth: 1 }}>
-								<View className="flex-row items-center justify-center mb-2">
-									<Ionicons name="information-circle" size={24} color={colors.textSecondary} />
-									<Text className="font-quicksand-bold text-lg ml-2" style={{ color: colors.textPrimary }}>
-										{i18n.t("enterprise.deliveryPartners.detail.status.notAssociated.title")}
-									</Text>
-								</View>
+									<View className="flex-row items-center justify-center mb-2">
+										<Ionicons name="information-circle" size={24} color={colors.textSecondary} />
+										<Text className="font-quicksand-bold text-lg ml-2" style={{ color: colors.textPrimary }}>
+											{i18n.t("enterprise.deliveryPartners.detail.status.notAssociated.title")}
+										</Text>
+									</View>
 									<Text className="font-quicksand-medium text-center" style={{ color: colors.textSecondary }}>
 										{i18n.t("enterprise.deliveryPartners.detail.status.notAssociated.description")}
 									</Text>

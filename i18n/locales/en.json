@@ -10,6 +10,13 @@
             "cancel": "Cancel"
         }
     },
+    "notFound": {
+        "title": "Page not found",
+        "description": "Sorry, the page you're looking for seems to have wandered off. It may no longer exist or the URL is incorrect.",
+        "goHome": "Go to home",
+        "goBack": "Previous page",
+        "help": "Need help? Contact support"
+    },
     "enterprise": {
         "settings": {
             "title": "Settings",
@@ -1522,7 +1529,13 @@
                     "subtitle": "Start the discussion about this product"
                 },
                 "today": "Today",
-                "yesterday": "Yesterday"
+                "yesterday": "Yesterday",
+                "retry": {
+                    "title": "Send failed",
+                    "message": "The message could not be sent",
+                    "retry": "Retry",
+                    "cancel": "Cancel"
+                }
             }
         },
         "settings": {

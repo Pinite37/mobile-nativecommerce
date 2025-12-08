@@ -3486,11 +3486,13 @@ export default function ConversationDetails() {
         <TouchableOpacity
           activeOpacity={1}
           onPress={() => setRetryModal({ visible: false, message: null })}
-          className="flex-1 bg-black/50 justify-center items-center px-6"
+          className="flex-1 justify-center items-center px-6"
+          style={{ backgroundColor: colors.overlay }}
         >
           <TouchableOpacity
             activeOpacity={1}
-            className="bg-card rounded-3xl p-6 w-full max-w-sm"
+            className="rounded-3xl p-6 w-full max-w-sm"
+            style={{ backgroundColor: colors.card }}
           >
             {/* Icon d'alerte */}
             <View className="items-center mb-4">
@@ -3501,24 +3503,25 @@ export default function ConversationDetails() {
 
             {/* Titre */}
             <Text className="text-xl font-quicksand-bold text-textPrimary text-center mb-2">
-              Échec d&apos;envoi
+              {i18n.t("enterprise.messages.conversationDetail.retry.title")}
             </Text>
 
             {/* Message */}
-            <Text className="text-base font-quicksand-medium text-neutral-600 text-center mb-6">
+            <Text className="text-base font-quicksand-medium text-center mb-6" style={{ color: colors.textSecondary }}>
               {retryModal.message?._sendError ||
-                "Le message n'a pas pu être envoyé"}
+                i18n.t("enterprise.messages.conversationDetail.retry.message")}
             </Text>
 
             {/* Actions */}
             <View className="flex-row gap-3">
               <TouchableOpacity
                 onPress={() => setRetryModal({ visible: false, message: null })}
-                className="flex-1 bg-neutral-100 py-3 rounded-xl"
+                className="flex-1 py-3 rounded-xl"
+                style={{ backgroundColor: colors.tertiary }}
                 activeOpacity={0.7}
               >
-                <Text className="text-neutral-700 font-quicksand-bold text-center">
-                  Annuler
+                <Text className="font-quicksand-bold text-center" style={{ color: colors.textPrimary }}>
+                  {i18n.t("enterprise.messages.conversationDetail.retry.cancel")}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -3532,7 +3535,7 @@ export default function ConversationDetails() {
                 activeOpacity={0.7}
               >
                 <Text className="text-white font-quicksand-bold text-center">
-                  Renvoyer
+                  {i18n.t("enterprise.messages.conversationDetail.retry.retry")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -3554,7 +3557,8 @@ export default function ConversationDetails() {
           onPress={() =>
             setMessageActionsModal({ visible: false, message: null })
           }
-          className="flex-1 bg-black/50 justify-end"
+          className="flex-1 justify-end"
+          style={{ backgroundColor: colors.overlay }}
         >
           <TouchableOpacity
             activeOpacity={1}
@@ -3650,7 +3654,8 @@ export default function ConversationDetails() {
           onPress={() =>
             setDeleteOptionsModal({ visible: false, messageId: null })
           }
-          className="flex-1 bg-black/50 justify-end"
+          className="flex-1 justify-end"
+          style={{ backgroundColor: colors.overlay }}
         >
           <TouchableOpacity
             activeOpacity={1}
@@ -3713,10 +3718,11 @@ export default function ConversationDetails() {
               onPress={() =>
                 setDeleteOptionsModal({ visible: false, messageId: null })
               }
-              className="mt-4 bg-neutral-100 py-4 rounded-xl"
+              className="mt-4 py-4 rounded-xl"
+              style={{ backgroundColor: colors.tertiary }}
               activeOpacity={0.7}
             >
-              <Text className="text-neutral-700 font-quicksand-bold text-center">
+              <Text className="font-quicksand-bold text-center" style={{ color: colors.textPrimary }}>
                 Annuler
               </Text>
             </TouchableOpacity>
@@ -3734,7 +3740,8 @@ export default function ConversationDetails() {
         <TouchableOpacity
           activeOpacity={1}
           onPress={() => setAttachmentModal(false)}
-          className="flex-1 bg-black/50 justify-end"
+          className="flex-1 justify-end"
+          style={{ backgroundColor: colors.overlay }}
         >
           <TouchableOpacity
             activeOpacity={1}
@@ -3788,10 +3795,11 @@ export default function ConversationDetails() {
             {/* Bouton Annuler */}
             <TouchableOpacity
               onPress={() => setAttachmentModal(false)}
-              className="mt-4 bg-neutral-100 py-4 rounded-xl"
+              className="mt-4 py-4 rounded-xl"
+              style={{ backgroundColor: colors.tertiary }}
               activeOpacity={0.7}
             >
-              <Text className="text-neutral-700 font-quicksand-bold text-center">
+              <Text className="font-quicksand-bold text-center" style={{ color: colors.textPrimary }}>
                 Annuler
               </Text>
             </TouchableOpacity>

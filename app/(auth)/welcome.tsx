@@ -42,7 +42,7 @@ export default function WelcomeScreen() {
         className="flex-1 justify-between px-6"
         style={{
           paddingTop: Math.max(insets.top, 48),
-          paddingBottom: Math.max(insets.bottom, 16)
+          paddingBottom: Math.max(insets.bottom, 32)
         }}
       >
         {/* Top Section with Illustration */}

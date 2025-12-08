@@ -10,6 +10,13 @@
             "cancel": "Annuler"
         }
     },
+    "notFound": {
+        "title": "Page introuvable",
+        "description": "Désolé, la page que vous recherchez semble s'être égarée. Elle n'existe peut-être plus ou l'URL est incorrecte.",
+        "goHome": "Retour à l'accueil",
+        "goBack": "Page précédente",
+        "help": "Besoin d'aide ? Contactez le support"
+    },
     "enterprise": {
         "settings": {
             "title": "Paramètres",
@@ -1315,7 +1322,7 @@
                 "suggestions": "Suggestions",
                 "types": {
                     "product": "Produit",
-                    "category": "Catégorie", 
+                    "category": "Catégorie",
                     "enterprise": "Entreprise"
                 }
             },
@@ -1522,7 +1529,13 @@
                     "subtitle": "Commencez la discussion à propos de ce produit"
                 },
                 "today": "Aujourd'hui",
-                "yesterday": "Hier"
+                "yesterday": "Hier",
+                "retry": {
+                    "title": "Échec de l'envoi",
+                    "message": "Le message n'a pas pu être envoyé",
+                    "retry": "Réessayer",
+                    "cancel": "Annuler"
+                }
             }
         },
         "settings": {

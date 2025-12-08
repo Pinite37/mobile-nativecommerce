@@ -17,6 +17,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SubscriptionWelcomeModal } from '../../components/enterprise/SubscriptionWelcomeModal';
 import { useToast } from '../../components/ui/ReanimatedToast/context';
 import { beninCities, neighborhoodsByCity } from '../../constants/LocationData';
@@ -42,7 +43,7 @@ export default function EnterpriseSignUpScreen() {
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [ifuNumber, setIfuNumber] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-  
+
   // UI states
   const [cityModalVisible, setCityModalVisible] = useState(false);
   const [districtModalVisible, setDistrictModalVisible] = useState(false);
@@ -50,7 +51,7 @@ export default function EnterpriseSignUpScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
-  
+
   // Multi-step form states
   const [currentStep, setCurrentStep] = useState(1);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -60,7 +61,8 @@ export default function EnterpriseSignUpScreen() {
 
   const toast = useToast();
   const { handlePostRegistration } = useAuth();
-  
+  const insets = useSafeAreaInsets();
+
   const TOTAL_STEPS = 4;
 
   useEffect(() => {
@@ -169,7 +171,7 @@ export default function EnterpriseSignUpScreen() {
   };
   const handleNextStep = () => {
     let isValid = false;
-    
+
     switch (currentStep) {
       case 1:
         isValid = validateStep1();
@@ -236,25 +238,25 @@ export default function EnterpriseSignUpScreen() {
         whatsapp,
         website,
       };
-      
+
       console.log('🏢 Enterprise Sign up:', userData);
-      
+
       // Utiliser l'utilitaire d'inscription avec connexion automatique
       const response = await RegistrationHelper.registerWithAutoLogin(userData, true);
-      
+
       if (response.success && response.data) {
         console.log('✅ Inscription entreprise réussie, traitement de l\'état...');
-        
+
         // Afficher l'état d'authentification pour debug
         await RegistrationHelper.logAuthenticationState();
-        
+
         // Mettre à jour l'état d'authentification
         await handlePostRegistration(response.data.user, response.data.user.role);
-        
+
         toast.showToast({ title: 'Succès', subtitle: 'Compte entreprise créé avec succès !' });
-        
+
         console.log('🎯 Affichage du modal de sélection de plan...');
-        
+
         // Afficher le modal de sélection de plan au lieu de rediriger directement
         setTimeout(() => {
           setShowSubscriptionModal(true);
@@ -308,7 +310,7 @@ export default function EnterpriseSignUpScreen() {
       <Text className="text-lg font-quicksand-semibold text-neutral-900 mb-4">
         Informations Personnelles
       </Text>
-      
+
       {/* Name Inputs */}
       <View className="flex-row mb-4">
         <View className="flex-1 mr-2">
@@ -337,7 +339,7 @@ export default function EnterpriseSignUpScreen() {
           />
         </View>
       </View>
-      
+
       {/* Email */}
       <View className="mb-4">
         <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
@@ -469,9 +471,8 @@ export default function EnterpriseSignUpScreen() {
           Quartier *
         </Text>
         <TouchableOpacity
-          className={`w-full px-4 py-3 border border-neutral-300 rounded-2xl bg-white flex-row justify-between items-center ${
-            !selectedCity ? 'opacity-50' : ''
-          }`}
+          className={`w-full px-4 py-3 border border-neutral-300 rounded-2xl bg-white flex-row justify-between items-center ${!selectedCity ? 'opacity-50' : ''
+            }`}
           onPress={() => selectedCity && setDistrictModalVisible(true)}
           disabled={!selectedCity}
           activeOpacity={0.7}
@@ -621,20 +622,20 @@ export default function EnterpriseSignUpScreen() {
           Exigences du Mot de Passe :
         </Text>
         <View className="flex-row items-center mb-1">
-          <Ionicons 
-            name={password.length >= 6 ? 'checkmark-circle' : 'ellipse-outline'} 
-            size={16} 
-            color={password.length >= 6 ? '#10B981' : '#9CA3AF'} 
+          <Ionicons
+            name={password.length >= 6 ? 'checkmark-circle' : 'ellipse-outline'}
+            size={16}
+            color={password.length >= 6 ? '#10B981' : '#9CA3AF'}
           />
           <Text className={`text-sm font-quicksand ml-2 ${password.length >= 6 ? 'text-green-600' : 'text-neutral-600'}`}>
             Au moins 6 caractères
           </Text>
         </View>
         <View className="flex-row items-center">
-          <Ionicons 
-            name={password === confirmPassword && password ? 'checkmark-circle' : 'ellipse-outline'} 
-            size={16} 
-            color={password === confirmPassword && password ? '#10B981' : '#9CA3AF'} 
+          <Ionicons
+            name={password === confirmPassword && password ? 'checkmark-circle' : 'ellipse-outline'}
+            size={16}
+            color={password === confirmPassword && password ? '#10B981' : '#9CA3AF'}
           />
           <Text className={`text-sm font-quicksand ml-2 ${password === confirmPassword && password ? 'text-green-600' : 'text-neutral-600'}`}>
             Les mots de passe correspondent
@@ -649,9 +650,8 @@ export default function EnterpriseSignUpScreen() {
           className="flex-row items-center mr-3"
           activeOpacity={0.7}
         >
-          <View className={`w-6 h-6 rounded-md border-2 items-center justify-center ${
-            agreedToTerms ? 'bg-primary-600 border-primary-600' : 'bg-white border-neutral-300'
-          }`}>
+          <View className={`w-6 h-6 rounded-md border-2 items-center justify-center ${agreedToTerms ? 'bg-primary-600 border-primary-600' : 'bg-white border-neutral-300'
+            }`}>
             {agreedToTerms && <Text className="text-white text-center">✓</Text>}
           </View>
         </TouchableOpacity>
@@ -669,14 +669,20 @@ export default function EnterpriseSignUpScreen() {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View className="flex-1">
           {/* Header */}
-          <View className="px-6 pt-16 pb-4 bg-white">
+          <View
+            className="px-6 bg-white"
+            style={{
+              paddingTop: Math.max(insets.top, 16) + 16,
+              paddingBottom: 16
+            }}
+          >
             <TouchableOpacity
               onPress={() => currentStep > 1 ? handlePreviousStep() : router.back()}
               className="mb-6"
             >
               <Ionicons name="arrow-back" size={24} color="#374151" />
             </TouchableOpacity>
-            
+
             <Text className="text-3xl font-quicksand-bold text-neutral-900 mb-2">
               Créer un Compte Entreprise
             </Text>
@@ -692,27 +698,24 @@ export default function EnterpriseSignUpScreen() {
               <View className="flex-row items-center">
                 {[1, 2, 3, 4].map((step, index) => (
                   <React.Fragment key={step}>
-                    <View className={`w-10 h-10 rounded-full items-center justify-center ${
-                      step === currentStep 
-                        ? 'bg-primary-500' 
-                        : step < currentStep 
-                        ? 'bg-green-500' 
-                        : 'bg-neutral-200'
-                    }`}>
+                    <View className={`w-10 h-10 rounded-full items-center justify-center ${step === currentStep
+                        ? 'bg-primary-500'
+                        : step < currentStep
+                          ? 'bg-green-500'
+                          : 'bg-neutral-200'
+                      }`}>
                       {step < currentStep ? (
                         <Ionicons name="checkmark" size={20} color="#FFFFFF" />
                       ) : (
-                        <Text className={`font-quicksand-bold text-base ${
-                          step === currentStep ? 'text-white' : 'text-neutral-500'
-                        }`}>
+                        <Text className={`font-quicksand-bold text-base ${step === currentStep ? 'text-white' : 'text-neutral-500'
+                          }`}>
                           {step}
                         </Text>
                       )}
                     </View>
                     {index < 3 && (
-                      <View className={`w-16 h-1 mx-1 ${
-                        step < currentStep ? 'bg-green-500' : 'bg-neutral-200'
-                      }`} />
+                      <View className={`w-16 h-1 mx-1 ${step < currentStep ? 'bg-green-500' : 'bg-neutral-200'
+                        }`} />
                     )}
                   </React.Fragment>
                 ))}
@@ -731,7 +734,7 @@ export default function EnterpriseSignUpScreen() {
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={{
-                paddingBottom: 20,
+                paddingBottom: Math.max(insets.bottom, 20) + 100,
                 flexGrow: 1
               }}
               scrollEventThrottle={16}
@@ -745,7 +748,13 @@ export default function EnterpriseSignUpScreen() {
           </KeyboardAvoidingView>
 
           {/* Bottom Navigation */}
-          <View className="px-6 py-4 bg-white border-t border-neutral-200">
+          <View
+            className="px-6 bg-white border-t border-neutral-200"
+            style={{
+              paddingTop: 16,
+              paddingBottom: Math.max(insets.bottom, 16) + 8
+            }}
+          >
             <View className="flex-row items-center mb-3">
               {currentStep > 1 && (
                 <TouchableOpacity
@@ -759,13 +768,11 @@ export default function EnterpriseSignUpScreen() {
                   </Text>
                 </TouchableOpacity>
               )}
-              
+
               <TouchableOpacity
-                className={`py-4 rounded-2xl ${
-                  isLoading ? 'bg-primary-300' : 'bg-primary-500'
-                } flex-row items-center justify-center ${
-                  currentStep > 1 ? 'flex-1 ml-2' : 'flex-1'
-                }`}
+                className={`py-4 rounded-2xl ${isLoading ? 'bg-primary-300' : 'bg-primary-500'
+                  } flex-row items-center justify-center ${currentStep > 1 ? 'flex-1 ml-2' : 'flex-1'
+                  }`}
                 onPress={handleNextStep}
                 disabled={isLoading}
                 activeOpacity={1}
@@ -774,11 +781,11 @@ export default function EnterpriseSignUpScreen() {
                   <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 8 }} />
                 )}
                 <Text className="text-white text-center font-quicksand-semibold text-base">
-                  {isLoading 
-                    ? 'Création' 
-                    : currentStep === TOTAL_STEPS 
-                    ? 'Créer le Compte' 
-                    : 'Continuer'}
+                  {isLoading
+                    ? 'Création'
+                    : currentStep === TOTAL_STEPS
+                      ? 'Créer le Compte'
+                      : 'Continuer'}
                 </Text>
                 {currentStep < TOTAL_STEPS && !isLoading && (
                   <Ionicons name="arrow-forward" size={20} color="#FFFFFF" style={{ marginLeft: 8 }} />
@@ -808,7 +815,7 @@ export default function EnterpriseSignUpScreen() {
           >
             <TouchableWithoutFeedback onPress={() => setCityModalVisible(false)}>
               <View className="flex-1 bg-black/50 justify-end">
-                <TouchableWithoutFeedback onPress={() => {}}>
+                <TouchableWithoutFeedback onPress={() => { }}>
                   <View className="bg-white rounded-t-3xl max-h-96">
                     <View className="p-4 border-b border-neutral-200">
                       <Text className="text-lg font-quicksand-bold text-center text-neutral-900">
@@ -824,9 +831,8 @@ export default function EnterpriseSignUpScreen() {
                           onPress={() => selectCity(item.name)}
                           activeOpacity={0.7}
                         >
-                          <Text className={`font-quicksand text-base ${
-                            selectedCity === item.name ? 'text-primary-500 font-quicksand-bold' : 'text-neutral-900'
-                          }`}>
+                          <Text className={`font-quicksand text-base ${selectedCity === item.name ? 'text-primary-500 font-quicksand-bold' : 'text-neutral-900'
+                            }`}>
                             {item.name}
                           </Text>
                         </TouchableOpacity>
@@ -847,7 +853,7 @@ export default function EnterpriseSignUpScreen() {
           >
             <TouchableWithoutFeedback onPress={() => setDistrictModalVisible(false)}>
               <View className="flex-1 bg-black/50 justify-end">
-                <TouchableWithoutFeedback onPress={() => {}}>
+                <TouchableWithoutFeedback onPress={() => { }}>
                   <View className="bg-white rounded-t-3xl max-h-96">
                     <View className="p-4 border-b border-neutral-200">
                       <Text className="text-lg font-quicksand-bold text-center text-neutral-900">
@@ -863,9 +869,8 @@ export default function EnterpriseSignUpScreen() {
                           onPress={() => selectDistrict(item)}
                           activeOpacity={0.7}
                         >
-                          <Text className={`font-quicksand text-base ${
-                            selectedDistrict === item ? 'text-primary-500 font-quicksand-bold' : 'text-neutral-900'
-                          }`}>
+                          <Text className={`font-quicksand text-base ${selectedDistrict === item ? 'text-primary-500 font-quicksand-bold' : 'text-neutral-900'
+                            }`}>
                             {item}
                           </Text>
                         </TouchableOpacity>
@@ -876,7 +881,7 @@ export default function EnterpriseSignUpScreen() {
               </View>
             </TouchableWithoutFeedback>
           </Modal>
-          
+
           {/* Modal de bienvenue et sélection de plan */}
           <SubscriptionWelcomeModal
             visible={showSubscriptionModal}
