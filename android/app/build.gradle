@@ -98,6 +98,14 @@ android {
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }
     signingConfigs {
+        release {
+            // Caution! In production, you need to generate your own keystore file.
+            // see https://reactnative.dev/docs/signed-apk-android.
+            storeFile file('my-release-key.keystore')
+            storePassword 'pinite37'
+            keyAlias 'my-key-alias'
+            keyPassword 'pinite37'
+        }
         debug {
             storeFile file('debug.keystore')
             storePassword 'android'
