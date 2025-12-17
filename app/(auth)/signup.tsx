@@ -68,11 +68,18 @@ export default function SignUpScreen() {
 
     setIsLoading(true);
     try {
+      // Formater le numéro de téléphone avec l'indicatif +229
+      let formattedPhone = phone.replace(/[\s-]/g, '');
+      if (!formattedPhone.startsWith('+')) {
+        formattedPhone = '+229' + formattedPhone;
+      }
+      console.log('📱 Numéro formaté pour inscription:', formattedPhone);
+
       const userData = {
         firstName,
         lastName,
         email,
-        phone,
+        phone: formattedPhone,
         address,
         password,
         agreedToTerms,

@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SubscriptionProvider, useSubscription } from '../../contexts/SubscriptionContext';
+import { useSubscription } from '../../contexts/SubscriptionContext';
 import SubscriptionService, { Plan } from '../../services/api/SubscriptionService';
 import { useToast as useReanimatedToast } from '../ui/ReanimatedToast/context';
 import { ToastProvider } from '../ui/ReanimatedToast/toast-provider';
@@ -29,7 +29,7 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
   userName,
 }) => {
   const { showToast } = useReanimatedToast();
-  const { activateTrialPlan: activateTrialFromContext } = useSubscription();
+  const { activateTrialPlan: activateTrialFromContext, loadSubscription } = useSubscription();
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(false);
   const [loadingPlans, setLoadingPlans] = useState(true);
@@ -161,7 +161,12 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
 
       console.log('✅ Plan d\'essai activé avec succès');
       
-      // Fermer le modal d'abord
+      // Recharger le contexte d'abonnement pour mettre à jour needsSubscription
+      setActivationProgress('Finalisation...');
+      await loadSubscription();
+      console.log('✅ Contexte d\'abonnement rechargé');
+      
+      // Fermer le modal
       onClose();
       
       // Afficher un toast de succès après fermeture du modal
@@ -218,10 +223,13 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
   };
 
   const handleViewPlans = () => {
-    // Ne pas fermer le modal, juste naviguer vers la page des abonnements
-    // L'utilisateur devra choisir un plan sur cette page
-    router.push('/(app)/(enterprise)/subscriptions' as any);
-    onClose(); // Fermer le modal car l'utilisateur va choisir un plan
+    // Fermer le modal d'abord pour permettre la navigation
+    console.log('📋 Navigation vers la page des abonnements');
+    onClose();
+    // Naviguer après un délai pour laisser le modal se fermer
+    setTimeout(() => {
+      router.push('/(app)/(enterprise)/subscriptions' as any);
+    }, 300);
   };
 
   return (
@@ -412,16 +420,11 @@ export const SubscriptionWelcomeModal: React.FC<SubscriptionWelcomeModalProps> =
       visible={visible} 
       animationType="slide" 
       presentationStyle="pageSheet"
-      onRequestClose={() => {
-        // Ne rien faire - empêche la fermeture par le bouton retour Android
-        console.log('⚠️ Le modal ne peut pas être fermé sans choisir un abonnement');
-      }}
+      onRequestClose={onClose}
     >
-      <SubscriptionProvider>
-        <ToastProvider>
-          <ModalContent visible={visible} onClose={onClose} userName={userName} />
-        </ToastProvider>
-      </SubscriptionProvider>
+      <ToastProvider>
+        <ModalContent visible={visible} onClose={onClose} userName={userName} />
+      </ToastProvider>
     </Modal>
   );
 };

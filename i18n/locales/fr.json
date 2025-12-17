@@ -1246,7 +1246,7 @@
         },
         "dashboard": {
             "search": {
-                "placeholder": "Que recherchez-vous ?",
+                "placeholder": "Que recherchez-vous sur AXI ?",
                 "neighborhoodPlaceholder": "Quartier",
                 "suggestions": "Suggestions",
                 "recentSearches": "Recherches récentes",
@@ -1315,7 +1315,7 @@
                 "evening": "Bonsoir"
             },
             "search": {
-                "placeholder": "Que recherchez-vous ?",
+                "placeholder": "Que recherchez-vous sur AXI ?",
                 "recentSearches": "Recherches récentes",
                 "clearHistory": "Effacer l'historique",
                 "noRecentSearches": "Aucune recherche récente",

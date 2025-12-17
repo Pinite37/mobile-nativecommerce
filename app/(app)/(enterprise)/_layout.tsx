@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Stack, usePathname } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { SubscriptionWelcomeModal } from "../../../components/enterprise/SubscriptionWelcomeModal";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -9,16 +9,20 @@ function EnterpriseLayoutContent() {
   const { needsSubscription, loading } = useSubscription();
   const { user } = useAuth();
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
-    // Afficher le modal si l'utilisateur n'a pas d'abonnement
-    if (!loading && needsSubscription) {
+    // Ne pas afficher le modal si on est sur la page des abonnements
+    const isOnSubscriptionPage = pathname?.includes('/subscriptions');
+    
+    // Afficher le modal si l'utilisateur n'a pas d'abonnement ET n'est pas sur la page subscriptions
+    if (!loading && needsSubscription && !isOnSubscriptionPage) {
       console.log('🎯 ENTERPRISE LAYOUT - Affichage du modal de bienvenue requis');
       setShowWelcomeModal(true);
-    } else if (!needsSubscription) {
+    } else if (!needsSubscription || isOnSubscriptionPage) {
       setShowWelcomeModal(false);
     }
-  }, [needsSubscription, loading]);
+  }, [needsSubscription, loading, pathname]);
 
   return (
     <>

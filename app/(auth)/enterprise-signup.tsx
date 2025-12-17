@@ -116,11 +116,7 @@ export default function EnterpriseSignUpScreen() {
       toast.showToast({ title: 'Erreur', subtitle: 'Le nom de l\'entreprise est requis' });
       return false;
     }
-    if (!ifuNumber.trim()) {
-      toast.showToast({ title: 'Erreur', subtitle: 'Le numéro IFU est requis' });
-      return false;
-    }
-    if (!/^\d{13}$/.test(ifuNumber)) {
+    if (ifuNumber.trim() && !/^\d{13}$/.test(ifuNumber)) {
       toast.showToast({ title: 'Erreur', subtitle: 'Le numéro IFU doit contenir exactement 13 chiffres' });
       return false;
     }
@@ -220,22 +216,39 @@ export default function EnterpriseSignUpScreen() {
 
     setIsLoading(true);
     try {
+      // Formater le numéro de téléphone personnel avec l'indicatif +229
+      let formattedPhone = phone.replace(/[\s-]/g, '');
+      if (!formattedPhone.startsWith('+')) {
+        formattedPhone = '+229' + formattedPhone;
+      }
+      console.log('📱 Numéro personnel formaté pour inscription:', formattedPhone);
+
+      // Formater le numéro WhatsApp avec l'indicatif +229 si fourni
+      let formattedWhatsApp = whatsapp;
+      if (whatsapp) {
+        formattedWhatsApp = whatsapp.replace(/[\s-]/g, '');
+        if (!formattedWhatsApp.startsWith('+')) {
+          formattedWhatsApp = '+229' + formattedWhatsApp;
+        }
+        console.log('📱 Numéro WhatsApp formaté pour inscription:', formattedWhatsApp);
+      }
+
       const userData: EnterpriseRegisterRequest = {
         firstName,
         lastName,
         email,
-        phone,
+        phone: formattedPhone,
         password,
         address,
         role: 'ENTERPRISE',
         companyName,
-        ifuNumber,
+        ifuNumber: ifuNumber || undefined,
         agreedToTerms,
         description,
         city: selectedCity,
         district: selectedDistrict,
         companyEmail: companyEmail || email, // Utiliser l'email personnel si pas d'email entreprise
-        whatsapp,
+        whatsapp: formattedWhatsApp,
         website,
       };
 
@@ -433,7 +446,7 @@ export default function EnterpriseSignUpScreen() {
       {/* IFU Number */}
       <View className="mb-4">
         <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-          Numéro IFU *
+          Numéro IFU (Optionnel)
         </Text>
         <TextInput
           ref={ifuNumberRef}
@@ -699,10 +712,10 @@ export default function EnterpriseSignUpScreen() {
                 {[1, 2, 3, 4].map((step, index) => (
                   <React.Fragment key={step}>
                     <View className={`w-10 h-10 rounded-full items-center justify-center ${step === currentStep
-                        ? 'bg-primary-500'
-                        : step < currentStep
-                          ? 'bg-green-500'
-                          : 'bg-neutral-200'
+                      ? 'bg-primary-500'
+                      : step < currentStep
+                        ? 'bg-green-500'
+                        : 'bg-neutral-200'
                       }`}>
                       {step < currentStep ? (
                         <Ionicons name="checkmark" size={20} color="#FFFFFF" />

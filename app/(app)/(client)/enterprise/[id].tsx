@@ -19,8 +19,8 @@ import {
     View,
 } from "react-native";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import i18n from "../../../../i18n/i18n";
 import { useTheme } from "../../../../contexts/ThemeContext";
+import i18n from "../../../../i18n/i18n";
 import EnterpriseService, { Enterprise } from "../../../../services/api/EnterpriseService";
 import { Product } from "../../../../types/product";
 
@@ -140,7 +140,32 @@ export default function EnterpriseDetails() {
         const message = i18n.t("client.enterprise.whatsapp.message", {
             companyName: enterprise?.companyName
         });
-        const whatsappUrl = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
+
+        // Vérifier que le numéro est valide
+        if (!phone || phone.trim() === '') {
+            setErrorModal({
+                visible: true,
+                title: 'Erreur',
+                message: 'Numéro de téléphone non disponible'
+            });
+            return;
+        }
+
+        // Formater le numéro: enlever tous les caractères non numériques sauf le +
+        let formattedPhone = phone.replace(/[^0-9+]/g, '');
+        
+        // Enlever le + s'il n'est pas au début
+        formattedPhone = formattedPhone.replace(/(?!^)\+/g, '');
+        
+        // Si le numéro ne commence pas par +, ajouter +229 (indicatif du Bénin)
+        if (!formattedPhone.startsWith('+')) {
+            formattedPhone = '+229' + formattedPhone;
+        }
+
+        console.log('📱 Numéro original:', phone);
+        console.log('📱 Numéro formaté pour WhatsApp:', formattedPhone);
+
+        const whatsappUrl = `whatsapp://send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
 
         Linking.canOpenURL(whatsappUrl)
             .then((supported) => {

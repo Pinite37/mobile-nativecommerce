@@ -22,7 +22,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/axicauriss.png",
+        "foregroundImage": "./assets/images/axilogo.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,

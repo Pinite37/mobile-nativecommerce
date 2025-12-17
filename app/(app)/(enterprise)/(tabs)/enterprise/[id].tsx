@@ -249,8 +249,35 @@ export default function EnterpriseDetails() {
   );
 
   const openWhatsApp = (phone: string) => {
+    // Validation du numéro
+    if (!phone || phone.trim() === '') {
+      setErrorModal({
+        visible: true,
+        title: i18n.t("messages.error"),
+        message: 'Numéro de téléphone invalide'
+      });
+      return;
+    }
+
+    // Log du numéro original
+    console.log('📱 Numéro original:', phone);
+
+    // Formatage robuste : enlever tous les caractères sauf chiffres et +
+    let formattedPhone = phone.replace(/[^0-9+]/g, '');
+    
+    // Enlever les + qui ne sont pas au début
+    formattedPhone = formattedPhone.replace(/(?!^)\+/g, '');
+    
+    // Ajouter l'indicatif +229 si pas de + au début
+    if (!formattedPhone.startsWith('+')) {
+      formattedPhone = '+229' + formattedPhone;
+    }
+
+    // Log du numéro formaté
+    console.log('📱 Numéro formaté pour WhatsApp:', formattedPhone);
+
     const message = `Bonjour ! Je découvre votre entreprise "${enterprise?.companyName}" sur NativeCommerce. Pouvez-vous me donner plus d'informations sur vos produits ? Merci !`;
-    const whatsappUrl = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `whatsapp://send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
 
     Linking.canOpenURL(whatsappUrl)
       .then((supported) => {
@@ -274,7 +301,30 @@ export default function EnterpriseDetails() {
   };
 
   const makePhoneCall = (phone: string) => {
-    const phoneUrl = `tel:${phone}`;
+    // Validation du numéro
+    if (!phone || phone.trim() === '') {
+      setErrorModal({
+        visible: true,
+        title: i18n.t("messages.error"),
+        message: 'Numéro de téléphone invalide'
+      });
+      return;
+    }
+
+    // Log du numéro original
+    console.log('📞 Numéro original:', phone);
+
+    // Formatage robuste pour l'appel téléphonique
+    let formattedPhone = phone.replace(/[^0-9+]/g, '');
+    formattedPhone = formattedPhone.replace(/(?!^)\+/g, '');
+    
+    if (!formattedPhone.startsWith('+')) {
+      formattedPhone = '+229' + formattedPhone;
+    }
+
+    console.log('📞 Numéro formaté pour l\'appel:', formattedPhone);
+
+    const phoneUrl = `tel:${formattedPhone}`;
     Linking.canOpenURL(phoneUrl)
       .then((supported) => {
         if (supported) {

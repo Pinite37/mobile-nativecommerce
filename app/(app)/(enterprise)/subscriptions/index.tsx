@@ -16,8 +16,8 @@ import KkiapayPayment from "../../../../components/subscription/KkiapayPayment";
 import StatusModal from "../../../../components/subscription/StatusModal";
 import UpgradeConfirmationModal from "../../../../components/subscription/UpgradeConfirmationModal";
 import { useAuth } from "../../../../contexts/AuthContext";
-import { useTheme } from "../../../../contexts/ThemeContext";
 import { useSubscription } from "../../../../contexts/SubscriptionContext";
+import { useTheme } from "../../../../contexts/ThemeContext";
 import i18n from "../../../../i18n/i18n";
 import PaymentService from "../../../../services/api/PaymentService";
 import SubscriptionService, {
@@ -101,6 +101,7 @@ function EnterpriseSubscriptionsContent() {
   const { subscription, loadSubscription } = useSubscription();
   const { user } = useAuth();
   const { colors, isDark } = useTheme();
+  const [canGoBack, setCanGoBack] = useState(true);
 
   // Modal state
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -192,6 +193,7 @@ function EnterpriseSubscriptionsContent() {
           }. ${i18n.t("enterprise.subscriptions.payment.thanks")}`
         );
         setShowStatusModal(true);
+        setCanGoBack(true); // Autoriser le retour après paiement réussi
       } else {
         throw new Error("Intention de paiement ou transaction ID manquant");
       }
@@ -227,6 +229,23 @@ function EnterpriseSubscriptionsContent() {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Vérifier si l'utilisateur peut revenir en arrière
+  useEffect(() => {
+    // Bloquer le retour si aucun abonnement actif
+    if (subscription) {
+      const hasActivePlan = Boolean(
+        subscription.isActive && 
+        subscription.endDate && 
+        new Date(subscription.endDate) > new Date()
+      );
+      setCanGoBack(hasActivePlan);
+      console.log('🔒 Retour autorisé:', hasActivePlan);
+    } else {
+      setCanGoBack(false);
+      console.log('🔒 Retour bloqué: pas d\'abonnement');
+    }
+  }, [subscription]);
 
   const loadData = async () => {
     try {
@@ -273,6 +292,7 @@ function EnterpriseSubscriptionsContent() {
       const isFree = selectedPlan.price === "Gratuit";
 
       if (isFree) {
+        // Plan gratuit: activation directe
         // Plan gratuit - Activer le trial directement
         await SubscriptionService.activateTrialPlan();
         console.log("✅ Plan d'essai activé");
@@ -289,6 +309,7 @@ function EnterpriseSubscriptionsContent() {
         setStatusTitle("🎉 Succès !");
         setStatusMessage(`Votre période d'essai a été activée avec succès.`);
         setShowStatusModal(true);
+        setCanGoBack(true); // Autoriser le retour après activation
       } else {
         // Plan payant - Créer une intention de paiement
         const amount = parseFloat(selectedPlan.price.replace(/[^0-9]/g, ""));
@@ -528,9 +549,16 @@ function EnterpriseSubscriptionsContent() {
         >
           <View className="flex-row items-center justify-between">
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={() => {
+                if (canGoBack) {
+                  router.back();
+                } else {
+                  console.log('⚠️ Retour bloqué: veuillez activer un plan d\'abonnement');
+                }
+              }}
               className="w-10 h-10 rounded-full bg-white/20 items-center justify-center"
               activeOpacity={0.7}
+              style={{ opacity: canGoBack ? 1 : 0.5 }}
             >
               <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
             </TouchableOpacity>
@@ -657,6 +685,21 @@ function EnterpriseSubscriptionsContent() {
                       </Text>
                     </TouchableOpacity>
                   )}
+                </View>
+              </View>
+            )}
+
+            {/* Avertissement si pas de plan actif */}
+            {!canGoBack && (
+              <View style={{ backgroundColor: '#FEF3C7', borderLeftWidth: 4, borderLeftColor: '#F59E0B', borderRadius: 12, padding: 16, marginBottom: 20, flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons name="warning" size={24} color="#F59E0B" style={{ marginRight: 12 }} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: '#92400E', fontFamily: 'Quicksand-Bold', fontSize: 14, marginBottom: 4 }}>
+                    Activation requise
+                  </Text>
+                  <Text style={{ color: '#78350F', fontFamily: 'Quicksand-Medium', fontSize: 12, lineHeight: 18 }}>
+                    Veuillez activer un plan d&apos;abonnement pour accéder à l&apos;application.
+                  </Text>
                 </View>
               </View>
             )}

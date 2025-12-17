@@ -235,7 +235,27 @@ export default function ProductDetails() {
       price: product ? formatPrice(product.price) : ""
     });
 
-    const whatsappUrl = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(
+    // Vérifier que le numéro est valide
+    if (!phone || phone.trim() === '') {
+      showNotification("error", "Erreur", "Numéro de téléphone non disponible");
+      return;
+    }
+
+    // Formater le numéro: enlever tous les caractères non numériques sauf le +
+    let formattedPhone = phone.replace(/[^0-9+]/g, '');
+    
+    // Enlever le + s'il n'est pas au début
+    formattedPhone = formattedPhone.replace(/(?!^)\+/g, '');
+    
+    // Si le numéro ne commence pas par +, ajouter +229 (indicatif du Bénin)
+    if (!formattedPhone.startsWith('+')) {
+      formattedPhone = '+229' + formattedPhone;
+    }
+
+    console.log('📱 Numéro original:', phone);
+    console.log('📱 Numéro formaté pour WhatsApp:', formattedPhone);
+
+    const whatsappUrl = `whatsapp://send?phone=${formattedPhone}&text=${encodeURIComponent(
       message
     )}`;
 
