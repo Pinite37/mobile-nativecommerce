@@ -25,6 +25,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import CarouselComponent from "../../../../components/ui/CarouselComponent";
 import AdvertisementService, {
   Advertisement,
 } from "../../../../services/api/AdvertisementService";
@@ -137,7 +138,7 @@ export default function EnterpriseDashboard() {
   const [cityModalVisible, setCityModalVisible] = useState(false);
   const [neighborhoodModalVisible, setNeighborhoodModalVisible] =
     useState(false);
-  const [currentAdIndex, setCurrentAdIndex] = useState(0);
+  // const [currentAdIndex, setCurrentAdIndex] = useState(0); // Removed unused
 
   // États pour les produits de l'entreprise
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -197,19 +198,8 @@ export default function EnterpriseDashboard() {
     }
   }, [activeAds.length]);
 
-  const onAdViewableItemsChanged = useRef(({ viewableItems }: any) => {
-    viewableItems.forEach((vi: any) => {
-      const ad: Advertisement = vi.item;
-      if (!ad?._id) return;
-      if (!viewedAdsRef.current.has(ad._id)) {
-        viewedAdsRef.current.add(ad._id);
-        (AdvertisementService as any)
-          .incrementView?.(ad._id)
-          ?.catch((err: any) => console.warn("view track fail", err));
-      }
-    });
-  }).current;
-  const adViewabilityConfig = { itemVisiblePercentThreshold: 60 };
+  // const onAdViewableItemsChanged = ...; // Removed unused
+  // const adViewabilityConfig = ...; // Removed unused
 
   const handleAdPress = async (ad: Advertisement) => {
     try {
@@ -272,9 +262,8 @@ export default function EnterpriseDashboard() {
           setSuggestions([]);
           return true; // Empêche la navigation arrière par défaut
         }
-        // Sinon, on est sur la page d'accueil : quitter l'app au lieu de retourner aux pages d'auth
-        BackHandler.exitApp();
-        return true;
+        // Sinon, laisser le comportement par défaut (qui quittera l'app car c'est la page racine)
+        return false;
       }
     );
 
@@ -1576,47 +1565,13 @@ export default function EnterpriseDashboard() {
             {/* Boosted Ads Carousel (amélioré avec images et overlay) */}
             <View className="py-4">
               {activeAds.length > 0 ? (
-                <>
-                  <FlatList
-                    data={activeAds}
-                    renderItem={renderAd}
-                    keyExtractor={(_item: any, index) =>
-                      _item && _item._id ? String(_item._id) : `ad-${index}`
-                    }
-                    horizontal
-                    pagingEnabled
-                    showsHorizontalScrollIndicator={false}
-                    onViewableItemsChanged={onAdViewableItemsChanged}
-                    viewabilityConfig={adViewabilityConfig}
-                    onMomentumScrollEnd={(event) => {
-                      const newIndex = Math.round(
-                        event.nativeEvent.contentOffset.x /
-                        (Dimensions.get("window").width - 48)
-                      );
-                      setCurrentAdIndex(newIndex);
-                    }}
-                    contentContainerStyle={{ paddingHorizontal: 16 }}
-                  />
-                  {/* Indicators */}
-                  <View className="flex-row justify-center mt-3">
-                    {activeAds.map((_, index) => {
-                      const active = index === currentAdIndex;
-                      return (
-                        <View
-                          key={index}
-                          style={{
-                            width: active ? 16 : 8,
-                            height: 8,
-                            borderRadius: 9999,
-                            backgroundColor: active ? "#10B981" : "#D1D5DB",
-                            marginHorizontal: 4,
-                            opacity: active ? 1 : 0.7,
-                          }}
-                        />
-                      );
-                    })}
-                  </View>
-                </>
+                <CarouselComponent
+                  data={activeAds}
+                  renderItem={renderAd}
+                  height={180}
+                  autoPlayInterval={3000}
+                  containerStyle={{ marginTop: 10 }}
+                />
               ) : (
                 <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="mx-4 rounded-2xl p-6 items-center border">
                   <View style={{ backgroundColor: isDark ? colors.tertiary : "#F5F5F5" }} className="w-16 h-16 rounded-full items-center justify-center mb-4">
@@ -1896,7 +1851,8 @@ export default function EnterpriseDashboard() {
             {/* Bannière Promotion Entreprise */}
           </Animated.ScrollView>
         </>
-      )}
+      )
+      }
 
       {/* Modal de sélection de ville */}
       <Modal
@@ -1978,6 +1934,6 @@ export default function EnterpriseDashboard() {
           </View>
         </View>
       </Modal>
-    </View>
+    </View >
   );
 }

@@ -28,6 +28,7 @@ import { useAuth } from "../../../../contexts/AuthContext";
 import AdvertisementService, { Advertisement } from '../../../../services/api/AdvertisementService';
 import CategoryService from "../../../../services/api/CategoryService";
 // import { useSearchCache } from "../../../../hooks/useSearchCache"; // retiré (non utilisé)
+import CarouselComponent from "../../../../components/ui/CarouselComponent";
 import { useLocale } from "../../../../contexts/LocaleContext";
 import i18n from "../../../../i18n/i18n";
 import { Enterprise } from "../../../../services/api/EnterpriseService";
@@ -116,7 +117,7 @@ export default function ClientHome() {
     const [selectedNeighborhood, setSelectedNeighborhood] = useState("");
     const [cityModalVisible, setCityModalVisible] = useState(false);
     const [neighborhoodModalVisible, setNeighborhoodModalVisible] = useState(false);
-    const [currentAdIndex, setCurrentAdIndex] = useState(0);
+    // const [currentAdIndex, setCurrentAdIndex] = useState(0); // Removed unused
     const [refreshing, setRefreshing] = useState(false);
     const [loading, setLoading] = useState(true); // État de chargement global
     const scrollY = useRef(new Animated.Value(0)).current;
@@ -180,18 +181,8 @@ export default function ClientHome() {
         }
     };
 
-    const onAdViewableItemsChanged = useRef(({ viewableItems }: any) => {
-        viewableItems.forEach((vi: any) => {
-            const ad: Advertisement = vi.item;
-            if (!ad?._id) return;
-            if (!viewedAdsRef.current.has(ad._id)) {
-                viewedAdsRef.current.add(ad._id);
-                (AdvertisementService as any).incrementView?.(ad._id)
-                    ?.catch((err: any) => console.warn('view track fail', err));
-            }
-        });
-    }).current;
-    const adViewabilityConfig = { itemVisiblePercentThreshold: 60 };
+    // const onAdViewableItemsChanged = ...; // Removed unused
+    // const adViewabilityConfig = ...; // Removed unused
 
     const handleAdPress = async (ad: Advertisement) => {
         try {
@@ -1511,42 +1502,13 @@ export default function ClientHome() {
                         {/* Boosted Ads Carousel (amélioré avec images et overlay) */}
                         <View className="py-0">
                             {adsToDisplay.length > 0 ? (
-                                <>
-                                    <FlatList
-                                        data={adsToDisplay}
-                                        renderItem={renderAd}
-                                        keyExtractor={(_item: any, index) => (_item && _item._id ? String(_item._id) : `ad-${index}`)}
-                                        horizontal
-                                        pagingEnabled
-                                        showsHorizontalScrollIndicator={false}
-                                        onViewableItemsChanged={onAdViewableItemsChanged}
-                                        viewabilityConfig={adViewabilityConfig}
-                                        onMomentumScrollEnd={(event) => {
-                                            const newIndex = Math.round(event.nativeEvent.contentOffset.x / (Dimensions.get('window').width - 48));
-                                            setCurrentAdIndex(newIndex);
-                                        }}
-                                        contentContainerStyle={{ paddingHorizontal: 16 }}
-                                    />
-                                    {/* Indicators */}
-                                    <View className="flex-row justify-center mt-3">
-                                        {adsToDisplay.map((_, index) => {
-                                            const active = index === currentAdIndex;
-                                            return (
-                                                <View
-                                                    key={index}
-                                                    style={{
-                                                        width: active ? 16 : 8,
-                                                        height: 8,
-                                                        borderRadius: 9999,
-                                                        backgroundColor: active ? '#10B981' : '#D1D5DB',
-                                                        marginHorizontal: 4,
-                                                        opacity: active ? 1 : 0.7,
-                                                    }}
-                                                />
-                                            );
-                                        })}
-                                    </View>
-                                </>
+                                <CarouselComponent
+                                    data={adsToDisplay}
+                                    renderItem={renderAd}
+                                    height={180}
+                                    autoPlayInterval={3000}
+                                    containerStyle={{ marginTop: 10 }}
+                                />
                             ) : (
                                 <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="mx-4 rounded-2xl p-6 items-center border">
                                     <View className="w-16 h-16 rounded-full bg-neutral-100 items-center justify-center mb-4">
