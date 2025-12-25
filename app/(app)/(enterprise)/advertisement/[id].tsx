@@ -89,7 +89,7 @@ export default function AdvertisementDetails() {
     if (!advertisement || !advertisement.createdBy?.enterprise) return;
 
     // Navigate to the enterprise page
-    router.push(`/(app)/(client)/enterprise/${advertisement.createdBy.enterprise}`);
+    router.push(`/(app)/(enterprise)/(tabs)/enterprise/${advertisement.createdBy.enterprise}`);
   };
 
   const handleScroll = (event: any) => {

@@ -418,7 +418,7 @@ export default function EnterpriseDetails() {
           {formatPrice(product.price)}
         </Text>
 
-        {product.stats && (
+        {/* {product.stats && (
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center">
               <Ionicons name="star" size={12} color="#FFD700" />
@@ -430,7 +430,7 @@ export default function EnterpriseDetails() {
               {i18n.t("client.enterprise.stats.sold", { count: product.stats.totalSales || 0 })}
             </Text>
           </View>
-        )}
+        )} */}
       </View>
     </TouchableOpacity>
   );
@@ -601,7 +601,7 @@ export default function EnterpriseDetails() {
                     </Text>
                   </View>
 
-                  <View className="flex-1 rounded-xl p-3 ml-2" style={{backgroundColor: isDark ? colors.surface || '#1f2937' : '#f9fafb'}}>
+                  {/* <View className="flex-1 rounded-xl p-3 ml-2" style={{backgroundColor: isDark ? colors.surface || '#1f2937' : '#f9fafb'}}>
                     <View className="flex-row items-center mb-1">
                       <Ionicons name="people" size={16} color="#8B5CF6" />
                       <Text className="text-base font-quicksand-bold ml-1" style={{color: colors.text}}>
@@ -611,7 +611,7 @@ export default function EnterpriseDetails() {
                     <Text className="text-xs" style={{color: colors.textSecondary}}>
                       {i18n.t("enterprise.profile.modals.enterpriseDetails.orders")}
                     </Text>
-                  </View>
+                  </View> */}
                 </View>
 
                 {/* Actions de contact */}
@@ -666,12 +666,12 @@ export default function EnterpriseDetails() {
                 <Text className="text-lg font-quicksand-bold" style={{color: colors.text}}>
                   {i18n.t("enterprise.profile.modals.enterpriseDetails.enterpriseProducts")}
                 </Text>
-                <Text className="text-sm px-3 py-1 rounded-full" style={{
+                {/* <Text className="text-sm px-3 py-1 rounded-full" style={{
                   color: colors.textSecondary,
                   backgroundColor: isDark ? colors.surface || '#1f2937' : '#f9fafb'
                 }}>
                   {pagination.total} {i18n.t("enterprise.profile.modals.enterpriseDetails.products")}
-                </Text>
+                </Text> */}
               </View>
             </View>
           </View>

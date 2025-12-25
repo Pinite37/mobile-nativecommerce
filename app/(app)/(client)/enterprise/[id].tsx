@@ -279,7 +279,7 @@ export default function EnterpriseDetails() {
                     {formatPrice(product.price)}
                 </Text>
 
-                {product.stats && (
+                {/* {product.stats && (
                     <View className="flex-row items-center justify-between">
                         <View className="flex-row items-center">
                             <Ionicons name="star" size={12} color="#FFD700" />
@@ -291,7 +291,7 @@ export default function EnterpriseDetails() {
                             {i18n.t("client.enterprise.stats.sold", { count: product.stats?.totalSales || 0 })}
                         </Text>
                     </View>
-                )}
+                )} */}
             </View>
         </TouchableOpacity>
     );
@@ -591,7 +591,7 @@ export default function EnterpriseDetails() {
                                             <>
                                                 <TouchableOpacity
                                                     onPress={() => openWhatsApp(enterprise.contactInfo.phone)}
-                                                    className="flex-row items-center bg-gradient-to-r from-green-50 to-green-100 rounded-2xl px-4 py-3 border border-green-200 shadow-sm"
+                                                    className="flex-row items-center bg-success-100 rounded-xl px-3 py-2 mr-2 mb-2"
                                                     activeOpacity={0.8}
                                                 >
                                                     <View className="w-8 h-8 bg-green-500 rounded-full justify-center items-center mr-3">
@@ -604,7 +604,7 @@ export default function EnterpriseDetails() {
 
                                                 <TouchableOpacity
                                                     onPress={() => makePhoneCall(enterprise.contactInfo.phone)}
-                                                    className="flex-row items-center bg-gradient-to-r from-orange-50 to-orange-100 rounded-2xl px-4 py-3 border border-orange-200 shadow-sm"
+                                                    className="flex-row items-center bg-warning-100 rounded-xl px-3 py-2 mr-2 mb-2"
                                                     activeOpacity={0.8}
                                                 >
                                                     <View className="w-8 h-8 bg-orange-500 rounded-full justify-center items-center mr-3">
