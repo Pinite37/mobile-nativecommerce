@@ -8,11 +8,17 @@ class ApiService {
   private baseURL: string;
   private isRefreshing: boolean = false;
   private refreshSubscribers: ((token: string) => void)[] = [];
+  private basicAuthToken: string;
 
   constructor() {
     // Utiliser la variable d'environnement ou valeur par défaut
     const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
     this.baseURL = `${backendUrl}/api`;
+
+    // Créer le token Basic Auth
+    const BASIC_AUTH_USERNAME = process.env.EXPO_PUBLIC_BASIC_AUTH_USERNAME || 'staging_user';
+    const BASIC_AUTH_PASSWORD = process.env.EXPO_PUBLIC_BASIC_AUTH_PASSWORD || 'ZBddQ2dTah7s3pQP';
+    this.basicAuthToken = btoa(`${BASIC_AUTH_USERNAME}:${BASIC_AUTH_PASSWORD}`);
 
     console.log('🌐 API Base URL:', this.baseURL);
     console.log('🔧 Backend URL from .env:', process.env.EXPO_PUBLIC_BACKEND_URL);
@@ -38,13 +44,16 @@ class ApiService {
     // Request interceptor
     this.axiosInstance.interceptors.request.use(
       async (config: any) => {
-        // Add auth token if available
+        // Add Basic Auth for nginx
+        config.headers.Authorization = `Basic ${this.basicAuthToken}`;
+
+        // Add JWT Bearer token in custom header
         const token = await TokenStorageService.getAccessToken();
         if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-          console.log('🔐 Token ajouté à la requête:', `***${token.slice(-10)}`);
+          config.headers['X-Auth-Token'] = `Bearer ${token}`;
+          console.log('🔐 Token JWT ajouté à X-Auth-Token:', `***${token.slice(-10)}`);
         } else {
-          console.log('⚠️ Aucun token disponible pour cette requête');
+          console.log('⚠️ Aucun token JWT disponible pour cette requête');
         }
 
         // Add device info
@@ -104,7 +113,7 @@ class ApiService {
             console.log('⏳ Refresh en cours, mise en file d\'attente...');
             return new Promise((resolve) => {
               this.addRefreshSubscriber((token: string) => {
-                originalRequest.headers.Authorization = `Bearer ${token}`;
+                originalRequest.headers['X-Auth-Token'] = `Bearer ${token}`;
                 resolve(this.axiosInstance(originalRequest));
               });
             });
@@ -141,7 +150,7 @@ class ApiService {
             this.isRefreshing = false;
             
             // Retry la requête originale avec le nouveau token
-            originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
+            originalRequest.headers['X-Auth-Token'] = `Bearer ${newTokens.accessToken}`;
             console.log('🔄 Nouvelle tentative de la requête originale...');
             
             return this.axiosInstance(originalRequest);
@@ -212,6 +221,7 @@ class ApiService {
       }, {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Basic ${this.basicAuthToken}`,
         },
         timeout: 10000,
       });
