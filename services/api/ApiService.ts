@@ -8,17 +8,11 @@ class ApiService {
   private baseURL: string;
   private isRefreshing: boolean = false;
   private refreshSubscribers: ((token: string) => void)[] = [];
-  private basicAuthToken: string;
 
   constructor() {
     // Utiliser la variable d'environnement ou valeur par défaut
     const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
     this.baseURL = `${backendUrl}/api`;
-
-    // Créer le token Basic Auth
-    const BASIC_AUTH_USERNAME = process.env.EXPO_PUBLIC_BASIC_AUTH_USERNAME || 'staging_user';
-    const BASIC_AUTH_PASSWORD = process.env.EXPO_PUBLIC_BASIC_AUTH_PASSWORD || 'ZBddQ2dTah7s3pQP';
-    this.basicAuthToken = btoa(`${BASIC_AUTH_USERNAME}:${BASIC_AUTH_PASSWORD}`);
 
     console.log('🌐 API Base URL:', this.baseURL);
     console.log('🔧 Backend URL from .env:', process.env.EXPO_PUBLIC_BACKEND_URL);
@@ -44,9 +38,6 @@ class ApiService {
     // Request interceptor
     this.axiosInstance.interceptors.request.use(
       async (config: any) => {
-        // Add Basic Auth for nginx
-        config.headers.Authorization = `Basic ${this.basicAuthToken}`;
-
         // Add JWT Bearer token in custom header
         const token = await TokenStorageService.getAccessToken();
         if (token) {
@@ -221,7 +212,6 @@ class ApiService {
       }, {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Basic ${this.basicAuthToken}`,
         },
         timeout: 10000,
       });

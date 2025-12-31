@@ -166,17 +166,11 @@ class SocketService {
       console.log('🌐 Socket.IO Server URL:', serverUrl);
       console.log('🔧 Backend URL from .env:', process.env.EXPO_PUBLIC_BACKEND_URL);
 
-      // Créer le token Basic Auth
-      const BASIC_AUTH_USERNAME = process.env.EXPO_PUBLIC_BASIC_AUTH_USERNAME || 'staging_user';
-      const BASIC_AUTH_PASSWORD = process.env.EXPO_PUBLIC_BASIC_AUTH_PASSWORD || 'ZBddQ2dTah7s3pQP';
-      const basicAuthToken = btoa(`${BASIC_AUTH_USERNAME}:${BASIC_AUTH_PASSWORD}`);
-
       // Créer la socket avec configuration optimale
       console.log('🔧 Configuration Socket.IO:', {
         url: serverUrl,
         hasToken: !!token,
-        tokenPreview: token ? `${token.substring(0, 20)}...` : 'none',
-        hasBasicAuth: !!basicAuthToken
+        tokenPreview: token ? `${token.substring(0, 20)}...` : 'none'
       });
 
       this.socket = io(serverUrl, {
@@ -184,7 +178,6 @@ class SocketService {
           token: token
         },
         extraHeaders: {
-          'Authorization': `Basic ${basicAuthToken}`,
           'X-Auth-Token': `Bearer ${token}`
         },
         transports: ['websocket', 'polling'],
