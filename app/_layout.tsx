@@ -50,6 +50,7 @@ export default function RootLayout() {
                   <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
                   <Stack.Screen name="(auth)" options={{ headerShown: false }} />
                   <Stack.Screen name="(app)" options={{ headerShown: false }} />
+                  <Stack.Screen name="+not-found" options={{ headerShown: false }} />
                 </Stack>
               </ReanimatedToastProvider>
             </SocketProvider>

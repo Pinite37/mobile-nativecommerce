@@ -58,6 +58,19 @@
                 "cancel": "Annuler",
                 "inProgress": "En cours..."
             },
+            "deleteAccount": {
+                "sectionTitle": "Zone de danger",
+                "button": "Supprimer mon compte",
+                "modalTitle": "Supprimer le compte",
+                "modalMessage": "Cette action est irréversible. Votre compte sera marqué pour suppression et sera supprimé définitivement dans 15 jours.",
+                "confirmButton": "Oui, supprimer mon compte",
+                "cancelButton": "Annuler",
+                "inProgress": "Suppression en cours...",
+                "successTitle": "Suppression de compte",
+                "successMessage": "Votre compte a été marqué pour suppression. Il sera supprimé définitivement dans 15 jours.",
+                "errorTitle": "Erreur",
+                "errorMessage": "Une erreur s'est produite lors de la suppression du compte."
+            },
             "languageModal": {
                 "title": "Choisir la langue",
                 "french": "Français",
@@ -1604,6 +1617,19 @@
                 "dataReset": "Données réinitialisées",
                 "dataResetMessage": "Vos préférences ont été remises à zéro"
             },
+            "deleteAccount": {
+                "sectionTitle": "ZONE DE DANGER",
+                "button": "Supprimer mon compte",
+                "modalTitle": "Supprimer votre compte ?",
+                "modalMessage": "Cette action est irréversible. Toutes vos données seront supprimées définitivement.",
+                "confirmButton": "Oui, supprimer",
+                "cancelButton": "Annuler",
+                "inProgress": "Suppression en cours...",
+                "successTitle": "Compte supprimé",
+                "successMessage": "Votre compte a été marqué pour suppression.",
+                "errorTitle": "Erreur",
+                "errorMessage": "Une erreur s'est produite lors de la suppression du compte."
+            },
             "appVersion": "Axi Market 1.0.0"
         },
         "details": {
@@ -1625,18 +1651,22 @@
                         "upload": "Erreur",
                         "uploadMessage": "Impossible de télécharger l'image",
                         "remove": "Erreur",
-                        "removeMessage": "Impossible de supprimer l'image"
+                        "removeMessage": "Impossible de supprimer l'image",
+                        "select": "Erreur",
+                        "selectMessage": "Impossible de sélectionner l'image"
                     },
                     "success": {
                         "title": "Succès",
-                        "message": "Photo de profil mise à jour"
+                        "message": "Photo de profil mise à jour",
+                        "previewMessage": "Image sélectionnée. Elle sera uploadée lors de l'enregistrement."
                     },
                     "remove": {
                         "title": "Supprimer la photo",
                         "message": "Êtes-vous sûr de vouloir supprimer votre photo de profil ?",
                         "cancel": "Annuler",
                         "confirm": "Supprimer",
-                        "success": "Photo de profil supprimée"
+                        "success": "Photo de profil supprimée",
+                        "previewSuccess": "Photo marquée pour suppression. Elle sera retirée lors de l'enregistrement."
                     },
                     "uploading": "Téléchargement en cours...",
                     "takePhoto": "Prendre une photo",

@@ -1,12 +1,12 @@
 import {
-    AuthResponse,
-    AuthTokens,
-    ChangePasswordRequest,
-    EnterpriseRegisterRequest,
-    LoginRequest,
-    RegisterRequest,
-    ResetPasswordRequest,
-    User,
+  AuthResponse,
+  AuthTokens,
+  ChangePasswordRequest,
+  EnterpriseRegisterRequest,
+  LoginRequest,
+  RegisterRequest,
+  ResetPasswordRequest,
+  User,
 } from '../../types/auth';
 import TokenStorageService from '../TokenStorageService';
 import ApiService from './ApiService';
@@ -217,6 +217,19 @@ class AuthService {
       }
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Device disconnection failed');
+    }
+  }
+
+  // Delete account
+  async deleteAccount(): Promise<void> {
+    try {
+      const response = await ApiService.delete(`${this.BASE_URL}/account`);
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Account deletion failed');
+      }
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Account deletion failed');
     }
   }
 
