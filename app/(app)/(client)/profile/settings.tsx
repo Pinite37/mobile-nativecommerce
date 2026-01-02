@@ -17,6 +17,7 @@ import { useToast } from "../../../../components/ui/ToastManager";
 import { useLocale } from "../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import i18n from "../../../../i18n/i18n";
+import AuthService from "../../../../services/api/AuthService";
 import PreferencesService from "../../../../services/api/PreferencesService";
 
 export default function SettingsScreen() {
@@ -69,6 +70,7 @@ export default function SettingsScreen() {
   // État pour le modal de confirmation de réinitialisation
   const [clearDataModal, setClearDataModal] = useState(false);
   const [languageModal, setLanguageModal] = useState(false);
+  const [deleteAccountModal, setDeleteAccountModal] = useState(false);
 
   // Charger les paramètres utilisateur depuis l'API
   useEffect(() => {
@@ -263,6 +265,41 @@ export default function SettingsScreen() {
     } catch (error) {
       console.error("Erreur lors de la réinitialisation des données:", error);
       toast.showError(i18n.t("client.settings.errors.resetData"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Fonction pour supprimer le compte
+  const handleDeleteAccount = () => {
+    setDeleteAccountModal(true);
+  };
+
+  const confirmDeleteAccount = async () => {
+    try {
+      setSaving(true);
+
+      // Appeler l'API pour supprimer le compte
+      await AuthService.deleteAccount();
+
+      toast.showSuccess(
+        i18n.t("client.settings.deleteAccount.successTitle"),
+        i18n.t("client.settings.deleteAccount.successMessage")
+      );
+
+      // Déconnecter l'utilisateur
+      await AuthService.logout();
+
+      // Rediriger vers la page de connexion
+      router.replace('/(auth)/signin');
+
+      setDeleteAccountModal(false);
+    } catch (error) {
+      console.error("Erreur suppression compte:", error);
+      toast.showError(
+        i18n.t("client.settings.deleteAccount.errorTitle"),
+        i18n.t("client.settings.deleteAccount.errorMessage")
+      );
     } finally {
       setSaving(false);
     }
@@ -516,6 +553,41 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Suppression de compte */}
+        <View className="mt-6 mx-4">
+          <Text className="text-sm font-quicksand-semibold mb-2" style={{ color: colors.textSecondary }}>
+            {i18n.t("client.settings.deleteAccount.sectionTitle")}
+          </Text>
+          <View className="rounded-2xl" style={{ backgroundColor: colors.card }}>
+            <TouchableOpacity
+              onPress={handleDeleteAccount}
+              style={{
+                backgroundColor: isDark ? "rgba(239, 68, 68, 0.1)" : "#FEF2F2",
+                borderColor: isDark ? "rgba(239, 68, 68, 0.3)" : "#FEE2E2"
+              }}
+              className="rounded-2xl py-4 items-center border mx-4 my-4"
+              activeOpacity={0.7}
+              disabled={saving}
+            >
+              {saving ? (
+                <ActivityIndicator size="small" color="#DC2626" />
+              ) : (
+                <View className="flex-row items-center">
+                  <Ionicons
+                    name="trash-outline"
+                    size={20}
+                    color="#DC2626"
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text style={{ color: "#DC2626" }} className="text-base font-quicksand-bold">
+                    {i18n.t("enterprise.settings.deleteAccount.button")}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Bouton pour effacer les données */}
         {/* <View className="mt-8 mx-4 mb-8">
           <TouchableOpacity
@@ -733,6 +805,89 @@ export default function SettingsScreen() {
             </View>
           </View>
         </View>
+      </Modal>
+
+      {/* Modal de confirmation pour supprimer le compte */}
+      <Modal
+        visible={deleteAccountModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDeleteAccountModal(false)}
+      >
+        <TouchableOpacity
+          className="flex-1 bg-black/50 justify-center items-center px-4"
+          activeOpacity={1}
+          onPress={() => setDeleteAccountModal(false)}
+        >
+          <TouchableOpacity
+            className="w-full max-w-sm rounded-3xl p-6"
+            style={{ backgroundColor: colors.card }}
+            activeOpacity={1}
+            onPress={() => {}}
+          >
+            <View className="items-center mb-6">
+              <View
+                className="w-16 h-16 rounded-full items-center justify-center mb-4"
+                style={{ backgroundColor: "#FEF2F2" }}
+              >
+                <Ionicons name="warning-outline" size={32} color="#EF4444" />
+              </View>
+              <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold text-center mb-2">
+                {i18n.t("client.settings.deleteAccount.modalTitle")}
+              </Text>
+              <Text style={{ color: colors.textSecondary }} className="text-base font-quicksand-medium text-center leading-6">
+                {i18n.t("client.settings.deleteAccount.modalMessage")}
+              </Text>
+            </View>
+
+            <View className="space-y-3">
+              <TouchableOpacity
+                onPress={confirmDeleteAccount}
+                disabled={saving}
+                className="rounded-xl py-4 items-center"
+                style={{ overflow: "hidden", position: "relative" }}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={["#EF4444", "#DC2626"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                  }}
+                />
+                {saving ? (
+                  <View className="flex-row items-center">
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                    <Text className="font-quicksand-bold text-white ml-2">
+                      {i18n.t("client.settings.deleteAccount.inProgress")}
+                    </Text>
+                  </View>
+                ) : (
+                  <Text className="font-quicksand-bold text-white">
+                    {i18n.t("client.settings.deleteAccount.confirmButton")}
+                  </Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setDeleteAccountModal(false)}
+                disabled={saving}
+                style={{ backgroundColor: isDark ? colors.tertiary : "#F3F4F6" }}
+                className="rounded-xl py-4 items-center mt-4"
+                activeOpacity={0.7}
+              >
+                <Text style={{ color: colors.textPrimary }} className="font-quicksand-semibold">
+                  {i18n.t("client.settings.deleteAccount.cancelButton")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
     </View>
   );

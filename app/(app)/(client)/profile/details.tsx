@@ -50,6 +50,13 @@ export default function ProfileDetailsScreen() {
     profileImage: user?.profileImage || undefined,
   });
 
+  // État local pour stocker l'image sélectionnée (pas encore uploadée)
+  const [pendingImage, setPendingImage] = useState<{
+    uri: string;
+    base64: string;
+    mimeType: string;
+  } | null>(null);
+
   // Charger les informations du profil depuis l'API
   useEffect(() => {
     fetchProfileData();
@@ -95,8 +102,28 @@ export default function ProfileDetailsScreen() {
         phone: profile.phone,
       };
       
-      // Appeler l'API pour mettre à jour le profil
-      await CustomerService.updateProfile(updateData);
+      // Si une image est en attente, l'uploader avec les autres données
+      if (pendingImage && pendingImage.uri) {
+        console.log('📤 Uploading profile with new image');
+        await CustomerService.updateProfileWithImage(
+          updateData,
+          pendingImage.base64,
+          pendingImage.mimeType
+        );
+      } else if (pendingImage && !pendingImage.uri) {
+        // Si l'image a été supprimée (uri vide)
+        console.log('🗑️ Removing profile image');
+        await CustomerService.removeProfileImage();
+        // Mettre à jour le profil sans l'image
+        await CustomerService.updateProfile(updateData);
+      } else {
+        // Pas de changement d'image, juste mettre à jour le profil
+        console.log('📝 Updating profile without image change');
+        await CustomerService.updateProfile(updateData);
+      }
+      
+      // Réinitialiser l'image en attente
+      setPendingImage(null);
       
       // Rafraîchir les données utilisateur dans le contexte
       await refreshUserData();
@@ -114,11 +141,12 @@ export default function ProfileDetailsScreen() {
     }
   };
   
-  // Gérer la mise à jour de la photo de profil
-  const handleImageUpdated = (imageUrl: string) => {
-    setProfile(prev => ({ ...prev, profileImage: imageUrl }));
-    // Rafraîchir les données utilisateur dans le contexte
-    refreshUserData();
+  // Gérer la sélection de la photo de profil (sans upload)
+  const handleImageSelected = (imageData: { uri: string; base64: string; mimeType: string }) => {
+    // Stocker les données de l'image pour l'upload ultérieur
+    setPendingImage(imageData);
+    // Mettre à jour l'aperçu de l'image
+    setProfile(prev => ({ ...prev, profileImage: imageData.uri }));
   };
 
   // Skeleton Loader Component
@@ -232,7 +260,7 @@ export default function ProfileDetailsScreen() {
           <ImagePickerModal
             visible={imagePickerVisible}
             onClose={() => setImagePickerVisible(false)}
-            onImageUpdated={handleImageUpdated}
+            onImageSelected={handleImageSelected}
           />
 
           <ScrollView className="flex-1 px-4">
@@ -333,7 +361,7 @@ export default function ProfileDetailsScreen() {
           </View>
 
           {/* Sécurité */}
-          <View className="rounded-2xl mt-6 p-4" style={{ backgroundColor: colors.card }}>
+          {/* <View className="rounded-2xl mt-6 p-4" style={{ backgroundColor: colors.card }}>
             <Text className="text-lg font-quicksand-bold mb-4" style={{ color: colors.textPrimary }}>
               {i18n.t("client.details.sections.security")}
             </Text>
@@ -379,7 +407,7 @@ export default function ProfileDetailsScreen() {
                 <View className="w-4 h-4 bg-white rounded-full" />
               </View>
             </TouchableOpacity>
-          </View>
+          </View> */}
 
           {/* Bouton de sauvegarde */}
           <View className="my-8">

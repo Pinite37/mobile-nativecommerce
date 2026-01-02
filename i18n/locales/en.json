@@ -58,6 +58,19 @@
                 "cancel": "Cancel",
                 "inProgress": "In progress..."
             },
+            "deleteAccount": {
+                "sectionTitle": "Danger Zone",
+                "button": "Delete my account",
+                "modalTitle": "Delete account",
+                "modalMessage": "This action is irreversible. Your account will be marked for deletion and will be permanently deleted in 15 days.",
+                "confirmButton": "Yes, delete my account",
+                "cancelButton": "Cancel",
+                "inProgress": "Deleting...",
+                "successTitle": "Account deletion",
+                "successMessage": "Your account has been marked for deletion. It will be permanently deleted in 15 days.",
+                "errorTitle": "Error",
+                "errorMessage": "An error occurred while deleting the account."
+            },
             "languageModal": {
                 "title": "Choose language",
                 "french": "Français",
@@ -1604,6 +1617,19 @@
                 "dataReset": "Data Reset",
                 "dataResetMessage": "Your preferences have been reset"
             },
+            "deleteAccount": {
+                "sectionTitle": "DANGER ZONE",
+                "button": "Delete my account",
+                "modalTitle": "Delete your account?",
+                "modalMessage": "This action is irreversible. All your data will be permanently deleted.",
+                "confirmButton": "Yes, delete",
+                "cancelButton": "Cancel",
+                "inProgress": "Deleting...",
+                "successTitle": "Account Deleted",
+                "successMessage": "Your account has been marked for deletion.",
+                "errorTitle": "Error",
+                "errorMessage": "An error occurred while deleting the account."
+            },
             "appVersion": "Axi Market 1.0.0"
         },
         "details": {
@@ -1625,18 +1651,22 @@
                         "upload": "Error",
                         "uploadMessage": "Unable to upload the image",
                         "remove": "Error",
-                        "removeMessage": "Unable to remove the image"
+                        "removeMessage": "Unable to remove the image",
+                        "select": "Error",
+                        "selectMessage": "Unable to select the image"
                     },
                     "success": {
                         "title": "Success",
-                        "message": "Profile photo updated"
+                        "message": "Profile photo updated",
+                        "previewMessage": "Image selected. It will be uploaded when you save."
                     },
                     "remove": {
                         "title": "Remove Photo",
                         "message": "Are you sure you want to remove your profile photo?",
                         "cancel": "Cancel",
                         "confirm": "Remove",
-                        "success": "Profile photo removed"
+                        "success": "Profile photo removed",
+                        "previewSuccess": "Photo marked for removal. It will be deleted when you save."
                     },
                     "uploading": "Uploading...",
                     "takePhoto": "Take a photo",

@@ -2,16 +2,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Image,
-  Modal,
-  RefreshControl,
-  ScrollView,
-  Switch,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Image,
+    Modal,
+    RefreshControl,
+    ScrollView,
+    Switch,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import ImagePickerModal from '../../../components/ui/ImagePickerModal';
 import { useToast } from '../../../components/ui/ToastManager';
@@ -136,12 +136,37 @@ export default function ProfileScreen() {
     return `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase();
   };
 
-  const handleImageUpdated = (imageUrl: string) => {
-    if (profileData) {
-      setProfileData({
-        ...profileData,
-        profileImage: imageUrl || undefined,
-      });
+  const handleImageSelected = async (imageData: { uri: string; base64: string; mimeType: string }) => {
+    try {
+      if (!imageData.uri) {
+        // Suppression d'image
+        await CustomerService.removeProfileImage();
+        if (profileData) {
+          setProfileData({
+            ...profileData,
+            profileImage: undefined,
+          });
+        }
+        toast.showSuccess('Succès', 'Photo de profil supprimée');
+      } else {
+        // Upload immédiat de l'image
+        const response = await CustomerService.updateProfileWithImage(
+          {},
+          imageData.base64,
+          imageData.mimeType
+        );
+        
+        if (profileData) {
+          setProfileData({
+            ...profileData,
+            profileImage: response.profileImage || imageData.uri,
+          });
+        }
+        toast.showSuccess('Succès', 'Photo de profil mise à jour');
+      }
+    } catch (error: any) {
+      console.error('Error updating profile image:', error);
+      toast.showError('Erreur', 'Impossible de mettre à jour la photo');
     }
   };
 
@@ -469,7 +494,7 @@ export default function ProfileScreen() {
       <ImagePickerModal
         visible={showImagePicker}
         onClose={() => setShowImagePicker(false)}
-        onImageUpdated={handleImageUpdated}
+        onImageSelected={handleImageSelected}
       />
 
       {/* Logout Confirmation Modal */}

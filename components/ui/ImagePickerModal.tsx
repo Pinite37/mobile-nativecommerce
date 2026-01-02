@@ -3,27 +3,26 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Modal,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Modal,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import i18n from '../../i18n/i18n';
-import CustomerService from '../../services/api/CustomerService';
 import { useToast } from './ToastManager';
 
 interface ImagePickerModalProps {
   visible: boolean;
   onClose: () => void;
-  onImageUpdated: (imageUrl: string) => void;
+  onImageSelected: (imageData: { uri: string; base64: string; mimeType: string }) => void;
 }
 
 export default function ImagePickerModal({
   visible,
   onClose,
-  onImageUpdated,
+  onImageSelected,
 }: ImagePickerModalProps) {
   const [isUploading, setIsUploading] = useState(false);
   const toast = useToast();
@@ -67,7 +66,7 @@ export default function ImagePickerModal({
       });
 
       if (!result.canceled && result.assets[0]) {
-        await uploadImage(result.assets[0]);
+        handleImageSelected(result.assets[0]);
       }
     } catch (error) {
       console.error('Error picking image:', error);
@@ -88,7 +87,7 @@ export default function ImagePickerModal({
       });
 
       if (!result.canceled && result.assets[0]) {
-        await uploadImage(result.assets[0]);
+        handleImageSelected(result.assets[0]);
       }
     } catch (error) {
       console.error('Error taking photo:', error);
@@ -96,10 +95,8 @@ export default function ImagePickerModal({
     }
   };
 
-  const uploadImage = async (asset: ImagePicker.ImagePickerAsset) => {
+  const handleImageSelected = (asset: ImagePicker.ImagePickerAsset) => {
     try {
-      setIsUploading(true);
-
       console.log('📷 Selected Image Asset:', {
         uri: asset.uri,
         type: asset.type,
@@ -128,31 +125,30 @@ export default function ImagePickerModal({
         }
       }
 
-      console.log('📤 Updating profile with base64 image, type:', mimeType);
-
-      // Utiliser la nouvelle méthode qui envoie l'image en base64
-      const response = await CustomerService.updateProfileWithImage(
-        {}, // Données du profil (vide pour juste l'image)
-        asset.base64,
-        mimeType
+      console.log('✅ Image selected, will be uploaded on save');
+      
+      // Retourner les données de l'image sans l'uploader
+      onImageSelected({
+        uri: asset.uri,
+        base64: asset.base64,
+        mimeType,
+      });
+      
+      toast.showSuccess(
+        i18n.t('client.details.photo.modal.success.title'),
+        i18n.t('client.details.photo.modal.success.previewMessage')
       );
-      
-      // Extraire l'URL de l'image de la réponse
-      const imageUrl = response.profileImage || asset.uri;
-      
-      onImageUpdated(imageUrl);
-      toast.showSuccess(i18n.t('client.details.photo.modal.success.title'), i18n.t('client.details.photo.modal.success.message'));
       onClose();
     } catch (error: any) {
-      console.error('❌ Error uploading image:', error);
-      console.error('❌ Error details:', error.response?.data);
-      toast.showError(i18n.t('client.details.photo.modal.errors.upload'), error.message || i18n.t('client.details.photo.modal.errors.uploadMessage'));
-    } finally {
-      setIsUploading(false);
+      console.error('❌ Error selecting image:', error);
+      toast.showError(
+        i18n.t('client.details.photo.modal.errors.select'),
+        error.message || i18n.t('client.details.photo.modal.errors.selectMessage')
+      );
     }
   };
 
-  const removeImage = async () => {
+  const removeImage = () => {
     Alert.alert(
       i18n.t('client.details.photo.modal.remove.title'),
       i18n.t('client.details.photo.modal.remove.message'),
@@ -161,19 +157,18 @@ export default function ImagePickerModal({
         {
           text: i18n.t('client.details.photo.modal.remove.confirm'),
           style: 'destructive',
-          onPress: async () => {
-            try {
-              setIsUploading(true);
-              await CustomerService.removeProfileImage();
-              onImageUpdated('');
-              toast.showSuccess(i18n.t('client.details.photo.modal.success.title'), i18n.t('client.details.photo.modal.remove.success'));
-              onClose();
-            } catch (error: any) {
-              console.error('Error removing image:', error);
-              toast.showError(i18n.t('client.details.photo.modal.errors.remove'), error.message || i18n.t('client.details.photo.modal.errors.removeMessage'));
-            } finally {
-              setIsUploading(false);
-            }
+          onPress: () => {
+            // Retourner une image vide pour marquer la suppression
+            onImageSelected({
+              uri: '',
+              base64: '',
+              mimeType: '',
+            });
+            toast.showSuccess(
+              i18n.t('client.details.photo.modal.success.title'),
+              i18n.t('client.details.photo.modal.remove.previewSuccess')
+            );
+            onClose();
           },
         },
       ]
