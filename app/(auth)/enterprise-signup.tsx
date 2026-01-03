@@ -376,7 +376,7 @@ export default function EnterpriseSignUpScreen() {
         </Text>
         <TextInput
           className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
-          placeholder="+229 XX XX XX XX"
+          placeholder="XX XX XX XX XX"
           placeholderTextColor="#9CA3AF"
           value={phone}
           onChangeText={setPhone}
@@ -534,7 +534,7 @@ export default function EnterpriseSignUpScreen() {
         <TextInput
           key="whatsapp-input"
           className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
-          placeholder="+229 XX XX XX XX"
+          placeholder="XX XX XX XX XX"
           placeholderTextColor="#9CA3AF"
           value={whatsapp}
           onChangeText={(text) => {
