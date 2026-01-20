@@ -1854,7 +1854,7 @@
                 "modalOk": "OK"
             },
             "whatsapp": {
-                "message": "Bonjour ! Je découvre votre entreprise \"{{companyName}}\" sur NativeCommerce. Pouvez-vous me donner plus d'informations sur vos produits ? Merci !"
+                "message": "Bonjour ! Je découvre votre entreprise \"{{companyName}}\" sur Axi Marketplace. Pouvez-vous me donner plus d'informations sur vos produits ? Merci !"
             },
             "status": {
                 "active": "Entreprise active"

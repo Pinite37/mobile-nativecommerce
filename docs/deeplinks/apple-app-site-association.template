@@ -1,0 +1,13 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "__APPLE_TEAM_ID__.com.axi.axiapp",
+        "paths": [
+          "/p/*"
+        ]
+      }
+    ]
+  }
+}

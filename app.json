@@ -11,6 +11,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.axi.axiapp",
+      "associatedDomains": [
+        "applinks:aximarketplace.com",
+        "applinks:www.aximarketplace.com"
+      ],
       "runtimeVersion": {
         "policy": "appVersion"
       },
@@ -29,7 +33,26 @@
       "package": "com.axi.axiapp",
       "googleServicesFile": "./google-services.json",
       "runtimeVersion": "1.0.0",
-      "softwareKeyboardLayoutMode": "pan"
+      "softwareKeyboardLayoutMode": "pan",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "aximarketplace.com",
+              "pathPrefix": "/p"
+            },
+            {
+              "scheme": "https",
+              "host": "www.aximarketplace.com",
+              "pathPrefix": "/p"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "bundler": "metro",
