@@ -12,7 +12,6 @@ import {
   Easing,
   FlatList,
   Image,
-  Linking,
   Modal,
   Platform,
   ScrollView,
@@ -32,6 +31,11 @@ import i18n from "../../../../i18n/i18n";
 import MessagingService from "../../../../services/api/MessagingService";
 import ProductService from "../../../../services/api/ProductService";
 import { Product } from "../../../../types/product";
+import { createPublicProductShareUrl } from "../../../../utils/AppLinks";
+import {
+  openPhoneCall,
+  openWhatsAppChat,
+} from "../../../../utils/ContactLinks";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -46,7 +50,7 @@ export default function ProductDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { locale } = useLocale();
+  useLocale();
   const { colors, isDark } = useTheme();
   const { notification, showNotification, hideNotification } =
     useNotification();
@@ -131,7 +135,7 @@ export default function ProductDetails() {
       setSimilarProducts(response.similarProducts);
       console.log(
         "✅ Produits similaires chargés:",
-        response.similarProducts.length
+        response.similarProducts.length,
       );
     } catch (error) {
       console.error("❌ Erreur chargement produits similaires:", error);
@@ -184,7 +188,8 @@ export default function ProductDetails() {
         {similarProduct.stock <= 5 && similarProduct.stock > 0 && (
           <View className="absolute top-2 left-2 bg-warning-500 rounded-full px-2 py-1">
             <Text className="text-white text-xs font-quicksand-bold">
-              {similarProduct.stock} {i18n.t('enterprise.productDetails.stock.remaining')}
+              {similarProduct.stock}{" "}
+              {i18n.t("enterprise.productDetails.stock.remaining")}
             </Text>
           </View>
         )}
@@ -206,124 +211,41 @@ export default function ProductDetails() {
     </TouchableOpacity>
   );
 
-
-
-  const openWhatsApp = (phone: string) => {
-    // Validation du numéro
-    if (!phone || phone.trim() === '') {
-      showNotification(
-        "error",
-        "Erreur",
-        "Numéro de téléphone invalide"
-      );
-      return;
-    }
-
-    // Log du numéro original
-    console.log('📱 Numéro original:', phone);
-
-    // Formatage robuste : enlever tous les caractères sauf chiffres et +
-    let formattedPhone = phone.replace(/[^0-9+]/g, '');
-    
-    // Enlever les + qui ne sont pas au début
-    formattedPhone = formattedPhone.replace(/(?!^)\+/g, '');
-    
-    // Ajouter l'indicatif +229 si pas de + au début
-    if (!formattedPhone.startsWith('+')) {
-      formattedPhone = '+229' + formattedPhone;
-    }
-
-    // Log du numéro formaté
-    console.log('📱 Numéro formaté pour WhatsApp:', formattedPhone);
-
-    const message = `Bonjour ! Je suis intéressé(e) par votre produit "${product?.name
-      }" sur Axi. 
+  const openWhatsApp = async (phone: string) => {
+    const message = `Bonjour ! Je suis intéressé(e) par votre produit "${
+      product?.name
+    }" sur Axi. 
     
 Prix affiché : ${product ? formatPrice(product.price) : ""}
 
 Pouvez-vous me donner plus d'informations ? Merci !`;
 
-    const whatsappUrl = `whatsapp://send?phone=${formattedPhone}&text=${encodeURIComponent(
-      message
-    )}`;
+    const result = await openWhatsAppChat({ phone, message });
 
-    Linking.canOpenURL(whatsappUrl)
-      .then((supported) => {
-        if (supported) {
-          return Linking.openURL(whatsappUrl);
-        } else {
-          showNotification(
-            "warning",
-            i18n.t('enterprise.productDetails.notifications.whatsappNotAvailable'),
-            i18n.t('enterprise.productDetails.notifications.whatsappNotAvailableMessage')
-          );
-          makePhoneCall(phone);
-        }
-      })
-      .catch(() => {
-        showNotification("error", "Erreur", "Impossible d'ouvrir WhatsApp");
-      });
+    if (!result.ok) {
+      showNotification(
+        "warning",
+        i18n.t("enterprise.productDetails.notifications.whatsappNotAvailable"),
+        i18n.t(
+          "enterprise.productDetails.notifications.whatsappNotAvailableMessage",
+        ),
+      );
+      makePhoneCall(phone);
+    }
   };
 
-  const makePhoneCall = (phone: string) => {
-    // Validation du numéro
-    if (!phone || phone.trim() === '') {
+  const makePhoneCall = async (phone: string) => {
+    const result = await openPhoneCall(phone);
+
+    if (!result.ok) {
       showNotification(
         "error",
-        "Erreur",
-        "Numéro de téléphone invalide"
+        i18n.t("enterprise.productDetails.notifications.callError"),
+        result.reason === "invalid_phone"
+          ? "Numéro de téléphone invalide"
+          : i18n.t("enterprise.productDetails.notifications.callErrorMessage"),
       );
-      return;
     }
-
-    // Log du numéro original
-    console.log('📞 Numéro original:', phone);
-
-    // Formatage robuste pour l'appel téléphonique
-    let formattedPhone = phone.replace(/[^0-9+]/g, '');
-    formattedPhone = formattedPhone.replace(/(?!^)\+/g, '');
-    
-    if (!formattedPhone.startsWith('+')) {
-      formattedPhone = '+229' + formattedPhone;
-    }
-
-    console.log('📞 Numéro formaté pour l\'appel:', formattedPhone);
-
-    const phoneUrl = `tel:${formattedPhone}`;
-    Linking.canOpenURL(phoneUrl)
-      .then((supported) => {
-        if (supported) {
-          return Linking.openURL(phoneUrl);
-        } else {
-          showNotification("error", i18n.t('enterprise.productDetails.notifications.callError'), i18n.t('enterprise.productDetails.notifications.callErrorMessage'));
-        }
-      })
-      .catch(() => {
-        showNotification("error", "Erreur", "Impossible de passer l'appel");
-      });
-  };
-
-  const openWebsite = (website: string) => {
-    let url = website;
-    if (!url.startsWith("http://") && !url.startsWith("https://")) {
-      url = `https://${url}`;
-    }
-
-    Linking.canOpenURL(url)
-      .then((supported) => {
-        if (supported) {
-          return Linking.openURL(url);
-        } else {
-          showNotification(
-            "error",
-            "Erreur",
-            "Impossible d'ouvrir le site web"
-          );
-        }
-      })
-      .catch(() => {
-        showNotification("error", "Erreur", "Impossible d'ouvrir le site web");
-      });
   };
 
   // Skeleton Loader Component
@@ -336,7 +258,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
           duration: 1200,
           easing: Easing.linear,
           useNativeDriver: true,
-        })
+        }),
       );
       loop.start();
       return () => loop.stop();
@@ -346,7 +268,9 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
       outputRange: [-150, 150],
     });
     return (
-      <View style={[{ backgroundColor: colors.border, overflow: "hidden" }, style]}>
+      <View
+        style={[{ backgroundColor: colors.border, overflow: "hidden" }, style]}
+      >
         <Animated.View
           style={{
             position: "absolute",
@@ -354,7 +278,9 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
             bottom: 0,
             width: 120,
             transform: [{ translateX }],
-            backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.35)",
+            backgroundColor: isDark
+              ? "rgba(255,255,255,0.1)"
+              : "rgba(255,255,255,0.35)",
             opacity: 0.7,
           }}
         />
@@ -406,7 +332,10 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         </View>
 
         {/* Content Skeleton */}
-        <View style={{ backgroundColor: colors.card }} className="px-6 py-6 rounded-t-3xl -mt-6">
+        <View
+          style={{ backgroundColor: colors.card }}
+          className="px-6 py-6 rounded-t-3xl -mt-6"
+        >
           {/* ... skeleton content ... */}
           <ShimmerBlock
             style={{
@@ -451,17 +380,25 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         />
         <View className="flex-1 justify-center items-center px-6">
           <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
-          <Text style={{ color: colors.textPrimary }} className="mt-4 text-xl font-quicksand-bold">
-            {i18n.t('enterprise.productDetails.notFound.title')}
+          <Text
+            style={{ color: colors.textPrimary }}
+            className="mt-4 text-xl font-quicksand-bold"
+          >
+            {i18n.t("enterprise.productDetails.notFound.title")}
           </Text>
-          <Text style={{ color: colors.textSecondary }} className="mt-2 font-quicksand-medium text-center">
-            {i18n.t('enterprise.productDetails.notFound.message')}
+          <Text
+            style={{ color: colors.textSecondary }}
+            className="mt-2 font-quicksand-medium text-center"
+          >
+            {i18n.t("enterprise.productDetails.notFound.message")}
           </Text>
           <TouchableOpacity
             className="mt-6 bg-primary-500 rounded-2xl px-6 py-3"
             onPress={() => router.back()}
           >
-            <Text className="text-white font-quicksand-semibold">{i18n.t('enterprise.productDetails.notFound.backButton')}</Text>
+            <Text className="text-white font-quicksand-semibold">
+              {i18n.t("enterprise.productDetails.notFound.backButton")}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -470,7 +407,11 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
 
   return (
     <View style={[styles.safe, { backgroundColor: colors.card }]}>
-      <ExpoStatusBar style={isDark ? "light" : "dark"} translucent backgroundColor="transparent" />
+      <ExpoStatusBar
+        style={isDark ? "light" : "dark"}
+        translucent
+        backgroundColor="transparent"
+      />
 
       {/* Compact Header (Appears on scroll) */}
       <Animated.View
@@ -485,7 +426,11 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         ]}
         pointerEvents="box-none"
       >
-        <BlurView intensity={100} tint="light" style={StyleSheet.absoluteFill} />
+        <BlurView
+          intensity={100}
+          tint="light"
+          style={StyleSheet.absoluteFill}
+        />
 
         <View style={styles.compactHeaderContent}>
           <TouchableOpacity
@@ -508,11 +453,14 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
               onPress={async () => {
                 try {
                   await Share.share({
-                    message: product && product.name
-                      ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ""}`
-                      : i18n.t('enterprise.productDetails.share.defaultMessage') ?? 'Voir ce produit',
+                    message:
+                      product && product.name
+                        ? `${product.name} • ${formatPrice(product.price)}\n${createPublicProductShareUrl(product._id)}`
+                        : (i18n.t(
+                            "enterprise.productDetails.share.defaultMessage",
+                          ) ?? "Voir ce produit"),
                   });
-                } catch { }
+                } catch {}
               }}
               className="w-10 h-10 justify-center items-center mr-1"
             >
@@ -573,11 +521,11 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
             try {
               await Share.share({
                 message: product
-                  ? `${product.name} • ${formatPrice(product.price)}${product.images?.[0] ? `\n${product.images[0]}` : ""
-                  }`
-                  : i18n.t('enterprise.productDetails.share.defaultMessage') ?? 'Voir ce produit',
+                  ? `${product.name} • ${formatPrice(product.price)}\n${createPublicProductShareUrl(product._id)}`
+                  : (i18n.t("enterprise.productDetails.share.defaultMessage") ??
+                    "Voir ce produit"),
               });
-            } catch { }
+            } catch {}
           }}
           className="w-10 h-10 bg-black/30 rounded-full justify-center items-center mr-2"
         >
@@ -626,7 +574,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
           <Text style={styles.subTitle} className="font-quicksand-medium">
             {typeof product.category === "object" && product.category?.name
               ? product.category.name
-              : i18n.t('enterprise.productDetails.category.default')}{" "}
+              : i18n.t("enterprise.productDetails.category.default")}{" "}
             • {formatPrice(product.price)}
           </Text>
         </Animated.View>
@@ -639,10 +587,12 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         contentContainerStyle={{ paddingTop: HEADER_HEIGHT }}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false }
+          { useNativeDriver: false },
         )}
       >
-        <View style={[styles.contentContainer, { backgroundColor: colors.card }]}>
+        <View
+          style={[styles.contentContainer, { backgroundColor: colors.card }]}
+        >
           {/* Thumbnails */}
           {product.images.length > 1 && (
             <View className="mt-4 mb-6">
@@ -690,15 +640,27 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
             <Text className="text-3xl font-quicksand-bold text-primary-600 mb-2">
               {formatPrice(product.price)}
             </Text>
-            <Text style={{ color: colors.textSecondary }} className="font-quicksand-medium leading-6">
+            <Text
+              style={{ color: colors.textSecondary }}
+              className="font-quicksand-medium leading-6"
+            >
               {product.description}
             </Text>
           </View>
 
           {/* Enterprise Section */}
-          <View style={{ backgroundColor: colors.secondary, borderColor: colors.border }} className="p-4 border rounded-2xl mb-6">
-            <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold mb-3">
-              {i18n.t('enterprise.productDetails.store.title')}
+          <View
+            style={{
+              backgroundColor: colors.secondary,
+              borderColor: colors.border,
+            }}
+            className="p-4 border rounded-2xl mb-6"
+          >
+            <Text
+              style={{ color: colors.textPrimary }}
+              className="text-lg font-quicksand-bold mb-3"
+            >
+              {i18n.t("enterprise.productDetails.store.title")}
             </Text>
             <TouchableOpacity
               className="flex-row items-center"
@@ -708,13 +670,13 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                   product.enterprise._id
                 ) {
                   router.push(
-                    `/(app)/(enterprise)/(tabs)/enterprise/${product.enterprise._id}`
+                    `/(app)/(enterprise)/(tabs)/enterprise/${product.enterprise._id}`,
                   );
                 }
               }}
             >
               {typeof product.enterprise === "object" &&
-                product.enterprise.logo ? (
+              product.enterprise.logo ? (
                 <Image
                   source={{ uri: product.enterprise.logo }}
                   className="w-14 h-14 rounded-2xl"
@@ -726,29 +688,45 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                 </View>
               )}
               <View className="ml-4 flex-1">
-                <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold">
+                <Text
+                  style={{ color: colors.textPrimary }}
+                  className="text-lg font-quicksand-bold"
+                >
                   {typeof product.enterprise === "object"
                     ? product.enterprise.companyName
                     : product.enterprise}
                 </Text>
                 {typeof product.enterprise === "object" &&
                   product.enterprise.location && (
-                    <Text style={{ color: colors.textSecondary }} className="text-sm mt-1">
+                    <Text
+                      style={{ color: colors.textSecondary }}
+                      className="text-sm mt-1"
+                    >
                       📍 {product.enterprise.location.city},{" "}
                       {product.enterprise.location.district}
                     </Text>
                   )}
               </View>
-              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={colors.textSecondary}
+              />
             </TouchableOpacity>
 
             {/* Contact Options */}
             {typeof product.enterprise === "object" &&
               (product.enterprise.contactInfo?.phone ||
                 product.enterprise.contactInfo?.website) && (
-                <View style={{ borderTopColor: colors.border }} className="mt-4 pt-4 border-t">
-                  <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand-bold mb-3 uppercase tracking-wider">
-                    {i18n.t('enterprise.productDetails.store.contact')}
+                <View
+                  style={{ borderTopColor: colors.border }}
+                  className="mt-4 pt-4 border-t"
+                >
+                  <Text
+                    style={{ color: colors.textSecondary }}
+                    className="text-sm font-quicksand-bold mb-3 uppercase tracking-wider"
+                  >
+                    {i18n.t("enterprise.productDetails.store.contact")}
                   </Text>
                   <View className="flex-row flex-wrap -mx-1">
                     {typeof product.enterprise === "object" &&
@@ -757,13 +735,16 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                           <TouchableOpacity
                             onPress={() =>
                               typeof product.enterprise === "object" &&
-                                product.enterprise.contactInfo?.phone
+                              product.enterprise.contactInfo?.phone
                                 ? openWhatsApp(
-                                  product.enterprise.contactInfo.phone
-                                )
+                                    product.enterprise.contactInfo.phone,
+                                  )
                                 : undefined
                             }
-                            style={{ backgroundColor: colors.card, borderColor: colors.border }}
+                            style={{
+                              backgroundColor: colors.card,
+                              borderColor: colors.border,
+                            }}
                             className="flex-1 rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border shadow-sm"
                           >
                             <Ionicons
@@ -771,25 +752,36 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                               size={18}
                               color="#10B981"
                             />
-                            <Text style={{ color: colors.textPrimary }} className="ml-2 font-quicksand-bold text-sm">
-                              {i18n.t('enterprise.productDetails.store.whatsapp')}
+                            <Text
+                              style={{ color: colors.textPrimary }}
+                              className="ml-2 font-quicksand-bold text-sm"
+                            >
+                              {i18n.t(
+                                "enterprise.productDetails.store.whatsapp",
+                              )}
                             </Text>
                           </TouchableOpacity>
                           <TouchableOpacity
                             onPress={() =>
                               typeof product.enterprise === "object" &&
-                                product.enterprise.contactInfo?.phone
+                              product.enterprise.contactInfo?.phone
                                 ? makePhoneCall(
-                                  product.enterprise.contactInfo.phone
-                                )
+                                    product.enterprise.contactInfo.phone,
+                                  )
                                 : undefined
                             }
-                            style={{ backgroundColor: colors.card, borderColor: colors.border }}
+                            style={{
+                              backgroundColor: colors.card,
+                              borderColor: colors.border,
+                            }}
                             className="flex-1 rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border shadow-sm"
                           >
                             <Ionicons name="call" size={18} color="#FE8C00" />
-                            <Text style={{ color: colors.textPrimary }} className="ml-2 font-quicksand-bold text-sm">
-                              {i18n.t('enterprise.productDetails.store.call')}
+                            <Text
+                              style={{ color: colors.textPrimary }}
+                              className="ml-2 font-quicksand-bold text-sm"
+                            >
+                              {i18n.t("enterprise.productDetails.store.call")}
                             </Text>
                           </TouchableOpacity>
                         </>
@@ -805,14 +797,14 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                   const conversation =
                     await MessagingService.createConversationForProduct(id!);
                   router.push(
-                    `/(app)/(enterprise)/conversation/${conversation._id}`
+                    `/(app)/(enterprise)/conversation/${conversation._id}`,
                   );
                 } catch (error) {
                   console.error("Erreur création conversation:", error);
                   showNotification(
                     "error",
                     "Erreur",
-                    "Impossible de créer la conversation"
+                    "Impossible de créer la conversation",
                   );
                 }
               }}
@@ -820,17 +812,23 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
             >
               <Ionicons name="chatbubbles" size={18} color="#D97706" />
               <Text className="ml-2 text-amber-800 font-quicksand-bold text-sm">
-                {i18n.t('enterprise.productDetails.store.negotiate')}
+                {i18n.t("enterprise.productDetails.store.negotiate")}
               </Text>
             </TouchableOpacity>
           </View>
 
           {/* Similar Products */}
           {(similarProducts.length > 0 || loadingSimilar) && (
-            <View style={{ borderTopColor: colors.border }} className="py-4 border-t">
+            <View
+              style={{ borderTopColor: colors.border }}
+              className="py-4 border-t"
+            >
               <View className="flex-row justify-between items-center mb-4">
-                <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold">
-                  {i18n.t('enterprise.productDetails.similar.title')}
+                <Text
+                  style={{ color: colors.textPrimary }}
+                  className="text-xl font-quicksand-bold"
+                >
+                  {i18n.t("enterprise.productDetails.similar.title")}
                 </Text>
               </View>
               {loadingSimilar ? (
@@ -907,12 +905,12 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
             initialScrollIndex={currentImageIndex}
             onMomentumScrollEnd={(e) => {
               const newIndex = Math.round(
-                e.nativeEvent.contentOffset.x / screenWidth
+                e.nativeEvent.contentOffset.x / screenWidth,
               );
               setCurrentImageIndex(newIndex);
             }}
             onScrollToIndexFailed={({ index }) => {
-              setTimeout(() => { }, 100);
+              setTimeout(() => {}, 100);
             }}
           />
         </View>

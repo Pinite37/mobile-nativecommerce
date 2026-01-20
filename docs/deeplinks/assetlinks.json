@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.axi.axiapp",
+      "sha256_cert_fingerprints": [
+        "4F:67:6F:94:CB:73:15:D3:34:82:FD:53:AF:56:68:85:D1:E3:D4:9A:48:00:15:2B:A5:AE:F3:B5:43:65:34:0E"
+      ]
+    }
+  }
+]
