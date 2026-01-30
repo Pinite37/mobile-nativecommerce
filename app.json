@@ -15,9 +15,7 @@
         "applinks:aximarketplace.com",
         "applinks:www.aximarketplace.com"
       ],
-      "runtimeVersion": {
-        "policy": "appVersion"
-      },
+      "runtimeVersion": "1.0.0",
       "infoPlist": {
         "NSCameraUsageDescription": "Cette application a besoin d'accéder à votre caméra pour prendre des photos de vos produits et publicités.",
         "NSPhotoLibraryUsageDescription": "Cette application a besoin d'accéder à votre galerie photo pour sélectionner des images de vos produits et publicités.",
