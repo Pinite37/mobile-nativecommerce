@@ -1,11 +1,16 @@
 # Deep links (aximarketplace.com)
 
-Objectif : partager des URLs `https://aximarketplace.com/p/<productId>` qui ouvrent l'app automatiquement (Universal Links iOS + App Links Android).
+Objectif : partager des URLs comme :
+
+- Produits : `https://aximarketplace.com/p/<productId>`
+- Publicités : `https://aximarketplace.com/ad/<advertisementId>`
+
+…qui ouvrent l'app automatiquement (Universal Links iOS + App Links Android).
 
 ## Côté app (déjà fait dans ce repo)
 
 - iOS : `associatedDomains` = `applinks:aximarketplace.com` (+ www)
-- Android : `intentFilters` `https://aximarketplace.com/p/*` (+ www), `autoVerify: true`
+- Android : `intentFilters` `https://aximarketplace.com/p/*` et `https://aximarketplace.com/ad/*` (+ www), `autoVerify: true`
 - Partage : utilise `EXPO_PUBLIC_WEB_URL` (par défaut `https://aximarketplace.com`) via `utils/AppLinks.ts`
 
 ## Côté domaine (à faire sur ton serveur)
@@ -40,4 +45,4 @@ URL : `https://aximarketplace.com/.well-known/assetlinks.json`
 ## Notes importantes
 
 - WhatsApp/SMS cliquent beaucoup mieux sur `https://...` que sur `axiapp://...`.
-- Sans les 2 fichiers `.well-known`, les liens `https://aximarketplace.com/p/...` s'ouvriront dans le navigateur au lieu de l'app.
+- Sans les 2 fichiers `.well-known`, les liens `https://aximarketplace.com/p/...` et `https://aximarketplace.com/ad/...` s'ouvriront dans le navigateur au lieu de l'app.

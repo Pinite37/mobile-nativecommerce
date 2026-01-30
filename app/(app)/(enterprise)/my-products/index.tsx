@@ -280,8 +280,7 @@ export default function MyProductsPage() {
           </View>
           <TouchableOpacity
             onPress={() => {
-              // TODO: Navigate to create product page
-              Alert.alert(i18n.t('enterprise.myProducts.createComingSoon'), i18n.t('enterprise.myProducts.createComingSoonMessage'));
+              router.push('/(app)/(enterprise)/(tabs)/products/create');
             }}
             className="w-10 h-10 bg-white/20 rounded-full items-center justify-center"
           >

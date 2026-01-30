@@ -5,3 +5,11 @@ export function createPublicProductShareUrl(productId: string): string {
     process.env.EXPO_PUBLIC_WEB_URL || "https://aximarketplace.com";
   return `${baseUrl.replace(/\/$/, "")}/p/${productId}`;
 }
+
+export function createPublicAdvertisementShareUrl(
+  advertisementId: string,
+): string {
+  const baseUrl =
+    process.env.EXPO_PUBLIC_WEB_URL || "https://aximarketplace.com";
+  return `${baseUrl.replace(/\/$/, "")}/ad/${advertisementId}`;
+}

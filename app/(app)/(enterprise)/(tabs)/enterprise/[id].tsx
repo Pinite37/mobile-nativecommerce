@@ -464,7 +464,7 @@ export default function EnterpriseDetails() {
           className="w-full h-28 rounded-t-2xl"
           resizeMode="cover"
         />
-        {product.stock <= 5 && product.stock > 0 && (
+        {/* {product.stock <= 5 && product.stock > 0 && (
           <View className="absolute top-2 right-2 bg-warning-500 rounded-full px-2 py-1">
             <Text className="text-white text-xs font-quicksand-bold">
               {i18n.t("client.enterprise.stock.remaining", {
@@ -472,7 +472,7 @@ export default function EnterpriseDetails() {
               })}
             </Text>
           </View>
-        )}
+        )} */}
       </View>
 
       <View className="p-3">

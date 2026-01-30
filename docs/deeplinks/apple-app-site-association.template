@@ -5,7 +5,8 @@
       {
         "appID": "__APPLE_TEAM_ID__.com.axi.axiapp",
         "paths": [
-          "/p/*"
+          "/p/*",
+          "/ad/*"
         ]
       }
     ]
