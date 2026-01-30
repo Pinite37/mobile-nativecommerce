@@ -34,6 +34,15 @@
         <data android:scheme="axiapp"/>
         <data android:scheme="exp+mobile"/>
       </intent-filter>
+      <intent-filter android:autoVerify="true" data-generated="true">
+        <action android:name="android.intent.action.VIEW"/>
+        <data android:scheme="https" android:host="aximarketplace.com" android:pathPrefix="/p"/>
+        <data android:scheme="https" android:host="aximarketplace.com" android:pathPrefix="/ad"/>
+        <data android:scheme="https" android:host="www.aximarketplace.com" android:pathPrefix="/p"/>
+        <data android:scheme="https" android:host="www.aximarketplace.com" android:pathPrefix="/ad"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+      </intent-filter>
     </activity>
   </application>
 </manifest>
