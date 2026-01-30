@@ -185,14 +185,14 @@ export default function ProductDetails() {
           cachePolicy="memory-disk"
         />
         {/* Badge stock si faible */}
-        {similarProduct.stock <= 5 && similarProduct.stock > 0 && (
+        {/* {similarProduct.stock <= 5 && similarProduct.stock > 0 && (
           <View className="absolute top-2 left-2 bg-warning-500 rounded-full px-2 py-1">
             <Text className="text-white text-xs font-quicksand-bold">
               {similarProduct.stock}{" "}
               {i18n.t("enterprise.productDetails.stock.remaining")}
             </Text>
           </View>
-        )}
+        )} */}
       </View>
 
       <View className="p-3">

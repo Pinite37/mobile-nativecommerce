@@ -10,7 +10,15 @@ export default function TabsLayout() {
   const { unreadCount } = useUnreadNotifications();
   const insets = useSafeAreaInsets();
 
-  const NotificationIcon = ({ color, size, focused }: { color: string; size: number; focused: boolean }) => (
+  const NotificationIcon = ({
+    color,
+    size,
+    focused,
+  }: {
+    color: string;
+    size: number;
+    focused: boolean;
+  }) => (
     <TabBarIconWithBadge
       name="notifications"
       color={color}
@@ -173,6 +181,8 @@ export default function TabsLayout() {
         name="enterprise/[id]"
         options={{
           href: null, // Cache la route dynamique enterprise/[id]
+          // Masque complètement la TabBar (menu) sur cette page
+          tabBarStyle: { display: "none" },
         }}
       />
       <Tabs.Screen

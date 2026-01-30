@@ -44,8 +44,18 @@
             },
             {
               "scheme": "https",
+              "host": "aximarketplace.com",
+              "pathPrefix": "/ad"
+            },
+            {
+              "scheme": "https",
               "host": "www.aximarketplace.com",
               "pathPrefix": "/p"
+            },
+            {
+              "scheme": "https",
+              "host": "www.aximarketplace.com",
+              "pathPrefix": "/ad"
             }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
