@@ -4,9 +4,30 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Réimportons le CustomTabBar maintenant que le menu s'affiche correctement
 import { CustomTabBar } from "../../../../components/ui/CustomTabBar";
+import { TabBarIconWithBadge } from "../../../../components/ui/TabBarIconWithBadge";
+import { useUnreadMessages } from "../../../../hooks/useUnreadMessages";
 
 export default function ClientTabsLayout() {
   const insets = useSafeAreaInsets();
+  const { unreadConversationCount } = useUnreadMessages();
+
+  const MessagesIcon = ({
+    color,
+    size,
+    focused,
+  }: {
+    color: string;
+    size: number;
+    focused: boolean;
+  }) => (
+    <TabBarIconWithBadge
+      name="chatbubbles"
+      color={color}
+      size={size}
+      focused={focused}
+      badgeCount={unreadConversationCount}
+    />
+  );
 
   // Calcul dynamique pour tenir compte des barres de navigation Android / iOS
   const baseHeight = 70; // hauteur visuelle de base du tab bar (sans inset)
@@ -119,13 +140,7 @@ export default function ClientTabsLayout() {
         options={{
           title: "Messages",
           headerShown: false,
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons 
-              name={focused ? "chatbubbles" : "chatbubbles-outline"} 
-              size={focused ? 26 : 24} 
-              color={color} 
-            />
-          ),
+          tabBarIcon: MessagesIcon,
         }}
       />
       <Tabs.Screen

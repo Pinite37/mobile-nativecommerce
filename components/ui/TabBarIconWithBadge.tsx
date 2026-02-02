@@ -17,11 +17,19 @@ export const TabBarIconWithBadge: React.FC<TabBarIconWithBadgeProps> = ({
   focused,
   badgeCount,
 }) => {
+  const baseName = String(name);
+  const focusedName = baseName.endsWith("-outline")
+    ? (baseName.slice(0, -"-outline".length) as any)
+    : (baseName as any);
+  const unfocusedName = baseName.endsWith("-outline")
+    ? (baseName as any)
+    : (`${baseName}-outline` as any);
+
   return (
     <View className="relative">
       <Ionicons
-        name={focused ? name.replace('-outline', '') as any : `${name}-outline` as any}
-        size={focused ? size + 2 : size}
+        name={focused ? focusedName : unfocusedName}
+        size={size}
         color={color}
       />
 
