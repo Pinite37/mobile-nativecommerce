@@ -30,7 +30,7 @@ export const useUnreadMessages = () => {
 
   const isRefreshingRef = useRef(false);
   const scheduledRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null
+    null,
   );
 
   const refresh = useCallback(async () => {
@@ -51,7 +51,7 @@ export const useUnreadMessages = () => {
     try {
       const conversations = await MessagingService.getUserConversations(1, 100);
       const unreadConversationCount = (conversations ?? []).filter(
-        (c: any) => (c?.unreadCount ?? 0) > 0
+        (c: any) => (c?.unreadCount ?? 0) > 0,
       ).length;
 
       setState({
@@ -75,7 +75,7 @@ export const useUnreadMessages = () => {
         refresh();
       }, delayMs);
     },
-    [refresh]
+    [refresh],
   );
 
   // Initial load + refresh when app comes to foreground

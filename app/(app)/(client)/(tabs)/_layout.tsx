@@ -45,23 +45,23 @@ export default function ClientTabsLayout() {
         tabBarInactiveTintColor: "#9CA3AF",
         headerShown: false, // Ensure all headers are hidden by default
         tabBarLabelStyle: {
-          fontFamily: 'Quicksand-SemiBold',
+          fontFamily: "Quicksand-SemiBold",
           fontSize: 12,
           marginBottom: 4,
         },
         tabBarStyle: {
-          display: 'flex', // Make sure it's visible
-          position: 'absolute', // Make sure it stays at the bottom
+          display: "flex", // Make sure it's visible
+          position: "absolute", // Make sure it stays at the bottom
           bottom: 0,
           left: 0,
           right: 0,
           borderTopWidth: 0,
           elevation: 10,
-          shadowColor: '#000',
+          shadowColor: "#000",
           shadowOffset: { width: 0, height: -3 },
           shadowOpacity: 0.1,
           shadowRadius: 8,
-          backgroundColor: '#FFFFFF',
+          backgroundColor: "#FFFFFF",
           height: dynamicHeight,
           borderTopRightRadius: 25,
           borderTopLeftRadius: 25,
@@ -86,14 +86,14 @@ export default function ClientTabsLayout() {
           title: "Accueil",
           headerShown: false,
           tabBarLabelStyle: {
-            fontFamily: 'Quicksand-SemiBold',
+            fontFamily: "Quicksand-SemiBold",
             fontSize: 12,
           },
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons 
-              name={focused ? "home" : "home-outline"} 
-              size={focused ? 26 : 24} 
-              color={color} 
+            <Ionicons
+              name={focused ? "home" : "home-outline"}
+              size={focused ? 26 : 24}
+              color={color}
             />
           ),
         }}
@@ -122,19 +122,19 @@ export default function ClientTabsLayout() {
           title: "Favoris",
           headerShown: false,
           tabBarLabelStyle: {
-            fontFamily: 'Quicksand-SemiBold',
+            fontFamily: "Quicksand-SemiBold",
             fontSize: 12,
           },
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons 
-              name={focused ? "heart" : "heart-outline"} 
-              size={focused ? 26 : 24} 
-              color={color} 
+            <Ionicons
+              name={focused ? "heart" : "heart-outline"}
+              size={focused ? 26 : 24}
+              color={color}
             />
           ),
         }}
       />
-      
+
       <Tabs.Screen
         name="messages"
         options={{
@@ -149,14 +149,14 @@ export default function ClientTabsLayout() {
           title: "Profil",
           headerShown: false,
           tabBarLabelStyle: {
-            fontFamily: 'Quicksand-SemiBold',
+            fontFamily: "Quicksand-SemiBold",
             fontSize: 12,
           },
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons 
-              name={focused ? "person" : "person-outline"} 
-              size={focused ? 26 : 24} 
-              color={color} 
+            <Ionicons
+              name={focused ? "person" : "person-outline"}
+              size={focused ? 26 : 24}
+              color={color}
             />
           ),
         }}
