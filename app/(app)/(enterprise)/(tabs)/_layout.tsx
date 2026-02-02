@@ -4,10 +4,12 @@ import React from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CustomTabBar } from "../../../../components/ui/CustomTabBar";
 import { TabBarIconWithBadge } from "../../../../components/ui/TabBarIconWithBadge";
+import { useUnreadMessages } from "../../../../hooks/useUnreadMessages";
 import { useUnreadNotifications } from "../../../../hooks/useUnreadNotifications";
 
 export default function TabsLayout() {
   const { unreadCount } = useUnreadNotifications();
+  const { unreadConversationCount } = useUnreadMessages();
   const insets = useSafeAreaInsets();
 
   const NotificationIcon = ({
@@ -22,9 +24,27 @@ export default function TabsLayout() {
     <TabBarIconWithBadge
       name="notifications"
       color={color}
-      size={focused ? size + 2 : size}
+      size={size}
       focused={focused}
       badgeCount={unreadCount}
+    />
+  );
+
+  const MessagesIcon = ({
+    color,
+    size,
+    focused,
+  }: {
+    color: string;
+    size: number;
+    focused: boolean;
+  }) => (
+    <TabBarIconWithBadge
+      name="chatbubbles"
+      color={color}
+      size={size}
+      focused={focused}
+      badgeCount={unreadConversationCount}
     />
   );
 
@@ -120,13 +140,7 @@ export default function TabsLayout() {
         options={{
           title: "Messages",
           headerShown: false,
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "chatbubbles" : "chatbubbles-outline"}
-              size={focused ? 26 : 24}
-              color={color}
-            />
-          ),
+          tabBarIcon: MessagesIcon,
         }}
       />
       <Tabs.Screen
