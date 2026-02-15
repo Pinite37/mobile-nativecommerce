@@ -2,7 +2,7 @@ export interface User {
   _id: string;
   email: string;
   emailVerified?: boolean;
-  role: 'CLIENT' | 'ENTERPRISE';
+  role: "CLIENT" | "ENTERPRISE";
   firstName: string;
   lastName: string;
   phone: string;
@@ -13,7 +13,7 @@ export interface User {
   blockedReason?: string;
   lastActive: Date;
   location: {
-    type: 'Point';
+    type: "Point";
     coordinates: [number, number];
     address: string;
   };
@@ -54,7 +54,7 @@ export interface LoginRequest {
 export interface RegisterRequest {
   email: string;
   password: string;
-  role: 'CLIENT' | 'ENTERPRISE';
+  role: "CLIENT" | "ENTERPRISE";
   firstName: string;
   lastName: string;
   phone: string;

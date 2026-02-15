@@ -1,30 +1,43 @@
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { useToast } from '../../components/ui/ReanimatedToast/context';
-import { useAuth } from '../../contexts/AuthContext';
-import AuthService from '../../services/api/AuthService';
-import { ErrorHandler } from '../../utils/ErrorHandler';
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import React, { useEffect, useState } from "react";
+import {
+    ActivityIndicator,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useToast } from "../../components/ui/ReanimatedToast/context";
+import { useAuth } from "../../contexts/AuthContext";
+import AuthService from "../../services/api/AuthService";
+import { ErrorHandler } from "../../utils/ErrorHandler";
 
 export default function SignInScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
-  const { checkAuthStatus, redirectToRoleBasedHome, logout, isAuthenticated, userRole, isLoading: authLoading } = useAuth();
+  const {
+    checkAuthStatus,
+    redirectToRoleBasedHome,
+    logout,
+    isAuthenticated,
+    userRole,
+    isLoading: authLoading,
+  } = useAuth();
 
   // Bloquer l'accès si déjà connecté
   useEffect(() => {
     if (!authLoading && isAuthenticated && userRole) {
-      console.log('🚫 Utilisateur déjà connecté, redirection depuis signin');
-      if (userRole === 'CLIENT') {
-        router.replace('/(app)/(client)/(tabs)');
-      } else if (userRole === 'ENTERPRISE') {
-        router.replace('/(app)/(enterprise)/(tabs)');
+      console.log("🚫 Utilisateur déjà connecté, redirection depuis signin");
+      if (userRole === "CLIENT") {
+        router.replace("/(app)/(client)/(tabs)");
+      } else if (userRole === "ENTERPRISE") {
+        router.replace("/(app)/(enterprise)/(tabs)");
       }
     }
   }, [authLoading, isAuthenticated, userRole]);
@@ -36,7 +49,10 @@ export default function SignInScreen() {
 
   const handleSignIn = async () => {
     if (!email || !password) {
-      toast.showToast({ title: 'Erreur', subtitle: 'Veuillez remplir tous les champs' });
+      toast.showToast({
+        title: "Erreur",
+        subtitle: "Veuillez remplir tous les champs",
+      });
       return;
     }
 
@@ -48,24 +64,27 @@ export default function SignInScreen() {
         const userRole = response.data.user.role;
 
         // Check if role is supported
-        if ((userRole as string) === 'DELIVER') {
-          console.log('🚚 DELIVER role detected - showing error toast');
-          console.log('🚚 User role from response:', userRole);
+        if ((userRole as string) === "DELIVER") {
+          console.log("🚚 DELIVER role detected - showing error toast");
+          console.log("🚚 User role from response:", userRole);
 
           // Show error toast with longer duration
-          console.log('🚚 About to call toast.showError');
+          console.log("🚚 About to call toast.showError");
           toast.showToast({
-            title: 'Profil non supporté',
-            subtitle: 'Cette application ne gère que les profils clients et entreprises. Veuillez utiliser l\'application dédiée aux livreurs.'
+            title: "Profil non supporté",
+            subtitle:
+              "Cette application ne gère que les profils clients et entreprises. Veuillez utiliser l'application dédiée aux livreurs.",
           });
-          console.log('🚚 toast.showError called successfully');
+          console.log("🚚 toast.showError called successfully");
 
           // Clear any stored session data
           await logout();
 
           // Add a longer delay to ensure toast is visible before any navigation
           setTimeout(() => {
-            console.log('🚚 DELIVER role handled - toast should have been visible for 6 seconds');
+            console.log(
+              "🚚 DELIVER role handled - toast should have been visible for 6 seconds",
+            );
           }, 6500);
 
           return;
@@ -73,17 +92,27 @@ export default function SignInScreen() {
 
         // Check if email needs verification BEFORE refreshing auth status
         if (!response.data.user.emailVerified) {
-          console.log('📧 Email non vérifié, redirection IMMÉDIATE vers la vérification OTP');
-          console.log('⚠️ checkAuthStatus NON appelé - sera appelé après vérification OTP');
+          console.log(
+            "📧 Email non vérifié, redirection IMMÉDIATE vers la vérification OTP",
+          );
+          console.log(
+            "⚠️ checkAuthStatus NON appelé - sera appelé après vérification OTP",
+          );
           // Ne PAS appeler checkAuthStatus ici !
           // Cela évite de déclencher isAuthenticated=true, le modal notification, le chargement index.tsx, etc.
-          toast.showToast({ title: 'Vérification requise', subtitle: 'Veuillez vérifier votre adresse email' });
-          router.replace('/(auth)/verify-email' as any);
+          toast.showToast({
+            title: "Vérification requise",
+            subtitle: "Veuillez vérifier votre adresse email",
+          });
+          router.replace("/(auth)/verify-email" as any);
           return;
         }
 
-        const successMessage = ErrorHandler.getSuccessMessage('login');
-        toast.showToast({ title: successMessage.title, subtitle: successMessage.message });
+        const successMessage = ErrorHandler.getSuccessMessage("login");
+        toast.showToast({
+          title: successMessage.title,
+          subtitle: successMessage.message,
+        });
 
         // Email vérifié : activer la session complète
         await checkAuthStatus();
@@ -94,27 +123,45 @@ export default function SignInScreen() {
       }
     } catch (error: any) {
       // Détecter l'erreur spécifique "Email non vérifié" (401)
-      const errorMsg = error?.response?.data?.message || error?.message || '';
-      if (errorMsg.toLowerCase().includes('email non vérifié') || errorMsg.toLowerCase().includes('email not verified')) {
-        console.log('📧 Erreur 401 - Email non vérifié, redirection vers vérification OTP');
-        toast.showToast({ title: 'Vérification requise', subtitle: 'Veuillez vérifier votre adresse email avant de vous connecter' });
-        router.replace({ pathname: '/(auth)/verify-email' as any, params: { email } });
+      const errorMsg = error?.response?.data?.message || error?.message || "";
+      if (
+        errorMsg.toLowerCase().includes("email non vérifié") ||
+        errorMsg.toLowerCase().includes("email not verified")
+      ) {
+        console.log(
+          "📧 Erreur 401 - Email non vérifié, redirection vers vérification OTP",
+        );
+        toast.showToast({
+          title: "Vérification requise",
+          subtitle:
+            "Veuillez vérifier votre adresse email avant de vous connecter",
+        });
+        router.replace({
+          pathname: "/(auth)/verify-email" as any,
+          params: { email },
+        });
         return;
       }
 
       const errorMessage = ErrorHandler.parseApiError(error);
-      toast.showToast({ title: errorMessage.title, subtitle: errorMessage.message });
+      toast.showToast({
+        title: errorMessage.title,
+        subtitle: errorMessage.message,
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleSignUp = () => {
-    router.push('/(auth)/role-selection');
+    router.push("/(auth)/role-selection");
   };
 
   const handleForgotPassword = () => {
-    toast.showToast({ title: 'Info', subtitle: 'Fonctionnalité de mot de passe oublié sera bientôt disponible' });
+    toast.showToast({
+      title: "Info",
+      subtitle: "Fonctionnalité de mot de passe oublié sera bientôt disponible",
+    });
   };
 
   return (
@@ -168,7 +215,7 @@ export default function SignInScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
               className="border border-neutral-200 rounded-xl px-4 py-4 text-base font-quicksand text-neutral-900"
-              style={{ color: '#111827' }}
+              style={{ color: "#111827" }}
             />
           </View>
 
@@ -185,7 +232,7 @@ export default function SignInScreen() {
                 placeholderTextColor="#9CA3AF"
                 secureTextEntry={!showPassword}
                 className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 text-base font-quicksand text-neutral-900"
-                style={{ color: '#111827' }}
+                style={{ color: "#111827" }}
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
@@ -193,7 +240,7 @@ export default function SignInScreen() {
                 activeOpacity={0.7}
               >
                 <Ionicons
-                  name={showPassword ? 'eye-off' : 'eye'}
+                  name={showPassword ? "eye-off" : "eye"}
                   size={20}
                   color="#6B7280"
                 />
@@ -216,21 +263,26 @@ export default function SignInScreen() {
             onPress={handleSignIn}
             disabled={isLoading}
             activeOpacity={1}
-            className={`rounded-xl py-4 mb-6 flex-row items-center justify-center ${isLoading ? 'bg-primary/70' : 'bg-primary'
-              }`}
+            className={`rounded-xl py-4 mb-6 flex-row items-center justify-center ${
+              isLoading ? "bg-primary/70" : "bg-primary"
+            }`}
           >
             {isLoading && (
-              <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 8 }} />
+              <ActivityIndicator
+                size="small"
+                color="#FFFFFF"
+                style={{ marginRight: 8 }}
+              />
             )}
             <Text className="text-white font-quicksand-semibold text-base text-center">
-              {isLoading ? 'Connexion...' : 'Se connecter'}
+              {isLoading ? "Connexion..." : "Se connecter"}
             </Text>
           </TouchableOpacity>
 
           {/* Sign Up Link */}
           <View className="flex-row justify-center items-center">
             <Text className="text-neutral-600 font-quicksand text-sm">
-              Vous n&apos;avez pas de compte ?{' '}
+              Vous n&apos;avez pas de compte ?{" "}
             </Text>
             <TouchableOpacity onPress={handleSignUp}>
               <Text className="text-primary font-quicksand-semibold text-sm">

@@ -23,32 +23,34 @@ export default function Index() {
   }, []);
 
   useEffect(() => {
-    StartupPerformanceMonitor.mark('App Index - useEffect déclenché');
+    StartupPerformanceMonitor.mark("App Index - useEffect déclenché");
 
     // Wait for both auth and onboarding checks to complete
     if (isLoading || !hasCheckedOnboarding) {
       return;
     }
 
-    StartupPerformanceMonitor.mark('App Index - Auth check terminé');
+    StartupPerformanceMonitor.mark("App Index - Auth check terminé");
 
     // Navigation logic based on auth and onboarding state
     if (isAuthenticated && userRole) {
       // Check if email is verified
       if (user && user.emailVerified === false) {
-        console.log('📧 Email non vérifié au démarrage, redirection vers vérification OTP');
-        router.replace('/(auth)/verify-email' as any);
+        console.log(
+          "📧 Email non vérifié au démarrage, redirection vers vérification OTP",
+        );
+        router.replace("/(auth)/verify-email" as any);
         return;
       }
-      StartupPerformanceMonitor.mark('App Index - Navigation vers app');
+      StartupPerformanceMonitor.mark("App Index - Navigation vers app");
       // User is authenticated, redirect to role-based home
       NavigationHelper.navigateToRoleHome(userRole);
     } else if (!onboardingCompleted) {
-      StartupPerformanceMonitor.mark('App Index - Navigation vers onboarding');
+      StartupPerformanceMonitor.mark("App Index - Navigation vers onboarding");
       // User is not authenticated and hasn't seen onboarding
       NavigationHelper.navigateToOnboarding();
     } else {
-      StartupPerformanceMonitor.mark('App Index - Navigation vers welcome');
+      StartupPerformanceMonitor.mark("App Index - Navigation vers welcome");
       // User is not authenticated but has seen onboarding
       NavigationHelper.navigateToAuth();
     }
@@ -57,7 +59,14 @@ export default function Index() {
     setTimeout(() => {
       StartupPerformanceMonitor.logReport();
     }, 1000);
-  }, [isAuthenticated, user, userRole, isLoading, hasCheckedOnboarding, onboardingCompleted]);
+  }, [
+    isAuthenticated,
+    user,
+    userRole,
+    isLoading,
+    hasCheckedOnboarding,
+    onboardingCompleted,
+  ]);
 
   return (
     <View className="flex-1 bg-white">

@@ -1,41 +1,48 @@
-import { Ionicons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
-import { Linking, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useToast } from '../../components/ui/ReanimatedToast/context';
-import { useAuth } from '../../contexts/AuthContext';
-import { ErrorHandler } from '../../utils/ErrorHandler';
-import { RegistrationHelper } from '../../utils/RegistrationHelper';
+import { Ionicons } from "@expo/vector-icons";
+import { router, useLocalSearchParams } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import React, { useEffect, useState } from "react";
+import { Linking, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useToast } from "../../components/ui/ReanimatedToast/context";
+import { useAuth } from "../../contexts/AuthContext";
+import { ErrorHandler } from "../../utils/ErrorHandler";
+import { RegistrationHelper } from "../../utils/RegistrationHelper";
 
 export default function SignUpScreen() {
   const { role } = useLocalSearchParams<{ role: string }>();
 
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const toast = useToast();
   const insets = useSafeAreaInsets();
-  const { redirectToRoleBasedHome, handlePostRegistration, logout, isAuthenticated, userRole, isLoading: authLoading } = useAuth();
+  const {
+    redirectToRoleBasedHome,
+    handlePostRegistration,
+    logout,
+    isAuthenticated,
+    userRole,
+    isLoading: authLoading,
+  } = useAuth();
 
   // Bloquer l'accès si déjà connecté
   useEffect(() => {
     if (!authLoading && isAuthenticated && userRole) {
-      console.log('🚫 Utilisateur déjà connecté, redirection depuis signup');
-      if (userRole === 'CLIENT') {
-        router.replace('/(app)/(client)/(tabs)');
-      } else if (userRole === 'ENTERPRISE') {
-        router.replace('/(app)/(enterprise)/(tabs)');
+      console.log("🚫 Utilisateur déjà connecté, redirection depuis signup");
+      if (userRole === "CLIENT") {
+        router.replace("/(app)/(client)/(tabs)");
+      } else if (userRole === "ENTERPRISE") {
+        router.replace("/(app)/(enterprise)/(tabs)");
       }
     }
   }, [authLoading, isAuthenticated, userRole]);
@@ -46,34 +53,54 @@ export default function SignUpScreen() {
   }
 
   const handleSignUp = async () => {
-    if (!firstName || !lastName || !email || !phone || !address || !password || !confirmPassword) {
-      toast.showToast({ title: 'Erreur', subtitle: 'Veuillez remplir tous les champs' });
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !phone ||
+      !address ||
+      !password ||
+      !confirmPassword
+    ) {
+      toast.showToast({
+        title: "Erreur",
+        subtitle: "Veuillez remplir tous les champs",
+      });
       return;
     }
 
     if (password !== confirmPassword) {
-      toast.showToast({ title: 'Erreur', subtitle: 'Les mots de passe ne correspondent pas' });
+      toast.showToast({
+        title: "Erreur",
+        subtitle: "Les mots de passe ne correspondent pas",
+      });
       return;
     }
 
     if (password.length < 6) {
-      toast.showToast({ title: 'Erreur', subtitle: 'Le mot de passe doit contenir au moins 6 caractères' });
+      toast.showToast({
+        title: "Erreur",
+        subtitle: "Le mot de passe doit contenir au moins 6 caractères",
+      });
       return;
     }
 
     if (!agreedToTerms) {
-      toast.showToast({ title: 'Erreur', subtitle: 'Veuillez accepter les termes et conditions' });
+      toast.showToast({
+        title: "Erreur",
+        subtitle: "Veuillez accepter les termes et conditions",
+      });
       return;
     }
 
     setIsLoading(true);
     try {
       // Formater le numéro de téléphone avec l'indicatif +229
-      let formattedPhone = phone.replace(/[\s-]/g, '');
-      if (!formattedPhone.startsWith('+')) {
-        formattedPhone = '+229' + formattedPhone;
+      let formattedPhone = phone.replace(/[\s-]/g, "");
+      if (!formattedPhone.startsWith("+")) {
+        formattedPhone = "+229" + formattedPhone;
       }
-      console.log('📱 Numéro formaté pour inscription:', formattedPhone);
+      console.log("📱 Numéro formaté pour inscription:", formattedPhone);
 
       const userData = {
         firstName,
@@ -83,23 +110,27 @@ export default function SignUpScreen() {
         address,
         password,
         agreedToTerms,
-        role: (role || 'CLIENT') as 'CLIENT' | 'ENTERPRISE',
+        role: (role || "CLIENT") as "CLIENT" | "ENTERPRISE",
       };
 
-      console.log('🚀 Début de l\'inscription...');
+      console.log("🚀 Début de l'inscription...");
 
       // Utiliser l'utilitaire d'inscription avec connexion automatique
-      const response = await RegistrationHelper.registerWithAutoLogin(userData, false);
+      const response = await RegistrationHelper.registerWithAutoLogin(
+        userData,
+        false,
+      );
 
       if (response.success && response.data) {
-        console.log('✅ Inscription réussie, traitement de l\'état...');
+        console.log("✅ Inscription réussie, traitement de l'état...");
 
         // Check if role is supported
         const userRole = response.data.user.role;
-        if ((userRole as string) === 'DELIVER') {
+        if ((userRole as string) === "DELIVER") {
           toast.showToast({
-            title: 'Profil non supporté',
-            subtitle: 'Cette application ne gère que les profils clients et entreprises. Veuillez utiliser l\'application dédiée aux livreurs.'
+            title: "Profil non supporté",
+            subtitle:
+              "Cette application ne gère que les profils clients et entreprises. Veuillez utiliser l'application dédiée aux livreurs.",
           });
 
           // Clear any stored session data
@@ -110,23 +141,33 @@ export default function SignUpScreen() {
         // Afficher l'état d'authentification pour debug
         await RegistrationHelper.logAuthenticationState();
 
-        const successMessage = ErrorHandler.getSuccessMessage('register');
-        toast.showToast({ title: successMessage.title, subtitle: successMessage.message });
+        const successMessage = ErrorHandler.getSuccessMessage("register");
+        toast.showToast({
+          title: successMessage.title,
+          subtitle: successMessage.message,
+        });
 
         // Check if email needs verification BEFORE setting full auth state
         if (!response.data.user.emailVerified) {
-          console.log('📧 Email non vérifié, redirection IMMÉDIATE vers la vérification OTP');
-          console.log('⚠️ handlePostRegistration NON appelé - sera appelé après vérification OTP');
+          console.log(
+            "📧 Email non vérifié, redirection IMMÉDIATE vers la vérification OTP",
+          );
+          console.log(
+            "⚠️ handlePostRegistration NON appelé - sera appelé après vérification OTP",
+          );
           // Ne PAS appeler handlePostRegistration ici !
           // Cela évite de déclencher isAuthenticated=true, le modal notification, le chargement index.tsx, etc.
           // On redirige directement vers l'OTP sans passer par le home
-          router.replace('/(auth)/verify-email' as any);
+          router.replace("/(auth)/verify-email" as any);
           return;
         }
 
         // Email déjà vérifié : activer la session complète
-        console.log('🎯 Email vérifié, activation de la session complète...');
-        await handlePostRegistration(response.data.user, response.data.user.role);
+        console.log("🎯 Email vérifié, activation de la session complète...");
+        await handlePostRegistration(
+          response.data.user,
+          response.data.user.role,
+        );
 
         // Rediriger vers l'interface correspondant au rôle avec un délai optimisé
         setTimeout(() => {
@@ -134,9 +175,12 @@ export default function SignUpScreen() {
         }, 1200);
       }
     } catch (error: any) {
-      console.error('❌ Erreur inscription:', error);
+      console.error("❌ Erreur inscription:", error);
       const errorMessage = ErrorHandler.parseApiError(error);
-      toast.showToast({ title: errorMessage.title, subtitle: errorMessage.message });
+      toast.showToast({
+        title: errorMessage.title,
+        subtitle: errorMessage.message,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -155,7 +199,7 @@ export default function SignUpScreen() {
         className="absolute top-0 left-0 right-0 z-10 bg-white px-6"
         style={{
           paddingTop: Math.max(insets.top, 16) + 16,
-          paddingBottom: 16
+          paddingBottom: 16,
         }}
       >
         <TouchableOpacity
@@ -177,7 +221,9 @@ export default function SignUpScreen() {
         extraHeight={150}
         resetScrollToCoords={{ x: 0, y: 0 }}
         scrollEnabled={true}
-        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 30) + 60 }}
+        contentContainerStyle={{
+          paddingBottom: Math.max(insets.bottom, 30) + 60,
+        }}
       >
         {/* Header */}
         <View className="px-6 pb-8">
@@ -277,7 +323,7 @@ export default function SignUpScreen() {
                 className="absolute right-4 top-4"
               >
                 <Ionicons
-                  name={showPassword ? 'eye-off' : 'eye'}
+                  name={showPassword ? "eye-off" : "eye"}
                   size={20}
                   color="#6B7280"
                 />
@@ -303,7 +349,7 @@ export default function SignUpScreen() {
                 className="absolute right-4 top-4"
               >
                 <Ionicons
-                  name={showConfirmPassword ? 'eye-off' : 'eye'}
+                  name={showConfirmPassword ? "eye-off" : "eye"}
                   size={20}
                   color="#6B7280"
                 />
@@ -324,17 +370,21 @@ export default function SignUpScreen() {
                 )}
               </View>
               <Text className="text-sm font-quicksand text-neutral-600 flex-1">
-                J&#39;accepte les{' '}
+                J&#39;accepte les{" "}
                 <Text
                   className="text-primary font-quicksand-medium"
-                  onPress={() => Linking.openURL('https://nativecommerce.com/terms')}
+                  onPress={() =>
+                    Linking.openURL("https://nativecommerce.com/terms")
+                  }
                 >
                   « termes et conditions »
-                </Text>
-                {' '}et la{' '}
+                </Text>{" "}
+                et la{" "}
                 <Text
                   className="text-primary font-quicksand-medium"
-                  onPress={() => Linking.openURL('https://nativecommerce.com/privacy')}
+                  onPress={() =>
+                    Linking.openURL("https://nativecommerce.com/privacy")
+                  }
                 >
                   « politique de confidentialité »
                 </Text>
@@ -346,18 +396,19 @@ export default function SignUpScreen() {
           <TouchableOpacity
             onPress={handleSignUp}
             disabled={isLoading}
-            className={`rounded-xl py-4 mb-6 ${isLoading ? 'bg-primary/70' : 'bg-primary'
-              }`}
+            className={`rounded-xl py-4 mb-6 ${
+              isLoading ? "bg-primary/70" : "bg-primary"
+            }`}
           >
             <Text className="text-white font-quicksand-semibold text-base text-center">
-              {isLoading ? 'Création du compte...' : 'Créer le compte'}
+              {isLoading ? "Création du compte..." : "Créer le compte"}
             </Text>
           </TouchableOpacity>
 
           {/* Sign In Link */}
           <View className="flex-row justify-center items-center pb-6">
             <Text className="text-neutral-600 font-quicksand text-sm">
-              Vous avez déjà un compte ?{' '}
+              Vous avez déjà un compte ?{" "}
             </Text>
             <TouchableOpacity onPress={handleSignIn}>
               <Text className="text-primary font-quicksand-semibold text-sm">

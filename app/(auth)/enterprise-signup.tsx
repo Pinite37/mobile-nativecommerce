@@ -1,47 +1,47 @@
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useRef, useState } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Keyboard,
-  KeyboardAvoidingView,
-  Linking,
-  Modal,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SubscriptionWelcomeModal } from '../../components/enterprise/SubscriptionWelcomeModal';
-import { useToast } from '../../components/ui/ReanimatedToast/context';
-import { beninCities, neighborhoodsByCity } from '../../constants/LocationData';
-import { useAuth } from '../../contexts/AuthContext';
-import { EnterpriseRegisterRequest } from '../../types/auth';
-import { RegistrationHelper } from '../../utils/RegistrationHelper';
+    ActivityIndicator,
+    FlatList,
+    Keyboard,
+    KeyboardAvoidingView,
+    Linking,
+    Modal,
+    Platform,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SubscriptionWelcomeModal } from "../../components/enterprise/SubscriptionWelcomeModal";
+import { useToast } from "../../components/ui/ReanimatedToast/context";
+import { beninCities, neighborhoodsByCity } from "../../constants/LocationData";
+import { useAuth } from "../../contexts/AuthContext";
+import { EnterpriseRegisterRequest } from "../../types/auth";
+import { RegistrationHelper } from "../../utils/RegistrationHelper";
 
 export default function EnterpriseSignUpScreen() {
   // Form data states
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [address, setAddress] = useState('');
-  const [companyName, setCompanyName] = useState('');
-  const [description, setDescription] = useState('');
-  const [companyEmail, setCompanyEmail] = useState('');
-  const [whatsapp, setWhatsapp] = useState('');
-  const [website, setWebsite] = useState('');
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [address, setAddress] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [description, setDescription] = useState("");
+  const [companyEmail, setCompanyEmail] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [website, setWebsite] = useState("");
   const [selectedCity, setSelectedCity] = useState(beninCities[0].name);
-  const [selectedDistrict, setSelectedDistrict] = useState('');
-  const [ifuNumber, setIfuNumber] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [ifuNumber, setIfuNumber] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   // UI states
@@ -67,7 +67,7 @@ export default function EnterpriseSignUpScreen() {
 
   useEffect(() => {
     // Réinitialiser le quartier si la ville change
-    setSelectedDistrict('');
+    setSelectedDistrict("");
   }, [selectedCity]);
 
   // Reset scroll to top when step changes
@@ -85,27 +85,33 @@ export default function EnterpriseSignUpScreen() {
   // Validation functions for each step
   const validateStep1 = (): boolean => {
     if (!firstName.trim()) {
-      toast.showToast({ title: 'Erreur', subtitle: 'Le prénom est requis' });
+      toast.showToast({ title: "Erreur", subtitle: "Le prénom est requis" });
       return false;
     }
     if (!lastName.trim()) {
-      toast.showToast({ title: 'Erreur', subtitle: 'Le nom est requis' });
+      toast.showToast({ title: "Erreur", subtitle: "Le nom est requis" });
       return false;
     }
     if (!email.trim()) {
-      toast.showToast({ title: 'Erreur', subtitle: 'L\'email est requis' });
+      toast.showToast({ title: "Erreur", subtitle: "L'email est requis" });
       return false;
     }
     if (!/\S+@\S+\.\S+/.test(email)) {
-      toast.showToast({ title: 'Erreur', subtitle: 'Veuillez entrer un email valide' });
+      toast.showToast({
+        title: "Erreur",
+        subtitle: "Veuillez entrer un email valide",
+      });
       return false;
     }
     if (!phone.trim()) {
-      toast.showToast({ title: 'Erreur', subtitle: 'Le numéro de téléphone est requis' });
+      toast.showToast({
+        title: "Erreur",
+        subtitle: "Le numéro de téléphone est requis",
+      });
       return false;
     }
     if (!address.trim()) {
-      toast.showToast({ title: 'Erreur', subtitle: 'L\'adresse est requise' });
+      toast.showToast({ title: "Erreur", subtitle: "L'adresse est requise" });
       return false;
     }
     return true;
@@ -113,19 +119,31 @@ export default function EnterpriseSignUpScreen() {
 
   const validateStep2 = (): boolean => {
     if (!companyName.trim()) {
-      toast.showToast({ title: 'Erreur', subtitle: 'Le nom de l\'entreprise est requis' });
+      toast.showToast({
+        title: "Erreur",
+        subtitle: "Le nom de l'entreprise est requis",
+      });
       return false;
     }
     if (ifuNumber.trim() && !/^\d{13}$/.test(ifuNumber)) {
-      toast.showToast({ title: 'Erreur', subtitle: 'Le numéro IFU doit contenir exactement 13 chiffres' });
+      toast.showToast({
+        title: "Erreur",
+        subtitle: "Le numéro IFU doit contenir exactement 13 chiffres",
+      });
       return false;
     }
     if (!selectedCity) {
-      toast.showToast({ title: 'Erreur', subtitle: 'Veuillez sélectionner une ville' });
+      toast.showToast({
+        title: "Erreur",
+        subtitle: "Veuillez sélectionner une ville",
+      });
       return false;
     }
     if (!selectedDistrict) {
-      toast.showToast({ title: 'Erreur', subtitle: 'Veuillez sélectionner un quartier' });
+      toast.showToast({
+        title: "Erreur",
+        subtitle: "Veuillez sélectionner un quartier",
+      });
       return false;
     }
     return true;
@@ -138,19 +156,31 @@ export default function EnterpriseSignUpScreen() {
 
   const validateStep4 = (): boolean => {
     if (!password) {
-      toast.showToast({ title: 'Erreur', subtitle: 'Le mot de passe est requis' });
+      toast.showToast({
+        title: "Erreur",
+        subtitle: "Le mot de passe est requis",
+      });
       return false;
     }
     if (password.length < 6) {
-      toast.showToast({ title: 'Erreur', subtitle: 'Le mot de passe doit contenir au moins 6 caractères' });
+      toast.showToast({
+        title: "Erreur",
+        subtitle: "Le mot de passe doit contenir au moins 6 caractères",
+      });
       return false;
     }
     if (password !== confirmPassword) {
-      toast.showToast({ title: 'Erreur', subtitle: 'Les mots de passe ne correspondent pas' });
+      toast.showToast({
+        title: "Erreur",
+        subtitle: "Les mots de passe ne correspondent pas",
+      });
       return false;
     }
     if (!agreedToTerms) {
-      toast.showToast({ title: 'Erreur', subtitle: 'Veuillez accepter les conditions d\'utilisation' });
+      toast.showToast({
+        title: "Erreur",
+        subtitle: "Veuillez accepter les conditions d'utilisation",
+      });
       return false;
     }
     return true;
@@ -159,10 +189,22 @@ export default function EnterpriseSignUpScreen() {
   // Function to scroll to a specific input
   const scrollToInput = (ref: React.RefObject<TextInput | null>) => {
     if (ref.current && scrollViewRef.current) {
-      ref.current.measure((x: number, y: number, width: number, height: number, pageX: number, pageY: number) => {
-        const scrollY = pageY - 150; // Offset to show input with some space above
-        scrollViewRef.current?.scrollTo({ y: Math.max(0, scrollY), animated: true });
-      });
+      ref.current.measure(
+        (
+          x: number,
+          y: number,
+          width: number,
+          height: number,
+          pageX: number,
+          pageY: number,
+        ) => {
+          const scrollY = pageY - 150; // Offset to show input with some space above
+          scrollViewRef.current?.scrollTo({
+            y: Math.max(0, scrollY),
+            animated: true,
+          });
+        },
+      );
     }
   };
   const handleNextStep = () => {
@@ -199,38 +241,64 @@ export default function EnterpriseSignUpScreen() {
   };
 
   const handleSignUp = async () => {
-    if (!firstName || !lastName || !email || !phone || !password || !confirmPassword || !address || !companyName || !selectedCity || !selectedDistrict) {
-      toast.showToast({ title: 'Erreur', subtitle: 'Veuillez remplir tous les champs obligatoires' });
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !phone ||
+      !password ||
+      !confirmPassword ||
+      !address ||
+      !companyName ||
+      !selectedCity ||
+      !selectedDistrict
+    ) {
+      toast.showToast({
+        title: "Erreur",
+        subtitle: "Veuillez remplir tous les champs obligatoires",
+      });
       return;
     }
 
     if (password !== confirmPassword) {
-      toast.showToast({ title: 'Erreur', subtitle: 'Les mots de passe ne correspondent pas' });
+      toast.showToast({
+        title: "Erreur",
+        subtitle: "Les mots de passe ne correspondent pas",
+      });
       return;
     }
 
     if (password.length < 6) {
-      toast.showToast({ title: 'Erreur', subtitle: 'Le mot de passe doit contenir au moins 6 caractères' });
+      toast.showToast({
+        title: "Erreur",
+        subtitle: "Le mot de passe doit contenir au moins 6 caractères",
+      });
       return;
     }
 
     setIsLoading(true);
     try {
       // Formater le numéro de téléphone personnel avec l'indicatif +229
-      let formattedPhone = phone.replace(/[\s-]/g, '');
-      if (!formattedPhone.startsWith('+')) {
-        formattedPhone = '+229' + formattedPhone;
+      let formattedPhone = phone.replace(/[\s-]/g, "");
+      if (!formattedPhone.startsWith("+")) {
+        formattedPhone = "+229" + formattedPhone;
       }
-      console.log('📱 Numéro personnel formaté pour inscription:', formattedPhone);
+      console.log(
+        "📱 Numéro personnel formaté pour inscription:",
+        formattedPhone,
+      );
 
       // Formater le numéro WhatsApp avec l'indicatif +229 si fourni
       let formattedWhatsApp = whatsapp;
       if (whatsapp) {
-        formattedWhatsApp = whatsapp.replace(/[\s-]/g, '');
-        if (!formattedWhatsApp.startsWith('+')) {
-          formattedWhatsApp = '+229' + formattedWhatsApp;
+        formattedWhatsApp = whatsapp.replace(/[\s-]/g, "");
+        if (!formattedWhatsApp.startsWith("+")) {
+          formattedWhatsApp = "+229" + formattedWhatsApp;
         }
-        console.log('📱 Numéro WhatsApp formaté pour inscription:', formattedWhatsApp);
+        console.log(
+          "📱 Numéro WhatsApp formaté pour inscription:",
+          formattedWhatsApp,
+        );
       }
 
       const userData: EnterpriseRegisterRequest = {
@@ -240,7 +308,7 @@ export default function EnterpriseSignUpScreen() {
         phone: formattedPhone,
         password,
         address,
-        role: 'ENTERPRISE',
+        role: "ENTERPRISE",
         companyName,
         ifuNumber: ifuNumber || undefined,
         agreedToTerms,
@@ -252,34 +320,49 @@ export default function EnterpriseSignUpScreen() {
         website,
       };
 
-      console.log('🏢 Enterprise Sign up:', userData);
+      console.log("🏢 Enterprise Sign up:", userData);
 
       // Utiliser l'utilitaire d'inscription avec connexion automatique
-      const response = await RegistrationHelper.registerWithAutoLogin(userData, true);
+      const response = await RegistrationHelper.registerWithAutoLogin(
+        userData,
+        true,
+      );
 
       if (response.success && response.data) {
-        console.log('✅ Inscription entreprise réussie, traitement de l\'état...');
+        console.log(
+          "✅ Inscription entreprise réussie, traitement de l'état...",
+        );
 
         // Afficher l'état d'authentification pour debug
         await RegistrationHelper.logAuthenticationState();
 
-        toast.showToast({ title: 'Succès', subtitle: 'Compte entreprise créé avec succès !' });
+        toast.showToast({
+          title: "Succès",
+          subtitle: "Compte entreprise créé avec succès !",
+        });
 
         // Check if email needs verification BEFORE setting full auth state
         if (!response.data.user.emailVerified) {
-          console.log('📧 Email non vérifié, redirection IMMÉDIATE vers la vérification OTP');
-          console.log('⚠️ handlePostRegistration NON appelé - sera appelé après vérification OTP');
+          console.log(
+            "📧 Email non vérifié, redirection IMMÉDIATE vers la vérification OTP",
+          );
+          console.log(
+            "⚠️ handlePostRegistration NON appelé - sera appelé après vérification OTP",
+          );
           // Ne PAS appeler handlePostRegistration ici !
           // Cela évite de déclencher isAuthenticated=true, le modal notification, le chargement index.tsx, etc.
-          router.replace('/(auth)/verify-email' as any);
+          router.replace("/(auth)/verify-email" as any);
           return;
         }
 
         // Email déjà vérifié : activer la session complète
-        console.log('🎯 Email vérifié, activation de la session complète...');
-        await handlePostRegistration(response.data.user, response.data.user.role);
+        console.log("🎯 Email vérifié, activation de la session complète...");
+        await handlePostRegistration(
+          response.data.user,
+          response.data.user.role,
+        );
 
-        console.log('🎯 Affichage du modal de sélection de plan...');
+        console.log("🎯 Affichage du modal de sélection de plan...");
 
         // Afficher le modal de sélection de plan au lieu de rediriger directement
         setTimeout(() => {
@@ -287,15 +370,20 @@ export default function EnterpriseSignUpScreen() {
         }, 800);
       }
     } catch (error: any) {
-      console.error('❌ Enterprise registration error:', error);
-      toast.showToast({ title: 'Erreur', subtitle: error.message || 'Échec de la création du compte. Veuillez réessayer.' });
+      console.error("❌ Enterprise registration error:", error);
+      toast.showToast({
+        title: "Erreur",
+        subtitle:
+          error.message ||
+          "Échec de la création du compte. Veuillez réessayer.",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleSignIn = () => {
-    router.push('/(auth)/signin');
+    router.push("/(auth)/signin");
   };
 
   // Fonction pour sélectionner une ville
@@ -303,7 +391,7 @@ export default function EnterpriseSignUpScreen() {
     setSelectedCity(cityName);
     setCityModalVisible(false);
     // Réinitialiser le quartier lors du changement de ville
-    setSelectedDistrict('');
+    setSelectedDistrict("");
   };
 
   // Fonction pour sélectionner un quartier
@@ -495,14 +583,17 @@ export default function EnterpriseSignUpScreen() {
           Quartier *
         </Text>
         <TouchableOpacity
-          className={`w-full px-4 py-3 border border-neutral-300 rounded-2xl bg-white flex-row justify-between items-center ${!selectedCity ? 'opacity-50' : ''
-            }`}
+          className={`w-full px-4 py-3 border border-neutral-300 rounded-2xl bg-white flex-row justify-between items-center ${
+            !selectedCity ? "opacity-50" : ""
+          }`}
           onPress={() => selectedCity && setDistrictModalVisible(true)}
           disabled={!selectedCity}
           activeOpacity={0.7}
         >
-          <Text className={`font-quicksand ${selectedDistrict ? 'text-neutral-900' : 'text-neutral-400'}`}>
-            {selectedDistrict || 'Sélectionnez un quartier'}
+          <Text
+            className={`font-quicksand ${selectedDistrict ? "text-neutral-900" : "text-neutral-400"}`}
+          >
+            {selectedDistrict || "Sélectionnez un quartier"}
           </Text>
           <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
         </TouchableOpacity>
@@ -549,7 +640,7 @@ export default function EnterpriseSignUpScreen() {
           placeholderTextColor="#9CA3AF"
           value={whatsapp}
           onChangeText={(text) => {
-            console.log('WhatsApp input:', text);
+            console.log("WhatsApp input:", text);
             setWhatsapp(text);
           }}
           keyboardType="phone-pad"
@@ -604,7 +695,7 @@ export default function EnterpriseSignUpScreen() {
             activeOpacity={0.7}
           >
             <Ionicons
-              name={showPassword ? 'eye-off' : 'eye'}
+              name={showPassword ? "eye-off" : "eye"}
               size={20}
               color="#9CA3AF"
             />
@@ -632,7 +723,7 @@ export default function EnterpriseSignUpScreen() {
             activeOpacity={0.7}
           >
             <Ionicons
-              name={showConfirmPassword ? 'eye-off' : 'eye'}
+              name={showConfirmPassword ? "eye-off" : "eye"}
               size={20}
               color="#9CA3AF"
             />
@@ -647,21 +738,31 @@ export default function EnterpriseSignUpScreen() {
         </Text>
         <View className="flex-row items-center mb-1">
           <Ionicons
-            name={password.length >= 6 ? 'checkmark-circle' : 'ellipse-outline'}
+            name={password.length >= 6 ? "checkmark-circle" : "ellipse-outline"}
             size={16}
-            color={password.length >= 6 ? '#10B981' : '#9CA3AF'}
+            color={password.length >= 6 ? "#10B981" : "#9CA3AF"}
           />
-          <Text className={`text-sm font-quicksand ml-2 ${password.length >= 6 ? 'text-green-600' : 'text-neutral-600'}`}>
+          <Text
+            className={`text-sm font-quicksand ml-2 ${password.length >= 6 ? "text-green-600" : "text-neutral-600"}`}
+          >
             Au moins 6 caractères
           </Text>
         </View>
         <View className="flex-row items-center">
           <Ionicons
-            name={password === confirmPassword && password ? 'checkmark-circle' : 'ellipse-outline'}
+            name={
+              password === confirmPassword && password
+                ? "checkmark-circle"
+                : "ellipse-outline"
+            }
             size={16}
-            color={password === confirmPassword && password ? '#10B981' : '#9CA3AF'}
+            color={
+              password === confirmPassword && password ? "#10B981" : "#9CA3AF"
+            }
           />
-          <Text className={`text-sm font-quicksand ml-2 ${password === confirmPassword && password ? 'text-green-600' : 'text-neutral-600'}`}>
+          <Text
+            className={`text-sm font-quicksand ml-2 ${password === confirmPassword && password ? "text-green-600" : "text-neutral-600"}`}
+          >
             Les mots de passe correspondent
           </Text>
         </View>
@@ -674,13 +775,24 @@ export default function EnterpriseSignUpScreen() {
           className="flex-row items-center mr-3"
           activeOpacity={0.7}
         >
-          <View className={`w-6 h-6 rounded-md border-2 items-center justify-center ${agreedToTerms ? 'bg-primary-600 border-primary-600' : 'bg-white border-neutral-300'
-            }`}>
+          <View
+            className={`w-6 h-6 rounded-md border-2 items-center justify-center ${
+              agreedToTerms
+                ? "bg-primary-600 border-primary-600"
+                : "bg-white border-neutral-300"
+            }`}
+          >
             {agreedToTerms && <Text className="text-white text-center">✓</Text>}
           </View>
         </TouchableOpacity>
         <Text className="text-neutral-600 font-quicksand text-sm flex-1">
-          J&apos;accepte les <Text className="text-primary-600 font-quicksand-semibold underline" onPress={() => Linking.openURL('https://axi-contrat.vercel.app')}>conditions d&apos;utilisation</Text>
+          J&apos;accepte les{" "}
+          <Text
+            className="text-primary-600 font-quicksand-semibold underline"
+            onPress={() => Linking.openURL("https://axi-contrat.vercel.app")}
+          >
+            conditions d&apos;utilisation
+          </Text>
         </Text>
       </View>
     </View>
@@ -697,11 +809,13 @@ export default function EnterpriseSignUpScreen() {
             className="px-6 bg-white"
             style={{
               paddingTop: Math.max(insets.top, 16) + 16,
-              paddingBottom: 16
+              paddingBottom: 16,
             }}
           >
             <TouchableOpacity
-              onPress={() => currentStep > 1 ? handlePreviousStep() : router.back()}
+              onPress={() =>
+                currentStep > 1 ? handlePreviousStep() : router.back()
+              }
               className="mb-6"
             >
               <Ionicons name="arrow-back" size={24} color="#374151" />
@@ -711,10 +825,11 @@ export default function EnterpriseSignUpScreen() {
               Créer un Compte Entreprise
             </Text>
             <Text className="text-base font-quicksand text-neutral-600 mb-6">
-              {currentStep === 1 && 'Parlez-nous de vous'}
-              {currentStep === 2 && 'Partagez les détails de votre entreprise'}
-              {currentStep === 3 && 'Comment les clients peuvent-ils vous joindre ?'}
-              {currentStep === 4 && 'Sécurisez votre compte'}
+              {currentStep === 1 && "Parlez-nous de vous"}
+              {currentStep === 2 && "Partagez les détails de votre entreprise"}
+              {currentStep === 3 &&
+                "Comment les clients peuvent-ils vous joindre ?"}
+              {currentStep === 4 && "Sécurisez votre compte"}
             </Text>
 
             {/* Progress Indicator - Centered */}
@@ -722,24 +837,35 @@ export default function EnterpriseSignUpScreen() {
               <View className="flex-row items-center">
                 {[1, 2, 3, 4].map((step, index) => (
                   <React.Fragment key={step}>
-                    <View className={`w-10 h-10 rounded-full items-center justify-center ${step === currentStep
-                      ? 'bg-primary-500'
-                      : step < currentStep
-                        ? 'bg-green-500'
-                        : 'bg-neutral-200'
-                      }`}>
+                    <View
+                      className={`w-10 h-10 rounded-full items-center justify-center ${
+                        step === currentStep
+                          ? "bg-primary-500"
+                          : step < currentStep
+                            ? "bg-green-500"
+                            : "bg-neutral-200"
+                      }`}
+                    >
                       {step < currentStep ? (
                         <Ionicons name="checkmark" size={20} color="#FFFFFF" />
                       ) : (
-                        <Text className={`font-quicksand-bold text-base ${step === currentStep ? 'text-white' : 'text-neutral-500'
-                          }`}>
+                        <Text
+                          className={`font-quicksand-bold text-base ${
+                            step === currentStep
+                              ? "text-white"
+                              : "text-neutral-500"
+                          }`}
+                        >
                           {step}
                         </Text>
                       )}
                     </View>
                     {index < 3 && (
-                      <View className={`w-16 h-1 mx-1 ${step < currentStep ? 'bg-green-500' : 'bg-neutral-200'
-                        }`} />
+                      <View
+                        className={`w-16 h-1 mx-1 ${
+                          step < currentStep ? "bg-green-500" : "bg-neutral-200"
+                        }`}
+                      />
                     )}
                   </React.Fragment>
                 ))}
@@ -748,7 +874,7 @@ export default function EnterpriseSignUpScreen() {
           </View>
 
           <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
             className="flex-1"
             keyboardVerticalOffset={0}
           >
@@ -759,15 +885,13 @@ export default function EnterpriseSignUpScreen() {
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={{
                 paddingBottom: Math.max(insets.bottom, 20) + 100,
-                flexGrow: 1
+                flexGrow: 1,
               }}
               scrollEventThrottle={16}
               keyboardDismissMode="interactive"
             >
               {/* Form Content */}
-              <View className="px-6 pt-4">
-                {renderStepContent()}
-              </View>
+              <View className="px-6 pt-4">{renderStepContent()}</View>
             </ScrollView>
           </KeyboardAvoidingView>
 
@@ -776,7 +900,7 @@ export default function EnterpriseSignUpScreen() {
             className="px-6 bg-white border-t border-neutral-200"
             style={{
               paddingTop: 16,
-              paddingBottom: Math.max(insets.bottom, 16) + 8
+              paddingBottom: Math.max(insets.bottom, 16) + 8,
             }}
           >
             <View className="flex-row items-center mb-3">
@@ -794,25 +918,36 @@ export default function EnterpriseSignUpScreen() {
               )}
 
               <TouchableOpacity
-                className={`py-4 rounded-2xl ${isLoading ? 'bg-primary-300' : 'bg-primary-500'
-                  } flex-row items-center justify-center ${currentStep > 1 ? 'flex-1 ml-2' : 'flex-1'
-                  }`}
+                className={`py-4 rounded-2xl ${
+                  isLoading ? "bg-primary-300" : "bg-primary-500"
+                } flex-row items-center justify-center ${
+                  currentStep > 1 ? "flex-1 ml-2" : "flex-1"
+                }`}
                 onPress={handleNextStep}
                 disabled={isLoading}
                 activeOpacity={1}
               >
                 {isLoading && (
-                  <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 8 }} />
+                  <ActivityIndicator
+                    size="small"
+                    color="#FFFFFF"
+                    style={{ marginRight: 8 }}
+                  />
                 )}
                 <Text className="text-white text-center font-quicksand-semibold text-base">
                   {isLoading
-                    ? 'Création'
+                    ? "Création"
                     : currentStep === TOTAL_STEPS
-                      ? 'Créer le Compte'
-                      : 'Continuer'}
+                      ? "Créer le Compte"
+                      : "Continuer"}
                 </Text>
                 {currentStep < TOTAL_STEPS && !isLoading && (
-                  <Ionicons name="arrow-forward" size={20} color="#FFFFFF" style={{ marginLeft: 8 }} />
+                  <Ionicons
+                    name="arrow-forward"
+                    size={20}
+                    color="#FFFFFF"
+                    style={{ marginLeft: 8 }}
+                  />
                 )}
               </TouchableOpacity>
             </View>
@@ -820,7 +955,7 @@ export default function EnterpriseSignUpScreen() {
             {/* Sign In Link */}
             <View className="flex-row justify-center">
               <Text className="text-neutral-600 font-quicksand text-sm">
-                Vous avez déjà un compte ?{' '}
+                Vous avez déjà un compte ?{" "}
               </Text>
               <TouchableOpacity onPress={handleSignIn} activeOpacity={0.7}>
                 <Text className="text-primary-500 font-quicksand-semibold text-sm">
@@ -837,9 +972,11 @@ export default function EnterpriseSignUpScreen() {
             animationType="slide"
             onRequestClose={() => setCityModalVisible(false)}
           >
-            <TouchableWithoutFeedback onPress={() => setCityModalVisible(false)}>
+            <TouchableWithoutFeedback
+              onPress={() => setCityModalVisible(false)}
+            >
               <View className="flex-1 bg-black/50 justify-end">
-                <TouchableWithoutFeedback onPress={() => { }}>
+                <TouchableWithoutFeedback onPress={() => {}}>
                   <View className="bg-white rounded-t-3xl max-h-96">
                     <View className="p-4 border-b border-neutral-200">
                       <Text className="text-lg font-quicksand-bold text-center text-neutral-900">
@@ -855,8 +992,13 @@ export default function EnterpriseSignUpScreen() {
                           onPress={() => selectCity(item.name)}
                           activeOpacity={0.7}
                         >
-                          <Text className={`font-quicksand text-base ${selectedCity === item.name ? 'text-primary-500 font-quicksand-bold' : 'text-neutral-900'
-                            }`}>
+                          <Text
+                            className={`font-quicksand text-base ${
+                              selectedCity === item.name
+                                ? "text-primary-500 font-quicksand-bold"
+                                : "text-neutral-900"
+                            }`}
+                          >
                             {item.name}
                           </Text>
                         </TouchableOpacity>
@@ -875,9 +1017,11 @@ export default function EnterpriseSignUpScreen() {
             animationType="slide"
             onRequestClose={() => setDistrictModalVisible(false)}
           >
-            <TouchableWithoutFeedback onPress={() => setDistrictModalVisible(false)}>
+            <TouchableWithoutFeedback
+              onPress={() => setDistrictModalVisible(false)}
+            >
               <View className="flex-1 bg-black/50 justify-end">
-                <TouchableWithoutFeedback onPress={() => { }}>
+                <TouchableWithoutFeedback onPress={() => {}}>
                   <View className="bg-white rounded-t-3xl max-h-96">
                     <View className="p-4 border-b border-neutral-200">
                       <Text className="text-lg font-quicksand-bold text-center text-neutral-900">
@@ -893,8 +1037,13 @@ export default function EnterpriseSignUpScreen() {
                           onPress={() => selectDistrict(item)}
                           activeOpacity={0.7}
                         >
-                          <Text className={`font-quicksand text-base ${selectedDistrict === item ? 'text-primary-500 font-quicksand-bold' : 'text-neutral-900'
-                            }`}>
+                          <Text
+                            className={`font-quicksand text-base ${
+                              selectedDistrict === item
+                                ? "text-primary-500 font-quicksand-bold"
+                                : "text-neutral-900"
+                            }`}
+                          >
                             {item}
                           </Text>
                         </TouchableOpacity>
@@ -912,7 +1061,6 @@ export default function EnterpriseSignUpScreen() {
             onClose={() => setShowSubscriptionModal(false)}
             userName={firstName}
           />
-
         </View>
       </TouchableWithoutFeedback>
     </View>
