@@ -263,10 +263,21 @@ export default function EnterpriseSignUpScreen() {
         // Afficher l'état d'authentification pour debug
         await RegistrationHelper.logAuthenticationState();
 
-        // Mettre à jour l'état d'authentification
-        await handlePostRegistration(response.data.user, response.data.user.role);
-
         toast.showToast({ title: 'Succès', subtitle: 'Compte entreprise créé avec succès !' });
+
+        // Check if email needs verification BEFORE setting full auth state
+        if (!response.data.user.emailVerified) {
+          console.log('📧 Email non vérifié, redirection IMMÉDIATE vers la vérification OTP');
+          console.log('⚠️ handlePostRegistration NON appelé - sera appelé après vérification OTP');
+          // Ne PAS appeler handlePostRegistration ici !
+          // Cela évite de déclencher isAuthenticated=true, le modal notification, le chargement index.tsx, etc.
+          router.replace('/(auth)/verify-email' as any);
+          return;
+        }
+
+        // Email déjà vérifié : activer la session complète
+        console.log('🎯 Email vérifié, activation de la session complète...');
+        await handlePostRegistration(response.data.user, response.data.user.role);
 
         console.log('🎯 Affichage du modal de sélection de plan...');
 

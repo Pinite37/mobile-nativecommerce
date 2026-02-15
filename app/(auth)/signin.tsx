@@ -69,10 +69,23 @@ export default function SignInScreen() {
           }, 6500);
 
           return;
-        } const successMessage = ErrorHandler.getSuccessMessage('login');
+        }
+
+        // Check if email needs verification BEFORE refreshing auth status
+        if (!response.data.user.emailVerified) {
+          console.log('📧 Email non vérifié, redirection IMMÉDIATE vers la vérification OTP');
+          console.log('⚠️ checkAuthStatus NON appelé - sera appelé après vérification OTP');
+          // Ne PAS appeler checkAuthStatus ici !
+          // Cela évite de déclencher isAuthenticated=true, le modal notification, le chargement index.tsx, etc.
+          toast.showToast({ title: 'Vérification requise', subtitle: 'Veuillez vérifier votre adresse email' });
+          router.replace('/(auth)/verify-email' as any);
+          return;
+        }
+
+        const successMessage = ErrorHandler.getSuccessMessage('login');
         toast.showToast({ title: successMessage.title, subtitle: successMessage.message });
 
-        // Refresh auth status and redirect
+        // Email vérifié : activer la session complète
         await checkAuthStatus();
 
         setTimeout(() => {
@@ -80,6 +93,15 @@ export default function SignInScreen() {
         }, 1000);
       }
     } catch (error: any) {
+      // Détecter l'erreur spécifique "Email non vérifié" (401)
+      const errorMsg = error?.response?.data?.message || error?.message || '';
+      if (errorMsg.toLowerCase().includes('email non vérifié') || errorMsg.toLowerCase().includes('email not verified')) {
+        console.log('📧 Erreur 401 - Email non vérifié, redirection vers vérification OTP');
+        toast.showToast({ title: 'Vérification requise', subtitle: 'Veuillez vérifier votre adresse email avant de vous connecter' });
+        router.replace({ pathname: '/(auth)/verify-email' as any, params: { email } });
+        return;
+      }
+
       const errorMessage = ErrorHandler.parseApiError(error);
       toast.showToast({ title: errorMessage.title, subtitle: errorMessage.message });
     } finally {

@@ -337,6 +337,53 @@ class AuthService {
       throw new Error(error.response?.data?.message || error.message || 'Inscription entreprise échouée');
     }
   }
+
+  // Verify email OTP
+  async verifyEmailOtp(otp: string, email?: string): Promise<{ success: boolean; message: string }> {
+    try {
+      console.log('🔄 Vérification OTP email...');
+      const body: any = { otp };
+      if (email) body.email = email;
+      const response = await ApiService.post<any>(`${this.BASE_URL}/verify-email-otp`, body);
+
+      if (response.success) {
+        console.log('✅ OTP vérifié avec succès');
+        // Update stored user data with emailVerified = true
+        const storedUser = await TokenStorageService.getUserData();
+        if (storedUser) {
+          storedUser.emailVerified = true;
+          await TokenStorageService.setUserData(storedUser);
+        }
+      }
+
+      return {
+        success: response.success,
+        message: response.message || 'OTP vérifié',
+      };
+    } catch (error: any) {
+      console.error('❌ Erreur vérification OTP:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Vérification OTP échouée');
+    }
+  }
+
+  // Resend email OTP
+  async resendEmailOtp(email?: string): Promise<{ success: boolean; message: string }> {
+    try {
+      console.log('🔄 Renvoi OTP email...');
+      const body: any = {};
+      if (email) body.email = email;
+      const response = await ApiService.post<any>(`${this.BASE_URL}/resend-email-otp`, body);
+      console.log('renvoi OTP response:', response);
+
+      return {
+        success: response.success,
+        message: response.message || 'OTP renvoyé',
+      };
+    } catch (error: any) {
+      console.error('❌ Erreur renvoi OTP:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Renvoi OTP échoué');
+    }
+  }
 }
 
 export default new AuthService();

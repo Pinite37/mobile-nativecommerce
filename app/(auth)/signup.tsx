@@ -110,13 +110,23 @@ export default function SignUpScreen() {
         // Afficher l'état d'authentification pour debug
         await RegistrationHelper.logAuthenticationState();
 
-        // Mettre à jour l'état d'authentification
-        await handlePostRegistration(response.data.user, response.data.user.role);
-
         const successMessage = ErrorHandler.getSuccessMessage('register');
         toast.showToast({ title: successMessage.title, subtitle: successMessage.message });
 
-        console.log('🎯 Redirection vers l\'interface utilisateur...');
+        // Check if email needs verification BEFORE setting full auth state
+        if (!response.data.user.emailVerified) {
+          console.log('📧 Email non vérifié, redirection IMMÉDIATE vers la vérification OTP');
+          console.log('⚠️ handlePostRegistration NON appelé - sera appelé après vérification OTP');
+          // Ne PAS appeler handlePostRegistration ici !
+          // Cela évite de déclencher isAuthenticated=true, le modal notification, le chargement index.tsx, etc.
+          // On redirige directement vers l'OTP sans passer par le home
+          router.replace('/(auth)/verify-email' as any);
+          return;
+        }
+
+        // Email déjà vérifié : activer la session complète
+        console.log('🎯 Email vérifié, activation de la session complète...');
+        await handlePostRegistration(response.data.user, response.data.user.role);
 
         // Rediriger vers l'interface correspondant au rôle avec un délai optimisé
         setTimeout(() => {

@@ -1,6 +1,7 @@
 export interface User {
   _id: string;
   email: string;
+  emailVerified?: boolean;
   role: 'CLIENT' | 'ENTERPRISE';
   firstName: string;
   lastName: string;

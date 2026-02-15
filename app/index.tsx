@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { LoadingOverlay } from "../components/ui/LoadingOverlay";
@@ -7,7 +8,7 @@ import { NavigationHelper } from "../utils/NavigationHelper";
 import StartupPerformanceMonitor from "../utils/StartupPerformanceMonitor";
 
 export default function Index() {
-  const { isAuthenticated, userRole, isLoading } = useAuth();
+  const { isAuthenticated, user, userRole, isLoading } = useAuth();
   const [hasCheckedOnboarding, setHasCheckedOnboarding] = useState(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
 
@@ -33,6 +34,12 @@ export default function Index() {
 
     // Navigation logic based on auth and onboarding state
     if (isAuthenticated && userRole) {
+      // Check if email is verified
+      if (user && user.emailVerified === false) {
+        console.log('📧 Email non vérifié au démarrage, redirection vers vérification OTP');
+        router.replace('/(auth)/verify-email' as any);
+        return;
+      }
       StartupPerformanceMonitor.mark('App Index - Navigation vers app');
       // User is authenticated, redirect to role-based home
       NavigationHelper.navigateToRoleHome(userRole);
@@ -50,7 +57,7 @@ export default function Index() {
     setTimeout(() => {
       StartupPerformanceMonitor.logReport();
     }, 1000);
-  }, [isAuthenticated, userRole, isLoading, hasCheckedOnboarding, onboardingCompleted]);
+  }, [isAuthenticated, user, userRole, isLoading, hasCheckedOnboarding, onboardingCompleted]);
 
   return (
     <View className="flex-1 bg-white">
