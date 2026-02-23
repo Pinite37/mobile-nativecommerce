@@ -308,17 +308,19 @@ export default function CategoryProductsScreen() {
             className="w-full h-32 rounded-xl"
             resizeMode="cover"
           />
-          <TouchableOpacity
-            className="absolute top-2 right-2 rounded-full p-1.5"
-            style={{ backgroundColor: colors.card + 'E6' }}
-            onPress={() => toggleFavorite(item._id)}
-          >
-            <Ionicons
-              name={isFavorite ? 'heart' : 'heart-outline'}
-              size={20}
-              color={isFavorite ? '#EF4444' : '#6B7280'}
-            />
-          </TouchableOpacity>
+          {isAuthenticated && (
+            <TouchableOpacity
+              className="absolute top-2 right-2 rounded-full p-1.5"
+              style={{ backgroundColor: colors.card + 'E6' }}
+              onPress={() => toggleFavorite(item._id)}
+            >
+              <Ionicons
+                name={isFavorite ? 'heart' : 'heart-outline'}
+                size={20}
+                color={isFavorite ? '#EF4444' : '#6B7280'}
+              />
+            </TouchableOpacity>
+          )}
           {item.stock === 0 && (
             <View className="absolute top-2 left-2 bg-red-500 px-2 py-1 rounded-lg">
               <Text className="text-white text-xs font-quicksand-bold">{i18n.t("client.category.product.outOfStock")}</Text>
@@ -386,13 +388,15 @@ export default function CategoryProductsScreen() {
             <Text className="text-sm font-quicksand-semibold flex-1" style={{ color: colors.textPrimary }} numberOfLines={2}>
               {item.name}
             </Text>
-            <TouchableOpacity onPress={() => toggleFavorite(item._id)} className="ml-2">
-              <Ionicons
-                name={isFavorite ? 'heart' : 'heart-outline'}
-                size={20}
-                color={isFavorite ? '#EF4444' : colors.textSecondary}
-              />
-            </TouchableOpacity>
+            {isAuthenticated && (
+              <TouchableOpacity onPress={() => toggleFavorite(item._id)} className="ml-2">
+                <Ionicons
+                  name={isFavorite ? 'heart' : 'heart-outline'}
+                  size={20}
+                  color={isFavorite ? '#EF4444' : colors.textSecondary}
+                />
+              </TouchableOpacity>
+            )}
           </View>
           <Text className="text-lg font-quicksand-bold mt-1" style={{ color: colors.brandPrimary }}>
             {formatPrice(item.price)}

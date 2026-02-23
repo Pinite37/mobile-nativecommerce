@@ -920,21 +920,23 @@ export default function ClientHome() {
                     )}
                 </View>
 
-                {/* Favorite Button */}
-                <TouchableOpacity
-                    style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)' }}
-                    className="absolute top-2 right-2 w-8 h-8 backdrop-blur-md rounded-full items-center justify-center shadow-sm"
-                    onPress={(e) => {
-                        e.stopPropagation();
-                        toggleFavorite(item._id);
-                    }}
-                >
-                    <Ionicons
-                        name={favorites.has(item._id) ? "heart" : "heart-outline"}
-                        size={16}
-                        color={favorites.has(item._id) ? "#EF4444" : colors.textSecondary}
-                    />
-                </TouchableOpacity>
+                {/* Favorite Button (connected users only) */}
+                {isAuthenticated && (
+                    <TouchableOpacity
+                        style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)' }}
+                        className="absolute top-2 right-2 w-8 h-8 backdrop-blur-md rounded-full items-center justify-center shadow-sm"
+                        onPress={(e) => {
+                            e.stopPropagation();
+                            toggleFavorite(item._id);
+                        }}
+                    >
+                        <Ionicons
+                            name={favorites.has(item._id) ? "heart" : "heart-outline"}
+                            size={16}
+                            color={favorites.has(item._id) ? "#EF4444" : colors.textSecondary}
+                        />
+                    </TouchableOpacity>
+                )}
             </View>
 
             <View className="p-3">
@@ -1097,17 +1099,19 @@ export default function ClientHome() {
                     <Text className="text-base font-quicksand-bold text-primary-600">
                         {formatPrice(item.price)}
                     </Text>
-                    <TouchableOpacity
-                        style={{ backgroundColor: colors.secondary }}
-                        className="rounded-full p-2"
-                        onPress={() => toggleFavorite(item._id)}
-                    >
-                        <Ionicons
-                            name={favorites.has(item._id) ? "heart" : "heart-outline"}
-                            size={18}
-                            color={favorites.has(item._id) ? "#EF4444" : colors.textSecondary}
-                        />
-                    </TouchableOpacity>
+                    {isAuthenticated && (
+                        <TouchableOpacity
+                            style={{ backgroundColor: colors.secondary }}
+                            className="rounded-full p-2"
+                            onPress={() => toggleFavorite(item._id)}
+                        >
+                            <Ionicons
+                                name={favorites.has(item._id) ? "heart" : "heart-outline"}
+                                size={18}
+                                color={favorites.has(item._id) ? "#EF4444" : colors.textSecondary}
+                            />
+                        </TouchableOpacity>
+                    )}
                 </View>
             </View>
         </TouchableOpacity>

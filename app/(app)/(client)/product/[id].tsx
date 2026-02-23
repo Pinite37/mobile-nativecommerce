@@ -549,16 +549,18 @@ export default function ProductDetails() {
             >
               <Ionicons name="share-social-outline" size={22} color="#000" />
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={toggleFavorite}
-              className="w-10 h-10 justify-center items-center mr-1"
-            >
-              <Ionicons
-                name={isFavorite ? "heart" : "heart-outline"}
-                size={22}
-                color={isFavorite ? "#EF4444" : "#000"}
-              />
-            </TouchableOpacity>
+            {isAuthenticated && (
+              <TouchableOpacity
+                onPress={toggleFavorite}
+                className="w-10 h-10 justify-center items-center mr-1"
+              >
+                <Ionicons
+                  name={isFavorite ? "heart" : "heart-outline"}
+                  size={22}
+                  color={isFavorite ? "#EF4444" : "#000"}
+                />
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               className="w-10 h-10 justify-center items-center"
               onPress={() => setImageModalVisible(true)}
@@ -624,16 +626,18 @@ export default function ProductDetails() {
         >
           <Ionicons name="share-social-outline" size={20} color="#FFFFFF" />
         </TouchableOpacity>
-        <TouchableOpacity
-          onPress={toggleFavorite}
-          className="w-10 h-10 bg-black/30 rounded-full justify-center items-center mr-2"
-        >
-          <Ionicons
-            name={isFavorite ? "heart" : "heart-outline"}
-            size={20}
-            color={isFavorite ? "#EF4444" : "#FFFFFF"}
-          />
-        </TouchableOpacity>
+        {isAuthenticated && (
+          <TouchableOpacity
+            onPress={toggleFavorite}
+            className="w-10 h-10 bg-black/30 rounded-full justify-center items-center mr-2"
+          >
+            <Ionicons
+              name={isFavorite ? "heart" : "heart-outline"}
+              size={20}
+              color={isFavorite ? "#EF4444" : "#FFFFFF"}
+            />
+          </TouchableOpacity>
+        )}
         <TouchableOpacity
           className="w-10 h-10 bg-black/30 rounded-full justify-center items-center"
           onPress={() => setImageModalVisible(true)}
