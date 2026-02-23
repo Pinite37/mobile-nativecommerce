@@ -1,4 +1,4 @@
-import { Stack, usePathname } from "expo-router";
+import { Redirect, Stack, usePathname } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { SubscriptionWelcomeModal } from "../../../components/enterprise/SubscriptionWelcomeModal";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -162,6 +162,16 @@ function EnterpriseLayoutContent() {
 }
 
 export default function EnterpriseLayout() {
+  const { isLoading, isAuthenticated, userRole } = useAuth();
+
+  if (isLoading) {
+    return null;
+  }
+
+  if (!isAuthenticated || userRole !== "ENTERPRISE") {
+    return <Redirect href="/(app)/(client)/(tabs)" />;
+  }
+
   return (
     <SubscriptionProvider>
       <EnterpriseLayoutContent />

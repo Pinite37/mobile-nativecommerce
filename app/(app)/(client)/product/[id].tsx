@@ -25,6 +25,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import NotificationModal, {
   useNotification,
 } from "../../../../components/ui/NotificationModal";
+import { useAuth } from "../../../../contexts/AuthContext";
 import { useLocale } from "../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import i18n from "../../../../i18n/i18n";
@@ -50,6 +51,7 @@ const AnimatedImage = Animated.createAnimatedComponent(ExpoImage);
 export default function ProductDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const insets = useSafeAreaInsets();
   const { locale } = useLocale();
   const { colors, isDark } = useTheme();
@@ -65,6 +67,18 @@ export default function ProductDetails() {
   const [isFavorite, setIsFavorite] = useState(false);
 
   const scrollY = useRef(new Animated.Value(0)).current;
+
+  const requireAuth = (
+    message: string = "Connectez-vous pour utiliser cette fonctionnalite.",
+  ) => {
+    if (isAuthenticated) return true;
+
+    showNotification("warning", "Connexion requise", message);
+    setTimeout(() => {
+      router.push("/(auth)/signin");
+    }, 150);
+    return false;
+  };
 
   const imageOpacity = scrollY.interpolate({
     inputRange: [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT],
@@ -116,11 +130,15 @@ export default function ProductDetails() {
         console.log("✅ Produit chargé:", JSON.stringify(productData, null, 2));
         setProduct(productData);
 
-        // Vérifier si le produit est en favori
-        const favoriteStatus = await ProductService.checkIfProductIsFavorite(
-          id!,
-        );
-        setIsFavorite(favoriteStatus);
+        // Vérifier le statut favori uniquement pour un utilisateur connecté
+        if (isAuthenticated) {
+          const favoriteStatus = await ProductService.checkIfProductIsFavorite(
+            id!,
+          );
+          setIsFavorite(favoriteStatus);
+        } else {
+          setIsFavorite(false);
+        }
 
         // Charger les produits similaires après avoir chargé le produit principal
         loadSimilarProducts(id!);
@@ -134,7 +152,7 @@ export default function ProductDetails() {
     if (id) {
       loadProductDetails();
     }
-  }, [id]);
+  }, [id, isAuthenticated]);
 
   const loadSimilarProducts = async (productId: string) => {
     try {
@@ -154,6 +172,12 @@ export default function ProductDetails() {
   };
 
   const toggleFavorite = async () => {
+    if (
+      !requireAuth("Connectez-vous pour ajouter ce produit a vos favoris.")
+    ) {
+      return;
+    }
+
     try {
       if (isFavorite) {
         await ProductService.removeProductFromFavorites(id!);
@@ -247,6 +271,14 @@ export default function ProductDetails() {
   );
 
   const openWhatsApp = async (phone: string) => {
+    if (
+      !requireAuth(
+        "Connectez-vous pour contacter une entreprise sur WhatsApp.",
+      )
+    ) {
+      return;
+    }
+
     const message = i18n.t("client.product.whatsapp.message", {
       productName: product?.name,
       price: product ? formatPrice(product.price) : "",
@@ -271,6 +303,14 @@ export default function ProductDetails() {
   };
 
   const makePhoneCall = async (phone: string) => {
+    if (
+      !requireAuth(
+        "Connectez-vous pour contacter une entreprise par telephone.",
+      )
+    ) {
+      return;
+    }
+
     const result = await openPhoneCall(phone);
 
     if (!result.ok) {
@@ -854,6 +894,12 @@ export default function ProductDetails() {
             {/* Faire une offre */}
             <TouchableOpacity
               onPress={async () => {
+                if (
+                  !requireAuth("Connectez-vous pour demarrer une conversation.")
+                ) {
+                  return;
+                }
+
                 try {
                   const conversation =
                     await MessagingService.createConversationForProduct(id!);

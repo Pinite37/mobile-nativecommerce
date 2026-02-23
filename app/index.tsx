@@ -50,9 +50,11 @@ export default function Index() {
       // User is not authenticated and hasn't seen onboarding
       NavigationHelper.navigateToOnboarding();
     } else {
-      StartupPerformanceMonitor.mark("App Index - Navigation vers welcome");
-      // User is not authenticated but has seen onboarding
-      NavigationHelper.navigateToAuth();
+      StartupPerformanceMonitor.mark(
+        "App Index - Navigation vers marketplace public",
+      );
+      // User is not authenticated but has seen onboarding: open marketplace in guest mode
+      NavigationHelper.navigateToPublicMarketplace();
     }
 
     // Log final report

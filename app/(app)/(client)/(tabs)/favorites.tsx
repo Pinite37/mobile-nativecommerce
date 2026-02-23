@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import i18n from "@/i18n/i18n";
+import { useAuth } from "../../../../contexts/AuthContext";
 
 import { FavoriteItem } from "@/types/product";
 
@@ -28,6 +29,7 @@ export default function FavoritesScreen() {
   const insets = useSafeAreaInsets();
   const { locale } = useLocale();
   const { colors, isDark } = useTheme();
+  const { isAuthenticated } = useAuth();
   const [favoriteItems, setFavoriteItems] = useState<FavoriteItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -36,7 +38,15 @@ export default function FavoritesScreen() {
   const [productToRemove, setProductToRemove] = useState<string | null>(null);
 
   // Fonction pour récupérer les produits favoris
-  const fetchFavoriteProducts = async (isRefresh: boolean = false) => {
+  const fetchFavoriteProducts = React.useCallback(async (isRefresh: boolean = false) => {
+    if (!isAuthenticated) {
+      setFavoriteItems([]);
+      setError(null);
+      setLoading(false);
+      if (isRefresh) setRefreshing(false);
+      return;
+    }
+
     try {
       if (!isRefresh) setLoading(true);
       setError(null);
@@ -54,7 +64,7 @@ export default function FavoritesScreen() {
       setLoading(false);
       if (isRefresh) setRefreshing(false);
     }
-  };
+  }, [isAuthenticated]);
 
   // Fonction pour ouvrir le modal de confirmation
   const handleRemoveFavorite = (productId: string) => {
@@ -99,7 +109,7 @@ export default function FavoritesScreen() {
   useFocusEffect(
     React.useCallback(() => {
       fetchFavoriteProducts();
-    }, [])
+    }, [fetchFavoriteProducts])
   );
 
   // Skeleton Loader Component
@@ -279,6 +289,35 @@ export default function FavoritesScreen() {
       </TouchableOpacity>
     );
   };
+
+  if (!isAuthenticated) {
+    return (
+      <View
+        style={{ flex: 1, backgroundColor: colors.secondary }}
+        className="justify-center items-center p-6"
+      >
+        <Ionicons name="lock-closed-outline" size={64} color="#10B981" />
+        <Text
+          style={{ color: colors.textPrimary }}
+          className="text-xl font-quicksand-bold mt-4 text-center"
+        >
+          Connexion requise
+        </Text>
+        <Text
+          style={{ color: colors.textSecondary }}
+          className="text-base font-quicksand mt-2 text-center"
+        >
+          Connectez-vous pour voir et gérer vos favoris.
+        </Text>
+        <TouchableOpacity
+          className="mt-6 bg-primary rounded-2xl px-6 py-3"
+          onPress={() => router.push("/(auth)/signin")}
+        >
+          <Text className="text-white font-quicksand-bold">Se connecter</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   // État de chargement avec skeleton
   if (loading) {

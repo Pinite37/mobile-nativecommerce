@@ -23,6 +23,11 @@ export const NavigationHelper = {
     router.replace('/(auth)/welcome');
   },
 
+  // Navigate to public marketplace (guest mode)
+  navigateToPublicMarketplace: () => {
+    router.replace('/(app)/(client)/(tabs)' as any);
+  },
+
   // Navigate to onboarding
   navigateToOnboarding: () => {
     router.replace('/(onboarding)');

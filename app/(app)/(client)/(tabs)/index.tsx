@@ -7,6 +7,7 @@ import { useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+    Alert,
     ActivityIndicator,
     Animated,
     BackHandler,
@@ -99,7 +100,7 @@ const categories = [
 // popularStores retiré (non utilisé)
 
 export default function ClientHome() {
-    const { user } = useAuth();
+    const { user, isAuthenticated } = useAuth();
     const { locale } = useLocale();
     const { colors, isDark } = useTheme();
     const router = useRouter();
@@ -317,6 +318,11 @@ export default function ClientHome() {
     }
 
     async function loadFavorites() {
+        if (!isAuthenticated) {
+            setFavorites(new Set());
+            return;
+        }
+
         try {
             console.log('🔥 Chargement des favoris...');
             const favResponse = await ProductService.getFavoriteProducts();
@@ -848,6 +854,18 @@ export default function ClientHome() {
 
     // Fonction pour toggle favori
     const toggleFavorite = async (productId: string) => {
+        if (!isAuthenticated) {
+            Alert.alert(
+                "Connexion requise",
+                "Connectez-vous pour ajouter des produits en favoris.",
+                [
+                    { text: "Plus tard", style: "cancel" },
+                    { text: "Se connecter", onPress: () => router.push("/(auth)/signin") },
+                ],
+            );
+            return;
+        }
+
         const isFavorite = favorites.has(productId);
         try {
             if (isFavorite) {
@@ -960,12 +978,20 @@ export default function ClientHome() {
             >
                 <View className={`${isSmallScreen ? 'px-4' : 'px-6'} flex-row justify-between items-center mb-4`}>
                     <View>
-                        <Text className="text-emerald-50 text-sm font-quicksand-medium">
-                            {greetUser()},
-                        </Text>
-                        <Text className="text-white text-2xl font-quicksand-bold">
-                            {user ? user.firstName : "Invité"}
-                        </Text>
+                        {isAuthenticated ? (
+                            <>
+                                <Text className="text-emerald-50 text-sm font-quicksand-medium">
+                                    {`${greetUser()},`}
+                                </Text>
+                                <Text className="text-white text-2xl font-quicksand-bold">
+                                    {user?.firstName || "Utilisateur"}
+                                </Text>
+                            </>
+                        ) : (
+                            <Text className="text-white text-2xl font-quicksand-bold">
+                                Bienvenue sur Aximarketplace
+                            </Text>
+                        )}
                     </View>
                     {/* <TouchableOpacity
                         className="bg-white/20 p-2 rounded-full backdrop-blur-sm border border-white/30"

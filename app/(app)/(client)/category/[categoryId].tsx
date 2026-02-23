@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import {
+  Alert,
   ActivityIndicator,
   Animated,
   BackHandler,
@@ -17,6 +18,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '../../../../contexts/AuthContext';
 import { useTheme } from '../../../../contexts/ThemeContext';
 import i18n from '../../../../i18n/i18n';
 import CategoryService from '../../../../services/api/CategoryService';
@@ -29,6 +31,7 @@ type ViewMode = 'grid' | 'list';
 export default function CategoryProductsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
   const { colors, isDark } = useTheme();
 
@@ -199,6 +202,18 @@ export default function CategoryProductsScreen() {
   };
 
   const toggleFavorite = (productId: string) => {
+    if (!isAuthenticated) {
+      Alert.alert(
+        "Connexion requise",
+        "Connectez-vous pour ajouter des produits en favoris.",
+        [
+          { text: "Plus tard", style: "cancel" },
+          { text: "Se connecter", onPress: () => router.push("/(auth)/signin") },
+        ],
+      );
+      return;
+    }
+
     setFavorites(prev => {
       const newFavorites = new Set(prev);
       if (newFavorites.has(productId)) {

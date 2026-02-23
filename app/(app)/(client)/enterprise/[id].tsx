@@ -34,11 +34,13 @@ import {
     openWebsiteUrl,
     openWhatsAppChat,
 } from "../../../../utils/ContactLinks";
+import { useAuth } from "../../../../contexts/AuthContext";
 
 const { width: screenWidth } = Dimensions.get("window");
 export default function EnterpriseDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
@@ -160,7 +162,23 @@ export default function EnterpriseDetails() {
     return new Intl.NumberFormat("fr-FR").format(price) + " FCFA";
   };
 
+  const requireAuthForContact = () => {
+    if (isAuthenticated) return true;
+
+    setErrorModal({
+      visible: true,
+      title: "Connexion requise",
+      message: "Connectez-vous pour contacter une entreprise.",
+    });
+    setTimeout(() => {
+      router.push("/(auth)/signin");
+    }, 200);
+    return false;
+  };
+
   const openWhatsApp = async (phone: string) => {
+    if (!requireAuthForContact()) return;
+
     const message = i18n.t("client.enterprise.whatsapp.message", {
       companyName: enterprise?.companyName,
     });
@@ -180,6 +198,8 @@ export default function EnterpriseDetails() {
   };
 
   const makePhoneCall = async (phone: string) => {
+    if (!requireAuthForContact()) return;
+
     const result = await openPhoneCall(phone);
 
     if (!result.ok) {
@@ -195,6 +215,8 @@ export default function EnterpriseDetails() {
   };
 
   const openWebsite = async (website: string) => {
+    if (!requireAuthForContact()) return;
+
     const result = await openWebsiteUrl(website);
 
     if (!result.ok) {

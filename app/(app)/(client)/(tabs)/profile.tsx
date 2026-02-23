@@ -21,7 +21,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../../../contexts/AuthContext";
 
 export default function ProfileScreen() {
-  const { user, logout, refreshUserData } = useAuth();
+  const { user, logout, refreshUserData, isAuthenticated } = useAuth();
   const insets = useSafeAreaInsets();
   const { locale } = useLocale();
   const { colors } = useTheme();
@@ -63,6 +63,11 @@ export default function ProfileScreen() {
   // Rafraîchir les données utilisateur au chargement de la page
   useEffect(() => {
     const loadUserData = async () => {
+      if (!isAuthenticated) {
+        setLoading(false);
+        return;
+      }
+
       try {
         await refreshUserData();
       } catch (error) {
@@ -77,7 +82,7 @@ export default function ProfileScreen() {
 
     loadUserData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // refreshUserData retiré des dépendances pour éviter la boucle infinie
+  }, [isAuthenticated]); // refreshUserData retiré des dépendances pour éviter la boucle infinie
 
   // Skeleton Loader Component
   const ShimmerBlock = ({ style }: { style?: any }) => {
@@ -298,6 +303,35 @@ export default function ProfileScreen() {
     },
     // { icon: "help-circle-outline", title: "Aide et support", route: "/(app)/(client)/profile/help" },
   ];
+
+  if (!isAuthenticated) {
+    return (
+      <View
+        className="flex-1 justify-center items-center p-6"
+        style={{ backgroundColor: colors.secondary }}
+      >
+        <Ionicons name="person-circle-outline" size={72} color="#10B981" />
+        <Text
+          style={{ color: colors.textPrimary }}
+          className="text-2xl font-quicksand-bold mt-4 text-center"
+        >
+          Connexion requise
+        </Text>
+        <Text
+          style={{ color: colors.textSecondary }}
+          className="text-base font-quicksand mt-2 text-center"
+        >
+          Connectez-vous pour accéder a votre profil.
+        </Text>
+        <TouchableOpacity
+          className="mt-6 bg-primary rounded-2xl px-6 py-3"
+          onPress={() => router.push("/(auth)/signin")}
+        >
+          <Text className="text-white font-quicksand-bold">Se connecter</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   if (loading) {
     return (

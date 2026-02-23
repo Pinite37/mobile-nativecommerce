@@ -43,13 +43,13 @@ export default function OnboardingScreen() {
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const scrollViewRef = useRef<ScrollView>(null);
 
-	// Guard: Si l'onboarding est déjà complété, rediriger vers welcome
+	// Guard: Si l'onboarding est déjà complété, rediriger vers le marketplace public
 	useEffect(() => {
 		const checkOnboarding = async () => {
 			const completed = await OnboardingService.hasCompletedOnboarding();
 			if (completed) {
-				console.log('🔒 Onboarding déjà complété, redirection vers welcome');
-				router.replace('/(auth)/welcome');
+				console.log('🔒 Onboarding déjà complété, redirection vers marketplace public');
+				router.replace('/(app)/(client)/(tabs)');
 			}
 		};
 		checkOnboarding();
@@ -66,15 +66,15 @@ export default function OnboardingScreen() {
 		} else {
 			// Marquer l'onboarding comme complété
 			await OnboardingService.markOnboardingComplete();
-			// Navigate to auth screens
-			router.replace('/(auth)/welcome');
+			// Navigate to marketplace public
+			router.replace('/(app)/(client)/(tabs)');
 		}
 	};
 
 	const handleSkip = async () => {
 		// Marquer l'onboarding comme complété même si skip
 		await OnboardingService.markOnboardingComplete();
-		router.replace('/(auth)/welcome');
+		router.replace('/(app)/(client)/(tabs)');
 	};
 
 	const handleScroll = (event: any) => {

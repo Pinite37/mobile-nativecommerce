@@ -250,7 +250,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsAuthenticated(false);
       setUser(null);
       setUserRole(null);
-      NavigationHelper.navigateToAuth();
+      NavigationHelper.navigateToPublicMarketplace();
     } catch (error) {
       console.error('Error during logout:', error);
     }
@@ -260,8 +260,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const targetRole = role || userRole;
 
     if (!targetRole) {
-      console.warn('No role found, redirecting to auth');
-      NavigationHelper.navigateToAuth();
+      console.warn('No role found, redirecting to public marketplace');
+      NavigationHelper.navigateToPublicMarketplace();
       return;
     }
 
@@ -269,7 +269,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       NavigationHelper.navigateToRoleHome(targetRole);
     } catch (error) {
       console.error('Error redirecting to role-based home:', error);
-      NavigationHelper.navigateToAuth();
+      NavigationHelper.navigateToPublicMarketplace();
     }
   };
 
@@ -358,9 +358,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUserRole(null);
       setIsLoading(false);
 
-      // Rediriger vers la page de connexion
+      // Rediriger vers le marketplace public
       setTimeout(() => {
-        NavigationHelper.navigateToAuth();
+        NavigationHelper.navigateToPublicMarketplace();
       }, 100);
     };
 

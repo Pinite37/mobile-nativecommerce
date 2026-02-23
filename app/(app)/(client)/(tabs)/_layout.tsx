@@ -1,15 +1,24 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Réimportons le CustomTabBar maintenant que le menu s'affiche correctement
 import { CustomTabBar } from "../../../../components/ui/CustomTabBar";
 import { TabBarIconWithBadge } from "../../../../components/ui/TabBarIconWithBadge";
+import { useAuth } from "../../../../contexts/AuthContext";
 import { useUnreadMessages } from "../../../../hooks/useUnreadMessages";
 
 export default function ClientTabsLayout() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const { unreadConversationCount } = useUnreadMessages();
+
+  const protectTab = (event: any) => {
+    if (isAuthenticated) return;
+    event.preventDefault();
+    router.push("/(auth)/signin");
+  };
 
   const MessagesIcon = ({
     color,
@@ -39,7 +48,7 @@ export default function ClientTabsLayout() {
   return (
     <Tabs
       tabBar={(props) => <CustomTabBar {...props} insets={insets} />}
-      initialRouteName="favorites"
+      initialRouteName="index"
       screenOptions={{
         tabBarActiveTintColor: "#10B981",
         tabBarInactiveTintColor: "#9CA3AF",
@@ -133,6 +142,9 @@ export default function ClientTabsLayout() {
             />
           ),
         }}
+        listeners={{
+          tabPress: protectTab,
+        }}
       />
 
       <Tabs.Screen
@@ -141,6 +153,9 @@ export default function ClientTabsLayout() {
           title: "Messages",
           headerShown: false,
           tabBarIcon: MessagesIcon,
+        }}
+        listeners={{
+          tabPress: protectTab,
         }}
       />
       <Tabs.Screen
@@ -159,6 +174,9 @@ export default function ClientTabsLayout() {
               color={color}
             />
           ),
+        }}
+        listeners={{
+          tabPress: protectTab,
         }}
       />
     </Tabs>
