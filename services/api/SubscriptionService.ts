@@ -1,5 +1,6 @@
 
 import ApiService from './ApiService';
+import { Platform } from 'react-native';
 
 export interface SubscriptionPlan {
   id: string;
@@ -98,6 +99,7 @@ export interface ActiveSubscription {
 class SubscriptionService {
   private readonly BASE_URL = '/enterprise/subscriptions';
   private readonly PLANS_BASE_URL = '/plans';
+  private readonly isIosBillingRestricted = Platform.OS === 'ios';
 
   private mockPlans: SubscriptionPlan[] = [
     {
@@ -354,6 +356,10 @@ class SubscriptionService {
    * Activer le plan d'essai gratuit (TRIAL)
    */
   async activateTrialPlan(): Promise<Subscription> {
+    if (this.isIosBillingRestricted) {
+      throw new Error('Les abonnements sont gérés en dehors de l’application iOS.');
+    }
+
     try {
       console.log('🔥 SUBSCRIPTION SERVICE - Activation plan TRIAL');
       console.log('ℹ️ Aucun paymentData envoyé (gratuit)');
@@ -379,6 +385,10 @@ class SubscriptionService {
    * S'abonner à un plan spécifique
    */
   async subscribeToPlan(planId: string, paymentData?: any): Promise<Subscription> {
+    if (this.isIosBillingRestricted) {
+      throw new Error('Les abonnements sont gérés en dehors de l’application iOS.');
+    }
+
     try {
       console.log('🔥 SUBSCRIPTION SERVICE - Abonnement au plan:', planId);
       

@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
+  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -31,6 +32,7 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
   const { showToast } = useReanimatedToast();
   const { activateTrialPlan: activateTrialFromContext, loadSubscription } = useSubscription();
   const insets = useSafeAreaInsets();
+  const isIosBillingRestricted = Platform.OS === 'ios';
   const [loading, setLoading] = useState(false);
   const [loadingPlans, setLoadingPlans] = useState(true);
   const [trialPlan, setTrialPlan] = useState<Plan | null>(null);
@@ -38,10 +40,19 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
 
   // Charger les plans et trouver le plan TRIAL
   useEffect(() => {
+    if (!visible) {
+      return;
+    }
+
+    if (isIosBillingRestricted) {
+      setLoadingPlans(false);
+      return;
+    }
+
     if (visible) {
       loadTrialPlan();
     }
-  }, [visible]);
+  }, [visible, isIosBillingRestricted]);
 
   const loadTrialPlan = async () => {
     try {
@@ -143,6 +154,10 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
   };
 
   const handleStartTrial = async () => {
+    if (isIosBillingRestricted) {
+      return;
+    }
+
     try {
       setLoading(true);
       setActivationProgress('Préparation de votre essai...');
@@ -222,6 +237,27 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
     }
   };
 
+  const handleRefreshAccess = async () => {
+    try {
+      setLoading(true);
+      await loadSubscription();
+      showToast({
+        title: 'Accès actualisé',
+        subtitle: 'Le statut du compte a été vérifié.',
+        autodismiss: true,
+      });
+      onClose();
+    } catch (err: any) {
+      showToast({
+        title: 'Erreur',
+        subtitle: err?.message || 'Impossible de vérifier votre accès.',
+        autodismiss: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleViewPlans = () => {
     // Fermer le modal d'abord pour permettre la navigation
     console.log('📋 Navigation vers la page des abonnements');
@@ -231,6 +267,82 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
       router.push('/(app)/(enterprise)/subscriptions' as any);
     }, 300);
   };
+
+  if (isIosBillingRestricted) {
+    return (
+      <View className="flex-1 bg-white">
+        <LinearGradient
+          colors={['#10B981', '#34D399']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={{
+            paddingTop: insets.top + 32,
+            paddingLeft: insets.left + 24,
+            paddingRight: insets.right + 24,
+            paddingBottom: 48,
+          }}
+        >
+          <View className="items-center">
+            <View className="bg-white/20 rounded-full mt-6 p-4 mb-4">
+              <Ionicons name="shield-checkmark" size={44} color="#FFFFFF" />
+            </View>
+            <Text className="text-3xl font-quicksand-bold text-white text-center mb-2">
+              Compte entreprise
+            </Text>
+            <Text className="text-white/90 font-quicksand-medium text-center text-base">
+              Fonctionnalité réservée aux comptes entreprise actifs.
+            </Text>
+          </View>
+        </LinearGradient>
+
+        <ScrollView
+          className="flex-1 -mt-6 rounded-t-[32px] bg-white px-6 pt-8"
+          contentContainerStyle={{ paddingBottom: 40 }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View className="bg-neutral-50 rounded-2xl p-5 border border-neutral-200">
+            <Text className="text-neutral-800 font-quicksand-bold text-base mb-2">
+              Vérification du compte
+            </Text>
+            <Text className="text-neutral-600 font-quicksand-medium text-sm leading-6">
+              Si votre abonnement est déjà actif, appuyez sur le bouton ci-dessous pour actualiser votre accès.
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            onPress={handleRefreshAccess}
+            disabled={loading}
+            className={`bg-primary-500 rounded-2xl py-4 mt-6 flex-row items-center justify-center ${
+              loading ? 'opacity-70' : ''
+            }`}
+            activeOpacity={0.8}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <>
+                <Ionicons name="refresh" size={20} color="#FFFFFF" />
+                <Text className="ml-2 text-white font-quicksand-bold text-base">
+                  Actualiser mon accès
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={onClose}
+            disabled={loading}
+            className="bg-white border border-neutral-300 rounded-2xl py-4 mt-4 flex-row items-center justify-center"
+            activeOpacity={0.8}
+          >
+            <Text className="text-neutral-700 font-quicksand-bold text-base">
+              Continuer
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-white">

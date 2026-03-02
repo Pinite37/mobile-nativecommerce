@@ -1,6 +1,6 @@
 import { KkiapayProvider, useKkiapay } from '@kkiapay-org/react-native-sdk';
 import { useEffect } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 
 interface KkiapayPaymentProps {
   amount: number;
@@ -50,6 +50,10 @@ function KkiapayPaymentContent({
 
 // Wrapper avec le provider localement
 export default function KkiapayPayment(props: KkiapayPaymentProps) {
+  if (Platform.OS === 'ios') {
+    return null;
+  }
+
   return (
     <View style={{
       position: 'absolute',

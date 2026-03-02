@@ -903,6 +903,7 @@ function EnterpriseProfilePage() {
   const isSmallPhone = width < 360;
   const isTablet = width >= 768 && width < 1024;
   const isLargeTablet = width >= 1024;
+  const isIosBillingRestricted = Platform.OS === "ios";
 
   // Header bottom padding (augmenté pour laisser plus d'espace)
   const headerBottomPadding = isLargeTablet
@@ -1731,21 +1732,32 @@ function EnterpriseProfilePage() {
                     </View> 
                   </View>
                   <TouchableOpacity
-                    onPress={() =>
-                      router.push("/(app)/(enterprise)/subscriptions" as any)
-                    }
+                    onPress={() => {
+                      if (!isIosBillingRestricted) {
+                        router.push("/(app)/(enterprise)/subscriptions" as any);
+                      }
+                    }}
                     className="rounded-xl py-2 px-3"
                     style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, width: '100%' }}
+                    activeOpacity={isIosBillingRestricted ? 1 : 0.7}
                   >
                     <View className="flex-row items-center justify-center">
-                      <Ionicons
-                        name="arrow-up-circle"
-                        size={isSmallPhone ? 12 : 14}
-                        color={colors.brandPrimary}
-                      />
-                      <Text className="font-quicksand-bold text-xs ml-1.5" style={{ color: colors.brandPrimary }}>
-                        {i18n.t("enterprise.profile.features.advertisements.upgrade")}
-                      </Text>
+                      {isIosBillingRestricted ? (
+                        <Text className="font-quicksand-bold text-xs" style={{ color: colors.textSecondary }}>
+                          Fonction réservée aux comptes actifs
+                        </Text>
+                      ) : (
+                        <>
+                          <Ionicons
+                            name="arrow-up-circle"
+                            size={isSmallPhone ? 12 : 14}
+                            color={colors.brandPrimary}
+                          />
+                          <Text className="font-quicksand-bold text-xs ml-1.5" style={{ color: colors.brandPrimary }}>
+                            {i18n.t("enterprise.profile.features.advertisements.upgrade")}
+                          </Text>
+                        </>
+                      )}
                     </View>
                   </TouchableOpacity>
                 </View>
@@ -1763,10 +1775,12 @@ function EnterpriseProfilePage() {
                 borderWidth: 1,
                 borderColor: colors.border,
               }}
-              activeOpacity={0.85}
-              onPress={() =>
-                router.push("/(app)/(enterprise)/subscriptions" as any)
-              }
+              activeOpacity={isIosBillingRestricted ? 1 : 0.85}
+              onPress={() => {
+                if (!isIosBillingRestricted) {
+                  router.push("/(app)/(enterprise)/subscriptions" as any);
+                }
+              }}
             >
               <View className="flex-row items-center justify-between">
                 <View className="mr-3 flex-1">
@@ -1793,14 +1807,20 @@ function EnterpriseProfilePage() {
               </View>
               <View className="mt-4 flex-row items-center">
                 <Text className="text-primary-600 font-quicksand-semibold text-xs">
-                  {subscription ? i18n.t("enterprise.profile.features.subscriptions.manage") : i18n.t("enterprise.profile.features.subscriptions.viewOffers")}
+                  {isIosBillingRestricted
+                    ? "Fonctionnalité réservée aux comptes actifs"
+                    : subscription
+                      ? i18n.t("enterprise.profile.features.subscriptions.manage")
+                      : i18n.t("enterprise.profile.features.subscriptions.viewOffers")}
                 </Text>
-                <Ionicons
-                  name="chevron-forward"
-                  size={isSmallPhone ? 12 : 14}
-                  color="#10B981"
-                  style={{ marginLeft: 4 }}
-                />
+                {!isIosBillingRestricted && (
+                  <Ionicons
+                    name="chevron-forward"
+                    size={isSmallPhone ? 12 : 14}
+                    color="#10B981"
+                    style={{ marginLeft: 4 }}
+                  />
+                )}
               </View>
             </TouchableOpacity>
           </View>

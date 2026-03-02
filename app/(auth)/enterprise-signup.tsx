@@ -362,12 +362,16 @@ export default function EnterpriseSignUpScreen() {
           response.data.user.role,
         );
 
-        console.log("🎯 Affichage du modal de sélection de plan...");
-
-        // Afficher le modal de sélection de plan au lieu de rediriger directement
-        setTimeout(() => {
-          setShowSubscriptionModal(true);
-        }, 800);
+        if (Platform.OS === "ios") {
+          console.log("📱 iOS détecté: aucun parcours d'abonnement in-app");
+          router.replace("/(app)/(enterprise)/(tabs)/" as any);
+        } else {
+          console.log("🎯 Affichage du modal de sélection de plan...");
+          // Afficher le modal de sélection de plan au lieu de rediriger directement
+          setTimeout(() => {
+            setShowSubscriptionModal(true);
+          }, 800);
+        }
       }
     } catch (error: any) {
       console.error("❌ Enterprise registration error:", error);

@@ -1,5 +1,6 @@
 import { Redirect, Stack, usePathname } from "expo-router";
 import React, { useEffect, useState } from "react";
+import { Platform } from "react-native";
 import { SubscriptionWelcomeModal } from "../../../components/enterprise/SubscriptionWelcomeModal";
 import { useAuth } from "../../../contexts/AuthContext";
 import { SubscriptionProvider, useSubscription } from "../../../contexts/SubscriptionContext";
@@ -10,8 +11,14 @@ function EnterpriseLayoutContent() {
   const { user } = useAuth();
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const pathname = usePathname();
+  const isIosBillingRestricted = Platform.OS === "ios";
 
   useEffect(() => {
+    if (isIosBillingRestricted) {
+      setShowWelcomeModal(false);
+      return;
+    }
+
     // Ne pas afficher le modal si on est sur la page des abonnements
     const isOnSubscriptionPage = pathname?.includes('/subscriptions');
     
@@ -22,7 +29,7 @@ function EnterpriseLayoutContent() {
     } else if (!needsSubscription || isOnSubscriptionPage) {
       setShowWelcomeModal(false);
     }
-  }, [needsSubscription, loading, pathname]);
+  }, [needsSubscription, loading, pathname, isIosBillingRestricted]);
 
   return (
     <>
@@ -151,7 +158,7 @@ function EnterpriseLayoutContent() {
         onClose={() => {
           // Le modal ne peut être fermé que si l'utilisateur n'a plus besoin d'abonnement
           // (c'est-à-dire après avoir activé un plan)
-          if (!needsSubscription) {
+          if (isIosBillingRestricted || !needsSubscription) {
             setShowWelcomeModal(false);
           }
         }}

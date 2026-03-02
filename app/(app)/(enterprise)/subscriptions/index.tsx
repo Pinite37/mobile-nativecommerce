@@ -6,6 +6,7 @@ import React, { useEffect, useState } from "react";
 import {
   Animated,
   Easing,
+  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -102,6 +103,7 @@ function EnterpriseSubscriptionsContent() {
   const { user } = useAuth();
   const { colors, isDark } = useTheme();
   const [canGoBack, setCanGoBack] = useState(true);
+  const isIosBillingRestricted = Platform.OS === "ios";
 
   // Modal state
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -232,6 +234,11 @@ function EnterpriseSubscriptionsContent() {
 
   // Vérifier si l'utilisateur peut revenir en arrière
   useEffect(() => {
+    if (isIosBillingRestricted) {
+      setCanGoBack(true);
+      return;
+    }
+
     // Bloquer le retour si aucun abonnement actif
     if (subscription) {
       const hasActivePlan = Boolean(
@@ -245,7 +252,7 @@ function EnterpriseSubscriptionsContent() {
       setCanGoBack(false);
       console.log('🔒 Retour bloqué: pas d\'abonnement');
     }
-  }, [subscription]);
+  }, [subscription, isIosBillingRestricted]);
 
   const loadData = async () => {
     try {
@@ -254,7 +261,11 @@ function EnterpriseSubscriptionsContent() {
       console.log("🔄 Chargement des plans et souscription...");
 
       // Charger les plans disponibles et la souscription active en parallèle
-      await Promise.all([loadPlans(), loadSubscription()]);
+      if (isIosBillingRestricted) {
+        await loadSubscription();
+      } else {
+        await Promise.all([loadPlans(), loadSubscription()]);
+      }
 
       console.log("✅ Données chargées");
     } catch (err: any) {
@@ -277,6 +288,10 @@ function EnterpriseSubscriptionsContent() {
 
   // Handle plan selection
   const handleSelectPlan = (plan: Plan) => {
+    if (isIosBillingRestricted) {
+      return;
+    }
+
     setSelectedPlan(plan);
     setShowUpgradeModal(true);
   };
@@ -284,6 +299,7 @@ function EnterpriseSubscriptionsContent() {
   // Handle upgrade confirmation
   const handleConfirmUpgrade = async () => {
     if (!selectedPlan || !user) return;
+    if (isIosBillingRestricted) return;
 
     try {
       setUpgradeLoading(true);
@@ -666,7 +682,7 @@ function EnterpriseSubscriptionsContent() {
                   </View>
 
                   {/* Quick Actions */}
-                  {isExpired() && (
+                  {isExpired() && !isIosBillingRestricted && (
                     <TouchableOpacity
                       className="bg-red-500 rounded-xl py-3.5 items-center shadow-sm"
                       onPress={() => {
@@ -689,63 +705,83 @@ function EnterpriseSubscriptionsContent() {
               </View>
             )}
 
+            {isIosBillingRestricted && !subscription?.isActive && (
+              <View style={{ backgroundColor: colors.card, borderRadius: 16, padding: 20, marginBottom: 20, borderWidth: 1, borderColor: colors.border }}>
+                <View className="flex-row items-start">
+                  <Ionicons name="lock-closed" size={22} color="#F59E0B" style={{ marginRight: 10, marginTop: 2 }} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 15, marginBottom: 4 }}>
+                      Accès entreprise limité
+                    </Text>
+                    <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 13, lineHeight: 20 }}>
+                      Fonctionnalité réservée aux comptes entreprise actifs.
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            )}
+
             {/* Avertissement si pas de plan actif */}
             {!canGoBack && (
               <View style={{ backgroundColor: '#FEF3C7', borderLeftWidth: 4, borderLeftColor: '#F59E0B', borderRadius: 12, padding: 16, marginBottom: 20, flexDirection: 'row', alignItems: 'center' }}>
                 <Ionicons name="warning" size={24} color="#F59E0B" style={{ marginRight: 12 }} />
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: '#92400E', fontFamily: 'Quicksand-Bold', fontSize: 14, marginBottom: 4 }}>
-                    Activation requise
+                    {isIosBillingRestricted ? "Accès restreint" : "Activation requise"}
                   </Text>
                   <Text style={{ color: '#78350F', fontFamily: 'Quicksand-Medium', fontSize: 12, lineHeight: 18 }}>
-                    Veuillez activer un plan d&apos;abonnement pour accéder à l&apos;application.
+                    {isIosBillingRestricted
+                      ? "Fonctionnalité réservée aux comptes entreprise actifs."
+                      : "Veuillez activer un plan d&apos;abonnement pour accéder à l&apos;application."}
                   </Text>
                 </View>
               </View>
             )}
 
             {/* Section Title */}
-            <View className="mb-5">
-              <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 4 }}>
-                {subscription ? i18n.t("enterprise.subscriptions.sections.otherPlans") : i18n.t("enterprise.subscriptions.sections.ourPlans")}
-              </Text>
-              <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 24 }}>
-                {subscription && isExpired()
-                  ? i18n.t("enterprise.subscriptions.sections.renewSubscription")
-                  : i18n.t("enterprise.subscriptions.sections.choosePlan")}
-              </Text>
-            </View>
-
-            {/* Plans List */}
-            {loading ? (
-              // Afficher les skeletons pendant le chargement
+            {!isIosBillingRestricted && (
               <>
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <SkeletonCard key={i} colors={colors} />
-                ))}
-              </>
-            ) : error ? (
-              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 64, backgroundColor: colors.card, borderRadius: 16 }}>
-                <View className="w-20 h-20 rounded-full bg-red-50 items-center justify-center mb-4">
-                  <Ionicons name="alert-circle" size={40} color="#EF4444" />
-                </View>
-                <Text style={{ color: '#DC2626', fontFamily: 'Quicksand-Bold', fontSize: 16, marginBottom: 8 }}>
-                  {i18n.t("enterprise.subscriptions.sections.loadingError")}
-                </Text>
-                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 14, textAlign: 'center', paddingHorizontal: 32, marginBottom: 24 }}>
-                  {error}
-                </Text>
-                <TouchableOpacity
-                  onPress={loadData}
-                  className="bg-primary-500 px-8 py-3 rounded-xl shadow-sm"
-                >
-                  <Text style={{ color: '#FFFFFF', fontFamily: 'Quicksand-Bold', fontSize: 14 }}>
-                    {i18n.t("enterprise.subscriptions.sections.retry")}
+                <View className="mb-5">
+                  <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 4 }}>
+                    {subscription ? i18n.t("enterprise.subscriptions.sections.otherPlans") : i18n.t("enterprise.subscriptions.sections.ourPlans")}
                   </Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              plans.map(renderPlan)
+                  <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 24 }}>
+                    {subscription && isExpired()
+                      ? i18n.t("enterprise.subscriptions.sections.renewSubscription")
+                      : i18n.t("enterprise.subscriptions.sections.choosePlan")}
+                  </Text>
+                </View>
+
+                {loading ? (
+                  <>
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <SkeletonCard key={i} colors={colors} />
+                    ))}
+                  </>
+                ) : error ? (
+                  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 64, backgroundColor: colors.card, borderRadius: 16 }}>
+                    <View className="w-20 h-20 rounded-full bg-red-50 items-center justify-center mb-4">
+                      <Ionicons name="alert-circle" size={40} color="#EF4444" />
+                    </View>
+                    <Text style={{ color: '#DC2626', fontFamily: 'Quicksand-Bold', fontSize: 16, marginBottom: 8 }}>
+                      {i18n.t("enterprise.subscriptions.sections.loadingError")}
+                    </Text>
+                    <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 14, textAlign: 'center', paddingHorizontal: 32, marginBottom: 24 }}>
+                      {error}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={loadData}
+                      className="bg-primary-500 px-8 py-3 rounded-xl shadow-sm"
+                    >
+                      <Text style={{ color: '#FFFFFF', fontFamily: 'Quicksand-Bold', fontSize: 14 }}>
+                        {i18n.t("enterprise.subscriptions.sections.retry")}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  plans.map(renderPlan)
+                )}
+              </>
             )}
 
             {/* Subscription Details Section */}
@@ -895,7 +931,7 @@ function EnterpriseSubscriptionsContent() {
 
       {/* Upgrade Confirmation Modal */}
       <UpgradeConfirmationModal
-        visible={showUpgradeModal}
+        visible={!isIosBillingRestricted && showUpgradeModal}
         plan={selectedPlan}
         currentPlanName={subscription?.plan?.name}
         onConfirm={handleConfirmUpgrade}
@@ -913,7 +949,7 @@ function EnterpriseSubscriptionsContent() {
       />
 
       {/* Processing Payment Modal */}
-      {processingPayment && (
+      {!isIosBillingRestricted && processingPayment && (
         <View
           style={{
             position: "absolute",
@@ -974,7 +1010,7 @@ function EnterpriseSubscriptionsContent() {
       )}
 
       {/* KKiaPay Widget */}
-      {showKkiapayWidget && paymentConfig && (
+      {!isIosBillingRestricted && showKkiapayWidget && paymentConfig && (
         <KkiapayPayment
           amount={paymentConfig.amount}
           email={paymentConfig.email}

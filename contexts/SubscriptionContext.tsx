@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import SubscriptionService, { Subscription } from '../services/api/SubscriptionService';
 import { useAuth } from './AuthContext';
 
@@ -24,6 +25,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [error, setError] = useState<string | null>(null);
   const [needsSubscription, setNeedsSubscription] = useState(false);
   const { user } = useAuth();
+  const isIosBillingRestricted = Platform.OS === 'ios';
 
   // Charger la souscription active
   const loadSubscription = useCallback(async () => {
@@ -71,6 +73,10 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       throw new Error('Vous devez être connecté en tant qu\'entreprise');
     }
 
+    if (isIosBillingRestricted) {
+      throw new Error('Les abonnements sont gérés en dehors de l’application iOS.');
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -88,12 +94,16 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, isIosBillingRestricted]);
 
   // S'abonner à un plan spécifique
   const subscribeToPlan = useCallback(async (planId: string, paymentData?: any) => {
     if (!user || user.role !== 'ENTERPRISE') {
       throw new Error('Vous devez être connecté en tant qu\'entreprise');
+    }
+
+    if (isIosBillingRestricted) {
+      throw new Error('Les abonnements sont gérés en dehors de l’application iOS.');
     }
 
     try {
@@ -113,7 +123,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, isIosBillingRestricted]);
 
   // Vérifier si une feature est disponible
   const canUseFeature = useCallback((featureName: string): boolean => {
