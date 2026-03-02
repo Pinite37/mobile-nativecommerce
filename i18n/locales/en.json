@@ -62,12 +62,12 @@
                 "sectionTitle": "Danger Zone",
                 "button": "Delete my account",
                 "modalTitle": "Delete account",
-                "modalMessage": "This action is irreversible. Your account will be marked for deletion and will be permanently deleted in 15 days.",
+                "modalMessage": "This action is irreversible.",
                 "confirmButton": "Yes, delete my account",
                 "cancelButton": "Cancel",
                 "inProgress": "Deleting...",
                 "successTitle": "Account deletion",
-                "successMessage": "Your account has been marked for deletion. It will be permanently deleted in 15 days.",
+                "successMessage": "Your account has been deleted successfully.",
                 "errorTitle": "Error",
                 "errorMessage": "An error occurred while deleting the account."
             },
@@ -76,7 +76,7 @@
                 "french": "Français",
                 "english": "English",
                 "frenchSubtitle": "French",
-                "englishSubtitle": "Anglais"
+                "englishSubtitle": "English"
             },
             "messages": {
                 "error": "Error",
@@ -1626,7 +1626,7 @@
                 "cancelButton": "Cancel",
                 "inProgress": "Deleting...",
                 "successTitle": "Account Deleted",
-                "successMessage": "Your account has been marked for deletion.",
+                "successMessage": "Your account has been deleted successfully.",
                 "errorTitle": "Error",
                 "errorMessage": "An error occurred while deleting the account."
             },

@@ -53,7 +53,7 @@ export default function ProductDetails() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const insets = useSafeAreaInsets();
-  const { locale } = useLocale();
+  useLocale();
   const { colors, isDark } = useTheme();
   const { notification, showNotification, hideNotification } =
     useNotification();
@@ -129,6 +129,7 @@ export default function ProductDetails() {
         const productData = await ProductService.getPublicProductById(id!);
         console.log("✅ Produit chargé:", JSON.stringify(productData, null, 2));
         setProduct(productData);
+        setCurrentImageIndex(0);
 
         // Vérifier le statut favori uniquement pour un utilisateur connecté
         if (isAuthenticated) {
@@ -209,6 +210,21 @@ export default function ProductDetails() {
     return new Intl.NumberFormat("fr-FR").format(price) + " FCFA";
   };
 
+  const formatNumber = (value?: number) => {
+    return new Intl.NumberFormat("fr-FR").format(value || 0);
+  };
+
+  const formatDate = (value?: string) => {
+    if (!value) return "Date inconnue";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "Date inconnue";
+    return date.toLocaleDateString("fr-FR", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
   // Composant pour une carte de produit similaire
   const SimilarProductCard = ({
     product: similarProduct,
@@ -270,7 +286,7 @@ export default function ProductDetails() {
     </TouchableOpacity>
   );
 
-  const openWhatsApp = async (phone: string) => {
+  const openWhatsApp = async (phone?: string) => {
     if (
       !requireAuth(
         "Connectez-vous pour contacter une entreprise sur WhatsApp.",
@@ -489,6 +505,26 @@ export default function ProductDetails() {
     );
   }
 
+  const enterprise =
+    typeof product.enterprise === "object" ? product.enterprise : null;
+  const productImages =
+    Array.isArray(product.images) && product.images.length > 0
+      ? product.images.filter(Boolean)
+      : [];
+  const activeImage =
+    productImages[currentImageIndex] || productImages[0] || undefined;
+  const categoryLabel =
+    typeof product.category === "object"
+      ? product.category?.name || "Categorie"
+      : product.category || "Categorie";
+  const enterpriseName =
+    enterprise?.companyName ||
+    (typeof product.enterprise === "string" ? product.enterprise : "Entreprise");
+  const contactPhone = enterprise?.contactInfo?.phone || "";
+  const contactWhatsapp =
+    enterprise?.contactInfo?.whatsapp || enterprise?.contactInfo?.phone || "";
+  const contactWebsite = enterprise?.contactInfo?.website || "";
+
   return (
     <View style={[styles.safe, { backgroundColor: colors.card }]}>
       <ExpoStatusBar
@@ -563,7 +599,10 @@ export default function ProductDetails() {
             )}
             <TouchableOpacity
               className="w-10 h-10 justify-center items-center"
-              onPress={() => setImageModalVisible(true)}
+              onPress={() => {
+                if (productImages.length === 0) return;
+                setImageModalVisible(true);
+              }}
             >
               <Ionicons name="images-outline" size={22} color="#000" />
             </TouchableOpacity>
@@ -640,7 +679,10 @@ export default function ProductDetails() {
         )}
         <TouchableOpacity
           className="w-10 h-10 bg-black/30 rounded-full justify-center items-center"
-          onPress={() => setImageModalVisible(true)}
+          onPress={() => {
+            if (productImages.length === 0) return;
+            setImageModalVisible(true);
+          }}
         >
           <Ionicons name="images-outline" size={20} color="#FFFFFF" />
         </TouchableOpacity>
@@ -648,20 +690,24 @@ export default function ProductDetails() {
 
       {/* Parallax Header Background */}
       <View style={styles.headerWrapper} pointerEvents="none">
-        <AnimatedImage
-          source={{ uri: product.images?.[0] }}
-          style={[
-            styles.headerImage,
-            {
-              opacity: imageOpacity,
-              transform: [
-                { translateY: imageTranslateY },
-                { scale: imageScale },
-              ],
-            },
-          ]}
-          contentFit="cover"
-        />
+        {activeImage ? (
+          <AnimatedImage
+            source={{ uri: activeImage }}
+            style={[
+              styles.headerImage,
+              {
+                opacity: imageOpacity,
+                transform: [
+                  { translateY: imageTranslateY },
+                  { scale: imageScale },
+                ],
+              },
+            ]}
+            contentFit="cover"
+          />
+        ) : (
+          <View style={[styles.headerImage, { backgroundColor: colors.border }]} />
+        )}
 
         <AnimatedBlurView
           intensity={blurIntensity}
@@ -679,10 +725,7 @@ export default function ProductDetails() {
             {product.name}
           </Text>
           <Text style={styles.subTitle} className="font-quicksand-medium">
-            {typeof product.category === "object" && product.category?.name
-              ? product.category.name
-              : "Produit"}{" "}
-            • {formatPrice(product.price)}
+            {categoryLabel} • {formatPrice(product.price)}
           </Text>
         </Animated.View>
       </View>
@@ -701,11 +744,11 @@ export default function ProductDetails() {
           style={[styles.contentContainer, { backgroundColor: colors.card }]}
         >
           {/* Thumbnails */}
-          {product.images.length > 1 && (
+          {productImages.length > 1 && (
             <View className="mt-4 mb-6">
               <FlatList
                 ref={imagesListRef}
-                data={product.images}
+                data={productImages}
                 horizontal
                 keyExtractor={(item, index) => `thumb-${index}`}
                 showsHorizontalScrollIndicator={false}
@@ -755,6 +798,126 @@ export default function ProductDetails() {
             </Text>
           </View>
 
+          {/* Product meta */}
+          <View
+            style={{
+              backgroundColor: colors.secondary,
+              borderColor: colors.border,
+            }}
+            className="p-4 border rounded-2xl mb-6"
+          >
+            <Text
+              style={{ color: colors.textPrimary }}
+              className="text-lg font-quicksand-bold mb-3"
+            >
+              Details du produit
+            </Text>
+
+            <View className="flex-row flex-wrap -mx-1 mb-2">
+              <View
+                style={{
+                  width: "48%",
+                  backgroundColor: colors.card,
+                  borderColor: colors.border,
+                }}
+                className="m-1 rounded-xl px-3 py-3 border"
+              >
+                <Text style={{ color: colors.textSecondary }} className="text-xs">
+                  Stock
+                </Text>
+                <Text style={{ color: colors.textPrimary }} className="mt-1 font-quicksand-bold">
+                  {formatNumber(product.stock)}
+                </Text>
+              </View>
+
+              <View
+                style={{
+                  width: "48%",
+                  backgroundColor: colors.card,
+                  borderColor: colors.border,
+                }}
+                className="m-1 rounded-xl px-3 py-3 border"
+              >
+                <Text style={{ color: colors.textSecondary }} className="text-xs">
+                  Vues
+                </Text>
+                <Text style={{ color: colors.textPrimary }} className="mt-1 font-quicksand-bold">
+                  {formatNumber(product.stats?.views)}
+                </Text>
+              </View>
+            </View>
+
+            <View className="flex-row flex-wrap -mx-1 mb-2">
+              <View
+                style={{
+                  width: "48%",
+                  backgroundColor: colors.card,
+                  borderColor: colors.border,
+                }}
+                className="m-1 rounded-xl px-3 py-3 border"
+              >
+                <Text style={{ color: colors.textSecondary }} className="text-xs">
+                  Ventes
+                </Text>
+                <Text style={{ color: colors.textPrimary }} className="mt-1 font-quicksand-bold">
+                  {formatNumber(product.stats?.totalSales)}
+                </Text>
+              </View>
+
+              <View
+                style={{
+                  width: "48%",
+                  backgroundColor: colors.card,
+                  borderColor: colors.border,
+                }}
+                className="m-1 rounded-xl px-3 py-3 border"
+              >
+                <Text style={{ color: colors.textSecondary }} className="text-xs">
+                  Publie le
+                </Text>
+                <Text style={{ color: colors.textPrimary }} className="mt-1 font-quicksand-bold">
+                  {formatDate(product.createdAt)}
+                </Text>
+              </View>
+            </View>
+
+            <View
+              style={{ backgroundColor: colors.card, borderColor: colors.border }}
+              className="rounded-xl px-3 py-3 border"
+            >
+              <Text style={{ color: colors.textSecondary }} className="text-xs">
+                Categorie
+              </Text>
+              <Text style={{ color: colors.textPrimary }} className="mt-1 font-quicksand-bold">
+                {categoryLabel}
+              </Text>
+            </View>
+
+            {Array.isArray(product.tags) && product.tags.length > 0 && (
+              <View className="mt-4">
+                <Text
+                  style={{ color: colors.textSecondary }}
+                  className="text-xs font-quicksand-bold mb-2 uppercase tracking-wider"
+                >
+                  Tags
+                </Text>
+                <View className="flex-row flex-wrap">
+                  {product.tags.map((tag) => (
+                    <View
+                      key={tag}
+                      style={{ backgroundColor: colors.card, borderColor: colors.border }}
+                      className="mr-2 mb-2 px-3 py-1.5 rounded-full border"
+                    >
+                      <Text style={{ color: colors.textPrimary }} className="text-xs font-quicksand-semibold">
+                        #{tag}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
+
           {/* Enterprise Section */}
           <View
             style={{
@@ -799,18 +962,14 @@ export default function ProductDetails() {
                   style={{ color: colors.textPrimary }}
                   className="text-lg font-quicksand-bold"
                 >
-                  {typeof product.enterprise === "object"
-                    ? product.enterprise.companyName
-                    : product.enterprise}
+                  {enterpriseName}
                 </Text>
-                {typeof product.enterprise === "object" &&
-                  product.enterprise.location && (
+                {enterprise && enterprise.location && (
                     <Text
                       style={{ color: colors.textSecondary }}
                       className="text-sm mt-1"
                     >
-                      📍 {product.enterprise.location.city},{" "}
-                      {product.enterprise.location.district}
+                      📍 {enterprise.location.city}, {enterprise.location.district}
                     </Text>
                   )}
               </View>
@@ -822,9 +981,7 @@ export default function ProductDetails() {
             </TouchableOpacity>
 
             {/* Contact Options */}
-            {typeof product.enterprise === "object" &&
-              (product.enterprise.contactInfo?.phone ||
-                product.enterprise.contactInfo?.website) && (
+            {enterprise && (contactPhone || contactWebsite || contactWhatsapp) && (
                 <View
                   style={{ borderTopColor: colors.border }}
                   className="mt-4 pt-4 border-t"
@@ -836,18 +993,10 @@ export default function ProductDetails() {
                     {i18n.t("client.enterprise.contact.title")}
                   </Text>
                   <View className="flex-row flex-wrap -mx-1">
-                    {typeof product.enterprise === "object" &&
-                      product.enterprise.contactInfo?.phone && (
+                    {contactWhatsapp && (
                         <>
                           <TouchableOpacity
-                            onPress={() =>
-                              typeof product.enterprise === "object" &&
-                              product.enterprise.contactInfo?.phone
-                                ? openWhatsApp(
-                                    product.enterprise.contactInfo.phone,
-                                  )
-                                : undefined
-                            }
+                            onPress={() => openWhatsApp(contactWhatsapp)}
                             style={{
                               backgroundColor: colors.card,
                               borderColor: colors.border,
@@ -866,15 +1015,12 @@ export default function ProductDetails() {
                               WhatsApp
                             </Text>
                           </TouchableOpacity>
+                        </>
+                      )}
+                    {contactPhone && (
+                      <>
                           <TouchableOpacity
-                            onPress={() =>
-                              typeof product.enterprise === "object" &&
-                              product.enterprise.contactInfo?.phone
-                                ? makePhoneCall(
-                                    product.enterprise.contactInfo.phone,
-                                  )
-                                : undefined
-                            }
+                            onPress={() => makePhoneCall(contactPhone)}
                             style={{
                               backgroundColor: colors.card,
                               borderColor: colors.border,
@@ -889,11 +1035,49 @@ export default function ProductDetails() {
                               {i18n.t("client.enterprise.contact.call")}
                             </Text>
                           </TouchableOpacity>
-                        </>
-                      )}
+                      </>
+                    )}
+                    {contactWebsite && (
+                      <TouchableOpacity
+                        onPress={() => openWebsite(contactWebsite)}
+                        style={{
+                          backgroundColor: colors.card,
+                          borderColor: colors.border,
+                        }}
+                        className="w-full rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border shadow-sm"
+                      >
+                        <Ionicons name="globe-outline" size={18} color="#3B82F6" />
+                        <Text
+                          style={{ color: colors.textPrimary }}
+                          className="ml-2 font-quicksand-bold text-sm"
+                        >
+                          Site web
+                        </Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 </View>
               )}
+
+            {enterprise?.description ? (
+              <View
+                style={{ borderTopColor: colors.border }}
+                className="mt-4 pt-4 border-t"
+              >
+                <Text
+                  style={{ color: colors.textSecondary }}
+                  className="text-sm font-quicksand-bold mb-2 uppercase tracking-wider"
+                >
+                  A propos de la boutique
+                </Text>
+                <Text
+                  style={{ color: colors.textSecondary }}
+                  className="font-quicksand-medium leading-6"
+                >
+                  {enterprise.description}
+                </Text>
+              </View>
+            ) : null}
 
             {/* Faire une offre */}
             <TouchableOpacity
@@ -984,14 +1168,14 @@ export default function ProductDetails() {
                 <Ionicons name="close" size={20} color="#FFFFFF" />
               </TouchableOpacity>
               <Text className="text-white font-quicksand-medium">
-                {currentImageIndex + 1}/{product.images.length}
+                {currentImageIndex + 1}/{productImages.length}
               </Text>
               <View className="w-10" />
             </View>
           </View>
 
           <FlatList
-            data={product.images}
+            data={productImages}
             renderItem={({ item }) => (
               <View
                 style={{

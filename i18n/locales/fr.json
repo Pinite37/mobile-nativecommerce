@@ -62,12 +62,12 @@
                 "sectionTitle": "Zone de danger",
                 "button": "Supprimer mon compte",
                 "modalTitle": "Supprimer le compte",
-                "modalMessage": "Cette action est irréversible. Votre compte sera marqué pour suppression et sera supprimé définitivement dans 15 jours.",
+                "modalMessage": "Cette action est irréversible.",
                 "confirmButton": "Oui, supprimer mon compte",
                 "cancelButton": "Annuler",
                 "inProgress": "Suppression en cours...",
                 "successTitle": "Suppression de compte",
-                "successMessage": "Votre compte a été marqué pour suppression. Il sera supprimé définitivement dans 15 jours.",
+                "successMessage": "Votre compte a été supprimé avec succès",
                 "errorTitle": "Erreur",
                 "errorMessage": "Une erreur s'est produite lors de la suppression du compte."
             },
@@ -1626,7 +1626,7 @@
                 "cancelButton": "Annuler",
                 "inProgress": "Suppression en cours...",
                 "successTitle": "Compte supprimé",
-                "successMessage": "Votre compte a été marqué pour suppression.",
+                "successMessage": "Votre compte a été supprimé avec succès",
                 "errorTitle": "Erreur",
                 "errorMessage": "Une erreur s'est produite lors de la suppression du compte."
             },

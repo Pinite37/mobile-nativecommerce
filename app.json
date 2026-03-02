@@ -13,13 +13,16 @@
       "bundleIdentifier": "com.axi.axiapp",
       "associatedDomains": [
         "applinks:aximarketplace.com",
+        "applinks:www.aximarketplace.com",
+        "applinks:aximarketplace.com",
         "applinks:www.aximarketplace.com"
       ],
       "runtimeVersion": "1.0.0",
       "infoPlist": {
         "NSCameraUsageDescription": "Cette application a besoin d'accéder à votre caméra pour prendre des photos de vos produits et publicités.",
         "NSPhotoLibraryUsageDescription": "Cette application a besoin d'accéder à votre galerie photo pour sélectionner des images de vos produits et publicités.",
-        "NSPhotoLibraryAddUsageDescription": "Cette application a besoin d'accéder à votre galerie photo pour sauvegarder des images."
+        "NSPhotoLibraryAddUsageDescription": "Cette application a besoin d'accéder à votre galerie photo pour sauvegarder des images.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -58,8 +61,14 @@
               "pathPrefix": "/ad"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
+      ],
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
