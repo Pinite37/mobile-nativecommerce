@@ -5,6 +5,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
     FlatList,
+    Image,
     Keyboard,
     KeyboardAvoidingView,
     Linking,
@@ -434,7 +435,7 @@ export default function EnterpriseSignUpScreen() {
             Prénom *
           </Text>
           <TextInput
-            className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
+            className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
             placeholder="Jean"
             placeholderTextColor="#9CA3AF"
             value={firstName}
@@ -447,7 +448,7 @@ export default function EnterpriseSignUpScreen() {
             Nom *
           </Text>
           <TextInput
-            className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
+            className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
             placeholder="DOSSOU"
             placeholderTextColor="#9CA3AF"
             value={lastName}
@@ -462,7 +463,7 @@ export default function EnterpriseSignUpScreen() {
           Email *
         </Text>
         <TextInput
-          className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
+          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
           placeholder="jean.dossou@exemple.com"
           placeholderTextColor="#9CA3AF"
           value={email}
@@ -478,7 +479,7 @@ export default function EnterpriseSignUpScreen() {
           Numéro de Téléphone *
         </Text>
         <TextInput
-          className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
+          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
           placeholder="XX XX XX XX XX"
           placeholderTextColor="#9CA3AF"
           value={phone}
@@ -493,7 +494,7 @@ export default function EnterpriseSignUpScreen() {
           Adresse *
         </Text>
         <TextInput
-          className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
+          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
           placeholder="Cotonou"
           placeholderTextColor="#9CA3AF"
           value={address}
@@ -517,7 +518,7 @@ export default function EnterpriseSignUpScreen() {
         </Text>
         <TextInput
           ref={companyNameRef}
-          className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
+          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
           placeholder="Votre Entreprise SARL"
           placeholderTextColor="#9CA3AF"
           value={companyName}
@@ -534,7 +535,7 @@ export default function EnterpriseSignUpScreen() {
         </Text>
         <TextInput
           ref={descriptionRef}
-          className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
+          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
           placeholder="Décrivez votre entreprise..."
           placeholderTextColor="#9CA3AF"
           value={description}
@@ -553,7 +554,7 @@ export default function EnterpriseSignUpScreen() {
         </Text>
         <TextInput
           ref={ifuNumberRef}
-          className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
+          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
           placeholder="1234567890123"
           placeholderTextColor="#9CA3AF"
           value={ifuNumber}
@@ -570,7 +571,7 @@ export default function EnterpriseSignUpScreen() {
           Ville *
         </Text>
         <TouchableOpacity
-          className="w-full px-4 py-3 border border-neutral-300 rounded-2xl bg-white flex-row justify-between items-center"
+          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl bg-white flex-row justify-between items-center shadow-sm"
           onPress={() => setCityModalVisible(true)}
           activeOpacity={0.7}
         >
@@ -587,7 +588,7 @@ export default function EnterpriseSignUpScreen() {
           Quartier *
         </Text>
         <TouchableOpacity
-          className={`w-full px-4 py-3 border border-neutral-300 rounded-2xl bg-white flex-row justify-between items-center ${
+          className={`w-full px-5 py-4 border border-neutral-200/60 rounded-2xl bg-white flex-row justify-between items-center shadow-sm ${
             !selectedCity ? "opacity-50" : ""
           }`}
           onPress={() => selectedCity && setDistrictModalVisible(true)}
@@ -621,7 +622,7 @@ export default function EnterpriseSignUpScreen() {
           Email Entreprise
         </Text>
         <TextInput
-          className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
+          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
           placeholder="contact@votreentreprise.com"
           placeholderTextColor="#9CA3AF"
           value={companyEmail}
@@ -639,7 +640,7 @@ export default function EnterpriseSignUpScreen() {
         </Text>
         <TextInput
           key="whatsapp-input"
-          className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
+          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
           placeholder="XX XX XX XX XX"
           placeholderTextColor="#9CA3AF"
           value={whatsapp}
@@ -659,7 +660,7 @@ export default function EnterpriseSignUpScreen() {
           Site Web
         </Text>
         <TextInput
-          className="w-full px-4 py-3 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
+          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
           placeholder="https://votreentreprise.com"
           placeholderTextColor="#9CA3AF"
           value={website}
@@ -685,7 +686,7 @@ export default function EnterpriseSignUpScreen() {
         </Text>
         <View className="relative">
           <TextInput
-            className="w-full px-4 py-3 pr-12 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
+            className="w-full px-5 py-4 pr-12 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
             placeholder="Entrez votre mot de passe"
             placeholderTextColor="#9CA3AF"
             value={password}
@@ -714,7 +715,7 @@ export default function EnterpriseSignUpScreen() {
         </Text>
         <View className="relative">
           <TextInput
-            className="w-full px-4 py-3 pr-12 border border-neutral-300 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500"
+            className="w-full px-5 py-4 pr-12 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
             placeholder="Confirmez votre mot de passe"
             placeholderTextColor="#9CA3AF"
             value={confirmPassword}
@@ -803,14 +804,21 @@ export default function EnterpriseSignUpScreen() {
   );
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-[#F8F9FA]">
       <StatusBar style="dark" />
+
+      {/* Background Shapes */}
+      <View className="absolute top-[-100] right-[-80] w-[300px] h-[300px] rounded-full bg-primary/10" />
+      <View 
+        className="absolute top-[30%] left-[-140] w-[280px] h-[350px] bg-primary/20" 
+        style={{ borderTopRightRadius: 150, borderBottomRightRadius: 150 }} 
+      />
 
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View className="flex-1">
           {/* Header */}
           <View
-            className="px-6 bg-white"
+            className="px-6"
             style={{
               paddingTop: Math.max(insets.top, 16) + 16,
               paddingBottom: 16,
@@ -825,6 +833,12 @@ export default function EnterpriseSignUpScreen() {
               <Ionicons name="arrow-back" size={24} color="#374151" />
             </TouchableOpacity>
 
+            <Image 
+              source={require('../../assets/images/axiLogoo.png')} 
+              style={{ width: 120, height: 40 }} 
+              resizeMode="contain" 
+              className="mb-4"
+            />
             <Text className="text-3xl font-quicksand-bold text-neutral-900 mb-2">
               Créer un Compte Entreprise
             </Text>

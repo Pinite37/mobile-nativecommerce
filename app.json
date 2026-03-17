@@ -8,16 +8,14 @@
     "scheme": "axiapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "runtimeVersion": "1.0.0",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.axi.axiapp",
       "associatedDomains": [
         "applinks:aximarketplace.com",
-        "applinks:www.aximarketplace.com",
-        "applinks:aximarketplace.com",
         "applinks:www.aximarketplace.com"
       ],
-      "runtimeVersion": "1.0.0",
       "infoPlist": {
         "NSCameraUsageDescription": "Cette application a besoin d'accéder à votre caméra pour prendre des photos de vos produits et publicités.",
         "NSPhotoLibraryUsageDescription": "Cette application a besoin d'accéder à votre galerie photo pour sélectionner des images de vos produits et publicités.",
@@ -33,7 +31,6 @@
       "edgeToEdgeEnabled": true,
       "package": "com.axi.axiapp",
       "googleServicesFile": "./google-services.json",
-      "runtimeVersion": "1.0.0",
       "softwareKeyboardLayoutMode": "pan",
       "intentFilters": [
         {
@@ -61,15 +58,10 @@
               "pathPrefix": "/ad"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ],
-      "permissions": [
-        "android.permission.RECORD_AUDIO"
-      ]
+      "permissions": ["android.permission.RECORD_AUDIO"]
     },
     "web": {
       "bundler": "metro",
@@ -116,7 +108,9 @@
       }
     },
     "updates": {
-      "url": "https://u.expo.dev/f5333952-d25c-444e-a7bc-11b81a5ac526"
+      "url": "https://u.expo.dev/f5333952-d25c-444e-a7bc-11b81a5ac526",
+      "enabled": true,
+      "fallbackToCacheTimeout": 0
     },
     "owner": "theophas"
   }

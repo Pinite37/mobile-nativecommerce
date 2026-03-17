@@ -4,6 +4,7 @@ import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
+    Image,
     Text,
     TextInput,
     TouchableOpacity,
@@ -165,16 +166,23 @@ export default function SignInScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-[#F8F9FA]">
       <StatusBar style="dark" />
 
+      {/* Background Shapes */}
+      <View className="absolute top-[-100] left-[-80] w-[300px] h-[300px] rounded-full bg-primary/10" />
+      <View 
+        className="absolute top-[20%] right-[-140] w-[280px] h-[350px] bg-primary/20" 
+        style={{ borderTopLeftRadius: 150, borderBottomLeftRadius: 150 }} 
+      />
+
       {/* Fixed Header with Back Button */}
-      <View className="absolute top-0 left-0 right-0 z-10 bg-white px-6 pt-16 pb-4">
+      <View className="absolute top-0 left-0 right-0 z-10 px-6 pt-16 pb-4">
         <TouchableOpacity
           onPress={() => router.back()}
-          className="w-10 h-10 rounded-full bg-neutral-100 items-center justify-center"
+          className="w-11 h-11 rounded-full bg-white shadow-sm items-center justify-center border border-neutral-100"
         >
-          <Ionicons name="arrow-back" size={20} color="#374151" />
+          <Ionicons name="arrow-back" size={22} color="#374151" />
         </TouchableOpacity>
       </View>
 
@@ -191,11 +199,18 @@ export default function SignInScreen() {
         contentContainerStyle={{ paddingBottom: 60 }}
       >
         {/* Header */}
-        <View className="px-6 pb-8">
-          <Text className="text-3xl font-quicksand-bold text-neutral-900 mb-2">
-            Bienvenue
+        <View className="px-6 pb-10">
+          <Image 
+            source={require('../../assets/images/axiLogoo.png')} 
+            style={{ width: 140, height: 45 }} 
+            resizeMode="contain" 
+            className="mb-6"
+          />
+          <Text className="text-4xl font-quicksand-bold text-neutral-900 mb-2 leading-tight">
+            Bienvenue{"\n"}sur{" "}
+            <Text className="text-primary">AXI Marketplace</Text>
           </Text>
-          <Text className="text-base font-quicksand text-neutral-600">
+          <Text className="text-base font-quicksand text-neutral-600 mt-2">
             Connectez-vous à votre compte
           </Text>
         </View>
@@ -203,40 +218,34 @@ export default function SignInScreen() {
         {/* Form */}
         <View className="px-6">
           {/* Email Input */}
-          <View className="mb-4">
-            <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-              Email
-            </Text>
+          <View className="mb-5">
             <TextInput
               value={email}
               onChangeText={setEmail}
-              placeholder="Entrez votre email"
+              placeholder="Email"
               placeholderTextColor="#9CA3AF"
               keyboardType="email-address"
               autoCapitalize="none"
-              className="border border-neutral-200 rounded-xl px-4 py-4 text-base font-quicksand text-neutral-900"
-              style={{ color: "#111827" }}
+              className="bg-white border rounded-2xl px-5 py-4 text-base font-quicksand text-neutral-900 border-neutral-200/60 shadow-sm"
+              style={{ color: "#111827", minHeight: 60 }}
             />
           </View>
 
           {/* Password Input */}
-          <View className="mb-6">
-            <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-              Mot de passe
-            </Text>
+          <View className="mb-4">
             <View className="relative">
               <TextInput
                 value={password}
                 onChangeText={setPassword}
-                placeholder="Entrez votre mot de passe"
+                placeholder="Mot de passe"
                 placeholderTextColor="#9CA3AF"
                 secureTextEntry={!showPassword}
-                className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 text-base font-quicksand text-neutral-900"
-                style={{ color: "#111827" }}
+                className="bg-white border rounded-2xl px-5 py-4 pr-12 text-base font-quicksand text-neutral-900 border-neutral-200/60 shadow-sm"
+                style={{ color: "#111827", minHeight: 60 }}
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-4"
+                className="absolute right-4 top-5"
                 activeOpacity={0.7}
               >
                 <Ionicons
@@ -249,21 +258,21 @@ export default function SignInScreen() {
           </View>
 
           {/* Forgot Password */}
-          {/* <TouchableOpacity
+          <TouchableOpacity
             onPress={handleForgotPassword}
-            className="self-end mb-8"
+            className="self-end mb-8 mt-2"
           >
-            <Text className="text-primary font-quicksand-medium text-sm">
+            <Text className="text-primary font-quicksand-medium text-sm underline">
               Mot de passe oublié ?
             </Text>
-          </TouchableOpacity> */}
+          </TouchableOpacity>
 
           {/* Sign In Button */}
           <TouchableOpacity
             onPress={handleSignIn}
             disabled={isLoading}
-            activeOpacity={1}
-            className={`rounded-xl py-4 mb-6 flex-row items-center justify-center ${
+            activeOpacity={0.8}
+            className={`rounded-2xl py-4 mb-6 flex-row items-center justify-center shadow-sm ${
               isLoading ? "bg-primary/70" : "bg-primary"
             }`}
           >
@@ -282,10 +291,10 @@ export default function SignInScreen() {
           {/* Sign Up Link */}
           <View className="flex-row justify-center items-center">
             <Text className="text-neutral-600 font-quicksand text-sm">
-              Vous n&apos;avez pas de compte ?{" "}
+              Je n&apos;ai pas de compte.{" "}
             </Text>
             <TouchableOpacity onPress={handleSignUp}>
-              <Text className="text-primary font-quicksand-semibold text-sm">
+              <Text className="text-primary font-quicksand-bold text-sm underline">
                 S&apos;inscrire
               </Text>
             </TouchableOpacity>

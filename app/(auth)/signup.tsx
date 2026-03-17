@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
-import { Linking, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Image, Linking, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useToast } from "../../components/ui/ReanimatedToast/context";
@@ -191,12 +191,19 @@ export default function SignUpScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-[#F8F9FA]">
       <StatusBar style="dark" />
+
+      {/* Background Shapes */}
+      <View className="absolute top-[-100] right-[-80] w-[300px] h-[300px] rounded-full bg-primary/10" />
+      <View 
+        className="absolute top-[30%] left-[-140] w-[280px] h-[350px] bg-primary/20" 
+        style={{ borderTopRightRadius: 150, borderBottomRightRadius: 150 }} 
+      />
 
       {/* Fixed Header with Back Button */}
       <View
-        className="absolute top-0 left-0 right-0 z-10 bg-white px-6"
+        className="absolute top-0 left-0 right-0 z-10 px-6"
         style={{
           paddingTop: Math.max(insets.top, 16) + 16,
           paddingBottom: 16,
@@ -204,9 +211,9 @@ export default function SignUpScreen() {
       >
         <TouchableOpacity
           onPress={() => router.back()}
-          className="w-10 h-10 rounded-full bg-neutral-100 items-center justify-center"
+          className="w-11 h-11 rounded-full bg-white shadow-sm items-center justify-center border border-neutral-100"
         >
-          <Ionicons name="arrow-back" size={20} color="#374151" />
+          <Ionicons name="arrow-back" size={22} color="#374151" />
         </TouchableOpacity>
       </View>
 
@@ -226,7 +233,13 @@ export default function SignUpScreen() {
         }}
       >
         {/* Header */}
-        <View className="px-6 pb-8">
+        <View className="px-6 pb-6 mt-4">
+          <Image 
+            source={require('../../assets/images/axiLogoo.png')} 
+            style={{ width: 120, height: 40 }} 
+            resizeMode="contain" 
+            className="mb-4"
+          />
           <Text className="text-3xl font-quicksand-bold text-neutral-900 mb-2">
             Créer un compte
           </Text>
@@ -247,7 +260,8 @@ export default function SignUpScreen() {
                 value={firstName}
                 onChangeText={setFirstName}
                 placeholder="Prénom"
-                className="border border-neutral-200 rounded-xl px-4 py-4 text-base font-quicksand"
+                placeholderTextColor="#9CA3AF"
+                className="bg-white border rounded-2xl px-5 py-4 text-base font-quicksand text-neutral-900 border-neutral-200/60 shadow-sm"
               />
             </View>
             <View className="flex-1 ml-2">
@@ -258,7 +272,8 @@ export default function SignUpScreen() {
                 value={lastName}
                 onChangeText={setLastName}
                 placeholder="Nom"
-                className="border border-neutral-200 rounded-xl px-4 py-4 text-base font-quicksand"
+                placeholderTextColor="#9CA3AF"
+                className="bg-white border rounded-2xl px-5 py-4 text-base font-quicksand text-neutral-900 border-neutral-200/60 shadow-sm"
               />
             </View>
           </View>
@@ -271,10 +286,11 @@ export default function SignUpScreen() {
             <TextInput
               value={email}
               onChangeText={setEmail}
-              placeholder="Entrez votre email"
+              placeholder="Email"
+              placeholderTextColor="#9CA3AF"
               keyboardType="email-address"
               autoCapitalize="none"
-              className="border border-neutral-200 rounded-xl px-4 py-4 text-base font-quicksand"
+              className="bg-white border rounded-2xl px-5 py-4 text-base font-quicksand text-neutral-900 border-neutral-200/60 shadow-sm"
             />
           </View>
 
@@ -286,9 +302,10 @@ export default function SignUpScreen() {
             <TextInput
               value={phone}
               onChangeText={setPhone}
-              placeholder="Entrez votre numéro de téléphone"
+              placeholder="229 XX XX XX XX"
+              placeholderTextColor="#9CA3AF"
               keyboardType="phone-pad"
-              className="border border-neutral-200 rounded-xl px-4 py-4 text-base font-quicksand"
+              className="bg-white border rounded-2xl px-5 py-4 text-base font-quicksand text-neutral-900 border-neutral-200/60 shadow-sm"
             />
           </View>
 
@@ -300,8 +317,9 @@ export default function SignUpScreen() {
             <TextInput
               value={address}
               onChangeText={setAddress}
-              placeholder="Entrez votre adresse"
-              className="border border-neutral-200 rounded-xl px-4 py-4 text-base font-quicksand"
+              placeholder="Adresse complète"
+              placeholderTextColor="#9CA3AF"
+              className="bg-white border rounded-2xl px-5 py-4 text-base font-quicksand text-neutral-900 border-neutral-200/60 shadow-sm"
             />
           </View>
 
@@ -314,13 +332,15 @@ export default function SignUpScreen() {
               <TextInput
                 value={password}
                 onChangeText={setPassword}
-                placeholder="Entrez votre mot de passe"
+                placeholder="Mot de passe"
+                placeholderTextColor="#9CA3AF"
                 secureTextEntry={!showPassword}
-                className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 text-base font-quicksand"
+                className="bg-white border rounded-2xl px-5 py-4 pr-12 text-base font-quicksand text-neutral-900 border-neutral-200/60 shadow-sm"
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-4"
+                className="absolute right-4 top-5"
+                activeOpacity={0.7}
               >
                 <Ionicons
                   name={showPassword ? "eye-off" : "eye"}
@@ -340,13 +360,15 @@ export default function SignUpScreen() {
               <TextInput
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
-                placeholder="Confirmez votre mot de passe"
+                placeholder="Confirmez le mot de passe"
+                placeholderTextColor="#9CA3AF"
                 secureTextEntry={!showConfirmPassword}
-                className="border border-neutral-200 rounded-xl px-4 py-4 pr-12 text-base font-quicksand"
+                className="bg-white border rounded-2xl px-5 py-4 pr-12 text-base font-quicksand text-neutral-900 border-neutral-200/60 shadow-sm"
               />
               <TouchableOpacity
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-4 top-4"
+                className="absolute right-4 top-5"
+                activeOpacity={0.7}
               >
                 <Ionicons
                   name={showConfirmPassword ? "eye-off" : "eye"}
@@ -364,9 +386,9 @@ export default function SignUpScreen() {
               className="flex-row items-start"
               activeOpacity={1}
             >
-              <View className="w-5 h-5 border-2 border-neutral-300 rounded mr-3 mt-0.5 justify-center items-center">
+              <View className={`w-5 h-5 border-2 rounded mr-3 mt-0.5 justify-center items-center ${agreedToTerms ? 'bg-primary border-primary' : 'border-neutral-300 bg-white'}`}>
                 {agreedToTerms && (
-                  <Ionicons name="checkmark" size={14} color="#3B82F6" />
+                  <Ionicons name="checkmark" size={14} color="#FFFFFF" />
                 )}
               </View>
               <Text className="text-sm font-quicksand text-neutral-600 flex-1">
@@ -396,7 +418,8 @@ export default function SignUpScreen() {
           <TouchableOpacity
             onPress={handleSignUp}
             disabled={isLoading}
-            className={`rounded-xl py-4 mb-6 ${
+            activeOpacity={0.8}
+            className={`rounded-2xl py-4 mb-6 shadow-sm ${
               isLoading ? "bg-primary/70" : "bg-primary"
             }`}
           >
@@ -406,12 +429,12 @@ export default function SignUpScreen() {
           </TouchableOpacity>
 
           {/* Sign In Link */}
-          <View className="flex-row justify-center items-center pb-6">
+          <View className="flex-row justify-center items-center pb-6 mt-2">
             <Text className="text-neutral-600 font-quicksand text-sm">
               Vous avez déjà un compte ?{" "}
             </Text>
             <TouchableOpacity onPress={handleSignIn}>
-              <Text className="text-primary font-quicksand-semibold text-sm">
+              <Text className="text-primary font-quicksand-bold text-sm underline">
                 Se connecter
               </Text>
             </TouchableOpacity>
