@@ -795,6 +795,11 @@
         },
         "offers": {
             "title": "Mes offres",
+            "offersSubtitle": "Suivez vos offres classiques créées depuis les conversations.",
+            "viewModes": {
+                "calls": "Appels à livraison",
+                "offers": "Offres classiques"
+            },
             "filters": {
                 "all": "Toutes",
                 "open": "Ouvertes",
@@ -809,6 +814,8 @@
                 "expired": "Expirée"
             },
             "count": {
+                "calls": "appel",
+                "callsPlural": "appels",
                 "offers": "offre",
                 "offersPlural": "offres"
             },
@@ -817,6 +824,53 @@
                 "client": "Client",
                 "expires": "Expire",
                 "delete": "Supprimer"
+            },
+            "calls": {
+                "subtitle": "Créez et suivez vos demandes de livraison indépendantes.",
+                "labels": {
+                    "pickup": "Lieu de départ",
+                    "delivery": "Lieu de livraison",
+                    "customerInfo": "Infos destinataire",
+                    "noDescription": "Aucune précision ajoutée",
+                    "noCustomerName": "Nom non renseigné",
+                    "noCustomerPhone": "Téléphone non renseigné"
+                },
+                "empty": {
+                    "title": "Aucun appel à livraison",
+                    "message": "Créez un appel pour proposer une livraison indépendante à vos livreurs."
+                },
+                "form": {
+                    "productName": "Nom du produit",
+                    "productNamePlaceholder": "Ex: Colis documents, Sac de riz 25kg",
+                    "description": "Détails de la livraison",
+                    "descriptionPlaceholder": "Ajoutez ce que le livreur doit savoir sur le colis ou la mission",
+                    "pickupLocation": "Lieu de départ",
+                    "pickupLocationPlaceholder": "Ex: Akpakpa, Rue 120",
+                    "deliveryLocation": "Lieu de livraison",
+                    "deliveryLocationPlaceholder": "Ex: Fidjrossè plage, immeuble bleu",
+                    "customerName": "Nom du destinataire",
+                    "customerNamePlaceholder": "Ex: Jean Dupont",
+                    "customerPhone": "Téléphone du destinataire",
+                    "customerPhonePlaceholder": "Ex: +22990000000"
+                },
+                "create": {
+                    "button": "Créer un appel",
+                    "title": "Nouvel appel à livraison",
+                    "subtitle": "Décrivez rapidement la mission pour qu'un livreur puisse la prendre.",
+                    "submit": "Publier l'appel",
+                    "successTitle": "Appel publié",
+                    "successMessage": "Votre appel à livraison a été créé avec succès.",
+                    "errorTitle": "Création impossible",
+                    "errorMessage": "Impossible de créer l'appel à livraison."
+                },
+                "validation": {
+                    "requiredTitle": "Champs requis",
+                    "requiredMessage": "Nom du produit, lieux, nom et téléphone du destinataire, frais et expiration sont requis.",
+                    "invalidFeeTitle": "Frais invalide",
+                    "invalidFeeMessage": "Le frais de livraison doit être un nombre positif.",
+                    "invalidExpiryTitle": "Expiration invalide",
+                    "invalidExpiryMessage": "La date d'expiration doit être future."
+                }
             },
             "empty": {
                 "title": "Aucune offre",
@@ -828,15 +882,19 @@
                 "loadError": "Erreur de chargement"
             },
             "deleteModal": {
-                "title": "Supprimer l'offre ?",
-                "message": "Cette action est irréversible. L'offre sera définitivement supprimée.",
+                "offerTitle": "Supprimer l'offre ?",
+                "offerMessage": "Cette action est irréversible. L'offre sera définitivement supprimée.",
+                "callTitle": "Supprimer l'appel ?",
+                "callMessage": "Cette action est irréversible. L'appel à livraison sera définitivement supprimé.",
                 "cancel": "Annuler",
                 "confirm": "Supprimer",
                 "deleting": "Suppression...",
-                "successTitle": "Offre supprimée",
-                "successMessage": "Votre offre a été supprimée avec succès.",
+                "offerSuccessTitle": "Offre supprimée",
+                "offerSuccessMessage": "Votre offre a été supprimée avec succès.",
+                "callSuccessTitle": "Appel supprimé",
+                "callSuccessMessage": "Votre appel à livraison a été supprimé avec succès.",
                 "errorTitle": "Échec de la suppression",
-                "errorMessage": "Impossible de supprimer l'offre"
+                "errorMessage": "Impossible de supprimer cet élément"
             }
         },
         "marketplace": {

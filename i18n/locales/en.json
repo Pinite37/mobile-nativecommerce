@@ -795,6 +795,11 @@
         },
         "offers": {
             "title": "My offers",
+            "offersSubtitle": "Track your classic offers created from conversations.",
+            "viewModes": {
+                "calls": "Delivery calls",
+                "offers": "Classic offers"
+            },
             "filters": {
                 "all": "All",
                 "open": "Open",
@@ -809,6 +814,8 @@
                 "expired": "Expired"
             },
             "count": {
+                "calls": "call",
+                "callsPlural": "calls",
                 "offers": "offer",
                 "offersPlural": "offers"
             },
@@ -817,6 +824,53 @@
                 "client": "Client",
                 "expires": "Expires",
                 "delete": "Delete"
+            },
+            "calls": {
+                "subtitle": "Create and track independent delivery requests.",
+                "labels": {
+                    "pickup": "Pickup location",
+                    "delivery": "Delivery location",
+                    "customerInfo": "Recipient info",
+                    "noDescription": "No extra details provided",
+                    "noCustomerName": "No name provided",
+                    "noCustomerPhone": "No phone provided"
+                },
+                "empty": {
+                    "title": "No delivery calls",
+                    "message": "Create a call to publish an independent delivery request to your riders."
+                },
+                "form": {
+                    "productName": "Product name",
+                    "productNamePlaceholder": "E.g: Document package, 25kg rice bag",
+                    "description": "Delivery details",
+                    "descriptionPlaceholder": "Add what the rider should know about the parcel or mission",
+                    "pickupLocation": "Pickup location",
+                    "pickupLocationPlaceholder": "E.g: Akpakpa, Street 120",
+                    "deliveryLocation": "Delivery location",
+                    "deliveryLocationPlaceholder": "E.g: Fidjrosse beach, blue building",
+                    "customerName": "Recipient name",
+                    "customerNamePlaceholder": "E.g: Jean Dupont",
+                    "customerPhone": "Recipient phone",
+                    "customerPhonePlaceholder": "E.g: +22990000000"
+                },
+                "create": {
+                    "button": "Create a call",
+                    "title": "New delivery call",
+                    "subtitle": "Quickly describe the mission so a rider can take it.",
+                    "submit": "Publish call",
+                    "successTitle": "Call published",
+                    "successMessage": "Your delivery call has been created successfully.",
+                    "errorTitle": "Creation failed",
+                    "errorMessage": "Unable to create the delivery call."
+                },
+                "validation": {
+                    "requiredTitle": "Required fields",
+                    "requiredMessage": "Product name, locations, recipient name and phone, fee and expiration are required.",
+                    "invalidFeeTitle": "Invalid fee",
+                    "invalidFeeMessage": "Delivery fee must be a positive number.",
+                    "invalidExpiryTitle": "Invalid expiration",
+                    "invalidExpiryMessage": "Expiration date must be in the future."
+                }
             },
             "empty": {
                 "title": "No offers",
@@ -828,15 +882,19 @@
                 "loadError": "Loading error"
             },
             "deleteModal": {
-                "title": "Delete offer?",
-                "message": "This action is irreversible. The offer will be permanently deleted.",
+                "offerTitle": "Delete offer?",
+                "offerMessage": "This action is irreversible. The offer will be permanently deleted.",
+                "callTitle": "Delete call?",
+                "callMessage": "This action is irreversible. The delivery call will be permanently deleted.",
                 "cancel": "Cancel",
                 "confirm": "Delete",
                 "deleting": "Deleting...",
-                "successTitle": "Offer deleted",
-                "successMessage": "Your offer has been successfully deleted.",
+                "offerSuccessTitle": "Offer deleted",
+                "offerSuccessMessage": "Your offer has been successfully deleted.",
+                "callSuccessTitle": "Call deleted",
+                "callSuccessMessage": "Your delivery call has been successfully deleted.",
                 "errorTitle": "Deletion failed",
-                "errorMessage": "Unable to delete offer"
+                "errorMessage": "Unable to delete this item"
             }
         },
         "marketplace": {
