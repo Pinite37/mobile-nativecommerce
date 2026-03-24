@@ -10,6 +10,7 @@ import {
   Easing,
   Image,
   KeyboardAvoidingView,
+  Linking,
   Modal,
   Platform,
   RefreshControl,
@@ -2020,6 +2021,50 @@ function EnterpriseProfilePage() {
                 {i18n.t("enterprise.profile.management.logout")}
               </Text>
             </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Lien Plateforme Web */}
+        <View className="px-4 pb-4">
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => Linking.openURL('https://aximarketplace.com')}
+            className="rounded-2xl overflow-hidden"
+            style={{
+              shadowColor: isDark ? "#000" : "#3B82F6",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: isDark ? 0.3 : 0.1,
+              shadowRadius: 8,
+              elevation: 4,
+            }}
+          >
+            <LinearGradient
+              colors={isDark ? ["#1E3A8A", "#2563EB"] : ["#EFF6FF", "#DBEAFE"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ padding: 16 }}
+              className="flex-row items-center justify-between"
+            >
+              <View className="flex-row items-center flex-1">
+                <View 
+                  className="w-12 h-12 rounded-full items-center justify-center shadow-sm"
+                  style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : '#FFFFFF' }}
+                >
+                  <Ionicons name="planet" size={24} color={isDark ? '#FFFFFF' : '#2563EB'} />
+                </View>
+                <View className="ml-4 flex-1">
+                  <Text className="font-quicksand-bold text-base" style={{ color: isDark ? '#FFFFFF' : '#1E40AF' }}>
+                    Axi Marketplace
+                  </Text>
+                  <Text className="font-quicksand-medium text-xs mt-0.5" style={{ color: isDark ? 'rgba(255,255,255,0.8)' : '#3B82F6' }}>
+                    Visitez notre plateforme web
+                  </Text>
+                </View>
+              </View>
+              <View className="w-8 h-8 rounded-full items-center justify-center" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(37,99,235,0.1)' }}>
+                <Ionicons name="open-outline" size={16} color={isDark ? '#FFFFFF' : '#2563EB'} />
+              </View>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
 
