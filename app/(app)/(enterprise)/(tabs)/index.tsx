@@ -130,7 +130,7 @@ export default function EnterpriseDashboard() {
   const isSmallScreen = width < 380;
 
   const FIXED_HEADER_HEIGHT = 120 + insets.top;
-  // const [profileData, setProfileData] = useState<EnterpriseProfile | null>(null); // non utilisé pour l'instant
+  const [companyName, setCompanyName] = useState("");
 
   // États pour la recherche par localisation
   const [selectedCity, setSelectedCity] = useState(beninCities[0].name);
@@ -273,7 +273,10 @@ export default function EnterpriseDashboard() {
   const loadProfileData = async () => {
     try {
       await AuthDebugger.debugTokenStatus();
-      await EnterpriseService.getProfile(); // appelé seulement pour vérifier auth; données non stockées ici
+      const profile = await EnterpriseService.getProfile();
+      if (profile?.enterprise?.companyName) {
+        setCompanyName(profile.enterprise.companyName);
+      }
     } catch (error) {
       console.error("❌ Erreur chargement profil dashboard:", error);
     }
@@ -1132,7 +1135,7 @@ export default function EnterpriseDashboard() {
               {greetUser()},
             </Text>
             <Text className="text-white text-2xl font-quicksand-bold">
-              {user ? user.firstName : "Entreprise"}
+              {companyName || user?.firstName || "Entreprise"}
             </Text>
           </View>
           {/* <TouchableOpacity

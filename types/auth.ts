@@ -61,13 +61,21 @@ export interface RegisterRequest {
   address: string;
 }
 
-export interface EnterpriseRegisterRequest extends RegisterRequest {
+export interface EnterpriseRegisterRequest {
+  email: string;
+  password: string;
+  role: "ENTERPRISE";
   companyName: string;
-  ifuNumber?: string;
+  companyPhone: string;
   agreedToTerms: boolean;
-  description: string;
-  city: string;
-  district: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  address?: string;
+  ifuNumber?: string;
+  description?: string;
+  city?: string;
+  district?: string;
   companyEmail?: string;
   whatsapp?: string;
   website?: string;

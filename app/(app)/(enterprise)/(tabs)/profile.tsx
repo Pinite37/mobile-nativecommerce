@@ -1925,8 +1925,7 @@ function EnterpriseProfilePage() {
               ) : (
                 <View className="w-12 h-12 rounded-full items-center justify-center" style={{ backgroundColor: colors.tertiary }}>
                   <Text className="font-quicksand-bold text-sm" style={{ color: colors.textSecondary }}>
-                    {`${profileData.user.firstName?.[0] || ""}${profileData.user.lastName?.[0] || ""
-                      }`.toUpperCase()}
+                    {(`${profileData.user.firstName?.[0] || ""}${profileData.user.lastName?.[0] || ""}` || profileData.enterprise.companyName?.[0] || "E").toUpperCase()}
                   </Text>
                 </View>
               )}
@@ -1936,7 +1935,9 @@ function EnterpriseProfilePage() {
                   style={{ color: colors.textPrimary }}
                   numberOfLines={1}
                 >
-                  {profileData.user.firstName} {profileData.user.lastName}
+                  {profileData.user.firstName || profileData.user.lastName
+                    ? `${profileData.user.firstName || ""} ${profileData.user.lastName || ""}`.trim()
+                    : profileData.enterprise.companyName}
                 </Text>
                 <Text
                   className="text-sm font-quicksand-light"

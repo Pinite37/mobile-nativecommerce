@@ -18,6 +18,10 @@ import {
     TouchableWithoutFeedback,
     View,
 } from "react-native";
+import PhoneInput, {
+    ICountry,
+    getCountryByCca2,
+} from "react-native-international-phone-number";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SubscriptionWelcomeModal } from "../../components/enterprise/SubscriptionWelcomeModal";
 import { useToast } from "../../components/ui/ReanimatedToast/context";
@@ -26,19 +30,32 @@ import { useAuth } from "../../contexts/AuthContext";
 import { EnterpriseRegisterRequest } from "../../types/auth";
 import { RegistrationHelper } from "../../utils/RegistrationHelper";
 
+const DEFAULT_COUNTRY_CCA2 = "BJ";
+
 export default function EnterpriseSignUpScreen() {
+  const defaultCountry = getCountryByCca2(DEFAULT_COUNTRY_CCA2) ?? null;
+
   // Form data states
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [phoneCountry, setPhoneCountry] = useState<ICountry | null>(
+    defaultCountry,
+  );
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [address, setAddress] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [companyPhone, setCompanyPhone] = useState("");
+  const [companyPhoneCountry, setCompanyPhoneCountry] =
+    useState<ICountry | null>(defaultCountry);
   const [description, setDescription] = useState("");
   const [companyEmail, setCompanyEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [whatsappCountry, setWhatsappCountry] = useState<ICountry | null>(
+    defaultCountry,
+  );
   const [website, setWebsite] = useState("");
   const [selectedCity, setSelectedCity] = useState(beninCities[0].name);
   const [selectedDistrict, setSelectedDistrict] = useState("");
@@ -84,13 +101,13 @@ export default function EnterpriseSignUpScreen() {
   }, [currentStep]);
 
   // Validation functions for each step
+  // Step 1: company essentials (the only required business fields)
   const validateStep1 = (): boolean => {
-    if (!firstName.trim()) {
-      toast.showToast({ title: "Erreur", subtitle: "Le prénom est requis" });
-      return false;
-    }
-    if (!lastName.trim()) {
-      toast.showToast({ title: "Erreur", subtitle: "Le nom est requis" });
+    if (!companyName.trim()) {
+      toast.showToast({
+        title: "Erreur",
+        subtitle: "Le nom de l'entreprise est requis",
+      });
       return false;
     }
     if (!email.trim()) {
@@ -104,28 +121,18 @@ export default function EnterpriseSignUpScreen() {
       });
       return false;
     }
-    if (!phone.trim()) {
+    if (!companyPhone.trim()) {
       toast.showToast({
         title: "Erreur",
-        subtitle: "Le numéro de téléphone est requis",
+        subtitle: "Le numéro de l'entreprise est requis",
       });
-      return false;
-    }
-    if (!address.trim()) {
-      toast.showToast({ title: "Erreur", subtitle: "L'adresse est requise" });
       return false;
     }
     return true;
   };
 
+  // Step 2: business details — fully optional, only validate format of what's filled
   const validateStep2 = (): boolean => {
-    if (!companyName.trim()) {
-      toast.showToast({
-        title: "Erreur",
-        subtitle: "Le nom de l'entreprise est requis",
-      });
-      return false;
-    }
     if (ifuNumber.trim() && !/^\d{13}$/.test(ifuNumber)) {
       toast.showToast({
         title: "Erreur",
@@ -133,25 +140,11 @@ export default function EnterpriseSignUpScreen() {
       });
       return false;
     }
-    if (!selectedCity) {
-      toast.showToast({
-        title: "Erreur",
-        subtitle: "Veuillez sélectionner une ville",
-      });
-      return false;
-    }
-    if (!selectedDistrict) {
-      toast.showToast({
-        title: "Erreur",
-        subtitle: "Veuillez sélectionner un quartier",
-      });
-      return false;
-    }
     return true;
   };
 
+  // Step 3: optional contact/personal info
   const validateStep3 = (): boolean => {
-    // Step 3 is optional, so always valid
     return true;
   };
 
@@ -242,21 +235,18 @@ export default function EnterpriseSignUpScreen() {
   };
 
   const handleSignUp = async () => {
-    if (
-      !firstName ||
-      !lastName ||
-      !email ||
-      !phone ||
-      !password ||
-      !confirmPassword ||
-      !address ||
-      !companyName ||
-      !selectedCity ||
-      !selectedDistrict
-    ) {
+    if (!companyName.trim() || !email.trim() || !companyPhone.trim()) {
       toast.showToast({
         title: "Erreur",
         subtitle: "Veuillez remplir tous les champs obligatoires",
+      });
+      return;
+    }
+
+    if (!password || password.length < 6) {
+      toast.showToast({
+        title: "Erreur",
+        subtitle: "Le mot de passe doit contenir au moins 6 caractères",
       });
       return;
     }
@@ -269,56 +259,49 @@ export default function EnterpriseSignUpScreen() {
       return;
     }
 
-    if (password.length < 6) {
-      toast.showToast({
-        title: "Erreur",
-        subtitle: "Le mot de passe doit contenir au moins 6 caractères",
-      });
-      return;
-    }
-
     setIsLoading(true);
     try {
-      // Formater le numéro de téléphone personnel avec l'indicatif +229
-      let formattedPhone = phone.replace(/[\s-]/g, "");
-      if (!formattedPhone.startsWith("+")) {
-        formattedPhone = "+229" + formattedPhone;
-      }
-      console.log(
-        "📱 Numéro personnel formaté pour inscription:",
-        formattedPhone,
-      );
+      const formatInternationalPhone = (
+        local: string,
+        country: ICountry | null,
+      ) => {
+        const digits = local.replace(/[^\d]/g, "");
+        if (!digits) return "";
+        const root = country?.idd?.root ?? "";
+        const suffix = country?.idd?.suffixes?.[0] ?? "";
+        const prefix = root ? `${root}${suffix}` : "";
+        return `${prefix}${digits}`;
+      };
 
-      // Formater le numéro WhatsApp avec l'indicatif +229 si fourni
-      let formattedWhatsApp = whatsapp;
-      if (whatsapp) {
-        formattedWhatsApp = whatsapp.replace(/[\s-]/g, "");
-        if (!formattedWhatsApp.startsWith("+")) {
-          formattedWhatsApp = "+229" + formattedWhatsApp;
-        }
-        console.log(
-          "📱 Numéro WhatsApp formaté pour inscription:",
-          formattedWhatsApp,
-        );
-      }
+      const formattedCompanyPhone = formatInternationalPhone(
+        companyPhone,
+        companyPhoneCountry,
+      );
+      const formattedPhone = phone.trim()
+        ? formatInternationalPhone(phone, phoneCountry)
+        : "";
+      const formattedWhatsApp = whatsapp.trim()
+        ? formatInternationalPhone(whatsapp, whatsappCountry)
+        : "";
 
       const userData: EnterpriseRegisterRequest = {
-        firstName,
-        lastName,
-        email,
-        phone: formattedPhone,
+        email: email.trim(),
         password,
-        address,
         role: "ENTERPRISE",
-        companyName,
-        ifuNumber: ifuNumber || undefined,
+        companyName: companyName.trim(),
+        companyPhone: formattedCompanyPhone,
         agreedToTerms,
-        description,
-        city: selectedCity,
-        district: selectedDistrict,
-        companyEmail: companyEmail || email, // Utiliser l'email personnel si pas d'email entreprise
-        whatsapp: formattedWhatsApp,
-        website,
+        ...(firstName.trim() && { firstName: firstName.trim() }),
+        ...(lastName.trim() && { lastName: lastName.trim() }),
+        ...(formattedPhone && { phone: formattedPhone }),
+        ...(address.trim() && { address: address.trim() }),
+        ...(description.trim() && { description: description.trim() }),
+        ...(ifuNumber.trim() && { ifuNumber: ifuNumber.trim() }),
+        ...(selectedCity && { city: selectedCity }),
+        ...(selectedDistrict && { district: selectedDistrict }),
+        ...(companyEmail.trim() && { companyEmail: companyEmail.trim() }),
+        ...(formattedWhatsApp && { whatsapp: formattedWhatsApp }),
+        ...(website.trim() && { website: website.trim() }),
       };
 
       console.log("🏢 Enterprise Sign up:", userData);
@@ -421,91 +404,29 @@ export default function EnterpriseSignUpScreen() {
     }
   };
 
-  // Step 1: Personal Information
+  const phoneInputStyles = {
+    container: {
+      backgroundColor: "#FFFFFF",
+      borderWidth: 1,
+      borderColor: "rgba(229, 231, 235, 0.6)",
+      borderRadius: 16,
+      paddingVertical: 4,
+    },
+    flagContainer: {
+      backgroundColor: "#FFFFFF",
+      borderTopLeftRadius: 16,
+      borderBottomLeftRadius: 16,
+    },
+    input: {
+      color: "#111827",
+    },
+    callingCode: {
+      color: "#111827",
+    },
+  };
+
+  // Step 1: Company essentials (only required fields besides password)
   const renderStep1 = () => (
-    <View>
-      <Text className="text-lg font-quicksand-semibold text-neutral-900 mb-4">
-        Informations Personnelles
-      </Text>
-
-      {/* Name Inputs */}
-      <View className="flex-row mb-4">
-        <View className="flex-1 mr-2">
-          <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-            Prénom *
-          </Text>
-          <TextInput
-            className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
-            placeholder="Jean"
-            placeholderTextColor="#9CA3AF"
-            value={firstName}
-            onChangeText={setFirstName}
-            autoFocus={false}
-          />
-        </View>
-        <View className="flex-1 ml-2">
-          <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-            Nom *
-          </Text>
-          <TextInput
-            className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
-            placeholder="DOSSOU"
-            placeholderTextColor="#9CA3AF"
-            value={lastName}
-            onChangeText={setLastName}
-          />
-        </View>
-      </View>
-
-      {/* Email */}
-      <View className="mb-4">
-        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-          Email *
-        </Text>
-        <TextInput
-          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
-          placeholder="jean.dossou@exemple.com"
-          placeholderTextColor="#9CA3AF"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-      </View>
-
-      {/* Phone */}
-      <View className="mb-4">
-        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-          Numéro de Téléphone *
-        </Text>
-        <TextInput
-          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
-          placeholder="XX XX XX XX XX"
-          placeholderTextColor="#9CA3AF"
-          value={phone}
-          onChangeText={setPhone}
-          keyboardType="phone-pad"
-        />
-      </View>
-
-      {/* Address */}
-      <View className="mb-6">
-        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-          Adresse *
-        </Text>
-        <TextInput
-          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
-          placeholder="Cotonou"
-          placeholderTextColor="#9CA3AF"
-          value={address}
-          onChangeText={setAddress}
-        />
-      </View>
-    </View>
-  );
-
-  // Step 2: Business Information
-  const renderStep2 = () => (
     <View>
       <Text className="text-lg font-quicksand-semibold text-neutral-900 mb-4">
         Informations Entreprise
@@ -528,10 +449,54 @@ export default function EnterpriseSignUpScreen() {
         />
       </View>
 
+      {/* Email */}
+      <View className="mb-4">
+        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+          Email *
+        </Text>
+        <TextInput
+          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
+          placeholder="contact@votreentreprise.com"
+          placeholderTextColor="#9CA3AF"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+      </View>
+
+      {/* Company Phone (required) */}
+      <View className="mb-6">
+        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+          Numéro de l&apos;Entreprise *
+        </Text>
+        <PhoneInput
+          value={companyPhone}
+          onChangePhoneNumber={setCompanyPhone}
+          selectedCountry={companyPhoneCountry}
+          onChangeSelectedCountry={setCompanyPhoneCountry}
+          defaultCountry={DEFAULT_COUNTRY_CCA2}
+          phoneInputStyles={phoneInputStyles}
+          placeholder="XX XX XX XX"
+        />
+      </View>
+    </View>
+  );
+
+  // Step 2: Business details (all optional)
+  const renderStep2 = () => (
+    <View>
+      <Text className="text-lg font-quicksand-semibold text-neutral-900 mb-2">
+        Détails de l&apos;Entreprise
+      </Text>
+      <Text className="text-sm font-quicksand text-neutral-500 mb-4">
+        Ces champs sont optionnels mais recommandés
+      </Text>
+
       {/* Description */}
       <View className="mb-4">
         <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-          Description de l&apos;Entreprise (Optionnel)
+          Description de l&apos;Entreprise
         </Text>
         <TextInput
           ref={descriptionRef}
@@ -550,7 +515,7 @@ export default function EnterpriseSignUpScreen() {
       {/* IFU Number */}
       <View className="mb-4">
         <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-          Numéro IFU (Optionnel)
+          Numéro IFU
         </Text>
         <TextInput
           ref={ifuNumberRef}
@@ -568,7 +533,7 @@ export default function EnterpriseSignUpScreen() {
       {/* City Selection */}
       <View className="mb-4">
         <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-          Ville *
+          Ville
         </Text>
         <TouchableOpacity
           className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl bg-white flex-row justify-between items-center shadow-sm"
@@ -585,7 +550,7 @@ export default function EnterpriseSignUpScreen() {
       {/* District Selection */}
       <View className="mb-6">
         <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-          Quartier *
+          Quartier
         </Text>
         <TouchableOpacity
           className={`w-full px-5 py-4 border border-neutral-200/60 rounded-2xl bg-white flex-row justify-between items-center shadow-sm ${
@@ -606,15 +571,73 @@ export default function EnterpriseSignUpScreen() {
     </View>
   );
 
-  // Step 3: Contact Information (Optional)
+  // Step 3: Optional contact & personal info
   const renderStep3 = () => (
     <View>
       <Text className="text-lg font-quicksand-semibold text-neutral-900 mb-2">
-        Contact Entreprise
+        Contact & Représentant
       </Text>
       <Text className="text-sm font-quicksand text-neutral-500 mb-4">
-        Ces champs sont optionnels mais recommandés
+        Tous ces champs sont optionnels
       </Text>
+
+      {/* Name Inputs */}
+      <View className="flex-row mb-4">
+        <View className="flex-1 mr-2">
+          <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+            Prénom
+          </Text>
+          <TextInput
+            className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
+            placeholder="Jean"
+            placeholderTextColor="#9CA3AF"
+            value={firstName}
+            onChangeText={setFirstName}
+          />
+        </View>
+        <View className="flex-1 ml-2">
+          <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+            Nom
+          </Text>
+          <TextInput
+            className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
+            placeholder="DOSSOU"
+            placeholderTextColor="#9CA3AF"
+            value={lastName}
+            onChangeText={setLastName}
+          />
+        </View>
+      </View>
+
+      {/* Personal Phone */}
+      <View className="mb-4">
+        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+          Téléphone Personnel
+        </Text>
+        <PhoneInput
+          value={phone}
+          onChangePhoneNumber={setPhone}
+          selectedCountry={phoneCountry}
+          onChangeSelectedCountry={setPhoneCountry}
+          defaultCountry={DEFAULT_COUNTRY_CCA2}
+          phoneInputStyles={phoneInputStyles}
+          placeholder="XX XX XX XX"
+        />
+      </View>
+
+      {/* Address */}
+      <View className="mb-4">
+        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+          Adresse
+        </Text>
+        <TextInput
+          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
+          placeholder="Cotonou"
+          placeholderTextColor="#9CA3AF"
+          value={address}
+          onChangeText={setAddress}
+        />
+      </View>
 
       {/* Company Email */}
       <View className="mb-4">
@@ -629,7 +652,6 @@ export default function EnterpriseSignUpScreen() {
           onChangeText={setCompanyEmail}
           keyboardType="email-address"
           autoCapitalize="none"
-          autoFocus={false}
         />
       </View>
 
@@ -638,19 +660,14 @@ export default function EnterpriseSignUpScreen() {
         <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
           Numéro WhatsApp
         </Text>
-        <TextInput
-          key="whatsapp-input"
-          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
-          placeholder="XX XX XX XX XX"
-          placeholderTextColor="#9CA3AF"
+        <PhoneInput
           value={whatsapp}
-          onChangeText={(text) => {
-            console.log("WhatsApp input:", text);
-            setWhatsapp(text);
-          }}
-          keyboardType="phone-pad"
-          editable={true}
-          selectTextOnFocus={false}
+          onChangePhoneNumber={setWhatsapp}
+          selectedCountry={whatsappCountry}
+          onChangeSelectedCountry={setWhatsappCountry}
+          defaultCountry={DEFAULT_COUNTRY_CCA2}
+          phoneInputStyles={phoneInputStyles}
+          placeholder="XX XX XX XX"
         />
       </View>
 
@@ -843,8 +860,8 @@ export default function EnterpriseSignUpScreen() {
               Créer un Compte Entreprise
             </Text>
             <Text className="text-base font-quicksand text-neutral-600 mb-6">
-              {currentStep === 1 && "Parlez-nous de vous"}
-              {currentStep === 2 && "Partagez les détails de votre entreprise"}
+              {currentStep === 1 && "Parlez-nous de votre entreprise"}
+              {currentStep === 2 && "Ajoutez quelques détails (optionnel)"}
               {currentStep === 3 &&
                 "Comment les clients peuvent-ils vous joindre ?"}
               {currentStep === 4 && "Sécurisez votre compte"}

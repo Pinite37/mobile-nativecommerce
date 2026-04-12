@@ -262,9 +262,9 @@ export default function SignInScreen() {
             onPress={handleForgotPassword}
             className="self-end mb-8 mt-2"
           >
-            <Text className="text-primary font-quicksand-medium text-sm underline">
+            {/* <Text className="text-primary font-quicksand-medium text-sm underline">
               Mot de passe oublié ?
-            </Text>
+            </Text> */}
           </TouchableOpacity>
 
           {/* Sign In Button */}

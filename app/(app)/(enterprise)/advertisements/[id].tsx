@@ -145,7 +145,7 @@ export default function AdvertisementDetail() {
   const [refreshing, setRefreshing] = useState(false);
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [confirmationAction, setConfirmationAction] = useState<{
-    type: "pause" | "delete" | "activate";
+    type: "pause" | "delete" | "activate" | "relaunch";
     title: string;
     message: string;
     confirmText: string;
@@ -189,7 +189,9 @@ export default function AdvertisementDetail() {
     await load();
   };
 
-  const showConfirmation = (type: "pause" | "delete" | "activate") => {
+  const isExpired = ad ? new Date(ad.endDate).getTime() < Date.now() : false;
+
+  const showConfirmation = (type: "pause" | "delete" | "activate" | "relaunch") => {
     let title = "";
     let message = "";
     let confirmText = "";
@@ -213,6 +215,12 @@ export default function AdvertisementDetail() {
         message = i18n.t("enterprise.advertisementDetail.confirmations.activate.message");
         confirmText = i18n.t("enterprise.advertisementDetail.confirmations.activate.confirm");
         confirmColor = "#10B981";
+        break;
+      case "relaunch":
+        title = "Relancer la publicité";
+        message = "Cette publicité sera relancée immédiatement pour une durée de 24h. Voulez-vous continuer ?";
+        confirmText = "Relancer";
+        confirmColor = "#3B82F6";
         break;
     }
 
@@ -249,6 +257,15 @@ export default function AdvertisementDetail() {
         case "activate":
           const activateRes = await AdvertisementService.activate(ad._id);
           setAd(activateRes);
+          break;
+        case "relaunch":
+          const relaunchRes = await AdvertisementService.relaunch(ad._id);
+          setAd(relaunchRes);
+          showNotification(
+            "success",
+            "Publicité relancée",
+            "Votre publicité est de nouveau active pour 24h"
+          );
           break;
       }
     } catch (err: any) {
@@ -439,7 +456,26 @@ export default function AdvertisementDetail() {
           {/* Actions */}
           <View className="mx-4 mt-6">
             <View className="flex-row gap-4">
-              {ad.isActive ? (
+              {isExpired ? (
+                <TouchableOpacity
+                  onPress={() => showConfirmation("relaunch")}
+                  className="flex-1 rounded-2xl py-4 items-center shadow-lg"
+                  style={{ backgroundColor: "#3B82F6", shadowColor: "#3B82F6" }}
+                  activeOpacity={0.8}
+                >
+                  <View className="flex-row items-center">
+                    <Ionicons
+                      name="refresh"
+                      size={20}
+                      color="#FFFFFF"
+                      style={{ marginRight: 8 }}
+                    />
+                    <Text className="text-white font-quicksand-bold text-base">
+                      Relancer (24h)
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ) : ad.isActive ? (
                 <TouchableOpacity
                   onPress={() => showConfirmation("pause")}
                   className="flex-1 rounded-2xl py-4 items-center shadow-lg"
@@ -524,6 +560,8 @@ export default function AdvertisementDetail() {
                         ? "trash"
                         : confirmationAction?.type === "pause"
                         ? "pause"
+                        : confirmationAction?.type === "relaunch"
+                        ? "refresh"
                         : "play"
                     }
                     size={28}

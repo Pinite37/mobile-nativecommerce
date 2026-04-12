@@ -23,11 +23,11 @@ export interface Advertisement {
 export interface CreateAdvertisementPayload {
   title: string;
   description: string;
-  imagesBase64: string[]; // Array of base64 images with data:image/... prefix
+  imagesBase64: string[];
   type: Advertisement['type'];
   targetAudience?: Advertisement['targetAudience'];
-  startDate: string; // ISO
-  endDate: string;   // ISO
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface EnterpriseAdvertisementListResponse {
@@ -89,6 +89,11 @@ class AdvertisementService {
   async delete(id: string): Promise<boolean> {
     const res = await ApiService.delete<any>(`${this.BASE}/${id}`);
     return !!(res as any).success;
+  }
+
+  async relaunch(id: string): Promise<Advertisement> {
+    const res = await ApiService.patch<any>(`${this.BASE}/${id}/relaunch`, {});
+    return (res as any).data?.data || (res as any).data || (res as any);
   }
 
   /** Get active advertisements for current user audience (public) */

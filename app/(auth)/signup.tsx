@@ -3,12 +3,18 @@ import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import { Image, Linking, Text, TextInput, TouchableOpacity, View } from "react-native";
+import PhoneInput, {
+  ICountry,
+  getCountryByCca2,
+} from "react-native-international-phone-number";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useToast } from "../../components/ui/ReanimatedToast/context";
 import { useAuth } from "../../contexts/AuthContext";
 import { ErrorHandler } from "../../utils/ErrorHandler";
 import { RegistrationHelper } from "../../utils/RegistrationHelper";
+
+const DEFAULT_COUNTRY_CCA2 = "BJ";
 
 export default function SignUpScreen() {
   const { role } = useLocalSearchParams<{ role: string }>();
@@ -17,6 +23,9 @@ export default function SignUpScreen() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [phoneCountry, setPhoneCountry] = useState<ICountry | null>(
+    getCountryByCca2(DEFAULT_COUNTRY_CCA2) ?? null,
+  );
   const [address, setAddress] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -95,11 +104,10 @@ export default function SignUpScreen() {
 
     setIsLoading(true);
     try {
-      // Formater le numéro de téléphone avec l'indicatif +229
-      let formattedPhone = phone.replace(/[\s-]/g, "");
-      if (!formattedPhone.startsWith("+")) {
-        formattedPhone = "+229" + formattedPhone;
-      }
+      const digits = phone.replace(/[^\d]/g, "");
+      const root = phoneCountry?.idd?.root ?? "";
+      const suffix = phoneCountry?.idd?.suffixes?.[0] ?? "";
+      const formattedPhone = `${root}${suffix}${digits}`;
       console.log("📱 Numéro formaté pour inscription:", formattedPhone);
 
       const userData = {
@@ -299,13 +307,33 @@ export default function SignUpScreen() {
             <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
               Numéro de téléphone
             </Text>
-            <TextInput
+            <PhoneInput
               value={phone}
-              onChangeText={setPhone}
-              placeholder="229 XX XX XX XX"
-              placeholderTextColor="#9CA3AF"
-              keyboardType="phone-pad"
-              className="bg-white border rounded-2xl px-5 py-4 text-base font-quicksand text-neutral-900 border-neutral-200/60 shadow-sm"
+              onChangePhoneNumber={setPhone}
+              selectedCountry={phoneCountry}
+              onChangeSelectedCountry={setPhoneCountry}
+              defaultCountry={DEFAULT_COUNTRY_CCA2}
+              placeholder="XX XX XX XX"
+              phoneInputStyles={{
+                container: {
+                  backgroundColor: "#FFFFFF",
+                  borderWidth: 1,
+                  borderColor: "rgba(229, 231, 235, 0.6)",
+                  borderRadius: 16,
+                  paddingVertical: 4,
+                },
+                flagContainer: {
+                  backgroundColor: "#FFFFFF",
+                  borderTopLeftRadius: 16,
+                  borderBottomLeftRadius: 16,
+                },
+                input: {
+                  color: "#111827",
+                },
+                callingCode: {
+                  color: "#111827",
+                },
+              }}
             />
           </View>
 
