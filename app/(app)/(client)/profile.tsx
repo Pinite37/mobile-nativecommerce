@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Image,
+    Linking,
     Modal,
     RefreshControl,
     ScrollView,
@@ -377,7 +378,10 @@ export default function ProfileScreen() {
             <Ionicons name="chevron-forward" size={20} color="#6B7280" />
           </TouchableOpacity>
 
-          <TouchableOpacity className="flex-row items-center justify-between py-3">
+          <TouchableOpacity
+            className="flex-row items-center justify-between py-3"
+            onPress={() => Linking.openURL('mailto:tanguyricardo@aximarketplace.com')}
+          >
             <View className="flex-row items-center">
               <Ionicons name="help-circle-outline" size={20} color="#6B7280" />
               <Text className="text-base font-quicksand text-gray-900 ml-3">

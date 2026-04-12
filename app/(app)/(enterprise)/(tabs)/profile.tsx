@@ -2053,6 +2053,28 @@ function EnterpriseProfilePage() {
 
               <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
             </TouchableOpacity>
+
+            {/* Aide & Support */}
+            <TouchableOpacity
+              onPress={() => Linking.openURL('mailto:tanguyricardo@aximarketplace.com')}
+              className="flex-row items-center justify-between px-4 py-5"
+            >
+              <View className="flex-row items-center">
+                <View className="w-10 h-10 rounded-full justify-center items-center" style={{ backgroundColor: isDark ? colors.brandPrimary + '20' : '#D1FAE5' }}>
+                  <Ionicons name="help-circle-outline" size={20} color={colors.brandPrimary} />
+                </View>
+                <View className="ml-4">
+                  <Text className="text-base font-quicksand-medium" style={{ color: colors.textPrimary }}>
+                    {i18n.t("enterprise.profile.management.help")}
+                  </Text>
+                  <Text className="text-sm font-quicksand-light" style={{ color: colors.textSecondary }}>
+                    {i18n.t("enterprise.profile.management.helpDescription")}
+                  </Text>
+                </View>
+              </View>
+
+              <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+            </TouchableOpacity>
           </View>
         </View>
 

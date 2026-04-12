@@ -243,6 +243,8 @@
                 "partnersCount": "{{count}} partenaire(s)",
                 "settings": "Paramètres",
                 "settingsDescription": "Préférences et configuration",
+                "help": "Aide & Support",
+                "helpDescription": "Contacter l'équipe support",
                 "logout": "Se déconnecter"
             },
             "contact": {
@@ -1495,7 +1497,8 @@
             "title": "Mon profil",
             "menu": {
                 "personalInfo": "Mes informations",
-                "settings": "Paramètres"
+                "settings": "Paramètres",
+                "help": "Aide & Support"
             },
             "logout": {
                 "button": "Déconnexion",

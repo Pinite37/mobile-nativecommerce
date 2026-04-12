@@ -10,6 +10,7 @@ import {
   Animated,
   Easing,
   Image,
+  Linking,
   Modal,
   ScrollView,
   Text,
@@ -301,7 +302,11 @@ export default function ProfileScreen() {
       title: i18n.t("client.profile.menu.settings"),
       route: "/(app)/(client)/profile/settings",
     },
-    // { icon: "help-circle-outline", title: "Aide et support", route: "/(app)/(client)/profile/help" },
+    {
+      icon: "help-circle-outline",
+      title: i18n.t("client.profile.menu.help"),
+      onPress: () => Linking.openURL('mailto:tanguyricardo@aximarketplace.com'),
+    },
   ];
 
   if (!isAuthenticated) {
@@ -421,7 +426,7 @@ export default function ProfileScreen() {
               key={index}
               className="rounded-2xl shadow-sm p-4 mb-2 flex-row items-center"
               style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }}
-              onPress={() => router.push(item.route as any)}
+              onPress={() => item.onPress ? item.onPress() : router.push(item.route as any)}
             >
               <View className="w-12 h-12 rounded-xl justify-center items-center mr-4" style={{ backgroundColor: colors.secondary }}>
                 <Ionicons name={item.icon as any} size={24} color={colors.brandPrimary} />
