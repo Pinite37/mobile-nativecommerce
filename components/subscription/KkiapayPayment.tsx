@@ -23,7 +23,7 @@ function KkiapayPaymentContent({
   onSuccess,
   onFailed,
   apiKey,
-  sandbox = true,
+  sandbox = false,
 }: KkiapayPaymentProps) {
   const { openKkiapayWidget, addSuccessListener, addFailedListener } = useKkiapay();
 

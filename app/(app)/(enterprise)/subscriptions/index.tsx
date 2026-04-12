@@ -354,7 +354,7 @@ function EnterpriseSubscriptionsContent() {
         setPaymentConfig({
           amount: amount,
           email: user.email || "client@example.com",
-          phone: user.phone || "",
+          phone: (user.phone || "").replace(/^\+229\s*/, "").replace(/\s+/g, ""),
           name: `${user.firstName} ${user.lastName}`,
           reason: `Abonnement ${selectedPlan.name}`,
         });
@@ -1018,7 +1018,7 @@ function EnterpriseSubscriptionsContent() {
           name={paymentConfig.name}
           reason={paymentConfig.reason}
           apiKey={process.env.EXPO_PUBLIC_KKIAPAY_PUBLIC_API_KEY || ""}
-          sandbox={true}
+          sandbox={false}
           onSuccess={handlePaymentSuccess}
           onFailed={handlePaymentFailed}
         />
