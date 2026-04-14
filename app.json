@@ -2,13 +2,13 @@
   "expo": {
     "name": "AXI",
     "slug": "mobile",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/axilogo.png",
     "scheme": "axiapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "runtimeVersion": "1.0.0",
+    "runtimeVersion": "1.0.1",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.axi.axiapp",
