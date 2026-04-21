@@ -28,7 +28,7 @@ export default function VerifyEmailScreen() {
   const inputRefs = useRef<(TextInput | null)[]>([]);
   const toast = useToast();
   const insets = useSafeAreaInsets();
-  const { user, checkAuthStatus, redirectToRoleBasedHome, userRole } =
+  const { user, checkAuthStatus, redirectToRoleBasedHome, userRole, logout } =
     useAuth();
 
   // Get stored user role from TokenStorage for cases where AuthContext isn't fully loaded
@@ -207,6 +207,19 @@ export default function VerifyEmailScreen() {
     }
   };
 
+  const handleExit = async () => {
+    try {
+      await logout();
+    } catch (e) {
+      console.warn("⚠️ logout a échoué, fallback sur clear tokens", e);
+      const TokenStorageService = (
+        await import("../../services/TokenStorageService")
+      ).default;
+      await TokenStorageService.clearTokens();
+    }
+    router.replace("/(auth)/signin" as any);
+  };
+
   const handleResendOtp = async (silent = false) => {
     if (cooldown > 0) return;
 
@@ -250,7 +263,7 @@ export default function VerifyEmailScreen() {
       {/* Header */}
       <View className="px-6 pt-4 pb-2">
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={handleExit}
           className="w-10 h-10 rounded-full bg-neutral-100 items-center justify-center"
         >
           <Ionicons name="arrow-back" size={20} color="#374151" />
@@ -341,6 +354,15 @@ export default function VerifyEmailScreen() {
               )}
             </TouchableOpacity>
           )}
+        </View>
+
+        {/* Wrong email escape hatch */}
+        <View className="items-center mt-8">
+          <TouchableOpacity onPress={handleExit} activeOpacity={0.7}>
+            <Text className="text-sm font-quicksand-semibold text-neutral-500 underline">
+              Mauvaise adresse email ? Revenir à la connexion
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>
