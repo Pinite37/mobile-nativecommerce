@@ -29,6 +29,7 @@ import { useAuth } from "../../../../contexts/AuthContext";
 import { useLocale } from "../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import i18n from "../../../../i18n/i18n";
+import CategoryService from "../../../../services/api/CategoryService";
 import MessagingService from "../../../../services/api/MessagingService";
 import ProductService from "../../../../services/api/ProductService";
 import { Product } from "../../../../types/product";
@@ -65,6 +66,7 @@ export default function ProductDetails() {
   const [loadingSimilar, setLoadingSimilar] = useState(false);
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [resolvedCategoryName, setResolvedCategoryName] = useState<string>("");
 
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -155,6 +157,34 @@ export default function ProductDetails() {
     }
   }, [id, isAuthenticated]);
 
+  useEffect(() => {
+    const categoryValue = product?.category;
+
+    const isObjectId = (value: string) => /^[a-f\d]{24}$/i.test(value);
+
+    const resolveCategoryName = async () => {
+      if (!categoryValue || typeof categoryValue === "object") {
+        setResolvedCategoryName("");
+        return;
+      }
+
+      const trimmedCategory = categoryValue.trim();
+      if (!isObjectId(trimmedCategory)) {
+        setResolvedCategoryName(trimmedCategory);
+        return;
+      }
+
+      try {
+        const category = await CategoryService.getCategoryById(trimmedCategory);
+        setResolvedCategoryName(category?.name || "");
+      } catch {
+        setResolvedCategoryName("");
+      }
+    };
+
+    resolveCategoryName();
+  }, [product?.category]);
+
   const loadSimilarProducts = async (productId: string) => {
     try {
       setLoadingSimilar(true);
@@ -208,21 +238,6 @@ export default function ProductDetails() {
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("fr-FR").format(price) + " FCFA";
-  };
-
-  const formatNumber = (value?: number) => {
-    return new Intl.NumberFormat("fr-FR").format(value || 0);
-  };
-
-  const formatDate = (value?: string) => {
-    if (!value) return "Date inconnue";
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "Date inconnue";
-    return date.toLocaleDateString("fr-FR", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
   };
 
   // Composant pour une carte de produit similaire
@@ -516,7 +531,7 @@ export default function ProductDetails() {
   const categoryLabel =
     typeof product.category === "object"
       ? product.category?.name || "Categorie"
-      : product.category || "Categorie";
+      : resolvedCategoryName || "Categorie";
   const enterpriseName =
     enterprise?.companyName ||
     (typeof product.enterprise === "string" ? product.enterprise : "Entreprise");
@@ -796,126 +811,6 @@ export default function ProductDetails() {
             >
               {product.description}
             </Text>
-          </View>
-
-          {/* Product meta */}
-          <View
-            style={{
-              backgroundColor: colors.secondary,
-              borderColor: colors.border,
-            }}
-            className="p-4 border rounded-2xl mb-6"
-          >
-            <Text
-              style={{ color: colors.textPrimary }}
-              className="text-lg font-quicksand-bold mb-3"
-            >
-              Details du produit
-            </Text>
-
-            <View className="flex-row flex-wrap -mx-1 mb-2">
-              <View
-                style={{
-                  width: "48%",
-                  backgroundColor: colors.card,
-                  borderColor: colors.border,
-                }}
-                className="m-1 rounded-xl px-3 py-3 border"
-              >
-                <Text style={{ color: colors.textSecondary }} className="text-xs">
-                  Stock
-                </Text>
-                <Text style={{ color: colors.textPrimary }} className="mt-1 font-quicksand-bold">
-                  {formatNumber(product.stock)}
-                </Text>
-              </View>
-
-              <View
-                style={{
-                  width: "48%",
-                  backgroundColor: colors.card,
-                  borderColor: colors.border,
-                }}
-                className="m-1 rounded-xl px-3 py-3 border"
-              >
-                <Text style={{ color: colors.textSecondary }} className="text-xs">
-                  Vues
-                </Text>
-                <Text style={{ color: colors.textPrimary }} className="mt-1 font-quicksand-bold">
-                  {formatNumber(product.stats?.views)}
-                </Text>
-              </View>
-            </View>
-
-            <View className="flex-row flex-wrap -mx-1 mb-2">
-              <View
-                style={{
-                  width: "48%",
-                  backgroundColor: colors.card,
-                  borderColor: colors.border,
-                }}
-                className="m-1 rounded-xl px-3 py-3 border"
-              >
-                <Text style={{ color: colors.textSecondary }} className="text-xs">
-                  Ventes
-                </Text>
-                <Text style={{ color: colors.textPrimary }} className="mt-1 font-quicksand-bold">
-                  {formatNumber(product.stats?.totalSales)}
-                </Text>
-              </View>
-
-              <View
-                style={{
-                  width: "48%",
-                  backgroundColor: colors.card,
-                  borderColor: colors.border,
-                }}
-                className="m-1 rounded-xl px-3 py-3 border"
-              >
-                <Text style={{ color: colors.textSecondary }} className="text-xs">
-                  Publie le
-                </Text>
-                <Text style={{ color: colors.textPrimary }} className="mt-1 font-quicksand-bold">
-                  {formatDate(product.createdAt)}
-                </Text>
-              </View>
-            </View>
-
-            <View
-              style={{ backgroundColor: colors.card, borderColor: colors.border }}
-              className="rounded-xl px-3 py-3 border"
-            >
-              <Text style={{ color: colors.textSecondary }} className="text-xs">
-                Categorie
-              </Text>
-              <Text style={{ color: colors.textPrimary }} className="mt-1 font-quicksand-bold">
-                {categoryLabel}
-              </Text>
-            </View>
-
-            {Array.isArray(product.tags) && product.tags.length > 0 && (
-              <View className="mt-4">
-                <Text
-                  style={{ color: colors.textSecondary }}
-                  className="text-xs font-quicksand-bold mb-2 uppercase tracking-wider"
-                >
-                  Tags
-                </Text>
-                <View className="flex-row flex-wrap">
-                  {product.tags.map((tag) => (
-                    <View
-                      key={tag}
-                      style={{ backgroundColor: colors.card, borderColor: colors.border }}
-                      className="mr-2 mb-2 px-3 py-1.5 rounded-full border"
-                    >
-                      <Text style={{ color: colors.textPrimary }} className="text-xs font-quicksand-semibold">
-                        #{tag}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
           </View>
 
           {/* Enterprise Section */}

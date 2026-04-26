@@ -7,6 +7,7 @@ import {
     Animated,
     Dimensions,
     Easing,
+  FlatList,
     Image,
     Modal,
     ScrollView,
@@ -16,7 +17,6 @@ import {
     View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useLocale } from "../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import i18n from "../../../../i18n/i18n";
 import AdvertisementService, {
@@ -24,13 +24,12 @@ import AdvertisementService, {
 } from "../../../../services/api/AdvertisementService";
 import { createPublicAdvertisementShareUrl } from "../../../../utils/AppLinks";
 
-const { width: screenWidth } = Dimensions.get("window");
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 export default function AdvertisementDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { locale } = useLocale();
   const { colors } = useTheme();
   const [advertisement, setAdvertisement] = useState<Advertisement | null>(
     null,
@@ -38,6 +37,7 @@ export default function AdvertisementDetails() {
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
+  const [imageModalVisible, setImageModalVisible] = useState(false);
 
   // État pour le modal d'erreur
   const [errorModal, setErrorModal] = useState(false);
@@ -346,12 +346,20 @@ export default function AdvertisementDetails() {
           >
             {advertisement.images && advertisement.images.length > 0 ? (
               advertisement.images.map((imageUri, index) => (
-                <Image
+                <TouchableOpacity
                   key={index}
-                  source={{ uri: imageUri }}
-                  className="w-screen h-64"
-                  resizeMode="cover"
-                />
+                  activeOpacity={0.95}
+                  onPress={() => {
+                    setCurrentImageIndex(index);
+                    setImageModalVisible(true);
+                  }}
+                >
+                  <Image
+                    source={{ uri: imageUri }}
+                    className="w-screen h-64"
+                    resizeMode="cover"
+                  />
+                </TouchableOpacity>
               ))
             ) : (
               <View
@@ -410,6 +418,19 @@ export default function AdvertisementDetails() {
               </Text>
             </View>
           </View>
+
+          {advertisement.images && advertisement.images.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setImageModalVisible(true)}
+              className="absolute bottom-4 right-4 bg-black/60 px-3 py-2 rounded-full flex-row items-center"
+              activeOpacity={0.8}
+            >
+              <Ionicons name="images-outline" size={14} color="#FFFFFF" />
+              <Text className="text-white text-xs font-quicksand-semibold ml-1">
+                Voir
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Contenu */}
@@ -670,6 +691,69 @@ export default function AdvertisementDetails() {
             </TouchableOpacity>
           </TouchableOpacity>
         </TouchableOpacity>
+      </Modal>
+
+      {/* Visionneur d'images */}
+      <Modal
+        visible={imageModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setImageModalVisible(false)}
+      >
+        <View className="flex-1 bg-black/95">
+          <View
+            className="absolute top-0 left-0 right-0"
+            style={{ paddingTop: insets.top + 8, zIndex: 10 }}
+          >
+            <View className="flex-row justify-between items-center px-4 pb-2">
+              <TouchableOpacity
+                onPress={() => setImageModalVisible(false)}
+                className="w-10 h-10 bg-white/15 rounded-full justify-center items-center"
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close" size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+              <Text className="text-white font-quicksand-medium">
+                {currentImageIndex + 1}/{advertisement?.images?.length || 0}
+              </Text>
+              <View className="w-10" />
+            </View>
+          </View>
+
+          <FlatList
+            data={advertisement?.images || []}
+            renderItem={({ item }) => (
+              <View
+                style={{
+                  width: screenWidth,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: screenHeight,
+                }}
+              >
+                <Image
+                  source={{ uri: item }}
+                  style={{ width: screenWidth, height: screenWidth }}
+                  resizeMode="contain"
+                />
+              </View>
+            )}
+            keyExtractor={(item, index) => `full-${index}`}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            initialScrollIndex={currentImageIndex}
+            onMomentumScrollEnd={(e) => {
+              const newIndex = Math.round(
+                e.nativeEvent.contentOffset.x / screenWidth,
+              );
+              setCurrentImageIndex(newIndex);
+            }}
+            onScrollToIndexFailed={() => {
+              setTimeout(() => {}, 100);
+            }}
+          />
+        </View>
       </Modal>
     </View>
   );
