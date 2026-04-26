@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "W6V4C2G8SP.com.axi.axiapp",
+        "paths": [
+          "/p/*",
+          "/ad/*"
+        ]
+      }
+    ]
+  }
+}
