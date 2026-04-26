@@ -4,24 +4,24 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import {
-    Animated,
-    Dimensions,
-    Easing,
+  Animated,
+  Dimensions,
+  Easing,
   FlatList,
-    Image,
-    Modal,
-    ScrollView,
-    Share,
-    Text,
-    TouchableOpacity,
-    View,
+  Image,
+  Modal,
+  ScrollView,
+  Share,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocale } from "../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import i18n from "../../../../i18n/i18n";
 import AdvertisementService, {
-    Advertisement,
+  Advertisement,
 } from "../../../../services/api/AdvertisementService";
 import { createPublicAdvertisementShareUrl } from "../../../../utils/AppLinks";
 

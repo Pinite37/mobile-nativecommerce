@@ -37,9 +37,7 @@ export default function PublicProductShare() {
         backgroundColor: colors.background,
       }}
     >
-      <View
-        style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-      >
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     </View>

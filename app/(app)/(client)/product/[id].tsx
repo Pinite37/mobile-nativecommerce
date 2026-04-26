@@ -203,9 +203,7 @@ export default function ProductDetails() {
   };
 
   const toggleFavorite = async () => {
-    if (
-      !requireAuth("Connectez-vous pour ajouter ce produit a vos favoris.")
-    ) {
+    if (!requireAuth("Connectez-vous pour ajouter ce produit a vos favoris.")) {
       return;
     }
 
@@ -303,9 +301,7 @@ export default function ProductDetails() {
 
   const openWhatsApp = async (phone?: string) => {
     if (
-      !requireAuth(
-        "Connectez-vous pour contacter une entreprise sur WhatsApp.",
-      )
+      !requireAuth("Connectez-vous pour contacter une entreprise sur WhatsApp.")
     ) {
       return;
     }
@@ -534,7 +530,9 @@ export default function ProductDetails() {
       : resolvedCategoryName || "Categorie";
   const enterpriseName =
     enterprise?.companyName ||
-    (typeof product.enterprise === "string" ? product.enterprise : "Entreprise");
+    (typeof product.enterprise === "string"
+      ? product.enterprise
+      : "Entreprise");
   const contactPhone = enterprise?.contactInfo?.phone || "";
   const contactWhatsapp =
     enterprise?.contactInfo?.whatsapp || enterprise?.contactInfo?.phone || "";
@@ -721,7 +719,9 @@ export default function ProductDetails() {
             contentFit="cover"
           />
         ) : (
-          <View style={[styles.headerImage, { backgroundColor: colors.border }]} />
+          <View
+            style={[styles.headerImage, { backgroundColor: colors.border }]}
+          />
         )}
 
         <AnimatedBlurView
@@ -860,13 +860,14 @@ export default function ProductDetails() {
                   {enterpriseName}
                 </Text>
                 {enterprise && enterprise.location && (
-                    <Text
-                      style={{ color: colors.textSecondary }}
-                      className="text-sm mt-1"
-                    >
-                      📍 {enterprise.location.city}, {enterprise.location.district}
-                    </Text>
-                  )}
+                  <Text
+                    style={{ color: colors.textSecondary }}
+                    className="text-sm mt-1"
+                  >
+                    📍 {enterprise.location.city},{" "}
+                    {enterprise.location.district}
+                  </Text>
+                )}
               </View>
               <Ionicons
                 name="chevron-forward"
@@ -876,7 +877,8 @@ export default function ProductDetails() {
             </TouchableOpacity>
 
             {/* Contact Options */}
-            {enterprise && (contactPhone || contactWebsite || contactWhatsapp) && (
+            {enterprise &&
+              (contactPhone || contactWebsite || contactWhatsapp) && (
                 <View
                   style={{ borderTopColor: colors.border }}
                   className="mt-4 pt-4 border-t"
@@ -889,47 +891,47 @@ export default function ProductDetails() {
                   </Text>
                   <View className="flex-row flex-wrap -mx-1">
                     {contactWhatsapp && (
-                        <>
-                          <TouchableOpacity
-                            onPress={() => openWhatsApp(contactWhatsapp)}
-                            style={{
-                              backgroundColor: colors.card,
-                              borderColor: colors.border,
-                            }}
-                            className="flex-1 rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border shadow-sm"
+                      <>
+                        <TouchableOpacity
+                          onPress={() => openWhatsApp(contactWhatsapp)}
+                          style={{
+                            backgroundColor: colors.card,
+                            borderColor: colors.border,
+                          }}
+                          className="flex-1 rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border shadow-sm"
+                        >
+                          <Ionicons
+                            name="logo-whatsapp"
+                            size={18}
+                            color="#10B981"
+                          />
+                          <Text
+                            style={{ color: colors.textPrimary }}
+                            className="ml-2 font-quicksand-bold text-sm"
                           >
-                            <Ionicons
-                              name="logo-whatsapp"
-                              size={18}
-                              color="#10B981"
-                            />
-                            <Text
-                              style={{ color: colors.textPrimary }}
-                              className="ml-2 font-quicksand-bold text-sm"
-                            >
-                              WhatsApp
-                            </Text>
-                          </TouchableOpacity>
-                        </>
-                      )}
+                            WhatsApp
+                          </Text>
+                        </TouchableOpacity>
+                      </>
+                    )}
                     {contactPhone && (
                       <>
-                          <TouchableOpacity
-                            onPress={() => makePhoneCall(contactPhone)}
-                            style={{
-                              backgroundColor: colors.card,
-                              borderColor: colors.border,
-                            }}
-                            className="flex-1 rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border shadow-sm"
+                        <TouchableOpacity
+                          onPress={() => makePhoneCall(contactPhone)}
+                          style={{
+                            backgroundColor: colors.card,
+                            borderColor: colors.border,
+                          }}
+                          className="flex-1 rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border shadow-sm"
+                        >
+                          <Ionicons name="call" size={18} color="#FE8C00" />
+                          <Text
+                            style={{ color: colors.textPrimary }}
+                            className="ml-2 font-quicksand-bold text-sm"
                           >
-                            <Ionicons name="call" size={18} color="#FE8C00" />
-                            <Text
-                              style={{ color: colors.textPrimary }}
-                              className="ml-2 font-quicksand-bold text-sm"
-                            >
-                              {i18n.t("client.enterprise.contact.call")}
-                            </Text>
-                          </TouchableOpacity>
+                            {i18n.t("client.enterprise.contact.call")}
+                          </Text>
+                        </TouchableOpacity>
                       </>
                     )}
                     {contactWebsite && (
@@ -941,7 +943,11 @@ export default function ProductDetails() {
                         }}
                         className="w-full rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border shadow-sm"
                       >
-                        <Ionicons name="globe-outline" size={18} color="#3B82F6" />
+                        <Ionicons
+                          name="globe-outline"
+                          size={18}
+                          color="#3B82F6"
+                        />
                         <Text
                           style={{ color: colors.textPrimary }}
                           className="ml-2 font-quicksand-bold text-sm"
