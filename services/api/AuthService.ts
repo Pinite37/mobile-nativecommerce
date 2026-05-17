@@ -3,7 +3,9 @@ import {
   AuthTokens,
   ChangePasswordRequest,
   EnterpriseRegisterRequest,
+  ForgotPasswordResponse,
   LoginRequest,
+  OtpResetPasswordRequest,
   RegisterRequest,
   ResetPasswordRequest,
   User,
@@ -430,6 +432,44 @@ class AuthService {
         error.response?.data?.message ||
           error.message ||
           "Inscription entreprise échouée",
+      );
+    }
+  }
+
+  // Send forgot-password OTP code
+  async forgotPassword(email: string): Promise<ForgotPasswordResponse> {
+    try {
+      const response = await ApiService.post<ForgotPasswordResponse>(
+        `${this.BASE_URL}/forgot-password`,
+        { email },
+      );
+
+      if (response.success && response.data) {
+        return response.data;
+      }
+
+      return { sent: true, expiresAt: "" };
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || error.message || "Envoi du code échoué",
+      );
+    }
+  }
+
+  // Reset password using email + OTP
+  async resetPasswordWithOtp(resetData: OtpResetPasswordRequest): Promise<void> {
+    try {
+      const response = await ApiService.post(
+        `${this.BASE_URL}/reset-password`,
+        resetData,
+      );
+
+      if (!response.success) {
+        throw new Error(response.message || "Réinitialisation du mot de passe échouée");
+      }
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || error.message || "Réinitialisation du mot de passe échouée",
       );
     }
   }

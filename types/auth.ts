@@ -98,8 +98,19 @@ export interface ForgotPasswordRequest {
   email: string;
 }
 
+export interface ForgotPasswordResponse {
+  sent: boolean;
+  expiresAt: string;
+}
+
 export interface ResetPasswordRequest {
   token: string;
+  newPassword: string;
+}
+
+export interface OtpResetPasswordRequest {
+  email: string;
+  otp: string;
   newPassword: string;
 }
 
