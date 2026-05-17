@@ -10,7 +10,9 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "update:preview": "eas update --channel preview",
-    "update:production": "eas update --channel production"
+    "update:production": "eas update --channel production",
+    "build:android:production": "eas build --platform android --profile production",
+    "build:ios:production": "eas build --platform ios --profile production"
   },
   "expo": {
     "install": {
