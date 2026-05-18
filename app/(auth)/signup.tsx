@@ -9,8 +9,10 @@ import PhoneInput, {
 } from "react-native-international-phone-number";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LocationConsentBanner } from "../../components/ui/LocationConsentBanner";
 import { useToast } from "../../components/ui/ReanimatedToast/context";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLocationForRegistration } from "../../hooks/useLocationForRegistration";
 import { ErrorHandler } from "../../utils/ErrorHandler";
 import { RegistrationHelper } from "../../utils/RegistrationHelper";
 
@@ -33,6 +35,14 @@ export default function SignUpScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const {
+    status: locationStatus,
+    coords,
+    detectedCity,
+    requestLocation,
+    skip: skipLocation,
+    reset: resetLocation,
+  } = useLocationForRegistration();
   const toast = useToast();
   const insets = useSafeAreaInsets();
   const {
@@ -119,6 +129,7 @@ export default function SignUpScreen() {
         password,
         agreedToTerms,
         role: (role || "CLIENT") as "CLIENT" | "ENTERPRISE",
+        ...(coords && { latitude: coords.latitude, longitude: coords.longitude }),
       };
 
       console.log("🚀 Début de l'inscription...");
@@ -406,6 +417,15 @@ export default function SignUpScreen() {
               </TouchableOpacity>
             </View>
           </View>
+
+          {/* Location Detection */}
+          <LocationConsentBanner
+            status={locationStatus}
+            detectedCity={detectedCity}
+            onRequest={requestLocation}
+            onSkip={skipLocation}
+            onReset={resetLocation}
+          />
 
           {/* Terms and Conditions Checkbox */}
           <View className="mb-6">

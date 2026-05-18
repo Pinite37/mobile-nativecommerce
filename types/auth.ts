@@ -59,6 +59,8 @@ export interface RegisterRequest {
   lastName: string;
   phone: string;
   address: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface EnterpriseRegisterRequest {
@@ -83,6 +85,8 @@ export interface EnterpriseRegisterRequest {
     platform: string;
     url: string;
   }[];
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface RefreshTokenRequest {

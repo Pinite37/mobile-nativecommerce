@@ -2,13 +2,13 @@
   "expo": {
     "name": "AXI",
     "slug": "mobile",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/axilogo.png",
     "scheme": "axiapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "runtimeVersion": "1.0.2",
+    "runtimeVersion": "1.0.3",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.axi.axiapp",
@@ -58,10 +58,15 @@
               "pathPrefix": "/ad"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ],
-      "permissions": ["android.permission.RECORD_AUDIO"]
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -96,7 +101,13 @@
       ],
       "expo-secure-store",
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "AXI Marketplace utilise votre position pour détecter votre ville lors de l'inscription."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

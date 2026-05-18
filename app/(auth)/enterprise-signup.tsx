@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
+
 import {
     ActivityIndicator,
     FlatList,
@@ -24,9 +25,11 @@ import PhoneInput, {
 } from "react-native-international-phone-number";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SubscriptionWelcomeModal } from "../../components/enterprise/SubscriptionWelcomeModal";
+import { LocationConsentBanner } from "../../components/ui/LocationConsentBanner";
 import { useToast } from "../../components/ui/ReanimatedToast/context";
 import { beninCities, neighborhoodsByCity } from "../../constants/LocationData";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLocationForRegistration } from "../../hooks/useLocationForRegistration";
 import { EnterpriseRegisterRequest } from "../../types/auth";
 import { RegistrationHelper } from "../../utils/RegistrationHelper";
 
@@ -80,6 +83,15 @@ export default function EnterpriseSignUpScreen() {
   const toast = useToast();
   const { handlePostRegistration } = useAuth();
   const insets = useSafeAreaInsets();
+  const {
+    status: locationStatus,
+    coords,
+    detectedCity,
+    requestLocation,
+    skip: skipLocation,
+    reset: resetLocation,
+  } = useLocationForRegistration();
+  const autoFilledCityRef = useRef(false);
 
   const TOTAL_STEPS = 4;
 
@@ -87,6 +99,20 @@ export default function EnterpriseSignUpScreen() {
     // Réinitialiser le quartier si la ville change
     setSelectedDistrict("");
   }, [selectedCity]);
+
+  // Auto-fill city from GPS when location is granted
+  useEffect(() => {
+    if (locationStatus === "granted" && detectedCity && !autoFilledCityRef.current) {
+      const cityPart = detectedCity.split(",")[0].trim();
+      const match = beninCities.find(
+        (c) => c.name.toLowerCase() === cityPart.toLowerCase(),
+      );
+      if (match) {
+        setSelectedCity(match.name);
+        autoFilledCityRef.current = true;
+      }
+    }
+  }, [locationStatus, detectedCity]);
 
   // Reset scroll to top when step changes
   useEffect(() => {
@@ -302,6 +328,7 @@ export default function EnterpriseSignUpScreen() {
         ...(companyEmail.trim() && { companyEmail: companyEmail.trim() }),
         ...(formattedWhatsApp && { whatsapp: formattedWhatsApp }),
         ...(website.trim() && { website: website.trim() }),
+        ...(coords && { latitude: coords.latitude, longitude: coords.longitude }),
       };
 
       console.log("🏢 Enterprise Sign up:", userData);
@@ -529,6 +556,15 @@ export default function EnterpriseSignUpScreen() {
           maxLength={13}
         />
       </View>
+
+      {/* Location Detection */}
+      <LocationConsentBanner
+        status={locationStatus}
+        detectedCity={detectedCity}
+        onRequest={requestLocation}
+        onSkip={skipLocation}
+        onReset={resetLocation}
+      />
 
       {/* City Selection */}
       <View className="mb-4">
