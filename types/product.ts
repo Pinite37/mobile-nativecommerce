@@ -145,6 +145,8 @@ export interface ProductFilters {
   minPrice?: number;
   maxPrice?: number;
   sort?: 'price_asc' | 'price_desc' | 'rating' | 'popular' | 'newest';
+  city?: string;
+  district?: string;
 }
 
 export interface FavoriteItem {

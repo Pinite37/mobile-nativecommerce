@@ -59,6 +59,7 @@ export interface DeliveryPartner {
   isActive?: boolean;
   vehicleType?: string;
   rating?: number;
+  city?: string;
 }
 
 // Version enrichie lorsqu'on consomme l'endpoint with-status
@@ -150,6 +151,7 @@ class EnterpriseService {
       isActive: raw.isActive,
       vehicleType: raw.vehicleType,
       rating: stats.rating ?? 0,
+      city: raw.city || user.location?.city,
     };
   }
 
@@ -308,11 +310,12 @@ class EnterpriseService {
   /**
    * Récupérer tous les partenaires de livraison disponibles
    */
-  async getDeliveryPartners(): Promise<DeliveryPartner[]> {
+  async getDeliveryPartners(city?: string): Promise<DeliveryPartner[]> {
+    const query = city ? `?city=${encodeURIComponent(city)}` : '';
     // Essayer différentes routes pour récupérer la liste
     const candidateUrls = [
-      `${this.BASE_URL}/delivery-partners`,
-      `${this.BASE_URL}/deliverers`
+      `${this.BASE_URL}/delivery-partners${query}`,
+      `${this.BASE_URL}/deliverers${query}`
     ];
 
     let lastError: any = null;
@@ -348,9 +351,10 @@ class EnterpriseService {
    * Nouvel endpoint enrichi: /enterprise/delivery-partners/with-status
    * Retour attendu: { total, associatedCount, deliverers: [ { ...isAssociated, isVerified, workingHours, stats } ] }
    */
-  async getDeliveryPartnersWithStatus(): Promise<DeliveryPartnersWithStatusResponse> {
+  async getDeliveryPartnersWithStatus(city?: string): Promise<DeliveryPartnersWithStatusResponse> {
     try {
-      const response = await ApiService.get<any>(`${this.BASE_URL}/delivery-partners/with-status`);
+      const query = city ? `?city=${encodeURIComponent(city)}` : '';
+      const response = await ApiService.get<any>(`${this.BASE_URL}/delivery-partners/with-status${query}`);
       console.log('🔄 Delivery partners WITH STATUS response (raw):', JSON.stringify(response, null, 2));
       if (response.success) {
         const data = response.data || {};

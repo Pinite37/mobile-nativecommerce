@@ -411,6 +411,8 @@ class ProductService {
       if (filters.minPrice) queryParams.append('minPrice', filters.minPrice.toString());
       if (filters.maxPrice) queryParams.append('maxPrice', filters.maxPrice.toString());
       if (filters.sort) queryParams.append('sort', filters.sort);
+      if (filters.city) queryParams.append('city', filters.city);
+      if (filters.district) queryParams.append('district', filters.district);
 
       const url = `${this.BASE_URL}?${queryParams.toString()}`;
       const response = await ApiService.get<any>(url);

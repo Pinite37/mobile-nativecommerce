@@ -3,13 +3,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Animated, Easing, FlatList, Image, RefreshControl, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, Easing, FlatList, Image, RefreshControl, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useToast } from '../../../../components/ui/ToastManager';
 import { useLocale } from '../../../../contexts/LocaleContext';
 import { useTheme } from '../../../../contexts/ThemeContext';
 import i18n from '../../../../i18n/i18n';
 import EnterpriseService, { DeliveryPartnerStatus, DeliveryPartnersWithStatusResponse, Enterprise } from '../../../../services/api/EnterpriseService';
+import { beninCities } from '../../../../constants/LocationData';
 
 /**
  * Écran de gestion des partenaires de livraison (design moderne et cohérent)
@@ -23,6 +24,7 @@ export default function DeliveryPartnersScreen() {
 	const [partners, setPartners] = useState<DeliveryPartnerStatus[]>([]);
 	const [filtered, setFiltered] = useState<DeliveryPartnerStatus[]>([]);
 	const [search, setSearch] = useState('');
+	const [selectedCity, setSelectedCity] = useState('');
 	const [loading, setLoading] = useState(false);
 	const [associating, setAssociating] = useState<string | null>(null);
 	const [refreshing, setRefreshing] = useState(false);
@@ -110,8 +112,15 @@ export default function DeliveryPartnersScreen() {
 				</View>
 
 				{/* Barre de recherche skeleton */}
-				<View className="bg-white/20 rounded-2xl px-4 py-3 mb-4">
+				<View className="bg-white/20 rounded-2xl px-4 py-3 mb-3">
 					<ShimmerBlock style={{ height: 16, borderRadius: 8, width: '60%' }} />
+				</View>
+
+				{/* City chips skeleton */}
+				<View className="flex-row mb-4">
+					{[80, 70, 90, 65].map((w, i) => (
+						<ShimmerBlock key={i} style={{ width: w, height: 28, borderRadius: 14, marginRight: 8 }} />
+					))}
 				</View>
 
 				{/* Statistiques skeleton */}
@@ -171,10 +180,10 @@ export default function DeliveryPartnersScreen() {
 		);
 	};
 
-	const loadPartners = useCallback(async () => {
+	const loadPartners = useCallback(async (cityFilter?: string) => {
 		try {
 			setLoading(true);
-			const data: DeliveryPartnersWithStatusResponse = await EnterpriseService.getDeliveryPartnersWithStatus();
+			const data: DeliveryPartnersWithStatusResponse = await EnterpriseService.getDeliveryPartnersWithStatus(cityFilter || undefined);
 			setTotals({ total: data.total, associatedCount: data.associatedCount });
 			setPartners(data.deliverers);
 			setFiltered(data.deliverers);
@@ -190,13 +199,13 @@ export default function DeliveryPartnersScreen() {
 	const onRefresh = async () => {
 		try {
 			setRefreshing(true);
-			await loadPartners();
+			await loadPartners(selectedCity || undefined);
 		} finally {
 			setRefreshing(false);
 		}
 	};
 
-	useEffect(() => { loadPartners(); }, [loadPartners]);
+	useEffect(() => { loadPartners(selectedCity || undefined); }, [loadPartners, selectedCity]);
 
 	useEffect(() => {
 		if (!search.trim()) {
@@ -297,8 +306,16 @@ export default function DeliveryPartnersScreen() {
 					</View>
 
 					{/* Informations de contact - responsive */}
-					{(item.phone || item.email) && (
+					{(item.phone || item.email || item.city) && (
 						<View className="mb-3 pt-3" style={{ borderTopColor: colors.borderLight }}>
+							{item.city && (
+								<View className="flex-row items-center mb-2">
+									<Ionicons name="location" size={14} color={colors.textTertiary} />
+									<Text className="text-sm font-quicksand-medium ml-2 flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
+										{item.city}
+									</Text>
+								</View>
+							)}
 							{item.phone && (
 								<View className="flex-row items-center mb-2">
 									<Ionicons name="call" size={14} color={colors.textTertiary} />
@@ -441,6 +458,36 @@ export default function DeliveryPartnersScreen() {
 								</TouchableOpacity>
 							)}
 						</View>
+
+						{/* Filtre par ville */}
+						<ScrollView
+							horizontal
+							showsHorizontalScrollIndicator={false}
+							className="mt-3"
+							contentContainerStyle={{ paddingRight: 8 }}
+						>
+							<TouchableOpacity
+								onPress={() => setSelectedCity('')}
+								className="mr-2 px-3 py-1.5 rounded-full"
+								style={{ backgroundColor: !selectedCity ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.2)' }}
+							>
+								<Text className="text-xs font-quicksand-semibold" style={{ color: !selectedCity ? '#047857' : '#FFFFFF' }}>
+									Toutes
+								</Text>
+							</TouchableOpacity>
+							{beninCities.map(city => (
+								<TouchableOpacity
+									key={city.id}
+									onPress={() => setSelectedCity(city.name)}
+									className="mr-2 px-3 py-1.5 rounded-full"
+									style={{ backgroundColor: selectedCity === city.name ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.2)' }}
+								>
+									<Text className="text-xs font-quicksand-semibold" style={{ color: selectedCity === city.name ? '#047857' : '#FFFFFF' }}>
+										{city.name}
+									</Text>
+								</TouchableOpacity>
+							))}
+						</ScrollView>
 					</LinearGradient>
 
 					{/* Contenu principal */}

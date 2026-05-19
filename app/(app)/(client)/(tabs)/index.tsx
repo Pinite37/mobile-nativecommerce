@@ -213,16 +213,19 @@ export default function ClientHome() {
     const adsToDisplay = ads;
 
     // ================= Fonctions produits & favoris (déclarations hoistées) =================
-    async function loadFeaturedProducts(reset = false) {
+    async function loadFeaturedProducts(cityFilter?: string, districtFilter?: string) {
         try {
             setLoadingProducts(true);
-            const pageToLoad = 1; // Toujours commencer par la page 1 pour le chargement initial
+            const pageToLoad = 1;
+            const city = cityFilter ?? selectedCity;
+            const district = districtFilter ?? selectedNeighborhood;
 
-            // Utiliser l'API des produits publics pour avoir plus de contrôle sur la pagination
             const response = await ProductService.getAllPublicProducts({
                 limit: 6,
                 sort: "newest",
                 page: pageToLoad,
+                city: city || undefined,
+                district: district || undefined,
             });
 
             // Toujours remplacer les produits lors du chargement initial
@@ -273,6 +276,8 @@ export default function ClientHome() {
                 limit: 6,
                 sort: "newest",
                 page: nextPage,
+                city: selectedCity || undefined,
+                district: selectedNeighborhood || undefined,
             });
 
             // Ajouter les nouveaux produits aux existants en évitant les doublons
@@ -377,9 +382,17 @@ export default function ClientHome() {
     }
 
     useEffect(() => {
-        // Réinitialiser le quartier si la ville change
         setSelectedNeighborhood("");
+        loadFeaturedProducts(selectedCity, "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedCity]);
+
+    useEffect(() => {
+        if (selectedNeighborhood) {
+            loadFeaturedProducts(selectedCity, selectedNeighborhood);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedNeighborhood]);
 
     // Gestion du bouton retour pour masquer les résultats de recherche et suggestions
     useEffect(() => {
