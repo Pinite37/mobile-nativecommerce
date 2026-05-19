@@ -49,7 +49,7 @@ export default function MarketplacePage() {
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [inStockOnly, setInStockOnly] = useState(false);
-  const [sortBy, setSortBy] = useState<SortOption>('popular');
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showFilters, setShowFilters] = useState(false);
 

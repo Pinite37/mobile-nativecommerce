@@ -1,20 +1,26 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from 'expo-image-picker';
 import { router } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  FlatList,
   Image,
+  Modal,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LocationConsentBanner } from "../../../../components/ui/LocationConsentBanner";
 import { useToast } from "../../../../components/ui/ToastManager";
+import { beninCities, neighborhoodsByCity } from "../../../../constants/LocationData";
 import { useAuth } from "../../../../contexts/AuthContext";
-import EnterpriseService, { Enterprise, SocialLink } from "../../../../services/api/EnterpriseService";
+import { useLocationForRegistration } from "../../../../hooks/useLocationForRegistration";
+import EnterpriseService, { Enterprise, SocialLink, UpdateEnterpriseInfoRequest } from "../../../../services/api/EnterpriseService";
 
 export default function EnterpriseInfoScreen() {
   const { user } = useAuth();
@@ -27,9 +33,21 @@ export default function EnterpriseInfoScreen() {
   const [website, setWebsite] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [district, setDistrict] = useState("");
+  const [cityModalVisible, setCityModalVisible] = useState(false);
+  const [districtModalVisible, setDistrictModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
+  const {
+    status: locationStatus,
+    detectedCity,
+    requestLocation,
+    skip: skipLocation,
+    reset: resetLocation,
+  } = useLocationForRegistration();
+  const autoFilledCityRef = useRef(false);
 
   const loadEnterpriseData = useCallback(async () => {
     if (!user?.id) return;
@@ -44,6 +62,8 @@ export default function EnterpriseInfoScreen() {
         setWebsite(data.website || "");
         setPhone(data.phone || "");
         setAddress(data.address || "");
+        setCity(data.location?.city || "");
+        setDistrict(data.location?.district || "");
         setSocialLinks(data.socialLinks || []);
       }
     } catch (error) {
@@ -57,6 +77,21 @@ export default function EnterpriseInfoScreen() {
   useEffect(() => {
     loadEnterpriseData();
   }, [loadEnterpriseData]);
+
+  // Auto-fill city from GPS (only once, don't override user's manual selection)
+  useEffect(() => {
+    if (locationStatus === "granted" && detectedCity && !autoFilledCityRef.current) {
+      const cityPart = detectedCity.split(",")[0].trim();
+      const match = beninCities.find(
+        (c) => c.name.toLowerCase() === cityPart.toLowerCase(),
+      );
+      if (match) {
+        setCity(match.name);
+        setDistrict(""); // reset district when city changes
+        autoFilledCityRef.current = true;
+      }
+    }
+  }, [locationStatus, detectedCity]);
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -106,17 +141,14 @@ export default function EnterpriseInfoScreen() {
 
     try {
       setSaving(true);
-      const updatedEnterprise = {
-        ...enterprise,
-        name,
+      const updateData: UpdateEnterpriseInfoRequest = {
+        companyName: name,
         description,
-        website,
-        phone,
-        address,
-        socialLinks
+        socialLinks,
+        ...(city && { location: { city, district } }),
       };
 
-      await EnterpriseService.updateEnterprise(updatedEnterprise, imageBase64);
+      await EnterpriseService.updateEnterpriseInfoWithLogo(updateData, imageBase64 || undefined);
       toast.showSuccess("Succès", "Informations de l'entreprise mises à jour avec succès");
       router.back();
     } catch (error) {
@@ -254,6 +286,56 @@ export default function EnterpriseInfoScreen() {
             </View>
           </View>
 
+          {/* Ville & Quartier */}
+          <View className="mb-6">
+            <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3 pl-1">
+              Localisation
+            </Text>
+
+            <LocationConsentBanner
+              status={locationStatus}
+              detectedCity={detectedCity}
+              onRequest={requestLocation}
+              onSkip={skipLocation}
+              onReset={resetLocation}
+            />
+
+            {locationStatus !== "granted" && (
+              <View className="mb-4">
+                <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
+                  Ville
+                </Text>
+                <TouchableOpacity
+                  className="bg-white border border-neutral-200 rounded-xl px-4 py-3 flex-row justify-between items-center"
+                  onPress={() => setCityModalVisible(true)}
+                  activeOpacity={0.7}
+                >
+                  <Text className={`font-quicksand ${city ? "text-neutral-800" : "text-neutral-400"}`}>
+                    {city || "Sélectionnez une ville"}
+                  </Text>
+                  <Ionicons name="chevron-down" size={18} color="#9CA3AF" />
+                </TouchableOpacity>
+              </View>
+            )}
+
+            <View>
+              <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
+                Quartier
+              </Text>
+              <TouchableOpacity
+                className={`bg-white border border-neutral-200 rounded-xl px-4 py-3 flex-row justify-between items-center ${!city ? "opacity-50" : ""}`}
+                onPress={() => city && setDistrictModalVisible(true)}
+                disabled={!city}
+                activeOpacity={0.7}
+              >
+                <Text className={`font-quicksand ${district ? "text-neutral-800" : "text-neutral-400"}`}>
+                  {district || "Sélectionnez un quartier"}
+                </Text>
+                <Ionicons name="chevron-down" size={18} color="#9CA3AF" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
           {/* Réseaux sociaux */}
           <View className="mb-6">
             <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3 pl-1">
@@ -311,6 +393,70 @@ export default function EnterpriseInfoScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Modal ville */}
+      <Modal visible={cityModalVisible} transparent animationType="slide" onRequestClose={() => setCityModalVisible(false)}>
+        <TouchableWithoutFeedback onPress={() => setCityModalVisible(false)}>
+          <View className="flex-1 bg-black/50 justify-end">
+            <TouchableWithoutFeedback onPress={() => {}}>
+              <View className="bg-white rounded-t-3xl max-h-96">
+                <View className="p-4 border-b border-neutral-200">
+                  <Text className="text-lg font-quicksand-bold text-center text-neutral-900">
+                    Sélectionner la Ville
+                  </Text>
+                </View>
+                <FlatList
+                  data={beninCities}
+                  keyExtractor={(item) => item.id.toString()}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      className="p-4 border-b border-neutral-100"
+                      onPress={() => { setCity(item.name); setDistrict(""); setCityModalVisible(false); }}
+                      activeOpacity={0.7}
+                    >
+                      <Text className={`font-quicksand text-base ${city === item.name ? "text-primary-500 font-quicksand-bold" : "text-neutral-900"}`}>
+                        {item.name}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                />
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      {/* Modal quartier */}
+      <Modal visible={districtModalVisible} transparent animationType="slide" onRequestClose={() => setDistrictModalVisible(false)}>
+        <TouchableWithoutFeedback onPress={() => setDistrictModalVisible(false)}>
+          <View className="flex-1 bg-black/50 justify-end">
+            <TouchableWithoutFeedback onPress={() => {}}>
+              <View className="bg-white rounded-t-3xl max-h-96">
+                <View className="p-4 border-b border-neutral-200">
+                  <Text className="text-lg font-quicksand-bold text-center text-neutral-900">
+                    Sélectionner le Quartier
+                  </Text>
+                </View>
+                <FlatList
+                  data={neighborhoodsByCity[city] || []}
+                  keyExtractor={(item, index) => index.toString()}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      className="p-4 border-b border-neutral-100"
+                      onPress={() => { setDistrict(item); setDistrictModalVisible(false); }}
+                      activeOpacity={0.7}
+                    >
+                      <Text className={`font-quicksand text-base ${district === item ? "text-primary-500 font-quicksand-bold" : "text-neutral-900"}`}>
+                        {item}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                />
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </SafeAreaView>
   );
 }

@@ -317,7 +317,7 @@ export default function EnterpriseDashboard() {
       // Récupérer tous les produits publics pour que les entreprises voient tout le marketplace
       const response = await ProductService.getAllPublicProducts({
         limit: 6,
-        sort: "popular",
+        sort: "newest",
         page: pageToLoad,
       });
 
@@ -367,7 +367,7 @@ export default function EnterpriseDashboard() {
 
       const response = await ProductService.getAllPublicProducts({
         limit: 6,
-        sort: "popular",
+        sort: "newest",
         page: nextPage,
       });
 

@@ -41,34 +41,40 @@ export function useLocationForRegistration() {
 
   const requestLocation = useCallback(async () => {
     setState({ status: "requesting", coords: null, detectedCity: null });
+    console.log("[Location] Démarrage de la détection...");
 
     try {
       // Vérifier d'abord si la permission est déjà accordée (sans re-demander)
       const existing = await Location.getForegroundPermissionsAsync();
+      console.log("[Location] Permission existante:", existing.status, "| canAskAgain:", existing.canAskAgain);
 
       let granted = existing.status === Location.PermissionStatus.GRANTED;
 
       if (!granted) {
-        // Demander la permission
+        console.log("[Location] Demande de permission en cours...");
         const { status } = await Location.requestForegroundPermissionsAsync();
+        console.log("[Location] Résultat de la demande:", status);
         granted = status === Location.PermissionStatus.GRANTED;
       }
 
       if (!granted) {
+        console.log("[Location] Permission refusée → statut 'denied'");
         setState({ status: "denied", coords: null, detectedCity: null });
         return;
       }
 
+      console.log("[Location] Permission accordée, récupération de la position GPS...");
+
       // Timeout de sécurité si le GPS est très lent
       const timeoutPromise = new Promise<null>((_, reject) => {
-        timeoutRef.current = setTimeout(
-          () => reject(new Error("timeout")),
-          TIMEOUT_MS,
-        );
+        timeoutRef.current = setTimeout(() => {
+          console.log("[Location] ⏱ Timeout GPS atteint après", TIMEOUT_MS, "ms → statut 'error'");
+          reject(new Error("timeout"));
+        }, TIMEOUT_MS);
       });
 
       const positionPromise = Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced, // Bon compromis vitesse/précision
+        accuracy: Location.Accuracy.Balanced,
       });
 
       const position = (await Promise.race([
@@ -77,6 +83,7 @@ export function useLocationForRegistration() {
       ])) as Location.LocationObject;
 
       clearTimer();
+      console.log("[Location] Position obtenue:", position.coords.latitude, position.coords.longitude, "| précision:", position.coords.accuracy, "m");
 
       const coords: LocationCoords = {
         latitude: position.coords.latitude,
@@ -86,9 +93,10 @@ export function useLocationForRegistration() {
       // Reverse geocoding pour afficher la ville à l'utilisateur
       let detectedCity: string | null = null;
       try {
+        console.log("[Location] Reverse geocoding...");
         const [place] = await Location.reverseGeocodeAsync(coords);
+        console.log("[Location] Place brute:", JSON.stringify(place));
         if (place) {
-          // Composer un nom lisible : ville ou sous-région + pays
           const city =
             place.city ||
             place.subregion ||
@@ -101,20 +109,18 @@ export function useLocationForRegistration() {
               ? `${city}, ${country}`
               : city
             : country || null;
+          console.log("[Location] Ville détectée:", detectedCity);
         }
-      } catch {
-        // Reverse geocoding échoué — on garde les coords quand même
+      } catch (geoErr) {
+        console.warn("[Location] Reverse geocoding échoué:", geoErr);
       }
 
       setState({ status: "granted", coords, detectedCity });
+      console.log("[Location] ✅ Statut final: granted");
     } catch (err: any) {
       clearTimer();
-      if (err?.message === "timeout") {
-        // Timeout GPS : on considère comme erreur non bloquante
-        setState({ status: "error", coords: null, detectedCity: null });
-      } else {
-        setState({ status: "error", coords: null, detectedCity: null });
-      }
+      console.error("[Location] ❌ Erreur:", err?.message, err);
+      setState({ status: "error", coords: null, detectedCity: null });
     }
   }, []);
 

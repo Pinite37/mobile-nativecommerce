@@ -93,7 +93,7 @@ export default function EnterpriseSignUpScreen() {
   } = useLocationForRegistration();
   const autoFilledCityRef = useRef(false);
 
-  const TOTAL_STEPS = 4;
+  const TOTAL_STEPS = 3;
 
   useEffect(() => {
     // Réinitialiser le quartier si la ville change
@@ -157,7 +157,7 @@ export default function EnterpriseSignUpScreen() {
     return true;
   };
 
-  // Step 2: business details — fully optional, only validate format of what's filled
+  // Step 2: all optional details — only validate IFU format if filled
   const validateStep2 = (): boolean => {
     if (ifuNumber.trim() && !/^\d{13}$/.test(ifuNumber)) {
       toast.showToast({
@@ -169,12 +169,7 @@ export default function EnterpriseSignUpScreen() {
     return true;
   };
 
-  // Step 3: optional contact/personal info
   const validateStep3 = (): boolean => {
-    return true;
-  };
-
-  const validateStep4 = (): boolean => {
     if (!password) {
       toast.showToast({
         title: "Erreur",
@@ -239,9 +234,6 @@ export default function EnterpriseSignUpScreen() {
         break;
       case 3:
         isValid = validateStep3();
-        break;
-      case 4:
-        isValid = validateStep4();
         if (isValid) {
           handleSignUp();
           return;
@@ -424,8 +416,6 @@ export default function EnterpriseSignUpScreen() {
         return renderStep2();
       case 3:
         return renderStep3();
-      case 4:
-        return renderStep4();
       default:
         return null;
     }
@@ -510,54 +500,27 @@ export default function EnterpriseSignUpScreen() {
     </View>
   );
 
-  // Step 2: Business details (all optional)
+  // Step 2: All optional details (merged)
+  const SectionDivider = ({ label }: { label: string }) => (
+    <View className="flex-row items-center mt-2 mb-5">
+      <View className="flex-1 h-px bg-neutral-100" />
+      <Text className="text-xs font-quicksand-medium text-neutral-400 mx-3 uppercase">
+        {label}
+      </Text>
+      <View className="flex-1 h-px bg-neutral-100" />
+    </View>
+  );
+
   const renderStep2 = () => (
     <View>
-      <Text className="text-lg font-quicksand-semibold text-neutral-900 mb-2">
-        Détails de l&apos;Entreprise
+      <Text className="text-lg font-quicksand-semibold text-neutral-900 mb-1">
+        Détails & Contact
       </Text>
-      <Text className="text-sm font-quicksand text-neutral-500 mb-4">
-        Ces champs sont optionnels mais recommandés
+      <Text className="text-sm font-quicksand text-neutral-500 mb-5">
+        Tous ces champs sont optionnels — remplissez ce qui vous convient
       </Text>
 
-      {/* Description */}
-      <View className="mb-4">
-        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-          Description de l&apos;Entreprise
-        </Text>
-        <TextInput
-          ref={descriptionRef}
-          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
-          placeholder="Décrivez votre entreprise..."
-          placeholderTextColor="#9CA3AF"
-          value={description}
-          onChangeText={setDescription}
-          onFocus={() => scrollToInput(descriptionRef)}
-          multiline
-          numberOfLines={3}
-          textAlignVertical="top"
-        />
-      </View>
-
-      {/* IFU Number */}
-      <View className="mb-4">
-        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-          Numéro IFU
-        </Text>
-        <TextInput
-          ref={ifuNumberRef}
-          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
-          placeholder="1234567890123"
-          placeholderTextColor="#9CA3AF"
-          value={ifuNumber}
-          onChangeText={setIfuNumber}
-          onFocus={() => scrollToInput(ifuNumberRef)}
-          keyboardType="numeric"
-          maxLength={13}
-        />
-      </View>
-
-      {/* Location Detection */}
+      {/* ── Localisation ── */}
       <LocationConsentBanner
         status={locationStatus}
         detectedCity={detectedCity}
@@ -566,25 +529,25 @@ export default function EnterpriseSignUpScreen() {
         onReset={resetLocation}
       />
 
-      {/* City Selection */}
-      <View className="mb-4">
-        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
-          Ville
-        </Text>
-        <TouchableOpacity
-          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl bg-white flex-row justify-between items-center shadow-sm"
-          onPress={() => setCityModalVisible(true)}
-          activeOpacity={0.7}
-        >
-          <Text className="font-quicksand text-neutral-900">
-            {selectedCity}
+      {/* Ville : affichée seulement si le GPS n'a pas fonctionné */}
+      {locationStatus !== "granted" && (
+        <View className="mb-4">
+          <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+            Ville
           </Text>
-          <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl bg-white flex-row justify-between items-center shadow-sm"
+            onPress={() => setCityModalVisible(true)}
+            activeOpacity={0.7}
+          >
+            <Text className="font-quicksand text-neutral-900">{selectedCity}</Text>
+            <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
+          </TouchableOpacity>
+        </View>
+      )}
 
-      {/* District Selection */}
-      <View className="mb-6">
+      {/* Quartier : toujours affiché (le GPS ne détecte pas le quartier) */}
+      <View className="mb-2">
         <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
           Quartier
         </Text>
@@ -604,20 +567,48 @@ export default function EnterpriseSignUpScreen() {
           <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
         </TouchableOpacity>
       </View>
-    </View>
-  );
 
-  // Step 3: Optional contact & personal info
-  const renderStep3 = () => (
-    <View>
-      <Text className="text-lg font-quicksand-semibold text-neutral-900 mb-2">
-        Contact & Représentant
-      </Text>
-      <Text className="text-sm font-quicksand text-neutral-500 mb-4">
-        Tous ces champs sont optionnels
-      </Text>
+      {/* ── À propos ── */}
+      <SectionDivider label="À propos" />
 
-      {/* Name Inputs */}
+      <View className="mb-4">
+        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+          Description de l&apos;Entreprise
+        </Text>
+        <TextInput
+          ref={descriptionRef}
+          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
+          placeholder="Décrivez votre entreprise..."
+          placeholderTextColor="#9CA3AF"
+          value={description}
+          onChangeText={setDescription}
+          onFocus={() => scrollToInput(descriptionRef)}
+          multiline
+          numberOfLines={3}
+          textAlignVertical="top"
+        />
+      </View>
+
+      <View className="mb-2">
+        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+          Numéro IFU
+        </Text>
+        <TextInput
+          ref={ifuNumberRef}
+          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
+          placeholder="1234567890123"
+          placeholderTextColor="#9CA3AF"
+          value={ifuNumber}
+          onChangeText={setIfuNumber}
+          onFocus={() => scrollToInput(ifuNumberRef)}
+          keyboardType="numeric"
+          maxLength={13}
+        />
+      </View>
+
+      {/* ── Contact & Représentant ── */}
+      <SectionDivider label="Contact & Représentant" />
+
       <View className="flex-row mb-4">
         <View className="flex-1 mr-2">
           <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
@@ -645,7 +636,6 @@ export default function EnterpriseSignUpScreen() {
         </View>
       </View>
 
-      {/* Personal Phone */}
       <View className="mb-4">
         <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
           Téléphone Personnel
@@ -661,7 +651,6 @@ export default function EnterpriseSignUpScreen() {
         />
       </View>
 
-      {/* Address */}
       <View className="mb-4">
         <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
           Adresse
@@ -675,7 +664,6 @@ export default function EnterpriseSignUpScreen() {
         />
       </View>
 
-      {/* Company Email */}
       <View className="mb-4">
         <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
           Email Entreprise
@@ -691,7 +679,6 @@ export default function EnterpriseSignUpScreen() {
         />
       </View>
 
-      {/* WhatsApp */}
       <View className="mb-4">
         <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
           Numéro WhatsApp
@@ -707,7 +694,6 @@ export default function EnterpriseSignUpScreen() {
         />
       </View>
 
-      {/* Website */}
       <View className="mb-6">
         <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
           Site Web
@@ -725,8 +711,8 @@ export default function EnterpriseSignUpScreen() {
     </View>
   );
 
-  // Step 4: Security
-  const renderStep4 = () => (
+  // Step 3: Security
+  const renderStep3 = () => (
     <View>
       <Text className="text-lg font-quicksand-semibold text-neutral-900 mb-4">
         Sécurisez Votre Compte
@@ -898,15 +884,13 @@ export default function EnterpriseSignUpScreen() {
             <Text className="text-base font-quicksand text-neutral-600 mb-6">
               {currentStep === 1 && "Parlez-nous de votre entreprise"}
               {currentStep === 2 && "Ajoutez quelques détails (optionnel)"}
-              {currentStep === 3 &&
-                "Comment les clients peuvent-ils vous joindre ?"}
-              {currentStep === 4 && "Sécurisez votre compte"}
+              {currentStep === 3 && "Sécurisez votre compte"}
             </Text>
 
             {/* Progress Indicator - Centered */}
             <View className="items-center justify-center mb-4">
               <View className="flex-row items-center">
-                {[1, 2, 3, 4].map((step, index) => (
+                {[1, 2, 3].map((step, index) => (
                   <React.Fragment key={step}>
                     <View
                       className={`w-10 h-10 rounded-full items-center justify-center ${
@@ -931,9 +915,9 @@ export default function EnterpriseSignUpScreen() {
                         </Text>
                       )}
                     </View>
-                    {index < 3 && (
+                    {index < 2 && (
                       <View
-                        className={`w-16 h-1 mx-1 ${
+                        className={`w-20 h-1 mx-1 ${
                           step < currentStep ? "bg-green-500" : "bg-neutral-200"
                         }`}
                       />
@@ -974,6 +958,18 @@ export default function EnterpriseSignUpScreen() {
               paddingBottom: Math.max(insets.bottom, 16) + 8,
             }}
           >
+            {currentStep === 2 && (
+              <TouchableOpacity
+                onPress={() => setCurrentStep(3)}
+                activeOpacity={0.7}
+                className="flex-row items-center justify-center border border-neutral-200 rounded-2xl py-3 mb-3"
+              >
+                <Text className="font-quicksand-medium text-neutral-500 text-sm mr-1">
+                  Passer cette étape
+                </Text>
+                <Ionicons name="arrow-forward" size={15} color="#6B7280" />
+              </TouchableOpacity>
+            )}
             <View className="flex-row items-center mb-3">
               {currentStep > 1 && (
                 <TouchableOpacity
@@ -1007,7 +1003,7 @@ export default function EnterpriseSignUpScreen() {
                 )}
                 <Text className="text-white text-center font-quicksand-semibold text-base">
                   {isLoading
-                    ? "Création"
+                    ? "Création en cours..."
                     : currentStep === TOTAL_STEPS
                       ? "Créer le Compte"
                       : "Continuer"}

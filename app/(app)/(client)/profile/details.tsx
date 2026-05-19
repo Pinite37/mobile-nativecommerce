@@ -19,8 +19,10 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ImagePickerModal from "../../../../components/ui/ImagePickerModal";
+import { LocationConsentBanner } from "../../../../components/ui/LocationConsentBanner";
 import { useToast } from "../../../../components/ui/ToastManager";
 import { useAuth } from "../../../../contexts/AuthContext";
+import { useLocationForRegistration } from "../../../../hooks/useLocationForRegistration";
 import i18n from "../../../../i18n/i18n";
 import CustomerService, { UpdateProfileRequest } from "../../../../services/api/CustomerService";
 
@@ -30,10 +32,37 @@ export default function ProfileDetailsScreen() {
   const { user, refreshUserData } = useAuth();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
-  const [loading, setLoading] = useState(true); // Commencer avec loading = true
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [imagePickerVisible, setImagePickerVisible] = useState(false);
   const toast = useToast();
+  const {
+    status: locationStatus,
+    coords,
+    detectedCity,
+    requestLocation,
+    skip: skipLocation,
+    reset: resetLocation,
+  } = useLocationForRegistration();
+
+  // Auto-save quand le GPS accorde la position
+  useEffect(() => {
+    if (locationStatus === "granted" && coords) {
+      CustomerService.updateLocation({
+        coordinates: [coords.longitude, coords.latitude], // GeoJSON: [lng, lat]
+        address: detectedCity || "",
+      })
+        .then(() => refreshUserData())
+        .then(() =>
+          toast.showSuccess(
+            "Localisation mise à jour",
+            detectedCity ? `Ville : ${detectedCity}` : "Position enregistrée",
+          ),
+        )
+        .catch(() => toast.showError("Impossible de mettre à jour la localisation"));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationStatus]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -408,6 +437,35 @@ export default function ProfileDetailsScreen() {
               </View>
             </TouchableOpacity>
           </View> */}
+
+          {/* Localisation */}
+          <View className="rounded-2xl mt-6 p-4" style={{ backgroundColor: colors.card }}>
+            <View className="flex-row items-center mb-3">
+              <Ionicons name="location-outline" size={18} color={colors.textSecondary} />
+              <Text className="text-lg font-quicksand-bold ml-2" style={{ color: colors.textPrimary }}>
+                Localisation
+              </Text>
+            </View>
+            {user?.location?.address ? (
+              <View className="flex-row items-center mb-3 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2">
+                <Ionicons name="location" size={13} color="#10B981" />
+                <Text className="text-sm font-quicksand text-emerald-700 ml-2 flex-1">
+                  {user.location.address}
+                </Text>
+              </View>
+            ) : (
+              <Text className="text-sm font-quicksand text-neutral-400 mb-3">
+                Aucune localisation enregistrée
+              </Text>
+            )}
+            <LocationConsentBanner
+              status={locationStatus}
+              detectedCity={detectedCity}
+              onRequest={requestLocation}
+              onSkip={skipLocation}
+              onReset={resetLocation}
+            />
+          </View>
 
           {/* Bouton de sauvegarde */}
           <View className="my-8">

@@ -114,7 +114,13 @@ export default function ClientHome() {
     const isTablet = screenWidth >= 768;
     const productWidth = isTablet ? '31%' : '48%'; // 3 colonnes sur tablette, 2 sur mobile
 
-    const [selectedCity, setSelectedCity] = useState(beninCities[0].name);
+    const [selectedCity, setSelectedCity] = useState(() => {
+        const address = (user as any)?.location?.address as string | undefined;
+        if (!address) return beninCities[0].name;
+        const cityPart = address.split(",")[0].trim();
+        const match = beninCities.find(c => c.name.toLowerCase() === cityPart.toLowerCase());
+        return match ? match.name : beninCities[0].name;
+    });
     const [selectedNeighborhood, setSelectedNeighborhood] = useState("");
     const [cityModalVisible, setCityModalVisible] = useState(false);
     const [neighborhoodModalVisible, setNeighborhoodModalVisible] = useState(false);
@@ -215,7 +221,7 @@ export default function ClientHome() {
             // Utiliser l'API des produits publics pour avoir plus de contrôle sur la pagination
             const response = await ProductService.getAllPublicProducts({
                 limit: 6,
-                sort: "popular",
+                sort: "newest",
                 page: pageToLoad,
             });
 
@@ -265,7 +271,7 @@ export default function ClientHome() {
 
             const response = await ProductService.getAllPublicProducts({
                 limit: 6,
-                sort: "popular",
+                sort: "newest",
                 page: nextPage,
             });
 
