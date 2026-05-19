@@ -2,9 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
-import React, { useEffect, useLayoutEffect, useState } from "react";
+import * as Notifications from 'expo-notifications';
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  AppState,
+  Linking,
   Modal,
   ScrollView,
   Switch,
@@ -19,6 +22,7 @@ import { useTheme } from "../../../../contexts/ThemeContext";
 import i18n from "../../../../i18n/i18n";
 import AuthService from "../../../../services/api/AuthService";
 import PreferencesService from "../../../../services/api/PreferencesService";
+import { useNotifications } from "../../../../hooks/useNotifications";
 
 export default function SettingsScreen() {
   const navigation = useNavigation();
@@ -72,9 +76,45 @@ export default function SettingsScreen() {
   const [languageModal, setLanguageModal] = useState(false);
   const [deleteAccountModal, setDeleteAccountModal] = useState(false);
 
+  const { setupNotifications } = useNotifications();
+  const [notifPermission, setNotifPermission] = useState<'granted' | 'denied' | 'undetermined'>('undetermined');
+  const prevPermissionRef = useRef<'granted' | 'denied' | 'undetermined'>('undetermined');
+
+  const checkNotificationPermission = async () => {
+    const { status } = await Notifications.getPermissionsAsync();
+    const newStatus = status as 'granted' | 'denied' | 'undetermined';
+    const prev = prevPermissionRef.current;
+    prevPermissionRef.current = newStatus;
+    setNotifPermission(newStatus);
+    // L'utilisateur vient d'activer depuis les paramètres système
+    if (prev !== 'granted' && newStatus === 'granted') {
+      setupNotifications();
+    }
+  };
+
+  const requestOrOpenNotificationSettings = async () => {
+    if (notifPermission === 'undetermined') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      const newStatus = status as 'granted' | 'denied' | 'undetermined';
+      setNotifPermission(newStatus);
+      if (newStatus === 'granted') {
+        // Permission accordée : setup canaux Android + token + enregistrement backend
+        setupNotifications();
+      }
+    } else {
+      // Déjà refusé : ouvrir les paramètres système, on re-vérifie au retour via AppState
+      await Linking.openSettings();
+    }
+  };
+
   // Charger les paramètres utilisateur depuis l'API
   useEffect(() => {
     loadUserPreferences();
+    checkNotificationPermission();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') checkNotificationPermission();
+    });
+    return () => sub.remove();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -379,11 +419,28 @@ export default function SettingsScreen() {
         </View>
 
         {/* Paramètres des notifications */}
-        {/* <View className="mt-6 mx-4">
+        <View className="mt-6 mx-4">
           <Text className="text-sm font-quicksand-semibold mb-2" style={{ color: colors.textSecondary }}>
             {i18n.t("client.settings.sections.notifications")}
           </Text>
-          <View className="rounded-2xl" style={{ backgroundColor: colors.card }}>
+          <View className="rounded-2xl overflow-hidden" style={{ backgroundColor: colors.card }}>
+            {/* Bannière permission OS */}
+            {notifPermission !== 'granted' && (
+              <TouchableOpacity
+                onPress={requestOrOpenNotificationSettings}
+                className="flex-row items-center px-4 py-3"
+                style={{ backgroundColor: '#FEF3C7', borderBottomColor: '#FDE68A', borderBottomWidth: 1 }}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="warning-outline" size={18} color="#D97706" />
+                <Text className="flex-1 text-sm font-quicksand-medium ml-2" style={{ color: '#92400E' }}>
+                  {notifPermission === 'undetermined'
+                    ? 'Autoriser les notifications pour les activer'
+                    : 'Notifications désactivées — appuyer pour ouvrir les paramètres'}
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color="#D97706" />
+              </TouchableOpacity>
+            )}
             <View className="px-4 py-4 flex-row justify-between items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
               <View className="flex-row items-center">
                 <Ionicons name="notifications-outline" size={20} color={colors.textSecondary} />
@@ -392,10 +449,11 @@ export default function SettingsScreen() {
                 </Text>
               </View>
               <Switch
-                value={settings.pushEnabled}
+                value={settings.pushEnabled && notifPermission === 'granted'}
                 onValueChange={() => toggleSetting('pushEnabled')}
                 trackColor={{ false: "#E5E7EB", true: "#10B98150" }}
-                thumbColor={settings.pushEnabled ? "#10B981" : "#9CA3AF"}
+                thumbColor={settings.pushEnabled && notifPermission === 'granted' ? "#10B981" : "#9CA3AF"}
+                disabled={notifPermission !== 'granted' || saving}
               />
             </View>
             <View className="px-4 py-4 flex-row justify-between items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
@@ -406,10 +464,11 @@ export default function SettingsScreen() {
                 </Text>
               </View>
               <Switch
-                value={settings.notifDelivery}
+                value={settings.notifDelivery && notifPermission === 'granted'}
                 onValueChange={() => toggleSetting('notifDelivery')}
                 trackColor={{ false: "#E5E7EB", true: "#10B98150" }}
-                thumbColor={settings.notifDelivery ? "#10B981" : "#9CA3AF"}
+                thumbColor={settings.notifDelivery && notifPermission === 'granted' ? "#10B981" : "#9CA3AF"}
+                disabled={notifPermission !== 'granted' || saving}
               />
             </View>
             <View className="px-4 py-4 flex-row justify-between items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
@@ -420,10 +479,11 @@ export default function SettingsScreen() {
                 </Text>
               </View>
               <Switch
-                value={settings.notifMessages}
+                value={settings.notifMessages && notifPermission === 'granted'}
                 onValueChange={() => toggleSetting('notifMessages')}
                 trackColor={{ false: "#E5E7EB", true: "#10B98150" }}
-                thumbColor={settings.notifMessages ? "#10B981" : "#9CA3AF"}
+                thumbColor={settings.notifMessages && notifPermission === 'granted' ? "#10B981" : "#9CA3AF"}
+                disabled={notifPermission !== 'granted' || saving}
               />
             </View>
             <View className="px-4 py-4 flex-row justify-between items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
@@ -434,10 +494,11 @@ export default function SettingsScreen() {
                 </Text>
               </View>
               <Switch
-                value={settings.notifNewProducts}
+                value={settings.notifNewProducts && notifPermission === 'granted'}
                 onValueChange={() => toggleSetting('notifNewProducts')}
                 trackColor={{ false: "#E5E7EB", true: "#10B98150" }}
-                thumbColor={settings.notifNewProducts ? "#10B981" : "#9CA3AF"}
+                thumbColor={settings.notifNewProducts && notifPermission === 'granted' ? "#10B981" : "#9CA3AF"}
+                disabled={notifPermission !== 'granted' || saving}
               />
             </View>
             <View className="px-4 py-4 flex-row justify-between items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
@@ -448,10 +509,11 @@ export default function SettingsScreen() {
                 </Text>
               </View>
               <Switch
-                value={settings.notifAdvertisements}
+                value={settings.notifAdvertisements && notifPermission === 'granted'}
                 onValueChange={() => toggleSetting('notifAdvertisements')}
                 trackColor={{ false: "#E5E7EB", true: "#10B98150" }}
-                thumbColor={settings.notifAdvertisements ? "#10B981" : "#9CA3AF"}
+                thumbColor={settings.notifAdvertisements && notifPermission === 'granted' ? "#10B981" : "#9CA3AF"}
+                disabled={notifPermission !== 'granted' || saving}
               />
             </View>
             <View className="px-4 py-4 flex-row justify-between items-center">
@@ -462,14 +524,15 @@ export default function SettingsScreen() {
                 </Text>
               </View>
               <Switch
-                value={settings.notifSystemUpdates}
+                value={settings.notifSystemUpdates && notifPermission === 'granted'}
                 onValueChange={() => toggleSetting('notifSystemUpdates')}
                 trackColor={{ false: "#E5E7EB", true: "#10B98150" }}
-                thumbColor={settings.notifSystemUpdates ? "#10B981" : "#9CA3AF"}
+                thumbColor={settings.notifSystemUpdates && notifPermission === 'granted' ? "#10B981" : "#9CA3AF"}
+                disabled={notifPermission !== 'granted' || saving}
               />
             </View>
           </View>
-        </View> */}
+        </View>
 
         {/* Paramètres d'affichage */}
         {/* <View className="mt-6 mx-4">

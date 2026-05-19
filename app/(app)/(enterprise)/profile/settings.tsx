@@ -3,9 +3,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
+import * as Notifications from 'expo-notifications';
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  AppState,
+  Linking,
   Modal,
   ScrollView,
   Switch,
@@ -19,6 +22,7 @@ import { useLocale } from "../../../../contexts/LocaleContext";
 import i18n from "../../../../i18n/i18n";
 import AuthService from "../../../../services/api/AuthService";
 import PreferencesService from "../../../../services/api/PreferencesService";
+import { useNotifications } from "../../../../hooks/useNotifications";
 
 export default function EnterpriseSettingsScreen() {
   const toast = useToast();
@@ -54,9 +58,45 @@ export default function EnterpriseSettingsScreen() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const { setupNotifications } = useNotifications();
+  const [notifPermission, setNotifPermission] = useState<'granted' | 'denied' | 'undetermined'>('undetermined');
+  const prevPermissionRef = useRef<'granted' | 'denied' | 'undetermined'>('undetermined');
+
+  const checkNotificationPermission = async () => {
+    const { status } = await Notifications.getPermissionsAsync();
+    const newStatus = status as 'granted' | 'denied' | 'undetermined';
+    const prev = prevPermissionRef.current;
+    prevPermissionRef.current = newStatus;
+    setNotifPermission(newStatus);
+    // L'utilisateur vient d'activer depuis les paramètres système
+    if (prev !== 'granted' && newStatus === 'granted') {
+      setupNotifications();
+    }
+  };
+
+  const requestOrOpenNotificationSettings = async () => {
+    if (notifPermission === 'undetermined') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      const newStatus = status as 'granted' | 'denied' | 'undetermined';
+      setNotifPermission(newStatus);
+      if (newStatus === 'granted') {
+        // Permission accordée : setup canaux Android + token + enregistrement backend
+        setupNotifications();
+      }
+    } else {
+      // Déjà refusé : ouvrir les paramètres système, on re-vérifie au retour via AppState
+      await Linking.openSettings();
+    }
+  };
+
   // Charger les préférences au démarrage
   useEffect(() => {
     loadUserPreferences();
+    checkNotificationPermission();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') checkNotificationPermission();
+    });
+    return () => sub.remove();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -302,38 +342,45 @@ export default function EnterpriseSettingsScreen() {
         </View>
 
         {/* Notifications */}
-        {/* <View className="mt-6 px-4">
+        <View className="mt-6 px-4">
           <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold mb-3 pl-1">
             {i18n.t("enterprise.settings.notifications.title")}
           </Text>
           <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="rounded-2xl shadow-sm border overflow-hidden">
+            {/* Bannière permission OS */}
+            {notifPermission !== 'granted' && (
+              <TouchableOpacity
+                onPress={requestOrOpenNotificationSettings}
+                className="flex-row items-center px-4 py-3"
+                style={{ backgroundColor: '#FEF3C7', borderBottomColor: '#FDE68A', borderBottomWidth: 1 }}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="warning-outline" size={18} color="#D97706" />
+                <Text className="flex-1 text-sm font-quicksand-medium ml-2" style={{ color: '#92400E' }}>
+                  {notifPermission === 'undetermined'
+                    ? 'Autoriser les notifications pour les activer'
+                    : 'Notifications désactivées — appuyer pour ouvrir les paramètres'}
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color="#D97706" />
+              </TouchableOpacity>
+            )}
             <View style={{ borderColor: colors.border }} className="flex-row items-center justify-between px-4 py-4 border-b">
               <View className="flex-row items-center">
-                <Ionicons
-                  name="notifications-outline"
-                  size={20}
-                  color={colors.brandPrimary}
-                />
+                <Ionicons name="notifications-outline" size={20} color={colors.brandPrimary} />
                 <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-medium ml-3">
                   {i18n.t("enterprise.settings.notifications.pushEnabled")}
                 </Text>
               </View>
               <Switch
-                value={pushEnabled}
+                value={pushEnabled && notifPermission === 'granted'}
                 onValueChange={(value) =>
-                  toggleSetting(
-                    "pushEnabled",
-                    pushEnabled,
-                    setPushEnabled,
-                    async () => {
-                      await PreferencesService.updateNotifications({
-                        pushEnabled: value,
-                      });
-                    }
-                  )
+                  toggleSetting("pushEnabled", pushEnabled, setPushEnabled, async () => {
+                    await PreferencesService.updateNotifications({ pushEnabled: value });
+                  })
                 }
                 trackColor={{ false: "#D1D5DB", true: "#C7F4DC" }}
-                thumbColor={pushEnabled ? "#10B981" : "#9CA3AF"}
+                thumbColor={pushEnabled && notifPermission === 'granted' ? "#10B981" : "#9CA3AF"}
+                disabled={notifPermission !== 'granted'}
               />
             </View>
 
@@ -345,21 +392,15 @@ export default function EnterpriseSettingsScreen() {
                 </Text>
               </View>
               <Switch
-                value={notifDelivery}
+                value={notifDelivery && notifPermission === 'granted'}
                 onValueChange={(value) =>
-                  toggleSetting(
-                    "notifDelivery",
-                    notifDelivery,
-                    setNotifDelivery,
-                    async () => {
-                      await PreferencesService.updateNotifications({
-                        types: { delivery: value },
-                      });
-                    }
-                  )
+                  toggleSetting("notifDelivery", notifDelivery, setNotifDelivery, async () => {
+                    await PreferencesService.updateNotifications({ types: { delivery: value } });
+                  })
                 }
                 trackColor={{ false: "#D1D5DB", true: "#C7F4DC" }}
-                thumbColor={notifDelivery ? "#10B981" : "#9CA3AF"}
+                thumbColor={notifDelivery && notifPermission === 'granted' ? "#10B981" : "#9CA3AF"}
+                disabled={notifPermission !== 'granted'}
               />
             </View>
 
@@ -371,21 +412,15 @@ export default function EnterpriseSettingsScreen() {
                 </Text>
               </View>
               <Switch
-                value={notifMessages}
+                value={notifMessages && notifPermission === 'granted'}
                 onValueChange={(value) =>
-                  toggleSetting(
-                    "notifMessages",
-                    notifMessages,
-                    setNotifMessages,
-                    async () => {
-                      await PreferencesService.updateNotifications({
-                        types: { messages: value },
-                      });
-                    }
-                  )
+                  toggleSetting("notifMessages", notifMessages, setNotifMessages, async () => {
+                    await PreferencesService.updateNotifications({ types: { messages: value } });
+                  })
                 }
                 trackColor={{ false: "#D1D5DB", true: "#C7F4DC" }}
-                thumbColor={notifMessages ? "#10B981" : "#9CA3AF"}
+                thumbColor={notifMessages && notifPermission === 'granted' ? "#10B981" : "#9CA3AF"}
+                disabled={notifPermission !== 'granted'}
               />
             </View>
 
@@ -397,21 +432,15 @@ export default function EnterpriseSettingsScreen() {
                 </Text>
               </View>
               <Switch
-                value={notifNewProducts}
+                value={notifNewProducts && notifPermission === 'granted'}
                 onValueChange={(value) =>
-                  toggleSetting(
-                    "notifNewProducts",
-                    notifNewProducts,
-                    setNotifNewProducts,
-                    async () => {
-                      await PreferencesService.updateNotifications({
-                        types: { newProducts: value },
-                      });
-                    }
-                  )
+                  toggleSetting("notifNewProducts", notifNewProducts, setNotifNewProducts, async () => {
+                    await PreferencesService.updateNotifications({ types: { newProducts: value } });
+                  })
                 }
                 trackColor={{ false: "#D1D5DB", true: "#C7F4DC" }}
-                thumbColor={notifNewProducts ? "#10B981" : "#9CA3AF"}
+                thumbColor={notifNewProducts && notifPermission === 'granted' ? "#10B981" : "#9CA3AF"}
+                disabled={notifPermission !== 'granted'}
               />
             </View>
 
@@ -423,21 +452,15 @@ export default function EnterpriseSettingsScreen() {
                 </Text>
               </View>
               <Switch
-                value={notifAdvertisements}
+                value={notifAdvertisements && notifPermission === 'granted'}
                 onValueChange={(value) =>
-                  toggleSetting(
-                    "notifAdvertisements",
-                    notifAdvertisements,
-                    setNotifAdvertisements,
-                    async () => {
-                      await PreferencesService.updateNotifications({
-                        types: { advertisements: value },
-                      });
-                    }
-                  )
+                  toggleSetting("notifAdvertisements", notifAdvertisements, setNotifAdvertisements, async () => {
+                    await PreferencesService.updateNotifications({ types: { advertisements: value } });
+                  })
                 }
                 trackColor={{ false: "#D1D5DB", true: "#C7F4DC" }}
-                thumbColor={notifAdvertisements ? "#10B981" : "#9CA3AF"}
+                thumbColor={notifAdvertisements && notifPermission === 'granted' ? "#10B981" : "#9CA3AF"}
+                disabled={notifPermission !== 'granted'}
               />
             </View>
 
@@ -449,25 +472,19 @@ export default function EnterpriseSettingsScreen() {
                 </Text>
               </View>
               <Switch
-                value={notifSystemUpdates}
+                value={notifSystemUpdates && notifPermission === 'granted'}
                 onValueChange={(value) =>
-                  toggleSetting(
-                    "notifSystemUpdates",
-                    notifSystemUpdates,
-                    setNotifSystemUpdates,
-                    async () => {
-                      await PreferencesService.updateNotifications({
-                        types: { systemUpdates: value },
-                      });
-                    }
-                  )
+                  toggleSetting("notifSystemUpdates", notifSystemUpdates, setNotifSystemUpdates, async () => {
+                    await PreferencesService.updateNotifications({ types: { systemUpdates: value } });
+                  })
                 }
                 trackColor={{ false: "#D1D5DB", true: "#C7F4DC" }}
-                thumbColor={notifSystemUpdates ? "#10B981" : "#9CA3AF"}
+                thumbColor={notifSystemUpdates && notifPermission === 'granted' ? "#10B981" : "#9CA3AF"}
+                disabled={notifPermission !== 'granted'}
               />
             </View>
           </View>
-        </View> */}
+        </View>
 
         {/* Affichage */}
         {/* <View className="mt-6 px-4">
