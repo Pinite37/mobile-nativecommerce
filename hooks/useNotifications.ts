@@ -84,7 +84,8 @@ export const useNotifications = () => {
       const token = await NotificationPermissionService.getExpoPushToken();
 
       if (!token) {
-        const message = 'Impossible d\'obtenir le token de notifications';
+        const message = 'Impossible d\'obtenir le token de notifications (appareil physique requis ou Firebase non configuré)';
+        console.error('❌', message);
         setError(message);
         return { success: false, message };
       }

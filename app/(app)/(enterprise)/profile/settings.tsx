@@ -8,7 +8,6 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   AppState,
-  Linking,
   Modal,
   ScrollView,
   Switch,
@@ -18,6 +17,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useToast } from "../../../../components/ui/ToastManager";
+import { NotificationPermissionModal } from "../../../../components/NotificationPermissionModal";
 import { useLocale } from "../../../../contexts/LocaleContext";
 import i18n from "../../../../i18n/i18n";
 import { LocationConsentBanner } from "../../../../components/ui/LocationConsentBanner";
@@ -85,40 +85,40 @@ export default function EnterpriseSettingsScreen() {
   const { setupNotifications } = useNotifications();
   const [notifPermission, setNotifPermission] = useState<'granted' | 'denied' | 'undetermined'>('undetermined');
   const prevPermissionRef = useRef<'granted' | 'denied' | 'undetermined'>('undetermined');
+  const [showNotifModal, setShowNotifModal] = useState(false);
 
-  const checkNotificationPermission = async () => {
+  // Appelé au mount : enregistre le token si permission déjà accordée
+  const initNotificationCheck = async () => {
+    const { status } = await Notifications.getPermissionsAsync();
+    const newStatus = status as 'granted' | 'denied' | 'undetermined';
+    console.log('🔔 [Settings] Statut notifications au démarrage:', newStatus);
+    prevPermissionRef.current = newStatus;
+    setNotifPermission(newStatus);
+    if (newStatus === 'granted') {
+      console.log('🔔 [Settings] Permission accordée → enregistrement du token...');
+      setupNotifications();
+    }
+  };
+
+  // Appelé depuis AppState : détecte une transition newly-granted (retour depuis paramètres système)
+  const checkNotificationPermissionChange = async () => {
     const { status } = await Notifications.getPermissionsAsync();
     const newStatus = status as 'granted' | 'denied' | 'undetermined';
     const prev = prevPermissionRef.current;
     prevPermissionRef.current = newStatus;
     setNotifPermission(newStatus);
-    // L'utilisateur vient d'activer depuis les paramètres système
     if (prev !== 'granted' && newStatus === 'granted') {
+      console.log('🔔 [Settings] Permission nouvellement accordée depuis les paramètres système → enregistrement...');
       setupNotifications();
-    }
-  };
-
-  const requestOrOpenNotificationSettings = async () => {
-    if (notifPermission === 'undetermined') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      const newStatus = status as 'granted' | 'denied' | 'undetermined';
-      setNotifPermission(newStatus);
-      if (newStatus === 'granted') {
-        // Permission accordée : setup canaux Android + token + enregistrement backend
-        setupNotifications();
-      }
-    } else {
-      // Déjà refusé : ouvrir les paramètres système, on re-vérifie au retour via AppState
-      await Linking.openSettings();
     }
   };
 
   // Charger les préférences au démarrage
   useEffect(() => {
     loadUserPreferences();
-    checkNotificationPermission();
+    initNotificationCheck();
     const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active') checkNotificationPermission();
+      if (state === 'active') checkNotificationPermissionChange();
     });
     return () => sub.remove();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -128,6 +128,7 @@ export default function EnterpriseSettingsScreen() {
     try {
       setLoading(true);
       const prefs = await PreferencesService.getPreferences();
+      console.log("⚙️ Préférences chargées:", prefs);
 
       // General
       setLanguage((prefs.general?.language || "fr") as "fr" | "en");
@@ -371,23 +372,6 @@ export default function EnterpriseSettingsScreen() {
             {i18n.t("enterprise.settings.notifications.title")}
           </Text>
           <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="rounded-2xl shadow-sm border overflow-hidden">
-            {/* Bannière permission OS */}
-            {notifPermission !== 'granted' && (
-              <TouchableOpacity
-                onPress={requestOrOpenNotificationSettings}
-                className="flex-row items-center px-4 py-3"
-                style={{ backgroundColor: '#FEF3C7', borderBottomColor: '#FDE68A', borderBottomWidth: 1 }}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="warning-outline" size={18} color="#D97706" />
-                <Text className="flex-1 text-sm font-quicksand-medium ml-2" style={{ color: '#92400E' }}>
-                  {notifPermission === 'undetermined'
-                    ? 'Autoriser les notifications pour les activer'
-                    : 'Notifications désactivées — appuyer pour ouvrir les paramètres'}
-                </Text>
-                <Ionicons name="chevron-forward" size={16} color="#D97706" />
-              </TouchableOpacity>
-            )}
             <View style={{ borderColor: colors.border }} className="flex-row items-center justify-between px-4 py-4 border-b">
               <View className="flex-row items-center">
                 <Ionicons name="notifications-outline" size={20} color={colors.brandPrimary} />
@@ -397,14 +381,17 @@ export default function EnterpriseSettingsScreen() {
               </View>
               <Switch
                 value={pushEnabled && notifPermission === 'granted'}
-                onValueChange={(value) =>
-                  toggleSetting("pushEnabled", pushEnabled, setPushEnabled, async () => {
-                    await PreferencesService.updateNotifications({ pushEnabled: value });
-                  })
-                }
+                onValueChange={(value) => {
+                  if (value && notifPermission !== 'granted') {
+                    setShowNotifModal(true);
+                  } else {
+                    toggleSetting("pushEnabled", pushEnabled, setPushEnabled, async () => {
+                      await PreferencesService.updateNotifications({ pushEnabled: value });
+                    });
+                  }
+                }}
                 trackColor={{ false: "#D1D5DB", true: "#C7F4DC" }}
                 thumbColor={pushEnabled && notifPermission === 'granted' ? "#10B981" : "#9CA3AF"}
-                disabled={notifPermission !== 'granted'}
               />
             </View>
 
@@ -416,14 +403,14 @@ export default function EnterpriseSettingsScreen() {
                 </Text>
               </View>
               <Switch
-                value={notifDelivery && notifPermission === 'granted'}
+                value={notifDelivery}
                 onValueChange={(value) =>
                   toggleSetting("notifDelivery", notifDelivery, setNotifDelivery, async () => {
                     await PreferencesService.updateNotifications({ types: { delivery: value } });
                   })
                 }
                 trackColor={{ false: "#D1D5DB", true: "#C7F4DC" }}
-                thumbColor={notifDelivery && notifPermission === 'granted' ? "#10B981" : "#9CA3AF"}
+                thumbColor={notifDelivery ? "#10B981" : "#9CA3AF"}
                 disabled={notifPermission !== 'granted'}
               />
             </View>
@@ -436,14 +423,14 @@ export default function EnterpriseSettingsScreen() {
                 </Text>
               </View>
               <Switch
-                value={notifMessages && notifPermission === 'granted'}
+                value={notifMessages}
                 onValueChange={(value) =>
                   toggleSetting("notifMessages", notifMessages, setNotifMessages, async () => {
                     await PreferencesService.updateNotifications({ types: { messages: value } });
                   })
                 }
                 trackColor={{ false: "#D1D5DB", true: "#C7F4DC" }}
-                thumbColor={notifMessages && notifPermission === 'granted' ? "#10B981" : "#9CA3AF"}
+                thumbColor={notifMessages ? "#10B981" : "#9CA3AF"}
                 disabled={notifPermission !== 'granted'}
               />
             </View>
@@ -456,14 +443,14 @@ export default function EnterpriseSettingsScreen() {
                 </Text>
               </View>
               <Switch
-                value={notifNewProducts && notifPermission === 'granted'}
+                value={notifNewProducts}
                 onValueChange={(value) =>
                   toggleSetting("notifNewProducts", notifNewProducts, setNotifNewProducts, async () => {
                     await PreferencesService.updateNotifications({ types: { newProducts: value } });
                   })
                 }
                 trackColor={{ false: "#D1D5DB", true: "#C7F4DC" }}
-                thumbColor={notifNewProducts && notifPermission === 'granted' ? "#10B981" : "#9CA3AF"}
+                thumbColor={notifNewProducts ? "#10B981" : "#9CA3AF"}
                 disabled={notifPermission !== 'granted'}
               />
             </View>
@@ -476,14 +463,14 @@ export default function EnterpriseSettingsScreen() {
                 </Text>
               </View>
               <Switch
-                value={notifAdvertisements && notifPermission === 'granted'}
+                value={notifAdvertisements}
                 onValueChange={(value) =>
                   toggleSetting("notifAdvertisements", notifAdvertisements, setNotifAdvertisements, async () => {
                     await PreferencesService.updateNotifications({ types: { advertisements: value } });
                   })
                 }
                 trackColor={{ false: "#D1D5DB", true: "#C7F4DC" }}
-                thumbColor={notifAdvertisements && notifPermission === 'granted' ? "#10B981" : "#9CA3AF"}
+                thumbColor={notifAdvertisements ? "#10B981" : "#9CA3AF"}
                 disabled={notifPermission !== 'granted'}
               />
             </View>
@@ -496,14 +483,14 @@ export default function EnterpriseSettingsScreen() {
                 </Text>
               </View>
               <Switch
-                value={notifSystemUpdates && notifPermission === 'granted'}
+                value={notifSystemUpdates}
                 onValueChange={(value) =>
                   toggleSetting("notifSystemUpdates", notifSystemUpdates, setNotifSystemUpdates, async () => {
                     await PreferencesService.updateNotifications({ types: { systemUpdates: value } });
                   })
                 }
                 trackColor={{ false: "#D1D5DB", true: "#C7F4DC" }}
-                thumbColor={notifSystemUpdates && notifPermission === 'granted' ? "#10B981" : "#9CA3AF"}
+                thumbColor={notifSystemUpdates ? "#10B981" : "#9CA3AF"}
                 disabled={notifPermission !== 'granted'}
               />
             </View>
@@ -910,6 +897,21 @@ export default function EnterpriseSettingsScreen() {
             </TouchableOpacity>
           </TouchableOpacity>
         </Modal>
+
+        <NotificationPermissionModal
+          visible={showNotifModal}
+          onClose={() => setShowNotifModal(false)}
+          onPermissionGranted={async () => {
+            const { status } = await Notifications.getPermissionsAsync();
+            const newStatus = status as 'granted' | 'denied' | 'undetermined';
+            prevPermissionRef.current = newStatus;
+            setNotifPermission(newStatus);
+            if (newStatus === 'granted') {
+              setPushEnabled(true);
+              await PreferencesService.updateNotifications({ pushEnabled: true });
+            }
+          }}
+        />
     </View>
   );
 }

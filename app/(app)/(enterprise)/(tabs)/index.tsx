@@ -1131,27 +1131,38 @@ export default function EnterpriseDashboard() {
 
           {/* Location Chips inside Search Card */}
           <View className={`flex-row mt-3 ${isSmallScreen ? 'px-0' : 'px-1'} pb-1`}>
-            <TouchableOpacity
-              onPress={() => setCityModalVisible(true)}
-              style={{ backgroundColor: isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5" }}
-              className={`flex-1 flex-row items-center justify-center py-2 rounded-xl ${isSmallScreen ? 'mr-1' : 'mr-2'}`}
+            <View
+              style={{ backgroundColor: selectedCity ? (isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5") : (isDark ? colors.tertiary : "#F3F4F6") }}
+              className={`flex-1 flex-row items-center py-2 px-2 rounded-xl ${isSmallScreen ? 'mr-1' : 'mr-2'}`}
             >
-              <Ionicons name="location" size={14} color={colors.brandSecondary} />
-              <Text style={{ color: colors.brandSecondary }} numberOfLines={1} className="ml-1.5 text-xs font-quicksand-bold">
-                {selectedCity}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => selectedCity && setNeighborhoodModalVisible(true)}
+              <TouchableOpacity className="flex-1 flex-row items-center" onPress={() => setCityModalVisible(true)}>
+                <Ionicons name="location" size={14} color={selectedCity ? colors.brandSecondary : colors.textSecondary} />
+                <Text style={{ color: selectedCity ? colors.brandSecondary : colors.textSecondary }} numberOfLines={1} className="ml-1.5 text-xs font-quicksand-bold flex-1">
+                  {selectedCity || 'Toutes les villes'}
+                </Text>
+              </TouchableOpacity>
+              {!!selectedCity && (
+                <TouchableOpacity onPress={() => { setSelectedCity(""); setSelectedNeighborhood(""); }} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }} className="ml-1">
+                  <Ionicons name="close-circle" size={14} color={colors.brandSecondary} />
+                </TouchableOpacity>
+              )}
+            </View>
+            <View
               style={{ backgroundColor: selectedCity ? (isDark ? colors.tertiary : "#F3F4F6") : (isDark ? colors.tertiary : "#F9FAFB"), opacity: selectedCity ? 1 : 0.5 }}
-              className={`flex-1 flex-row items-center justify-center py-2 rounded-xl ${isSmallScreen ? 'ml-1' : 'ml-2'}`}
-              disabled={!selectedCity}
+              className={`flex-1 flex-row items-center py-2 px-2 rounded-xl ${isSmallScreen ? 'ml-1' : 'ml-2'}`}
             >
-              <Ionicons name="map" size={14} color={colors.textSecondary} />
-              <Text style={{ color: colors.textSecondary }} numberOfLines={1} className="ml-1.5 text-xs font-quicksand-bold">
-                {selectedNeighborhood || i18n.t("enterprise.dashboard.search.neighborhoodPlaceholder")}
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity className="flex-1 flex-row items-center" onPress={() => selectedCity && setNeighborhoodModalVisible(true)} disabled={!selectedCity}>
+                <Ionicons name="map" size={14} color={colors.textSecondary} />
+                <Text style={{ color: colors.textSecondary }} numberOfLines={1} className="ml-1.5 text-xs font-quicksand-bold flex-1">
+                  {selectedNeighborhood || i18n.t("enterprise.dashboard.search.neighborhoodPlaceholder")}
+                </Text>
+              </TouchableOpacity>
+              {!!selectedNeighborhood && (
+                <TouchableOpacity onPress={() => { setSelectedNeighborhood(""); loadPopularProducts(selectedCity, ""); }} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }} className="ml-1">
+                  <Ionicons name="close-circle" size={14} color={colors.textSecondary} />
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         </View>
       </View>
@@ -1835,6 +1846,20 @@ export default function EnterpriseDashboard() {
             <FlatList
               data={beninCities}
               keyExtractor={(item) => item.id.toString()}
+              ListHeaderComponent={
+                <TouchableOpacity
+                  onPress={() => selectCity("")}
+                  style={{ borderColor: colors.border }}
+                  className="py-3 border-b"
+                >
+                  <Text
+                    style={{ color: !selectedCity ? colors.brandPrimary : colors.textSecondary }}
+                    className="text-base font-quicksand-medium"
+                  >
+                    Toutes les villes
+                  </Text>
+                </TouchableOpacity>
+              }
               renderItem={({ item }) => (
                 <TouchableOpacity
                   onPress={() => selectCity(item.name)}
