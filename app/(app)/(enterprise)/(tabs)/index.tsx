@@ -38,62 +38,7 @@ import SearchCacheService, {
   RecentSearch,
 } from "../../../../services/SearchCacheService";
 import { Category, Product } from "../../../../types/product";
-
-// Données des villes et quartiers du Bénin
-const beninCities = [
-  { id: 1, name: "Cotonou" },
-  { id: 2, name: "Porto-Novo" },
-  { id: 3, name: "Parakou" },
-  { id: 4, name: "Abomey-Calavi" },
-  { id: 5, name: "Bohicon" },
-  { id: 6, name: "Natitingou" },
-  { id: 7, name: "Ouidah" },
-  { id: 8, name: "Djougou" },
-];
-
-const neighborhoodsByCity: { [key: string]: string[] } = {
-  Cotonou: [
-    "Akpakpa",
-    "Cadjehoun",
-    "Fidjrossè",
-    "Gbégamey",
-    "Houéyiho",
-    "Jéricho",
-    "Menontin",
-    "Patte d'Oie",
-    "Ste Rita",
-    "Vedoko",
-    "Zongo",
-  ],
-  "Porto-Novo": [
-    "Adjarra",
-    "Adjohoun",
-    "Aguégué",
-    "Akpro-Missérété",
-    "Avrankou",
-    "Dangbo",
-  ],
-  Parakou: ["Albarika", "Banikanni", "Ladjifarani", "Titirou", "Zongo"],
-  "Abomey-Calavi": [
-    "Akassato",
-    "Arconville",
-    "Godomey",
-    "Tankpè",
-    "Togoudo",
-    "Zinvié",
-  ],
-  Bohicon: [
-    "Agongointo",
-    "Avogbanna",
-    "Lissèzoun",
-    "Ouassaho",
-    "Passagon",
-    "Sodohomè",
-  ],
-  Natitingou: ["Boriyouré", "Kouaba", "Péporiyakou", "Takonta", "Yarikou"],
-  Ouidah: ["Avlékété", "Djègbadji", "Houakpè", "Pahou", "Savi"],
-  Djougou: ["Bariénou", "Bougou", "Kolokondé", "Partago", "Sérou"],
-};
+import { beninCities, neighborhoodsByCity } from "../../../../constants/LocationData";
 
 // Catégories orientées entreprise (fallback)
 const staticCategories = [
@@ -242,9 +187,15 @@ export default function EnterpriseDashboard() {
   }, []);
 
   useEffect(() => {
-    // Réinitialiser le quartier si la ville change
     setSelectedNeighborhood("");
+    loadPopularProducts(selectedCity, "");
   }, [selectedCity]);
+
+  useEffect(() => {
+    if (selectedNeighborhood) {
+      loadPopularProducts(selectedCity, selectedNeighborhood);
+    }
+  }, [selectedNeighborhood]);
 
   // Gestion du bouton retour matériel
   useEffect(() => {
@@ -309,16 +260,20 @@ export default function EnterpriseDashboard() {
     }
   };
 
-  const loadPopularProducts = async (reset = false) => {
+  const loadPopularProducts = async (cityFilter?: string, districtFilter?: string, reset = false) => {
     try {
       setLoadingPopular(true);
-      const pageToLoad = 1; // Toujours commencer par la page 1 pour le chargement initial
+      const pageToLoad = 1;
 
-      // Récupérer tous les produits publics pour que les entreprises voient tout le marketplace
+      const city = cityFilter ?? selectedCity;
+      const district = districtFilter ?? selectedNeighborhood;
+
       const response = await ProductService.getAllPublicProducts({
         limit: 6,
         sort: "newest",
         page: pageToLoad,
+        city: city || undefined,
+        district: district || undefined,
       });
 
       // Toujours remplacer les produits lors du chargement initial
@@ -369,6 +324,8 @@ export default function EnterpriseDashboard() {
         limit: 6,
         sort: "newest",
         page: nextPage,
+        city: selectedCity || undefined,
+        district: selectedNeighborhood || undefined,
       });
 
       // Ajouter les nouveaux produits aux existants en évitant les doublons
@@ -436,7 +393,7 @@ export default function EnterpriseDashboard() {
         loadProfileData(),
         loadFeaturedProducts(),
         loadCategories(),
-        loadPopularProducts(),
+        loadPopularProducts(selectedCity, selectedNeighborhood),
         loadActiveAds(),
       ]);
     } catch (error) {

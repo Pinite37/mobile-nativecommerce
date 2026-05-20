@@ -20,7 +20,11 @@ import { useToast } from "../../../../components/ui/ToastManager";
 import { useLocale } from "../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import i18n from "../../../../i18n/i18n";
+import { LocationConsentBanner } from "../../../../components/ui/LocationConsentBanner";
+import { useAuth } from "../../../../contexts/AuthContext";
+import { useLocationForRegistration } from "../../../../hooks/useLocationForRegistration";
 import AuthService from "../../../../services/api/AuthService";
+import CustomerService from "../../../../services/api/CustomerService";
 import PreferencesService from "../../../../services/api/PreferencesService";
 import { useNotifications } from "../../../../hooks/useNotifications";
 
@@ -75,6 +79,28 @@ export default function SettingsScreen() {
   const [clearDataModal, setClearDataModal] = useState(false);
   const [languageModal, setLanguageModal] = useState(false);
   const [deleteAccountModal, setDeleteAccountModal] = useState(false);
+
+  const { user, refreshUserData } = useAuth();
+  const {
+    status: locationStatus,
+    coords,
+    detectedCity,
+    requestLocation: requestLocationUpdate,
+    skip: skipLocationUpdate,
+    reset: resetLocationUpdate,
+  } = useLocationForRegistration();
+
+  useEffect(() => {
+    if (locationStatus === 'granted' && coords) {
+      CustomerService.updateLocation({
+        coordinates: [coords.longitude, coords.latitude],
+        address: detectedCity || '',
+      })
+        .then(() => refreshUserData())
+        .catch((err) => console.error('❌ Erreur mise à jour localisation:', err));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationStatus]);
 
   const { setupNotifications } = useNotifications();
   const [notifPermission, setNotifPermission] = useState<'granted' | 'denied' | 'undetermined'>('undetermined');
@@ -570,6 +596,32 @@ export default function SettingsScreen() {
             </View>
           </View>
         </View> */}
+
+        {/* Localisation */}
+        <View className="mt-6 mx-4">
+          <Text className="text-sm font-quicksand-semibold mb-2" style={{ color: colors.textSecondary }}>
+            Localisation
+          </Text>
+          <View className="rounded-2xl overflow-hidden" style={{ backgroundColor: colors.card }}>
+            {user?.location?.address ? (
+              <View className="px-4 pt-4 pb-2 flex-row items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
+                <Ionicons name="location" size={18} color="#10B981" />
+                <Text className="text-sm font-quicksand-medium ml-2 flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
+                  {user.location.address}
+                </Text>
+              </View>
+            ) : null}
+            <View className="px-4 py-3">
+              <LocationConsentBanner
+                status={locationStatus}
+                detectedCity={detectedCity}
+                onRequest={requestLocationUpdate}
+                onSkip={skipLocationUpdate}
+                onReset={resetLocationUpdate}
+              />
+            </View>
+          </View>
+        </View>
 
         {/* Paramètres de confidentialité */}
         <View className="mt-6 mx-4">

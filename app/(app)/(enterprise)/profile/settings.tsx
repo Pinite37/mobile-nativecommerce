@@ -20,7 +20,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useToast } from "../../../../components/ui/ToastManager";
 import { useLocale } from "../../../../contexts/LocaleContext";
 import i18n from "../../../../i18n/i18n";
+import { LocationConsentBanner } from "../../../../components/ui/LocationConsentBanner";
+import { useAuth } from "../../../../contexts/AuthContext";
+import { useLocationForRegistration } from "../../../../hooks/useLocationForRegistration";
 import AuthService from "../../../../services/api/AuthService";
+import EnterpriseService from "../../../../services/api/EnterpriseService";
 import PreferencesService from "../../../../services/api/PreferencesService";
 import { useNotifications } from "../../../../hooks/useNotifications";
 
@@ -57,6 +61,26 @@ export default function EnterpriseSettingsScreen() {
   const [deleteAccountModal, setDeleteAccountModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const { user } = useAuth();
+  const {
+    status: locationStatus,
+    coords,
+    detectedCity,
+    requestLocation: requestLocationUpdate,
+    skip: skipLocationUpdate,
+    reset: resetLocationUpdate,
+  } = useLocationForRegistration();
+
+  useEffect(() => {
+    if (locationStatus === 'granted' && detectedCity) {
+      EnterpriseService.updateEnterpriseInfoWithLogo(
+        { location: { city: detectedCity, district: '' } },
+        undefined
+      ).catch((err) => console.error('❌ Erreur mise à jour localisation entreprise:', err));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationStatus]);
 
   const { setupNotifications } = useNotifications();
   const [notifPermission, setNotifPermission] = useState<'granted' | 'denied' | 'undetermined'>('undetermined');
@@ -575,6 +599,32 @@ export default function EnterpriseSettingsScreen() {
                 }
                 trackColor={{ false: "#D1D5DB", true: "#C7F4DC" }}
                 thumbColor={autoOnlineStatus ? "#10B981" : "#9CA3AF"}
+              />
+            </View>
+          </View>
+        </View>
+
+        {/* Localisation */}
+        <View className="mt-6 px-4">
+          <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold mb-3 pl-1">
+            Localisation
+          </Text>
+          <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="rounded-2xl shadow-sm border overflow-hidden">
+            {user?.location?.address ? (
+              <View className="px-4 pt-4 pb-3 flex-row items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
+                <Ionicons name="location" size={18} color={colors.brandPrimary} />
+                <Text className="text-sm font-quicksand-medium ml-2 flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
+                  {user.location.address}
+                </Text>
+              </View>
+            ) : null}
+            <View className="px-4 py-3">
+              <LocationConsentBanner
+                status={locationStatus}
+                detectedCity={detectedCity}
+                onRequest={requestLocationUpdate}
+                onSkip={skipLocationUpdate}
+                onReset={resetLocationUpdate}
               />
             </View>
           </View>

@@ -37,52 +37,13 @@ import ProductService from "../../../../services/api/ProductService";
 import SearchService from "../../../../services/api/SearchService";
 import SearchCacheService, { RecentSearch } from "../../../../services/SearchCacheService";
 import { Category, Product } from "../../../../types/product";
+import { beninCities, neighborhoodsByCity } from "../../../../constants/LocationData";
 
 // Polyfill Buffer pour React Native (utilisé par le cache)
 import { Buffer } from "buffer";
 if (typeof globalThis !== "undefined" && !(globalThis as any).Buffer) {
     (globalThis as any).Buffer = Buffer;
 }
-
-// Données des villes et quartiers du Bénin
-const beninCities = [
-    { id: 1, name: "Cotonou" },
-    { id: 2, name: "Porto-Novo" },
-    { id: 3, name: "Parakou" },
-    { id: 4, name: "Abomey-Calavi" },
-    { id: 5, name: "Bohicon" },
-    { id: 6, name: "Natitingou" },
-    { id: 7, name: "Ouidah" },
-    { id: 8, name: "Djougou" },
-];
-
-const neighborhoodsByCity: { [key: string]: string[] } = {
-    "Cotonou": [
-        "Akpakpa", "Cadjehoun", "Fidjrossè", "Gbégamey", "Houéyiho",
-        "Jéricho", "Menontin", "Patte d'Oie", "Ste Rita", "Vedoko", "Zongo"
-    ],
-    "Porto-Novo": [
-        "Adjarra", "Adjohoun", "Aguégué", "Akpro-Missérété", "Avrankou", "Dangbo"
-    ],
-    "Parakou": [
-        "Albarika", "Banikanni", "Ladjifarani", "Titirou", "Zongo"
-    ],
-    "Abomey-Calavi": [
-        "Akassato", "Arconville", "Godomey", "Tankpè", "Togoudo", "Zinvié"
-    ],
-    "Bohicon": [
-        "Agongointo", "Avogbanna", "Lissèzoun", "Ouassaho", "Passagon", "Sodohomè"
-    ],
-    "Natitingou": [
-        "Boriyouré", "Kouaba", "Péporiyakou", "Takonta", "Yarikou"
-    ],
-    "Ouidah": [
-        "Avlékété", "Djègbadji", "Houakpè", "Pahou", "Savi"
-    ],
-    "Djougou": [
-        "Bariénou", "Bougou", "Kolokondé", "Partago", "Sérou"
-    ],
-};
 
 // Données fictives
 const categories = [
