@@ -12,7 +12,7 @@
     "update:preview": "eas update --channel preview",
     "update:production": "eas update --channel production",
     "build:android:production": "eas build --platform android --profile production",
-    "build:ios:production": "eas build --platform ios --profile production",
+    "build:ios:production": "eas build --platform ios --profile production --auto-submit",
     "version:patch": "node scripts/bump-version.js patch",
     "version:minor": "node scripts/bump-version.js minor",
     "version:major": "node scripts/bump-version.js major"
