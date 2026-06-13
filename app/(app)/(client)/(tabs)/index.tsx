@@ -30,6 +30,7 @@ import AdvertisementService, { Advertisement } from '../../../../services/api/Ad
 import CategoryService from "../../../../services/api/CategoryService";
 // import { useSearchCache } from "../../../../hooks/useSearchCache"; // retiré (non utilisé)
 import CarouselComponent from "../../../../components/ui/CarouselComponent";
+import { getCategoryIcon } from "../../../../constants/CategoryIcons";
 import { useLocale } from "../../../../contexts/LocaleContext";
 import i18n from "../../../../i18n/i18n";
 import { Enterprise } from "../../../../services/api/EnterpriseService";
@@ -47,15 +48,15 @@ if (typeof globalThis !== "undefined" && !(globalThis as any).Buffer) {
 
 // Données fictives
 const categories = [
-    { id: 1, name: i18n.t('client.home.categories.trends'), icon: "flame", color: "#FF6B35" },
-    { id: 2, name: i18n.t('client.home.categories.vehicles'), icon: "car-sport", color: "#3B82F6" },
-    { id: 3, name: i18n.t('client.home.categories.realEstate'), icon: "home", color: "#8B5CF6" },
-    { id: 4, name: i18n.t('client.home.categories.phones'), icon: "phone-portrait", color: "#EC4899" },
-    { id: 5, name: i18n.t('client.home.categories.electronics'), icon: "laptop", color: "#10B981" },
-    { id: 6, name: i18n.t('client.home.categories.furniture'), icon: "bed", color: "#6366F1" },
-    { id: 7, name: i18n.t('client.home.categories.fashion'), icon: "shirt", color: "#EF4444" },
-    { id: 8, name: i18n.t('client.home.categories.services'), icon: "construct", color: "#F59E0B" },
-    { id: 9, name: i18n.t('client.home.categories.jobs'), icon: "briefcase", color: "#0EA5E9" },
+    { id: 1, name: i18n.t('client.home.categories.trends'), color: "#FF6B35" },
+    { id: 2, name: i18n.t('client.home.categories.vehicles'), color: "#3B82F6" },
+    { id: 3, name: i18n.t('client.home.categories.realEstate'), color: "#8B5CF6" },
+    { id: 4, name: i18n.t('client.home.categories.phones'), color: "#EC4899" },
+    { id: 5, name: i18n.t('client.home.categories.electronics'), color: "#10B981" },
+    { id: 6, name: i18n.t('client.home.categories.furniture'), color: "#6366F1" },
+    { id: 7, name: i18n.t('client.home.categories.fashion'), color: "#EF4444" },
+    { id: 8, name: i18n.t('client.home.categories.services'), color: "#F59E0B" },
+    { id: 9, name: i18n.t('client.home.categories.jobs'), color: "#0EA5E9" },
 ];
 
 // popularStores retiré (non utilisé)
@@ -1578,15 +1579,9 @@ export default function ClientHome() {
                                 >
                                     {(categoriesData.length > 0 ? categoriesData : categories).map((category: any, index: number) => {
                                         const categoryColors = ["#FF6B35", "#3B82F6", "#8B5CF6", "#EC4899", "#10B981", "#6366F1", "#EF4444", "#F59E0B"];
-                                        const icons = ["flame", "car-sport", "home", "phone-portrait", "laptop", "bed", "shirt", "construct"];
                                         const categoryColor = category.color || categoryColors[index % categoryColors.length];
-                                        const categoryIcon = category.icon || icons[index % icons.length];
                                         const categoryId = category._id || category.id || index;
-                                        // Détecte tous les types d'emojis (pas seulement les visages)
-                                        const isEmoji = (str: string) => {
-                                            const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}]/u;
-                                            return emojiRegex.test(str);
-                                        };
+                                        const localIcon = getCategoryIcon(category.name);
 
                                         return (
                                             <TouchableOpacity
@@ -1602,13 +1597,15 @@ export default function ClientHome() {
                                                         borderColor: categoryColor + "30",
                                                     }}
                                                 >
-                                                    {isEmoji(categoryIcon) ? (
-                                                        <Text style={{ fontSize: 24 }}>
-                                                            {categoryIcon}
-                                                        </Text>
+                                                    {localIcon ? (
+                                                        <Image
+                                                            source={localIcon}
+                                                            style={{ width: 40, height: 40 }}
+                                                            resizeMode="contain"
+                                                        />
                                                     ) : (
                                                         <Ionicons
-                                                            name={categoryIcon as any}
+                                                            name="grid-outline"
                                                             size={24}
                                                             color={categoryColor}
                                                         />
