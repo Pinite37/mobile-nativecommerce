@@ -26,95 +26,127 @@ const ICONS: Record<string, ImageSourcePropType> = {
   tablettes: require('../assets/images/icon/tablettes.png'),
 };
 
-// Normalise un nom de catégorie → clé de lookup
+// Normalise un nom de catégorie en clé ASCII simple
 function normalizeKey(name: string): string {
   return name
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '') // supprime les diacritiques
-    .replace(/[\s&]+/g, '-')
+    .replace(/[̀-ͯ]/g, '') // supprime les diacritiques (hex explicite, pas de char Unicode)
+    .replace(/[\s_&/\\]+/g, '-')
     .replace(/[^a-z0-9-]/g, '')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
 }
 
-// Table d'alias pour couvrir les variantes de noms API
-const ALIASES: Record<string, string> = {
-  // Accesoires / Accessoires
-  accesoires: 'accessories',
-  accessoires: 'accessories',
-  // Appareils photo
-  'appareils-photo': 'appareils-photo',
-  'appareil-photo': 'appareils-photo',
-  // Automobile / Véhicules
-  automobile: 'automobile',
-  vehicules: 'automobile',
-  vehicule: 'automobile',
-  voitures: 'automobile',
-  // Beauté
-  beaute: 'beaute',
-  soin: 'beaute',
-  cosmetique: 'beaute',
-  cosmetiques: 'beaute',
-  // Écrans / Moniteurs
-  ecrans: 'ecrans',
-  ecran: 'ecrans',
-  moniteurs: 'ecrans',
-  // Électroménager
-  electromenager: 'electromenager',
-  'electro-menager': 'electromenager',
-  // Fournitures médicales
-  'fournitures-medicales': 'fournitures-medicales',
-  'fournitures-medical': 'fournitures-medicales',
-  medical: 'fournitures-medicales',
-  sante: 'sante',
-  pharmacie: 'sante',
-  // Hi-Tech / Tech
-  'hi-tech': 'hi-tech',
-  tech: 'hi-tech',
-  technologie: 'hi-tech',
-  // Immobilier
-  immobilier: 'immobilier',
-  'biens-immobiliers': 'immobilier',
-  // Maison connectée
-  'maison-connectee': 'maison-connectee',
-  domotique: 'maison-connectee',
-  // Meubles / Mobilier
-  meubles: 'meubles',
-  mobilier: 'meubles',
-  meuble: 'meubles',
-  // Mode / Vêtements
-  mode: 'mode',
-  vetements: 'mode',
-  vetement: 'mode',
-  habillement: 'mode',
+// Mots-clés → clé icône (lookup rapide sans ordre de priorité)
+const KEYWORDS: Array<[string, string]> = [
+  // Smartphones / Téléphones
+  ['smartphone', 'smartphones'],
+  ['telephone', 'smartphones'],
+  ['portable', 'smartphones'],
+  ['mobile', 'smartphones'],
   // Ordinateurs
-  ordinateurs: 'ordinateurs',
-  ordinateur: 'ordinateurs',
-  informatique: 'ordinateurs',
+  ['ordinateur', 'ordinateurs'],
+  ['informatique', 'ordinateurs'],
+  ['laptop', 'ordinateurs'],
+  // Tablettes
+  ['tablette', 'tablettes'],
+  // Écrans
+  ['ecran', 'ecrans'],
+  ['moniteur', 'ecrans'],
+  // Accessoires
+  ['accessoire', 'accessories'],
+  ['accesoire', 'accessories'],
+  // Audio
+  ['audio', 'audio'],
+  ['casque', 'audio'],
+  ['enceinte', 'audio'],
+  // Gaming
+  ['gaming', 'gaming'],
+  ['jeu', 'gaming'],
+  ['console', 'gaming'],
+  // Hi-Tech
+  ['hi-tech', 'hi-tech'],
+  ['hitech', 'hi-tech'],
+  ['technologie', 'hi-tech'],
+  // Electroménager
+  ['electromenager', 'electromenager'],
+  ['electro', 'electromenager'],
+  ['menager', 'electromenager'],
+  // Appareils photo
+  ['appareil', 'appareils-photo'],
+  ['photo', 'appareils-photo'],
+  ['camera', 'appareils-photo'],
+  // Mode
+  ['mode', 'mode'],
+  ['vetement', 'mode'],
+  ['habillement', 'mode'],
+  ['fashion', 'mode'],
+  // Beauté
+  ['beaute', 'beaute'],
+  ['soin', 'beaute'],
+  ['cosmetique', 'beaute'],
+  ['parfum', 'beaute'],
+  // Meubles
+  ['meuble', 'meubles'],
+  ['mobilier', 'meubles'],
+  ['deco', 'meubles'],
+  // Maison connectée
+  ['maison-connectee', 'maison-connectee'],
+  ['domotique', 'maison-connectee'],
+  ['maison', 'maison-connectee'],
+  // Immobilier
+  ['immobilier', 'immobilier'],
+  ['foncier', 'immobilier'],
+  ['logement', 'immobilier'],
+  // Automobile
+  ['automobile', 'automobile'],
+  ['vehicule', 'automobile'],
+  ['voiture', 'automobile'],
+  ['moto', 'automobile'],
+  ['transport', 'automobile'],
+  // Restaurant / Alimentation
+  ['restaurant', 'restaurant-alimentation'],
+  ['alimentation', 'restaurant-alimentation'],
+  ['nourriture', 'restaurant-alimentation'],
+  ['food', 'restaurant-alimentation'],
+  ['traiteur', 'restaurant-alimentation'],
+  // Santé
+  ['sante', 'sante'],
+  ['pharmacie', 'sante'],
+  ['medical', 'sante'],
+  // Fournitures médicales
+  ['fourniture', 'fournitures-medicales'],
+  ['medicale', 'fournitures-medicales'],
+  ['medicales', 'fournitures-medicales'],
   // Prestation de services
-  'prestation-services': 'prestation-services',
-  'prestation-de-services': 'prestation-services',
-  services: 'prestation-services',
-  service: 'prestation-services',
-  // Restaurant et alimentation
-  'restaurant-alimentation': 'restaurant-alimentation',
-  'restaurant-et-alimentation': 'restaurant-alimentation',
-  alimentation: 'restaurant-alimentation',
-  restaurant: 'restaurant-alimentation',
-  nourriture: 'restaurant-alimentation',
-  alimentaire: 'restaurant-alimentation',
-  // Smartphones
-  smartphones: 'smartphones',
-  smartphone: 'smartphones',
-  telephones: 'smartphones',
-  telephone: 'smartphones',
-  portable: 'smartphones',
-  portables: 'smartphones',
-};
+  ['prestation', 'prestation-services'],
+  ['service', 'prestation-services'],
+  // Livres
+  ['livre', 'livres'],
+  ['librairie', 'livres'],
+  ['lecture', 'livres'],
+  // Sport
+  ['sport', 'sport'],
+  ['fitness', 'sport'],
+  // Divers
+  ['divers', 'divers'],
+  ['autre', 'divers'],
+];
 
 export function getCategoryIcon(categoryName: string): ImageSourcePropType | null {
   const key = normalizeKey(categoryName);
-  const resolved = ALIASES[key] ?? key;
-  return ICONS[resolved] ?? null;
+
+  // 1. Correspondance exacte dans ICONS
+  if (ICONS[key]) return ICONS[key];
+
+  // 2. Recherche par mot-clé (premier match gagne)
+  for (const [keyword, iconKey] of KEYWORDS) {
+    if (key.includes(keyword)) {
+      return ICONS[iconKey] ?? null;
+    }
+  }
+
+  console.warn('[CategoryIcons] Aucune icône pour :', categoryName, '(clé:', key, ')');
+  return null;
 }
