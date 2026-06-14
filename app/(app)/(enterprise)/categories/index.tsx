@@ -5,12 +5,14 @@ import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
+    Image,
     ScrollView,
     Text,
     TouchableOpacity,
     View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { getCategoryIcon } from '../../../../constants/CategoryIcons';
 import { useLocale } from '../../../../contexts/LocaleContext';
 import { useTheme } from '../../../../contexts/ThemeContext';
 import i18n from '../../../../i18n/i18n';
@@ -40,24 +42,10 @@ export default function AllCategoriesPage() {
         }
     };
 
-    const handleCategoryPress = (categoryId: string) => {
-        router.push(`/(app)/(enterprise)/category/${categoryId}`);
-    };
-
-    const categoryColors = ["#FF6B35", "#3B82F6", "#8B5CF6", "#EC4899", "#10B981", "#6366F1", "#EF4444", "#F59E0B"];
-    const icons = ["flame", "car-sport", "home", "phone-portrait", "laptop", "bed", "shirt", "construct"];
-
-    // Détecte tous les types d'emojis
-    const isEmoji = (str: string) => {
-        const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}]/u;
-        return emojiRegex.test(str);
-    };
-
     return (
         <View style={{ flex: 1, backgroundColor: colors.secondary }}>
             <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
 
-            {/* Header avec gradient */}
             <LinearGradient
                 colors={['#047857', '#10B981']}
                 start={{ x: 0, y: 0 }}
@@ -71,10 +59,7 @@ export default function AllCategoriesPage() {
                 }}
             >
                 <View className="flex-row items-center mb-3">
-                    <TouchableOpacity
-                        onPress={() => router.back()}
-                        className="mr-3"
-                    >
+                    <TouchableOpacity onPress={() => router.back()} className="mr-3">
                         <Ionicons name="arrow-back" size={24} color="white" />
                     </TouchableOpacity>
                     <View className="flex-1">
@@ -90,7 +75,6 @@ export default function AllCategoriesPage() {
                 </View>
             </LinearGradient>
 
-            {/* Contenu */}
             {loading ? (
                 <View className="flex-1 items-center justify-center">
                     <ActivityIndicator size="large" color="#10B981" />
@@ -107,14 +91,13 @@ export default function AllCategoriesPage() {
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 80 }}
                 >
-                    {categories.map((category: any, index: number) => {
-                        const categoryColor = category.color || categoryColors[index % categoryColors.length];
-                        const categoryIcon = category.icon || icons[index % icons.length];
+                    {categories.map((category: any) => {
+                        const localIcon = getCategoryIcon(category.name);
 
                         return (
                             <TouchableOpacity
                                 key={category._id}
-                                onPress={() => handleCategoryPress(category._id)}
+                                onPress={() => router.push(`/(app)/(enterprise)/category/${category._id}`)}
                                 style={{
                                     backgroundColor: colors.card,
                                     borderRadius: 16,
@@ -132,28 +115,19 @@ export default function AllCategoriesPage() {
                                     borderColor: colors.border
                                 }}
                             >
-                                {/* Icône de la catégorie */}
-                                <View
-                                    className="w-16 h-16 rounded-2xl justify-center items-center mr-4"
-                                    style={{
-                                        backgroundColor: categoryColor + "15",
-                                        borderWidth: 1,
-                                        borderColor: categoryColor + "30",
-                                    }}
-                                >
-                                    {isEmoji(categoryIcon) ? (
-                                        <Text className="text-3xl">{categoryIcon}</Text>
-                                    ) : (
-                                        <Ionicons
-                                            name={categoryIcon as any}
-                                            size={28}
-                                            color={categoryColor}
+                                <View style={{ width: 56, height: 56, justifyContent: 'center', alignItems: 'center', marginRight: 16 }}>
+                                    {localIcon ? (
+                                        <Image
+                                            source={localIcon}
+                                            style={{ width: 48, height: 48 }}
+                                            resizeMode="contain"
                                         />
+                                    ) : (
+                                        <Ionicons name="grid-outline" size={28} color={colors.textSecondary} />
                                     )}
                                 </View>
 
-                                {/* Informations de la catégorie */}
-                                <View className="flex-1">
+                                <View style={{ flex: 1 }}>
                                     <Text style={{ color: colors.textPrimary, fontSize: 16, fontFamily: 'Quicksand-Bold', marginBottom: 4 }}>
                                         {category.name}
                                     </Text>
@@ -169,7 +143,6 @@ export default function AllCategoriesPage() {
                                     )}
                                 </View>
 
-                                {/* Flèche de navigation */}
                                 <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
                             </TouchableOpacity>
                         );

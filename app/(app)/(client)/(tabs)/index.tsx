@@ -1578,8 +1578,6 @@ export default function ClientHome() {
                                     contentContainerStyle={{ paddingHorizontal: 20 }}
                                 >
                                     {(categoriesData.length > 0 ? categoriesData : categories).map((category: any, index: number) => {
-                                        const categoryColors = ["#FF6B35", "#3B82F6", "#8B5CF6", "#EC4899", "#10B981", "#6366F1", "#EF4444", "#F59E0B"];
-                                        const categoryColor = category.color || categoryColors[index % categoryColors.length];
                                         const categoryId = category._id || category.id || index;
                                         const localIcon = getCategoryIcon(category.name);
 
@@ -1589,25 +1587,18 @@ export default function ClientHome() {
                                                 onPress={() => category._id && router.push(`/(app)/(client)/category/${category._id}` as any)}
                                                 className="mr-4 items-center"
                                             >
-                                                <View
-                                                    className="w-16 h-16 rounded-2xl justify-center items-center mb-3 shadow-md"
-                                                    style={{
-                                                        backgroundColor: categoryColor + "15",
-                                                        borderWidth: 1,
-                                                        borderColor: categoryColor + "30",
-                                                    }}
-                                                >
+                                                <View className="w-16 h-16 justify-center items-center mb-3">
                                                     {localIcon ? (
                                                         <Image
                                                             source={localIcon}
-                                                            style={{ width: 40, height: 40 }}
+                                                            style={{ width: 56, height: 56 }}
                                                             resizeMode="contain"
                                                         />
                                                     ) : (
                                                         <Ionicons
                                                             name="grid-outline"
-                                                            size={24}
-                                                            color={categoryColor}
+                                                            size={32}
+                                                            color={colors.textSecondary}
                                                         />
                                                     )}
                                                 </View>
