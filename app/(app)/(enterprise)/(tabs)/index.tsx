@@ -29,6 +29,7 @@ import CarouselComponent from "../../../../components/ui/CarouselComponent";
 import AdvertisementService, {
   Advertisement,
 } from "../../../../services/api/AdvertisementService";
+import { getCategoryIcon } from "../../../../constants/CategoryIcons";
 import CategoryService from "../../../../services/api/CategoryService";
 import EnterpriseService from "../../../../services/api/EnterpriseService";
 import ProductService from "../../../../services/api/ProductService";
@@ -1607,45 +1608,14 @@ export default function EnterpriseDashboard() {
                     .slice(0, 9)
                     .map((category: any, index: number) => {
                       // Couleurs par défaut pour les vraies catégories
-                      const categoryColors = [
-                        "#FF6B35",
-                        "#3B82F6",
-                        "#8B5CF6",
-                        "#EC4899",
-                        "#10B981",
-                        "#6366F1",
-                        "#EF4444",
-                        "#F59E0B",
-                      ];
-                      const icons = [
-                        "briefcase",
-                        "megaphone",
-                        "card",
-                        "laptop",
-                        "school",
-                        "people",
-                        "construct",
-                        "car",
-                      ];
-
-                      const categoryColor =
-                        category.color || categoryColors[index % categoryColors.length];
-                      const categoryIcon =
-                        category.icon || icons[index % icons.length];
                       const categoryId = category._id || category.id || index;
-
-                      // Fonction helper pour déterminer si c'est un emoji ou une icône Ionicons
-                      const isEmoji = (str: string) => {
-                        const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}]/u;
-                        return emojiRegex.test(str);
-                      };
+                      const localIcon = getCategoryIcon(category.name);
 
                       return (
                         <TouchableOpacity
                           key={categoryId}
                           className="mr-4 items-center"
                           onPress={() => {
-                            // Navigation vers la page de produits de la catégorie
                             if (category._id) {
                               router.push(
                                 `/(app)/(enterprise)/category/${category._id}`
@@ -1653,24 +1623,15 @@ export default function EnterpriseDashboard() {
                             }
                           }}
                         >
-                          <View
-                            className="w-16 h-16 rounded-2xl justify-center items-center mb-3 shadow-md"
-                            style={{
-                              backgroundColor: categoryColor + "15",
-                              borderWidth: 1,
-                              borderColor: categoryColor + "30",
-                            }}
-                          >
-                            {isEmoji(categoryIcon) ? (
-                              <Text style={{ fontSize: 24 }}>
-                                {categoryIcon}
-                              </Text>
-                            ) : (
-                              <Ionicons
-                                name={categoryIcon as any}
-                                size={24}
-                                color={categoryColor}
+                          <View className="w-16 h-16 justify-center items-center mb-3">
+                            {localIcon ? (
+                              <Image
+                                source={localIcon}
+                                style={{ width: 56, height: 56 }}
+                                resizeMode="contain"
                               />
+                            ) : (
+                              <Ionicons name="grid-outline" size={32} color={colors.textSecondary} />
                             )}
                           </View>
                           <Text style={{ color: colors.textSecondary }} className="text-xs font-quicksand-semibold text-center w-16 leading-4" numberOfLines={2}>
@@ -1721,13 +1682,17 @@ export default function EnterpriseDashboard() {
                   </Text>
                 </View>
               ) : featuredProducts.length > 0 ? (
-                <View className="flex-row flex-wrap justify-between px-4">
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
+                >
                   {featuredProducts.map((item, index) => (
-                    <View key={`featured-${item._id}-${index}`} className="w-[48%]">
+                    <View key={`featured-${item._id}-${index}`} style={{ width: 180 }}>
                       {renderProduct(item)}
                     </View>
                   ))}
-                </View>
+                </ScrollView>
               ) : (
                 <View className="flex-1 justify-center items-center py-8">
                   <Text style={{ color: colors.textSecondary }} className="font-quicksand-medium">

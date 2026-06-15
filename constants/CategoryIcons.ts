@@ -111,14 +111,13 @@ const KEYWORDS: Array<[string, string]> = [
   ['nourriture', 'restaurant-alimentation'],
   ['food', 'restaurant-alimentation'],
   ['traiteur', 'restaurant-alimentation'],
+  // Fournitures médicales (avant Santé pour éviter que "medical" matche "sante")
+  ['fourniture', 'fournitures-medicales'],
+  ['medicale', 'fournitures-medicales'],
+  ['medical', 'fournitures-medicales'],
   // Santé
   ['sante', 'sante'],
   ['pharmacie', 'sante'],
-  ['medical', 'sante'],
-  // Fournitures médicales
-  ['fourniture', 'fournitures-medicales'],
-  ['medicale', 'fournitures-medicales'],
-  ['medicales', 'fournitures-medicales'],
   // Prestation de services
   ['prestation', 'prestation-services'],
   ['service', 'prestation-services'],

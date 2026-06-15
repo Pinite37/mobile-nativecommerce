@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
     Image,
+    Keyboard,
     Text,
     TextInput,
     TouchableOpacity,
@@ -49,6 +50,7 @@ export default function SignInScreen() {
   }
 
   const handleSignIn = async () => {
+    Keyboard.dismiss();
     if (!email || !password) {
       toast.showToast({
         title: "Erreur",

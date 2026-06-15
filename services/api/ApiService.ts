@@ -79,18 +79,25 @@ class ApiService {
         return response;
       },
       async (error: any) => {
-        // Tame 404 noise: log as warning with minimal context; keep errors for other statuses
         const status = error.response?.status;
         if (status === 404) {
           console.warn('⚠️ API 404 Not Found:', error.config?.url);
-        } else {
+        } else if (status !== 401) {
           console.error('❌ API Response Error:', status, error.response?.data);
         }
         
         // Handle 401 errors (unauthorized) - Token expiré
         if (error.response?.status === 401) {
           const originalRequest = error.config;
-          
+
+          // Les endpoints d'auth renvoient un 401 pour des raisons métier (mauvais mot de passe,
+          // email inconnu…) et non pour une session expirée — on laisse passer sans toucher à la session.
+          const isAuthEndpoint = /\/auth\/(login|signin|signup|register|forgot-password|reset-password|verify)/i
+            .test(originalRequest?.url ?? '');
+          if (isAuthEndpoint) {
+            return Promise.reject(error);
+          }
+
           // Éviter les boucles infinies
           if (originalRequest._retry) {
             console.warn('⚠️ Requête déjà retentée, abandon');
