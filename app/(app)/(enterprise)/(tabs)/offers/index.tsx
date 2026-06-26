@@ -26,8 +26,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import NotificationModal, {
   useNotification,
 } from "../../../../../components/ui/NotificationModal";
+import LockedFeatureOverlay from "../../../../../components/enterprise/LockedFeatureOverlay";
 import { useLocale } from "../../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../../contexts/ThemeContext";
+import { useSubscription } from "../../../../../contexts/SubscriptionContext";
 import i18n from "../../../../../i18n/i18n";
 import DeliveryService, {
   CreateDeliveryCallPayload,
@@ -124,6 +126,8 @@ export default function EnterpriseOffersScreen() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { locale } = useLocale();
   const { colors, isDark } = useTheme();
+  const { subscription } = useSubscription();
+  const isSubscriptionActive = subscription?.isActive === true;
   const FILTERS = getFilters();
   const VIEW_MODES = getViewModes();
   const insets = useSafeAreaInsets();
@@ -1043,7 +1047,7 @@ export default function EnterpriseOffersScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.secondary }}>
+    <View style={{ flex: 1, backgroundColor: colors.secondary, position: 'relative' }}>
       <ExpoStatusBar style="light" translucent />
       {renderHeader()}
 
@@ -1887,6 +1891,18 @@ export default function EnterpriseOffersScreen() {
         message={notification?.message || ""}
         onClose={hideNotification}
       />
+
+      {!isSubscriptionActive && (
+        <LockedFeatureOverlay
+          featureTitle="offre de livraison"
+          teaser={"Développez votre activité\navec la livraison."}
+          benefits={[
+            'Émettez des offres de livraison pour vos clients',
+            'Suivez vos commandes en temps réel',
+            'Augmentez vos ventes grâce à la livraison rapide',
+          ]}
+        />
+      )}
     </View>
   );
 }

@@ -16,9 +16,11 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import LockedFeatureOverlay from "../../../../../components/enterprise/LockedFeatureOverlay";
 import { useAuth } from "../../../../../contexts/AuthContext";
 import { useLocale } from "../../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../../contexts/ThemeContext";
+import { useSubscription } from "../../../../../contexts/SubscriptionContext";
 import { useSocket } from "../../../../../hooks/useSocket";
 import i18n from "../../../../../i18n/i18n";
 import MessagingService, {
@@ -28,6 +30,8 @@ import MessagingService, {
 export default function MessagesPage() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { subscription } = useSubscription();
+  const isSubscriptionActive = subscription?.isActive === true;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { locale } = useLocale(); // Écoute les changements de langue pour re-render automatiquement
   const { colors, isDark } = useTheme();
@@ -658,7 +662,7 @@ export default function MessagesPage() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.secondary }}>
+    <View style={{ flex: 1, backgroundColor: colors.secondary, position: 'relative' }}>
       <StatusBar
         backgroundColor={isDark ? colors.brandGradientStart : "#047857"}
         barStyle="light-content"
@@ -943,6 +947,19 @@ export default function MessagesPage() {
             </TouchableOpacity>
           </View>
         </View>
+      )}
+
+      {!isSubscriptionActive && (
+        <LockedFeatureOverlay
+          itemCount={conversations.length}
+          featureTitle={conversations.length === 1 ? 'conversation' : 'conversations'}
+          teaser={"Vos clients vous écrivent.\nSoyez présent pour eux."}
+          benefits={[
+            'Répondez à vos clients en temps réel',
+            'Ne manquez aucune opportunité de vente',
+            'Gérez toutes vos conversations au même endroit',
+          ]}
+        />
       )}
     </View>
   );
