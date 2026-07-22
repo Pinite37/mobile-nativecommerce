@@ -23,7 +23,7 @@ export default function LockedFeatureOverlay({
   featureTitle,
   teaser,
   benefits,
-  webUrl = 'https://aximarketplace.com/subscription',
+  webUrl = 'https://aximarketplace.com/enterprise',
 }: Props) {
   const { colors, isDark } = useTheme();
   const router = useRouter();
@@ -105,7 +105,7 @@ export default function LockedFeatureOverlay({
               color: '#10B981', textAlign: 'center',
               fontSize: 15, fontFamily: 'Quicksand-Bold', marginBottom: 6,
             }}>
-              {itemCount} {featureTitle} {itemCount > 1 ? 'vous attendent' : 'vous attend'} 🔒
+              {itemCount} {featureTitle} {itemCount > 1 ? 'vous attendent' : 'vous attend'} 
             </Text>
           )}
 

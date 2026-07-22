@@ -21,8 +21,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import NotificationModal, {
   useNotification,
 } from "../../../../../components/ui/NotificationModal";
+import LockedFeatureOverlay from "../../../../../components/enterprise/LockedFeatureOverlay";
 import { useLocale } from "../../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../../contexts/ThemeContext";
+import { useSubscription } from "../../../../../contexts/SubscriptionContext";
 import i18n from "../../../../../i18n/i18n";
 import CategoryService from "../../../../../services/api/CategoryService";
 import ProductService from "../../../../../services/api/ProductService";
@@ -43,6 +45,8 @@ export default function EnterpriseProducts() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { locale } = useLocale(); // Écoute les changements de langue pour re-render automatiquement
   const { colors, isDark } = useTheme();
+  const { subscription } = useSubscription();
+  const isSubscriptionActive = subscription?.isActive === true;
   const sortOptions = getSortOptions();
   const params = useLocalSearchParams();
   const { notification, showNotification, hideNotification } =
@@ -935,7 +939,7 @@ export default function EnterpriseProducts() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.secondary }}>
+    <View style={{ flex: 1, backgroundColor: colors.secondary, position: 'relative' }}>
       <ExpoStatusBar style={isDark ? "light" : "light"} translucent />
       {Header}
       <View style={{ flex: 1, backgroundColor: colors.primary }}>
@@ -1237,6 +1241,19 @@ export default function EnterpriseProducts() {
           title={notification.title}
           message={notification.message}
           onClose={hideNotification}
+        />
+      )}
+
+      {!isSubscriptionActive && (
+        <LockedFeatureOverlay
+          itemCount={products.length}
+          featureTitle={products.length === 1 ? 'produit' : 'produits'}
+          teaser={"Mettez vos produits\nen avant et vendez plus."}
+          benefits={[
+            'Publiez autant de produits que vous voulez',
+            'Gérez votre catalogue facilement',
+            'Soyez visible par des milliers de clients',
+          ]}
         />
       )}
     </View>
