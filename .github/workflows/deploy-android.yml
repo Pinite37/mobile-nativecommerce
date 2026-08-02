@@ -1,0 +1,116 @@
+name: Deploy to Google Play (Android)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Type de bump de version'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - none
+      track:
+        description: 'Track Google Play'
+        required: true
+        default: 'internal'
+        type: choice
+        options:
+          - internal
+          - alpha
+          - beta
+          - production
+      submit:
+        description: 'Soumettre sur Google Play apres le build ?'
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  deploy-android:
+    name: Build & Submit Android
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Bump version (${{ github.event.inputs.version_bump }})
+        if: ${{ github.event.inputs.version_bump != 'none' }}
+        id: version
+        run: |
+          npm version ${{ github.event.inputs.version_bump }} --no-git-tag-version
+
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Nouvelle version : $NEW_VERSION"
+
+          node -e "
+            const fs = require('fs');
+            const app = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+            app.expo.version = '$NEW_VERSION';
+            app.expo.runtimeVersion = '$NEW_VERSION';
+            fs.writeFileSync('app.json', JSON.stringify(app, null, 2) + '\n');
+          "
+
+      - name: Lire la version actuelle (si none)
+        if: ${{ github.event.inputs.version_bump == 'none' }}
+        id: version_none
+        run: |
+          CURRENT=$(node -p "require('./package.json').version")
+          echo "new_version=$CURRENT" >> $GITHUB_OUTPUT
+
+      - name: Commit & Tag version
+        if: ${{ github.event.inputs.version_bump != 'none' }}
+        run: |
+          git config user.name  "AXI CI/CD"
+          git config user.email "ci@aximarketplace.com"
+          git add package.json app.json
+          git commit -m "chore(release): v${{ steps.version.outputs.new_version }} [android]"
+          git tag "v${{ steps.version.outputs.new_version }}-android"
+          git push origin HEAD --tags
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build Android (production)
+        run: eas build --platform android --profile production --non-interactive
+
+      - name: Submit Android -> Google Play (${{ github.event.inputs.track }})
+        if: ${{ github.event.inputs.submit == 'true' }}
+        run: eas submit --platform android --profile production --latest --non-interactive
+        env:
+          EXPO_ANDROID_GOOGLE_PLAY_TRACK: ${{ github.event.inputs.track }}
+
+      - name: Resume
+        if: always()
+        run: |
+          VERSION=${{ steps.version.outputs.new_version || steps.version_none.outputs.new_version }}
+          echo "## Deploy Android - AXI Marketplace" >> $GITHUB_STEP_SUMMARY
+          echo "| Champ | Valeur |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Version | \`v$VERSION\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Track Google Play | ${{ github.event.inputs.track }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Soumis sur Google Play | ${{ github.event.inputs.submit }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Declenche par | @${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
