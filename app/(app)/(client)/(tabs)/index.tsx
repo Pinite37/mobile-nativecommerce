@@ -34,6 +34,7 @@ import { getCategoryIcon } from "../../../../constants/CategoryIcons";
 import { useLocale } from "../../../../contexts/LocaleContext";
 import i18n from "../../../../i18n/i18n";
 import { Enterprise } from "../../../../services/api/EnterpriseService";
+import { useUnreadNotifications } from "../../../../hooks/useUnreadNotifications";
 import ProductService from "../../../../services/api/ProductService";
 import SearchService from "../../../../services/api/SearchService";
 import SearchCacheService, { RecentSearch } from "../../../../services/SearchCacheService";
@@ -68,6 +69,13 @@ export default function ClientHome() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const FIXED_HEADER_HEIGHT = 120 + insets.top;
+    const { unreadCount, loadUnreadCount } = useUnreadNotifications();
+
+    useFocusEffect(
+        useCallback(() => {
+            loadUnreadCount();
+        }, [loadUnreadCount])
+    );
     // const { getCacheStats } = useSearchCache(); // (non utilisé pour l'instant)
 
     // Calcul responsive pour la largeur des produits
@@ -976,13 +984,15 @@ export default function ClientHome() {
                             </Text>
                         )}
                     </View>
-                    {/* <TouchableOpacity
+                    <TouchableOpacity
                         className="bg-white/20 p-2 rounded-full backdrop-blur-sm border border-white/30"
-                        onPress={() => { }}
+                        onPress={() => router.push('/(app)/(client)/profile/notifications' as any)}
                     >
                         <Ionicons name="notifications-outline" size={24} color="white" />
-                        <View className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-emerald-600" />
-                    </TouchableOpacity> */}
+                        {unreadCount > 0 && (
+                            <View className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-emerald-600" />
+                        )}
+                    </TouchableOpacity>
                 </View>
             </LinearGradient>
 

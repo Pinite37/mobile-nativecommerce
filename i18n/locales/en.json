@@ -241,6 +241,8 @@
                 "title": "Management & Tools",
                 "partners": "Delivery Partners",
                 "partnersCount": "{{count}} partner(s)",
+                "notifications": "Notifications",
+                "notificationsDescription": "Your received notifications",
                 "settings": "Settings",
                 "settingsDescription": "Preferences and configuration",
                 "help": "Help & Support",
@@ -251,6 +253,10 @@
                 "noInfo": "No contact information provided"
             },
             "appInfo": "Axi Market v1.0.0"
+        },
+        "notifications": {
+            "title": "Notifications",
+            "empty": "You have no notifications yet"
         },
         "subscriptions": {
             "title": "Subscriptions",
@@ -1498,7 +1504,8 @@
             "menu": {
                 "personalInfo": "My Information",
                 "settings": "Settings",
-                "help": "Help & Support"
+                "help": "Help & Support",
+                "notifications": "Notifications"
             },
             "logout": {
                 "button": "Logout",

@@ -4,7 +4,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import i18n from "@/i18n/i18n";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -35,6 +35,7 @@ import EnterpriseService from "../../../../services/api/EnterpriseService";
 import ProductService from "../../../../services/api/ProductService";
 import SearchService from "../../../../services/api/SearchService";
 import { AuthDebugger } from "../../../../services/AuthDebugger";
+import { useUnreadNotifications } from "../../../../hooks/useUnreadNotifications";
 import SearchCacheService, {
   RecentSearch,
 } from "../../../../services/SearchCacheService";
@@ -66,6 +67,13 @@ export default function EnterpriseDashboard() {
   const insets = useSafeAreaInsets();
   const { user, isAuthenticated, userRole } = useAuth();
   const router = useRouter();
+  const { unreadCount, loadUnreadCount } = useUnreadNotifications();
+
+  useFocusEffect(
+    useCallback(() => {
+      loadUnreadCount();
+    }, [loadUnreadCount])
+  );
   // const { getCacheStats } = useSearchCache(); // Hook pour gérer le cache automatiquement (usage futur)
 
   // const [loading, setLoading] = useState(false); // non utilisé pour l'instant
@@ -1096,13 +1104,15 @@ export default function EnterpriseDashboard() {
               {companyName || user?.firstName || "Entreprise"}
             </Text>
           </View>
-          {/* <TouchableOpacity
+          <TouchableOpacity
             className="bg-white/20 p-2 rounded-full backdrop-blur-sm border border-white/30"
-            onPress={() => { }}
+            onPress={() => router.push('/(app)/(enterprise)/profile/notifications' as any)}
           >
             <Ionicons name="notifications-outline" size={24} color="white" />
-            <View className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-emerald-600" />
-          </TouchableOpacity> */}
+            {unreadCount > 0 && (
+              <View className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-emerald-600" />
+            )}
+          </TouchableOpacity>
         </View>
       </LinearGradient>
 

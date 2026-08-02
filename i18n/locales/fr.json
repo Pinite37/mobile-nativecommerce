@@ -241,6 +241,8 @@
                 "title": "Gestion & Outils",
                 "partners": "Partenaires de Livraison",
                 "partnersCount": "{{count}} partenaire(s)",
+                "notifications": "Notifications",
+                "notificationsDescription": "Vos notifications reçues",
                 "settings": "Paramètres",
                 "settingsDescription": "Préférences et configuration",
                 "help": "Aide & Support",
@@ -251,6 +253,10 @@
                 "noInfo": "Aucune information de contact renseignée"
             },
             "appInfo": "Axi Market v1.0.0"
+        },
+        "notifications": {
+            "title": "Notifications",
+            "empty": "Vous n'avez aucune notification pour le moment"
         },
         "subscriptions": {
             "title": "Abonnements",
@@ -1498,7 +1504,8 @@
             "menu": {
                 "personalInfo": "Mes informations",
                 "settings": "Paramètres",
-                "help": "Aide & Support"
+                "help": "Aide & Support",
+                "notifications": "Notifications"
             },
             "logout": {
                 "button": "Déconnexion",
@@ -1513,6 +1520,10 @@
                 "userName": "Utilisateur",
                 "email": "email@exemple.com"
             }
+        },
+        "notifications": {
+            "title": "Notifications",
+            "empty": "Vous n'avez aucune notification pour le moment"
         },
         "messages": {
             "title": "Messages",

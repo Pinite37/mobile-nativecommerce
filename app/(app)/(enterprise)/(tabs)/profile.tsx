@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -26,6 +26,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 // New Reanimated toast system only
 import { useToast as useReanimatedToast } from "../../../../components/ui/ReanimatedToast/context";
 import { useAuth } from "../../../../contexts/AuthContext";
+import { useUnreadNotifications } from "../../../../hooks/useUnreadNotifications";
 import { useLocale } from "../../../../contexts/LocaleContext";
 import { useSubscription } from "../../../../contexts/SubscriptionContext";
 import { useTheme } from "../../../../contexts/ThemeContext";
@@ -873,6 +874,13 @@ function EnterpriseProfilePage() {
   const { locale } = useLocale(); // Écoute les changements de langue pour re-render automatiquement
   const { showToast: showReToast } = useReanimatedToast();
   const { colors, isDark } = useTheme();
+  const { unreadCount, loadUnreadCount } = useUnreadNotifications();
+
+  useFocusEffect(
+    useCallback(() => {
+      loadUnreadCount();
+    }, [loadUnreadCount])
+  );
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [profileData, setProfileData] = useState<EnterpriseProfile | null>(
@@ -2028,6 +2036,36 @@ function EnterpriseProfilePage() {
               </View>
 
               <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+            </TouchableOpacity>
+
+            {/* Notifications */}
+            <TouchableOpacity
+              onPress={() =>
+                router.push("/(app)/(enterprise)/profile/notifications" as any)
+              }
+              className="flex-row items-center justify-between px-4 py-5"
+              style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
+            >
+              <View className="flex-row items-center">
+                <View className="w-10 h-10 rounded-full justify-center items-center" style={{ backgroundColor: isDark ? colors.brandPrimary + '20' : '#D1FAE5' }}>
+                  <Ionicons name="notifications-outline" size={20} color={colors.brandPrimary} />
+                </View>
+                <View className="ml-4">
+                  <Text className="text-base font-quicksand-medium" style={{ color: colors.textPrimary }}>
+                    {i18n.t("enterprise.profile.management.notifications")}
+                  </Text>
+                  <Text className="text-sm font-quicksand-light" style={{ color: colors.textSecondary }}>
+                    {i18n.t("enterprise.profile.management.notificationsDescription")}
+                  </Text>
+                </View>
+              </View>
+
+              <View className="flex-row items-center">
+                {unreadCount > 0 && (
+                  <View className="w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: colors.error }} />
+                )}
+                <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+              </View>
             </TouchableOpacity>
 
             {/* Paramètres */}

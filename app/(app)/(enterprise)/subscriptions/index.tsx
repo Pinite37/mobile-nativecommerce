@@ -723,18 +723,18 @@ function EnterpriseSubscriptionsContent() {
 
             {/* Avertissement si pas de plan actif */}
             {!canGoBack && (
-              <View style={{ backgroundColor: '#FEF3C7', borderLeftWidth: 4, borderLeftColor: '#F59E0B', borderRadius: 12, padding: 16, marginBottom: 20, flexDirection: 'row', alignItems: 'center' }}>
-                <Ionicons name="warning" size={24} color="#F59E0B" style={{ marginRight: 12 }} />
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: '#92400E', fontFamily: 'Quicksand-Bold', fontSize: 14, marginBottom: 4 }}>
+              <View style={{ backgroundColor: '#FFFBEB', borderRadius: 16, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: '#FDE68A' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                  <Ionicons name="flash" size={16} color="#D97706" style={{ marginRight: 6 }} />
+                  <Text style={{ color: '#92400E', fontFamily: 'Quicksand-Bold', fontSize: 14 }}>
                     {isIosBillingRestricted ? "Accès restreint" : "Activation requise"}
                   </Text>
-                  <Text style={{ color: '#78350F', fontFamily: 'Quicksand-Medium', fontSize: 12, lineHeight: 18 }}>
-                    {isIosBillingRestricted
-                      ? "Fonctionnalité réservée aux comptes entreprise actifs."
-                      : "Veuillez activer un plan d&apos;abonnement pour accéder à l&apos;application."}
-                  </Text>
                 </View>
+                <Text style={{ color: '#78350F', fontFamily: 'Quicksand-Medium', fontSize: 13, lineHeight: 20 }}>
+                  {isIosBillingRestricted
+                    ? "Fonctionnalité réservée aux comptes entreprise actifs."
+                    : "Activez un plan d'abonnement pour accéder à toutes les fonctionnalités."}
+                </Text>
               </View>
             )}
 

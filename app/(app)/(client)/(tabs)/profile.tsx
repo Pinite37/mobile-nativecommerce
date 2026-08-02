@@ -5,7 +5,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   Animated,
   Easing,
@@ -20,12 +21,14 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../../../contexts/AuthContext";
+import { useUnreadNotifications } from "../../../../hooks/useUnreadNotifications";
 
 export default function ProfileScreen() {
   const { user, logout, refreshUserData, isAuthenticated } = useAuth();
   const insets = useSafeAreaInsets();
   const { locale } = useLocale();
   const { colors } = useTheme();
+  const { unreadCount, loadUnreadCount } = useUnreadNotifications();
   const [loading, setLoading] = useState(true);
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [confirmationAction, setConfirmationAction] = useState<{
@@ -38,6 +41,12 @@ export default function ProfileScreen() {
   } | null>(null);
 
   // Responsive dimensions
+  useFocusEffect(
+    useCallback(() => {
+      loadUnreadCount();
+    }, [loadUnreadCount])
+  );
+
   const { width } = useWindowDimensions();
   const isSmallPhone = width < 360;
   const isTablet = width >= 768 && width < 1024;
@@ -298,6 +307,11 @@ export default function ProfileScreen() {
     // { icon: "bag-check-outline", title: "Mes commandes", route: "/(app)/(client)/profile/orders" },
     // { icon: "card-outline", title: "Moyens de paiement", route: "/(app)/(client)/profile/payments" },
     {
+      icon: "notifications-outline",
+      title: i18n.t("client.profile.menu.notifications"),
+      route: "/(app)/(client)/profile/notifications",
+    },
+    {
       icon: "settings-outline",
       title: i18n.t("client.profile.menu.settings"),
       route: "/(app)/(client)/profile/settings",
@@ -385,10 +399,15 @@ export default function ProfileScreen() {
                 </View>
               )}
             </View>
-            {/* <TouchableOpacity className="relative">
+            <TouchableOpacity
+              className="relative"
+              onPress={() => router.push("/(app)/(client)/profile/notifications" as any)}
+            >
               <Ionicons name="notifications-outline" size={24} color="#FFFFFF" />
-              <View className="absolute -top-1 -right-1 w-3 h-3 bg-error-500 rounded-full" />
-            </TouchableOpacity> */}
+              {unreadCount > 0 && (
+                <View className="absolute -top-1 -right-1 w-3 h-3 bg-error-500 rounded-full" />
+              )}
+            </TouchableOpacity>
           </View>
         </LinearGradient>
 

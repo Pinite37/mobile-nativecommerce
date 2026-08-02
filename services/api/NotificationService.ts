@@ -29,13 +29,14 @@ export interface NotificationData {
   user: string;
   title: string;
   message: string;
-  type: 'MESSAGE' | 'ORDER' | 'REVIEW' | 'SYSTEM' | 'PRODUCT';
+  type: 'MESSAGE' | 'ORDER' | 'REVIEW' | 'SYSTEM' | 'PRODUCT' | 'SUBSCRIPTION' | 'BROADCAST';
   data: {
     messageId?: string;
     conversationId?: string;
     productId?: string;
     senderId?: string;
     orderId?: string;
+    broadcastId?: string;
   };
   read: boolean;
   readAt?: string;
@@ -243,7 +244,7 @@ class NotificationService {
     console.log('👁️ Marquage notification comme lue:', notificationId);
 
     try {
-      const response = await ApiService.put<any>(`${this.baseUrl}/${notificationId}/read`, {});
+      const response = await ApiService.patch<any>(`${this.baseUrl}/${notificationId}/read`, {});
 
       if (!response || !response.data) {
         throw new Error('Réponse invalide du serveur');
@@ -262,7 +263,7 @@ class NotificationService {
     console.log('👁️ Marquage toutes notifications comme lues');
 
     try {
-      const response = await ApiService.put<any>(`${this.baseUrl}/mark-all-read`, {});
+      const response = await ApiService.patch<any>(`${this.baseUrl}/mark-all-read`, {});
 
       if (!response || !response.data) {
         throw new Error('Réponse invalide du serveur');
