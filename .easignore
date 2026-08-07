@@ -1,3 +1,7 @@
 # EAS Build ignore warnings
 *.log
 node_modules/
+
+# Laisser EAS gérer les dossiers natifs via Prebuild
+/ios
+/android

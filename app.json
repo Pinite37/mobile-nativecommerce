@@ -12,6 +12,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.axi.axiapp",
+      "appleTeamId": "W6V4C2G8SP",
       "associatedDomains": [
         "applinks:aximarketplace.com",
         "applinks:www.aximarketplace.com"
