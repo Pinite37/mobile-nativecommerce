@@ -9,6 +9,7 @@ import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   RefreshControl,
   SafeAreaView,
   Text,
@@ -177,12 +178,20 @@ export default function NotificationsScreen({
           }
           renderItem={({ item }) => (
             <View
-              className="flex-row items-start p-4 rounded-2xl mb-3 border"
+              className="p-4 rounded-2xl mb-3 border overflow-hidden"
               style={{
                 backgroundColor: item.wasUnread ? colors.brandLight : colors.card,
                 borderColor: colors.border,
               }}
             >
+              {item.imageUrl && (
+                <Image
+                  source={{ uri: item.imageUrl }}
+                  className="w-full h-40 rounded-xl mb-3"
+                  resizeMode="cover"
+                />
+              )}
+              <View className="flex-row items-start">
               <View
                 className="w-10 h-10 rounded-full items-center justify-center mr-3"
                 style={{ backgroundColor: colors.brandLight }}
@@ -219,6 +228,7 @@ export default function NotificationsScreen({
                   style={{ backgroundColor: colors.brandPrimary }}
                 />
               )}
+              </View>
             </View>
           )}
           ListFooterComponent={

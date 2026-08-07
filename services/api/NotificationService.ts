@@ -29,6 +29,7 @@ export interface NotificationData {
   user: string;
   title: string;
   message: string;
+  imageUrl?: string;
   type: 'MESSAGE' | 'ORDER' | 'REVIEW' | 'SYSTEM' | 'PRODUCT' | 'SUBSCRIPTION' | 'BROADCAST';
   data: {
     messageId?: string;

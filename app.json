@@ -107,7 +107,8 @@
         {
           "locationWhenInUsePermission": "AXI Marketplace utilise votre position pour détecter votre ville lors de l'inscription."
         }
-      ]
+      ],
+      "@bacons/apple-targets"
     ],
     "experiments": {
       "typedRoutes": true
