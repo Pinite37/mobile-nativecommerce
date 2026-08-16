@@ -23,7 +23,7 @@ import {
     TouchableOpacity,
     View
 } from "react-native";
-import { Shimmer } from "../../../../../components/ui/Shimmer";
+import { Shimmer } from "../../../../components/ui/Shimmer";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from "../../../../contexts/AuthContext";
 import AdvertisementService, { Advertisement } from '../../../../services/api/AdvertisementService';
