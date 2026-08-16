@@ -7,7 +7,7 @@ import PhoneInput, {
   ICountry,
   getCountryByCca2,
 } from "react-native-international-phone-number";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LocationConsentBanner } from "../../components/ui/LocationConsentBanner";
 import { useToast } from "../../components/ui/ReanimatedToast/context";
@@ -177,7 +177,7 @@ export default function SignUpScreen() {
           // Ne PAS appeler handlePostRegistration ici !
           // Cela évite de déclencher isAuthenticated=true, le modal notification, le chargement index.tsx, etc.
           // On redirige directement vers l'OTP sans passer par le home
-          router.replace("/(auth)/verify-email" as any);
+          router.replace("/(auth)/verify-email");
           return;
         }
 

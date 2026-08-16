@@ -182,7 +182,7 @@ export default function NotFoundScreen() {
                                 if (router.canGoBack()) {
                                     router.back();
                                 } else {
-                                    router.replace("/" as any);
+                                    router.replace("/");
                                 }
                             }}
                             activeOpacity={0.8}

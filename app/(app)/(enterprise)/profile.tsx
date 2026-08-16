@@ -23,7 +23,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { SafeAreaView as SafeAreaInsetView } from 'react-native-safe-area-context';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 // New Reanimated toast system only
 import { useToast as useReanimatedToast } from '../../../../components/ui/ReanimatedToast/context';
 import { useAuth } from '../../../../contexts/AuthContext';

@@ -4,13 +4,12 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import React, { useCallback, useState } from "react";
+import { Image } from "expo-image";
 import {
   ActivityIndicator,
-  Animated,
-  Easing,
   FlatList,
-  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -29,6 +28,7 @@ import NotificationModal, {
 import LockedFeatureOverlay from "../../../../../components/enterprise/LockedFeatureOverlay";
 import { useLocale } from "../../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../../contexts/ThemeContext";
+import { Shimmer } from "../../../../../components/ui/Shimmer";
 import { useSubscription } from "../../../../../contexts/SubscriptionContext";
 import i18n from "../../../../../i18n/i18n";
 import DeliveryService, {
@@ -139,13 +139,27 @@ export default function EnterpriseOffersScreen() {
 
   const [viewMode, setViewMode] = useState<ViewMode>("CALLS");
   const [filter, setFilter] = useState<FilterStatus>("ALL");
-  const [offers, setOffers] = useState<DeliveryOffer[]>([]);
-  const [calls, setCalls] = useState<DeliveryCall[]>([]);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { notification, showNotification, hideNotification } =
     useNotification();
+
+  const queryClient = useQueryClient();
+
+  const { data: offers = [], isLoading: loadingOffers, error: offersError, refetch: refetchOffers } = useQuery({
+    queryKey: ['delivery', 'offers', filter],
+    queryFn: async () => { const s = filter === "ALL" ? undefined : filter; return DeliveryService.listEnterpriseOffers(s); },
+    staleTime: 30_000,
+  });
+
+  const { data: calls = [], isLoading: loadingCalls, error: callsError, refetch: refetchCalls } = useQuery({
+    queryKey: ['delivery', 'calls', filter],
+    queryFn: async () => { const s = filter === "ALL" ? undefined : filter; return DeliveryService.listEnterpriseCalls(s); },
+    staleTime: 30_000,
+  });
+
+  const loading = viewMode === "OFFERS" ? loadingOffers : loadingCalls;
+  const error = ((viewMode === "OFFERS" ? offersError : callsError) as Error | null)?.message ?? null;
+  const activeItems = viewMode === "OFFERS" ? offers : calls;
 
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
@@ -166,44 +180,17 @@ export default function EnterpriseOffersScreen() {
     new Date(Date.now() + 60 * 60 * 1000)
   );
 
-  const activeItems = viewMode === "OFFERS" ? offers : calls;
-
-  const fetchItems = useCallback(
-    async (withSpinner = true) => {
-      try {
-        if (withSpinner) setLoading(true);
-        setError(null);
-
-        const status = filter === "ALL" ? undefined : filter;
-
-        if (viewMode === "OFFERS") {
-          const list = await DeliveryService.listEnterpriseOffers(status);
-          setOffers(list);
-        } else {
-          const list = await DeliveryService.listEnterpriseCalls(status);
-          setCalls(list);
-        }
-      } catch (e: any) {
-        setError(e.message || i18n.t("enterprise.offers.error.loadError"));
-      } finally {
-        if (withSpinner) setLoading(false);
-      }
-    },
-    [filter, viewMode]
-  );
-
-  useEffect(() => {
-    fetchItems(true);
-  }, [fetchItems]);
-
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await fetchItems(false);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['delivery', 'offers', filter] }),
+        queryClient.invalidateQueries({ queryKey: ['delivery', 'calls', filter] }),
+      ]);
     } finally {
       setRefreshing(false);
     }
-  }, [fetchItems]);
+  }, [filter, queryClient]);
 
   const openCreateCallModal = () => {
     if (!callForm.expiresAt) {
@@ -283,13 +270,9 @@ export default function EnterpriseOffersScreen() {
         expiresAt: expires.toISOString(),
       };
 
-      const createdCall = await DeliveryService.createCall(payload);
+      await DeliveryService.createCall(payload);
 
-      setCalls((prev) =>
-        matchesFilter(createdCall.status, filter)
-          ? [createdCall, ...prev.filter((call) => call._id !== createdCall._id)]
-          : prev
-      );
+      queryClient.invalidateQueries({ queryKey: ['delivery', 'calls', filter] });
 
       setCallModalVisible(false);
       resetCallForm();
@@ -327,7 +310,7 @@ export default function EnterpriseOffersScreen() {
     try {
       if (selectedDeletion.type === "offer") {
         await DeliveryService.deleteOffer(selectedDeletion.id);
-        setOffers((prev) => prev.filter((offer) => offer._id !== selectedDeletion.id));
+        queryClient.invalidateQueries({ queryKey: ['delivery', 'offers', filter] });
         showNotification(
           "success",
           i18n.t("enterprise.offers.deleteModal.offerSuccessTitle"),
@@ -335,7 +318,7 @@ export default function EnterpriseOffersScreen() {
         );
       } else {
         await DeliveryService.deleteCall(selectedDeletion.id);
-        setCalls((prev) => prev.filter((call) => call._id !== selectedDeletion.id));
+        queryClient.invalidateQueries({ queryKey: ['delivery', 'calls', filter] });
         showNotification(
           "success",
           i18n.t("enterprise.offers.deleteModal.callSuccessTitle"),
@@ -356,55 +339,6 @@ export default function EnterpriseOffersScreen() {
     }
   };
 
-  const ShimmerBlock = ({ style }: { style?: any }) => {
-    const shimmer = useRef(new Animated.Value(0)).current;
-
-    useEffect(() => {
-      const loop = Animated.loop(
-        Animated.timing(shimmer, {
-          toValue: 1,
-          duration: 1200,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        })
-      );
-
-      loop.start();
-      return () => loop.stop();
-    }, [shimmer]);
-
-    const translateX = shimmer.interpolate({
-      inputRange: [0, 1],
-      outputRange: [-150, 150],
-    });
-
-    return (
-      <View
-        style={[
-          {
-            backgroundColor: isDark ? colors.tertiary : "#E5E7EB",
-            overflow: "hidden",
-          },
-          style,
-        ]}
-      >
-        <Animated.View
-          style={{
-            position: "absolute",
-            top: 0,
-            bottom: 0,
-            width: 120,
-            transform: [{ translateX }],
-            backgroundColor: isDark
-              ? "rgba(255,255,255,0.05)"
-              : "rgba(255,255,255,0.35)",
-            opacity: 0.7,
-          }}
-        />
-      </View>
-    );
-  };
-
   const SkeletonCard = () => (
     <View
       style={{
@@ -420,9 +354,9 @@ export default function EnterpriseOffersScreen() {
     >
       <View className="flex-row items-center justify-between mb-3">
         <View className="flex-row items-center flex-1 mr-3">
-          <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 12 }} />
+          <Shimmer style={{ width: 40, height: 40, borderRadius: 12 }} />
           <View className="ml-3 flex-1">
-            <ShimmerBlock
+            <Shimmer
               style={{
                 height: 16,
                 borderRadius: 8,
@@ -430,21 +364,21 @@ export default function EnterpriseOffersScreen() {
                 marginBottom: 6,
               }}
             />
-            <ShimmerBlock style={{ height: 12, borderRadius: 6, width: "45%" }} />
+            <Shimmer style={{ height: 12, borderRadius: 6, width: "45%" }} />
           </View>
         </View>
-        <ShimmerBlock style={{ height: 24, borderRadius: 12, width: 90 }} />
+        <Shimmer style={{ height: 24, borderRadius: 12, width: 90 }} />
       </View>
 
-      <ShimmerBlock style={{ height: 12, borderRadius: 6, width: "100%", marginBottom: 8 }} />
-      <ShimmerBlock style={{ height: 12, borderRadius: 6, width: "82%", marginBottom: 16 }} />
+      <Shimmer style={{ height: 12, borderRadius: 6, width: "100%", marginBottom: 8 }} />
+      <Shimmer style={{ height: 12, borderRadius: 6, width: "82%", marginBottom: 16 }} />
 
       <View
         style={{ borderTopColor: colors.border }}
         className="flex-row items-center justify-between pt-3 border-t"
       >
-        <ShimmerBlock style={{ height: 18, borderRadius: 8, width: 100 }} />
-        <ShimmerBlock style={{ height: 34, borderRadius: 10, width: 96 }} />
+        <Shimmer style={{ height: 18, borderRadius: 8, width: 100 }} />
+        <Shimmer style={{ height: 34, borderRadius: 10, width: 96 }} />
       </View>
     </View>
   );
@@ -1030,7 +964,7 @@ export default function EnterpriseOffersScreen() {
             {error}
           </Text>
           <TouchableOpacity
-            onPress={() => fetchItems(true)}
+            onPress={() => viewMode === "OFFERS" ? refetchOffers() : refetchCalls()}
             style={{ backgroundColor: colors.brandPrimary }}
             className="mt-4 rounded-xl px-4 py-2"
           >
@@ -1128,7 +1062,7 @@ export default function EnterpriseOffersScreen() {
       >
         <View style={{ flex: 1, backgroundColor: colors.overlay }}>
           <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            behavior="padding"
             style={{ flex: 1, justifyContent: "flex-end" }}
           >
             <View

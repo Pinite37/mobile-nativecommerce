@@ -1,20 +1,19 @@
 // Service publicités
 import { useTheme } from "@/contexts/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import React, { useCallback, useEffect, useState } from "react";
+import { Image } from "expo-image";
 import {
     Alert,
     ActivityIndicator,
-    Animated,
     BackHandler,
     Dimensions,
-    Easing,
     FlatList,
-    Image,
     Keyboard,
     Modal,
     RefreshControl,
@@ -24,6 +23,7 @@ import {
     TouchableOpacity,
     View
 } from "react-native";
+import { Shimmer } from "../../../../../components/ui/Shimmer";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from "../../../../contexts/AuthContext";
 import AdvertisementService, { Advertisement } from '../../../../services/api/AdvertisementService';
@@ -33,7 +33,6 @@ import CarouselComponent from "../../../../components/ui/CarouselComponent";
 import { getCategoryIcon } from "../../../../constants/CategoryIcons";
 import { useLocale } from "../../../../contexts/LocaleContext";
 import i18n from "../../../../i18n/i18n";
-import { Enterprise } from "../../../../services/api/EnterpriseService";
 import { useUnreadNotifications } from "../../../../hooks/useUnreadNotifications";
 import ProductService from "../../../../services/api/ProductService";
 import SearchService from "../../../../services/api/SearchService";
@@ -96,28 +95,7 @@ export default function ClientHome() {
     const [neighborhoodModalVisible, setNeighborhoodModalVisible] = useState(false);
     // const [currentAdIndex, setCurrentAdIndex] = useState(0); // Removed unused
     const [refreshing, setRefreshing] = useState(false);
-    const [loading, setLoading] = useState(true); // État de chargement global
-    const scrollY = useRef(new Animated.Value(0)).current;
     const [imageRefreshKey, setImageRefreshKey] = useState(0); // Clé pour forcer le rechargement des images
-
-    // États pour les produits de l'API
-    const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-    const [loadingProducts, setLoadingProducts] = useState(false);
-    const [loadingMoreProducts, setLoadingMoreProducts] = useState(false);
-    const [productsPage, setProductsPage] = useState(1);
-    const [hasMoreProducts, setHasMoreProducts] = useState(true);
-
-    // Refs pour accéder aux valeurs dans le listener de scroll
-    const loadingMoreProductsRef = useRef(false);
-    const hasMoreProductsRef = useRef(true);
-
-    // États pour les catégories
-    const [categoriesData, setCategoriesData] = useState<Category[]>([]);
-    const [loadingCategories, setLoadingCategories] = useState(false);
-
-    // États pour les boutiques
-    const [featuredStores, setFeaturedStores] = useState<Enterprise[]>([]);
-    const [loadingStores, setLoadingStores] = useState(false);
 
     // États pour la recherche
     const [searchQuery, setSearchQuery] = useState('');
@@ -134,235 +112,80 @@ export default function ClientHome() {
     const [resultsView, setResultsView] = useState<'grid' | 'list'>('grid');
     const [selectedSort, setSelectedSort] = useState<'relevance' | 'priceLow' | 'priceHigh' | 'newest'>('relevance');
 
-    // État pour les favoris
-    const [favorites, setFavorites] = useState<Set<string>>(new Set());
+    const queryClient = useQueryClient();
 
-    // ================= Publicités dynamiques =================
-    const [ads, setAds] = useState<Advertisement[]>([]);
-    const [loadingAds, setLoadingAds] = useState(false);
-    const viewedAdsRef = useRef<Set<string>>(new Set());
-    const lastAdsFetchRef = useRef<number>(0);
+    const { data: categoriesData = [], isLoading: loadingCategories } = useQuery({
+        queryKey: ['categories', 'active'],
+        queryFn: async () => { const r = await CategoryService.getActiveCategories(); return (r || []).slice(0, 9); },
+        staleTime: 1000 * 60 * 10,
+    });
 
-    const loadAds = async () => {
-        const now = Date.now();
-        if (now - lastAdsFetchRef.current < 60_000 && ads.length) return; // throttle 60s
-        try {
-            setLoadingAds(true);
-            const data = await AdvertisementService.getActive(10);
-            setAds(Array.isArray(data) ? data : []);
-            lastAdsFetchRef.current = now;
-        } catch (e) {
-            console.warn('⚠️ Erreur récupération publicités (fallback) :', e);
-        } finally {
-            setLoadingAds(false);
-        }
-    };
+    const { data: ads = [], isLoading: loadingAds } = useQuery({
+        queryKey: ['ads', 'active'],
+        queryFn: async () => { const d = await AdvertisementService.getActive(10); return Array.isArray(d) ? d : []; },
+        staleTime: 60_000,
+    });
 
-    // const onAdViewableItemsChanged = ...; // Removed unused
-    // const adViewabilityConfig = ...; // Removed unused
+    const {
+        data: productsData, isLoading: loadingProducts,
+        isFetchingNextPage: loadingMoreProducts, fetchNextPage, hasNextPage,
+    } = useInfiniteQuery({
+        queryKey: ['products', 'featured', selectedCity, selectedNeighborhood],
+        queryFn: ({ pageParam }) => ProductService.getAllPublicProducts({
+            limit: 6, sort: 'newest', page: pageParam as number,
+            city: selectedCity || undefined, district: selectedNeighborhood || undefined,
+        }),
+        getNextPageParam: (lastPage: any) => {
+            const p = lastPage?.pagination;
+            return p && p.page < p.pages ? p.page + 1 : undefined;
+        },
+        initialPageParam: 1,
+        staleTime: 1000 * 60 * 2,
+    });
+
+    const featuredProducts = productsData?.pages.flatMap((p: any) => p.products || []) ?? [];
+
+    const { data: favorites = new Set<string>() } = useQuery({
+        queryKey: ['favorites'],
+        enabled: !!isAuthenticated,
+        queryFn: async () => {
+            const data = await ProductService.getFavoriteProducts();
+            if (Array.isArray(data)) return new Set<string>(data.map((f: any) => f.product?._id).filter(Boolean));
+            if (Array.isArray((data as any)?.data)) return new Set<string>((data as any).data.map((f: any) => f.product?._id).filter(Boolean));
+            return new Set<string>();
+        },
+        staleTime: 1000 * 60 * 5,
+    });
+
+    const loading = loadingCategories || loadingProducts;
 
     const handleAdPress = async (ad: Advertisement) => {
         try {
-            console.log("🖱️ Clic sur publicité:", ad._id);
-
-            // Incrémenter le clic en arrière-plan
             AdvertisementService.incrementClick(ad._id).catch(() => { });
-
-            console.log("🧭 Navigation vers la page de la pub...");
-
-            // Naviguer vers la page de détails de la publicité
-            router.push(`/(app)/(client)/advertisement/${ad._id}` as any);
-
-            console.log("✅ Navigation lancée");
+            router.push({ pathname: '/(app)/(client)/advertisement/[id]', params: { id: ad._id } });
         } catch (e) {
             console.error('⚠️ Erreur clic publicité:', e);
         }
     };
 
-    // Ne pas utiliser de fallback - afficher un message si pas de publicités
-    const adsToDisplay = ads;
-
-    // ================= Fonctions produits & favoris (déclarations hoistées) =================
-    async function loadFeaturedProducts(cityFilter?: string, districtFilter?: string) {
-        try {
-            setLoadingProducts(true);
-            const pageToLoad = 1;
-            const city = cityFilter ?? selectedCity;
-            const district = districtFilter ?? selectedNeighborhood;
-
-            const response = await ProductService.getAllPublicProducts({
-                limit: 6,
-                sort: "newest",
-                page: pageToLoad,
-                city: city || undefined,
-                district: district || undefined,
-            });
-
-            // Toujours remplacer les produits lors du chargement initial
-            setFeaturedProducts(response.products || []);
-            setProductsPage(1);
-
-            // Vérifier s'il y a plus de produits disponibles
-            const hasMore = response.pagination
-                ? response.pagination.page < response.pagination.pages
-                : false;
-            setHasMoreProducts(hasMore);
-            hasMoreProductsRef.current = hasMore;
-            loadingMoreProductsRef.current = false;
-
-            console.log('📊 Pagination produits populaires:', {
-                currentPage: response.pagination?.page,
-                totalPages: response.pagination?.pages,
-                hasMore,
-                productsCount: response.products?.length
-            });
-        } catch (e) {
-            console.error('❌ Erreur chargement produits populaires:', e);
-        } finally {
-            setLoadingProducts(false);
-        }
-    }
-
-    const loadMoreFeaturedProducts = async () => {
-        if (loadingMoreProductsRef.current || !hasMoreProductsRef.current) {
-            console.log('🚫 Chargement bloqué:', {
-                loading: loadingMoreProductsRef.current,
-                hasMore: hasMoreProductsRef.current,
-                currentPage: productsPage,
-                totalProducts: featuredProducts.length
-            });
-            return;
-        }
-
-        try {
-            console.log('🔄 Début chargement page suivante...');
-            loadingMoreProductsRef.current = true;
-            setLoadingMoreProducts(true);
-
-            const nextPage = productsPage + 1;
-            console.log('📄 Chargement page:', nextPage, '| Produits actuels:', featuredProducts.length);
-
-            const response = await ProductService.getAllPublicProducts({
-                limit: 6,
-                sort: "newest",
-                page: nextPage,
-                city: selectedCity || undefined,
-                district: selectedNeighborhood || undefined,
-            });
-
-            // Ajouter les nouveaux produits aux existants en évitant les doublons
-            setFeaturedProducts((prev) => {
-                const existingIds = new Set(prev.map(p => p._id));
-                const uniqueNewProducts = (response.products || []).filter(p => !existingIds.has(p._id));
-                const newProducts = [...prev, ...uniqueNewProducts];
-                console.log('📦 Produits après ajout:', newProducts.length, '| Nouveaux uniques:', uniqueNewProducts.length);
-                return newProducts;
-            });
-
-            setProductsPage(nextPage);
-
-            // Vérifier s'il y a encore plus de produits
-            const hasMore = response.pagination
-                ? response.pagination.page < response.pagination.pages
-                : false;
-
-            setHasMoreProducts(hasMore);
-            hasMoreProductsRef.current = hasMore;
-
-            console.log('📊 Chargement page suivante:', {
-                page: nextPage,
-                currentPage: response.pagination?.page,
-                totalPages: response.pagination?.pages,
-                hasMore,
-                newProductsCount: response.products?.length,
-                totalProductsNow: featuredProducts.length + (response.products?.length || 0)
-            });
-        } catch (error) {
-            console.error('❌ Erreur chargement plus de produits populaires:', error);
-        } finally {
-            loadingMoreProductsRef.current = false;
-            setLoadingMoreProducts(false);
-        }
-    };
-
-    async function loadFeaturedStores() {
-        try {
-            setLoadingStores(true);
-            // Note: Pour l'instant on initialise vide car l'API nécessite un terme de recherche
-            // TODO: Implémenter une méthode API dédiée pour obtenir les entreprises en vedette
-            setFeaturedStores([]);
-        } catch (e) {
-            console.error('❌ Erreur chargement boutiques:', e);
-        } finally {
-            setLoadingStores(false);
-        }
-    }
-
-    async function loadFavorites() {
-        if (!isAuthenticated) {
-            setFavorites(new Set());
-            return;
-        }
-
-        try {
-            console.log('🔥 Chargement des favoris...');
-            const favResponse = await ProductService.getFavoriteProducts();
-            console.log('📦 Réponse favoris:', favResponse);
-
-            if (Array.isArray(favResponse)) {
-                const favoriteIds = favResponse.map((f: any) => f.product?._id);
-                console.log('❤️ IDs favoris:', favoriteIds);
-                setFavorites(new Set(favoriteIds));
-            } else if (Array.isArray((favResponse as any)?.data)) {
-                const favoriteIds = (favResponse as any).data.map((f: any) => f.product?._id);
-                console.log('❤️ IDs favoris (data):', favoriteIds);
-                setFavorites(new Set(favoriteIds));
-            } else {
-                console.warn('⚠️ Structure de réponse favoris inattendue:', favResponse);
-            }
-        } catch (e) {
-            console.error('❌ Erreur chargement favoris:', e);
-        }
-    }
-
-    async function loadCategories() {
-        try {
-            setLoadingCategories(true);
-            const categoriesResponse = await CategoryService.getActiveCategories();
-            setCategoriesData(categoriesResponse.slice(0, 9)); // Prendre les 9 premières catégories
-        } catch (error) {
-            console.error('❌ Erreur chargement catégories:', error);
-            // En cas d'erreur, on garde les catégories statiques vides
-            setCategoriesData([]);
-        } finally {
-            setLoadingCategories(false);
-        }
-    }
-
-    async function refreshData() {
+    const refreshData = async () => {
         try {
             setRefreshing(true);
-            setRefreshing(true);
-            await Promise.all([loadAds(), loadFeaturedProducts(), loadFavorites(), loadCategories(), loadFeaturedStores()]);
-        } catch (e) {
-            console.error('❌ Erreur refresh:', e);
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['ads', 'active'] }),
+                queryClient.invalidateQueries({ queryKey: ['products', 'featured'] }),
+                queryClient.invalidateQueries({ queryKey: ['favorites'] }),
+                queryClient.invalidateQueries({ queryKey: ['categories', 'active'] }),
+            ]);
         } finally {
             setRefreshing(false);
         }
-    }
+    };
 
     useEffect(() => {
         setSelectedNeighborhood("");
-        loadFeaturedProducts(selectedCity, "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedCity]);
-
-    useEffect(() => {
-        if (selectedNeighborhood) {
-            loadFeaturedProducts(selectedCity, selectedNeighborhood);
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedNeighborhood]);
 
     // Gestion du bouton retour pour masquer les résultats de recherche et suggestions
     useEffect(() => {
@@ -382,24 +205,10 @@ export default function ClientHome() {
         return () => backHandler.remove();
     }, [showSearchResults, showSuggestions]);
 
-    // ================= Chargement initial =================
-    const loadInitialData = async () => {
-        setLoading(true);
-        await Promise.all([
-            loadAds(),
-            loadFeaturedProducts(),
-            loadFavorites(),
-            loadCategories(),
-            loadFeaturedStores(),
-            loadRecentSearches()
-        ]);
-        setLoading(false);
-    };
-
     useEffect(() => {
-        loadInitialData();
+        loadRecentSearches();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // loadInitialData retiré des dépendances pour éviter la boucle infinie
+    }, []);
 
     // Forcer le rechargement des images quand on revient sur la page
     useFocusEffect(
@@ -409,62 +218,35 @@ export default function ClientHome() {
         }, [])
     );
 
-    // Skeleton Loader Component
-    const ShimmerBlock = ({ style }: { style?: any }) => {
-        const shimmer = React.useRef(new Animated.Value(0)).current;
-        useEffect(() => {
-            const loop = Animated.loop(
-                Animated.timing(shimmer, {
-                    toValue: 1,
-                    duration: 1200,
-                    easing: Easing.linear,
-                    useNativeDriver: true,
-                })
-            );
-            loop.start();
-            return () => loop.stop();
-        }, [shimmer]);
-        const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
-        return (
-            <View style={[{ backgroundColor: colors.border, overflow: 'hidden' }, style]}>
-                <Animated.View style={{
-                    position: 'absolute', top: 0, bottom: 0, width: 120,
-                    transform: [{ translateX }],
-                    backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.35)',
-                    opacity: 0.7,
-                }} />
-            </View>
-        );
-    };
 
     const SkeletonCard = ({ style }: { style?: any }) => (
         <View style={[{ backgroundColor: colors.card, borderColor: colors.border }, style]} className="rounded-2xl shadow-sm border overflow-hidden">
-            <ShimmerBlock style={{ height: 120, borderRadius: 16, width: '100%' }} />
+            <Shimmer style={{ height: 120, borderRadius: 16, width: '100%' }} />
         </View>
     );
 
     const SkeletonProduct = () => (
         <View style={[{ backgroundColor: colors.card, borderColor: colors.border, width: productWidth }]} className="rounded-2xl shadow-md border p-2 mb-3 overflow-hidden">
-            <ShimmerBlock style={{ height: 128, borderRadius: 16, width: '100%' }} />
+            <Shimmer style={{ height: 128, borderRadius: 16, width: '100%' }} />
             <View className="p-2">
-                <ShimmerBlock style={{ height: 14, borderRadius: 7, width: '80%', marginBottom: 8 }} />
-                <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '60%', marginBottom: 8 }} />
-                <ShimmerBlock style={{ height: 12, borderRadius: 6, width: '40%' }} />
+                <Shimmer style={{ height: 14, borderRadius: 7, width: '80%', marginBottom: 8 }} />
+                <Shimmer style={{ height: 16, borderRadius: 8, width: '60%', marginBottom: 8 }} />
+                <Shimmer style={{ height: 12, borderRadius: 6, width: '40%' }} />
             </View>
         </View>
     );
 
     const SkeletonProductList = () => (
         <View style={[{ backgroundColor: colors.card, borderColor: colors.border, width: '100%' }]} className="rounded-2xl shadow-md border p-2 mb-3 overflow-hidden flex-row">
-            <ShimmerBlock style={{ width: 100, height: 100, borderRadius: 16, marginRight: 12 }} />
+            <Shimmer style={{ width: 100, height: 100, borderRadius: 16, marginRight: 12 }} />
             <View className="flex-1">
-                <ShimmerBlock style={{ height: 14, borderRadius: 7, width: '80%', marginBottom: 8 }} />
+                <Shimmer style={{ height: 14, borderRadius: 7, width: '80%', marginBottom: 8 }} />
                 <View className="flex-row items-center mb-2">
-                    <ShimmerBlock style={{ height: 12, borderRadius: 6, width: '30%', marginRight: 4 }} />
-                    <ShimmerBlock style={{ width: 12, height: 12, borderRadius: 6 }} />
+                    <Shimmer style={{ height: 12, borderRadius: 6, width: '30%', marginRight: 4 }} />
+                    <Shimmer style={{ width: 12, height: 12, borderRadius: 6 }} />
                 </View>
-                <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '50%', marginBottom: 8 }} />
-                <ShimmerBlock style={{ height: 30, borderRadius: 15, width: '70%' }} />
+                <Shimmer style={{ height: 16, borderRadius: 8, width: '50%', marginBottom: 8 }} />
+                <Shimmer style={{ height: 30, borderRadius: 15, width: '70%' }} />
             </View>
         </View>
     );
@@ -487,20 +269,20 @@ export default function ClientHome() {
                 >
                     <View className={`${isSmallScreen ? 'px-4' : 'px-6'} flex-row justify-between items-center mb-4`}>
                         <View>
-                            <ShimmerBlock style={{ height: 16, borderRadius: 8, width: 80, marginBottom: 8 }} />
-                            <ShimmerBlock style={{ height: 24, borderRadius: 12, width: 120 }} />
+                            <Shimmer style={{ height: 16, borderRadius: 8, width: 80, marginBottom: 8 }} />
+                            <Shimmer style={{ height: 24, borderRadius: 12, width: 120 }} />
                         </View>
-                        <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
+                        <Shimmer style={{ width: 40, height: 40, borderRadius: 20 }} />
                     </View>
                 </LinearGradient>
 
                 {/* Floating Search Skeleton */}
                 <View className="-mt-14 px-4">
                     <View style={{ backgroundColor: colors.card }} className="rounded-3xl shadow-xl p-2">
-                        <ShimmerBlock style={{ height: 44, borderRadius: 16, width: '100%', marginBottom: 12 }} />
+                        <Shimmer style={{ height: 44, borderRadius: 16, width: '100%', marginBottom: 12 }} />
                         <View className="flex-row justify-between">
-                            <ShimmerBlock style={{ width: '48%', height: 36, borderRadius: 12 }} />
-                            <ShimmerBlock style={{ width: '48%', height: 36, borderRadius: 12 }} />
+                            <Shimmer style={{ width: '48%', height: 36, borderRadius: 12 }} />
+                            <Shimmer style={{ width: '48%', height: 36, borderRadius: 12 }} />
                         </View>
                     </View>
                 </View>
@@ -513,12 +295,12 @@ export default function ClientHome() {
                 {/* Ads Skeleton - Carousel Style */}
                 <View className="py-0">
                     <View className="px-4 mt-1">
-                        <ShimmerBlock style={{ height: 200, borderRadius: 24, width: '100%' }} />
+                        <Shimmer style={{ height: 200, borderRadius: 24, width: '100%' }} />
                     </View>
                     {/* Indicators */}
                     <View className="flex-row justify-center mt-3 gap-2">
                         {[0, 1, 2].map((i) => (
-                            <ShimmerBlock key={i} style={{ width: 8, height: 8, borderRadius: 4 }} />
+                            <Shimmer key={i} style={{ width: 8, height: 8, borderRadius: 4 }} />
                         ))}
                     </View>
                 </View>
@@ -526,14 +308,14 @@ export default function ClientHome() {
                 {/* Categories Skeleton - Horizontal Scroll */}
                 <View className="py-6">
                     <View className="px-6 mb-4">
-                        <ShimmerBlock style={{ height: 20, borderRadius: 10, width: 140, marginBottom: 4 }} />
-                        <ShimmerBlock style={{ height: 14, borderRadius: 7, width: 200 }} />
+                        <Shimmer style={{ height: 20, borderRadius: 10, width: 140, marginBottom: 4 }} />
+                        <Shimmer style={{ height: 14, borderRadius: 7, width: 200 }} />
                     </View>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: isSmallScreen ? 16 : 20, gap: isSmallScreen ? 8 : 12 }}>
                         {Array.from({ length: 6 }).map((_, index) => (
                             <View key={index} className="items-center">
-                                <ShimmerBlock style={{ width: 70, height: 70, borderRadius: 20, marginBottom: 8 }} />
-                                <ShimmerBlock style={{ width: 60, height: 12, borderRadius: 6 }} />
+                                <Shimmer style={{ width: 70, height: 70, borderRadius: 20, marginBottom: 8 }} />
+                                <Shimmer style={{ width: 60, height: 12, borderRadius: 6 }} />
                             </View>
                         ))}
                     </ScrollView>
@@ -543,14 +325,14 @@ export default function ClientHome() {
                 {/* Uncomment when featured stores are available */}
                 {/* <View className="py-4">
                     <View className="px-6 mb-4">
-                        <ShimmerBlock style={{ height: 20, borderRadius: 10, width: 160 }} />
+                        <Shimmer style={{ height: 20, borderRadius: 10, width: 160 }} />
                     </View>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 16 }}>
                         {Array.from({ length: 4 }).map((_, index) => (
                             <View key={index} className="items-center">
-                                <ShimmerBlock style={{ width: 80, height: 80, borderRadius: 40, marginBottom: 8 }} />
-                                <ShimmerBlock style={{ width: 70, height: 12, borderRadius: 6, marginBottom: 4 }} />
-                                <ShimmerBlock style={{ width: 50, height: 10, borderRadius: 5 }} />
+                                <Shimmer style={{ width: 80, height: 80, borderRadius: 40, marginBottom: 8 }} />
+                                <Shimmer style={{ width: 70, height: 12, borderRadius: 6, marginBottom: 4 }} />
+                                <Shimmer style={{ width: 50, height: 10, borderRadius: 5 }} />
                             </View>
                         ))}
                     </ScrollView>
@@ -559,8 +341,8 @@ export default function ClientHome() {
                 {/* Featured Products Skeleton */}
                 <View className="px-4 py-4">
                     <View className="mb-4 flex-row justify-between items-center">
-                        <ShimmerBlock style={{ height: 20, borderRadius: 10, width: 140 }} />
-                        <ShimmerBlock style={{ width: 80, height: 32, borderRadius: 16 }} />
+                        <Shimmer style={{ height: 20, borderRadius: 10, width: 140 }} />
+                        <Shimmer style={{ width: 80, height: 32, borderRadius: 16 }} />
                     </View>
                     <View className="flex-row flex-wrap justify-between">
                         {Array.from({ length: 6 }).map((_, index) => (
@@ -615,7 +397,6 @@ export default function ClientHome() {
         try {
             const recent = await SearchCacheService.getRecentSearches();
             setRecentSearches(recent);
-            console.log(`📚 ${recent.length} recherches récentes chargées`);
         } catch (error) {
             console.error('❌ Erreur chargement recherches récentes:', error);
         }
@@ -625,7 +406,6 @@ export default function ClientHome() {
         try {
             await SearchCacheService.clearRecentSearches();
             setRecentSearches([]);
-            console.log('🧹 Historique des recherches vidé');
         } catch (error) {
             console.error('❌ Erreur vidage historique:', error);
         }
@@ -636,7 +416,6 @@ export default function ClientHome() {
             await SearchCacheService.removeFromRecentSearches(query);
             const updatedRecent = await SearchCacheService.getRecentSearches();
             setRecentSearches(updatedRecent);
-            console.log('🗑️ Recherche supprimée:', query);
         } catch (error) {
             console.error('❌ Erreur suppression recherche:', error);
         }
@@ -719,9 +498,6 @@ export default function ClientHome() {
             setShowSuggestions(false);
             setShowRecentSearches(false);
 
-            console.log('🔍 Recherche en cours pour:', searchTerm);
-            console.log('📍 Localisation:', { city: selectedCity, district: selectedNeighborhood });
-
             const searchFilters = {
                 city: selectedCity,
                 district: selectedNeighborhood || undefined,
@@ -733,12 +509,9 @@ export default function ClientHome() {
             let cachedResults: any = null;
             try {
                 cachedResults = await SearchCacheService.getCachedSearchResults(searchTerm, searchFilters);
-            } catch (e) {
-                console.warn('⚠️ Cache indisponible (lecture):', e);
-            }
+            } catch (e) { /* cache unavailable */ }
 
             if (cachedResults) {
-                console.log('⚡ Résultats trouvés en cache');
                 setSearchResults(cachedResults.results || []);
                 const searchInfoWithCache = {
                     ...cachedResults.searchInfo,
@@ -752,8 +525,6 @@ export default function ClientHome() {
             }
 
             const response = await ProductService.searchPublicProducts(searchTerm, searchFilters);
-
-            console.log('✅ Résultats de recherche reçus:', response);
 
             // Normaliser la réponse (certains services renvoient { products, pagination }, d’autres { data, searchInfo })
             const results: Product[] = Array.isArray((response as any)?.data)
@@ -779,19 +550,7 @@ export default function ClientHome() {
                 await SearchCacheService.cacheSearchResults(searchTerm, results, normalizedInfo, searchFilters);
                 await SearchCacheService.addToRecentSearches(searchTerm, results.length);
                 await loadRecentSearches();
-            } catch (e) {
-                console.warn('⚠️ Cache indisponible (écriture):', e);
-            }
-
-            console.log(`📊 ${results.length} résultats trouvés pour "${searchTerm}"`);
-            console.log(`📍 Dans la zone: ${selectedCity}${selectedNeighborhood ? ` - ${selectedNeighborhood}` : ''}`);
-
-            if (normalizedInfo?.searchTime) {
-                console.log(`⏱️ Recherche effectuée en ${normalizedInfo.searchTime}ms`);
-            }
-            if (normalizedInfo?.totalResults != null) {
-                console.log(`🎯 ${normalizedInfo.totalResults} résultats au total`);
-            }
+            } catch (e) { /* cache unavailable */ }
 
         } catch (error) {
             console.error('❌ Erreur lors de la recherche:', error);
@@ -855,21 +614,17 @@ export default function ClientHome() {
             return;
         }
 
-        const isFavorite = favorites.has(productId);
+        const isFavorite = (favorites as Set<string>).has(productId);
         try {
             if (isFavorite) {
                 await ProductService.removeProductFromFavorites(productId);
             } else {
                 await ProductService.addProductToFavorites(productId);
             }
-            setFavorites(prev => {
-                const newFavorites = new Set(prev);
-                if (isFavorite) {
-                    newFavorites.delete(productId);
-                } else {
-                    newFavorites.add(productId);
-                }
-                return newFavorites;
+            queryClient.setQueryData(['favorites'], (prev: Set<string> = new Set()) => {
+                const next = new Set(prev);
+                if (isFavorite) next.delete(productId); else next.add(productId);
+                return next;
             });
         } catch (error) {
             console.error('❌ Erreur lors de la mise à jour des favoris:', error);
@@ -888,7 +643,7 @@ export default function ClientHome() {
                     key={`image-${item._id}-${imageRefreshKey}`}
                     source={{ uri: item.images[0] || "https://via.placeholder.com/300" }}
                     className="w-full h-40 bg-neutral-100"
-                    resizeMode="cover"
+                    contentFit="cover"
                 />
                 <LinearGradient
                     colors={['transparent', 'rgba(0,0,0,0.05)']}
@@ -986,7 +741,7 @@ export default function ClientHome() {
                     </View>
                     <TouchableOpacity
                         className="bg-white/20 p-2 rounded-full backdrop-blur-sm border border-white/30"
-                        onPress={() => router.push('/(app)/(client)/profile/notifications' as any)}
+                        onPress={() => router.push('/(app)/(client)/profile/notifications')}
                     >
                         <Ionicons name="notifications-outline" size={24} color="white" />
                         {unreadCount > 0 && (
@@ -1049,7 +804,7 @@ export default function ClientHome() {
                                 </Text>
                             </TouchableOpacity>
                             {!!selectedNeighborhood && (
-                                <TouchableOpacity onPress={() => { setSelectedNeighborhood(""); loadFeaturedProducts(selectedCity, ""); }} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }} className="ml-1">
+                                <TouchableOpacity onPress={() => setSelectedNeighborhood("")} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }} className="ml-1">
                                     <Ionicons name="close-circle" size={14} color={colors.textSecondary} />
                                 </TouchableOpacity>
                             )}
@@ -1073,7 +828,7 @@ export default function ClientHome() {
                     key={`image-list-${item._id}-${imageRefreshKey}`}
                     source={{ uri: item.images[0] || "https://via.placeholder.com/150x150/CCCCCC/FFFFFF?text=No+Image" }}
                     className="w-24 h-24 rounded-xl"
-                    resizeMode="cover"
+                    contentFit="cover"
                 />
                 {item.stats.totalSales > 10 && (
                     <View className="absolute top-1 left-1 bg-success-500 rounded-full px-2 py-0.5">
@@ -1122,13 +877,9 @@ export default function ClientHome() {
 
 
     const renderAd = ({ item }: { item: any }) => {
-        console.log("🎨 renderAd appelé pour:", item._id);
         return (
             <TouchableOpacity
-                onPress={() => {
-                    console.log("👆 TouchableOpacity onPress déclenché !");
-                    handleAdPress(item);
-                }}
+                onPress={() => handleAdPress(item)}
                 activeOpacity={0.9}
                 className="rounded-2xl overflow-hidden mx-3 shadow-md"
                 style={{
@@ -1147,7 +898,7 @@ export default function ClientHome() {
                                 : "https://via.placeholder.com/150x150/CCCCCC/FFFFFF?text=No+Image",
                     }}
                     style={{ width: "100%", height: 180, position: "absolute" }}
-                    resizeMode="cover"
+                    contentFit="cover"
                 />
                 <LinearGradient
                     colors={["rgba(0,0,0,0.0)", "rgba(0,0,0,0.7)"]}
@@ -1323,7 +1074,7 @@ export default function ClientHome() {
                         </View>
                     )}
 
-                    <Animated.ScrollView
+                    <ScrollView
                         className="flex-1"
                         showsVerticalScrollIndicator={false}
                         keyboardShouldPersistTaps="handled"
@@ -1332,23 +1083,13 @@ export default function ClientHome() {
                             paddingBottom: 90 + insets.bottom,
                         }}
                         scrollEventThrottle={16}
-                        onScroll={Animated.event(
-                            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                            {
-                                useNativeDriver: false,
-                                listener: (event: any) => {
-                                    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-                                    const paddingToBottom = 300; // Déclenche 300px avant la fin
-                                    const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
-
-                                    // Charger plus de produits si on est proche du bas
-                                    if (isCloseToBottom && !loadingMoreProductsRef.current && hasMoreProductsRef.current) {
-                                        console.log('🎯 Déclenchement chargement automatique produits');
-                                        loadMoreFeaturedProducts();
-                                    }
-                                }
+                        onScroll={(event) => {
+                            const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+                            const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - 300;
+                            if (isCloseToBottom && !loadingMoreProducts && hasNextPage) {
+                                fetchNextPage();
                             }
-                        )}
+                        }}
                         refreshControl={
                             <RefreshControl
                                 refreshing={refreshing}
@@ -1533,9 +1274,9 @@ export default function ClientHome() {
 
                         {/* Boosted Ads Carousel (amélioré avec images et overlay) */}
                         <View className="py-0">
-                            {adsToDisplay.length > 0 ? (
+                            {ads.length > 0 ? (
                                 <CarouselComponent
-                                    data={adsToDisplay}
+                                    data={ads}
                                     renderItem={renderAd}
                                     height={180}
                                     autoPlayInterval={3000}
@@ -1568,7 +1309,7 @@ export default function ClientHome() {
                                     </Text>
                                 </View>
                                 <TouchableOpacity
-                                    onPress={() => router.push('/(app)/(client)/categories' as any)}
+                                    onPress={() => router.push('/(app)/(client)/categories')}
                                     style={{ backgroundColor: isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5" }}
                                     className="flex-row items-center rounded-xl px-3 py-2 ml-2"
                                 >
@@ -1594,7 +1335,7 @@ export default function ClientHome() {
                                         return (
                                             <TouchableOpacity
                                                 key={categoryId}
-                                                onPress={() => category._id && router.push(`/(app)/(client)/category/${category._id}` as any)}
+                                                onPress={() => category._id && router.push({ pathname: '/(app)/(client)/category/[id]', params: { id: category._id } })}
                                                 className="mr-4 items-center"
                                             >
                                                 <View className="w-16 h-16 justify-center items-center mb-3">
@@ -1602,7 +1343,7 @@ export default function ClientHome() {
                                                         <Image
                                                             source={localIcon}
                                                             style={{ width: 56, height: 56 }}
-                                                            resizeMode="contain"
+                                                            contentFit="contain"
                                                         />
                                                     ) : (
                                                         <Ionicons
@@ -1630,7 +1371,7 @@ export default function ClientHome() {
                                     {i18n.t('client.home.featuredProducts.title')}
                                 </Text>
                                 <TouchableOpacity
-                                    onPress={() => router.push('/(app)/(client)/marketplace' as any)}
+                                    onPress={() => router.push('/(app)/(client)/marketplace')}
                                     style={{ backgroundColor: isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5" }}
                                     className="flex-row items-center rounded-xl px-3 py-2 ml-2"
                                 >
@@ -1666,14 +1407,14 @@ export default function ClientHome() {
                                         </View>
                                     )}
                                     {/* Indicateurs de développement */}
-                                    {__DEV__ && hasMoreProducts && !loadingMoreProducts && (
+                                    {__DEV__ && hasNextPage && !loadingMoreProducts && (
                                         <View className="py-2 items-center">
                                             <Text style={{ color: colors.textTertiary }} className="text-xs font-quicksand-medium">
-                                                Page {productsPage} • {featuredProducts.length} produits • Faites défiler pour plus
+                                                {featuredProducts.length} produits • Faites défiler pour plus
                                             </Text>
                                         </View>
                                     )}
-                                    {__DEV__ && !hasMoreProducts && featuredProducts.length > 6 && (
+                                    {__DEV__ && !hasNextPage && featuredProducts.length > 6 && (
                                         <View className="py-2 items-center">
                                             <Text style={{ color: colors.textTertiary }} className="text-xs font-quicksand-medium">
                                                 Tous les produits affichés • {featuredProducts.length} au total
@@ -1690,7 +1431,7 @@ export default function ClientHome() {
                             )}
                         </View>
 
-                    </Animated.ScrollView>
+                    </ScrollView>
 
                     {/* Modal de sélection de ville */}
                     <Modal

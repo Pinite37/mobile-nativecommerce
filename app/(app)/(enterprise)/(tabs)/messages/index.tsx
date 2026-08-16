@@ -1,13 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Image } from "expo-image";
 import {
   ActivityIndicator,
-  Animated,
-  Easing,
   FlatList,
-  Image,
   RefreshControl,
   StatusBar,
   Text,
@@ -15,11 +14,19 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import LockedFeatureOverlay from "../../../../../components/enterprise/LockedFeatureOverlay";
 import { useAuth } from "../../../../../contexts/AuthContext";
 import { useLocale } from "../../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../../contexts/ThemeContext";
+import { Shimmer } from "../../../../../components/ui/Shimmer";
 import { useSubscription } from "../../../../../contexts/SubscriptionContext";
 import { useSocket } from "../../../../../hooks/useSocket";
 import i18n from "../../../../../i18n/i18n";
@@ -37,14 +44,30 @@ export default function MessagesPage() {
   const { colors, isDark } = useTheme();
   const { user } = useAuth();
   const { onNewMessage, onMessagesRead } = useSocket();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<Conversation[]>([]);
-  const [searching, setSearching] = useState(false);
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [animatingConversations, setAnimatingConversations] = useState<Set<string>>(new Set());
+
+  const queryClient = useQueryClient();
+
+  const { data: conversations = [], isLoading: loading, refetch: refetchConversations } = useQuery({
+    queryKey: ['conversations'],
+    queryFn: async () => { const d = await MessagingService.getUserConversations(); return d || []; },
+    staleTime: 30_000,
+    retry: 1,
+  });
+
+  const filteredConversations = useMemo(() => {
+    if (!searchQuery.trim() || searchQuery.trim().length < 2) return conversations;
+    const lower = searchQuery.trim().toLowerCase();
+    return conversations.filter((conv) => {
+      const participant = conv.otherParticipant || conv.participants?.[0];
+      const participantName = participant ? MessagingService.formatParticipantName(participant) : "";
+      const productName = conv.product?.name || "";
+      return participantName.toLowerCase().includes(lower) || productName.toLowerCase().includes(lower);
+    });
+  }, [conversations, searchQuery]);
 
   // États pour le menu contextuel
   const [contextMenuVisible, setContextMenuVisible] = useState(false);
@@ -52,74 +75,19 @@ export default function MessagesPage() {
     useState<Conversation | null>(null);
   const [contextMenuLoading, setContextMenuLoading] = useState(false);
 
-  const loadConversations = async () => {
-    try {
-      setLoading(true);
-      const conversationsData = await MessagingService.getUserConversations();
-      setConversations(conversationsData || []);
-      console.log(
-        "✅ Conversations chargées:",
-        (conversationsData || []).length
-      );
-    } catch (error) {
-      console.error("❌ Erreur chargement conversations:", error);
-      setConversations([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-
-    if (query.trim().length < 2) {
-      setSearchResults([]);
-      setSearching(false);
-      return;
-    }
-
-    try {
-      setSearching(true);
-      // Pour le moment, filtrer localement car searchConversations n'est pas implémentée
-      const results = conversations.filter((conv) => {
-        const participant = conv.otherParticipant || conv.participants?.[0];
-        const participantName = participant
-          ? MessagingService.formatParticipantName(participant)
-          : "";
-        const productName = conv.product?.name || "";
-        const searchLower = query.toLowerCase();
-        return (
-          participantName.toLowerCase().includes(searchLower) ||
-          productName.toLowerCase().includes(searchLower)
-        );
-      });
-      setSearchResults(results);
-    } catch (error) {
-      console.error("❌ Erreur recherche conversations:", error);
-      setSearchResults([]);
-    } finally {
-      setSearching(false);
-    }
-  };
-
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadConversations();
+    await refetchConversations();
     setRefreshing(false);
   };
 
   // Gestion du menu contextuel
   const handleLongPress = (conversation: Conversation) => {
-    console.log("🔵 Long press sur conversation:", conversation._id);
     setSelectedConversation(conversation);
     setContextMenuVisible(true);
   };
 
   const handleArchiveConversation = () => {
-    console.log(
-      "📁 Archive conversation (pas encore implémenté):",
-      selectedConversation?._id
-    );
     setContextMenuVisible(false);
     setSelectedConversation(null);
     // TODO: Implémenter l'archivage plus tard
@@ -128,21 +96,15 @@ export default function MessagesPage() {
   const handleDeleteConversation = async () => {
     if (!selectedConversation) return;
 
-    console.log("🗑️ Suppression conversation:", selectedConversation._id);
     setContextMenuLoading(true);
 
     try {
       await MessagingService.deleteConversation(selectedConversation._id);
 
-      // Retirer la conversation de la liste localement
-      setConversations((prev) =>
-        prev.filter((conv) => conv._id !== selectedConversation._id)
-      );
-      setSearchResults((prev) =>
+      queryClient.setQueryData(['conversations'], (prev: Conversation[] = []) =>
         prev.filter((conv) => conv._id !== selectedConversation._id)
       );
 
-      console.log("✅ Conversation supprimée avec succès");
       setContextMenuVisible(false);
       setSelectedConversation(null);
 
@@ -164,12 +126,10 @@ export default function MessagesPage() {
     return new Intl.NumberFormat("fr-FR").format(price) + " FCFA";
   };
 
-  // Charger les conversations au focus de la page
   useFocusEffect(
     useCallback(() => {
-      console.log("🔄 ENTERPRISE - Page messages focusée - rechargement des conversations");
-      loadConversations();
-    }, [])
+      refetchConversations();
+    }, [refetchConversations])
   );
 
   // === GESTION SOCKET.IO ===
@@ -181,23 +141,9 @@ export default function MessagesPage() {
 
         // Écouter les nouveaux messages (notifications)
         const handleNewMessageNotification = (data: any) => {
-          console.log("🔔 Nouvelle notification de message:", data);
-          
-          if (!data?.conversation || !data?.message) {
-            console.warn("⚠️ Socket.IO new_message: données invalides", data);
-            return;
-          }
-          
-          // Vérifier si le message vient de l'utilisateur actuel
+          if (!data?.conversation || !data?.message) return;
+
           const isOwnMessage = data.message?.sender?._id === user?._id;
-          
-          console.log("📨 ENTERPRISE - Message reçu sur index:", {
-            conversationId: data.conversation._id,
-            isOwnMessage,
-            messageText: data.message?.text?.substring(0, 30),
-            senderId: data.message?.sender?._id,
-            currentUserId: user?._id,
-          });
           
           // Marquer la conversation comme en animation seulement si ce n'est pas son propre message
           if (!isOwnMessage) {
@@ -214,45 +160,17 @@ export default function MessagesPage() {
           }
 
           // Mettre à jour et remonter la conversation en haut
-          setConversations((prev) => {
-            const updatedConversations = prev.map((conv) => {
-              if (conv._id === data.conversation._id) {
-                return {
-                  ...conv,
-                  // N'incrémenter unreadCount que si ce n'est pas l'utilisateur actuel
-                  unreadCount: isOwnMessage ? (conv.unreadCount || 0) : (conv.unreadCount || 0) + 1,
-                  lastMessage: data.message,
-                  lastActivity: new Date().toISOString(),
-                };
-              }
-              return conv;
+          queryClient.setQueryData(['conversations'], (prev: Conversation[] = []) => {
+            const updated = prev.map((conv) => {
+              if (conv._id !== data.conversation._id) return conv;
+              return {
+                ...conv,
+                unreadCount: isOwnMessage ? (conv.unreadCount || 0) : (conv.unreadCount || 0) + 1,
+                lastMessage: data.message,
+                lastActivity: new Date().toISOString(),
+              };
             });
-            
-            // Trier par lastActivity (plus récent en premier)
-            return updatedConversations.sort((a, b) => {
-              const dateA = new Date(a.lastActivity || a.lastMessage?.sentAt || 0).getTime();
-              const dateB = new Date(b.lastActivity || b.lastMessage?.sentAt || 0).getTime();
-              return dateB - dateA;
-            });
-          });
-
-          // Mettre à jour aussi les résultats de recherche si applicable
-          setSearchResults((prev) => {
-            const updatedResults = prev.map((conv) => {
-              if (conv._id === data.conversation._id) {
-                return {
-                  ...conv,
-                  // N'incrémenter unreadCount que si ce n'est pas l'utilisateur actuel
-                  unreadCount: isOwnMessage ? (conv.unreadCount || 0) : (conv.unreadCount || 0) + 1,
-                  lastMessage: data.message,
-                  lastActivity: new Date().toISOString(),
-                };
-              }
-              return conv;
-            });
-            
-            // Trier par lastActivity (plus récent en premier)
-            return updatedResults.sort((a, b) => {
+            return updated.sort((a, b) => {
               const dateA = new Date(a.lastActivity || a.lastMessage?.sentAt || 0).getTime();
               const dateB = new Date(b.lastActivity || b.lastMessage?.sentAt || 0).getTime();
               return dateB - dateA;
@@ -262,36 +180,10 @@ export default function MessagesPage() {
 
         // Écouter les messages marqués comme lus
         const handleMessagesRead = (data: any) => {
-          console.log("👁️ Messages marqués comme lus:", data);
-
-          console.log("👁️ ENTERPRISE - Messages lus pour conversation:", data.conversationId);
-          
-          // Mettre à jour le compteur de messages non lus
-          setConversations((prev) =>
-            prev.map((conv) => {
-              if (conv._id === data.conversationId) {
-                console.log("✅ ENTERPRISE - Remise à zéro unreadCount pour:", conv._id);
-                return {
-                  ...conv,
-                  // Réinitialiser complètement à 0 quand les messages sont lus
-                  unreadCount: 0,
-                };
-              }
-              return conv;
-            })
-          );
-
-          setSearchResults((prev) =>
-            prev.map((conv) => {
-              if (conv._id === data.conversationId) {
-                return {
-                  ...conv,
-                  // Réinitialiser complètement à 0 quand les messages sont lus
-                  unreadCount: 0,
-                };
-              }
-              return conv;
-            })
+          queryClient.setQueryData(['conversations'], (prev: Conversation[] = []) =>
+            prev.map((conv) =>
+              conv._id === data.conversationId ? { ...conv, unreadCount: 0 } : conv
+            )
           );
         };
 
@@ -318,29 +210,21 @@ export default function MessagesPage() {
   }: {
     conversation: Conversation;
   }) => {
-    // Animation pour les nouvelles conversations
-    const scaleAnim = React.useRef(new Animated.Value(1)).current;
+    const scaleAnim = useSharedValue(1);
     const isAnimating = animatingConversations.has(conversation._id);
-    
+
+    const pulseStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: scaleAnim.value }],
+    }));
+
     React.useEffect(() => {
       if (isAnimating) {
-        // Animation de pulse
-        Animated.sequence([
-          Animated.timing(scaleAnim, {
-            toValue: 1.02,
-            duration: 150,
-            easing: Easing.out(Easing.ease),
-            useNativeDriver: true,
-          }),
-          Animated.timing(scaleAnim, {
-            toValue: 1,
-            duration: 150,
-            easing: Easing.in(Easing.ease),
-            useNativeDriver: true,
-          }),
-        ]).start();
+        scaleAnim.value = withSequence(
+          withTiming(1.02, { duration: 150, easing: Easing.out(Easing.ease) }),
+          withTiming(1, { duration: 150, easing: Easing.in(Easing.ease) })
+        );
       }
-    }, [isAnimating, scaleAnim]);
+    }, [isAnimating]);
     
     // L'API retourne déjà otherParticipant, sinon on prend le premier participant différent
     const otherParticipant =
@@ -365,11 +249,7 @@ export default function MessagesPage() {
     const unreadCount = Number(conversation?.unreadCount) || 0;
 
     return (
-      <Animated.View
-        style={{
-          transform: [{ scale: scaleAnim }],
-        }}
-      >
+      <Animated.View style={pulseStyle}>
         <TouchableOpacity
           style={{
             shadowColor: "#000",
@@ -398,7 +278,7 @@ export default function MessagesPage() {
               <Image
                 source={{ uri: otherParticipant.profileImage }}
                 className="w-14 h-14 rounded-full"
-                resizeMode="cover"
+                contentFit="cover"
               />
             ) : (
               <View className="w-14 h-14 bg-primary-100 rounded-full justify-center items-center">
@@ -458,7 +338,7 @@ export default function MessagesPage() {
                 <Image
                   source={{ uri: conversation.product.images[0] }}
                   className="w-5 h-5 rounded-md mr-2"
-                  resizeMode="cover"
+                  contentFit="cover"
                 />
               ) : (
                 <Ionicons
@@ -508,50 +388,9 @@ export default function MessagesPage() {
     );
   };
 
-  const displayedConversations =
-    searchQuery.trim().length >= 2
-      ? showUnreadOnly
-        ? searchResults.filter((conv) => (conv.unreadCount || 0) > 0)
-        : searchResults
-      : showUnreadOnly
-        ? conversations.filter((conv) => (conv.unreadCount || 0) > 0)
-        : conversations;
-
-  // Skeleton Loader Component
-  const ShimmerBlock = ({ style }: { style?: any }) => {
-    const shimmer = React.useRef(new Animated.Value(0)).current;
-    useEffect(() => {
-      const loop = Animated.loop(
-        Animated.timing(shimmer, {
-          toValue: 1,
-          duration: 1200,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        })
-      );
-      loop.start();
-      return () => loop.stop();
-    }, [shimmer]);
-    const translateX = shimmer.interpolate({
-      inputRange: [0, 1],
-      outputRange: [-150, 150],
-    });
-    return (
-      <View style={[{ backgroundColor: isDark ? colors.tertiary : "#F3F4F6", overflow: "hidden" }, style]}>
-        <Animated.View
-          style={{
-            position: "absolute",
-            top: 0,
-            bottom: 0,
-            width: 120,
-            transform: [{ translateX }],
-            backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.5)",
-            opacity: 0.7,
-          }}
-        />
-      </View>
-    );
-  };
+  const displayedConversations = showUnreadOnly
+    ? filteredConversations.filter((conv) => (conv.unreadCount || 0) > 0)
+    : filteredConversations;
 
   const SkeletonCard = () => (
     <View 
@@ -568,31 +407,31 @@ export default function MessagesPage() {
     >
       <View className="flex-row items-center">
         {/* Avatar skeleton */}
-        <ShimmerBlock style={{ width: 56, height: 56, borderRadius: 28 }} />
+        <Shimmer style={{ width: 56, height: 56, borderRadius: 28 }} />
 
         {/* Content skeleton */}
         <View className="ml-4 flex-1">
           <View className="flex-row items-center justify-between mb-2">
-            <ShimmerBlock
+            <Shimmer
               style={{ height: 18, borderRadius: 8, width: "60%" }}
             />
-            <ShimmerBlock
+            <Shimmer
               style={{ height: 12, borderRadius: 6, width: "20%" }}
             />
           </View>
 
           {/* Product info skeleton */}
           <View className="flex-row items-center mb-2">
-            <ShimmerBlock
+            <Shimmer
               style={{ width: 20, height: 20, borderRadius: 6, marginRight: 8 }}
             />
-            <ShimmerBlock
+            <Shimmer
               style={{ height: 12, borderRadius: 6, width: "50%" }}
             />
           </View>
 
           {/* Message preview skeleton */}
-          <ShimmerBlock
+          <Shimmer
             style={{
               height: 14,
               borderRadius: 6,
@@ -600,7 +439,7 @@ export default function MessagesPage() {
               marginBottom: 4,
             }}
           />
-          <ShimmerBlock style={{ height: 14, borderRadius: 6, width: "70%" }} />
+          <Shimmer style={{ height: 14, borderRadius: 6, width: "70%" }} />
         </View>
       </View>
     </View>
@@ -703,7 +542,7 @@ export default function MessagesPage() {
           </View>
           <TextInput
             value={searchQuery}
-            onChangeText={handleSearch}
+            onChangeText={setSearchQuery}
             placeholder={i18n.t("enterprise.messages.search.placeholder")}
             style={{
               backgroundColor: isDark ? colors.card : '#FFFFFF',
@@ -717,11 +556,6 @@ export default function MessagesPage() {
             className="rounded-2xl pl-11 pr-4 py-3.5 font-quicksand-medium text-base"
             placeholderTextColor={colors.textTertiary}
           />
-          {searching && (
-            <View className="absolute right-4 top-3.5">
-              <ActivityIndicator size="small" color="#10B981" />
-            </View>
-          )}
         </View>
       </LinearGradient>
 
@@ -828,7 +662,7 @@ export default function MessagesPage() {
                   style={{ backgroundColor: colors.brandPrimary }}
                   className="mt-8 rounded-2xl px-8 py-3.5 shadow-lg shadow-primary-500/30"
                   onPress={() =>
-                    router.push("/(app)/(enterprise)/(tabs)/" as any)
+                    router.push("/(app)/(enterprise)/(tabs)/")
                   }
                 >
                   <Text style={{ color: colors.textOnBrand }} className="font-quicksand-bold text-base">

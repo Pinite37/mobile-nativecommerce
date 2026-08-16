@@ -19,65 +19,28 @@ import UpgradeConfirmationModal from "../../../../components/subscription/Upgrad
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useSubscription } from "../../../../contexts/SubscriptionContext";
 import { useTheme } from "../../../../contexts/ThemeContext";
+import { Shimmer } from "../../../../components/ui/Shimmer";
 import i18n from "../../../../i18n/i18n";
 import PaymentService from "../../../../services/api/PaymentService";
 import SubscriptionService, {
   Plan,
 } from "../../../../services/api/SubscriptionService";
 
-// Skeleton Loader Component
-const ShimmerBlock = ({ style, colors }: { style?: any; colors: any }) => {
-  const shimmer = React.useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.timing(shimmer, {
-        toValue: 1,
-        duration: 1200,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [shimmer]);
-  const translateX = shimmer.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-150, 150],
-  });
-  return (
-    <View style={[{ backgroundColor: colors.border, overflow: "hidden" }, style]}>
-      <Animated.View
-        style={{
-          position: "absolute",
-          top: 0,
-          bottom: 0,
-          width: 120,
-          transform: [{ translateX }],
-          backgroundColor: "rgba(255,255,255,0.35)",
-          opacity: 0.7,
-        }}
-      />
-    </View>
-  );
-};
-
 const SkeletonCard = ({ colors }: { colors: any }) => (
   <View style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 24, padding: 20, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 }}>
     <View className="flex-row items-start justify-between mb-3">
       <View className="flex-1 mr-3">
-        <ShimmerBlock
-          colors={colors}
+        <Shimmer
           style={{ height: 20, borderRadius: 8, width: "40%", marginBottom: 8 }}
         />
-        <ShimmerBlock colors={colors} style={{ height: 24, borderRadius: 8, width: "60%" }} />
+        <Shimmer style={{ height: 24, borderRadius: 8, width: "60%" }} />
       </View>
-      <ShimmerBlock colors={colors} style={{ height: 24, borderRadius: 12, width: 80 }} />
+      <Shimmer style={{ height: 24, borderRadius: 12, width: 80 }} />
     </View>
     <View className="mb-4">
       {[1, 2, 3, 4].map((i) => (
         <View key={i} className="flex-row items-start mb-2">
-          <ShimmerBlock
-            colors={colors}
+          <Shimmer
             style={{
               width: 18,
               height: 18,
@@ -86,11 +49,11 @@ const SkeletonCard = ({ colors }: { colors: any }) => (
               marginTop: 1,
             }}
           />
-          <ShimmerBlock colors={colors} style={{ height: 14, borderRadius: 6, width: "80%" }} />
+          <Shimmer style={{ height: 14, borderRadius: 6, width: "80%" }} />
         </View>
       ))}
     </View>
-    <ShimmerBlock colors={colors} style={{ height: 44, borderRadius: 22, width: "100%" }} />
+    <Shimmer style={{ height: 44, borderRadius: 22, width: "100%" }} />
   </View>
 );
 
@@ -755,7 +718,7 @@ function EnterpriseSubscriptionsContent() {
                 {loading ? (
                   <>
                     {Array.from({ length: 3 }).map((_, i) => (
-                      <SkeletonCard key={i} colors={colors} />
+                      <SkeletonCard key={i} />
                     ))}
                   </>
                 ) : error ? (

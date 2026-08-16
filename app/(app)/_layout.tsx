@@ -39,7 +39,7 @@ export default function AppLayout() {
       case 'SUBSCRIPTION':
       case 'UNUSED_PRODUCT_SLOTS':
         if (isEnterprise) {
-          router.push('/(app)/(enterprise)/subscriptions/index' as any);
+          router.push('/(app)/(enterprise)/subscriptions/index');
         }
         break;
 
@@ -47,14 +47,14 @@ export default function AppLayout() {
       case 'OFFER_CREATED':
       case 'OFFER_ACCEPTED':
         if (isEnterprise) {
-          router.push('/(app)/(enterprise)/(tabs)/offers/index' as any);
+          router.push('/(app)/(enterprise)/(tabs)/offers/index');
         }
         break;
 
       case 'ORDER':
       case 'DELIVERY_COMPLETED':
         if (!isEnterprise) {
-          router.push('/(app)/(client)/profile/orders' as any);
+          router.push('/(app)/(client)/profile/orders');
         }
         break;
 

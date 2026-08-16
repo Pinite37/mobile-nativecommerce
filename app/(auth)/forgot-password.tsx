@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useToast } from "../../components/ui/ReanimatedToast/context";
 import AuthService from "../../services/api/AuthService";
@@ -195,7 +195,7 @@ export default function ForgotPasswordScreen() {
         title: "Mot de passe modifié ✓",
         subtitle: "Votre mot de passe a été réinitialisé avec succès",
       });
-      setTimeout(() => router.replace("/(auth)/signin" as any), 1200);
+      setTimeout(() => router.replace("/(auth)/signin"), 1200);
     } catch (error: any) {
       const msg: string = error.message || "";
       const lower = msg.toLowerCase();

@@ -12,9 +12,7 @@ import React, {
     useState,
 } from "react";
 import {
-    Animated,
     Dimensions,
-    Easing,
     FlatList,
     Image,
     Modal,
@@ -27,6 +25,14 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import Animated, {
+    Extrapolation,
+    interpolate,
+    useAnimatedProps,
+    useAnimatedRef,
+    useAnimatedStyle,
+    useScrollViewOffset,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import NotificationModal, {
@@ -34,6 +40,7 @@ import NotificationModal, {
 } from "../../../../../components/ui/NotificationModal";
 import { useToast } from "../../../../../components/ui/ToastManager";
 import { useTheme } from "../../../../../contexts/ThemeContext";
+import { Shimmer } from "../../../../../components/ui/Shimmer";
 import i18n from "../../../../../i18n/i18n";
 import ProductService from "../../../../../services/api/ProductService";
 import { Product } from "../../../../../types/product";
@@ -47,49 +54,6 @@ const TITLE_APPEAR_OFFSET = HEADER_HEIGHT - COMPACT_HEADER_HEIGHT - 50;
 
 const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 const AnimatedImage = Animated.createAnimatedComponent(ExpoImage);
-
-// Skeleton Loader Component
-const ShimmerBlock = ({ style, isDark }: { style?: any; isDark?: boolean }) => {
-  const shimmer = React.useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.timing(shimmer, {
-        toValue: 1,
-        duration: 1200,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [shimmer]);
-  const translateX = shimmer.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-150, 150],
-  });
-  return (
-    <View
-      style={[
-        { backgroundColor: isDark ? "#374151" : "#E5E7EB", overflow: "hidden" },
-        style,
-      ]}
-    >
-      <Animated.View
-        style={{
-          position: "absolute",
-          top: 0,
-          bottom: 0,
-          width: 120,
-          transform: [{ translateX }],
-          backgroundColor: isDark
-            ? "rgba(255,255,255,0.1)"
-            : "rgba(255,255,255,0.35)",
-          opacity: 0.7,
-        }}
-      />
-    </View>
-  );
-};
 
 const SkeletonProduct = ({
   colors,
@@ -114,21 +78,17 @@ const SkeletonProduct = ({
       style={{ paddingTop: Platform.OS === "ios" ? 66 : 16 }}
     >
       <View className="flex-row items-center justify-between px-4 pb-3">
-        <ShimmerBlock
-          isDark={isDark}
+        <Shimmer
           style={{ width: 40, height: 40, borderRadius: 20 }}
         />
-        <ShimmerBlock
-          isDark={isDark}
+        <Shimmer
           style={{ width: 120, height: 16, borderRadius: 8 }}
         />
         <View className="flex-row">
-          <ShimmerBlock
-            isDark={isDark}
+          <Shimmer
             style={{ width: 40, height: 40, borderRadius: 20, marginRight: 8 }}
           />
-          <ShimmerBlock
-            isDark={isDark}
+          <Shimmer
             style={{ width: 40, height: 40, borderRadius: 20 }}
           />
         </View>
@@ -138,13 +98,12 @@ const SkeletonProduct = ({
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
       {/* Image Skeleton */}
       <View style={{ marginTop: Platform.OS === "ios" ? 100 : 80 }}>
-        <ShimmerBlock isDark={isDark} style={{ width: "100%", height: 350 }} />
+        <Shimmer style={{ width: "100%", height: 350 }} />
 
         {/* Indicators Skeleton */}
         <View className="absolute bottom-4 left-0 right-0 flex-row justify-center">
           {[1, 2, 3].map((i) => (
-            <ShimmerBlock
-              isDark={isDark}
+            <Shimmer
               key={i}
               style={{
                 width: 8,
@@ -158,8 +117,7 @@ const SkeletonProduct = ({
 
         {/* Counter Skeleton */}
         <View className="absolute top-3 right-3">
-          <ShimmerBlock
-            isDark={isDark}
+          <Shimmer
             style={{ width: 60, height: 24, borderRadius: 12 }}
           />
         </View>
@@ -169,8 +127,7 @@ const SkeletonProduct = ({
       <View className="px-6 mt-3">
         <View className="flex-row">
           {[1, 2, 3, 4].map((i) => (
-            <ShimmerBlock
-              isDark={isDark}
+            <Shimmer
               key={i}
               style={{
                 width: 64,
@@ -187,8 +144,7 @@ const SkeletonProduct = ({
       <View className="px-6 py-6">
         {/* Price and Name */}
         <View className="mb-4">
-          <ShimmerBlock
-            isDark={isDark}
+          <Shimmer
             style={{
               width: "30%",
               height: 32,
@@ -196,8 +152,7 @@ const SkeletonProduct = ({
               marginBottom: 12,
             }}
           />
-          <ShimmerBlock
-            isDark={isDark}
+          <Shimmer
             style={{
               width: "80%",
               height: 28,
@@ -205,8 +160,7 @@ const SkeletonProduct = ({
               marginBottom: 8,
             }}
           />
-          <ShimmerBlock
-            isDark={isDark}
+          <Shimmer
             style={{
               width: "100%",
               height: 16,
@@ -214,16 +168,14 @@ const SkeletonProduct = ({
               marginBottom: 4,
             }}
           />
-          <ShimmerBlock
-            isDark={isDark}
+          <Shimmer
             style={{ width: "60%", height: 16, borderRadius: 8 }}
           />
         </View>
 
         {/* Status Button Skeleton */}
         <View className="mb-6">
-          <ShimmerBlock
-            isDark={isDark}
+          <Shimmer
             style={{
               width: 80,
               height: 32,
@@ -236,12 +188,10 @@ const SkeletonProduct = ({
         {/* Informations Section Skeleton */}
         <View className="mb-6">
           <View className="flex-row items-center mb-4">
-            <ShimmerBlock
-              isDark={isDark}
+            <Shimmer
               style={{ width: 6, height: 24, borderRadius: 3, marginRight: 12 }}
             />
-            <ShimmerBlock
-              isDark={isDark}
+            <Shimmer
               style={{ width: "30%", height: 24, borderRadius: 12 }}
             />
           </View>
@@ -257,8 +207,7 @@ const SkeletonProduct = ({
             }}
           >
             <View className="flex-row items-center mb-4">
-              <ShimmerBlock
-                isDark={isDark}
+              <Shimmer
                 style={{
                   width: 48,
                   height: 48,
@@ -267,8 +216,7 @@ const SkeletonProduct = ({
                 }}
               />
               <View className="flex-1">
-                <ShimmerBlock
-                  isDark={isDark}
+                <Shimmer
                   style={{
                     width: "60%",
                     height: 20,
@@ -276,13 +224,11 @@ const SkeletonProduct = ({
                     marginBottom: 8,
                   }}
                 />
-                <ShimmerBlock
-                  isDark={isDark}
+                <Shimmer
                   style={{ width: "40%", height: 16, borderRadius: 8 }}
                 />
               </View>
-              <ShimmerBlock
-                isDark={isDark}
+              <Shimmer
                 style={{ width: 60, height: 24, borderRadius: 12 }}
               />
             </View>
@@ -298,8 +244,7 @@ const SkeletonProduct = ({
                 {[1, 2, 3, 4].map((i) => (
                   <View key={i} className="w-1/2 px-2 mb-3">
                     <View className="flex-row items-center">
-                      <ShimmerBlock
-                        isDark={isDark}
+                      <Shimmer
                         style={{
                           width: 16,
                           height: 16,
@@ -307,13 +252,11 @@ const SkeletonProduct = ({
                           marginRight: 8,
                         }}
                       />
-                      <ShimmerBlock
-                        isDark={isDark}
+                      <Shimmer
                         style={{ width: "60%", height: 12, borderRadius: 6 }}
                       />
                     </View>
-                    <ShimmerBlock
-                      isDark={isDark}
+                    <Shimmer
                       style={{
                         width: "80%",
                         height: 14,
@@ -331,12 +274,10 @@ const SkeletonProduct = ({
         {/* Specifications Skeleton */}
         <View className="mb-6">
           <View className="flex-row items-center mb-4">
-            <ShimmerBlock
-              isDark={isDark}
+            <Shimmer
               style={{ width: 6, height: 24, borderRadius: 3, marginRight: 12 }}
             />
-            <ShimmerBlock
-              isDark={isDark}
+            <Shimmer
               style={{ width: "35%", height: 24, borderRadius: 12 }}
             />
           </View>
@@ -359,8 +300,7 @@ const SkeletonProduct = ({
                     : {}
                 }
               >
-                <ShimmerBlock
-                  isDark={isDark}
+                <Shimmer
                   style={{
                     width: 8,
                     height: 8,
@@ -368,8 +308,7 @@ const SkeletonProduct = ({
                     marginRight: 12,
                   }}
                 />
-                <ShimmerBlock
-                  isDark={isDark}
+                <Shimmer
                   style={{
                     width: "40%",
                     height: 16,
@@ -377,8 +316,7 @@ const SkeletonProduct = ({
                     marginRight: 16,
                   }}
                 />
-                <ShimmerBlock
-                  isDark={isDark}
+                <Shimmer
                   style={{ width: "30%", height: 16, borderRadius: 8 }}
                 />
               </View>
@@ -389,12 +327,10 @@ const SkeletonProduct = ({
         {/* Enterprise Section Skeleton */}
         <View className="px-6 mb-6">
           <View className="flex-row items-center mb-4">
-            <ShimmerBlock
-              isDark={isDark}
+            <Shimmer
               style={{ width: 6, height: 24, borderRadius: 3, marginRight: 12 }}
             />
-            <ShimmerBlock
-              isDark={isDark}
+            <Shimmer
               style={{ width: "40%", height: 24, borderRadius: 12 }}
             />
           </View>
@@ -409,8 +345,7 @@ const SkeletonProduct = ({
             }}
           >
             <View className="flex-row items-center mb-5">
-              <ShimmerBlock
-                isDark={isDark}
+              <Shimmer
                 style={{
                   width: 64,
                   height: 64,
@@ -419,8 +354,7 @@ const SkeletonProduct = ({
                 }}
               />
               <View className="flex-1">
-                <ShimmerBlock
-                  isDark={isDark}
+                <Shimmer
                   style={{
                     width: "70%",
                     height: 20,
@@ -428,8 +362,7 @@ const SkeletonProduct = ({
                     marginBottom: 8,
                   }}
                 />
-                <ShimmerBlock
-                  isDark={isDark}
+                <Shimmer
                   style={{ width: "50%", height: 16, borderRadius: 8 }}
                 />
               </View>
@@ -438,8 +371,7 @@ const SkeletonProduct = ({
             <View className="space-y-3">
               {[1, 2, 3, 4].map((i) => (
                 <View key={i} className="flex-row items-center py-3">
-                  <ShimmerBlock
-                    isDark={isDark}
+                  <Shimmer
                     style={{
                       width: 40,
                       height: 40,
@@ -448,8 +380,7 @@ const SkeletonProduct = ({
                     }}
                   />
                   <View className="flex-1">
-                    <ShimmerBlock
-                      isDark={isDark}
+                    <Shimmer
                       style={{
                         width: "30%",
                         height: 12,
@@ -457,8 +388,7 @@ const SkeletonProduct = ({
                         marginBottom: 6,
                       }}
                     />
-                    <ShimmerBlock
-                      isDark={isDark}
+                    <Shimmer
                       style={{ width: "60%", height: 14, borderRadius: 7 }}
                     />
                   </View>
@@ -512,50 +442,38 @@ export default function ProductDetails() {
   // Référence et variables pour le carrousel d'images
   const imagesListRef = useRef<FlatList<string>>(null);
 
-  // Animation pour le parallax
-  const scrollY = useRef(new Animated.Value(0)).current;
+  // Animation pour le parallax (Reanimated 4 — UI thread)
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
+  const scrollOffset = useScrollViewOffset(scrollRef);
 
-  const imageOpacity = scrollY.interpolate({
-    inputRange: [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT],
-    outputRange: [1, 0],
-    extrapolate: "clamp",
-  });
+  const imageStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollOffset.value, [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT], [1, 0], Extrapolation.CLAMP),
+    transform: [
+      { translateY: interpolate(scrollOffset.value, [0, HEADER_HEIGHT], [0, -HEADER_HEIGHT * 0.6], Extrapolation.CLAMP) },
+      { scale: interpolate(scrollOffset.value, [-HEADER_HEIGHT, 0], [2, 1], Extrapolation.CLAMP) },
+    ],
+  }));
 
-  const imageTranslateY = scrollY.interpolate({
-    inputRange: [0, HEADER_HEIGHT],
-    outputRange: [0, -HEADER_HEIGHT * 0.6],
-    extrapolate: "clamp",
-  });
+  const blurProps = useAnimatedProps(() => ({
+    intensity: interpolate(scrollOffset.value, [0, HEADER_HEIGHT * 0.7], [0, 50], Extrapolation.CLAMP),
+  }));
 
-  const imageScale = scrollY.interpolate({
-    inputRange: [-HEADER_HEIGHT, 0],
-    outputRange: [2, 1],
-    extrapolate: "clamp",
-  });
+  const compactHeaderStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollOffset.value, [TITLE_APPEAR_OFFSET, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT], [0, 1], Extrapolation.CLAMP),
+    transform: [{ translateY: interpolate(scrollOffset.value, [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT], [-100, 0], Extrapolation.CLAMP) }],
+  }));
 
-  const blurIntensity = scrollY.interpolate({
-    inputRange: [0, HEADER_HEIGHT * 0.7],
-    outputRange: [0, 50],
-    extrapolate: "clamp",
-  });
+  const bigTitleStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollOffset.value, [0, HEADER_HEIGHT * 0.5], [1, 0], Extrapolation.CLAMP),
+  }));
 
-  const compactHeaderTranslateY = scrollY.interpolate({
-    inputRange: [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT],
-    outputRange: [-100, 0],
-    extrapolate: "clamp",
-  });
+  const floatingBackStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollOffset.value, [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT - 20], [1, 0], Extrapolation.CLAMP),
+  }));
 
-  const compactHeaderOpacity = scrollY.interpolate({
-    inputRange: [TITLE_APPEAR_OFFSET, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT],
-    outputRange: [0, 1],
-    extrapolate: "clamp",
-  });
-
-  const bigTitleOpacity = scrollY.interpolate({
-    inputRange: [0, HEADER_HEIGHT * 0.5],
-    outputRange: [1, 0],
-    extrapolate: "clamp",
-  });
+  const floatingActionsStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollOffset.value, [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT - 20], [1, 0], Extrapolation.CLAMP),
+  }));
 
   console.log("🚀 ProductDetails - Product ID:", id);
 
@@ -736,7 +654,7 @@ export default function ProductDetails() {
 
   // États d'affichage
   if (loading) {
-    return <SkeletonProduct colors={colors} isDark={isDark} />;
+    return <SkeletonProduct colors={colors} />;
   }
 
   if (error || !product) {
@@ -800,9 +718,8 @@ export default function ProductDetails() {
           {
             paddingTop: insets.top,
             height: COMPACT_HEADER_HEIGHT,
-            opacity: compactHeaderOpacity,
-            transform: [{ translateY: compactHeaderTranslateY }],
           },
+          compactHeaderStyle,
         ]}
         pointerEvents="box-none"
       >
@@ -869,17 +786,15 @@ export default function ProductDetails() {
 
       {/* Fixed Back Button (visible initially) */}
       <Animated.View
-        style={{
-          position: "absolute",
-          top: insets.top + 10,
-          left: 16,
-          zIndex: 900,
-          opacity: scrollY.interpolate({
-            inputRange: [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT - 20],
-            outputRange: [1, 0],
-            extrapolate: "clamp",
-          }),
-        }}
+        style={[
+          {
+            position: "absolute",
+            top: insets.top + 10,
+            left: 16,
+            zIndex: 900,
+          },
+          floatingBackStyle,
+        ]}
       >
         <TouchableOpacity
           onPress={() => router.back()}
@@ -890,18 +805,16 @@ export default function ProductDetails() {
       </Animated.View>
 
       <Animated.View
-        style={{
-          position: "absolute",
-          top: insets.top + 10,
-          right: 16,
-          zIndex: 900,
-          flexDirection: "row",
-          opacity: scrollY.interpolate({
-            inputRange: [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT - 20],
-            outputRange: [1, 0],
-            extrapolate: "clamp",
-          }),
-        }}
+        style={[
+          {
+            position: "absolute",
+            top: insets.top + 10,
+            right: 16,
+            zIndex: 900,
+            flexDirection: "row",
+          },
+          floatingActionsStyle,
+        ]}
       >
         <TouchableOpacity
           onPress={async () => {
@@ -929,21 +842,12 @@ export default function ProductDetails() {
       <View style={styles.headerWrapper} pointerEvents="none">
         <AnimatedImage
           source={{ uri: product.images?.[0] }}
-          style={[
-            styles.headerImage,
-            {
-              opacity: imageOpacity,
-              transform: [
-                { translateY: imageTranslateY },
-                { scale: imageScale },
-              ],
-            },
-          ]}
+          style={[styles.headerImage, imageStyle]}
           contentFit="cover"
         />
 
         <AnimatedBlurView
-          intensity={blurIntensity}
+          animatedProps={blurProps}
           tint="dark"
           style={StyleSheet.absoluteFillObject}
         />
@@ -951,7 +855,8 @@ export default function ProductDetails() {
         <Animated.View
           style={[
             styles.bigTitleContainer,
-            { opacity: bigTitleOpacity, paddingBottom: 40 },
+            { paddingBottom: 40 },
+            bigTitleStyle,
           ]}
         >
           <Text style={styles.bigTitle} className="font-quicksand-bold">
@@ -968,13 +873,9 @@ export default function ProductDetails() {
 
       {/* Scrollable Content */}
       <Animated.ScrollView
-        scrollEventThrottle={16}
+        ref={scrollRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: HEADER_HEIGHT }}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false },
-        )}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

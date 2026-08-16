@@ -39,7 +39,7 @@ export default function Index() {
         console.log(
           "📧 Email non vérifié au démarrage, redirection vers vérification OTP",
         );
-        router.replace("/(auth)/verify-email" as any);
+        router.replace("/(auth)/verify-email");
         return;
       }
       StartupPerformanceMonitor.mark("App Index - Navigation vers app");

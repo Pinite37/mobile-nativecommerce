@@ -79,48 +79,11 @@ class NotificationService {
 
   async initializeNotifications(): Promise<void> {
     if (!notificationsAvailable || !Notifications) {
-      console.warn('🔔 Notifications not available (likely running in Expo Go)');
+      console.warn('Notifications not available (likely running in Expo Go)');
       return;
     }
-
-    try {
-      // Configurer le gestionnaire de notifications
-      Notifications.setNotificationHandler({
-        handleNotification: async () => ({
-          shouldShowAlert: true,
-          shouldPlaySound: true,
-          shouldSetBadge: true,
-          shouldShowBanner: true,
-          shouldShowList: true,
-        }),
-      });
-
-      // Écouter les interactions avec les notifications
-      Notifications.addNotificationReceivedListener(this.handleNotificationReceived.bind(this));
-      Notifications.addNotificationResponseReceivedListener(this.handleNotificationResponse.bind(this));
-    } catch (error) {
-      console.error('❌ Erreur lors de l\'initialisation des notifications:', error);
-    }
-  }
-
-  private async handleNotificationReceived(notification: any): Promise<void> {
-    console.log('🔔 Notification reçue:', notification);
-
-    // Ici vous pouvez ajouter une logique personnalisée
-    // Par exemple, mettre à jour l'état local, jouer un son spécifique, etc.
-  }
-
-  private async handleNotificationResponse(response: any): Promise<void> {
-    console.log('👆 Interaction notification:', response);
-
-    const data = response.notification.request.content.data;
-
-    // Gérer la navigation basée sur le type de notification
-    if (data?.conversationId) {
-      // Navigation vers la conversation
-      // Cette logique sera gérée dans le composant qui utilise ce service
-      console.log('📱 Navigation vers conversation:', data.conversationId);
-    }
+    // setNotificationHandler est configuré une seule fois dans app/_layout.tsx
+    // La navigation sur tap de notification est gérée dans app/(app)/_layout.tsx
   }
 
   // === GESTION DU TOKEN DE NOTIFICATION ===
@@ -163,8 +126,14 @@ class NotificationService {
         return null;
       }
 
-      // Obtenir le token
-      const token = await Notifications.getExpoPushTokenAsync();
+      const Constants = (eval('require'))('expo-constants').default;
+      const projectId =
+        Constants.easConfig?.projectId ??
+        Constants.expoConfig?.extra?.eas?.projectId;
+
+      const token = await Notifications.getExpoPushTokenAsync(
+        projectId ? { projectId } : undefined
+      );
       this.notificationToken = token.data;
 
       console.log('✅ Token de notification obtenu:', this.notificationToken);

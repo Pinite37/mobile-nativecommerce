@@ -2,13 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Image } from "expo-image";
 import {
   ActivityIndicator,
-  Animated,
-  Easing,
   FlatList,
-  Image,
   Modal,
   RefreshControl,
   Text,
@@ -24,6 +23,7 @@ import NotificationModal, {
 import LockedFeatureOverlay from "../../../../../components/enterprise/LockedFeatureOverlay";
 import { useLocale } from "../../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../../contexts/ThemeContext";
+import { Shimmer } from "../../../../../components/ui/Shimmer";
 import { useSubscription } from "../../../../../contexts/SubscriptionContext";
 import i18n from "../../../../../i18n/i18n";
 import CategoryService from "../../../../../services/api/CategoryService";
@@ -31,7 +31,6 @@ import ProductService from "../../../../../services/api/ProductService";
 import {
   Category,
   Product,
-  ProductsResponse,
 } from "../../../../../types/product";
 
 const getSortOptions = () => [
@@ -59,21 +58,45 @@ export default function EnterpriseProducts() {
 
   const [showSortModal, setShowSortModal] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-  const [initialLoading, setInitialLoading] = useState(true);
-
-  // Data state
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-
   const [refreshing, setRefreshing] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
 
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const [hasMoreProducts, setHasMoreProducts] = useState(true);
+  const queryClient = useQueryClient();
 
-  // Errors
-  const [error, setError] = useState<string | null>(null);
+  const { data: categories = [] as Category[] } = useQuery({
+    queryKey: ['categories', 'active'],
+    queryFn: async () => CategoryService.getActiveCategories() as Promise<Category[]>,
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const {
+    data: productsPages,
+    isLoading: initialLoading,
+    isFetchingNextPage: loadingMore,
+    fetchNextPage,
+    hasNextPage: hasMoreProducts,
+    error: productsQueryError,
+    refetch: refetchProducts,
+  } = useInfiniteQuery({
+    queryKey: ['enterprise', 'products', debouncedSearchQuery, selectedCategory, selectedSort],
+    queryFn: async ({ pageParam }) => {
+      const filters: any = {
+        sort: selectedSort === "createdAt" ? "newest" : selectedSort === "price" ? "price_desc" : "newest",
+      };
+      if (selectedCategory !== "all") filters.category = selectedCategory;
+      if (debouncedSearchQuery.trim()) {
+        return ProductService.searchEnterpriseProducts(debouncedSearchQuery.trim(), pageParam as number, 10, filters);
+      }
+      return ProductService.getEnterpriseProducts(pageParam as number, 10, filters);
+    },
+    getNextPageParam: (lastPage: any) => {
+      const p = lastPage?.pagination;
+      return p && p.page < p.pages ? p.page + 1 : undefined;
+    },
+    initialPageParam: 1,
+    staleTime: 1000 * 60 * 2,
+  });
+  const products = productsPages?.pages.flatMap((p: any) => p.products || []) ?? [];
+  const error = (productsQueryError as Error | null)?.message ?? null;
 
   // Confirmation modal
   const [confirmationVisible, setConfirmationVisible] = useState(false);
@@ -91,161 +114,35 @@ export default function EnterpriseProducts() {
   const [selectedProductForMenu, setSelectedProductForMenu] =
     useState<Product | null>(null);
 
-  // Load products function
-  const loadProducts = useCallback(
-    async (reset = false, pageToLoad?: number) => {
-      try {
-        if (reset) {
-          setCurrentPage(1);
-          setError(null);
-        }
-
-        const page = pageToLoad || (reset ? 1 : currentPage);
-
-        const filters: any = {
-          sort:
-            selectedSort === "createdAt"
-              ? "newest"
-              : selectedSort === "price"
-                ? "price_desc"
-                : "newest",
-        };
-
-        if (selectedCategory !== "all") {
-          filters.category = selectedCategory;
-        }
-
-        let response: ProductsResponse;
-        if (debouncedSearchQuery.trim()) {
-          response = await ProductService.searchEnterpriseProducts(
-            debouncedSearchQuery.trim(),
-            page,
-            10,
-            filters
-          );
-        } else {
-          response = await ProductService.getEnterpriseProducts(
-            page,
-            10,
-            filters
-          );
-        }
-
-        if (reset) {
-          setProducts(response.products || []);
-        } else {
-          setProducts((prev) => [...prev, ...(response.products || [])]);
-        }
-
-        const pagination = response.pagination || { page: 1, pages: 1 };
-        setCurrentPage(pagination.page);
-        setHasMoreProducts(pagination.page < pagination.pages);
-      } catch (err: any) {
-        const errorMessage =
-          err.message || i18n.t("enterprise.products.empty.error.title");
-        if (reset) {
-          setError(errorMessage);
-        }
-        console.error("Error loading products:", err);
-      }
-    },
-    [debouncedSearchQuery, selectedCategory, selectedSort, currentPage]
-  );
-
-  // Load initial data
-  const loadInitialData = useCallback(async () => {
-    try {
-      setError(null);
-
-      // Load products and categories separately to handle errors independently
-      let productsData: ProductsResponse | null = null;
-      let categoriesData: Category[] = [];
-
-      // Load products (this is critical)
-      try {
-        productsData = await ProductService.getEnterpriseProducts(1, 10, {
-          sort:
-            selectedSort === "createdAt"
-              ? "newest"
-              : selectedSort === "price"
-                ? "price_desc"
-                : "newest",
-        });
-      } catch (err: any) {
-        console.error("Error loading products:", err);
-        setError(err.message || i18n.t("enterprise.products.empty.error.title"));
-        return;
-      }
-
-      // Load categories (this is optional, failures should not block the UI)
-      try {
-        categoriesData = await CategoryService.getActiveCategories();
-      } catch (err: any) {
-        console.warn("Error loading categories:", err);
-        // Don't set error, just log it and continue with empty categories
-      }
-
-      // Set the data
-      setCategories(categoriesData);
-      if (productsData) {
-        setProducts(productsData.products || []);
-        setCurrentPage(productsData.pagination?.page || 1);
-        setHasMoreProducts(
-          (productsData.pagination?.page || 1) <
-          (productsData.pagination?.pages || 1)
-        );
-      }
-    } catch (err: any) {
-      setError(err.message || i18n.t("enterprise.products.empty.error.title"));
-      console.error("Error loading initial data:", err);
-    } finally {
-      setInitialLoading(false);
-    }
-  }, [selectedSort]);
-
-  useEffect(() => {
-    loadInitialData();
-  }, [loadInitialData]);
-
   // Auto-refresh when coming from create page
   useEffect(() => {
     if (params.refresh === "true") {
-      // Remove the refresh param and reload data
       router.replace("/(app)/(enterprise)/(tabs)/products");
-      loadInitialData();
+      queryClient.invalidateQueries({ queryKey: ['enterprise', 'products'] });
     }
-
-  }, [params.refresh, loadInitialData]);
+  }, [params.refresh, queryClient]);
 
   // Debounce search query
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
-    }, 2000); // Wait 2 seconds after user stops typing
-
+    }, 2000);
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
-  // Reload products when search/filter changes
-  useEffect(() => {
-    loadProducts(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearchQuery, selectedCategory, selectedSort]);
-
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await loadInitialData();
-    setRefreshing(false);
-  }, [loadInitialData]);
+    try {
+      await queryClient.invalidateQueries({ queryKey: ['enterprise', 'products', debouncedSearchQuery, selectedCategory, selectedSort] });
+    } finally {
+      setRefreshing(false);
+    }
+  }, [debouncedSearchQuery, selectedCategory, selectedSort, queryClient]);
 
-  const loadMoreProducts = useCallback(async () => {
+  const loadMoreProducts = useCallback(() => {
     if (loadingMore || !hasMoreProducts) return;
-
-    setLoadingMore(true);
-    setCurrentPage((prev) => prev + 1);
-    await loadProducts(false);
-    setLoadingMore(false);
-  }, [loadingMore, hasMoreProducts, loadProducts]);
+    fetchNextPage();
+  }, [loadingMore, hasMoreProducts, fetchNextPage]);
 
   const handleStatusChange = (product: Product) => {
     showConfirmation("status_change", product);
@@ -325,7 +222,7 @@ export default function EnterpriseProducts() {
       switch (type) {
         case "delete":
           await ProductService.deleteProduct(product._id);
-          setProducts((prev) => prev.filter((p) => p._id !== product._id));
+          queryClient.invalidateQueries({ queryKey: ['enterprise', 'products'] });
           showNotification(
             "success",
             i18n.t("enterprise.products.notifications.deleteSuccess"),
@@ -336,11 +233,7 @@ export default function EnterpriseProducts() {
           await ProductService.updateProduct(product._id, {
             isActive: !product.isActive,
           });
-          setProducts((prev) =>
-            prev.map((p) =>
-              p._id === product._id ? { ...p, isActive: !p.isActive } : p
-            )
-          );
+          queryClient.invalidateQueries({ queryKey: ['enterprise', 'products'] });
           showNotification(
             "success",
             i18n.t("enterprise.products.notifications.statusSuccess"),
@@ -392,7 +285,6 @@ export default function EnterpriseProducts() {
 
           <TouchableOpacity
             onPress={() => {
-              (global as any).__CURRENT_PRODUCT_ID__ = item._id;
               router.push(`/(app)/(enterprise)/(tabs)/products/${item._id}`);
             }}
           >
@@ -403,7 +295,7 @@ export default function EnterpriseProducts() {
                   "https://via.placeholder.com/160x160/E5E7EB/9CA3AF?text=No+Image",
               }}
               className="w-full h-32 rounded-xl"
-              resizeMode="cover"
+              contentFit="cover"
             />
             <View className="mt-3">
               <Text
@@ -460,7 +352,6 @@ export default function EnterpriseProducts() {
         }}
         className="rounded-2xl p-4 mx-4 mb-4"
         onPress={() => {
-          (global as any).__CURRENT_PRODUCT_ID__ = item._id;
           router.push(`/(app)/(enterprise)/(tabs)/products/${item._id}`);
         }}
       >
@@ -472,7 +363,7 @@ export default function EnterpriseProducts() {
                 "https://via.placeholder.com/80x80/E5E7EB/9CA3AF?text=No+Image",
             }}
             className="w-20 h-20 rounded-xl"
-            resizeMode="cover"
+            contentFit="cover"
           />
           <View className="ml-4 flex-1">
             <View className="flex-row items-start justify-between mb-2">
@@ -570,7 +461,7 @@ export default function EnterpriseProducts() {
             <TouchableOpacity
               style={{ backgroundColor: colors.brandPrimary }}
               className="rounded-xl py-4 px-6"
-              onPress={loadInitialData}
+              onPress={() => refetchProducts()}
             >
               <Text style={{ color: colors.textOnBrand }} className="font-quicksand-semibold">
                 {i18n.t("enterprise.products.empty.error.retry")}
@@ -678,53 +569,17 @@ export default function EnterpriseProducts() {
     </Modal>
   );
 
-  // Skeleton Loader Component
-  const ShimmerBlock = ({ style }: { style?: any }) => {
-    const shimmer = React.useRef(new Animated.Value(0)).current;
-    useEffect(() => {
-      const loop = Animated.loop(
-        Animated.timing(shimmer, {
-          toValue: 1,
-          duration: 1200,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        })
-      );
-      loop.start();
-      return () => loop.stop();
-    }, [shimmer]);
-    const translateX = shimmer.interpolate({
-      inputRange: [0, 1],
-      outputRange: [-150, 150],
-    });
-    return (
-      <View style={[{ backgroundColor: isDark ? colors.tertiary : "#E5E7EB", overflow: "hidden" }, style]}>
-        <Animated.View
-          style={{
-            position: "absolute",
-            top: 0,
-            bottom: 0,
-            width: 120,
-            transform: [{ translateX }],
-            backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.35)",
-            opacity: 0.7,
-          }}
-        />
-      </View>
-    );
-  };
-
   const SkeletonCard = ({ grid = false }: { grid?: boolean }) => (
     <View className={`${grid ? "w-1/2 px-2" : "w-full px-4"} mb-4`}>
       <View
         style={{ backgroundColor: colors.card, borderColor: colors.border }}
         className="rounded-2xl p-4 border overflow-hidden"
       >
-        <ShimmerBlock
+        <Shimmer
           style={{ height: grid ? 110 : 80, borderRadius: 16, width: "100%" }}
         />
         <View className="mt-4">
-          <ShimmerBlock
+          <Shimmer
             style={{
               height: 16,
               borderRadius: 8,
@@ -732,7 +587,7 @@ export default function EnterpriseProducts() {
               marginBottom: 8,
             }}
           />
-          <ShimmerBlock
+          <Shimmer
             style={{
               height: 12,
               borderRadius: 8,
@@ -740,7 +595,7 @@ export default function EnterpriseProducts() {
               marginBottom: 8,
             }}
           />
-          <ShimmerBlock style={{ height: 16, borderRadius: 8, width: "35%" }} />
+          <Shimmer style={{ height: 16, borderRadius: 8, width: "35%" }} />
         </View>
       </View>
     </View>
@@ -1096,7 +951,7 @@ export default function EnterpriseProducts() {
                           "https://via.placeholder.com/60x60/E5E7EB/9CA3AF?text=No+Image",
                       }}
                       className="w-14 h-14 rounded-xl mr-3"
-                      resizeMode="cover"
+                      contentFit="cover"
                     />
                     <View className="flex-1">
                       <Text
@@ -1123,8 +978,6 @@ export default function EnterpriseProducts() {
                   onPress={() => {
                     setMenuModalVisible(false);
                     if (selectedProductForMenu) {
-                      (global as any).__CURRENT_PRODUCT_ID__ =
-                        selectedProductForMenu._id;
                       router.push(
                         `/(app)/(enterprise)/(tabs)/products/${selectedProductForMenu._id}`
                       );

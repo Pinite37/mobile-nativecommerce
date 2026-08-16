@@ -6,8 +6,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Animated,
-  Easing,
   Image,
   RefreshControl,
   ScrollView,
@@ -18,6 +16,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocale } from '../../../../contexts/LocaleContext';
 import { useTheme } from '../../../../contexts/ThemeContext';
+import { Shimmer } from '../../../../components/ui/Shimmer';
 import i18n from '../../../../i18n/i18n';
 import ProductService from '../../../../services/api/ProductService';
 import { Product } from '../../../../types/product';
@@ -163,41 +162,13 @@ export default function MyProductsPage() {
     </TouchableOpacity>
   );
 
-  // Skeleton Loader Component
-  const ShimmerBlock = ({ style }: { style?: any }) => {
-    const shimmer = React.useRef(new Animated.Value(0)).current;
-    useEffect(() => {
-      const loop = Animated.loop(
-        Animated.timing(shimmer, {
-          toValue: 1,
-          duration: 1200,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        })
-      );
-      loop.start();
-      return () => loop.stop();
-    }, [shimmer]);
-    const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
-    return (
-      <View style={[{ backgroundColor: colors.border, overflow: 'hidden' }, style]}>
-        <Animated.View style={{
-          position: 'absolute', top: 0, bottom: 0, width: 120,
-          transform: [{ translateX }],
-          backgroundColor: 'rgba(255,255,255,0.35)',
-          opacity: 0.7,
-        }} />
-      </View>
-    );
-  };
-
   const SkeletonProduct = () => (
     <View style={{ backgroundColor: colors.card, borderRadius: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3, borderWidth: 1, borderColor: colors.border, padding: 12, marginBottom: 16, overflow: 'hidden' }}>
-      <ShimmerBlock style={{ height: 160, borderRadius: 12, width: '100%' }} />
+      <Shimmer style={{ height: 160, borderRadius: 12, width: '100%' }} />
       <View style={{ padding: 12 }}>
-        <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '80%', marginBottom: 8 }} />
-        <ShimmerBlock style={{ height: 12, borderRadius: 6, width: '60%', marginBottom: 8 }} />
-        <ShimmerBlock style={{ height: 18, borderRadius: 9, width: '40%' }} />
+        <Shimmer style={{ height: 16, borderRadius: 8, width: '80%', marginBottom: 8 }} />
+        <Shimmer style={{ height: 12, borderRadius: 6, width: '60%', marginBottom: 8 }} />
+        <Shimmer style={{ height: 18, borderRadius: 9, width: '40%' }} />
       </View>
     </View>
   );

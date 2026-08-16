@@ -6,6 +6,7 @@ import React, {
     useState,
     type ReactNode,
 } from "react";
+import { useColorScheme } from "react-native";
 import { getColors, type Colors, type Theme } from "../theme/colors";
 
 interface ThemeContextType {
@@ -24,67 +25,43 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 const THEME_STORAGE_KEY = "@app_theme";
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-    const [theme, setThemeState] = useState<Theme>("light");
-    const [isLoading, setIsLoading] = useState(true);
+    const systemScheme = useColorScheme();
+    // Démarrer avec le thème système synchrone — aucun flash au démarrage
+    const [theme, setThemeState] = useState<Theme>(systemScheme === "dark" ? "dark" : "light");
+    // isLoading reste false : le thème système est disponible immédiatement
+    const [isLoading] = useState(false);
 
-    // Load saved theme on mount
+    // Charger la préférence utilisateur en arrière-plan (override manuel)
     useEffect(() => {
-        loadSavedTheme();
+        AsyncStorage.getItem(THEME_STORAGE_KEY).then((saved) => {
+            if (saved === "light" || saved === "dark") {
+                setThemeState(saved);
+            }
+        });
     }, []);
 
-    const loadSavedTheme = async () => {
-        try {
-            const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
-            if (savedTheme && (savedTheme === "light" || savedTheme === "dark")) {
-                setThemeState(savedTheme);
-            }
-        } catch (error) {
-            console.error("Error loading saved theme:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     const setTheme = async (newTheme: Theme) => {
-        try {
-            // Update state immediately
-            setThemeState(newTheme);
-
-            // Persist to AsyncStorage
-            await AsyncStorage.setItem(THEME_STORAGE_KEY, newTheme);
-        } catch (error) {
-            console.error("Error changing theme:", error);
-            throw error;
-        }
+        setThemeState(newTheme);
+        await AsyncStorage.setItem(THEME_STORAGE_KEY, newTheme);
     };
 
     const toggleTheme = async () => {
-        const newTheme = theme === "light" ? "dark" : "light";
-        await setTheme(newTheme);
+        await setTheme(theme === "light" ? "dark" : "light");
     };
 
     const clearThemePreference = async () => {
-        try {
-            await AsyncStorage.removeItem(THEME_STORAGE_KEY);
-            setThemeState("light"); // Reset to default
-            console.log("✅ Theme preference cleared");
-        } catch (error) {
-            console.error("Error clearing theme preference:", error);
-        }
+        await AsyncStorage.removeItem(THEME_STORAGE_KEY);
+        setThemeState(systemScheme === "dark" ? "dark" : "light");
     };
 
     const loadUserTheme = async (userTheme?: string) => {
-        try {
-            if (userTheme && (userTheme === "light" || userTheme === "dark")) {
-                setThemeState(userTheme);
-                await AsyncStorage.setItem(THEME_STORAGE_KEY, userTheme);
-                console.log("✅ User theme loaded:", userTheme);
-            } else {
-                // If no user theme, load from local storage or default
-                await loadSavedTheme();
+        if (userTheme === "light" || userTheme === "dark") {
+            await setTheme(userTheme);
+        } else {
+            const saved = await AsyncStorage.getItem(THEME_STORAGE_KEY);
+            if (saved === "light" || saved === "dark") {
+                setThemeState(saved);
             }
-        } catch (error) {
-            console.error("Error loading user theme:", error);
         }
     };
 

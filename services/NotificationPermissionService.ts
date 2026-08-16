@@ -13,18 +13,7 @@ const PERMISSION_GRANTED_KEY = '@notification_permission_granted';
 class NotificationPermissionService {
   private static instance: NotificationPermissionService;
   
-  private constructor() {
-    // Configurer le comportement des notifications
-    Notifications.setNotificationHandler({
-      handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-        shouldShowBanner: true,
-        shouldShowList: true,
-      }),
-    });
-  }
+  private constructor() {}
 
   public static getInstance(): NotificationPermissionService {
     if (!NotificationPermissionService.instance) {
@@ -186,11 +175,12 @@ class NotificationPermissionService {
         return null;
       }
 
-      // Récupérer le projectId depuis app.json
-      const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+      const projectId =
+        Constants.easConfig?.projectId ??
+        Constants.expoConfig?.extra?.eas?.projectId;
 
       if (!projectId) {
-        console.error('❌ ProjectId non trouvé dans app.json');
+        console.error('❌ ProjectId non trouvé (Constants.easConfig ou app.json extra.eas)');
         return null;
       }
 

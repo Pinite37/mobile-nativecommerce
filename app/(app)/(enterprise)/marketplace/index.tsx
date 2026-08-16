@@ -5,7 +5,6 @@ import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Animated,
   BackHandler,
   Image,
   Keyboard,
@@ -19,6 +18,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocale } from '../../../../contexts/LocaleContext';
 import { useTheme } from '../../../../contexts/ThemeContext';
+import { Shimmer } from '../../../../components/ui/Shimmer';
 import i18n from '../../../../i18n/i18n';
 import ProductService from '../../../../services/api/ProductService';
 import { Product } from '../../../../types/product';
@@ -211,47 +211,14 @@ export default function MarketplacePage() {
     return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
   };
 
-  // Composant Skeleton pour le chargement
-  const ShimmerBlock = ({ style }: { style?: any }) => {
-    const shimmer = React.useRef(new Animated.Value(0)).current;
-
-    useEffect(() => {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(shimmer, { toValue: 1, duration: 1000, useNativeDriver: true }),
-          Animated.timing(shimmer, { toValue: 0, duration: 1000, useNativeDriver: true }),
-        ])
-      ).start();
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const translateX = shimmer.interpolate({
-      inputRange: [0, 1],
-      outputRange: [-150, 150],
-    });
-
-    return (
-      <View style={[{ backgroundColor: isDark ? colors.tertiary : colors.border, overflow: 'hidden' }, style]}>
-        <Animated.View
-          style={{
-            width: 150,
-            height: '100%',
-            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.5)',
-            transform: [{ translateX }],
-          }}
-        />
-      </View>
-    );
-  };
-
   const SkeletonProduct = () => (
     <View style={{ backgroundColor: colors.card, borderRadius: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2, marginBottom: 12, width: '48%', overflow: 'hidden' }}>
-      <ShimmerBlock style={{ height: 144, borderRadius: 12, width: '100%' }} />
+      <Shimmer style={{ height: 144, borderRadius: 12, width: '100%' }} />
       <View style={{ padding: 8 }}>
-        <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '80%', marginBottom: 8 }} />
+        <Shimmer style={{ height: 16, borderRadius: 8, width: '80%', marginBottom: 8 }} />
         <View className="flex-row justify-between items-center">
-          <ShimmerBlock style={{ height: 14, borderRadius: 8, width: '40%' }} />
-          <ShimmerBlock style={{ height: 14, borderRadius: 8, width: '20%' }} />
+          <Shimmer style={{ height: 14, borderRadius: 8, width: '40%' }} />
+          <Shimmer style={{ height: 14, borderRadius: 8, width: '20%' }} />
         </View>
       </View>
     </View>

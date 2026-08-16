@@ -190,7 +190,7 @@ export default function VerifyEmailScreen() {
             subtitle: "Vous pouvez maintenant vous connecter",
           });
           setTimeout(() => {
-            router.replace("/(auth)/signin" as any);
+            router.replace("/(auth)/signin");
           }, 800);
         }
       }
@@ -217,7 +217,7 @@ export default function VerifyEmailScreen() {
       ).default;
       await TokenStorageService.clearTokens();
     }
-    router.replace("/(auth)/signin" as any);
+    router.replace("/(auth)/signin");
   };
 
   const handleResendOtp = async (silent = false) => {

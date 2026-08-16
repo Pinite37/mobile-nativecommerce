@@ -3,9 +3,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Easing, Image, Modal, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useToast } from '../../../../components/ui/ToastManager';
+import { Shimmer } from '../../../../components/ui/Shimmer';
 import { useLocale } from '../../../../contexts/LocaleContext';
 import { useTheme } from '../../../../contexts/ThemeContext';
 import i18n from '../../../../i18n/i18n';
@@ -30,34 +31,6 @@ export default function DeliveryPartnerDetailScreen() {
 	const [checkingAssociation, setCheckingAssociation] = useState(false);
 	const [isAssociated, setIsAssociated] = useState<boolean | null>(null);
 	const [confirmationVisible, setConfirmationVisible] = useState(false);
-
-	// Skeleton Loader Component
-	const ShimmerBlock = ({ style }: { style?: any }) => {
-		const shimmer = React.useRef(new Animated.Value(0)).current;
-		useEffect(() => {
-			const loop = Animated.loop(
-				Animated.timing(shimmer, {
-					toValue: 1,
-					duration: 1200,
-					easing: Easing.linear,
-					useNativeDriver: true,
-				})
-			);
-			loop.start();
-			return () => loop.stop();
-		}, [shimmer]);
-		const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
-		return (
-			<View style={[{ backgroundColor: colors.border, overflow: 'hidden' }, style]}>
-				<Animated.View style={{
-					position: 'absolute', top: 0, bottom: 0, width: 120,
-					transform: [{ translateX }],
-					backgroundColor: 'rgba(255,255,255,0.35)',
-					opacity: 0.7,
-				}} />
-			</View>
-		);
-	};
 
 	const checkAssociationStatus = useCallback(async () => {
 		if (!partnerId) return;
@@ -166,15 +139,15 @@ export default function DeliveryPartnerDetailScreen() {
 					<TouchableOpacity className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
 						<Ionicons name="arrow-back" size={20} color="#FFFFFF" />
 					</TouchableOpacity>
-					<ShimmerBlock style={{ height: 20, borderRadius: 10, width: 120 }} />
+					<Shimmer style={{ height: 20, borderRadius: 10, width: 120 }} />
 					<View className="w-10" />
 				</View>
 
 				{/* Photo de profil skeleton */}
 				<View className="items-center mb-6">
-					<ShimmerBlock style={{ width: 100, height: 100, borderRadius: 50, marginBottom: 16 }} />
-					<ShimmerBlock style={{ height: 18, borderRadius: 9, width: 140, marginBottom: 8 }} />
-					<ShimmerBlock style={{ height: 14, borderRadius: 7, width: 100 }} />
+					<Shimmer style={{ width: 100, height: 100, borderRadius: 50, marginBottom: 16 }} />
+					<Shimmer style={{ height: 18, borderRadius: 9, width: 140, marginBottom: 8 }} />
+					<Shimmer style={{ height: 14, borderRadius: 7, width: 100 }} />
 				</View>
 			</LinearGradient>
 
@@ -193,8 +166,8 @@ export default function DeliveryPartnerDetailScreen() {
 							elevation: 3,
 						}}
 					>
-						<ShimmerBlock style={{ height: 16, borderRadius: 8, width: '60%', marginBottom: 12 }} />
-						<ShimmerBlock style={{ height: 60, borderRadius: 12, width: '100%' }} />
+						<Shimmer style={{ height: 16, borderRadius: 8, width: '60%', marginBottom: 12 }} />
+						<Shimmer style={{ height: 60, borderRadius: 12, width: '100%' }} />
 					</View>
 				))}
 			</View>

@@ -3,10 +3,9 @@ import { useTheme } from "@/contexts/ThemeContext";
 import i18n from "@/i18n/i18n";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, useFocusEffect, type Href } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useState } from "react";
-import { useFocusEffect } from "@react-navigation/native";
 import {
   Animated,
   Easing,
@@ -297,7 +296,7 @@ export default function ProfileScreen() {
     }
   };
 
-  const menuItems = [
+  const menuItems: Array<{ icon: string; title: string; route?: Href; onPress?: () => void }> = [
     {
       icon: "person-outline",
       title: i18n.t("client.profile.menu.personalInfo"),
@@ -401,7 +400,7 @@ export default function ProfileScreen() {
             </View>
             <TouchableOpacity
               className="relative"
-              onPress={() => router.push("/(app)/(client)/profile/notifications" as any)}
+              onPress={() => router.push("/(app)/(client)/profile/notifications")}
             >
               <Ionicons name="notifications-outline" size={24} color="#FFFFFF" />
               {unreadCount > 0 && (
@@ -445,7 +444,7 @@ export default function ProfileScreen() {
               key={index}
               className="rounded-2xl shadow-sm p-4 mb-2 flex-row items-center"
               style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }}
-              onPress={() => item.onPress ? item.onPress() : router.push(item.route as any)}
+              onPress={() => item.onPress ? item.onPress() : item.route && router.push(item.route)}
             >
               <View className="w-12 h-12 rounded-xl justify-center items-center mr-4" style={{ backgroundColor: colors.secondary }}>
                 <Ionicons name={item.icon as any} size={24} color={colors.brandPrimary} />

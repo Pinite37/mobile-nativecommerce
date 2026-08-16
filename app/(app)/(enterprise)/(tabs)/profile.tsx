@@ -6,8 +6,6 @@ import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
-  Easing,
   Image,
   KeyboardAvoidingView,
   Linking,
@@ -21,7 +19,7 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 // New Reanimated toast system only
 import { useToast as useReanimatedToast } from "../../../../components/ui/ReanimatedToast/context";
@@ -30,6 +28,7 @@ import { useUnreadNotifications } from "../../../../hooks/useUnreadNotifications
 import { useLocale } from "../../../../contexts/LocaleContext";
 import { useSubscription } from "../../../../contexts/SubscriptionContext";
 import { useTheme } from "../../../../contexts/ThemeContext";
+import { Shimmer } from "../../../../components/ui/Shimmer";
 import i18n from "../../../../i18n/i18n";
 import EnterpriseService, {
   Enterprise,
@@ -958,48 +957,12 @@ function EnterpriseProfilePage() {
           ? "31.5%"
           : "23%";
 
-  // Skeleton Loader Component
-  const ShimmerBlock = ({ style }: { style?: any }) => {
-    const shimmer = React.useRef(new Animated.Value(0)).current;
-    useEffect(() => {
-      const loop = Animated.loop(
-        Animated.timing(shimmer, {
-          toValue: 1,
-          duration: 1200,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        })
-      );
-      loop.start();
-      return () => loop.stop();
-    }, [shimmer]);
-    const translateX = shimmer.interpolate({
-      inputRange: [0, 1],
-      outputRange: [-150, 150],
-    });
-    return (
-      <View style={[{ backgroundColor: isDark ? colors.tertiary : "#E5E7EB", overflow: "hidden" }, style]}>
-        <Animated.View
-          style={{
-            position: "absolute",
-            top: 0,
-            bottom: 0,
-            width: 120,
-            transform: [{ translateX }],
-            backgroundColor: "rgba(255,255,255,0.35)",
-            opacity: isDark ? 0.15 : 0.7,
-          }}
-        />
-      </View>
-    );
-  };
-
   const SkeletonCard = ({ style }: { style?: any }) => (
     <View
       className="rounded-2xl shadow-sm overflow-hidden"
       style={[{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }, style]}
     >
-      <ShimmerBlock style={{ height: 120, borderRadius: 16, width: "100%" }} />
+      <Shimmer style={{ height: 120, borderRadius: 16, width: "100%" }} />
     </View>
   );
 
@@ -1020,7 +983,7 @@ function EnterpriseProfilePage() {
       >
         <View className="flex-row items-start justify-between">
           <View className="flex-1 pr-4">
-            <ShimmerBlock
+            <Shimmer
               style={{
                 height: 28,
                 borderRadius: 14,
@@ -1029,7 +992,7 @@ function EnterpriseProfilePage() {
               }}
             />
             <View className="flex-row items-center mt-3">
-              <ShimmerBlock
+              <Shimmer
                 style={{
                   width: 16,
                   height: 16,
@@ -1037,12 +1000,12 @@ function EnterpriseProfilePage() {
                   marginRight: 8,
                 }}
               />
-              <ShimmerBlock
+              <Shimmer
                 style={{ height: 14, borderRadius: 7, width: "40%" }}
               />
             </View>
             <View className="flex-row items-center mt-2">
-              <ShimmerBlock
+              <Shimmer
                 style={{
                   width: 12,
                   height: 12,
@@ -1050,12 +1013,12 @@ function EnterpriseProfilePage() {
                   marginRight: 8,
                 }}
               />
-              <ShimmerBlock
+              <Shimmer
                 style={{ height: 12, borderRadius: 6, width: "30%" }}
               />
             </View>
           </View>
-          <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
+          <Shimmer style={{ width: 40, height: 40, borderRadius: 20 }} />
         </View>
       </LinearGradient>
 
@@ -1073,7 +1036,7 @@ function EnterpriseProfilePage() {
           }}
         >
           <View className="flex-row items-start">
-            <ShimmerBlock
+            <Shimmer
               style={{
                 width: logoSize,
                 height: logoSize,
@@ -1081,7 +1044,7 @@ function EnterpriseProfilePage() {
               }}
             />
             <View className="flex-1 ml-5">
-              <ShimmerBlock
+              <Shimmer
                 style={{
                   height: 16,
                   borderRadius: 8,
@@ -1089,7 +1052,7 @@ function EnterpriseProfilePage() {
                   marginBottom: 8,
                 }}
               />
-              <ShimmerBlock
+              <Shimmer
                 style={{
                   height: 14,
                   borderRadius: 7,
@@ -1098,13 +1061,13 @@ function EnterpriseProfilePage() {
                 }}
               />
               <View className="flex-row mt-4 space-x-3">
-                <ShimmerBlock
+                <Shimmer
                   style={{ width: 60, height: 28, borderRadius: 14 }}
                 />
-                <ShimmerBlock
+                <Shimmer
                   style={{ width: 60, height: 28, borderRadius: 14 }}
                 />
-                <ShimmerBlock
+                <Shimmer
                   style={{ width: 60, height: 28, borderRadius: 14 }}
                 />
               </View>
@@ -1115,7 +1078,7 @@ function EnterpriseProfilePage() {
 
       {/* Marketing Skeleton */}
       <View className="px-4 pt-6">
-        <ShimmerBlock
+        <Shimmer
           style={{
             height: 20,
             borderRadius: 10,
@@ -1135,7 +1098,7 @@ function EnterpriseProfilePage() {
               marginBottom: stackMarketing ? 8 : 0,
             }}
           >
-            <ShimmerBlock
+            <Shimmer
               style={{ height: 120, borderRadius: 16, width: "100%" }}
             />
           </View>
@@ -1146,7 +1109,7 @@ function EnterpriseProfilePage() {
               marginTop: stackMarketing ? 8 : 0,
             }}
           >
-            <ShimmerBlock
+            <Shimmer
               style={{ height: 120, borderRadius: 16, width: "100%" }}
             />
           </View>
@@ -1161,7 +1124,7 @@ function EnterpriseProfilePage() {
 
       {/* Dashboard Skeleton */}
       <View className="px-4 py-4">
-        <ShimmerBlock
+        <Shimmer
           style={{
             height: 20,
             borderRadius: 10,
@@ -1184,7 +1147,7 @@ function EnterpriseProfilePage() {
 
       {/* Actions rapides Skeleton */}
       <View className="px-4 py-4">
-        <ShimmerBlock
+        <Shimmer
           style={{
             height: 20,
             borderRadius: 10,
@@ -1200,7 +1163,7 @@ function EnterpriseProfilePage() {
 
       {/* Gestion Skeleton */}
       <View className="px-4 py-4">
-        <ShimmerBlock
+        <Shimmer
           style={{
             height: 20,
             borderRadius: 10,
@@ -1222,7 +1185,7 @@ function EnterpriseProfilePage() {
 
       {/* Bouton de déconnexion Skeleton */}
       <View className="px-4 py-6">
-        <ShimmerBlock style={{ height: 48, borderRadius: 16, width: "100%" }} />
+        <Shimmer style={{ height: 48, borderRadius: 16, width: "100%" }} />
       </View>
     </ScrollView>
   );
@@ -1660,7 +1623,7 @@ function EnterpriseProfilePage() {
                 }}
                 activeOpacity={0.85}
                 onPress={() =>
-                  router.push("/(app)/(enterprise)/advertisements" as any)
+                  router.push("/(app)/(enterprise)/advertisements")
                 }
               >
                 <LinearGradient
@@ -1743,7 +1706,7 @@ function EnterpriseProfilePage() {
                   <TouchableOpacity
                     onPress={() => {
                       if (!isIosBillingRestricted) {
-                        router.push("/(app)/(enterprise)/subscriptions" as any);
+                        router.push("/(app)/(enterprise)/subscriptions");
                       }
                     }}
                     className="rounded-xl py-2 px-3"
@@ -1787,7 +1750,7 @@ function EnterpriseProfilePage() {
               activeOpacity={isIosBillingRestricted ? 1 : 0.85}
               onPress={() => {
                 if (!isIosBillingRestricted) {
-                  router.push("/(app)/(enterprise)/subscriptions" as any);
+                  router.push("/(app)/(enterprise)/subscriptions");
                 }
               }}
             >
@@ -2041,7 +2004,7 @@ function EnterpriseProfilePage() {
             {/* Notifications */}
             <TouchableOpacity
               onPress={() =>
-                router.push("/(app)/(enterprise)/profile/notifications" as any)
+                router.push("/(app)/(enterprise)/profile/notifications")
               }
               className="flex-row items-center justify-between px-4 py-5"
               style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
@@ -2071,7 +2034,7 @@ function EnterpriseProfilePage() {
             {/* Paramètres */}
             <TouchableOpacity
               onPress={() =>
-                router.push("/(app)/(enterprise)/profile/settings" as any)
+                router.push("/(app)/(enterprise)/profile/settings")
               }
               className="flex-row items-center justify-between px-4 py-5"
             >

@@ -5,8 +5,6 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import {
-  Animated,
-  Easing,
   Image,
   Modal,
   RefreshControl,
@@ -21,6 +19,7 @@ import { useLocale } from "@/contexts/LocaleContext";
 import i18n from "@/i18n/i18n";
 import { FavoriteItem } from "@/types/product";
 import { useTheme } from "../../../../contexts/ThemeContext";
+import { Shimmer } from "../../../../components/ui/Shimmer";
 
 export default function EnterpriseFavoritesScreen() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -112,56 +111,20 @@ export default function EnterpriseFavoritesScreen() {
     }, [])
   );
 
-  // Skeleton Loader Component
-  const ShimmerBlock = ({ style }: { style?: any }) => {
-    const shimmer = React.useRef(new Animated.Value(0)).current;
-    useEffect(() => {
-      const loop = Animated.loop(
-        Animated.timing(shimmer, {
-          toValue: 1,
-          duration: 1200,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        })
-      );
-      loop.start();
-      return () => loop.stop();
-    }, [shimmer]);
-    const translateX = shimmer.interpolate({
-      inputRange: [0, 1],
-      outputRange: [-150, 150],
-    });
-    return (
-      <View style={[{ backgroundColor: isDark ? colors.tertiary : "#E5E7EB", overflow: "hidden" }, style]}>
-        <Animated.View
-          style={{
-            position: "absolute",
-            top: 0,
-            bottom: 0,
-            width: 120,
-            transform: [{ translateX }],
-            backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.35)",
-            opacity: 0.7,
-          }}
-        />
-      </View>
-    );
-  };
-
   const SkeletonProduct = () => (
     <View
       style={{ backgroundColor: colors.card, borderColor: colors.border }}
       className="rounded-2xl border p-2 mb-3 w-[48%] overflow-hidden"
     >
-      <ShimmerBlock style={{ height: 128, borderRadius: 16, width: "100%" }} />
+      <Shimmer style={{ height: 128, borderRadius: 16, width: "100%" }} />
       <View className="p-2">
-        <ShimmerBlock
+        <Shimmer
           style={{ height: 14, borderRadius: 7, width: "80%", marginBottom: 8 }}
         />
-        <ShimmerBlock
+        <Shimmer
           style={{ height: 16, borderRadius: 8, width: "60%", marginBottom: 8 }}
         />
-        <ShimmerBlock style={{ height: 12, borderRadius: 6, width: "40%" }} />
+        <Shimmer style={{ height: 12, borderRadius: 6, width: "40%" }} />
       </View>
     </View>
   );
@@ -185,12 +148,12 @@ export default function EnterpriseFavoritesScreen() {
         }}
       >
         <View className="flex-row items-center justify-between mb-4">
-          <ShimmerBlock
+          <Shimmer
             style={{ height: 24, borderRadius: 12, width: "40%" }}
           />
         </View>
         <View className="flex-row justify-between items-center">
-          <ShimmerBlock
+          <Shimmer
             style={{ height: 32, borderRadius: 16, width: "35%" }}
           />
         </View>

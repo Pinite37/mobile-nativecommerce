@@ -7,9 +7,7 @@ import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
   Dimensions,
-  Easing,
   FlatList,
   Image,
   Modal,
@@ -21,6 +19,15 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedProps,
+  useAnimatedRef,
+  useAnimatedStyle,
+  useScrollViewOffset,
+} from "react-native-reanimated";
+import { Shimmer } from "../../../../components/ui/Shimmer";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import NotificationModal, {
   useNotification,
@@ -68,7 +75,37 @@ export default function ProductDetails() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [resolvedCategoryName, setResolvedCategoryName] = useState<string>("");
 
-  const scrollY = useRef(new Animated.Value(0)).current;
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
+  const scrollOffset = useScrollViewOffset(scrollRef);
+
+  const imageStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollOffset.value, [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT], [1, 0], Extrapolation.CLAMP),
+    transform: [
+      { translateY: interpolate(scrollOffset.value, [0, HEADER_HEIGHT], [0, -HEADER_HEIGHT * 0.6], Extrapolation.CLAMP) },
+      { scale: interpolate(scrollOffset.value, [-HEADER_HEIGHT, 0], [2, 1], Extrapolation.CLAMP) },
+    ],
+  }));
+
+  const blurProps = useAnimatedProps(() => ({
+    intensity: interpolate(scrollOffset.value, [0, HEADER_HEIGHT * 0.7], [0, 50], Extrapolation.CLAMP),
+  }));
+
+  const compactHeaderStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollOffset.value, [TITLE_APPEAR_OFFSET, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT], [0, 1], Extrapolation.CLAMP),
+    transform: [{ translateY: interpolate(scrollOffset.value, [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT], [-100, 0], Extrapolation.CLAMP) }],
+  }));
+
+  const bigTitleStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollOffset.value, [0, HEADER_HEIGHT * 0.5], [1, 0], Extrapolation.CLAMP),
+  }));
+
+  const floatingBackStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollOffset.value, [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT - 20], [1, 0], Extrapolation.CLAMP),
+  }));
+
+  const floatingActionsStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollOffset.value, [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT - 20], [1, 0], Extrapolation.CLAMP),
+  }));
 
   const requireAuth = (
     message: string = "Connectez-vous pour utiliser cette fonctionnalite.",
@@ -82,47 +119,6 @@ export default function ProductDetails() {
     return false;
   };
 
-  const imageOpacity = scrollY.interpolate({
-    inputRange: [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT],
-    outputRange: [1, 0],
-    extrapolate: "clamp",
-  });
-
-  const imageTranslateY = scrollY.interpolate({
-    inputRange: [0, HEADER_HEIGHT],
-    outputRange: [0, -HEADER_HEIGHT * 0.6],
-    extrapolate: "clamp",
-  });
-
-  const imageScale = scrollY.interpolate({
-    inputRange: [-HEADER_HEIGHT, 0],
-    outputRange: [2, 1],
-    extrapolate: "clamp",
-  });
-
-  const blurIntensity = scrollY.interpolate({
-    inputRange: [0, HEADER_HEIGHT * 0.7],
-    outputRange: [0, 50],
-    extrapolate: "clamp",
-  });
-
-  const compactHeaderTranslateY = scrollY.interpolate({
-    inputRange: [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT],
-    outputRange: [-100, 0],
-    extrapolate: "clamp",
-  });
-
-  const compactHeaderOpacity = scrollY.interpolate({
-    inputRange: [TITLE_APPEAR_OFFSET, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT],
-    outputRange: [0, 1],
-    extrapolate: "clamp",
-  });
-
-  const bigTitleOpacity = scrollY.interpolate({
-    inputRange: [0, HEADER_HEIGHT * 0.5],
-    outputRange: [1, 0],
-    extrapolate: "clamp",
-  });
 
   useEffect(() => {
     const loadProductDetails = async () => {
@@ -359,45 +355,6 @@ export default function ProductDetails() {
     }
   };
 
-  // Skeleton Loader Component
-  const ShimmerBlock = ({ style }: { style?: any }) => {
-    const shimmer = React.useRef(new Animated.Value(0)).current;
-    useEffect(() => {
-      const loop = Animated.loop(
-        Animated.timing(shimmer, {
-          toValue: 1,
-          duration: 1200,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        }),
-      );
-      loop.start();
-      return () => loop.stop();
-    }, [shimmer]);
-    const translateX = shimmer.interpolate({
-      inputRange: [0, 1],
-      outputRange: [-150, 150],
-    });
-    return (
-      <View
-        style={[{ backgroundColor: colors.border, overflow: "hidden" }, style]}
-      >
-        <Animated.View
-          style={{
-            position: "absolute",
-            top: 0,
-            bottom: 0,
-            width: 120,
-            transform: [{ translateX }],
-            backgroundColor: isDark
-              ? "rgba(255,255,255,0.1)"
-              : "rgba(255,255,255,0.35)",
-            opacity: 0.7,
-          }}
-        />
-      </View>
-    );
-  };
 
   const SkeletonProduct = () => (
     <View className="flex-1" style={{ backgroundColor: "transparent" }}>
@@ -412,10 +369,10 @@ export default function ProductDetails() {
         style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}
       >
         <View className="flex-row items-center justify-between px-4 pb-3">
-          <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
-          <ShimmerBlock style={{ width: 120, height: 16, borderRadius: 8 }} />
+          <Shimmer style={{ width: 40, height: 40, borderRadius: 20 }} />
+          <Shimmer style={{ width: 120, height: 16, borderRadius: 8 }} />
           <View className="flex-row">
-            <ShimmerBlock
+            <Shimmer
               style={{
                 width: 40,
                 height: 40,
@@ -423,7 +380,7 @@ export default function ProductDetails() {
                 marginRight: 8,
               }}
             />
-            <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20 }} />
+            <Shimmer style={{ width: 40, height: 40, borderRadius: 20 }} />
           </View>
         </View>
       </LinearGradient>
@@ -439,7 +396,7 @@ export default function ProductDetails() {
       >
         {/* Image Skeleton */}
         <View style={{ marginTop: 0 }}>
-          <ShimmerBlock style={{ width: "100%", height: 200 }} />
+          <Shimmer style={{ width: "100%", height: 200 }} />
         </View>
 
         {/* Content Skeleton */}
@@ -448,7 +405,7 @@ export default function ProductDetails() {
           className="px-6 py-6 rounded-t-3xl -mt-6"
         >
           {/* ... skeleton content ... */}
-          <ShimmerBlock
+          <Shimmer
             style={{
               width: "30%",
               height: 32,
@@ -456,7 +413,7 @@ export default function ProductDetails() {
               marginBottom: 12,
             }}
           />
-          <ShimmerBlock
+          <Shimmer
             style={{
               width: "80%",
               height: 28,
@@ -464,7 +421,7 @@ export default function ProductDetails() {
               marginBottom: 8,
             }}
           />
-          <ShimmerBlock
+          <Shimmer
             style={{
               width: "100%",
               height: 16,
@@ -553,9 +510,8 @@ export default function ProductDetails() {
           {
             paddingTop: insets.top,
             height: COMPACT_HEADER_HEIGHT,
-            opacity: compactHeaderOpacity,
-            transform: [{ translateY: compactHeaderTranslateY }],
           },
+          compactHeaderStyle,
         ]}
         pointerEvents="box-none"
       >
@@ -629,17 +585,15 @@ export default function ProductDetails() {
           Let's keep a back button always accessible or cross-fade.
       */}
       <Animated.View
-        style={{
-          position: "absolute",
-          top: insets.top + 10,
-          left: 16,
-          zIndex: 900,
-          opacity: scrollY.interpolate({
-            inputRange: [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT - 20],
-            outputRange: [1, 0],
-            extrapolate: "clamp",
-          }),
-        }}
+        style={[
+          {
+            position: "absolute",
+            top: insets.top + 10,
+            left: 16,
+            zIndex: 900,
+          },
+          floatingBackStyle,
+        ]}
       >
         <TouchableOpacity
           onPress={() => router.back()}
@@ -650,18 +604,16 @@ export default function ProductDetails() {
       </Animated.View>
 
       <Animated.View
-        style={{
-          position: "absolute",
-          top: insets.top + 10,
-          right: 16,
-          zIndex: 900,
-          flexDirection: "row",
-          opacity: scrollY.interpolate({
-            inputRange: [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT - 20],
-            outputRange: [1, 0],
-            extrapolate: "clamp",
-          }),
-        }}
+        style={[
+          {
+            position: "absolute",
+            top: insets.top + 10,
+            right: 16,
+            zIndex: 900,
+            flexDirection: "row",
+          },
+          floatingActionsStyle,
+        ]}
       >
         <TouchableOpacity
           onPress={async () => {
@@ -706,16 +658,7 @@ export default function ProductDetails() {
         {activeImage ? (
           <AnimatedImage
             source={{ uri: activeImage }}
-            style={[
-              styles.headerImage,
-              {
-                opacity: imageOpacity,
-                transform: [
-                  { translateY: imageTranslateY },
-                  { scale: imageScale },
-                ],
-              },
-            ]}
+            style={[styles.headerImage, imageStyle]}
             contentFit="cover"
           />
         ) : (
@@ -725,7 +668,7 @@ export default function ProductDetails() {
         )}
 
         <AnimatedBlurView
-          intensity={blurIntensity}
+          animatedProps={blurProps}
           tint="dark"
           style={StyleSheet.absoluteFillObject}
         />
@@ -733,7 +676,8 @@ export default function ProductDetails() {
         <Animated.View
           style={[
             styles.bigTitleContainer,
-            { opacity: bigTitleOpacity, paddingBottom: 40 },
+            { paddingBottom: 40 },
+            bigTitleStyle,
           ]}
         >
           <Text style={styles.bigTitle} className="font-quicksand-bold">
@@ -747,13 +691,9 @@ export default function ProductDetails() {
 
       {/* Scrollable Content */}
       <Animated.ScrollView
-        scrollEventThrottle={16}
+        ref={scrollRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: HEADER_HEIGHT }}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false },
-        )}
       >
         <View
           style={[styles.contentContainer, { backgroundColor: colors.card }]}

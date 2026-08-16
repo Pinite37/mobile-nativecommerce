@@ -239,7 +239,7 @@ export default function DeliveryPartnersScreen() {
 
 	const renderItem = ({ item }: { item: DeliveryPartnerStatus }) => {
 		const alreadyAssociated = item.isAssociated || enterprise?.deliveryPartners?.some(p => p._id === item._id);
-		const openDetail = () => router.push(`/delivery-partners/${item._id}` as any);
+		const openDetail = () => router.push({ pathname: '/(app)/(enterprise)/delivery-partners/[partnerId]', params: { partnerId: item._id } });
 
 		return (
 			<TouchableOpacity

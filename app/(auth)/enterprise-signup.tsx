@@ -354,7 +354,7 @@ export default function EnterpriseSignUpScreen() {
           );
           // Ne PAS appeler handlePostRegistration ici !
           // Cela évite de déclencher isAuthenticated=true, le modal notification, le chargement index.tsx, etc.
-          router.replace("/(auth)/verify-email" as any);
+          router.replace("/(auth)/verify-email");
           return;
         }
 
@@ -367,7 +367,7 @@ export default function EnterpriseSignUpScreen() {
 
         if (Platform.OS === "ios") {
           console.log("📱 iOS détecté: aucun parcours d'abonnement in-app");
-          router.replace("/(app)/(enterprise)/(tabs)/" as any);
+          router.replace("/(app)/(enterprise)/(tabs)/");
         } else {
           console.log("🎯 Affichage du modal de sélection de plan...");
           // Afficher le modal de sélection de plan au lieu de rediriger directement

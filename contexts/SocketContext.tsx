@@ -1,7 +1,6 @@
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import socketService from '../services/socket/SocketService';
-import TokenStorageService from '../services/TokenStorageService';
 import { useAuth } from './AuthContext';
 
 interface SocketContextType {
@@ -49,42 +48,18 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
     let mounted = true;
 
-    // Fonction pour tenter la connexion avec vérification du token
+    // socketService.connect() lit le token en interne via TokenStorageService
+    // isAuthenticated === true garantit que le token est disponible
     const attemptConnection = async () => {
       try {
-        // Vérifier que le token est bien disponible avec plusieurs tentatives
-        let token = null;
-        let attempts = 0;
-        const maxAttempts = 5;
-
-        while (!token && attempts < maxAttempts && mounted) {
-          token = await TokenStorageService.getAccessToken();
-          if (!token) {
-            console.log(`⏳ Token pas encore disponible (tentative ${attempts + 1}/${maxAttempts})`);
-            await new Promise(resolve => setTimeout(resolve, 500));
-            attempts++;
-          }
-        }
-
-        if (!token) {
-          console.error('❌ Token toujours manquant après plusieurs tentatives');
-          setError('Token d\'authentification manquant');
-          return;
-        }
-
         if (!mounted) return;
-
-        console.log('✅ Token trouvé, connexion Socket.IO...');
-
         await socketService.connect(user._id);
-        
         if (mounted) {
           setIsConnected(true);
           setError(null);
           setConnectionStatus(socketService.getConnectionStatus());
         }
       } catch (err: any) {
-        console.error('❌ Erreur connexion Socket.IO:', err);
         if (mounted) {
           setError(err.message || 'Erreur de connexion');
           setIsConnected(false);

@@ -29,7 +29,6 @@
         "foregroundImage": "./assets/images/axicauriss.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
       "package": "com.axi.axiapp",
       "googleServicesFile": "./google-services.json",
       "softwareKeyboardLayoutMode": "pan",
@@ -88,8 +87,8 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/axicauriss.png",
-          "color": "#ffffff",
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#0D9E6E",
           "sounds": []
         }
       ],

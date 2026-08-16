@@ -11,7 +11,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useToast } from "../../components/ui/ReanimatedToast/context";
 import { useAuth } from "../../contexts/AuthContext";
 import AuthService from "../../services/api/AuthService";
@@ -107,7 +107,7 @@ export default function SignInScreen() {
             title: "Vérification requise",
             subtitle: "Veuillez vérifier votre adresse email",
           });
-          router.replace("/(auth)/verify-email" as any);
+          router.replace("/(auth)/verify-email");
           return;
         }
 
@@ -161,7 +161,7 @@ export default function SignInScreen() {
   };
 
   const handleForgotPassword = () => {
-    router.push("/(auth)/forgot-password" as any);
+    router.push("/(auth)/forgot-password");
   };
 
   return (
