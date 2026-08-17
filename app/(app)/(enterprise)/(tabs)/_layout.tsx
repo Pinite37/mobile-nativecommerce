@@ -199,12 +199,6 @@ export default function TabsLayout() {
           tabBarStyle: { display: "none" },
         }}
       />
-      <Tabs.Screen
-        name="notifications/index"
-        options={{
-          href: null, // Cache cette route spécifique
-        }}
-      />
     </Tabs>
   );
 }

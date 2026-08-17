@@ -17,10 +17,18 @@ const HideToastOffset = ToastOffset + ToastHeight;
 const BaseSafeArea = 50;
 
 export const Toast: React.FC<ToastProps> = ({ toast, index, onDismiss }) => {
-  const { width: windowWidth } = useWindowDimensions();
-  const isActiveToast = toast.id === 0;
+const { width: windowWidth } = useWindowDimensions();
 
-  const initialBottomPosition = isActiveToast ? -HideToastOffset : BaseSafeArea + (toast.id - 1) * ToastOffset;
+  // Shared values so worklets never access plain JS object properties
+  const toastId = useSharedValue(toast.id);
+  const toastKey = useSharedValue(String(toast.key ?? toast.id));
+
+  useEffect(() => {
+    toastId.value = toast.id;
+    toastKey.value = String(toast.key ?? toast.id);
+  }, [toast.id, toast.key, toastId, toastKey]);
+
+  const initialBottomPosition = toast.id === 0 ? -HideToastOffset : BaseSafeArea + (toast.id - 1) * ToastOffset;
   const bottom = useSharedValue(initialBottomPosition);
 
   useEffect(() => {
@@ -30,17 +38,24 @@ export const Toast: React.FC<ToastProps> = ({ toast, index, onDismiss }) => {
   const translateX = useSharedValue(0);
   const isSwiping = useSharedValue(false);
 
+  // Opacity initialisée à la bonne valeur dès le premier rendu (pas de départ à 0)
+  const contentOpacity = useSharedValue(toast.id <= 1 ? 1 : 0);
+
+  useEffect(() => {
+    contentOpacity.value = withTiming(toast.id <= 1 ? 1 : 0, { duration: 200 });
+  }, [toast.id, contentOpacity]);
+
   const dismissItem = useCallback(() => {
     'worklet';
     translateX.value = withTiming(-windowWidth, undefined, isFinished => {
       if (isFinished) {
-        scheduleOnRN(onDismiss, String(toast.key ?? toast.id));
+        scheduleOnRN(onDismiss, toastKey.value);
       }
     });
-  }, [onDismiss, toast.id, toast.key, translateX, windowWidth]);
+  }, [onDismiss, toastKey, translateX, windowWidth]);
 
   const gesture = Gesture.Pan()
-    .enabled(isActiveToast)
+    .enabled(toast.id === 0)
     .onBegin(() => {
       isSwiping.value = true;
     })
@@ -60,29 +75,29 @@ export const Toast: React.FC<ToastProps> = ({ toast, index, onDismiss }) => {
     });
 
   useEffect(() => {
-    if (!toast.autodismiss || !isActiveToast) return;
+    if (!toast.autodismiss || toast.id !== 0) return;
     const timeout = setTimeout(() => {
       dismissItem();
     }, 2000);
     return () => clearTimeout(timeout);
-  }, [dismissItem, isActiveToast, toast.autodismiss]);
+  }, [dismissItem, toast.id, toast.autodismiss]);
 
   const rToastStyle = useAnimatedStyle(() => {
-    const baseScale = 1 - toast.id * 0.05;
+    const baseScale = 1 - toastId.value * 0.05;
     const scale = isSwiping.value ? baseScale * 0.96 : baseScale;
     return {
       bottom: bottom.value,
-      zIndex: 1000 - toast.id,
+      zIndex: 1000 - toastId.value,
       transform: [
         { scale: withTiming(scale) },
         { translateX: translateX.value },
       ],
     };
-  }, [toast]);
+  });
 
   const rVisibleContainerStyle = useAnimatedStyle(() => {
-    return { opacity: withTiming(toast.id <= 1 ? 1 : 0) };
-  }, [toast.id]);
+    return { opacity: contentOpacity.value };
+  });
 
   return (
     <GestureDetector gesture={gesture}>
@@ -147,6 +162,7 @@ const styles = StyleSheet.create({
     rowGap: 2,
   },
   title: {
+    color: '#111',
     fontSize: 16,
     fontWeight: 'bold',
   },

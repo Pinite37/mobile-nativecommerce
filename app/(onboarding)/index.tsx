@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import OnboardingService from '../../services/OnboardingService';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -42,6 +43,7 @@ const slides: OnboardingSlide[] = [
 export default function OnboardingScreen() {
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const scrollViewRef = useRef<ScrollView>(null);
+	const insets = useSafeAreaInsets();
 
 	// Guard: Si l'onboarding est déjà complété, rediriger vers le marketplace public
 	useEffect(() => {
@@ -90,13 +92,13 @@ export default function OnboardingScreen() {
 			<StatusBar style="dark" />
 
 			{/* Header avec logo */}
-			<View style={styles.header}>
+			<View style={[styles.header, { paddingTop: insets.top + 20 }]}>
 				<Image
 					source={require('../../assets/images/axiLogoo.png')}
 					style={styles.logo}
 					resizeMode="contain"
 				/>
-				<TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
+				<TouchableOpacity onPress={handleSkip} style={[styles.skipButton, { top: insets.top + 20 }]}>
 					<Text style={styles.skipText}>Passer</Text>
 				</TouchableOpacity>
 			</View>
@@ -182,7 +184,6 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 		alignItems: 'center',
 		paddingHorizontal: 20,
-		paddingTop: 60,
 		paddingBottom: 20,
 	},
 	logo: {
@@ -191,7 +192,6 @@ const styles = StyleSheet.create({
 	},
 	skipButton: {
 		position: 'absolute',
-		top: 60,
 		right: 20,
 		paddingHorizontal: 16,
 		paddingVertical: 8,

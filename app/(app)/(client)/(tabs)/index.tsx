@@ -72,8 +72,8 @@ export default function ClientHome() {
 
     useFocusEffect(
         useCallback(() => {
-            loadUnreadCount();
-        }, [loadUnreadCount])
+            if (isAuthenticated) loadUnreadCount();
+        }, [isAuthenticated, loadUnreadCount])
     );
     // const { getCacheStats } = useSearchCache(); // (non utilisé pour l'instant)
 
@@ -739,15 +739,17 @@ export default function ClientHome() {
                             </Text>
                         )}
                     </View>
-                    <TouchableOpacity
-                        className="bg-white/20 p-2 rounded-full backdrop-blur-sm border border-white/30"
-                        onPress={() => router.push('/(app)/(client)/profile/notifications')}
-                    >
-                        <Ionicons name="notifications-outline" size={24} color="white" />
-                        {unreadCount > 0 && (
-                            <View className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-emerald-600" />
-                        )}
-                    </TouchableOpacity>
+                    {isAuthenticated && (
+                        <TouchableOpacity
+                            className="bg-white/20 p-2 rounded-full backdrop-blur-sm border border-white/30"
+                            onPress={() => router.push('/(app)/(client)/profile/notifications')}
+                        >
+                            <Ionicons name="notifications-outline" size={24} color="white" />
+                            {unreadCount > 0 && (
+                                <View className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-emerald-600" />
+                            )}
+                        </TouchableOpacity>
+                    )}
                 </View>
             </LinearGradient>
 

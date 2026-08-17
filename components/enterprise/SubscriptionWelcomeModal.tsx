@@ -57,8 +57,6 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
   const loadTrialPlan = async () => {
     try {
       setLoadingPlans(true);
-      console.log('🔄 Chargement du plan TRIAL depuis le backend...');
-      
       // Récupérer les plans backend bruts pour avoir accès au champ duration
       const backendPlans = await SubscriptionService.getBackendEnterprisePlans();
       
@@ -66,8 +64,6 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
       const backendTrialPlan = backendPlans.find(plan => plan.duration === 'TRIAL');
       
       if (backendTrialPlan) {
-        console.log('✅ Plan TRIAL trouvé depuis backend:', backendTrialPlan);
-        
         // Mapper les features du plan backend
         const features: string[] = [];
         
@@ -95,8 +91,6 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
           features,
         });
       } else {
-        console.warn('⚠️ Aucun plan TRIAL trouvé dans le backend, fallback vers plans mappés');
-        
         // Fallback: chercher dans les plans mappés
         const plans = await SubscriptionService.getEnterprisePlans();
         const trial = plans.find(plan => 
@@ -107,10 +101,8 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
         
         if (trial) {
           setTrialPlan(trial);
-          console.log('✅ Plan TRIAL trouvé depuis plans mappés:', trial);
         } else {
           // Dernière option: valeurs par défaut
-          console.warn('⚠️ Utilisation des valeurs par défaut');
           setTrialPlan({
             id: 'trial-default',
             name: 'Essai Gratuit',
@@ -161,7 +153,6 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
     try {
       setLoading(true);
       setActivationProgress('Préparation de votre essai...');
-      console.log('🎉 Activation du plan d\'essai gratuit');
 
       // Timeout pour gérer les requêtes longues (refresh token, etc.)
       const activationPromise = activateTrialFromContext();
@@ -174,12 +165,9 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
       // Attendre l'activation avec timeout de 30 secondes
       await Promise.race([activationPromise, timeoutPromise]);
 
-      console.log('✅ Plan d\'essai activé avec succès');
-      
       // Recharger le contexte d'abonnement pour mettre à jour needsSubscription
       setActivationProgress('Finalisation...');
       await loadSubscription();
-      console.log('✅ Contexte d\'abonnement rechargé');
       
       // Fermer le modal
       onClose();
@@ -187,13 +175,11 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
       // Afficher un toast de succès après fermeture du modal
       setTimeout(() => {
         showToast({
-          title: '🎉 Bienvenue !',
+          title: 'Bienvenue !',
           subtitle: 'Votre essai gratuit est activé',
           autodismiss: true,
         });
         
-        // Rediriger vers le tableau de bord entreprise
-        console.log('🚀 Redirection vers le tableau de bord entreprise...');
         router.push('/(app)/(enterprise)/(tabs)/' as any);
       }, 300);
 
@@ -221,12 +207,12 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
       
       // Afficher un toast d'erreur avec le message du backend
       showToast({
-        title: '❌ Erreur',
+        title: 'Erreur',
         subtitle: errorMessage,
         autodismiss: true,
       });
       
-      console.log('⚠️ Détails de l\'erreur:', {
+      console.error('Détails erreur activation:', {
         message: err.message,
         status: err.status,
         response: err.response,

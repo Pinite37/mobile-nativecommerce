@@ -71,8 +71,8 @@ export default function EnterpriseDashboard() {
 
   useFocusEffect(
     useCallback(() => {
-      loadUnreadCount();
-    }, [loadUnreadCount])
+      if (isAuthenticated) loadUnreadCount();
+    }, [isAuthenticated, loadUnreadCount])
   );
   // const { getCacheStats } = useSearchCache(); // Hook pour gérer le cache automatiquement (usage futur)
 

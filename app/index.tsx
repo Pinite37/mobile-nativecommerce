@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useRootNavigationState } from "expo-router";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { LoadingOverlay } from "../components/ui/LoadingOverlay";
@@ -11,6 +11,7 @@ export default function Index() {
   const { isAuthenticated, user, userRole, isLoading } = useAuth();
   const [hasCheckedOnboarding, setHasCheckedOnboarding] = useState(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
+  const navigationState = useRootNavigationState();
 
   // Check onboarding status on mount
   useEffect(() => {
@@ -24,6 +25,9 @@ export default function Index() {
 
   useEffect(() => {
     StartupPerformanceMonitor.mark("App Index - useEffect déclenché");
+
+    // Wait for navigator to be ready (prevents crash during hot reload)
+    if (!navigationState?.key) return;
 
     // Wait for both auth and onboarding checks to complete
     if (isLoading || !hasCheckedOnboarding) {
@@ -62,6 +66,7 @@ export default function Index() {
       StartupPerformanceMonitor.logReport();
     }, 1000);
   }, [
+    navigationState?.key,
     isAuthenticated,
     user,
     userRole,

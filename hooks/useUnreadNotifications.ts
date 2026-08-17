@@ -10,8 +10,8 @@ export const useUnreadNotifications = () => {
       setLoading(true);
       const count = await NotificationService.getUnreadCount();
       setUnreadCount(count);
-    } catch (error) {
-      console.error('Erreur chargement compteur notifications:', error);
+    } catch {
+      // silencieux — erreur réseau ou utilisateur non connecté
     } finally {
       setLoading(false);
     }

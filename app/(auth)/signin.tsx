@@ -6,12 +6,14 @@ import {
     ActivityIndicator,
     Image,
     Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
     Text,
     TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useToast } from "../../components/ui/ReanimatedToast/context";
 import { useAuth } from "../../contexts/AuthContext";
 import AuthService from "../../services/api/AuthService";
@@ -68,28 +70,16 @@ export default function SignInScreen() {
 
         // Check if role is supported
         if ((userRole as string) === "DELIVER") {
-          console.log("🚚 DELIVER role detected - showing error toast");
-          console.log("🚚 User role from response:", userRole);
-
-          // Show error toast with longer duration
-          console.log("🚚 About to call toast.showError");
           toast.showToast({
             title: "Profil non supporté",
             subtitle:
               "Cette application ne gère que les profils clients et entreprises. Veuillez utiliser l'application dédiée aux livreurs.",
           });
-          console.log("🚚 toast.showError called successfully");
 
           // Clear any stored session data
           await logout();
 
           // Add a longer delay to ensure toast is visible before any navigation
-          setTimeout(() => {
-            console.log(
-              "🚚 DELIVER role handled - toast should have been visible for 6 seconds",
-            );
-          }, 6500);
-
           return;
         }
 
@@ -179,22 +169,20 @@ export default function SignInScreen() {
       <View className="absolute top-0 left-0 right-0 z-10 px-6 pt-16 pb-4">
         <TouchableOpacity
           onPress={() => router.back()}
-          className="w-11 h-11 rounded-full bg-white shadow-sm items-center justify-center border border-neutral-100"
+          className="w-11 h-11 rounded-full bg-white items-center justify-center border border-neutral-200"
         >
           <Ionicons name="arrow-back" size={22} color="#374151" />
         </TouchableOpacity>
       </View>
 
-      <KeyboardAwareScrollView
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+      <ScrollView
         className="flex-1 pt-28"
         showsVerticalScrollIndicator={false}
-        enableOnAndroid={true}
         keyboardShouldPersistTaps="handled"
-        extraScrollHeight={150}
-        enableAutomaticScroll={true}
-        extraHeight={150}
-        resetScrollToCoords={{ x: 0, y: 0 }}
-        scrollEnabled={true}
         contentContainerStyle={{ paddingBottom: 60 }}
       >
         {/* Header */}
@@ -225,7 +213,7 @@ export default function SignInScreen() {
               placeholderTextColor="#9CA3AF"
               keyboardType="email-address"
               autoCapitalize="none"
-              className="bg-white border rounded-2xl px-5 py-4 text-base font-quicksand text-neutral-900 border-neutral-200/60 shadow-sm"
+              className="bg-white border rounded-2xl px-5 py-4 text-base font-quicksand text-neutral-900 border-neutral-200"
               style={{ color: "#111827", minHeight: 60 }}
             />
           </View>
@@ -239,7 +227,7 @@ export default function SignInScreen() {
                 placeholder="Mot de passe"
                 placeholderTextColor="#9CA3AF"
                 secureTextEntry={!showPassword}
-                className="bg-white border rounded-2xl px-5 py-4 pr-12 text-base font-quicksand text-neutral-900 border-neutral-200/60 shadow-sm"
+                className="bg-white border rounded-2xl px-5 py-4 pr-12 text-base font-quicksand text-neutral-900 border-neutral-200"
                 style={{ color: "#111827", minHeight: 60 }}
               />
               <TouchableOpacity
@@ -271,7 +259,7 @@ export default function SignInScreen() {
             onPress={handleSignIn}
             disabled={isLoading}
             activeOpacity={0.8}
-            className={`rounded-2xl py-4 mb-6 flex-row items-center justify-center shadow-sm ${
+            className={`rounded-2xl py-4 mb-6 flex-row items-center justify-center ${
               isLoading ? "bg-primary/70" : "bg-primary"
             }`}
           >
@@ -299,7 +287,8 @@ export default function SignInScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </KeyboardAwareScrollView>
+      </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }

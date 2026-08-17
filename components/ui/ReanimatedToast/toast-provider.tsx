@@ -8,7 +8,7 @@ export const ToastProvider: FC<PropsWithChildren> = ({ children }) => {
   const MAX_TOASTS = 4; // active + 3 stacked
 
   const showToast = useCallback((toast: Omit<ToastType, 'id'>) => {
-    setToasts(prev => {
+setToasts(prev => {
       // Increment existing positions and drop those that would exceed MAX_TOASTS
       const updatedPrev = prev
         .map(item => ({ ...item, id: item.id + 1 }))
