@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect } from 'react';
 import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
-import { scheduleOnRN } from 'react-native-worklets';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import type { ToastType } from './context';
 
 type ToastProps = {
@@ -49,7 +48,7 @@ const { width: windowWidth } = useWindowDimensions();
     'worklet';
     translateX.value = withTiming(-windowWidth, undefined, isFinished => {
       if (isFinished) {
-        scheduleOnRN(onDismiss, toastKey.value);
+        runOnJS(onDismiss)(toastKey.value);
       }
     });
   }, [onDismiss, toastKey, translateX, windowWidth]);

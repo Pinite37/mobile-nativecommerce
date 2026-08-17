@@ -97,13 +97,13 @@ function EnterpriseLayoutContent() {
           }}
         />
         <Stack.Screen
-          name="marketplace/index"
+          name="marketplace"
           options={{
             headerShown: false,
           }}
         />
         <Stack.Screen
-          name="my-products/index"
+          name="my-products"
           options={{
             headerShown: false,
           }}
@@ -127,13 +127,13 @@ function EnterpriseLayoutContent() {
           }}
         />
         <Stack.Screen
-          name="subscriptions/index"
+          name="subscriptions"
           options={{
             headerShown: false,
           }}
         />
         <Stack.Screen
-          name="categories/index"
+          name="categories"
           options={{
             headerShown: false,
           }}

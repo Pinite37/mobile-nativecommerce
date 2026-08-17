@@ -2,23 +2,11 @@ import * as Notifications from 'expo-notifications';
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNotifications } from '../../hooks/useNotifications';
-
 export default function AppLayout() {
   const router = useRouter();
   const { userRole, isAuthenticated } = useAuth();
   const lastNotificationResponse = Notifications.useLastNotificationResponse();
   const coldStartHandled = useRef(false);
-  const { setupNotifications } = useNotifications();
-
-  // Demander les permissions notifications dès la connexion
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    const timer = setTimeout(() => {
-      setupNotifications();
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [isAuthenticated, setupNotifications]);
 
   const handleNotificationData = (data: Record<string, any>) => {
     if (!data?.type || !isAuthenticated) return;

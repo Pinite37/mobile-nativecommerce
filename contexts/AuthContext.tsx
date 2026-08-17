@@ -310,11 +310,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   return (
     <AuthContext.Provider value={value}>
       {children}
-      <NotificationPermissionModal
-        visible={showNotificationModal}
-        onClose={() => setShowNotificationModal(false)}
-        onPermissionGranted={() => setShowNotificationModal(false)}
-      />
+      {showNotificationModal && (
+        <NotificationPermissionModal
+          visible={showNotificationModal}
+          onClose={() => setShowNotificationModal(false)}
+          onPermissionGranted={() => setShowNotificationModal(false)}
+        />
+      )}
     </AuthContext.Provider>
   );
 };

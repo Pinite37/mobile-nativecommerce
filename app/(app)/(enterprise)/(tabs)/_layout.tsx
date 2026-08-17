@@ -121,7 +121,7 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="offers/index"
+        name="offers"
         options={{
           title: "Offres",
           tabBarLabel: "Offres",

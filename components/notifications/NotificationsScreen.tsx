@@ -75,7 +75,9 @@ export default function NotificationsScreen({
         setNotifications((prev) =>
           replace ? items : [...prev, ...items]
         );
-        setPagination(response.pagination);
+        if (response.pagination) {
+          setPagination(response.pagination);
+        }
         if (replace && items.some((n) => n.wasUnread)) {
           markAllAsReadSilently();
         }
@@ -101,7 +103,7 @@ export default function NotificationsScreen({
   }, [fetchPage]);
 
   const onEndReached = useCallback(async () => {
-    if (loadingMore || pagination.page >= pagination.pages) return;
+    if (loadingMore || !pagination || pagination.page >= pagination.pages) return;
     setLoadingMore(true);
     await fetchPage(pagination.page + 1, false);
     setLoadingMore(false);
