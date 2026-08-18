@@ -33,6 +33,7 @@ import NotificationModal, {
 } from "../../../../components/ui/NotificationModal";
 import { useLocale } from "../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../contexts/ThemeContext";
+import { ErrorState } from "../../../../components/ui/ErrorState";
 import i18n from "../../../../i18n/i18n";
 import MessagingService from "../../../../services/api/MessagingService";
 import ProductService from "../../../../services/api/ProductService";
@@ -313,35 +314,15 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
 
   if (!product) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.card }}>
-        <ExpoStatusBar
-          style={isDark ? "light" : "dark"}
-          translucent
-          backgroundColor="transparent"
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <ExpoStatusBar style={isDark ? "light" : "dark"} translucent backgroundColor="transparent" />
+        <ErrorState
+          variant="notFound"
+          title={i18n.t("enterprise.productDetails.notFound.title")}
+          message={i18n.t("enterprise.productDetails.notFound.message")}
+          onSecondary={() => router.back()}
+          secondaryLabel={i18n.t("enterprise.productDetails.notFound.backButton")}
         />
-        <View className="flex-1 justify-center items-center px-6">
-          <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
-          <Text
-            style={{ color: colors.textPrimary }}
-            className="mt-4 text-xl font-quicksand-bold"
-          >
-            {i18n.t("enterprise.productDetails.notFound.title")}
-          </Text>
-          <Text
-            style={{ color: colors.textSecondary }}
-            className="mt-2 font-quicksand-medium text-center"
-          >
-            {i18n.t("enterprise.productDetails.notFound.message")}
-          </Text>
-          <TouchableOpacity
-            className="mt-6 bg-primary-500 rounded-2xl px-6 py-3"
-            onPress={() => router.back()}
-          >
-            <Text className="text-white font-quicksand-semibold">
-              {i18n.t("enterprise.productDetails.notFound.backButton")}
-            </Text>
-          </TouchableOpacity>
-        </View>
       </View>
     );
   }

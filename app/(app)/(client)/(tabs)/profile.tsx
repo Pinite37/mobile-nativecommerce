@@ -26,7 +26,7 @@ export default function ProfileScreen() {
   const { user, logout, refreshUserData, isAuthenticated } = useAuth();
   const insets = useSafeAreaInsets();
   const { locale } = useLocale();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { unreadCount, loadUnreadCount } = useUnreadNotifications();
   const [loading, setLoading] = useState(true);
   const [confirmationVisible, setConfirmationVisible] = useState(false);
@@ -377,7 +377,7 @@ export default function ProfileScreen() {
             paddingTop: insets.top + 16,
             paddingLeft: insets.left + 24,
             paddingRight: insets.right + 24,
-            paddingBottom: headerBottomPadding,
+            paddingBottom: 20,
           }}
         >
           <View className="flex-row items-center justify-between">
@@ -410,72 +410,124 @@ export default function ProfileScreen() {
           </View>
         </LinearGradient>
 
-        {/* User Profile */}
-        <View className="px-4" style={{ marginTop: overlayLift }}>
-          <View className="rounded-2xl p-4 flex-row items-start shadow-sm" style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }}>
-            <View className="flex-row items-center w-full">
+        {/* User Card */}
+        <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
+          <View style={{ backgroundColor: colors.card, borderRadius: 20, padding: 20 }}>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
               {user?.profileImage ? (
                 <Image
                   source={{ uri: user.profileImage }}
-                  className="w-20 h-20 rounded-full mr-4"
-                  style={{ borderWidth: 3, borderColor: colors.brandPrimary }}
+                  style={{ width: 64, height: 64, borderRadius: 32, marginRight: 16 }}
+                  resizeMode="cover"
                 />
               ) : (
-                <View className="w-20 h-20 rounded-full items-center justify-center mr-4" style={{ backgroundColor: colors.secondary, borderColor: colors.border, borderWidth: 2 }}>
-                  <Ionicons name="person" size={32} color={colors.brandPrimary} />
+                <View
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 32,
+                    backgroundColor: isDark ? "#1f2937" : "#F3F4F6",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginRight: 16,
+                  }}
+                >
+                  <Text className="font-quicksand-bold text-xl" style={{ color: colors.brandPrimary }}>
+                    {user?.firstName?.[0]?.toUpperCase() || user?.lastName?.[0]?.toUpperCase() || "?"}
+                  </Text>
                 </View>
               )}
-              <View className="flex-1">
-                <Text className="text-xl font-quicksand-bold" style={{ color: colors.textPrimary }}>
-                  {user ? `${user.firstName} ${user.lastName}` : i18n.t("client.profile.placeholders.userName")}
+              <View style={{ flex: 1 }}>
+                <Text className="text-lg font-quicksand-bold" style={{ color: colors.textPrimary }} numberOfLines={1}>
+                  {user ? `${user.firstName} ${user.lastName}`.trim() : i18n.t("client.profile.placeholders.userName")}
                 </Text>
-                <Text className="font-quicksand mt-1" style={{ color: colors.textSecondary }}>
+                <Text className="text-sm font-quicksand-medium mt-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
                   {user?.email || i18n.t("client.profile.placeholders.email")}
                 </Text>
               </View>
+              <TouchableOpacity
+                onPress={() => router.push("/(app)/(client)/profile/details")}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: isDark ? colors.brandPrimary + "20" : "#D1FAE5",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginLeft: 10,
+                }}
+              >
+                <Ionicons name="create-outline" size={17} color={colors.brandPrimary} />
+              </TouchableOpacity>
             </View>
           </View>
         </View>
 
-        {/* Menu */}
-        <View className="mx-6 mb-6 mt-5">
-          {menuItems.map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              className="rounded-2xl shadow-sm p-4 mb-2 flex-row items-center"
-              style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }}
-              onPress={() => item.onPress ? item.onPress() : item.route && router.push(item.route)}
-            >
-              <View className="w-12 h-12 rounded-xl justify-center items-center mr-4" style={{ backgroundColor: colors.secondary }}>
-                <Ionicons name={item.icon as any} size={24} color={colors.brandPrimary} />
-              </View>
-              <View className="flex-1">
-                <Text className="font-quicksand-semibold text-base" style={{ color: colors.textPrimary }}>
-                  {item.title}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-            </TouchableOpacity>
-          ))}
+        {/* Menu — groupé dans une seule carte */}
+        <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
+          <View style={{ backgroundColor: colors.card, borderRadius: 20, overflow: "hidden" }}>
+            {menuItems.map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 20,
+                  paddingVertical: 15,
+                  borderBottomWidth: index < menuItems.length - 1 ? 1 : 0,
+                  borderBottomColor: colors.border,
+                }}
+                onPress={() => item.onPress ? item.onPress() : item.route && router.push(item.route)}
+              >
+                <View
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: isDark ? colors.brandPrimary + "20" : "#D1FAE5",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginRight: 14,
+                  }}
+                >
+                  <Ionicons name={item.icon as any} size={20} color={colors.brandPrimary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text className="font-quicksand-semibold text-base" style={{ color: colors.textPrimary }}>
+                    {item.title}
+                  </Text>
+                </View>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  {item.icon === "notifications-outline" && unreadCount > 0 && (
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#EF4444", marginRight: 8 }} />
+                  )}
+                  <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
         {/* Logout Button */}
-        <View className="px-6 mb-10">
+        <View style={{ paddingHorizontal: 16, marginTop: 16, marginBottom: 10 }}>
           <TouchableOpacity
             onPress={handleLogout}
-            className="bg-red-500 py-4 rounded-2xl shadow-md border border-red-400"
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: colors.card,
+              borderRadius: 16,
+              paddingVertical: 16,
+              borderWidth: 1,
+              borderColor: isDark ? "#7F1D1D" : "#FCA5A5",
+              gap: 8,
+            }}
           >
-            <View className="flex-row items-center justify-center">
-              <Ionicons
-                name="log-out-outline"
-                size={20}
-                color="white"
-                style={{ marginRight: 8 }}
-              />
-              <Text className="text-white font-quicksand-semibold">
-                {i18n.t("client.profile.logout.button")}
-              </Text>
-            </View>
+            <Ionicons name="log-out-outline" size={20} color="#EF4444" />
+            <Text className="font-quicksand-semibold" style={{ color: "#EF4444" }}>
+              {i18n.t("client.profile.logout.button")}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

@@ -18,6 +18,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../../../contexts/ThemeContext";
+import { ErrorState } from "../../../../components/ui/ErrorState";
 import i18n from "../../../../i18n/i18n";
 import AdvertisementService, {
   Advertisement,
@@ -30,7 +31,7 @@ export default function AdvertisementDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const [advertisement, setAdvertisement] = useState<Advertisement | null>(
     null,
   );
@@ -261,32 +262,15 @@ export default function AdvertisementDetails() {
 
   if (!advertisement) {
     return (
-      <View style={{ backgroundColor: colors.background }} className="flex-1">
-        <ExpoStatusBar style="light" translucent />
-        <View className="flex-1 justify-center items-center px-6">
-          <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
-          <Text
-            className="text-lg font-quicksand-bold mt-4"
-            style={{ color: colors.textPrimary }}
-          >
-            {i18n.t("enterprise.advertisementDetails.notFound.title")}
-          </Text>
-          <Text
-            className="font-quicksand-medium text-center mt-2"
-            style={{ color: colors.textSecondary }}
-          >
-            {i18n.t("enterprise.advertisementDetails.notFound.message")}
-          </Text>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="mt-6 px-6 py-3 rounded-full"
-            style={{ backgroundColor: "#10B981" }}
-          >
-            <Text className="text-white font-quicksand-bold">
-              {i18n.t("enterprise.advertisementDetails.notFound.backButton")}
-            </Text>
-          </TouchableOpacity>
-        </View>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
+        <ErrorState
+          variant="notFound"
+          title={i18n.t("enterprise.advertisementDetails.notFound.title")}
+          message={i18n.t("enterprise.advertisementDetails.notFound.message")}
+          onSecondary={() => router.back()}
+          secondaryLabel={i18n.t("enterprise.advertisementDetails.notFound.backButton")}
+        />
       </View>
     );
   }

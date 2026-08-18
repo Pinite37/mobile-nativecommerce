@@ -24,6 +24,7 @@ import LockedFeatureOverlay from "../../../../../components/enterprise/LockedFea
 import { useLocale } from "../../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../../contexts/ThemeContext";
 import { Shimmer } from "../../../../../components/ui/Shimmer";
+import { ErrorState } from "../../../../../components/ui/ErrorState";
 import { useSubscription } from "../../../../../contexts/SubscriptionContext";
 import i18n from "../../../../../i18n/i18n";
 import CategoryService from "../../../../../services/api/CategoryService";
@@ -449,37 +450,15 @@ export default function EnterpriseProducts() {
   const renderEmptyState = () => {
     if (error) {
       return (
-        <View className="flex-1 justify-center items-center px-6">
-          <Ionicons name="alert-circle-outline" size={80} color={colors.error} />
-          <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold mt-4 mb-2">
-            {i18n.t("enterprise.products.empty.error.title")}
-          </Text>
-          <Text style={{ color: colors.textSecondary }} className="text-center font-quicksand-medium mb-6">
-            {error}
-          </Text>
-          <View className="flex-row space-x-3">
-            <TouchableOpacity
-              style={{ backgroundColor: colors.brandPrimary }}
-              className="rounded-xl py-4 px-6"
-              onPress={() => refetchProducts()}
-            >
-              <Text style={{ color: colors.textOnBrand }} className="font-quicksand-semibold">
-                {i18n.t("enterprise.products.empty.error.retry")}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={{ backgroundColor: colors.tertiary }}
-              className="rounded-xl py-4 px-6"
-              onPress={() => {
-                router.push("/(app)/(enterprise)/(tabs)/products/create");
-              }}
-            >
-              <Text style={{ color: colors.textPrimary }} className="font-quicksand-semibold">
-                {i18n.t("enterprise.products.addProduct")}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <ErrorState
+          variant="network"
+          title={i18n.t("enterprise.products.empty.error.title")}
+          message={error}
+          onRetry={() => refetchProducts()}
+          retryLabel={i18n.t("enterprise.products.empty.error.retry")}
+          onSecondary={() => router.push("/(app)/(enterprise)/(tabs)/products/create")}
+          secondaryLabel={i18n.t("enterprise.products.addProduct")}
+        />
       );
     }
 

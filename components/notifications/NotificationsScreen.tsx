@@ -11,11 +11,11 @@ import {
   FlatList,
   Image,
   RefreshControl,
-  SafeAreaView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface NotificationsScreenProps {
   title: string;
@@ -26,25 +26,43 @@ interface DisplayNotification extends NotificationData {
   wasUnread: boolean;
 }
 
-const ICONS_BY_TYPE: Record<string, any> = {
-  MESSAGE: "chatbubble-outline",
-  ORDER: "bag-outline",
-  REVIEW: "star-half-outline",
-  PRODUCT: "cube-outline",
-  SUBSCRIPTION: "star-outline",
-  SYSTEM: "megaphone-outline",
-  BROADCAST: "megaphone-outline",
-};
+const ICONS_BY_TYPE: Record<string, { name: any; color: string; bg: string }> =
+  {
+    MESSAGE: { name: "chatbubble-ellipses", color: "#6366F1", bg: "rgba(99,102,241,0.12)" },
+    ORDER: { name: "bag-check", color: "#10B981", bg: "rgba(16,185,129,0.12)" },
+    REVIEW: { name: "star", color: "#F59E0B", bg: "rgba(245,158,11,0.12)" },
+    PRODUCT: { name: "cube", color: "#3B82F6", bg: "rgba(59,130,246,0.12)" },
+    SUBSCRIPTION: { name: "diamond", color: "#8B5CF6", bg: "rgba(139,92,246,0.12)" },
+    SYSTEM: { name: "megaphone", color: "#EF4444", bg: "rgba(239,68,68,0.12)" },
+    BROADCAST: { name: "megaphone", color: "#EF4444", bg: "rgba(239,68,68,0.12)" },
+  };
+
+const DEFAULT_ICON = { name: "notifications", color: "#10B981", bg: "rgba(16,185,129,0.12)" };
+
+function timeAgo(dateString: string): string {
+  const diff = Date.now() - new Date(dateString).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return "À l'instant";
+  if (minutes < 60) return `Il y a ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `Il y a ${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `Il y a ${days}j`;
+  return new Date(dateString).toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "short",
+  });
+}
 
 export default function NotificationsScreen({
   title,
   emptyMessage,
 }: NotificationsScreenProps) {
   const router = useRouter();
-  const { colors } = useTheme();
-  const [notifications, setNotifications] = useState<DisplayNotification[]>(
-    []
-  );
+  const { colors, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
+
+  const [notifications, setNotifications] = useState<DisplayNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -56,34 +74,21 @@ export default function NotificationsScreen({
   });
 
   const markAllAsReadSilently = useCallback(() => {
-    notificationService.markAllAsRead().catch((error) => {
-      console.error("❌ Erreur marquage global des notifications:", error);
-    });
+    notificationService.markAllAsRead().catch(() => {});
   }, []);
 
   const fetchPage = useCallback(
     async (page: number, replace: boolean) => {
       try {
-        const response = await notificationService.getUserNotifications(
-          page,
-          20,
-          true
-        );
-        const items: DisplayNotification[] = (response.data || []).map(
-          (n) => ({ ...n, wasUnread: !n.read })
-        );
-        setNotifications((prev) =>
-          replace ? items : [...prev, ...items]
-        );
-        if (response.pagination) {
-          setPagination(response.pagination);
-        }
-        if (replace && items.some((n) => n.wasUnread)) {
-          markAllAsReadSilently();
-        }
-      } catch (error) {
-        console.error("❌ Erreur chargement notifications:", error);
-      }
+        const response = await notificationService.getUserNotifications(page, 20, true);
+        const items: DisplayNotification[] = (response.data || []).map((n) => ({
+          ...n,
+          wasUnread: !n.read,
+        }));
+        setNotifications((prev) => (replace ? items : [...prev, ...items]));
+        if (response.pagination) setPagination(response.pagination);
+        if (replace && items.some((n) => n.wasUnread)) markAllAsReadSilently();
+      } catch {}
     },
     [markAllAsReadSilently]
   );
@@ -92,7 +97,6 @@ export default function NotificationsScreen({
     useCallback(() => {
       setLoading(true);
       fetchPage(1, true).finally(() => setLoading(false));
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
   );
 
@@ -103,57 +107,66 @@ export default function NotificationsScreen({
   }, [fetchPage]);
 
   const onEndReached = useCallback(async () => {
-    if (loadingMore || !pagination || pagination.page >= pagination.pages) return;
+    if (loadingMore || pagination.page >= pagination.pages) return;
     setLoadingMore(true);
     await fetchPage(pagination.page + 1, false);
     setLoadingMore(false);
   }, [fetchPage, loadingMore, pagination]);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString("fr-FR", {
-      day: "2-digit",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: colors.secondary }}>
+    <View style={{ flex: 1, backgroundColor: colors.secondary }}>
+      {/* Header gradient */}
       <LinearGradient
         colors={[colors.brandGradientStart, colors.brandGradientEnd]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        className="pt-16 pb-6 rounded-b-3xl shadow-md"
+        style={{
+          paddingTop: insets.top + 12,
+          paddingBottom: 20,
+          paddingHorizontal: 16,
+        }}
       >
-        <View className="px-6">
-          <View className="flex-row items-center justify-between">
-            <TouchableOpacity
-              onPress={() => router.back()}
-              className="w-10 h-10 bg-white/20 rounded-full justify-center items-center"
-            >
-              <Ionicons name="chevron-back" size={20} color="white" />
-            </TouchableOpacity>
-            <View className="flex-1 mx-4">
-              <Text className="text-lg font-quicksand-bold text-white text-center">
-                {title}
-              </Text>
-            </View>
-            <View className="w-10 h-10" />
-          </View>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={{
+              width: 38,
+              height: 38,
+              backgroundColor: "rgba(255,255,255,0.2)",
+              borderRadius: 19,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Ionicons name="chevron-back" size={20} color="#fff" />
+          </TouchableOpacity>
+
+          <Text
+            className="font-quicksand-bold text-white text-lg"
+            style={{ flex: 1, textAlign: "center" }}
+          >
+            {title}
+          </Text>
+
+          {/* Espace équilibrant le bouton back */}
+          <View style={{ width: 38 }} />
         </View>
       </LinearGradient>
 
       {loading ? (
-        <View className="flex-1 items-center justify-center">
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <ActivityIndicator size="large" color={colors.brandPrimary} />
         </View>
       ) : (
         <FlatList
           data={notifications}
           keyExtractor={(item) => item._id}
-          contentContainerStyle={{ flexGrow: 1, padding: 16, paddingBottom: 40 }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingTop: 16,
+            paddingHorizontal: 16,
+            paddingBottom: insets.bottom + 100,
+          }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -164,82 +177,149 @@ export default function NotificationsScreen({
           onEndReachedThreshold={0.4}
           onEndReached={onEndReached}
           ListEmptyComponent={
-            <View className="flex-1 items-center justify-center py-20">
-              <Ionicons
-                name="notifications-off-outline"
-                size={48}
-                color={colors.textTertiary}
-              />
+            <View
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                paddingTop: 80,
+              }}
+            >
+              {/* Cercle illustratif */}
+              <View
+                style={{
+                  width: 96,
+                  height: 96,
+                  borderRadius: 48,
+                  backgroundColor: isDark
+                    ? "rgba(16,185,129,0.1)"
+                    : "rgba(16,185,129,0.08)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 20,
+                }}
+              >
+                <Ionicons
+                  name="notifications-off-outline"
+                  size={44}
+                  color={colors.brandPrimary}
+                />
+              </View>
               <Text
-                className="mt-3 font-quicksand-medium"
-                style={{ color: colors.textSecondary }}
+                className="font-quicksand-bold text-base"
+                style={{ color: colors.textPrimary, marginBottom: 6 }}
+              >
+                Tout est calme ici
+              </Text>
+              <Text
+                className="font-quicksand-medium text-sm text-center"
+                style={{ color: colors.textSecondary, maxWidth: 260 }}
               >
                 {emptyMessage}
               </Text>
             </View>
           }
-          renderItem={({ item }) => (
-            <View
-              className="p-4 rounded-2xl mb-3 border overflow-hidden"
-              style={{
-                backgroundColor: item.wasUnread ? colors.brandLight : colors.card,
-                borderColor: colors.border,
-              }}
-            >
-              {item.imageUrl && (
-                <Image
-                  source={{ uri: item.imageUrl }}
-                  className="w-full h-40 rounded-xl mb-3"
-                  resizeMode="cover"
-                />
-              )}
-              <View className="flex-row items-start">
+          renderItem={({ item }) => {
+            const icon = ICONS_BY_TYPE[item.type] ?? DEFAULT_ICON;
+
+            return (
               <View
-                className="w-10 h-10 rounded-full items-center justify-center mr-3"
-                style={{ backgroundColor: colors.brandLight }}
+                style={{
+                  backgroundColor: item.wasUnread
+                    ? isDark
+                      ? "rgba(16,185,129,0.07)"
+                      : "rgba(16,185,129,0.05)"
+                    : colors.card,
+                  borderRadius: 16,
+                  marginBottom: 10,
+                  flexDirection: "row",
+                  alignItems: "flex-start",
+                  padding: 14,
+                }}
               >
-                <Ionicons
-                  name={ICONS_BY_TYPE[item.type] || "notifications-outline"}
-                  size={20}
-                  color={colors.brandPrimary}
-                />
-              </View>
-              <View className="flex-1">
-                <Text
-                  className="font-quicksand-bold"
-                  style={{ color: colors.textPrimary }}
-                >
-                  {item.title}
-                </Text>
-                <Text
-                  className="font-quicksand mt-1"
-                  style={{ color: colors.textSecondary }}
-                >
-                  {item.message}
-                </Text>
-                <Text
-                  className="font-quicksand text-xs mt-2"
-                  style={{ color: colors.textTertiary }}
-                >
-                  {formatDate(item.createdAt)}
-                </Text>
-              </View>
-              {item.wasUnread && (
+                {/* Icône colorée */}
                 <View
-                  className="w-2.5 h-2.5 rounded-full ml-2 mt-1"
-                  style={{ backgroundColor: colors.brandPrimary }}
-                />
-              )}
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    backgroundColor: icon.bg,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginRight: 12,
+                    flexShrink: 0,
+                  }}
+                >
+                  <Ionicons name={icon.name} size={20} color={icon.color} />
+                </View>
+
+                {/* Contenu */}
+                <View style={{ flex: 1 }}>
+                  {item.imageUrl && (
+                    <Image
+                      source={{ uri: item.imageUrl }}
+                      style={{
+                        width: "100%",
+                        height: 140,
+                        borderRadius: 12,
+                        marginBottom: 10,
+                      }}
+                      resizeMode="cover"
+                    />
+                  )}
+                  <Text
+                    className="font-quicksand-bold"
+                    style={{ color: colors.textPrimary, fontSize: 14 }}
+                  >
+                    {item.title}
+                  </Text>
+                  <Text
+                    className="font-quicksand-medium"
+                    style={{
+                      color: colors.textSecondary,
+                      fontSize: 13,
+                      marginTop: 3,
+                      lineHeight: 18,
+                    }}
+                  >
+                    {item.message}
+                  </Text>
+                  <Text
+                    className="font-quicksand"
+                    style={{
+                      color: colors.textTertiary,
+                      fontSize: 11,
+                      marginTop: 6,
+                    }}
+                  >
+                    {timeAgo(item.createdAt)}
+                  </Text>
+                </View>
+
+                {/* Pastille non-lu */}
+                {item.wasUnread && (
+                  <View
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: colors.brandPrimary,
+                      marginLeft: 10,
+                      marginTop: 4,
+                      flexShrink: 0,
+                    }}
+                  />
+                )}
               </View>
-            </View>
-          )}
+            );
+          }}
           ListFooterComponent={
             loadingMore ? (
-              <ActivityIndicator className="my-4" color={colors.brandPrimary} />
+              <ActivityIndicator style={{ marginVertical: 16 }} color={colors.brandPrimary} />
             ) : null
           }
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }

@@ -1492,114 +1492,153 @@ function EnterpriseProfilePage() {
         }
       >
 
-        {/* Overlay Card */}
-        <View className="px-4 pt-4">
-          <View
-            className="rounded-2xl p-4 flex-row items-start"
-            style={{
-              backgroundColor: colors.card,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3,
-            }}
-          >
-            <View className="relative">
-              {profileData.enterprise.logo ? (
-                <Image
-                  source={{ uri: profileData.enterprise.logo }}
-                  className="rounded-2xl"
-                  resizeMode="cover"
-                  style={{ width: logoSize, height: logoSize }}
-                />
-              ) : (
-                <View
-                  className="rounded-2xl bg-primary-500 items-center justify-center"
-                  style={{ width: logoSize, height: logoSize }}
+        {/* Profile Card */}
+        <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
+          <View style={{ backgroundColor: colors.card, borderRadius: 20, padding: 20 }}>
+            {/* Logo + nom + localisation */}
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
+              <View style={{ position: "relative", marginRight: 16 }}>
+                {profileData.enterprise.logo ? (
+                  <Image
+                    source={{ uri: profileData.enterprise.logo }}
+                    style={{ width: 72, height: 72, borderRadius: 18 }}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View
+                    style={{
+                      width: 72,
+                      height: 72,
+                      borderRadius: 18,
+                      backgroundColor: "#FE8C00",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text className="text-white font-quicksand-bold text-2xl">
+                      {profileData.enterprise.companyName?.[0]?.toUpperCase() || "E"}
+                    </Text>
+                  </View>
+                )}
+                {profileData.enterprise.isActive && (
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: -4,
+                      right: -4,
+                      width: 22,
+                      height: 22,
+                      borderRadius: 11,
+                      backgroundColor: "#10B981",
+                      borderWidth: 2,
+                      borderColor: colors.card,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Ionicons name="checkmark" size={12} color="#FFFFFF" />
+                  </View>
+                )}
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text
+                  numberOfLines={2}
+                  className="text-lg font-quicksand-bold"
+                  style={{ color: colors.textPrimary }}
                 >
-                  <Text className="text-white font-quicksand-bold text-2xl">
-                    {profileData.enterprise.companyName?.[0]?.toUpperCase() ||
-                      "E"}
+                  {profileData.enterprise.companyName}
+                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
+                  <Ionicons name="location-sharp" size={13} color={colors.textSecondary} />
+                  <Text
+                    className="text-sm font-quicksand-medium ml-1"
+                    style={{ color: colors.textSecondary }}
+                    numberOfLines={1}
+                  >
+                    {profileData.enterprise.location.district},{" "}
+                    {profileData.enterprise.location.city}
                   </Text>
                 </View>
-              )}
-              {profileData.enterprise.isActive && (
-                <View className="absolute -top-1 -right-1 w-6 h-6 bg-success-500 rounded-full justify-center items-center">
-                  <Ionicons name="checkmark" size={14} color="#FFFFFF" />
-                </View>
-              )}
+              </View>
             </View>
 
-            <View
-              className="flex-1"
-              style={{ marginLeft: isSmallPhone ? 12 : 20 }}
-            >
-              {profileData.enterprise.description ? (
-                <Text
-                  className="font-quicksand-medium text-sm"
-                  style={{ color: colors.textPrimary }}
-                  numberOfLines={3}
-                >
-                  {profileData.enterprise.description}
-                </Text>
-              ) : (
-                <Text className="font-quicksand-regular text-sm italic" style={{ color: colors.textTertiary }}>
-                  {i18n.t("enterprise.profile.placeholders.noDescription")}
-                </Text>
-              )}
-              <View
-                className="flex-row mt-4 space-x-3"
-                style={{ flexWrap: wrapOverlayChips ? "wrap" : "nowrap" }}
+            {/* Description */}
+            {profileData.enterprise.description ? (
+              <Text
+                className="font-quicksand-medium text-sm"
+                style={{ color: colors.textSecondary, marginBottom: 16, lineHeight: 20 }}
+                numberOfLines={3}
               >
-                <TouchableOpacity
-                  onPress={() => setShowEditProfile(true)}
-                  className="px-3 py-2 rounded-xl flex-row items-center"
-                  style={{
-                    marginBottom: wrapOverlayChips ? 8 : 0,
-                    flexShrink: 1,
-                    backgroundColor: isDark ? colors.brandPrimary + '20' : '#D1FAE5',
-                  }}
-                >
-                  <Ionicons name="person" size={14} color={colors.brandPrimary} />
-                  <Text className="font-quicksand-semibold text-xs ml-1" style={{ color: colors.brandPrimary }}>
-                    {i18n.t("enterprise.profile.actions.profile")}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  // Ancien bouton modal d'ajout partenaire retiré : redirection uniquement depuis la section gestion
-                  onPress={handleNavigateToPartners}
-                  className="px-3 py-2 rounded-xl flex-row items-center"
-                  style={{
-                    marginBottom: wrapOverlayChips ? 8 : 0,
-                    flexShrink: 1,
-                    backgroundColor: isDark ? '#8B5CF620' : '#EDE9FE',
-                  }}
-                >
-                  <Ionicons name="people" size={14} color="#8B5CF6" />
-                  <Text className="font-quicksand-semibold text-xs ml-1" style={{ color: '#8B5CF6' }}>
-                    {i18n.t("enterprise.profile.actions.partners")}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setShowEnterpriseDetails(true)}
-                  className="px-3 py-2 rounded-xl flex-row items-center"
-                  style={{
-                    marginBottom: wrapOverlayChips ? 8 : 0,
-                    backgroundColor: colors.tertiary,
-                    flexShrink: 1,
-                  }}
-                >
-                  <Ionicons
-                    name="information-circle"
-                    size={14}
-                    color={colors.textSecondary}
-                  />
-                  <Text className="font-quicksand-semibold text-xs ml-1" style={{ color: colors.textSecondary }}>
-                    {i18n.t("enterprise.profile.actions.details")}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+                {profileData.enterprise.description}
+              </Text>
+            ) : (
+              <Text
+                className="font-quicksand-regular text-sm italic"
+                style={{ color: colors.textTertiary, marginBottom: 16 }}
+              >
+                {i18n.t("enterprise.profile.placeholders.noDescription")}
+              </Text>
+            )}
+
+            {/* Séparateur */}
+            <View style={{ height: 1, backgroundColor: colors.border, marginBottom: 14 }} />
+
+            {/* Boutons d'action */}
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <TouchableOpacity
+                onPress={() => setShowEditProfile(true)}
+                style={{
+                  flex: 1,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: isDark ? colors.brandPrimary + "20" : "#D1FAE5",
+                  borderRadius: 12,
+                  paddingVertical: 10,
+                  gap: 4,
+                }}
+              >
+                <Ionicons name="person" size={14} color={colors.brandPrimary} />
+                <Text className="font-quicksand-semibold text-xs" style={{ color: colors.brandPrimary }}>
+                  {i18n.t("enterprise.profile.actions.profile")}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleNavigateToPartners}
+                style={{
+                  flex: 1,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: isDark ? "#8B5CF620" : "#EDE9FE",
+                  borderRadius: 12,
+                  paddingVertical: 10,
+                  gap: 4,
+                }}
+              >
+                <Ionicons name="people" size={14} color="#8B5CF6" />
+                <Text className="font-quicksand-semibold text-xs" style={{ color: "#8B5CF6" }}>
+                  {i18n.t("enterprise.profile.actions.partners")}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowEnterpriseDetails(true)}
+                style={{
+                  flex: 1,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: colors.tertiary || (isDark ? "#374151" : "#F3F4F6"),
+                  borderRadius: 12,
+                  paddingVertical: 10,
+                  gap: 4,
+                }}
+              >
+                <Ionicons name="information-circle" size={14} color={colors.textSecondary} />
+                <Text className="font-quicksand-semibold text-xs" style={{ color: colors.textSecondary }}>
+                  {i18n.t("enterprise.profile.actions.details")}
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -1616,7 +1655,7 @@ function EnterpriseProfilePage() {
             {/* Card Publicités avec restriction */}
             {canUseFeature("advertisements") ? (
               <TouchableOpacity
-                className="flex-1 rounded-2xl overflow-hidden shadow-sm"
+                className="flex-1 rounded-2xl overflow-hidden"
                 style={{
                   marginRight: stackMarketing ? 0 : 8,
                   marginBottom: stackMarketing ? 8 : 0,
@@ -1666,7 +1705,7 @@ function EnterpriseProfilePage() {
               </TouchableOpacity>
             ) : (
               <View
-                className="flex-1 rounded-2xl overflow-hidden shadow-sm"
+                className="flex-1 rounded-2xl overflow-hidden"
                 style={{
                   marginRight: stackMarketing ? 0 : 8,
                   marginBottom: stackMarketing ? 8 : 0,
@@ -1738,14 +1777,12 @@ function EnterpriseProfilePage() {
 
             {/* Card Abonnements */}
             <TouchableOpacity
-              className="flex-1 rounded-2xl shadow-sm"
+              className="flex-1 rounded-2xl"
               style={{
                 marginLeft: stackMarketing ? 0 : 8,
                 marginTop: stackMarketing ? 8 : 0,
                 padding: isSmallPhone ? 16 : 20,
                 backgroundColor: colors.card,
-                borderWidth: 1,
-                borderColor: colors.border,
               }}
               activeOpacity={isIosBillingRestricted ? 1 : 0.85}
               onPress={() => {
@@ -1799,122 +1836,103 @@ function EnterpriseProfilePage() {
         </View>
 
         {/* Contact & Owner Cards */}
-        <View className="px-4 pt-6 space-y-4">
-          <View className="rounded-2xl p-5 shadow-sm" style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
-            <Text className="text-sm font-quicksand-semibold mb-4" style={{ color: colors.textPrimary }}>
-              {i18n.t("enterprise.profile.sections.contact")}
-            </Text>
-            <View className="space-y-3">
-              {profileData.enterprise.contactInfo?.email && (
-                <View className="flex-row items-center py-2">
-                  <View className="w-9 h-9 rounded-xl items-center justify-center" style={{ backgroundColor: isDark ? colors.brandSecondary + '20' : '#FFF4E5' }}>
-                    <Ionicons name="mail" size={18} color={colors.brandSecondary} />
-                  </View>
-                  <Text
-                    className="text-sm ml-4 font-quicksand-medium flex-1"
-                    style={{ color: colors.textPrimary }}
-                    numberOfLines={1}
-                  >
-                    {profileData.enterprise.contactInfo.email}
-                  </Text>
+        <View style={{ paddingHorizontal: 16, paddingTop: 16, gap: 12 }}>
+          {/* Contact */}
+          <View style={{ backgroundColor: colors.card, borderRadius: 20, overflow: "hidden" }}>
+            <View style={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 8 }}>
+              <Text className="text-sm font-quicksand-semibold" style={{ color: colors.textPrimary }}>
+                {i18n.t("enterprise.profile.sections.contact")}
+              </Text>
+            </View>
+            {profileData.enterprise.contactInfo?.email && (
+              <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 13, borderTopWidth: 1, borderTopColor: colors.border }}>
+                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#431407" : "#FFF7ED", alignItems: "center", justifyContent: "center", marginRight: 14 }}>
+                  <Ionicons name="mail" size={17} color="#EA580C" />
                 </View>
-              )}
-              {profileData.enterprise.contactInfo?.phone && (
-                <View className="flex-row items-center py-2">
-                  <View className="w-9 h-9 rounded-xl items-center justify-center" style={{ backgroundColor: isDark ? colors.brandSecondary + '20' : '#FFF4E5' }}>
-                    <Ionicons name="call" size={18} color={colors.brandSecondary} />
-                  </View>
-                  <Text
-                    className="text-sm ml-4 font-quicksand-medium flex-1"
-                    style={{ color: colors.textPrimary }}
-                    numberOfLines={1}
-                  >
-                    {profileData.enterprise.contactInfo.phone}
-                  </Text>
+                <Text className="text-sm font-quicksand-medium flex-1" style={{ color: colors.textPrimary }} numberOfLines={1}>
+                  {profileData.enterprise.contactInfo.email}
+                </Text>
+              </View>
+            )}
+            {profileData.enterprise.contactInfo?.phone && (
+              <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 13, borderTopWidth: 1, borderTopColor: colors.border }}>
+                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#052e16" : "#F0FDF4", alignItems: "center", justifyContent: "center", marginRight: 14 }}>
+                  <Ionicons name="call" size={17} color="#16A34A" />
                 </View>
-              )}
-              {profileData.enterprise.contactInfo?.whatsapp && (
-                <View className="flex-row items-center py-2">
-                  <View className="w-9 h-9 rounded-xl items-center justify-center" style={{ backgroundColor: isDark ? '#10B98120' : '#D1FAE5' }}>
-                    <Ionicons name="logo-whatsapp" size={18} color="#10B981" />
-                  </View>
-                  <Text
-                    className="text-sm ml-4 font-quicksand-medium flex-1"
-                    style={{ color: colors.textPrimary }}
-                    numberOfLines={1}
-                  >
-                    {profileData.enterprise.contactInfo.whatsapp}
-                  </Text>
+                <Text className="text-sm font-quicksand-medium flex-1" style={{ color: colors.textPrimary }} numberOfLines={1}>
+                  {profileData.enterprise.contactInfo.phone}
+                </Text>
+              </View>
+            )}
+            {profileData.enterprise.contactInfo?.whatsapp && (
+              <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 13, borderTopWidth: 1, borderTopColor: colors.border }}>
+                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#052e16" : "#F0FDF4", alignItems: "center", justifyContent: "center", marginRight: 14 }}>
+                  <Ionicons name="logo-whatsapp" size={17} color="#16A34A" />
                 </View>
-              )}
-              {profileData.enterprise.contactInfo?.website && (
-                <View className="flex-row items-center py-2">
-                  <View className="w-9 h-9 rounded-xl items-center justify-center" style={{ backgroundColor: isDark ? '#2563EB20' : '#DBEAFE' }}>
-                    <Ionicons name="globe" size={18} color="#2563EB" />
-                  </View>
-                  <Text
-                    className="text-sm ml-4 font-quicksand-medium flex-1"
-                    style={{ color: colors.textPrimary }}
-                    numberOfLines={1}
-                  >
-                    {profileData.enterprise.contactInfo.website}
-                  </Text>
+                <Text className="text-sm font-quicksand-medium flex-1" style={{ color: colors.textPrimary }} numberOfLines={1}>
+                  {profileData.enterprise.contactInfo.whatsapp}
+                </Text>
+              </View>
+            )}
+            {profileData.enterprise.contactInfo?.website && (
+              <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 13, borderTopWidth: 1, borderTopColor: colors.border }}>
+                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#1e3a5f" : "#EFF6FF", alignItems: "center", justifyContent: "center", marginRight: 14 }}>
+                  <Ionicons name="globe" size={17} color="#3B82F6" />
                 </View>
-              )}
-              {!profileData.enterprise.contactInfo?.email &&
-                !profileData.enterprise.contactInfo?.phone &&
-                !profileData.enterprise.contactInfo?.whatsapp &&
-                !profileData.enterprise.contactInfo?.website && (
+                <Text className="text-sm font-quicksand-medium flex-1" style={{ color: colors.textPrimary }} numberOfLines={1}>
+                  {profileData.enterprise.contactInfo.website}
+                </Text>
+              </View>
+            )}
+            {!profileData.enterprise.contactInfo?.email &&
+              !profileData.enterprise.contactInfo?.phone &&
+              !profileData.enterprise.contactInfo?.whatsapp &&
+              !profileData.enterprise.contactInfo?.website && (
+                <View style={{ paddingHorizontal: 20, paddingBottom: 18, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 14 }}>
                   <Text className="text-sm font-quicksand-regular italic" style={{ color: colors.textTertiary }}>
                     {i18n.t("enterprise.profile.contact.noInfo")}
                   </Text>
-                )}
-            </View>
+                </View>
+              )}
           </View>
 
-          <View className="rounded-2xl p-5 shadow-sm" style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
-            <View className="flex-row items-center justify-between mb-3">
+          {/* Propriétaire */}
+          <View style={{ backgroundColor: colors.card, borderRadius: 20, padding: 20 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
               <Text className="text-sm font-quicksand-semibold" style={{ color: colors.textPrimary }}>
                 {i18n.t("enterprise.profile.sections.owner")}
               </Text>
               <TouchableOpacity
                 onPress={() => setShowEditProfile(true)}
-                className="flex-row items-center"
+                style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
               >
-                <Ionicons name="create-outline" size={16} color={colors.textSecondary} />
-                <Text className="text-xs font-quicksand-medium ml-1" style={{ color: colors.textSecondary }}>
+                <Ionicons name="create-outline" size={15} color={colors.textSecondary} />
+                <Text className="text-xs font-quicksand-medium" style={{ color: colors.textSecondary }}>
                   {i18n.t("enterprise.profile.actions.edit")}
                 </Text>
               </TouchableOpacity>
             </View>
-            <View className="flex-row items-center">
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
               {profileData.user.profileImage ? (
                 <Image
                   source={{ uri: profileData.user.profileImage }}
-                  className="w-12 h-12 rounded-full"
+                  style={{ width: 48, height: 48, borderRadius: 24, marginRight: 14 }}
+                  resizeMode="cover"
                 />
               ) : (
-                <View className="w-12 h-12 rounded-full items-center justify-center" style={{ backgroundColor: colors.tertiary }}>
+                <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: isDark ? "#1f2937" : "#F3F4F6", alignItems: "center", justifyContent: "center", marginRight: 14 }}>
                   <Text className="font-quicksand-bold text-sm" style={{ color: colors.textSecondary }}>
                     {(`${profileData.user.firstName?.[0] || ""}${profileData.user.lastName?.[0] || ""}` || profileData.enterprise.companyName?.[0] || "E").toUpperCase()}
                   </Text>
                 </View>
               )}
-              <View className="ml-4 flex-1">
-                <Text
-                  className="text-base font-quicksand-semibold"
-                  style={{ color: colors.textPrimary }}
-                  numberOfLines={1}
-                >
+              <View style={{ flex: 1 }}>
+                <Text className="text-base font-quicksand-semibold" style={{ color: colors.textPrimary }} numberOfLines={1}>
                   {profileData.user.firstName || profileData.user.lastName
                     ? `${profileData.user.firstName || ""} ${profileData.user.lastName || ""}`.trim()
                     : profileData.enterprise.companyName}
                 </Text>
-                <Text
-                  className="text-sm font-quicksand-light"
-                  style={{ color: colors.textSecondary }}
-                  numberOfLines={1}
-                >
+                <Text className="text-sm font-quicksand-medium mt-0.5" style={{ color: colors.textSecondary }} numberOfLines={1}>
                   {profileData.user.email}
                 </Text>
               </View>
@@ -1922,59 +1940,12 @@ function EnterpriseProfilePage() {
           </View>
         </View>
 
-        {/* Lien Plateforme Web - Moved here for better visibility on iOS */}
-        <View className="px-4 pt-4">
-          <View
-            style={{
-              shadowColor: isDark ? "#000" : "#2563EB",
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: isDark ? 0.3 : 0.12,
-              shadowRadius: 10,
-              elevation: 5,
-            }}
-          >
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={() => Linking.openURL('https://aximarketplace.com')}
-              className="rounded-2xl overflow-hidden"
-            >
-              <LinearGradient
-                colors={isDark ? ["#1E3A8A", "#2563EB"] : ["#3B82F6", "#1D4ED8"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={{ padding: 16 }}
-                className="flex-row items-center justify-between"
-              >
-                <View className="flex-row items-center flex-1">
-                  <View 
-                    className="w-12 h-12 rounded-full items-center justify-center shadow-sm"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
-                  >
-                    <Ionicons name="planet" size={24} color="#FFFFFF" />
-                  </View>
-                  <View className="ml-4 flex-1">
-                    <Text className="font-quicksand-bold text-base text-white">
-                      Axi Marketplace
-                    </Text>
-                    <Text className="font-quicksand-medium text-xs mt-0.5 text-white/90">
-                      Visitez notre plateforme web
-                    </Text>
-                  </View>
-                </View>
-                <View className="w-8 h-8 rounded-full items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>
-                  <Ionicons name="open-outline" size={16} color="#FFFFFF" />
-                </View>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-        </View>
-
         {/* Menu de gestion */}
-        <View className="px-4 py-4">
+        <View style={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 4 }}>
           <Text className="text-lg font-quicksand-bold mb-4 pl-1" style={{ color: colors.textPrimary }}>
             {i18n.t("enterprise.profile.management.title")}
           </Text>
-          <View className="rounded-2xl shadow-sm overflow-hidden" style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
+          <View style={{ backgroundColor: colors.card, borderRadius: 20, overflow: "hidden" }}>
             {/* Partenaires de livraison */}
             <TouchableOpacity
               onPress={handleNavigateToPartners}
@@ -2059,6 +2030,7 @@ function EnterpriseProfilePage() {
             <TouchableOpacity
               onPress={() => Linking.openURL('mailto:tanguyricardo@aximarketplace.com')}
               className="flex-row items-center justify-between px-4 py-5"
+              style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
             >
               <View className="flex-row items-center">
                 <View className="w-10 h-10 rounded-full justify-center items-center" style={{ backgroundColor: isDark ? colors.brandPrimary + '20' : '#D1FAE5' }}>
@@ -2073,25 +2045,52 @@ function EnterpriseProfilePage() {
                   </Text>
                 </View>
               </View>
-
               <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+            </TouchableOpacity>
+
+            {/* Site web Axi Marketplace */}
+            <TouchableOpacity
+              onPress={() => Linking.openURL('https://aximarketplace.com')}
+              className="flex-row items-center justify-between px-4 py-5"
+            >
+              <View className="flex-row items-center">
+                <View className="w-10 h-10 rounded-full justify-center items-center" style={{ backgroundColor: isDark ? "#1e3a5f" : "#EFF6FF" }}>
+                  <Ionicons name="globe-outline" size={20} color="#3B82F6" />
+                </View>
+                <View className="ml-4">
+                  <Text className="text-base font-quicksand-medium" style={{ color: colors.textPrimary }}>
+                    Axi Marketplace
+                  </Text>
+                  <Text className="text-sm font-quicksand-light" style={{ color: colors.textSecondary }}>
+                    aximarketplace.com
+                  </Text>
+                </View>
+              </View>
+              <Ionicons name="open-outline" size={18} color={colors.textTertiary} />
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Bouton de déconnexion */}
-        <View className="px-4 py-6">
+        <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 }}>
           <TouchableOpacity
-            className="rounded-2xl py-4"
-            style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: colors.card,
+              borderRadius: 16,
+              paddingVertical: 16,
+              borderWidth: 1,
+              borderColor: isDark ? "#7F1D1D" : "#FCA5A5",
+              gap: 8,
+            }}
             onPress={handleLogout}
           >
-            <View className="flex-row items-center justify-center">
-              <Ionicons name="log-out-outline" size={20} color={colors.error} />
-              <Text className="font-quicksand-semibold ml-2" style={{ color: colors.error }}>
-                {i18n.t("enterprise.profile.management.logout")}
-              </Text>
-            </View>
+            <Ionicons name="log-out-outline" size={20} color="#EF4444" />
+            <Text className="font-quicksand-semibold" style={{ color: "#EF4444" }}>
+              {i18n.t("enterprise.profile.management.logout")}
+            </Text>
           </TouchableOpacity>
         </View>
 
