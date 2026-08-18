@@ -94,60 +94,31 @@ export default function ProfileScreen() {
   }, [isAuthenticated]); // refreshUserData retiré des dépendances pour éviter la boucle infinie
 
   // Skeleton Loader Component
+  const shimmerBg = isDark ? "#2A3441" : "#E8EAED";
+  const shimmerGleam = isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.65)";
+
   const ShimmerBlock = ({ style }: { style?: any }) => {
     const shimmer = React.useRef(new Animated.Value(0)).current;
     useEffect(() => {
       const loop = Animated.loop(
-        Animated.timing(shimmer, {
-          toValue: 1,
-          duration: 1200,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        })
+        Animated.timing(shimmer, { toValue: 1, duration: 1100, easing: Easing.linear, useNativeDriver: true })
       );
       loop.start();
       return () => loop.stop();
     }, [shimmer]);
-    const translateX = shimmer.interpolate({
-      inputRange: [0, 1],
-      outputRange: [-150, 150],
-    });
+    const translateX = shimmer.interpolate({ inputRange: [0, 1], outputRange: [-200, 200] });
     return (
-      <View style={[{ backgroundColor: colors.card, overflow: "hidden" }, style]}>
+      <View style={[{ backgroundColor: shimmerBg, overflow: "hidden" }, style]}>
         <Animated.View
           style={{
-            position: "absolute",
-            top: 0,
-            bottom: 0,
-            width: 120,
+            position: "absolute", top: 0, bottom: 0, width: 160,
             transform: [{ translateX }],
-            backgroundColor: "rgba(255,255,255,0.35)",
-            opacity: 0.7,
+            backgroundColor: shimmerGleam,
           }}
         />
       </View>
     );
   };
-
-  const SkeletonMenuItem = () => (
-    <View className="rounded-2xl shadow-sm p-4 mb-3" style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }}>
-      <View className="flex-row items-center">
-        <ShimmerBlock style={{ width: 48, height: 48, borderRadius: 12 }} />
-        <View className="ml-4 flex-1">
-          <ShimmerBlock
-            style={{
-              height: 16,
-              borderRadius: 8,
-              width: "70%",
-              marginBottom: 8,
-            }}
-          />
-          <ShimmerBlock style={{ height: 14, borderRadius: 6, width: "50%" }} />
-        </View>
-        <ShimmerBlock style={{ width: 20, height: 20, borderRadius: 2 }} />
-      </View>
-    </View>
-  );
 
   // Fonctions de confirmation modal
   const showConfirmation = (type: "logout", onConfirm: () => void) => {
@@ -189,85 +160,66 @@ export default function ProfileScreen() {
   };
 
   const renderSkeletonProfile = () => (
-    <ScrollView
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: 90 }}
-    >
-      {/* Header Skeleton */}
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
+      {/* Header — même gradient que le vrai layout */}
       <LinearGradient
         colors={["#047857", "#10B981"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        className="px-6"
-        style={{
-          paddingTop: insets.top + 16,
-          paddingLeft: insets.left + 24,
-          paddingRight: insets.right + 24,
-          paddingBottom: headerBottomPadding,
-        }}
+        style={{ paddingTop: insets.top + 16, paddingHorizontal: 24, paddingBottom: 20 }}
       >
-        <View className="flex-row items-center justify-between">
-          <View className="flex-1 pr-4">
-            <ShimmerBlock
-              style={{
-                height: 24,
-                borderRadius: 12,
-                width: "60%",
-                marginBottom: 8,
-              }}
-            />
-            <ShimmerBlock
-              style={{ height: 14, borderRadius: 7, width: "40%" }}
-            />
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <View>
+            <ShimmerBlock style={{ height: 22, borderRadius: 11, width: 120, marginBottom: 8, backgroundColor: "rgba(255,255,255,0.25)" }} />
+            <ShimmerBlock style={{ height: 14, borderRadius: 7, width: 90, backgroundColor: "rgba(255,255,255,0.18)" }} />
           </View>
-          <ShimmerBlock style={{ width: 24, height: 24, borderRadius: 12 }} />
+          <ShimmerBlock style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.25)" }} />
         </View>
       </LinearGradient>
 
-      {/* User Profile Skeleton */}
-      <View className="px-4" style={{ marginTop: overlayLift }}>
-        <View className="rounded-2xl p-4 flex-row items-start shadow-sm" style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }}>
-          <View className="p-6">
-            <View className="flex-row items-center">
-              <ShimmerBlock
-                style={{ width: 80, height: 80, borderRadius: 40 }}
-              />
-              <View className="ml-4 flex-1">
-                <ShimmerBlock
-                  style={{
-                    height: 20,
-                    borderRadius: 10,
-                    width: "80%",
-                    marginBottom: 8,
-                  }}
-                />
-                <ShimmerBlock
-                  style={{
-                    height: 14,
-                    borderRadius: 7,
-                    width: "60%",
-                    marginBottom: 16,
-                  }}
-                />
-                <ShimmerBlock
-                  style={{ height: 32, borderRadius: 16, width: "40%" }}
-                />
-              </View>
+      {/* User card skeleton — correspond au vrai user card */}
+      <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
+        <View style={{ backgroundColor: colors.card, borderRadius: 20, padding: 20 }}>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            {/* Avatar */}
+            <ShimmerBlock style={{ width: 64, height: 64, borderRadius: 32, marginRight: 16 }} />
+            {/* Nom + email */}
+            <View style={{ flex: 1 }}>
+              <ShimmerBlock style={{ height: 18, borderRadius: 9, width: "70%", marginBottom: 10 }} />
+              <ShimmerBlock style={{ height: 13, borderRadius: 6, width: "55%" }} />
             </View>
+            {/* Bouton édition */}
+            <ShimmerBlock style={{ width: 36, height: 36, borderRadius: 18, marginLeft: 10 }} />
           </View>
         </View>
       </View>
 
-      {/* Menu Skeleton */}
-      <View className="mx-6 mb-6">
-        {Array.from({ length: 6 }).map((_, index) => (
-          <SkeletonMenuItem key={index} />
-        ))}
+      {/* Menu skeleton — card unique avec dividers */}
+      <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
+        <View style={{ backgroundColor: colors.card, borderRadius: 20, overflow: "hidden" }}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <View
+              key={i}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 20,
+                paddingVertical: 15,
+                borderBottomWidth: i < 3 ? 1 : 0,
+                borderBottomColor: colors.border,
+              }}
+            >
+              <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20, marginRight: 14 }} />
+              <ShimmerBlock style={{ height: 14, borderRadius: 7, flex: 1 }} />
+              <ShimmerBlock style={{ width: 18, height: 18, borderRadius: 9, marginLeft: 12 }} />
+            </View>
+          ))}
+        </View>
       </View>
 
-      {/* Logout Button Skeleton */}
-      <View className="px-6 mb-10">
-        <ShimmerBlock style={{ height: 48, borderRadius: 16, width: "100%" }} />
+      {/* Bouton déconnexion skeleton */}
+      <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
+        <ShimmerBlock style={{ height: 52, borderRadius: 16 }} />
       </View>
     </ScrollView>
   );

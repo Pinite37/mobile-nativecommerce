@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -241,7 +242,7 @@ export default function EnterpriseSettingsScreen() {
         {/* Version de l'app */}
         <View className="mt-10 pb-8 px-6">
           <Text className="text-center text-xs text-neutral-500 font-quicksand-medium">
-            NativeCommerce Business v1.0.0
+            AXI Marketplace v{Constants.expoConfig?.version ?? "—"}
           </Text>
         </View>
       </ScrollView>

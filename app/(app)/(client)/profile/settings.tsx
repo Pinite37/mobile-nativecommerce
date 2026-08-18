@@ -19,6 +19,7 @@ import { useToast } from "../../../../components/ui/ToastManager";
 import { NotificationPermissionModal } from "../../../../components/NotificationPermissionModal";
 import { useLocale } from "../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../contexts/ThemeContext";
+import Constants from "expo-constants";
 import i18n from "../../../../i18n/i18n";
 import { LocationConsentBanner } from "../../../../components/ui/LocationConsentBanner";
 import { useAuth } from "../../../../contexts/AuthContext";
@@ -717,7 +718,7 @@ export default function SettingsScreen() {
         {/* Version de l'application */}
         <View className="mb-12 mt-9 items-center">
           <Text className="text-sm font-quicksand" style={{ color: colors.textSecondary }}>
-            {i18n.t("client.settings.appVersion")}
+            AXI Marketplace v{Constants.expoConfig?.version ?? "—"}
           </Text>
         </View>
       </ScrollView>
