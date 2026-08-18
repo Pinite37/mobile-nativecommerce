@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   ActivityIndicator,
@@ -10,6 +10,7 @@ import {
   BackHandler,
   Image,
   Keyboard,
+  Pressable,
   RefreshControl,
   ScrollView,
   Text,
@@ -56,6 +57,28 @@ export default function CategoryProductsScreen() {
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showFilters, setShowFilters] = useState(false);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const slideAnim = useRef(new Animated.Value(500)).current;
+  const backdropAnim = useRef(new Animated.Value(0)).current;
+
+  const openFilters = useCallback(() => {
+    setFilterModalVisible(true);
+    setShowFilters(true);
+    Animated.parallel([
+      Animated.spring(slideAnim, { toValue: 0, damping: 22, stiffness: 200, useNativeDriver: true }),
+      Animated.timing(backdropAnim, { toValue: 1, duration: 220, useNativeDriver: true }),
+    ]).start();
+  }, [slideAnim, backdropAnim]);
+
+  const closeFilters = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(slideAnim, { toValue: 500, duration: 260, useNativeDriver: true }),
+      Animated.timing(backdropAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
+    ]).start(() => {
+      setFilterModalVisible(false);
+      setShowFilters(false);
+    });
+  }, [slideAnim, backdropAnim]);
 
   // Favoris (simulé)
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -70,14 +93,14 @@ export default function CategoryProductsScreen() {
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
       if (showFilters) {
-        setShowFilters(false);
+        closeFilters();
         return true;
       }
       return false;
     });
 
     return () => backHandler.remove();
-  }, [showFilters]);
+  }, [showFilters, closeFilters]);
 
   const loadCategoryProducts = async (page: number = 1, append: boolean = false) => {
     try {
@@ -183,20 +206,19 @@ export default function CategoryProductsScreen() {
       sortBy
     });
     Keyboard.dismiss();
-    setShowFilters(false);
+    closeFilters();
     setCurrentPage(1);
     loadCategoryProducts(1, false);
   };
 
   const handleResetFilters = () => {
-    console.log('🔄 Réinitialisation des filtres');
     Keyboard.dismiss();
     setSearchQuery('');
     setMinPrice('');
     setMaxPrice('');
     setInStockOnly(false);
     setSortBy('newest');
-    setShowFilters(false);
+    closeFilters();
     setCurrentPage(1);
     loadCategoryProducts(1, false);
   };
@@ -462,7 +484,7 @@ export default function CategoryProductsScreen() {
                 color="white"
               />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setShowFilters(true)}>
+            <TouchableOpacity onPress={openFilters}>
               <View className="relative">
                 <Ionicons name="options" size={22} color="white" />
                 {(minPrice || maxPrice || inStockOnly) && (
@@ -613,35 +635,62 @@ export default function CategoryProductsScreen() {
         </ScrollView>
       )}
 
-      {/* Modal de filtres */}
-      {showFilters && (
-        <View className="absolute inset-0 bg-black/50" style={{ paddingTop: insets.top }}>
-          <View className="absolute bottom-0 left-0 right-0 rounded-t-3xl p-6 max-h-[80%]" style={{ backgroundColor: colors.card }}>
-            <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-xl font-quicksand-bold" style={{ color: colors.textPrimary }}>{i18n.t("client.category.filters.title")}</Text>
-              <TouchableOpacity onPress={() => setShowFilters(false)}>
-                <Ionicons name="close" size={24} color={colors.textSecondary} />
+      {/* Modal de filtres — slide-up animé */}
+      {filterModalVisible && (
+        <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }} pointerEvents="box-none">
+          <Animated.View
+            style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, opacity: backdropAnim }}
+            pointerEvents="auto"
+          >
+            <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)' }} onPress={closeFilters} />
+          </Animated.View>
+
+          <Animated.View
+            style={{
+              position: 'absolute', bottom: 0, left: 0, right: 0,
+              backgroundColor: colors.card,
+              borderTopLeftRadius: 28, borderTopRightRadius: 28,
+              paddingHorizontal: 24, paddingTop: 20,
+              paddingBottom: insets.bottom + 24,
+              maxHeight: '82%',
+              transform: [{ translateY: slideAnim }],
+            }}
+          >
+            <View style={{ alignItems: 'center', marginBottom: 16 }}>
+              <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: colors.borderLight }} />
+            </View>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <Text className="text-xl font-quicksand-bold" style={{ color: colors.textPrimary }}>
+                {i18n.t("client.category.filters.title")}
+              </Text>
+              <TouchableOpacity
+                onPress={closeFilters}
+                style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Ionicons name="close" size={18} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Filtre de prix */}
-              <View className="mb-4">
-                <Text className="text-sm font-quicksand-semibold mb-2" style={{ color: colors.textPrimary }}>{i18n.t("client.category.filters.price.label")}</Text>
-                <View className="flex-row items-center">
+              <View style={{ marginBottom: 20 }}>
+                <Text className="text-xs font-quicksand-bold" style={{ color: colors.textSecondary, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                  {i18n.t("client.category.filters.price.label")}
+                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <TextInput
-                    className="flex-1 rounded-xl px-4 py-3 font-quicksand-medium"
-                    style={{ backgroundColor: colors.secondary, color: colors.textPrimary }}
+                    style={{ flex: 1, backgroundColor: colors.secondary, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontSize: 14 }}
+                    className="font-quicksand-medium"
                     placeholder={i18n.t("client.category.filters.price.min")}
                     placeholderTextColor={colors.textSecondary}
                     keyboardType="numeric"
                     value={minPrice}
                     onChangeText={setMinPrice}
                   />
-                  <Text className="mx-2 font-quicksand-medium" style={{ color: colors.textSecondary }}>-</Text>
+                  <Text style={{ color: colors.textSecondary, fontSize: 16 }}>–</Text>
                   <TextInput
-                    className="flex-1 rounded-xl px-4 py-3 font-quicksand-medium"
-                    style={{ backgroundColor: colors.secondary, color: colors.textPrimary }}
+                    style={{ flex: 1, backgroundColor: colors.secondary, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontSize: 14 }}
+                    className="font-quicksand-medium"
                     placeholder={i18n.t("client.category.filters.price.max")}
                     placeholderTextColor={colors.textSecondary}
                     keyboardType="numeric"
@@ -651,51 +700,38 @@ export default function CategoryProductsScreen() {
                 </View>
               </View>
 
-              {/* Disponibilité */}
               <TouchableOpacity
                 onPress={() => setInStockOnly(!inStockOnly)}
-                className="flex-row items-center justify-between py-3 mb-4"
+                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, marginBottom: 20, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.borderLight }}
               >
                 <Text className="text-sm font-quicksand-semibold" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.category.filters.stock")}
                 </Text>
-                <View
-                  className="w-12 h-6 rounded-full justify-center"
-                  style={{ backgroundColor: inStockOnly ? colors.brandPrimary : colors.border }}
-                >
-                  <View
-                    className="w-5 h-5 rounded-full"
-                    style={{
-                      backgroundColor: colors.card,
-                      marginLeft: inStockOnly ? 22 : 2
-                    }}
-                  />
+                <View style={{ width: 48, height: 26, borderRadius: 13, backgroundColor: inStockOnly ? colors.brandPrimary : colors.borderLight, justifyContent: 'center' }}>
+                  <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: '#fff', marginLeft: inStockOnly ? 24 : 4 }} />
                 </View>
               </TouchableOpacity>
 
-              {/* Boutons d'action */}
-              <View className="flex-row mt-4 gap-3">
+              <View style={{ flexDirection: 'row', gap: 12, marginTop: 8 }}>
                 <TouchableOpacity
+                  style={{ flex: 1, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.secondary, alignItems: 'center' }}
                   onPress={handleResetFilters}
-                  className="flex-1 py-3 rounded-xl"
-                  style={{ backgroundColor: colors.secondary }}
                 >
-                  <Text className="font-quicksand-semibold text-center" style={{ color: colors.textPrimary }}>
+                  <Text className="font-quicksand-semibold" style={{ color: colors.textPrimary }}>
                     {i18n.t("client.category.filters.reset")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
+                  style={{ flex: 1, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.brandPrimary, alignItems: 'center' }}
                   onPress={handleApplyFilters}
-                  className="flex-1 py-3 rounded-xl"
-                  style={{ backgroundColor: colors.brandPrimary }}
                 >
-                  <Text className="text-white font-quicksand-semibold text-center">
+                  <Text className="text-white font-quicksand-bold">
                     {i18n.t("client.category.filters.apply")}
                   </Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
-          </View>
+          </Animated.View>
         </View>
       )}
     </View>

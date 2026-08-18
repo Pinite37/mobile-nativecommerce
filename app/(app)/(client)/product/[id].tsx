@@ -35,6 +35,7 @@ import NotificationModal, {
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useLocale } from "../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../contexts/ThemeContext";
+import { ErrorState } from "../../../../components/ui/ErrorState";
 import i18n from "../../../../i18n/i18n";
 import CategoryService from "../../../../services/api/CategoryService";
 import MessagingService from "../../../../services/api/MessagingService";
@@ -440,35 +441,19 @@ export default function ProductDetails() {
 
   if (!product) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.card }}>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
         <ExpoStatusBar
           style={isDark ? "light" : "dark"}
           translucent
           backgroundColor="transparent"
         />
-        <View className="flex-1 justify-center items-center px-6">
-          <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
-          <Text
-            style={{ color: colors.textPrimary }}
-            className="mt-4 text-xl font-quicksand-bold"
-          >
-            {i18n.t("client.product.error.notFound")}
-          </Text>
-          <Text
-            style={{ color: colors.textSecondary }}
-            className="mt-2 font-quicksand-medium text-center"
-          >
-            {i18n.t("client.product.error.notFoundMessage")}
-          </Text>
-          <TouchableOpacity
-            className="mt-6 bg-primary-500 rounded-2xl px-6 py-3"
-            onPress={() => router.back()}
-          >
-            <Text className="text-white font-quicksand-semibold">
-              {i18n.t("client.product.error.back")}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <ErrorState
+          variant="notFound"
+          title={i18n.t("client.product.error.notFound")}
+          message={i18n.t("client.product.error.notFoundMessage")}
+          onRetry={() => router.back()}
+          retryLabel={i18n.t("client.product.error.back")}
+        />
       </View>
     );
   }
@@ -757,9 +742,10 @@ export default function ProductDetails() {
           <View
             style={{
               backgroundColor: colors.secondary,
-              borderColor: colors.border,
+              borderRadius: 20,
+              padding: 16,
+              marginBottom: 24,
             }}
-            className="p-4 border rounded-2xl mb-6"
           >
             <Text
               style={{ color: colors.textPrimary }}
@@ -800,13 +786,15 @@ export default function ProductDetails() {
                   {enterpriseName}
                 </Text>
                 {enterprise && enterprise.location && (
-                  <Text
-                    style={{ color: colors.textSecondary }}
-                    className="text-sm mt-1"
-                  >
-                    📍 {enterprise.location.city},{" "}
-                    {enterprise.location.district}
-                  </Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
+                    <Ionicons name="location-sharp" size={13} color={colors.textSecondary} />
+                    <Text
+                      style={{ color: colors.textSecondary, marginLeft: 3, fontSize: 13 }}
+                      className="font-quicksand-medium"
+                    >
+                      {enterprise.location.city}, {enterprise.location.district}
+                    </Text>
+                  </View>
                 )}
               </View>
               <Ionicons
@@ -829,74 +817,66 @@ export default function ProductDetails() {
                   >
                     {i18n.t("client.enterprise.contact.title")}
                   </Text>
-                  <View className="flex-row flex-wrap -mx-1">
+                  <View style={{ flexDirection: "row", gap: 10, marginBottom: contactWebsite ? 10 : 0 }}>
                     {contactWhatsapp && (
-                      <>
-                        <TouchableOpacity
-                          onPress={() => openWhatsApp(contactWhatsapp)}
-                          style={{
-                            backgroundColor: colors.card,
-                            borderColor: colors.border,
-                          }}
-                          className="flex-1 rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border shadow-sm"
-                        >
-                          <Ionicons
-                            name="logo-whatsapp"
-                            size={18}
-                            color="#10B981"
-                          />
-                          <Text
-                            style={{ color: colors.textPrimary }}
-                            className="ml-2 font-quicksand-bold text-sm"
-                          >
-                            WhatsApp
-                          </Text>
-                        </TouchableOpacity>
-                      </>
+                      <TouchableOpacity
+                        onPress={() => openWhatsApp(contactWhatsapp)}
+                        style={{
+                          flex: 1,
+                          backgroundColor: "#10B981",
+                          borderRadius: 14,
+                          paddingVertical: 12,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Ionicons name="logo-whatsapp" size={18} color="#fff" />
+                        <Text style={{ color: "#fff", marginLeft: 8, fontSize: 14 }} className="font-quicksand-bold">
+                          WhatsApp
+                        </Text>
+                      </TouchableOpacity>
                     )}
                     {contactPhone && (
-                      <>
-                        <TouchableOpacity
-                          onPress={() => makePhoneCall(contactPhone)}
-                          style={{
-                            backgroundColor: colors.card,
-                            borderColor: colors.border,
-                          }}
-                          className="flex-1 rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border shadow-sm"
-                        >
-                          <Ionicons name="call" size={18} color="#FE8C00" />
-                          <Text
-                            style={{ color: colors.textPrimary }}
-                            className="ml-2 font-quicksand-bold text-sm"
-                          >
-                            {i18n.t("client.enterprise.contact.call")}
-                          </Text>
-                        </TouchableOpacity>
-                      </>
-                    )}
-                    {contactWebsite && (
                       <TouchableOpacity
-                        onPress={() => openWebsite(contactWebsite)}
+                        onPress={() => makePhoneCall(contactPhone)}
                         style={{
-                          backgroundColor: colors.card,
-                          borderColor: colors.border,
+                          flex: 1,
+                          borderWidth: 1.5,
+                          borderColor: "#FE8C00",
+                          borderRadius: 14,
+                          paddingVertical: 12,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "center",
                         }}
-                        className="w-full rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border shadow-sm"
                       >
-                        <Ionicons
-                          name="globe-outline"
-                          size={18}
-                          color="#3B82F6"
-                        />
-                        <Text
-                          style={{ color: colors.textPrimary }}
-                          className="ml-2 font-quicksand-bold text-sm"
-                        >
-                          Site web
+                        <Ionicons name="call" size={18} color="#FE8C00" />
+                        <Text style={{ color: "#FE8C00", marginLeft: 8, fontSize: 14 }} className="font-quicksand-bold">
+                          {i18n.t("client.enterprise.contact.call")}
                         </Text>
                       </TouchableOpacity>
                     )}
                   </View>
+                  {contactWebsite && (
+                    <TouchableOpacity
+                      onPress={() => openWebsite(contactWebsite)}
+                      style={{
+                        borderWidth: 1.5,
+                        borderColor: "#3B82F6",
+                        borderRadius: 14,
+                        paddingVertical: 12,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Ionicons name="globe-outline" size={18} color="#3B82F6" />
+                      <Text style={{ color: "#3B82F6", marginLeft: 8, fontSize: 14 }} className="font-quicksand-bold">
+                        Site web
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               )}
 
@@ -944,10 +924,18 @@ export default function ProductDetails() {
                   );
                 }
               }}
-              className="bg-amber-100 rounded-xl py-3 flex-row items-center justify-center mt-4"
+              style={{
+                backgroundColor: colors.brandPrimary,
+                borderRadius: 14,
+                paddingVertical: 13,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                marginTop: 16,
+              }}
             >
-              <Ionicons name="chatbubbles" size={18} color="#D97706" />
-              <Text className="ml-2 text-amber-800 font-quicksand-bold text-sm">
+              <Ionicons name="chatbubbles" size={18} color="#fff" />
+              <Text style={{ color: "#fff", marginLeft: 8, fontSize: 14 }} className="font-quicksand-bold">
                 {i18n.t("client.product.actions.negotiate")}
               </Text>
             </TouchableOpacity>
