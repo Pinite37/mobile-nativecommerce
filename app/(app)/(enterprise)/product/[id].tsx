@@ -153,55 +153,38 @@ export default function ProductDetails() {
     product: Product;
   }) => (
     <TouchableOpacity
-      className="rounded-xl mr-4 overflow-hidden"
+      activeOpacity={0.85}
       style={{
-        width: 140,
+        width: 152,
+        marginRight: 12,
+        borderRadius: 16,
+        overflow: "hidden",
         backgroundColor: colors.card,
-        borderWidth: 1,
-        borderColor: colors.border,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
       }}
       onPress={() => {
         router.push(`/(app)/(enterprise)/product/${similarProduct._id}`);
       }}
     >
-      <View className="relative">
-        <ExpoImage
-          source={{
-            uri:
-              similarProduct.images[0] ||
-              "https://via.placeholder.com/140x100/CCCCCC/FFFFFF?text=No+Image",
-          }}
-          style={{ width: 140, height: 140 }}
-          contentFit="cover"
-          transition={200}
-          cachePolicy="memory-disk"
-        />
-        {/* Badge stock si faible */}
-        {/* {similarProduct.stock <= 5 && similarProduct.stock > 0 && (
-          <View className="absolute top-2 left-2 bg-warning-500 rounded-full px-2 py-1">
-            <Text className="text-white text-xs font-quicksand-bold">
-              {similarProduct.stock}{" "}
-              {i18n.t("enterprise.productDetails.stock.remaining")}
-            </Text>
-          </View>
-        )} */}
-      </View>
-
-      <View className="p-3">
+      <ExpoImage
+        source={{
+          uri:
+            similarProduct.images[0] ||
+            "https://via.placeholder.com/152x120/F3F4F6/9CA3AF?text=AXI",
+        }}
+        style={{ width: 152, height: 110 }}
+        contentFit="cover"
+        transition={200}
+        cachePolicy="memory-disk"
+      />
+      <View style={{ padding: 10 }}>
         <Text
           numberOfLines={2}
-          style={{ color: colors.textPrimary }}
-          className="text-sm font-quicksand-semibold mb-2 leading-5"
+          style={{ color: colors.textPrimary, fontSize: 12, lineHeight: 17, marginBottom: 6 }}
+          className="font-quicksand-semibold"
         >
           {similarProduct.name}
         </Text>
-
-        <Text className="text-base font-quicksand-bold text-emerald-600">
+        <Text style={{ color: "#10B981", fontSize: 13 }} className="font-quicksand-bold">
           {formatPrice(similarProduct.price)}
         </Text>
       </View>
@@ -589,21 +572,18 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
           </View>
 
           {/* Enterprise Section */}
-          <View
-            style={{
-              backgroundColor: colors.secondary,
-              borderColor: colors.border,
-            }}
-            className="p-4 border rounded-2xl mb-6"
-          >
-            <Text
-              style={{ color: colors.textPrimary }}
-              className="text-lg font-quicksand-bold mb-3"
-            >
-              {i18n.t("enterprise.productDetails.store.title")}
-            </Text>
+          <View style={{ marginBottom: 24 }}>
+            {/* Boutique row */}
             <TouchableOpacity
-              className="flex-row items-center"
+              activeOpacity={0.75}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: colors.secondary,
+                borderRadius: 16,
+                padding: 14,
+                marginBottom: 10,
+              }}
               onPress={() => {
                 if (
                   typeof product.enterprise === "object" &&
@@ -619,119 +599,87 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
               product.enterprise.logo ? (
                 <Image
                   source={{ uri: product.enterprise.logo }}
-                  className="w-14 h-14 rounded-2xl"
+                  style={{ width: 48, height: 48, borderRadius: 12 }}
                   resizeMode="cover"
                 />
               ) : (
-                <View className="w-14 h-14 bg-primary-100 rounded-2xl justify-center items-center">
-                  <Ionicons name="storefront" size={24} color="#FE8C00" />
+                <View style={{
+                  width: 48, height: 48, borderRadius: 12,
+                  backgroundColor: isDark ? "#2D2D2D" : "#FFF3E0",
+                  alignItems: "center", justifyContent: "center",
+                }}>
+                  <Ionicons name="storefront" size={22} color="#FE8C00" />
                 </View>
               )}
-              <View className="ml-4 flex-1">
-                <Text
-                  style={{ color: colors.textPrimary }}
-                  className="text-lg font-quicksand-bold"
-                >
+              <View style={{ marginLeft: 12, flex: 1 }}>
+                <Text style={{ color: colors.textPrimary, fontSize: 15 }} className="font-quicksand-bold">
                   {typeof product.enterprise === "object"
                     ? product.enterprise.companyName
                     : product.enterprise}
                 </Text>
                 {typeof product.enterprise === "object" &&
                   product.enterprise.location && (
-                    <Text
-                      style={{ color: colors.textSecondary }}
-                      className="text-sm mt-1"
-                    >
-                      📍 {product.enterprise.location.city},{" "}
-                      {product.enterprise.location.district}
-                    </Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", marginTop: 3 }}>
+                      <Ionicons name="location-sharp" size={12} color={colors.textSecondary} />
+                      <Text style={{ color: colors.textSecondary, fontSize: 12, marginLeft: 3 }} className="font-quicksand-medium">
+                        {product.enterprise.location.city},{" "}
+                        {product.enterprise.location.district}
+                      </Text>
+                    </View>
                   )}
               </View>
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={colors.textSecondary}
-              />
+              <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
             </TouchableOpacity>
 
-            {/* Contact Options */}
+            {/* Contact buttons */}
             {typeof product.enterprise === "object" &&
-              (product.enterprise.contactInfo?.phone ||
-                product.enterprise.contactInfo?.website) && (
-                <View
-                  style={{ borderTopColor: colors.border }}
-                  className="mt-4 pt-4 border-t"
-                >
-                  <Text
-                    style={{ color: colors.textSecondary }}
-                    className="text-sm font-quicksand-bold mb-3 uppercase tracking-wider"
+              product.enterprise.contactInfo?.phone && (
+                <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() =>
+                      typeof product.enterprise === "object" &&
+                      product.enterprise.contactInfo?.phone
+                        ? openWhatsApp(product.enterprise.contactInfo.phone)
+                        : undefined
+                    }
+                    style={{
+                      flex: 1, flexDirection: "row", alignItems: "center",
+                      justifyContent: "center", paddingVertical: 13,
+                      borderRadius: 14, backgroundColor: isDark ? "#052e16" : "#F0FDF4",
+                    }}
                   >
-                    {i18n.t("enterprise.productDetails.store.contact")}
-                  </Text>
-                  <View className="flex-row flex-wrap -mx-1">
-                    {typeof product.enterprise === "object" &&
-                      product.enterprise.contactInfo?.phone && (
-                        <>
-                          <TouchableOpacity
-                            onPress={() =>
-                              typeof product.enterprise === "object" &&
-                              product.enterprise.contactInfo?.phone
-                                ? openWhatsApp(
-                                    product.enterprise.contactInfo.phone,
-                                  )
-                                : undefined
-                            }
-                            style={{
-                              backgroundColor: colors.card,
-                              borderColor: colors.border,
-                            }}
-                            className="flex-1 rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border shadow-sm"
-                          >
-                            <Ionicons
-                              name="logo-whatsapp"
-                              size={18}
-                              color="#10B981"
-                            />
-                            <Text
-                              style={{ color: colors.textPrimary }}
-                              className="ml-2 font-quicksand-bold text-sm"
-                            >
-                              {i18n.t(
-                                "enterprise.productDetails.store.whatsapp",
-                              )}
-                            </Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            onPress={() =>
-                              typeof product.enterprise === "object" &&
-                              product.enterprise.contactInfo?.phone
-                                ? makePhoneCall(
-                                    product.enterprise.contactInfo.phone,
-                                  )
-                                : undefined
-                            }
-                            style={{
-                              backgroundColor: colors.card,
-                              borderColor: colors.border,
-                            }}
-                            className="flex-1 rounded-xl px-3 py-3 m-1 flex-row items-center justify-center border shadow-sm"
-                          >
-                            <Ionicons name="call" size={18} color="#FE8C00" />
-                            <Text
-                              style={{ color: colors.textPrimary }}
-                              className="ml-2 font-quicksand-bold text-sm"
-                            >
-                              {i18n.t("enterprise.productDetails.store.call")}
-                            </Text>
-                          </TouchableOpacity>
-                        </>
-                      )}
-                  </View>
+                    <Ionicons name="logo-whatsapp" size={19} color="#16A34A" />
+                    <Text style={{ color: "#16A34A", marginLeft: 7, fontSize: 14 }} className="font-quicksand-bold">
+                      {i18n.t("enterprise.productDetails.store.whatsapp")}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() =>
+                      typeof product.enterprise === "object" &&
+                      product.enterprise.contactInfo?.phone
+                        ? makePhoneCall(product.enterprise.contactInfo.phone)
+                        : undefined
+                    }
+                    style={{
+                      flex: 1, flexDirection: "row", alignItems: "center",
+                      justifyContent: "center", paddingVertical: 13,
+                      borderRadius: 14, backgroundColor: isDark ? "#431407" : "#FFF7ED",
+                    }}
+                  >
+                    <Ionicons name="call" size={19} color="#EA580C" />
+                    <Text style={{ color: "#EA580C", marginLeft: 7, fontSize: 14 }} className="font-quicksand-bold">
+                      {i18n.t("enterprise.productDetails.store.call")}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               )}
 
-            {/* Faire une offre */}
+            {/* Discuter / Négocier */}
             <TouchableOpacity
+              activeOpacity={0.85}
               onPress={async () => {
                 try {
                   const conversation =
@@ -748,10 +696,13 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                   );
                 }
               }}
-              className="bg-amber-100 rounded-xl py-3 flex-row items-center justify-center mt-4"
+              style={{
+                flexDirection: "row", alignItems: "center", justifyContent: "center",
+                paddingVertical: 14, borderRadius: 14, backgroundColor: "#FE8C00",
+              }}
             >
-              <Ionicons name="chatbubbles" size={18} color="#D97706" />
-              <Text className="ml-2 text-amber-800 font-quicksand-bold text-sm">
+              <Ionicons name="chatbubbles" size={19} color="#fff" />
+              <Text style={{ color: "#fff", marginLeft: 8, fontSize: 15 }} className="font-quicksand-bold">
                 {i18n.t("enterprise.productDetails.store.negotiate")}
               </Text>
             </TouchableOpacity>
@@ -759,20 +710,17 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
 
           {/* Similar Products */}
           {(similarProducts.length > 0 || loadingSimilar) && (
-            <View
-              style={{ borderTopColor: colors.border }}
-              className="py-4 border-t"
-            >
-              <View className="flex-row justify-between items-center mb-4">
-                <Text
-                  style={{ color: colors.textPrimary }}
-                  className="text-xl font-quicksand-bold"
-                >
-                  {i18n.t("enterprise.productDetails.similar.title")}
-                </Text>
-              </View>
+            <View style={{ borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border, paddingTop: 20, marginBottom: 8 }}>
+              <Text
+                style={{ color: colors.textPrimary, fontSize: 18, marginBottom: 14 }}
+                className="font-quicksand-bold"
+              >
+                {i18n.t("enterprise.productDetails.similar.title")}
+              </Text>
               {loadingSimilar ? (
-                <ActivityIndicator size="small" color="#FE8C00" />
+                <View style={{ alignItems: "center", paddingVertical: 20 }}>
+                  <ActivityIndicator size="small" color="#10B981" />
+                </View>
               ) : (
                 <FlatList
                   data={similarProducts}
@@ -782,7 +730,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                   keyExtractor={(item) => item._id}
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ paddingBottom: 8 }}
+                  contentContainerStyle={{ paddingBottom: 4 }}
                 />
               )}
             </View>
