@@ -22,10 +22,9 @@ import {
 import Animated, {
   Extrapolation,
   interpolate,
-  useAnimatedProps,
-  useAnimatedRef,
+  useAnimatedScrollHandler,
   useAnimatedStyle,
-  useScrollViewOffset,
+  useSharedValue,
 } from "react-native-reanimated";
 import { Shimmer } from "../../../../components/ui/Shimmer";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -50,7 +49,6 @@ const HEADER_HEIGHT = Math.round(screenHeight * 0.45);
 const COMPACT_HEADER_HEIGHT = 100;
 const TITLE_APPEAR_OFFSET = HEADER_HEIGHT - COMPACT_HEADER_HEIGHT - 50;
 
-const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 const AnimatedImage = Animated.createAnimatedComponent(ExpoImage);
 
 export default function ProductDetails() {
@@ -69,36 +67,40 @@ export default function ProductDetails() {
   const [loadingSimilar, setLoadingSimilar] = useState(false);
   const [imageModalVisible, setImageModalVisible] = useState(false);
 
-  const scrollRef = useAnimatedRef<Animated.ScrollView>();
-  const scrollOffset = useScrollViewOffset(scrollRef);
+  const scrollY = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      'worklet';
+      scrollY.value = event.contentOffset.y;
+    },
+  });
 
   const imageStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollOffset.value, [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT], [1, 0], Extrapolation.CLAMP),
+    opacity: interpolate(scrollY.value, [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT], [1, 0], Extrapolation.CLAMP),
     transform: [
-      { translateY: interpolate(scrollOffset.value, [0, HEADER_HEIGHT], [0, -HEADER_HEIGHT * 0.6], Extrapolation.CLAMP) },
-      { scale: interpolate(scrollOffset.value, [-HEADER_HEIGHT, 0], [2, 1], Extrapolation.CLAMP) },
+      { translateY: interpolate(scrollY.value, [0, HEADER_HEIGHT], [0, -HEADER_HEIGHT * 0.6], Extrapolation.CLAMP) },
+      { scale: interpolate(scrollY.value, [-HEADER_HEIGHT, 0], [2, 1], Extrapolation.CLAMP) },
     ],
   }));
 
-  const blurProps = useAnimatedProps(() => ({
-    intensity: interpolate(scrollOffset.value, [0, HEADER_HEIGHT * 0.7], [0, 50], Extrapolation.CLAMP),
+  const overlayOpacityStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollY.value, [0, HEADER_HEIGHT * 0.7], [0, 0.45], Extrapolation.CLAMP),
   }));
 
   const compactHeaderStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollOffset.value, [TITLE_APPEAR_OFFSET, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT], [0, 1], Extrapolation.CLAMP),
-    transform: [{ translateY: interpolate(scrollOffset.value, [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT], [-100, 0], Extrapolation.CLAMP) }],
+    opacity: interpolate(scrollY.value, [TITLE_APPEAR_OFFSET, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT], [0, 1], Extrapolation.CLAMP),
   }));
 
   const bigTitleStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollOffset.value, [0, HEADER_HEIGHT * 0.5], [1, 0], Extrapolation.CLAMP),
+    opacity: interpolate(scrollY.value, [0, HEADER_HEIGHT * 0.5], [1, 0], Extrapolation.CLAMP),
   }));
 
   const floatingBackStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollOffset.value, [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT - 20], [1, 0], Extrapolation.CLAMP),
+    opacity: interpolate(scrollY.value, [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT - 20], [1, 0], Extrapolation.CLAMP),
   }));
 
   const floatingActionsStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollOffset.value, [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT - 20], [1, 0], Extrapolation.CLAMP),
+    opacity: interpolate(scrollY.value, [0, HEADER_HEIGHT - COMPACT_HEADER_HEIGHT - 20], [1, 0], Extrapolation.CLAMP),
   }));
 
   useEffect(() => {
@@ -381,11 +383,11 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         ]}
         pointerEvents="box-none"
       >
-        <BlurView
-          intensity={100}
-          tint="light"
-          style={StyleSheet.absoluteFill}
-        />
+        {Platform.OS === 'ios' ? (
+          <BlurView intensity={100} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
+        ) : (
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.card }]} />
+        )}
 
         <View style={styles.compactHeaderContent}>
           <TouchableOpacity
@@ -493,15 +495,13 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
       {/* Parallax Header Background */}
       <View style={styles.headerWrapper} pointerEvents="none">
         <AnimatedImage
-          source={{ uri: product.images?.[0] }}
+          source={{ uri: product.images?.[currentImageIndex] }}
           style={[styles.headerImage, imageStyle]}
           contentFit="cover"
         />
 
-        <AnimatedBlurView
-          animatedProps={blurProps}
-          tint="dark"
-          style={StyleSheet.absoluteFillObject}
+        <Animated.View
+          style={[StyleSheet.absoluteFillObject, { backgroundColor: '#000' }, overlayOpacityStyle]}
         />
 
         <Animated.View
@@ -525,7 +525,8 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
 
       {/* Scrollable Content */}
       <Animated.ScrollView
-        ref={scrollRef}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: HEADER_HEIGHT }}
       >
@@ -876,17 +877,16 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 1000,
-    elevation: 10, // Pour Android
-    shadowColor: "#000", // Pour iOS
-    shadowOffset: { width: 0, height: 4 }, // Pour iOS
-    shadowOpacity: 0.3, // Pour iOS
-    shadowRadius: 4, // Pour iOS
-    backgroundColor: "rgba(255,255,255,0.8)", // Fallback plus clair
+    elevation: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
     justifyContent: "flex-end",
     paddingBottom: 10,
     overflow: "hidden",
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(0,0,0,0.05)",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "rgba(0,0,0,0.1)",
   },
   compactHeaderContent: {
     flexDirection: "row",
