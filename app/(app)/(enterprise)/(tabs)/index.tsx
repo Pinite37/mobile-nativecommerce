@@ -632,7 +632,7 @@ export default function EnterpriseDashboard() {
               item.images[0] ||
               "https://via.placeholder.com/150x150/CCCCCC/FFFFFF?text=No+Image",
           }}
-          className="w-full h-32 rounded-t-2xl"
+          style={{ width: "100%", height: 128, borderTopLeftRadius: 16, borderTopRightRadius: 16 }}
           contentFit="cover"
         />
         {/* Badge pour les produits avec beaucoup de ventes */}
@@ -704,7 +704,7 @@ export default function EnterpriseDashboard() {
               item.images[0] ||
               "https://via.placeholder.com/150x150/CCCCCC/FFFFFF?text=No+Image",
           }}
-          className="w-24 h-24 rounded-xl"
+          style={{ width: 96, height: 96, borderRadius: 12 }}
           contentFit="cover"
         />
         {item.stats?.totalSales > 10 && (

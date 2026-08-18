@@ -80,14 +80,13 @@ export const useNotifications = () => {
       // 2. Configurer les canaux Android et autres paramètres
       await NotificationPermissionService.setupNotifications();
 
-      // 3. Obtenir le token Expo Push
+      // 3. Obtenir le token Expo Push (indisponible sur simulateur — non bloquant)
       const token = await NotificationPermissionService.getExpoPushToken();
 
       if (!token) {
-        const message = 'Impossible d\'obtenir le token de notifications (appareil physique requis ou Firebase non configuré)';
-        console.error('❌', message);
-        setError(message);
-        return { success: false, message };
+        console.log('⚠️ Token push non disponible (simulateur ou Firebase non configuré) — permissions accordées');
+        setHasPermission(true);
+        return { success: true };
       }
 
       setExpoPushToken(token);

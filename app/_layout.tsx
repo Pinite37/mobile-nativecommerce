@@ -7,10 +7,14 @@ import * as Notifications from "expo-notifications";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+import { LogBox } from "react-native";
 import { ToastProvider as ReanimatedToastProvider } from "../components/ui/ReanimatedToast/toast-provider";
 import { AuthProvider } from "../contexts/AuthContext";
 import { SocketProvider } from "../contexts/SocketContext";
 import "./globals.css";
+
+// Désactiver l'overlay LogBox (erreurs toujours visibles dans la console Metro)
+LogBox.ignoreAllLogs();
 
 const queryClient = new QueryClient({
   defaultOptions: {

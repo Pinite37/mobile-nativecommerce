@@ -25,6 +25,7 @@ class AuthService {
       );
 
       if (response.success && response.data) {
+        await TokenStorageService.clearAll();
         // Store tokens
         await ApiService.setAuthTokens(
           response.data.tokens.accessToken,
@@ -57,6 +58,7 @@ class AuthService {
       );
 
       if (response.success && response.data) {
+        await TokenStorageService.clearAll();
         // Store tokens
         await ApiService.setAuthTokens(
           response.data.tokens.accessToken,
@@ -90,6 +92,8 @@ class AuthService {
       );
 
       if (response.success && response.data) {
+        // Effacer toute session précédente avant de stocker les nouvelles données
+        await TokenStorageService.clearAll();
         // Store tokens
         await ApiService.setAuthTokens(
           response.data.tokens.accessToken,

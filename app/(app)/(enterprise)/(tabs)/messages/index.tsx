@@ -277,7 +277,7 @@ export default function MessagesPage() {
             {otherParticipant?.profileImage ? (
               <Image
                 source={{ uri: otherParticipant.profileImage }}
-                className="w-14 h-14 rounded-full"
+                style={{ width: 56, height: 56, borderRadius: 28 }}
                 contentFit="cover"
               />
             ) : (

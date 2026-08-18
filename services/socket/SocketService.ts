@@ -147,7 +147,7 @@ class SocketService {
       const token = await TokenStorageService.getAccessToken();
       
       if (!token) {
-        console.error('❌ Aucun token trouvé pour la connexion Socket.IO');
+        console.log('❌ Aucun token trouvé pour la connexion Socket.IO');
         throw new Error('Token manquant');
       }
 
@@ -219,13 +219,13 @@ class SocketService {
       });
 
     } catch (error: any) {
-      console.error('❌ Erreur connexion Socket.IO:', error);
+      console.log('❌ Erreur connexion Socket.IO:', error);
       const classified = this.classifyError(error);
-      console.error('Type d\'erreur:', classified.type, '-', classified.message);
-      
+      console.log('Type d\'erreur:', classified.type, '-', classified.message);
+
       // Notifier les listeners d'erreur
       this._emitToHandlers('error', { error, classified });
-      
+
       throw error;
     }
   }
@@ -266,17 +266,17 @@ class SocketService {
 
     // Erreur de connexion
     this.socket.on('connect_error', (error) => {
-      console.error('❌ Erreur de connexion Socket.IO:', error.message);
+      console.log('❌ Erreur de connexion Socket.IO:', error.message);
       this.reconnectAttempts++;
-      
+
       const classified = this.classifyError(error);
-      console.error('Type d\'erreur:', classified.type, '-', classified.message);
-      
+      console.log('Type d\'erreur:', classified.type, '-', classified.message);
+
       this._emitToHandlers('connect_error', { error, classified, attempt: this.reconnectAttempts });
 
       // Arrêter les tentatives si erreur non retryable ou limite atteinte
       if (!classified.retryable || this.reconnectAttempts >= this.maxReconnectAttempts) {
-        console.error('❌ Abandon des tentatives de reconnexion');
+        console.log('❌ Abandon des tentatives de reconnexion');
         this._emitToHandlers('connection_failed', { error, classified });
       }
     });
@@ -289,7 +289,7 @@ class SocketService {
 
     // Erreur d'authentification
     this.socket.on('auth_error', (error) => {
-      console.error('❌ Erreur d\'authentification Socket.IO:', error);
+      console.log('❌ Erreur d\'authentification Socket.IO:', error);
       this._emitToHandlers('auth_error', error);
     });
 

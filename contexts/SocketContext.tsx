@@ -85,14 +85,14 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     };
 
     const handleConnectError = (data: any) => {
-      console.error('❌ Erreur connexion Socket.IO (SocketProvider):', data.classified?.message);
+      console.log('❌ Erreur connexion Socket.IO (SocketProvider):', data.classified?.message);
       setError(data.classified?.message || 'Erreur de connexion');
       setIsConnected(false);
       setConnectionStatus(socketService.getConnectionStatus());
     };
 
     const handleError = (data: any) => {
-      console.error('❌ Erreur Socket.IO (SocketProvider):', data);
+      console.log('❌ Erreur Socket.IO (SocketProvider):', data);
       setError(data.classified?.message || 'Une erreur est survenue');
     };
 

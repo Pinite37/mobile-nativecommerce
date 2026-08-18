@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Dimensions, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Linking, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import notificationPermissionService from '../services/NotificationPermissionService';
 import { useNotifications } from '../hooks/useNotifications';
 
 interface NotificationPermissionModalProps {
@@ -70,6 +71,7 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
 
   const handleSkip = () => {
     console.log('⏭️ Utilisateur passe les notifications');
+    notificationPermissionService.markPermissionAsked();
     onClose();
   };
 
@@ -460,7 +462,7 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
                 onPress={() => {
                   setPermissionDeniedModal(false);
                   onClose();
-                  // Ici on pourrait ouvrir les paramètres de l'app
+                  Linking.openSettings();
                 }}
                 style={{
                   flex: 1,

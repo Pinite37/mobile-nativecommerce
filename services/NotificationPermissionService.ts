@@ -71,12 +71,6 @@ class NotificationPermissionService {
     try {
       console.log('📱 Demande de permissions de notifications...');
 
-      // Vérifier qu'on est sur un appareil physique
-      if (!Device.isDevice) {
-        console.warn('⚠️ Les notifications nécessitent un appareil physique');
-        return false;
-      }
-
       // Vérifier l'état actuel des permissions
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;

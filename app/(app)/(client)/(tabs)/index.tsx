@@ -642,7 +642,7 @@ export default function ClientHome() {
                 <Image
                     key={`image-${item._id}-${imageRefreshKey}`}
                     source={{ uri: item.images[0] || "https://via.placeholder.com/300" }}
-                    className="w-full h-40 bg-neutral-100"
+                    style={{ width: "100%", height: 160, backgroundColor: "#F3F4F6" }}
                     contentFit="cover"
                 />
                 <LinearGradient
@@ -829,7 +829,7 @@ export default function ClientHome() {
                 <Image
                     key={`image-list-${item._id}-${imageRefreshKey}`}
                     source={{ uri: item.images[0] || "https://via.placeholder.com/150x150/CCCCCC/FFFFFF?text=No+Image" }}
-                    className="w-24 h-24 rounded-xl"
+                    style={{ width: 96, height: 96, borderRadius: 12 }}
                     contentFit="cover"
                 />
                 {item.stats.totalSales > 10 && (

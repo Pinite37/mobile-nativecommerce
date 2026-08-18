@@ -294,7 +294,7 @@ export default function EnterpriseProducts() {
                   item.images[0] ||
                   "https://via.placeholder.com/160x160/E5E7EB/9CA3AF?text=No+Image",
               }}
-              className="w-full h-32 rounded-xl"
+              style={{ width: "100%", height: 128, borderRadius: 12 }}
               contentFit="cover"
             />
             <View className="mt-3">
@@ -362,7 +362,7 @@ export default function EnterpriseProducts() {
                 item.images[0] ||
                 "https://via.placeholder.com/80x80/E5E7EB/9CA3AF?text=No+Image",
             }}
-            className="w-20 h-20 rounded-xl"
+            style={{ width: 80, height: 80, borderRadius: 12 }}
             contentFit="cover"
           />
           <View className="ml-4 flex-1">
@@ -950,7 +950,7 @@ export default function EnterpriseProducts() {
                           selectedProductForMenu.images[0] ||
                           "https://via.placeholder.com/60x60/E5E7EB/9CA3AF?text=No+Image",
                       }}
-                      className="w-14 h-14 rounded-xl mr-3"
+                      style={{ width: 56, height: 56, borderRadius: 12, marginRight: 12 }}
                       contentFit="cover"
                     />
                     <View className="flex-1">
