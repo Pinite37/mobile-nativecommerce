@@ -398,7 +398,7 @@ export default function ClientEnterpriseDetails() {
                 className="font-quicksand-bold text-sm"
                 style={{ color: isFollowing ? "#8B5CF6" : "#fff" }}
               >
-                {isFollowing ? "Abonné" : "S'abonner"}
+                {isFollowing ? "Ne plus suivre" : "Suivre"}
               </Text>
             </>
           )}

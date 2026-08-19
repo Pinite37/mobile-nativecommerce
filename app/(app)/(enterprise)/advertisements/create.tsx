@@ -398,7 +398,7 @@ export default function CreateAdvertisement() {
                       setImages([]);
                       setImagesBase64([]);
                     }}
-                    className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 rounded-full items-center justify-center shadow-sm"
+                    className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 rounded-full items-center justify-center"
                     activeOpacity={0.7}
                   >
                     <Ionicons name="close" size={16} color="#FFFFFF" />
@@ -412,7 +412,7 @@ export default function CreateAdvertisement() {
               <TouchableOpacity
                 onPress={showImagePickerOptions}
                 style={{ backgroundColor: colors.card, borderColor: colors.border }}
-                className="w-full h-32 rounded-2xl items-center justify-center border border-dashed shadow-sm"
+                className="w-full h-32 rounded-2xl items-center justify-center border border-dashed"
                 activeOpacity={0.7}
               >
                 <Ionicons name="add" size={32} color={colors.textSecondary} />
@@ -439,7 +439,7 @@ export default function CreateAdvertisement() {
               onChangeText={setTitle}
               placeholder={i18n.t("enterprise.advertisementsCreate.placeholders.title")}
               style={{ backgroundColor: colors.card, color: colors.textPrimary, borderColor: colors.border }}
-              className="rounded-2xl px-4 py-4 font-quicksand-medium border shadow-sm"
+              className="rounded-2xl px-4 py-4 font-quicksand-medium border"
               placeholderTextColor={colors.textSecondary}
               maxLength={100}
               multiline
@@ -460,7 +460,7 @@ export default function CreateAdvertisement() {
               onChangeText={setDescription}
               placeholder={i18n.t("enterprise.advertisementsCreate.placeholders.description")}
               style={{ backgroundColor: colors.card, color: colors.textPrimary, borderColor: colors.border }}
-              className="rounded-2xl px-4 py-4 font-quicksand-medium border shadow-sm"
+              className="rounded-2xl px-4 py-4 font-quicksand-medium border"
               placeholderTextColor={colors.textSecondary}
               multiline
               numberOfLines={4}
@@ -486,7 +486,7 @@ export default function CreateAdvertisement() {
                       backgroundColor: type === t ? "#10B981" : colors.card,
                       borderColor: type === t ? "#10B981" : colors.border
                     }}
-                    className="px-3 py-2 rounded-xl border shadow-sm"
+                    className="px-3 py-2 rounded-xl border"
                     activeOpacity={1}
                   >
                     <Text
@@ -514,7 +514,7 @@ export default function CreateAdvertisement() {
                       backgroundColor: audience === a ? "#10B981" : colors.card,
                       borderColor: audience === a ? "#10B981" : colors.border
                     }}
-                    className="px-3 py-2 rounded-xl border shadow-sm"
+                    className="px-3 py-2 rounded-xl border"
                     activeOpacity={1}
                   >
                     <Text
@@ -535,7 +535,7 @@ export default function CreateAdvertisement() {
           <View className="mt-6">
             <View
               style={{ backgroundColor: colors.card, borderColor: colors.border }}
-              className="rounded-2xl px-4 py-4 border shadow-sm flex-row items-center"
+              className="rounded-2xl px-4 py-4 border flex-row items-center"
             >
               <Ionicons name="time-outline" size={20} color="#10B981" style={{ marginRight: 12 }} />
               <Text style={{ color: colors.textSecondary }} className="font-quicksand-medium text-sm flex-1">
@@ -550,7 +550,7 @@ export default function CreateAdvertisement() {
               <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-semibold mb-3">
                 {i18n.t("enterprise.advertisementsCreate.sections.preview")}
               </Text>
-              <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="rounded-2xl overflow-hidden border shadow-sm">
+              <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="rounded-2xl overflow-hidden border">
                 {images.length > 0 ? (
                   <View className="relative">
                     <Image
@@ -594,10 +594,10 @@ export default function CreateAdvertisement() {
             <TouchableOpacity
               onPress={submit}
               disabled={submitting}
-              className={`flex-1 rounded-2xl py-4 flex-row items-center justify-center shadow-lg ${
+              className={`flex-1 rounded-2xl py-4 flex-row items-center justify-center ${
                 validate()
-                  ? "bg-neutral-300 shadow-neutral-300/20"
-                  : "bg-emerald-500 shadow-emerald-500/20"
+                  ? "bg-neutral-300"
+                  : "bg-emerald-500"
               }`}
               activeOpacity={0.8}
             >

@@ -81,7 +81,7 @@ const SkeletonDetail: React.FC = () => {
       showsVerticalScrollIndicator={false}
     >
       {/* Hero Image Skeleton */}
-      <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="mx-4 mt-8 rounded-3xl overflow-hidden border shadow-sm">
+      <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="mx-4 mt-8 rounded-3xl overflow-hidden border">
         <Shimmer style={{ height: 224, width: "100%" }} />
         <View className="p-6 gap-4">
           <Shimmer style={{ height: 24, borderRadius: 8, width: "80%" }} />
@@ -106,13 +106,13 @@ const SkeletonDetail: React.FC = () => {
             </View>
           </View>
           <View className="flex-row gap-4 mt-2">
-            <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="flex-1 rounded-2xl p-4 border shadow-sm">
+            <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="flex-1 rounded-2xl p-4 border">
               <Shimmer style={{ height: 12, borderRadius: 4, width: 30 }} />
               <Shimmer
                 style={{ height: 24, borderRadius: 6, width: 40, marginTop: 6 }}
               />
             </View>
-            <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="flex-1 rounded-2xl p-4 border shadow-sm">
+            <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="flex-1 rounded-2xl p-4 border">
               <Shimmer style={{ height: 12, borderRadius: 4, width: 25 }} />
               <Shimmer
                 style={{ height: 24, borderRadius: 6, width: 35, marginTop: 6 }}
@@ -339,7 +339,7 @@ export default function AdvertisementDetail() {
           showsVerticalScrollIndicator={false}
         >
           {/* Hero Image */}
-          <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="mx-4 mt-8 rounded-3xl overflow-hidden border shadow-sm">
+          <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="mx-4 mt-8 rounded-3xl overflow-hidden border">
             {ad.images && ad.images.length > 0 ? (
               <View className="relative">
                 <Image
@@ -354,7 +354,7 @@ export default function AdvertisementDetail() {
                   className="absolute inset-0"
                 />
                 {statusInfo && (
-                  <View className="absolute top-4 left-4 px-3 py-1.5 rounded-full backdrop-blur-md bg-white/90 shadow-sm">
+                  <View className="absolute top-4 left-4 px-3 py-1.5 rounded-full backdrop-blur-md bg-white/90">
                     <Text
                       className="text-xs font-quicksand-bold"
                       style={{ color: statusInfo.color }}
@@ -417,7 +417,7 @@ export default function AdvertisementDetail() {
                 </View>
               </View>
               <View className="mt-6 flex-row gap-4">
-                <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="flex-1 rounded-2xl p-4 border shadow-sm">
+                <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="flex-1 rounded-2xl p-4 border">
                   <View className="flex-row items-center mb-2">
                     <Ionicons
                       name="eye-outline"
@@ -433,7 +433,7 @@ export default function AdvertisementDetail() {
                     {ad.views ?? 0}
                   </Text>
                 </View>
-                <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="flex-1 rounded-2xl p-4 border shadow-sm">
+                <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="flex-1 rounded-2xl p-4 border">
                   <View className="flex-row items-center mb-2">
                     <Ionicons
                       name="finger-print-outline"
@@ -459,7 +459,7 @@ export default function AdvertisementDetail() {
               {isExpired ? (
                 <TouchableOpacity
                   onPress={() => showConfirmation("relaunch")}
-                  className="flex-1 rounded-2xl py-4 items-center shadow-lg"
+                  className="flex-1 rounded-2xl py-4 items-center"
                   style={{ backgroundColor: "#3B82F6", shadowColor: "#3B82F6" }}
                   activeOpacity={0.8}
                 >
@@ -478,7 +478,7 @@ export default function AdvertisementDetail() {
               ) : ad.isActive ? (
                 <TouchableOpacity
                   onPress={() => showConfirmation("pause")}
-                  className="flex-1 rounded-2xl py-4 items-center shadow-lg"
+                  className="flex-1 rounded-2xl py-4 items-center"
                   style={{ backgroundColor: "#F59E0B", shadowColor: "#F59E0B" }}
                   activeOpacity={0.8}
                 >
@@ -497,7 +497,7 @@ export default function AdvertisementDetail() {
               ) : (
                 <TouchableOpacity
                   onPress={() => showConfirmation("activate")}
-                  className="flex-1 rounded-2xl py-4 items-center shadow-lg"
+                  className="flex-1 rounded-2xl py-4 items-center"
                   style={{ backgroundColor: "#10B981", shadowColor: "#10B981" }}
                   activeOpacity={0.8}
                 >
@@ -516,7 +516,7 @@ export default function AdvertisementDetail() {
               )}
               <TouchableOpacity
                 onPress={() => showConfirmation("delete")}
-                className="w-16 rounded-2xl items-center justify-center shadow-lg"
+                className="w-16 rounded-2xl items-center justify-center"
                 style={{ backgroundColor: "#EF4444", shadowColor: "#EF4444" }}
                 activeOpacity={0.8}
               >

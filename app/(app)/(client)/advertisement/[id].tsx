@@ -397,7 +397,7 @@ export default function AdvertisementDetails() {
 
               {/* Badge type avec design amélioré */}
               <View
-                className="absolute top-4 left-4 bg-primary-500 px-4 py-2 rounded-full shadow-lg"
+                className="absolute top-4 left-4 bg-primary-500 px-4 py-2 rounded-full"
                 style={{ elevation: 3 }}
               >
                 <Text className="text-white text-xs font-quicksand-bold uppercase tracking-wider">
@@ -407,7 +407,7 @@ export default function AdvertisementDetails() {
 
               {/* Badge expiration avec design moderne */}
               <View
-                className="absolute top-4 right-4 bg-black/70 px-3 py-2 rounded-full backdrop-blur-sm shadow-lg"
+                className="absolute top-4 right-4 bg-black/70 px-3 py-2 rounded-full backdrop-blur-sm"
                 style={{ elevation: 3 }}
               >
                 <View className="flex-row items-center">

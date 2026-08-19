@@ -869,7 +869,7 @@ export default function ProductDetails() {
                       className="font-quicksand-bold text-sm"
                       style={{ color: isFollowing ? "#8B5CF6" : "#fff" }}
                     >
-                      {isFollowing ? `Abonné · ${followerCount}` : "S'abonner"}
+                      {isFollowing ? "Ne plus suivre" : "Suivre"}
                     </Text>
                   </>
                 )}

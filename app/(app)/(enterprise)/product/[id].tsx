@@ -678,7 +678,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                       className="font-quicksand-bold text-sm"
                       style={{ color: isFollowing ? "#8B5CF6" : "#fff" }}
                     >
-                      {isFollowing ? `Abonné · ${followerCount}` : "S'abonner à la boutique"}
+                      {isFollowing ? "Ne plus suivre" : "Suivre"}
                     </Text>
                   </>
                 )}

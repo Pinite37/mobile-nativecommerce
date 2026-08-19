@@ -530,9 +530,7 @@ export default function MessagesPage() {
           <Text className="text-3xl font-quicksand-bold text-white tracking-tight">
             {i18n.t("enterprise.messages.title")}
           </Text>
-          <TouchableOpacity className="w-10 h-10 bg-white/20 rounded-full justify-center items-center active:bg-white/30">
-            <Ionicons name="create-outline" size={24} color="white" />
-          </TouchableOpacity>
+          <View className="w-10 h-10" />
         </View>
 
         {/* Barre de recherche */}

@@ -111,7 +111,7 @@ const Shimmer: React.FC<{ style?: any }> = ({ style }) => {
 const SkeletonCard: React.FC = () => {
   const { colors } = useTheme();
   return (
-    <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="rounded-3xl overflow-hidden mb-5 border shadow-sm">
+    <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="rounded-3xl overflow-hidden mb-5 border">
       <Shimmer style={{ height: 160, width: "100%" }} />
       <View className="p-5 gap-3">
         <View className="flex-row justify-between items-center">
@@ -318,7 +318,7 @@ export default function EnterpriseAdvertisements() {
           } as any)
         }
         style={{ backgroundColor: colors.card, borderColor: colors.border }}
-        className="rounded-3xl overflow-hidden mb-5 border shadow-sm"
+        className="rounded-3xl overflow-hidden mb-5 border"
         activeOpacity={0.9}
         accessibilityRole="button"
         accessibilityLabel={`${i18n.t("enterprise.advertisements.card.open")} ${item.title}`}
@@ -336,7 +336,7 @@ export default function EnterpriseAdvertisements() {
               end={{ x: 0, y: 1 }}
               className="absolute inset-0"
             />
-            <View className="absolute top-4 left-4 px-2.5 py-1 rounded-full backdrop-blur-md bg-white/90 shadow-sm">
+            <View className="absolute top-4 left-4 px-2.5 py-1 rounded-full backdrop-blur-md bg-white/90">
               <Text
                 style={{
                   fontFamily: "Quicksand-Bold",
@@ -425,7 +425,7 @@ export default function EnterpriseAdvertisements() {
         <View className="mt-8">
           <TouchableOpacity
             onPress={handleCreateAd}
-            className="w-full bg-white rounded-2xl py-3.5 flex-row items-center justify-center shadow-lg shadow-black/10"
+            className="w-full bg-white rounded-2xl py-3.5 flex-row items-center justify-center"
             activeOpacity={0.8}
           >
             <Ionicons name="add" size={22} color="#059669" />
@@ -445,7 +445,7 @@ export default function EnterpriseAdvertisements() {
               onChangeText={setSearchQuery}
               placeholder={i18n.t("enterprise.advertisements.search.placeholder")}
               style={{ fontFamily: "Quicksand-Medium", backgroundColor: colors.card, color: colors.textPrimary }}
-              className="rounded-2xl pl-12 pr-10 py-3.5 text-sm shadow-sm"
+              className="rounded-2xl pl-12 pr-10 py-3.5 text-sm"
               placeholderTextColor={colors.textSecondary}
             />
             {searchQuery.length > 0 && (
@@ -500,7 +500,7 @@ export default function EnterpriseAdvertisements() {
                   {i18n.t("enterprise.advertisements.summary.title")}
                 </Text>
                 <View className="flex-row gap-3">
-                  <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="flex-1 rounded-2xl p-4 border shadow-sm">
+                  <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="flex-1 rounded-2xl p-4 border">
                     <View className="flex-row items-center mb-2">
                       <View className="w-2 h-2 rounded-full bg-emerald-500 mr-2" />
                       <Text style={{ color: colors.textSecondary }} className="text-xs font-quicksand-bold">
@@ -511,7 +511,7 @@ export default function EnterpriseAdvertisements() {
                       {ads.filter((a) => a.status === "active").length}
                     </Text>
                   </View>
-                  <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="flex-1 rounded-2xl p-4 border shadow-sm">
+                  <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="flex-1 rounded-2xl p-4 border">
                     <View className="flex-row items-center mb-2">
                       <View className="w-2 h-2 rounded-full bg-amber-500 mr-2" />
                       <Text style={{ color: colors.textSecondary }} className="text-xs font-quicksand-bold">
@@ -522,7 +522,7 @@ export default function EnterpriseAdvertisements() {
                       {ads.filter((a) => a.status === "paused").length}
                     </Text>
                   </View>
-                  <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="flex-1 rounded-2xl p-4 border shadow-sm">
+                  <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="flex-1 rounded-2xl p-4 border">
                     <View className="flex-row items-center mb-2">
                       <View className="w-2 h-2 rounded-full bg-neutral-400 mr-2" />
                       <Text style={{ color: colors.textSecondary }} className="text-xs font-quicksand-bold">
