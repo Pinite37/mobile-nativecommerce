@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
@@ -871,7 +872,13 @@ const AddPartnerModal: React.FC<AddPartnerModalProps> = ({
 function EnterpriseProfilePage() {
   const { logout } = useAuth();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { locale } = useLocale(); // Écoute les changements de langue pour re-render automatiquement
+  const { locale } = useLocale();
+
+  const { data: followingList = [] } = useQuery({
+    queryKey: ['my-following'],
+    queryFn: () => FollowService.getMyFollowing(),
+    staleTime: 1000 * 60 * 5,
+  }); // Écoute les changements de langue pour re-render automatiquement
   const { showToast: showReToast } = useReanimatedToast();
   const { colors, isDark } = useTheme();
   const { unreadCount, loadUnreadCount } = useUnreadNotifications();
@@ -1584,8 +1591,8 @@ function EnterpriseProfilePage() {
               </Text>
             )}
 
-            {/* Compteur d'abonnés */}
-            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
+            {/* Compteur d'abonnés + suivis */}
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 }}>
               <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: isDark ? "rgba(139,92,246,0.12)" : "rgba(139,92,246,0.09)", borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, gap: 6 }}>
                 <Ionicons name="people-outline" size={14} color="#8B5CF6" />
                 <Text className="font-quicksand-bold text-sm" style={{ color: colors.textPrimary }}>
@@ -1595,6 +1602,18 @@ function EnterpriseProfilePage() {
                   abonné{followerCount !== 1 ? "s" : ""}
                 </Text>
               </View>
+              <TouchableOpacity
+                onPress={() => router.push('/(app)/(enterprise)/marketplace')}
+                style={{ flexDirection: "row", alignItems: "center", backgroundColor: isDark ? "rgba(16,185,129,0.12)" : "rgba(16,185,129,0.09)", borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, gap: 6 }}
+              >
+                <Ionicons name="storefront-outline" size={14} color="#10B981" />
+                <Text className="font-quicksand-bold text-sm" style={{ color: colors.textPrimary }}>
+                  {followingList.length}
+                </Text>
+                <Text className="font-quicksand text-xs" style={{ color: colors.textSecondary }}>
+                  suivi{followingList.length !== 1 ? "s" : ""}
+                </Text>
+              </TouchableOpacity>
             </View>
 
             {/* Séparateur */}
