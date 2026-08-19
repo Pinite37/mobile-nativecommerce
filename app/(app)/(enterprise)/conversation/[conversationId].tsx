@@ -418,30 +418,48 @@ const WALLPAPER_ICONS_ENT = [
   'chatbubble-outline', 'heart-outline', 'star-outline', 'sparkles-outline',
   'leaf-outline', 'bag-handle-outline', 'storefront-outline', 'happy-outline',
   'flower-outline', 'ribbon-outline', 'pricetag-outline', 'gift-outline',
-] as const;
+  'diamond-outline', 'cart-outline', 'cube-outline', 'megaphone-outline',
+  'thumbs-up-outline', 'shield-checkmark-outline', 'wallet-outline', 'trending-up-outline',
+];
 
-const WALLPAPER_ITEMS_ENT = Array.from({ length: 16 }, (_, r) =>
-  Array.from({ length: 7 }, (_, c) => ({
-    key: `${r}-${c}`,
-    top: r * 64 + (c % 2 === 1 ? 32 : 0),
-    left: c * 72,
-    icon: WALLPAPER_ICONS_ENT[(r * 5 + c * 3) % WALLPAPER_ICONS_ENT.length],
-    rot: (r * 47 + c * 83) % 360,
-  }))
+// Pseudo-random stable — même résultat à chaque render
+const _rng = (n: number) => { const x = Math.sin(n + 1) * 73856; return x - Math.floor(x); };
+
+// Grille 9×34 avec jitter : garantit zéro zone vide, invisiblement non-aligné
+const _COLS = 9, _CELL_W = 46, _CELL_H = 52;
+const WALLPAPER_ITEMS_ENT = Array.from({ length: 34 }, (_, r) =>
+  Array.from({ length: _COLS }, (_, c) => {
+    const i = r * _COLS + c;
+    return {
+      key: `w${i}`,
+      top: r * _CELL_H + (_rng(i * 5 + 0) - 0.5) * _CELL_H * 0.9,
+      left: c * _CELL_W + (_rng(i * 5 + 1) - 0.5) * _CELL_W * 0.9,
+      icon: WALLPAPER_ICONS_ENT[Math.floor(_rng(i * 5 + 2) * WALLPAPER_ICONS_ENT.length)],
+      rot: _rng(i * 5 + 3) * 360,
+      size: 14 + Math.floor(_rng(i * 5 + 4) * 14),
+      alpha: 0.055 + _rng(i * 5 + 0.7) * 0.065,
+    };
+  })
 ).flat();
 
-const ChatWallpaperEnt = React.memo(({ isDark }: { isDark: boolean }) => {
-  const opacity = isDark ? 0.07 : 0.09;
-  return (
-    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} pointerEvents="none">
-      {WALLPAPER_ITEMS_ENT.map(item => (
-        <View key={item.key} style={{ position: 'absolute', top: item.top, left: item.left, opacity, transform: [{ rotate: `${item.rot}deg` }] }}>
-          <Ionicons name={item.icon} size={22} color="#10B981" />
-        </View>
-      ))}
-    </View>
-  );
-});
+const ChatWallpaperEnt = React.memo(({ isDark }: { isDark: boolean }) => (
+  <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} pointerEvents="none">
+    {WALLPAPER_ITEMS_ENT.map(item => (
+      <View
+        key={item.key}
+        style={{
+          position: 'absolute',
+          top: item.top,
+          left: item.left,
+          opacity: isDark ? item.alpha * 0.8 : item.alpha,
+          transform: [{ rotate: `${item.rot}deg` }],
+        }}
+      >
+        <Ionicons name={item.icon as any} size={item.size} color="#10B981" />
+      </View>
+    ))}
+  </View>
+));
 
 const SwipeableRow = ({
   children,
@@ -2619,7 +2637,7 @@ export default function ConversationDetails() {
           )}
 
           {/* Zone de saisie Android */}
-          <View style={{ flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 10, paddingVertical: 8, paddingBottom: Math.max(insets.bottom + 4, 10), backgroundColor: isDark ? '#0F1923' : '#EEF2F7', gap: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 10, paddingVertical: 8, paddingBottom: Platform.OS === 'ios' ? Math.max(insets.bottom + 4, 10) : 8, backgroundColor: isDark ? '#0F1923' : '#EEF2F7', gap: 8 }}>
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 21, paddingHorizontal: 14, minHeight: 42, maxHeight: 120, borderWidth: 1, borderColor: colors.border }}>
               <TextInput
                 ref={textInputRef}
@@ -2654,7 +2672,7 @@ export default function ConversationDetails() {
       ) : (
         <KeyboardAvoidingView
           className="flex-1"
-          behavior="padding"
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
           style={{ flex: 1 }}
         >
           <FlatList
@@ -2794,7 +2812,7 @@ export default function ConversationDetails() {
           )}
 
           {/* Zone de saisie iOS */}
-          <View style={{ flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 10, paddingVertical: 8, paddingBottom: Math.max(insets.bottom + 4, 10), backgroundColor: isDark ? '#0F1923' : '#EEF2F7', gap: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 10, paddingVertical: 8, paddingBottom: Platform.OS === 'ios' ? Math.max(insets.bottom + 4, 10) : 8, backgroundColor: isDark ? '#0F1923' : '#EEF2F7', gap: 8 }}>
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 21, paddingHorizontal: 14, minHeight: 42, maxHeight: 120, borderWidth: 1, borderColor: colors.border }}>
               <TextInput
                 ref={textInputRef}
