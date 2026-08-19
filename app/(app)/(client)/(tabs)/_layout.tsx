@@ -38,45 +38,22 @@ export default function ClientTabsLayout() {
     />
   );
 
-  // Calcul dynamique pour tenir compte des barres de navigation Android / iOS
-  const baseHeight = 70; // hauteur visuelle de base du tab bar (sans inset)
-  const dynamicHeight = baseHeight + insets.bottom; // on ajoute l'inset réel
-  const dynamicPaddingBottom = 16 + Math.min(insets.bottom, 24); // conserver un bon touch area sans exagérer
-  const dynamicPaddingTop = 16; // padding top fixe pour cohérence
-  const dynamicPaddingHorizontal = Math.max(12, insets.left + insets.right + 8); // Adaptation aux écrans avec notches
+  const bottomMargin = Math.max(insets.bottom + 6, 22);
+  const tabBarTotalHeight = 60 + bottomMargin;
 
   return (
     <Tabs
       tabBar={(props) => <CustomTabBar {...props} insets={insets} />}
       initialRouteName="index"
+      sceneContainerStyle={{ paddingBottom: tabBarTotalHeight }}
       screenOptions={{
         tabBarActiveTintColor: "#10B981",
         tabBarInactiveTintColor: "#9CA3AF",
-        headerShown: false, // Ensure all headers are hidden by default
+        headerShown: false,
         tabBarLabelStyle: {
           fontFamily: "Quicksand-SemiBold",
           fontSize: 12,
           marginBottom: 4,
-        },
-        tabBarStyle: {
-          display: "flex", // Make sure it's visible
-          position: "absolute", // Make sure it stays at the bottom
-          bottom: 0,
-          left: 0,
-          right: 0,
-          borderTopWidth: 0,
-          elevation: 10,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -3 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          backgroundColor: "#FFFFFF",
-          height: dynamicHeight,
-          borderTopRightRadius: 25,
-          borderTopLeftRadius: 25,
-          paddingBottom: dynamicPaddingBottom,
-          paddingTop: dynamicPaddingTop,
-          paddingHorizontal: dynamicPaddingHorizontal,
         },
         headerStyle: {
           backgroundColor: "#FFFFFF",

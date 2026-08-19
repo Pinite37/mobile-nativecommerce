@@ -553,8 +553,6 @@ export default function ConversationDetails() {
 
   // Offre de livraison (création depuis la conversation)
   const [offerModalVisible, setOfferModalVisible] = useState(false);
-  const slideOfferAnim = useRef(new RNAnimated.Value(600)).current;
-  const backdropOfferAnim = useRef(new RNAnimated.Value(0)).current;
   const [creatingOffer, setCreatingOffer] = useState(false);
   const [offerForm, setOfferForm] = useState<{
     deliveryZone: string;
@@ -581,21 +579,10 @@ export default function ConversationDetails() {
       const defaultExpiry = new Date(Date.now() + 60 * 60 * 1000).toISOString();
       setOfferForm((prev) => ({ ...prev, expiresAt: defaultExpiry }));
     }
-    slideOfferAnim.setValue(600);
-    backdropOfferAnim.setValue(0);
     setOfferModalVisible(true);
-    RNAnimated.parallel([
-      RNAnimated.spring(slideOfferAnim, { toValue: 0, damping: 22, stiffness: 200, useNativeDriver: true }),
-      RNAnimated.timing(backdropOfferAnim, { toValue: 1, duration: 220, useNativeDriver: true }),
-    ]).start();
   };
 
-  const closeOfferModal = () => {
-    RNAnimated.parallel([
-      RNAnimated.timing(slideOfferAnim, { toValue: 600, duration: 260, useNativeDriver: true }),
-      RNAnimated.timing(backdropOfferAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
-    ]).start(() => setOfferModalVisible(false));
-  };
+  const closeOfferModal = () => setOfferModalVisible(false);
 
   // États pour la gestion des confirmations de suppression
   const [confirmationVisible, setConfirmationVisible] = useState(false);
@@ -639,8 +626,10 @@ export default function ConversationDetails() {
 
     // Dans les conversations CLIENT_ENTERPRISE, le vendeur est toujours le second participant
     if (Array.isArray(conv.participants) && conv.participants.length >= 2) {
-      const sellerId = conv.participants[1]; // Second élément = vendeur
-      return sellerId === currentUserId;
+      const seller = conv.participants[1];
+      // participants peut être des objets populés ou des string IDs
+      const sellerId = typeof seller === "object" ? seller?._id : seller;
+      return sellerId ? String(sellerId) === String(currentUserId) : false;
     }
 
     // Fallback: vérifier via le produit si disponible
@@ -649,7 +638,7 @@ export default function ConversationDetails() {
         typeof conv.product.enterprise === "string"
           ? conv.product.enterprise
           : conv.product.enterprise._id;
-      return enterpriseId === currentUserId;
+      return String(enterpriseId) === String(currentUserId);
     }
 
     return false;
@@ -2294,8 +2283,9 @@ export default function ConversationDetails() {
     <View style={{ flex: 1, backgroundColor: isDark ? '#0F1923' : '#EEF2F7' }}>
       <ChatWallpaperEnt isDark={isDark} />
       <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
-      {/* Header */}
+      {/* Header - spacer de mise en page uniquement, les touches sont gérées par le header absolu */}
       <LinearGradient
+        pointerEvents="none"
         colors={["#047857", "#10B981"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -2943,12 +2933,12 @@ export default function ConversationDetails() {
       <Modal
         visible={offerModalVisible}
         transparent={true}
-        animationType="none"
+        animationType="slide"
         onRequestClose={closeOfferModal}
       >
-        <RNAnimated.View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', opacity: backdropOfferAnim, justifyContent: 'flex-end' }}>
-          <Pressable style={{ flex: 1 }} onPress={closeOfferModal} />
-          <RNAnimated.View style={{ transform: [{ translateY: slideOfferAnim }], maxHeight: '85%' }}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
+          <Pressable style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} onPress={closeOfferModal} />
+          <View style={{ maxHeight: '85%' }}>
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
@@ -3331,8 +3321,8 @@ export default function ConversationDetails() {
               </View>
             </View>
           </KeyboardAvoidingView>
-          </RNAnimated.View>
-        </RNAnimated.View>
+          </View>
+        </View>
       </Modal>
 
       {/* Modal iOS pour le sélecteur de date */}

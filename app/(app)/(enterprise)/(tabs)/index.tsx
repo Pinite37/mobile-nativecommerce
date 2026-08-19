@@ -41,6 +41,10 @@ import SearchCacheService, {
 } from "../../../../services/SearchCacheService";
 import { Category, Product } from "../../../../types/product";
 import { beninCities, neighborhoodsByCity } from "../../../../constants/LocationData";
+import { StatusBar as StatusBarComponent } from "../../../../components/ui/StatusBar";
+import { StatusViewer } from "../../../../components/ui/StatusViewer";
+import { StatusCreator } from "../../../../components/ui/StatusCreator";
+import StatusService, { StatusGroup } from "../../../../services/api/StatusService";
 
 // Catégories orientées entreprise (fallback)
 const staticCategories = [
@@ -81,6 +85,46 @@ export default function EnterpriseDashboard() {
   const isSmallScreen = width < 380;
 
   const FIXED_HEADER_HEIGHT = 120 + insets.top;
+
+  // États statuts
+  const [statusGroups, setStatusGroups] = useState<StatusGroup[]>([]);
+  const [statusCurrentUserId, setStatusCurrentUserId] = useState('');
+  const [viewerVisible, setViewerVisible] = useState(false);
+  const [viewerGroupIndex, setViewerGroupIndex] = useState(0);
+  const [creatorVisible, setCreatorVisible] = useState(false);
+
+  const loadStatuses = useCallback(async () => {
+    console.log('[Home] loadStatuses appelé');
+    try {
+      const res = await StatusService.getAll();
+      console.log('[Home] ✅ Groupes statuts:', res.groups.length, '| currentUserId:', res.currentUserId);
+      setStatusGroups(res.groups);
+      setStatusCurrentUserId(res.currentUserId);
+    } catch (e: any) {
+      console.error('[Home] ❌ loadStatuses failed:', e?.message);
+    }
+  }, []);
+
+  useFocusEffect(useCallback(() => { loadStatuses(); }, [loadStatuses]));
+
+  const handlePressStatusGroup = (group: StatusGroup) => {
+    const idx = statusGroups.findIndex(g => g.enterprise._id === group.enterprise._id);
+    setViewerGroupIndex(idx >= 0 ? idx : 0);
+    setViewerVisible(true);
+  };
+
+  const handleStatusViewed = async (statusId: string) => {
+    try { await StatusService.markViewed(statusId); } catch {}
+    setStatusGroups(prev => prev.map(g => ({
+      ...g,
+      statuses: g.statuses.map(s => s._id === statusId ? { ...s, viewed: true } : s),
+      hasUnviewed: g.statuses.some(s => s._id !== statusId && !s.viewed),
+    })));
+  };
+
+  const handleDeleteStatus = async (statusId: string) => {
+    try { await StatusService.remove(statusId); await loadStatuses(); } catch {}
+  };
 
   // États pour la recherche par localisation
   const [selectedCity, setSelectedCity] = useState(beninCities[0].name);
@@ -1034,6 +1078,18 @@ export default function EnterpriseDashboard() {
             }
           >
             {renderSearchSection()}
+
+            {/* Statuts */}
+            {statusGroups.length > 0 || userRole === 'ENTERPRISE' ? (
+              <StatusBarComponent
+                groups={statusGroups}
+                currentUserId={statusCurrentUserId}
+                isEnterprise={userRole === 'ENTERPRISE'}
+                onPressGroup={handlePressStatusGroup}
+                onPressAdd={() => setCreatorVisible(true)}
+              />
+            ) : null}
+
             {/* Résultats de recherche */}
             {showSearchResults && (
               <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="px-4 py-4 border-b">
@@ -1615,6 +1671,24 @@ export default function EnterpriseDashboard() {
           </View>
         </View>
       </Modal>
+
+      {/* Status Viewer */}
+      <StatusViewer
+        visible={viewerVisible}
+        groups={statusGroups}
+        initialGroupIndex={viewerGroupIndex}
+        currentUserId={statusCurrentUserId}
+        onClose={() => setViewerVisible(false)}
+        onViewed={handleStatusViewed}
+        onDelete={handleDeleteStatus}
+      />
+
+      {/* Status Creator (enterprise only) */}
+      <StatusCreator
+        visible={creatorVisible}
+        onClose={() => setCreatorVisible(false)}
+        onCreated={() => { setCreatorVisible(false); loadStatuses(); }}
+      />
     </View >
   );
 }

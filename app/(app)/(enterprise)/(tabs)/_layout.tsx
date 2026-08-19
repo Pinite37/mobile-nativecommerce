@@ -48,9 +48,13 @@ export default function TabsLayout() {
     />
   );
 
+  const bottomMargin = Math.max(insets.bottom + 6, 22);
+  const tabBarTotalHeight = 60 + bottomMargin;
+
   return (
     <Tabs
       tabBar={(props) => <CustomTabBar {...props} insets={insets} />}
+      sceneContainerStyle={{ paddingBottom: tabBarTotalHeight }}
       screenOptions={{
         tabBarActiveTintColor: "#10B981",
         tabBarInactiveTintColor: "#9CA3AF",
