@@ -1467,22 +1467,24 @@ export default function EnterpriseDashboard() {
                       {i18n.t("enterprise.dashboard.featuredProducts.subtitle")}
                     </Text>
                   </View>
-                  <TouchableOpacity
-                    onPress={() => {
-                      try {
-                        router.push("/(app)/(enterprise)/my-products");
-                      } catch (error) {
-                        console.warn("Erreur navigation mes produits:", error);
-                      }
-                    }}
-                    style={{ backgroundColor: isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5" }}
-                    className="flex-row items-center rounded-xl px-3 py-2"
-                  >
-                    <Text style={{ color: colors.brandPrimary }} className="font-quicksand-semibold text-sm mr-1">
-                      {i18n.t("enterprise.dashboard.featuredProducts.viewAll")}
-                    </Text>
-                    <Ionicons name="chevron-forward" size={14} color={colors.brandPrimary} />
-                  </TouchableOpacity>
+                  {!loadingProducts && featuredProducts.length > 0 && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        try {
+                          router.push("/(app)/(enterprise)/my-products");
+                        } catch (error) {
+                          console.warn("Erreur navigation mes produits:", error);
+                        }
+                      }}
+                      style={{ backgroundColor: isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5" }}
+                      className="flex-row items-center rounded-xl px-3 py-2"
+                    >
+                      <Text style={{ color: colors.brandPrimary }} className="font-quicksand-semibold text-sm mr-1">
+                        {i18n.t("enterprise.dashboard.featuredProducts.viewAll")}
+                      </Text>
+                      <Ionicons name="chevron-forward" size={14} color={colors.brandPrimary} />
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
               {loadingProducts ? (
@@ -1505,10 +1507,27 @@ export default function EnterpriseDashboard() {
                   ))}
                 </ScrollView>
               ) : (
-                <View className="flex-1 justify-center items-center py-8">
-                  <Text style={{ color: colors.textSecondary }} className="font-quicksand-medium">
-                    {i18n.t("enterprise.dashboard.featuredProducts.noProducts")}
+                <View style={{ backgroundColor: colors.card, borderColor: colors.border, marginHorizontal: 16, borderRadius: 20, padding: 24, alignItems: 'center', borderWidth: 1, borderStyle: 'dashed' }}>
+                  <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: isDark ? 'rgba(16,185,129,0.12)' : '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+                    <Ionicons name="bag-add-outline" size={30} color={colors.brandPrimary} />
+                  </View>
+                  <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 16, marginBottom: 6, textAlign: 'center' }}>
+                    Aucun produit pour le moment
                   </Text>
+                  <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 13, textAlign: 'center', marginBottom: 18, lineHeight: 19 }}>
+                    Ajoutez vos premiers produits pour qu'ils apparaissent ici.
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      try { router.push("/(app)/(enterprise)/my-products"); } catch {}
+                    }}
+                    style={{ backgroundColor: colors.brandPrimary, borderRadius: 14, paddingHorizontal: 22, paddingVertical: 11, flexDirection: 'row', alignItems: 'center', gap: 7 }}
+                  >
+                    <Ionicons name="add" size={18} color="#fff" />
+                    <Text style={{ color: '#fff', fontFamily: 'Quicksand-Bold', fontSize: 14 }}>
+                      Ajouter un produit
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               )}
             </View>
