@@ -4,19 +4,22 @@ import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, router, useFocusEffect } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
-  Modal,
   Platform,
+  Pressable,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import NotificationModal, { useNotification } from "../../../../../components/ui/NotificationModal";
@@ -168,8 +171,25 @@ export default function CreateProduct() {
   });
 
   const [errors, setErrors] = useState<ProductFormErrors>({});
-  const [maxReachedStep, setMaxReachedStep] = useState<number>(0); // index of farthest unlocked step
+  const [maxReachedStep, setMaxReachedStep] = useState<number>(0);
   const [showErrorSummary, setShowErrorSummary] = useState(false);
+
+  // Navigation clavier entre champs
+  const nameRef = useRef<TextInput>(null);
+  const descriptionRef = useRef<TextInput>(null);
+  const priceRef = useRef<TextInput>(null);
+  const stockRef = useRef<TextInput>(null);
+
+  // Retour visuel focus
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+
+  // Animations modals slide-up
+  const [tagModalVisible, setTagModalVisible] = useState(false);
+  const [specModalVisible, setSpecModalVisible] = useState(false);
+  const slideTagAnim = useRef(new Animated.Value(500)).current;
+  const backdropTagAnim = useRef(new Animated.Value(0)).current;
+  const slideSpecAnim = useRef(new Animated.Value(500)).current;
+  const backdropSpecAnim = useRef(new Animated.Value(0)).current;
 
   const steps: { id: Step; title: string; icon: string }[] = [
     { id: 'basic', title: i18n.t('enterprise.products.create.steps.basic'), icon: 'information-circle' },
@@ -339,12 +359,9 @@ export default function CreateProduct() {
 
   const addTag = () => {
     if (newTag.trim() && !form.tags.includes(newTag.trim())) {
-      setForm(prev => ({
-        ...prev,
-        tags: [...prev.tags, newTag.trim()]
-      }));
+      setForm(prev => ({ ...prev, tags: [...prev.tags, newTag.trim()] }));
       setNewTag('');
-      setShowTagModal(false);
+      closeTagModal();
     }
   };
 
@@ -362,7 +379,7 @@ export default function CreateProduct() {
         specifications: [...prev.specifications, { key: newSpec.key.trim(), value: newSpec.value.trim() }]
       }));
       setNewSpec({ key: '', value: '' });
-      setShowSpecModal(false);
+      closeSpecModal();
     }
   };
 
@@ -372,6 +389,52 @@ export default function CreateProduct() {
       specifications: prev.specifications.filter((_, i) => i !== index)
     }));
   };
+
+  // Style TextInput avec highlight focus
+  const getInputStyle = (field: string): any => ({
+    backgroundColor: colors.secondary,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    color: colors.textPrimary,
+    fontFamily: 'Quicksand-Medium',
+    borderWidth: focusedField === field ? 1.5 : 1,
+    borderColor: focusedField === field ? '#10B981' : colors.border,
+  });
+
+  const openTagModal = useCallback(() => {
+    setTagModalVisible(true);
+    setShowTagModal(true);
+    Animated.parallel([
+      Animated.spring(slideTagAnim, { toValue: 0, damping: 22, stiffness: 200, useNativeDriver: true }),
+      Animated.timing(backdropTagAnim, { toValue: 1, duration: 220, useNativeDriver: true }),
+    ]).start();
+  }, [slideTagAnim, backdropTagAnim]);
+
+  const closeTagModal = useCallback(() => {
+    Keyboard.dismiss();
+    Animated.parallel([
+      Animated.timing(slideTagAnim, { toValue: 500, duration: 260, useNativeDriver: true }),
+      Animated.timing(backdropTagAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
+    ]).start(() => { setTagModalVisible(false); setShowTagModal(false); });
+  }, [slideTagAnim, backdropTagAnim]);
+
+  const openSpecModal = useCallback(() => {
+    setSpecModalVisible(true);
+    setShowSpecModal(true);
+    Animated.parallel([
+      Animated.spring(slideSpecAnim, { toValue: 0, damping: 22, stiffness: 200, useNativeDriver: true }),
+      Animated.timing(backdropSpecAnim, { toValue: 1, duration: 220, useNativeDriver: true }),
+    ]).start();
+  }, [slideSpecAnim, backdropSpecAnim]);
+
+  const closeSpecModal = useCallback(() => {
+    Keyboard.dismiss();
+    Animated.parallel([
+      Animated.timing(slideSpecAnim, { toValue: 500, duration: 260, useNativeDriver: true }),
+      Animated.timing(backdropSpecAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
+    ]).start(() => { setSpecModalVisible(false); setShowSpecModal(false); });
+  }, [slideSpecAnim, backdropSpecAnim]);
 
   const nextStep = () => {
     const ok = validateStep(currentStep);
@@ -555,56 +618,31 @@ export default function CreateProduct() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.secondary }}>
       <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
-        {/* Header */}
-        <LinearGradient
-          colors={['#047857', '#10B981']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={{
-            paddingTop: insets.top + 16,
-            paddingBottom: 32,
-            paddingLeft: insets.left + 24,
-            paddingRight: insets.right + 24,
-            borderBottomLeftRadius: 32,
-            borderBottomRightRadius: 32,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 8,
-            elevation: 4,
-          }}
-        >
-          <View className="px-6">
-            <View className="flex-row items-center justify-between">
-              <Link
-                href="/(app)/(enterprise)/(tabs)/products"
-                asChild
-              >
-                <TouchableOpacity
-                  className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm items-center justify-center border border-white/30"
-                >
-                  <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
-                </TouchableOpacity>
-              </Link>
-              <View className="flex-1 items-center px-2">
-                <Text className="text-2xl font-quicksand-bold text-white text-center">
-                  {i18n.t("enterprise.products.create.title")}
-                </Text>
-                <Text className="text-white/90 font-quicksand-medium text-sm text-center mt-1">
-                  {i18n.t("enterprise.products.create.subtitle")}
-                </Text>
-              </View>
-              <View className="w-12" />
-            </View>
-          </View>
-        </LinearGradient>
 
-        {/* Step Indicator + Progress */}
-        <View style={{ backgroundColor: colors.card, paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+      {/* Header compact — hors zone clavier */}
+      <LinearGradient
+        colors={['#047857', '#10B981']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={{ paddingTop: insets.top + 10, paddingBottom: 14, paddingHorizontal: 20 }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Link href="/(app)/(enterprise)/(tabs)/products" asChild>
+            <TouchableOpacity style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+          </Link>
+          <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 12 }}>
+            <Text className="text-lg font-quicksand-bold text-white text-center">
+              {i18n.t("enterprise.products.create.title")}
+            </Text>
+          </View>
+          <View style={{ width: 40 }} />
+        </View>
+      </LinearGradient>
+
+      {/* Step Indicator + Progress */}
+      <View style={{ backgroundColor: colors.card, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: colors.border }}>
           <View className="h-2.5 w-full rounded-full bg-neutral-200 overflow-hidden mb-5">
             <View
               style={{
@@ -700,14 +738,19 @@ export default function CreateProduct() {
           </View>
         </View>
 
-        <ScrollView
-          className="flex-1"
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <KeyboardAwareScrollView
+          style={{ flex: 1 }}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 140, paddingTop: 8 }}
+          contentContainerStyle={{ paddingBottom: 24, paddingTop: 8 }}
           keyboardShouldPersistTaps="handled"
+          bottomOffset={90}
         >
           {currentStep === 'basic' && (
-            <View className="px-5 py-6 space-y-6">
+            <View style={{ paddingHorizontal: 20, paddingVertical: 24, gap: 24 }}>
               {/* Subscription Limits Info */}
               {subscription && (
                 <View style={{ backgroundColor: colors.secondary, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.border }}>
@@ -719,7 +762,7 @@ export default function CreateProduct() {
                       {i18n.t("enterprise.products.create.limits.planTitle")} {subscription.plan.name}
                     </Text>
                   </View>
-                  <View className="space-y-2">
+                  <View style={{ gap: 8 }}>
                     <View className="flex-row items-center justify-between">
                       <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 12 }}>
                         {i18n.t("enterprise.products.create.limits.products")}
@@ -775,7 +818,7 @@ export default function CreateProduct() {
                   </View>
                 </View>
 
-                <View className="space-y-4">
+                <View style={{ gap: 16 }}>
                   {form.images.length > 0 && (
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3 -mx-2">
                       <View className="flex-row gap-3 px-2">
@@ -865,17 +908,22 @@ export default function CreateProduct() {
                   </View>
                 </View>
 
-                <View className="space-y-5">
+                <View style={{ gap: 20 }}>
                   <View>
                     <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 14, marginBottom: 8 }}>
                       {i18n.t("enterprise.products.create.fields.nameTitle")}
                     </Text>
                     <TextInput
-                      style={{ backgroundColor: colors.secondary, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', borderWidth: 1, borderColor: colors.border }}
+                      ref={nameRef}
+                      style={getInputStyle('name')}
                       placeholder={i18n.t("enterprise.products.create.fields.namePlaceholder")}
                       placeholderTextColor={colors.textSecondary}
                       value={form.name}
                       onChangeText={(text) => setForm(prev => ({ ...prev, name: text }))}
+                      returnKeyType="next"
+                      onSubmitEditing={() => descriptionRef.current?.focus()}
+                      onFocus={() => setFocusedField('name')}
+                      onBlur={() => setFocusedField(null)}
                     />
                     {errors.name && (
                       <View className="flex-row items-center bg-red-50 rounded-lg p-2 mt-2">
@@ -890,7 +938,8 @@ export default function CreateProduct() {
                       {i18n.t("enterprise.products.create.fields.descriptionTitle")}
                     </Text>
                     <TextInput
-                      style={{ backgroundColor: colors.secondary, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', borderWidth: 1, borderColor: colors.border, minHeight: 100 }}
+                      ref={descriptionRef}
+                      style={[getInputStyle('description'), { minHeight: 100 }]}
                       placeholder={i18n.t("enterprise.products.create.fields.descriptionPlaceholder")}
                       placeholderTextColor={colors.textSecondary}
                       value={form.description}
@@ -898,6 +947,11 @@ export default function CreateProduct() {
                       multiline
                       numberOfLines={4}
                       textAlignVertical="top"
+                      blurOnSubmit={false}
+                      returnKeyType="next"
+                      onSubmitEditing={() => priceRef.current?.focus()}
+                      onFocus={() => setFocusedField('description')}
+                      onBlur={() => setFocusedField(null)}
                     />
                     {errors.description && (
                       <View className="flex-row items-center bg-red-50 rounded-lg p-2 mt-2">
@@ -912,17 +966,22 @@ export default function CreateProduct() {
                       <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 14, marginBottom: 8 }}>
                         {i18n.t("enterprise.products.create.fields.priceTitle")}
                       </Text>
-                      <View className="flex-row items-center" style={{ backgroundColor: colors.secondary, borderRadius: 12, borderWidth: 1, borderColor: colors.border }}>
+                      <View className="flex-row items-center" style={{ backgroundColor: colors.secondary, borderRadius: 12, borderWidth: focusedField === 'price' ? 1.5 : 1, borderColor: focusedField === 'price' ? '#10B981' : colors.border }}>
                         <View className="pl-4 pr-2">
                           <Ionicons name="cash-outline" size={20} color={colors.textSecondary} />
                         </View>
                         <TextInput
+                          ref={priceRef}
                           style={{ flex: 1, paddingVertical: 14, paddingRight: 16, color: colors.textPrimary, fontFamily: 'Quicksand-Medium' }}
                           placeholder={i18n.t("enterprise.products.create.fields.pricePlaceholder")}
                           placeholderTextColor={colors.textSecondary}
                           value={form.price}
                           onChangeText={(text) => setForm(prev => ({ ...prev, price: text }))}
                           keyboardType="numeric"
+                          returnKeyType="next"
+                          onSubmitEditing={() => stockRef.current?.focus()}
+                          onFocus={() => setFocusedField('price')}
+                          onBlur={() => setFocusedField(null)}
                         />
                       </View>
                       {errors.price && (
@@ -937,17 +996,22 @@ export default function CreateProduct() {
                       <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 14, marginBottom: 8 }}>
                         {i18n.t("enterprise.products.create.fields.stockTitle")}
                       </Text>
-                      <View className="flex-row items-center" style={{ backgroundColor: colors.secondary, borderRadius: 12, borderWidth: 1, borderColor: colors.border }}>
+                      <View className="flex-row items-center" style={{ backgroundColor: colors.secondary, borderRadius: 12, borderWidth: focusedField === 'stock' ? 1.5 : 1, borderColor: focusedField === 'stock' ? '#10B981' : colors.border }}>
                         <View className="pl-4 pr-2">
                           <Ionicons name="cube-outline" size={20} color={colors.textSecondary} />
                         </View>
                         <TextInput
+                          ref={stockRef}
                           style={{ flex: 1, paddingVertical: 14, paddingRight: 16, color: colors.textPrimary, fontFamily: 'Quicksand-Medium' }}
                           placeholder={i18n.t("enterprise.products.create.fields.stockPlaceholder")}
                           placeholderTextColor={colors.textSecondary}
                           value={form.stock}
                           onChangeText={(text) => setForm(prev => ({ ...prev, stock: text }))}
                           keyboardType="numeric"
+                          returnKeyType="done"
+                          onSubmitEditing={() => Keyboard.dismiss()}
+                          onFocus={() => setFocusedField('stock')}
+                          onBlur={() => setFocusedField(null)}
                         />
                       </View>
                       {errors.stock && (
@@ -999,6 +1063,7 @@ export default function CreateProduct() {
                             borderColor: form.category === category._id ? '#6366F1' : colors.border
                           }}
                           onPress={() => {
+                            Keyboard.dismiss();
                             setForm(prev => ({ ...prev, category: category._id }));
                             if (errors.category) {
                               setErrors(prev => ({ ...prev, category: undefined }));
@@ -1036,7 +1101,7 @@ export default function CreateProduct() {
           )}
 
           {currentStep === 'details' && (
-            <View className="px-5 py-6 space-y-6">
+            <View style={{ paddingHorizontal: 20, paddingVertical: 24, gap: 24 }}>
               {/* Product Details */}
               <View style={{ backgroundColor: colors.card, borderRadius: 24, padding: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4, borderWidth: 1, borderColor: colors.border }}>
                 <View className="flex-row items-center mb-5">
@@ -1053,7 +1118,7 @@ export default function CreateProduct() {
                   </View>
                 </View>
 
-                <View className="space-y-5">
+                <View style={{ gap: 20 }}>
                   <View className="flex-row gap-3">
                     <View className="flex-1">
                       <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 14, marginBottom: 8 }}>
@@ -1210,7 +1275,7 @@ export default function CreateProduct() {
                     </Text>
                   </View>
                   <TouchableOpacity
-                    onPress={() => setShowSpecModal(true)}
+                    onPress={openSpecModal}
                     className="bg-primary-100 rounded-full p-2"
                   >
                     <Ionicons name="add" size={20} color="#6366F1" />
@@ -1218,7 +1283,7 @@ export default function CreateProduct() {
                 </View>
 
                 {form.specifications.length > 0 ? (
-                  <View className="space-y-3">
+                  <View style={{ gap: 12 }}>
                     {form.specifications.map((spec, index) => (
                       <View key={index} className="flex-row items-center justify-between" style={{ backgroundColor: colors.secondary, borderRadius: 16, padding: 16 }}>
                         <View className="flex-1">
@@ -1251,7 +1316,7 @@ export default function CreateProduct() {
                     </Text>
                   </View>
                   <TouchableOpacity
-                    onPress={() => setShowTagModal(true)}
+                    onPress={openTagModal}
                     className="bg-primary-100 rounded-full p-2"
                   >
                     <Ionicons name="add" size={20} color="#6366F1" />
@@ -1282,7 +1347,7 @@ export default function CreateProduct() {
               </View>
             </View>
           )}
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
         {/* Fixed Bottom Buttons */}
         <View style={{ backgroundColor: colors.card, borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: 16, paddingTop: 16, paddingBottom: Math.max(insets.bottom, 16) + 8 }}>
@@ -1293,7 +1358,7 @@ export default function CreateProduct() {
                 <Ionicons name="alert-circle" size={16} color="#DC2626" />
                 <Text className="text-red-600 font-quicksand-semibold ml-2 text-sm">Veuillez corriger les erreurs :</Text>
               </View>
-              <View className="space-y-1">
+              <View style={{ gap: 4 }}>
                 {currentStep === 'basic' && (
                   <>
                     {errors.name && <Text className="text-red-500 text-xs">• {errors.name}</Text>}
@@ -1368,104 +1433,142 @@ export default function CreateProduct() {
           )}
         </View>
 
-        {/* Tag Modal */}
-        <Modal
-          visible={showTagModal}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowTagModal(false)}
-        >
-          <TouchableOpacity
-            className="flex-1 bg-black/50 justify-center items-center"
-            activeOpacity={1}
-            onPress={() => setShowTagModal(false)}
+      </KeyboardAvoidingView>
+
+      {/* Tag slide-up modal */}
+      {tagModalVisible && (
+        <View pointerEvents="box-none" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+          <Animated.View
+            pointerEvents="auto"
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', opacity: backdropTagAnim }}
           >
-            <View style={{ backgroundColor: colors.card, borderRadius: 16, padding: 24, marginHorizontal: 24, width: '100%', maxWidth: 400 }}>
-              <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 18, marginBottom: 16 }}>
-                {i18n.t("enterprise.products.create.modals.addTag")}
-              </Text>
+            <Pressable style={{ flex: 1 }} onPress={closeTagModal} />
+          </Animated.View>
+          <Animated.View
+            style={{
+              position: 'absolute', left: 0, right: 0, bottom: 0,
+              backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+              paddingBottom: Math.max(insets.bottom, 16) + 8,
+              transform: [{ translateY: slideTagAnim }],
+            }}
+          >
+            <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: 'center', marginTop: 12, marginBottom: 20 }} />
+            <View style={{ paddingHorizontal: 24 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 18 }}>
+                  {i18n.t("enterprise.products.create.modals.addTag")}
+                </Text>
+                <TouchableOpacity
+                  onPress={closeTagModal}
+                  style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Ionicons name="close" size={18} color={colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
               <TextInput
-                style={{ backgroundColor: colors.secondary, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 16, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', borderWidth: 2, borderColor: colors.border, marginBottom: 16 }}
+                style={{ backgroundColor: colors.secondary, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', borderWidth: 1, borderColor: colors.border, marginBottom: 16 }}
                 placeholder={i18n.t("enterprise.products.create.modals.tagPlaceholder")}
                 placeholderTextColor={colors.textSecondary}
                 value={newTag}
                 onChangeText={setNewTag}
                 autoFocus
+                returnKeyType="done"
+                onSubmitEditing={addTag}
               />
-              <View className="flex-row space-x-3">
+              <View style={{ flexDirection: 'row', gap: 12 }}>
                 <TouchableOpacity
-                  className="flex-1 bg-neutral-100 rounded-2xl py-3"
-                  onPress={() => setShowTagModal(false)}
+                  style={{ flex: 1, backgroundColor: colors.secondary, borderRadius: 16, paddingVertical: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.border }}
+                  onPress={closeTagModal}
                 >
-                  <Text className="text-neutral-700 text-center font-quicksand-semibold">
+                  <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold' }}>
                     {i18n.t("enterprise.products.create.modals.cancel")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className="flex-1 bg-primary-500 rounded-2xl py-3 shadow-sm"
+                  style={{ flex: 1, backgroundColor: '#10B981', borderRadius: 16, paddingVertical: 14, alignItems: 'center' }}
                   onPress={addTag}
                 >
-                  <Text className="text-white text-center font-quicksand-semibold">
+                  <Text style={{ color: '#FFFFFF', fontFamily: 'Quicksand-SemiBold' }}>
                     {i18n.t("enterprise.products.create.modals.tagAction")}
                   </Text>
                 </TouchableOpacity>
               </View>
             </View>
-          </TouchableOpacity>
-        </Modal>
+          </Animated.View>
+        </View>
+      )}
 
-        {/* Specification Modal */}
-        <Modal
-          visible={showSpecModal}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowSpecModal(false)}
-        >
-          <TouchableOpacity
-            className="flex-1 bg-black/50 justify-center items-center"
-            activeOpacity={1}
-            onPress={() => setShowSpecModal(false)}
+      {/* Spec slide-up modal */}
+      {specModalVisible && (
+        <View pointerEvents="box-none" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+          <Animated.View
+            pointerEvents="auto"
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', opacity: backdropSpecAnim }}
           >
-            <View style={{ backgroundColor: colors.card, borderRadius: 16, padding: 24, marginHorizontal: 24, width: '100%', maxWidth: 400 }}>
-              <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 18, marginBottom: 16 }}>
-                {i18n.t("enterprise.products.create.modals.addSpecification")}
-              </Text>
+            <Pressable style={{ flex: 1 }} onPress={closeSpecModal} />
+          </Animated.View>
+          <Animated.View
+            style={{
+              position: 'absolute', left: 0, right: 0, bottom: 0,
+              backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+              paddingBottom: Math.max(insets.bottom, 16) + 8,
+              transform: [{ translateY: slideSpecAnim }],
+            }}
+          >
+            <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: 'center', marginTop: 12, marginBottom: 20 }} />
+            <View style={{ paddingHorizontal: 24 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 18 }}>
+                  {i18n.t("enterprise.products.create.modals.addSpecification")}
+                </Text>
+                <TouchableOpacity
+                  onPress={closeSpecModal}
+                  style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Ionicons name="close" size={18} color={colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
               <TextInput
-                style={{ backgroundColor: colors.secondary, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 16, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', borderWidth: 2, borderColor: colors.border, marginBottom: 12 }}
+                style={{ backgroundColor: colors.secondary, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', borderWidth: 1, borderColor: colors.border, marginBottom: 12 }}
                 placeholder={i18n.t("enterprise.products.create.modals.specKeyPlaceholder")}
                 placeholderTextColor={colors.textSecondary}
                 value={newSpec.key}
                 onChangeText={(text) => setNewSpec(prev => ({ ...prev, key: text }))}
+                autoFocus
+                returnKeyType="next"
               />
               <TextInput
-                style={{ backgroundColor: colors.secondary, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 16, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', borderWidth: 2, borderColor: colors.border, marginBottom: 16 }}
+                style={{ backgroundColor: colors.secondary, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', borderWidth: 1, borderColor: colors.border, marginBottom: 16 }}
                 placeholder={i18n.t("enterprise.products.create.modals.specValuePlaceholder")}
                 placeholderTextColor={colors.textSecondary}
                 value={newSpec.value}
                 onChangeText={(text) => setNewSpec(prev => ({ ...prev, value: text }))}
+                returnKeyType="done"
+                onSubmitEditing={addSpecification}
               />
-              <View className="flex-row space-x-3">
+              <View style={{ flexDirection: 'row', gap: 12 }}>
                 <TouchableOpacity
-                  className="flex-1 bg-neutral-100 rounded-2xl py-3"
-                  onPress={() => setShowSpecModal(false)}
+                  style={{ flex: 1, backgroundColor: colors.secondary, borderRadius: 16, paddingVertical: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.border }}
+                  onPress={closeSpecModal}
                 >
-                  <Text className="text-neutral-700 text-center font-quicksand-semibold">
+                  <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold' }}>
                     {i18n.t("enterprise.products.create.modals.cancel")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className="flex-1 bg-primary-500 rounded-2xl py-3 shadow-sm"
+                  style={{ flex: 1, backgroundColor: '#10B981', borderRadius: 16, paddingVertical: 14, alignItems: 'center' }}
                   onPress={addSpecification}
                 >
-                  <Text className="text-white text-center font-quicksand-semibold">
+                  <Text style={{ color: '#FFFFFF', fontFamily: 'Quicksand-SemiBold' }}>
                     {i18n.t("enterprise.products.create.modals.tagAction")}
                   </Text>
                 </TouchableOpacity>
               </View>
             </View>
-          </TouchableOpacity>
-        </Modal>
-      </KeyboardAvoidingView>
+          </Animated.View>
+        </View>
+      )}
+
       <NotificationModal
         visible={notification?.visible || false}
         type={notification?.type || 'info'}
