@@ -13,6 +13,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useToast } from "../../components/ui/ReanimatedToast/context";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTheme } from "../../contexts/ThemeContext";
 import AuthService from "../../services/api/AuthService";
 
 const OTP_LENGTH = 6;
@@ -28,6 +29,7 @@ export default function VerifyEmailScreen() {
   const inputRefs = useRef<(TextInput | null)[]>([]);
   const toast = useToast();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const { user, checkAuthStatus, redirectToRoleBasedHome, userRole, logout } =
     useAuth();
 
@@ -257,16 +259,17 @@ export default function VerifyEmailScreen() {
     : "";
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
-      <StatusBar style="dark" />
+    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
+      <StatusBar style={isDark ? "light" : "dark"} />
 
       {/* Header */}
       <View className="px-6 pt-4 pb-2">
         <TouchableOpacity
           onPress={handleExit}
-          className="w-10 h-10 rounded-full bg-neutral-100 items-center justify-center"
+          className="w-10 h-10 rounded-full items-center justify-center"
+          style={{ backgroundColor: colors.tertiary }}
         >
-          <Ionicons name="arrow-back" size={20} color="#374151" />
+          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -274,15 +277,15 @@ export default function VerifyEmailScreen() {
       <View className="flex-1 px-6 pt-6">
         {/* Icon */}
         <View className="items-center mb-6">
-          <View className="w-20 h-20 rounded-full bg-emerald-50 items-center justify-center mb-4">
+          <View className="w-20 h-20 rounded-full items-center justify-center mb-4" style={{ backgroundColor: colors.brandLight }}>
             <Ionicons name="mail-open-outline" size={40} color="#10B981" />
           </View>
-          <Text className="text-2xl font-quicksand-bold text-neutral-900 text-center">
+          <Text className="text-2xl font-quicksand-bold text-center" style={{ color: colors.textPrimary }}>
             Vérifiez votre email
           </Text>
-          <Text className="text-base font-quicksand text-neutral-500 text-center mt-2 px-4">
+          <Text className="text-base font-quicksand text-center mt-2 px-4" style={{ color: colors.textSecondary }}>
             Nous avons envoyé un code de vérification à{"\n"}
-            <Text className="font-quicksand-semibold text-neutral-700">
+            <Text className="font-quicksand-semibold" style={{ color: colors.textPrimary }}>
               {maskedEmail}
             </Text>
           </Text>
@@ -302,12 +305,10 @@ export default function VerifyEmailScreen() {
               keyboardType="number-pad"
               maxLength={index === 0 ? OTP_LENGTH : 1}
               selectTextOnFocus
-              className={`w-12 h-14 rounded-xl text-center text-xl font-quicksand-bold border-2 ${
-                digit
-                  ? "border-emerald-500 bg-emerald-50"
-                  : "border-neutral-200 bg-neutral-50"
-              }`}
-              style={{ color: "#1F2937" }}
+              className="w-12 h-14 rounded-xl text-center text-xl font-quicksand-bold border-2"
+              style={digit
+                ? { borderColor: '#10B981', backgroundColor: colors.brandLight, color: colors.textPrimary }
+                : { borderColor: colors.border, backgroundColor: colors.secondary, color: colors.textPrimary }}
             />
           ))}
         </View>
@@ -333,11 +334,11 @@ export default function VerifyEmailScreen() {
 
         {/* Resend */}
         <View className="items-center mt-2">
-          <Text className="text-sm font-quicksand text-neutral-500 mb-2">
+          <Text className="text-sm font-quicksand mb-2" style={{ color: colors.textSecondary }}>
             Vous n&apos;avez pas reçu le code ?
           </Text>
           {cooldown > 0 ? (
-            <Text className="text-sm font-quicksand-semibold text-neutral-400">
+            <Text className="text-sm font-quicksand-semibold" style={{ color: colors.textTertiary }}>
               Renvoyer dans {cooldown}s
             </Text>
           ) : (
@@ -359,7 +360,7 @@ export default function VerifyEmailScreen() {
         {/* Wrong email escape hatch */}
         <View className="items-center mt-8">
           <TouchableOpacity onPress={handleExit} activeOpacity={0.7}>
-            <Text className="text-sm font-quicksand-semibold text-neutral-500 underline">
+            <Text className="text-sm font-quicksand-semibold underline" style={{ color: colors.textSecondary }}>
               Mauvaise adresse email ? Revenir à la connexion
             </Text>
           </TouchableOpacity>

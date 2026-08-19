@@ -4,10 +4,12 @@ import React, { useEffect } from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function WelcomeScreen() {
   const insets = useSafeAreaInsets();
   const { isAuthenticated, userRole, isLoading } = useAuth();
+  const { colors, isDark } = useTheme();
 
   // Bloquer l'accès si déjà connecté
   useEffect(() => {
@@ -34,8 +36,8 @@ export default function WelcomeScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white">
-      <StatusBar style="dark" />
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <StatusBar style={isDark ? "light" : "dark"} />
 
       {/* Main Content */}
       <View
@@ -53,11 +55,11 @@ export default function WelcomeScreen() {
             resizeMode="contain"
           />
 
-          <Text className="text-3xl font-quicksand-bold text-center text-neutral-900 mb-3 mt-4">
+          <Text className="text-3xl font-quicksand-bold text-center mb-3 mt-4" style={{ color: colors.textPrimary }}>
             Connectez-vous
           </Text>
 
-          <Text className="text-sm font-quicksand text-center text-neutral-600 px-8">
+          <Text className="text-sm font-quicksand text-center px-8" style={{ color: colors.textSecondary }}>
             Bienvenue ! Veuillez vous connecter à votre compte
           </Text>
         </View>
@@ -78,7 +80,8 @@ export default function WelcomeScreen() {
           {/* Create Account Button */}
           <TouchableOpacity
             onPress={handleCreateAccount}
-            className="bg-white border-2 border-primary rounded-2xl py-4 shadow-sm"
+            className="border-2 border-primary rounded-2xl py-4 shadow-sm"
+            style={{ backgroundColor: colors.background }}
             activeOpacity={1}
           >
             <Text className="text-primary font-quicksand-semibold text-base text-center">

@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const userRoles = [
   {
@@ -25,6 +26,7 @@ const userRoles = [
 
 export default function RoleSelectionScreen() {
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const { colors, isDark } = useTheme();
 
   const handleContinue = () => {
     if (!selectedRole) {
@@ -47,9 +49,9 @@ export default function RoleSelectionScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white">
-      <StatusBar style="dark" />
-      
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View className="px-6 pt-16 pb-8">
@@ -57,13 +59,13 @@ export default function RoleSelectionScreen() {
             onPress={() => router.back()}
             className="mb-6"
           >
-            <Ionicons name="arrow-back" size={24} color="#374151" />
+            <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
-          
-          <Text className="text-3xl font-quicksand-bold text-neutral-900 mb-2">
+
+          <Text className="text-3xl font-quicksand-bold mb-2" style={{ color: colors.textPrimary }}>
             Choisissez votre rôle
           </Text>
-          <Text className="text-base font-quicksand text-neutral-600">
+          <Text className="text-base font-quicksand" style={{ color: colors.textSecondary }}>
             Sélectionnez comment vous souhaitez utiliser notre plateforme
           </Text>
         </View>
@@ -74,11 +76,10 @@ export default function RoleSelectionScreen() {
             <TouchableOpacity
               key={role.id}
               onPress={() => setSelectedRole(role.id)}
-              className={`border-2 rounded-2xl p-6 mb-4 ${
-                selectedRole === role.id
-                  ? 'border-primary bg-primary/5'
-                  : 'border-neutral-200 bg-white'
-              }`}
+              className="border-2 rounded-2xl p-6 mb-4"
+              style={selectedRole === role.id
+                ? { borderColor: '#10B981', backgroundColor: 'rgba(16,185,129,0.05)' }
+                : { borderColor: colors.border, backgroundColor: colors.card }}
               activeOpacity={0.8}
             >
               <View className="flex-row items-center">
@@ -86,18 +87,19 @@ export default function RoleSelectionScreen() {
                   <Ionicons name={role.icon as any} size={24} color={role.iconColor} />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-lg font-quicksand-semibold text-neutral-900 mb-1">
+                  <Text className="text-lg font-quicksand-semibold mb-1" style={{ color: colors.textPrimary }}>
                     {role.title}
                   </Text>
-                  <Text className="text-sm font-quicksand text-neutral-600">
+                  <Text className="text-sm font-quicksand" style={{ color: colors.textSecondary }}>
                     {role.description}
                   </Text>
                 </View>
-                <View className={`w-6 h-6 rounded-full border-2 ${
-                  selectedRole === role.id
-                    ? 'border-primary bg-primary'
-                    : 'border-neutral-300'
-                } items-center justify-center`}>
+                <View
+                  className="w-6 h-6 rounded-full border-2 items-center justify-center"
+                  style={selectedRole === role.id
+                    ? { borderColor: '#10B981', backgroundColor: '#10B981' }
+                    : { borderColor: colors.border }}
+                >
                   {selectedRole === role.id && (
                     <View className="w-2 h-2 rounded-full bg-white" />
                   )}
@@ -111,14 +113,14 @@ export default function RoleSelectionScreen() {
         <View className="px-6 pb-6 mt-8">
           <TouchableOpacity
             onPress={handleContinue}
-            className={`rounded-xl py-4 ${
-              selectedRole ? 'bg-primary' : 'bg-neutral-200'
-            }`}
+            className={`rounded-xl py-4 ${selectedRole ? 'bg-primary' : ''}`}
+            style={!selectedRole ? { backgroundColor: colors.tertiary } : undefined}
             disabled={!selectedRole}
           >
-            <Text className={`font-quicksand-semibold text-base text-center ${
-              selectedRole ? 'text-white' : 'text-neutral-500'
-            }`}>
+            <Text
+              className="font-quicksand-semibold text-base text-center"
+              style={{ color: selectedRole ? '#FFFFFF' : colors.textSecondary }}
+            >
               Continuer
             </Text>
           </TouchableOpacity>

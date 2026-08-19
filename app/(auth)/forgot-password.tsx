@@ -13,6 +13,7 @@ import {
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useToast } from "../../components/ui/ReanimatedToast/context";
+import { useTheme } from "../../contexts/ThemeContext";
 import AuthService from "../../services/api/AuthService";
 
 const OTP_LENGTH = 6;
@@ -26,6 +27,7 @@ type Step = 1 | 2 | 3;
 export default function ForgotPasswordScreen() {
   const insets = useSafeAreaInsets();
   const toast = useToast();
+  const { colors, isDark } = useTheme();
 
   const [step, setStep] = useState<Step>(1);
 
@@ -248,24 +250,25 @@ export default function ForgotPasswordScreen() {
 
   // ─── Render ────────────────────────────────────────────────────────────────
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
-      <StatusBar style="dark" />
+    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
+      <StatusBar style={isDark ? "light" : "dark"} />
 
       {/* Header: back + step indicators */}
       <View className="px-6 pt-4 pb-2 flex-row items-center gap-4">
         <TouchableOpacity
           onPress={handleBack}
-          className="w-10 h-10 rounded-full bg-neutral-100 items-center justify-center"
+          className="w-10 h-10 rounded-full items-center justify-center"
+          style={{ backgroundColor: colors.tertiary }}
         >
-          <Ionicons name="arrow-back" size={20} color="#374151" />
+          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
 
         <View className="flex-row gap-2 items-center">
           {([1, 2, 3] as Step[]).map((s) => (
             <View
               key={s}
-              className={`h-1.5 rounded-full ${s < step ? "bg-emerald-400" : s === step ? "bg-emerald-500" : "bg-neutral-200"}`}
-              style={{ width: s === step ? 28 : 10 }}
+              className={`h-1.5 rounded-full ${s < step ? "bg-emerald-400" : s === step ? "bg-emerald-500" : ""}`}
+              style={{ width: s === step ? 28 : 10, backgroundColor: (s < step || s === step) ? undefined : colors.tertiary }}
             />
           ))}
         </View>
@@ -282,13 +285,13 @@ export default function ForgotPasswordScreen() {
       >
         {/* Icon + Title + Subtitle */}
         <View className="items-center px-6 pt-8 pb-6">
-          <View className="w-20 h-20 rounded-full bg-emerald-50 items-center justify-center mb-5">
+          <View className="w-20 h-20 rounded-full items-center justify-center mb-5" style={{ backgroundColor: colors.brandLight }}>
             <Ionicons name={current.icon as any} size={40} color="#10B981" />
           </View>
-          <Text className="text-2xl font-quicksand-bold text-neutral-900 text-center mb-2">
+          <Text className="text-2xl font-quicksand-bold text-center mb-2" style={{ color: colors.textPrimary }}>
             {current.title}
           </Text>
-          <Text className="text-sm font-quicksand text-neutral-500 text-center px-4">
+          <Text className="text-sm font-quicksand text-center px-4" style={{ color: colors.textSecondary }}>
             {current.subtitle}
           </Text>
         </View>
@@ -301,14 +304,14 @@ export default function ForgotPasswordScreen() {
                 value={email}
                 onChangeText={setEmail}
                 placeholder="votre@email.com"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.textTertiary}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
                 returnKeyType="send"
                 onSubmitEditing={handleSendOtp}
-                className="bg-neutral-50 border border-neutral-200 rounded-2xl px-5 py-4 text-base font-quicksand text-neutral-900 mb-6"
-                style={{ color: "#111827", minHeight: 60 }}
+                className="border rounded-2xl px-5 py-4 text-base font-quicksand mb-6"
+                style={{ backgroundColor: colors.secondary, borderColor: colors.border, color: colors.textPrimary, minHeight: 60 }}
               />
 
               <TouchableOpacity
@@ -338,8 +341,9 @@ export default function ForgotPasswordScreen() {
                       ? "text-red-500"
                       : countdown <= 60
                         ? "text-amber-500"
-                        : "text-neutral-400"
+                        : ""
                   }`}
+                  style={{ color: countdown === 0 ? undefined : countdown <= 60 ? undefined : colors.textTertiary }}
                 >
                   {countdown > 0
                     ? `Expire dans ${formatTime(countdown)}`
@@ -359,12 +363,10 @@ export default function ForgotPasswordScreen() {
                     keyboardType="number-pad"
                     maxLength={index === 0 ? OTP_LENGTH : 1}
                     selectTextOnFocus
-                    className={`w-12 h-14 rounded-xl text-center text-xl font-quicksand-bold border-2 ${
-                      digit
-                        ? "border-emerald-500 bg-emerald-50"
-                        : "border-neutral-200 bg-neutral-50"
-                    }`}
-                    style={{ color: "#1F2937" }}
+                    className="w-12 h-14 rounded-xl text-center text-xl font-quicksand-bold border-2"
+                    style={digit
+                      ? { borderColor: '#10B981', backgroundColor: colors.brandLight, color: colors.textPrimary }
+                      : { borderColor: colors.border, backgroundColor: colors.secondary, color: colors.textPrimary }}
                   />
                 ))}
               </View>
@@ -383,11 +385,11 @@ export default function ForgotPasswordScreen() {
 
               {/* Renvoyer */}
               <View className="items-center">
-                <Text className="text-sm font-quicksand text-neutral-500 mb-2">
+                <Text className="text-sm font-quicksand mb-2" style={{ color: colors.textSecondary }}>
                   Vous n&apos;avez pas reçu le code ?
                 </Text>
                 {resendCooldown > 0 ? (
-                  <Text className="text-sm font-quicksand-semibold text-neutral-400">
+                  <Text className="text-sm font-quicksand-semibold" style={{ color: colors.textTertiary }}>
                     Renvoyer dans {resendCooldown}s
                   </Text>
                 ) : (
@@ -414,10 +416,10 @@ export default function ForgotPasswordScreen() {
                   value={newPassword}
                   onChangeText={setNewPassword}
                   placeholder="Nouveau mot de passe"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.textTertiary}
                   secureTextEntry={!showNewPassword}
-                  className="bg-neutral-50 border border-neutral-200 rounded-2xl px-5 py-4 pr-12 text-base font-quicksand text-neutral-900"
-                  style={{ color: "#111827", minHeight: 60 }}
+                  className="border rounded-2xl px-5 py-4 pr-12 text-base font-quicksand"
+                  style={{ backgroundColor: colors.secondary, borderColor: colors.border, color: colors.textPrimary, minHeight: 60 }}
                 />
                 <TouchableOpacity
                   onPress={() => setShowNewPassword((p) => !p)}
@@ -427,7 +429,7 @@ export default function ForgotPasswordScreen() {
                   <Ionicons
                     name={showNewPassword ? "eye-off" : "eye"}
                     size={20}
-                    color="#6B7280"
+                    color={colors.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
@@ -438,10 +440,10 @@ export default function ForgotPasswordScreen() {
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   placeholder="Confirmer le mot de passe"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.textTertiary}
                   secureTextEntry={!showConfirmPassword}
-                  className="bg-neutral-50 border border-neutral-200 rounded-2xl px-5 py-4 pr-12 text-base font-quicksand text-neutral-900"
-                  style={{ color: "#111827", minHeight: 60 }}
+                  className="border rounded-2xl px-5 py-4 pr-12 text-base font-quicksand"
+                  style={{ backgroundColor: colors.secondary, borderColor: colors.border, color: colors.textPrimary, minHeight: 60 }}
                   returnKeyType="done"
                   onSubmitEditing={handleResetPassword}
                 />
@@ -453,13 +455,13 @@ export default function ForgotPasswordScreen() {
                   <Ionicons
                     name={showConfirmPassword ? "eye-off" : "eye"}
                     size={20}
-                    color="#6B7280"
+                    color={colors.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
 
               {/* Hint règle */}
-              <Text className="text-xs font-quicksand text-neutral-400 mb-6 px-1">
+              <Text className="text-xs font-quicksand mb-6 px-1" style={{ color: colors.textTertiary }}>
                 Au moins 8 caractères, une majuscule, une minuscule et un chiffre
               </Text>
 

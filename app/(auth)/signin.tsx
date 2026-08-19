@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { useToast } from "../../components/ui/ReanimatedToast/context";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTheme } from "../../contexts/ThemeContext";
 import AuthService from "../../services/api/AuthService";
 import { ErrorHandler } from "../../utils/ErrorHandler";
 
@@ -25,6 +26,7 @@ export default function SignInScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
+  const { colors, isDark } = useTheme();
   const {
     checkAuthStatus,
     redirectToRoleBasedHome,
@@ -155,23 +157,24 @@ export default function SignInScreen() {
   };
 
   return (
-    <View className="flex-1 bg-[#F8F9FA]">
-      <StatusBar style="dark" />
+    <View style={{ flex: 1, backgroundColor: colors.secondary }}>
+      <StatusBar style={isDark ? "light" : "dark"} />
 
       {/* Background Shapes */}
       <View className="absolute top-[-100] left-[-80] w-[300px] h-[300px] rounded-full bg-primary/10" />
-      <View 
-        className="absolute top-[20%] right-[-140] w-[280px] h-[350px] bg-primary/20" 
-        style={{ borderTopLeftRadius: 150, borderBottomLeftRadius: 150 }} 
+      <View
+        className="absolute top-[20%] right-[-140] w-[280px] h-[350px] bg-primary/20"
+        style={{ borderTopLeftRadius: 150, borderBottomLeftRadius: 150 }}
       />
 
       {/* Fixed Header with Back Button */}
       <View className="absolute top-0 left-0 right-0 z-10 px-6 pt-16 pb-4">
         <TouchableOpacity
           onPress={() => router.back()}
-          className="w-11 h-11 rounded-full bg-white items-center justify-center border border-neutral-200"
+          className="w-11 h-11 rounded-full items-center justify-center border"
+          style={{ backgroundColor: colors.card, borderColor: colors.border }}
         >
-          <Ionicons name="arrow-back" size={22} color="#374151" />
+          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -187,17 +190,17 @@ export default function SignInScreen() {
       >
         {/* Header */}
         <View className="px-6 pb-10">
-          <Image 
-            source={require('../../assets/images/axiLogoo.png')} 
-            style={{ width: 140, height: 45 }} 
-            resizeMode="contain" 
+          <Image
+            source={require('../../assets/images/axiLogoo.png')}
+            style={{ width: 140, height: 45 }}
+            resizeMode="contain"
             className="mb-6"
           />
-          <Text className="text-4xl font-quicksand-bold text-neutral-900 mb-2 leading-tight">
+          <Text className="text-4xl font-quicksand-bold mb-2 leading-tight" style={{ color: colors.textPrimary }}>
             Bienvenue{"\n"}sur{" "}
             <Text className="text-primary">AXI Marketplace</Text>
           </Text>
-          <Text className="text-base font-quicksand text-neutral-600 mt-2">
+          <Text className="text-base font-quicksand mt-2" style={{ color: colors.textSecondary }}>
             Connectez-vous à votre compte
           </Text>
         </View>
@@ -210,11 +213,11 @@ export default function SignInScreen() {
               value={email}
               onChangeText={setEmail}
               placeholder="Email"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.textTertiary}
               keyboardType="email-address"
               autoCapitalize="none"
-              className="bg-white border rounded-2xl px-5 py-4 text-base font-quicksand text-neutral-900 border-neutral-200"
-              style={{ color: "#111827", minHeight: 60 }}
+              className="border rounded-2xl px-5 py-4 text-base font-quicksand"
+              style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary, minHeight: 60 }}
             />
           </View>
 
@@ -225,10 +228,10 @@ export default function SignInScreen() {
                 value={password}
                 onChangeText={setPassword}
                 placeholder="Mot de passe"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.textTertiary}
                 secureTextEntry={!showPassword}
-                className="bg-white border rounded-2xl px-5 py-4 pr-12 text-base font-quicksand text-neutral-900 border-neutral-200"
-                style={{ color: "#111827", minHeight: 60 }}
+                className="border rounded-2xl px-5 py-4 pr-12 text-base font-quicksand"
+                style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary, minHeight: 60 }}
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
@@ -238,7 +241,7 @@ export default function SignInScreen() {
                 <Ionicons
                   name={showPassword ? "eye-off" : "eye"}
                   size={20}
-                  color="#6B7280"
+                  color={colors.textSecondary}
                 />
               </TouchableOpacity>
             </View>
@@ -277,7 +280,7 @@ export default function SignInScreen() {
 
           {/* Sign Up Link */}
           <View className="flex-row justify-center items-center">
-            <Text className="text-neutral-600 font-quicksand text-sm">
+            <Text className="font-quicksand text-sm" style={{ color: colors.textSecondary }}>
               Je n&apos;ai pas de compte.{" "}
             </Text>
             <TouchableOpacity onPress={handleSignUp}>

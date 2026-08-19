@@ -27,6 +27,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SubscriptionWelcomeModal } from "../../components/enterprise/SubscriptionWelcomeModal";
 import { LocationConsentBanner } from "../../components/ui/LocationConsentBanner";
 import { useToast } from "../../components/ui/ReanimatedToast/context";
+import { useTheme } from "../../contexts/ThemeContext";
 import { beninCities, neighborhoodsByCity } from "../../constants/LocationData";
 import { useAuth } from "../../contexts/AuthContext";
 import { useLocationForRegistration } from "../../hooks/useLocationForRegistration";
@@ -81,6 +82,7 @@ export default function EnterpriseSignUpScreen() {
   const ifuNumberRef = useRef<TextInput>(null);
 
   const toast = useToast();
+  const { colors, isDark } = useTheme();
   const { handlePostRegistration } = useAuth();
   const insets = useSafeAreaInsets();
   const {
@@ -423,42 +425,43 @@ export default function EnterpriseSignUpScreen() {
 
   const phoneInputStyles = {
     container: {
-      backgroundColor: "#FFFFFF",
+      backgroundColor: colors.card,
       borderWidth: 1,
-      borderColor: "rgba(229, 231, 235, 0.6)",
+      borderColor: colors.border,
       borderRadius: 16,
       paddingVertical: 4,
     },
     flagContainer: {
-      backgroundColor: "#FFFFFF",
+      backgroundColor: colors.card,
       borderTopLeftRadius: 16,
       borderBottomLeftRadius: 16,
     },
     input: {
-      color: "#111827",
+      color: colors.textPrimary,
     },
     callingCode: {
-      color: "#111827",
+      color: colors.textPrimary,
     },
   };
 
   // Step 1: Company essentials (only required fields besides password)
   const renderStep1 = () => (
     <View>
-      <Text className="text-lg font-quicksand-semibold text-neutral-900 mb-4">
+      <Text className="text-lg font-quicksand-semibold mb-4" style={{ color: colors.textPrimary }}>
         Informations Entreprise
       </Text>
 
       {/* Company Name */}
       <View className="mb-4">
-        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
           Nom de l&apos;Entreprise *
         </Text>
         <TextInput
           ref={companyNameRef}
-          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
+          className="w-full px-5 py-4 border rounded-2xl font-quicksand shadow-sm"
+          style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
           placeholder="Votre Entreprise SARL"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textTertiary}
           value={companyName}
           onChangeText={setCompanyName}
           onFocus={() => scrollToInput(companyNameRef)}
@@ -468,13 +471,14 @@ export default function EnterpriseSignUpScreen() {
 
       {/* Email */}
       <View className="mb-4">
-        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
           Email *
         </Text>
         <TextInput
-          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
+          className="w-full px-5 py-4 border rounded-2xl font-quicksand shadow-sm"
+          style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
           placeholder="contact@votreentreprise.com"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textTertiary}
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -484,7 +488,7 @@ export default function EnterpriseSignUpScreen() {
 
       {/* Company Phone (required) */}
       <View className="mb-6">
-        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
           Numéro de l&apos;Entreprise *
         </Text>
         <PhoneInput
@@ -503,20 +507,20 @@ export default function EnterpriseSignUpScreen() {
   // Step 2: All optional details (merged)
   const SectionDivider = ({ label }: { label: string }) => (
     <View className="flex-row items-center mt-2 mb-5">
-      <View className="flex-1 h-px bg-neutral-100" />
-      <Text className="text-xs font-quicksand-medium text-neutral-400 mx-3 uppercase">
+      <View className="flex-1 h-px" style={{ backgroundColor: colors.borderLight }} />
+      <Text className="text-xs font-quicksand-medium mx-3 uppercase" style={{ color: colors.textTertiary }}>
         {label}
       </Text>
-      <View className="flex-1 h-px bg-neutral-100" />
+      <View className="flex-1 h-px" style={{ backgroundColor: colors.borderLight }} />
     </View>
   );
 
   const renderStep2 = () => (
     <View>
-      <Text className="text-lg font-quicksand-semibold text-neutral-900 mb-1">
+      <Text className="text-lg font-quicksand-semibold mb-1" style={{ color: colors.textPrimary }}>
         Détails & Contact
       </Text>
-      <Text className="text-sm font-quicksand text-neutral-500 mb-5">
+      <Text className="text-sm font-quicksand mb-5" style={{ color: colors.textSecondary }}>
         Tous ces champs sont optionnels — remplissez ce qui vous convient
       </Text>
 
@@ -532,39 +536,37 @@ export default function EnterpriseSignUpScreen() {
       {/* Ville : affichée seulement si le GPS n'a pas fonctionné */}
       {locationStatus !== "granted" && (
         <View className="mb-4">
-          <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+          <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
             Ville
           </Text>
           <TouchableOpacity
-            className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl bg-white flex-row justify-between items-center shadow-sm"
+            className="w-full px-5 py-4 border rounded-2xl flex-row justify-between items-center shadow-sm"
+            style={{ backgroundColor: colors.card, borderColor: colors.border }}
             onPress={() => setCityModalVisible(true)}
             activeOpacity={0.7}
           >
-            <Text className="font-quicksand text-neutral-900">{selectedCity}</Text>
-            <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
+            <Text className="font-quicksand" style={{ color: colors.textPrimary }}>{selectedCity}</Text>
+            <Ionicons name="chevron-down" size={20} color={colors.textTertiary} />
           </TouchableOpacity>
         </View>
       )}
 
       {/* Quartier : toujours affiché (le GPS ne détecte pas le quartier) */}
       <View className="mb-2">
-        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
           Quartier
         </Text>
         <TouchableOpacity
-          className={`w-full px-5 py-4 border border-neutral-200/60 rounded-2xl bg-white flex-row justify-between items-center shadow-sm ${
-            !selectedCity ? "opacity-50" : ""
-          }`}
+          className={`w-full px-5 py-4 border rounded-2xl flex-row justify-between items-center shadow-sm ${!selectedCity ? "opacity-50" : ""}`}
+          style={{ backgroundColor: colors.card, borderColor: colors.border }}
           onPress={() => selectedCity && setDistrictModalVisible(true)}
           disabled={!selectedCity}
           activeOpacity={0.7}
         >
-          <Text
-            className={`font-quicksand ${selectedDistrict ? "text-neutral-900" : "text-neutral-400"}`}
-          >
+          <Text className="font-quicksand" style={{ color: selectedDistrict ? colors.textPrimary : colors.textTertiary }}>
             {selectedDistrict || "Sélectionnez un quartier"}
           </Text>
-          <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
+          <Ionicons name="chevron-down" size={20} color={colors.textTertiary} />
         </TouchableOpacity>
       </View>
 
@@ -572,14 +574,15 @@ export default function EnterpriseSignUpScreen() {
       <SectionDivider label="À propos" />
 
       <View className="mb-4">
-        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
           Description de l&apos;Entreprise
         </Text>
         <TextInput
           ref={descriptionRef}
-          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
+          className="w-full px-5 py-4 border rounded-2xl font-quicksand shadow-sm"
+          style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
           placeholder="Décrivez votre entreprise..."
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textTertiary}
           value={description}
           onChangeText={setDescription}
           onFocus={() => scrollToInput(descriptionRef)}
@@ -590,14 +593,15 @@ export default function EnterpriseSignUpScreen() {
       </View>
 
       <View className="mb-2">
-        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
           Numéro IFU
         </Text>
         <TextInput
           ref={ifuNumberRef}
-          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
+          className="w-full px-5 py-4 border rounded-2xl font-quicksand shadow-sm"
+          style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
           placeholder="1234567890123"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textTertiary}
           value={ifuNumber}
           onChangeText={setIfuNumber}
           onFocus={() => scrollToInput(ifuNumberRef)}
@@ -611,25 +615,27 @@ export default function EnterpriseSignUpScreen() {
 
       <View className="flex-row mb-4">
         <View className="flex-1 mr-2">
-          <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+          <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
             Prénom
           </Text>
           <TextInput
-            className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
+            className="w-full px-5 py-4 border rounded-2xl font-quicksand shadow-sm"
+            style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
             placeholder="Jean"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.textTertiary}
             value={firstName}
             onChangeText={setFirstName}
           />
         </View>
         <View className="flex-1 ml-2">
-          <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+          <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
             Nom
           </Text>
           <TextInput
-            className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
+            className="w-full px-5 py-4 border rounded-2xl font-quicksand shadow-sm"
+            style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
             placeholder="DOSSOU"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.textTertiary}
             value={lastName}
             onChangeText={setLastName}
           />
@@ -637,7 +643,7 @@ export default function EnterpriseSignUpScreen() {
       </View>
 
       <View className="mb-4">
-        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
           Téléphone Personnel
         </Text>
         <PhoneInput
@@ -652,26 +658,28 @@ export default function EnterpriseSignUpScreen() {
       </View>
 
       <View className="mb-4">
-        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
           Adresse
         </Text>
         <TextInput
-          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
+          className="w-full px-5 py-4 border rounded-2xl font-quicksand shadow-sm"
+          style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
           placeholder="Cotonou"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textTertiary}
           value={address}
           onChangeText={setAddress}
         />
       </View>
 
       <View className="mb-4">
-        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
           Email Entreprise
         </Text>
         <TextInput
-          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
+          className="w-full px-5 py-4 border rounded-2xl font-quicksand shadow-sm"
+          style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
           placeholder="contact@votreentreprise.com"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textTertiary}
           value={companyEmail}
           onChangeText={setCompanyEmail}
           keyboardType="email-address"
@@ -680,7 +688,7 @@ export default function EnterpriseSignUpScreen() {
       </View>
 
       <View className="mb-4">
-        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
           Numéro WhatsApp
         </Text>
         <PhoneInput
@@ -695,13 +703,14 @@ export default function EnterpriseSignUpScreen() {
       </View>
 
       <View className="mb-6">
-        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
           Site Web
         </Text>
         <TextInput
-          className="w-full px-5 py-4 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
+          className="w-full px-5 py-4 border rounded-2xl font-quicksand shadow-sm"
+          style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
           placeholder="https://votreentreprise.com"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textTertiary}
           value={website}
           onChangeText={setWebsite}
           keyboardType="url"
@@ -714,20 +723,21 @@ export default function EnterpriseSignUpScreen() {
   // Step 3: Security
   const renderStep3 = () => (
     <View>
-      <Text className="text-lg font-quicksand-semibold text-neutral-900 mb-4">
+      <Text className="text-lg font-quicksand-semibold mb-4" style={{ color: colors.textPrimary }}>
         Sécurisez Votre Compte
       </Text>
 
       {/* Password */}
       <View className="mb-4">
-        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
           Mot de Passe *
         </Text>
         <View className="relative">
           <TextInput
-            className="w-full px-5 py-4 pr-12 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
+            className="w-full px-5 py-4 pr-12 border rounded-2xl font-quicksand shadow-sm"
+            style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
             placeholder="Entrez votre mot de passe"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.textTertiary}
             value={password}
             onChangeText={setPassword}
             secureTextEntry={!showPassword}
@@ -741,7 +751,7 @@ export default function EnterpriseSignUpScreen() {
             <Ionicons
               name={showPassword ? "eye-off" : "eye"}
               size={20}
-              color="#9CA3AF"
+              color={colors.textTertiary}
             />
           </TouchableOpacity>
         </View>
@@ -749,14 +759,15 @@ export default function EnterpriseSignUpScreen() {
 
       {/* Confirm Password */}
       <View className="mb-6">
-        <Text className="text-sm font-quicksand-medium text-neutral-700 mb-2">
+        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
           Confirmer le Mot de Passe *
         </Text>
         <View className="relative">
           <TextInput
-            className="w-full px-5 py-4 pr-12 border border-neutral-200/60 rounded-2xl font-quicksand text-neutral-900 bg-white focus:border-primary-500 shadow-sm"
+            className="w-full px-5 py-4 pr-12 border rounded-2xl font-quicksand shadow-sm"
+            style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
             placeholder="Confirmez votre mot de passe"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.textTertiary}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry={!showConfirmPassword}
@@ -769,43 +780,39 @@ export default function EnterpriseSignUpScreen() {
             <Ionicons
               name={showConfirmPassword ? "eye-off" : "eye"}
               size={20}
-              color="#9CA3AF"
+              color={colors.textTertiary}
             />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Password Requirements */}
-      <View className="bg-blue-50 p-4 rounded-xl mb-6">
-        <Text className="text-sm font-quicksand-medium text-blue-900 mb-2">
+      <View className="p-4 rounded-xl mb-6" style={{ backgroundColor: isDark ? '#1E3A5F' : '#EFF6FF' }}>
+        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: isDark ? '#93C5FD' : '#1E40AF' }}>
           Exigences du Mot de Passe :
         </Text>
         <View className="flex-row items-center mb-1">
           <Ionicons
             name={password.length >= 6 ? "checkmark-circle" : "ellipse-outline"}
             size={16}
-            color={password.length >= 6 ? "#10B981" : "#9CA3AF"}
+            color={password.length >= 6 ? "#10B981" : colors.textTertiary}
           />
           <Text
-            className={`text-sm font-quicksand ml-2 ${password.length >= 6 ? "text-green-600" : "text-neutral-600"}`}
+            className={`text-sm font-quicksand ml-2 ${password.length >= 6 ? "text-green-600" : ""}`}
+            style={{ color: password.length >= 6 ? undefined : colors.textSecondary }}
           >
             Au moins 6 caractères
           </Text>
         </View>
         <View className="flex-row items-center">
           <Ionicons
-            name={
-              password === confirmPassword && password
-                ? "checkmark-circle"
-                : "ellipse-outline"
-            }
+            name={password === confirmPassword && password ? "checkmark-circle" : "ellipse-outline"}
             size={16}
-            color={
-              password === confirmPassword && password ? "#10B981" : "#9CA3AF"
-            }
+            color={password === confirmPassword && password ? "#10B981" : colors.textTertiary}
           />
           <Text
-            className={`text-sm font-quicksand ml-2 ${password === confirmPassword && password ? "text-green-600" : "text-neutral-600"}`}
+            className={`text-sm font-quicksand ml-2 ${password === confirmPassword && password ? "text-green-600" : ""}`}
+            style={{ color: password === confirmPassword && password ? undefined : colors.textSecondary }}
           >
             Les mots de passe correspondent
           </Text>
@@ -820,16 +827,15 @@ export default function EnterpriseSignUpScreen() {
           activeOpacity={0.7}
         >
           <View
-            className={`w-6 h-6 rounded-md border-2 items-center justify-center ${
-              agreedToTerms
-                ? "bg-primary-600 border-primary-600"
-                : "bg-white border-neutral-300"
-            }`}
+            className="w-6 h-6 rounded-md border-2 items-center justify-center"
+            style={agreedToTerms
+              ? { backgroundColor: '#10B981', borderColor: '#10B981' }
+              : { backgroundColor: colors.card, borderColor: colors.border }}
           >
             {agreedToTerms && <Text className="text-white text-center">✓</Text>}
           </View>
         </TouchableOpacity>
-        <Text className="text-neutral-600 font-quicksand text-sm flex-1">
+        <Text className="font-quicksand text-sm flex-1" style={{ color: colors.textSecondary }}>
           J&apos;accepte les{" "}
           <Text
             className="text-primary-600 font-quicksand-semibold underline"
@@ -843,14 +849,14 @@ export default function EnterpriseSignUpScreen() {
   );
 
   return (
-    <View className="flex-1 bg-[#F8F9FA]">
-      <StatusBar style="dark" />
+    <View style={{ flex: 1, backgroundColor: colors.secondary }}>
+      <StatusBar style={isDark ? "light" : "dark"} />
 
       {/* Background Shapes */}
       <View className="absolute top-[-100] right-[-80] w-[300px] h-[300px] rounded-full bg-primary/10" />
-      <View 
-        className="absolute top-[30%] left-[-140] w-[280px] h-[350px] bg-primary/20" 
-        style={{ borderTopRightRadius: 150, borderBottomRightRadius: 150 }} 
+      <View
+        className="absolute top-[30%] left-[-140] w-[280px] h-[350px] bg-primary/20"
+        style={{ borderTopRightRadius: 150, borderBottomRightRadius: 150 }}
       />
 
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -869,19 +875,19 @@ export default function EnterpriseSignUpScreen() {
               }
               className="mb-6"
             >
-              <Ionicons name="arrow-back" size={24} color="#374151" />
+              <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
             </TouchableOpacity>
 
-            <Image 
-              source={require('../../assets/images/axiLogoo.png')} 
-              style={{ width: 120, height: 40 }} 
-              resizeMode="contain" 
+            <Image
+              source={require('../../assets/images/axiLogoo.png')}
+              style={{ width: 120, height: 40 }}
+              resizeMode="contain"
               className="mb-4"
             />
-            <Text className="text-3xl font-quicksand-bold text-neutral-900 mb-2">
+            <Text className="text-3xl font-quicksand-bold mb-2" style={{ color: colors.textPrimary }}>
               Créer un Compte Entreprise
             </Text>
-            <Text className="text-base font-quicksand text-neutral-600 mb-6">
+            <Text className="text-base font-quicksand mb-6" style={{ color: colors.textSecondary }}>
               {currentStep === 1 && "Parlez-nous de votre entreprise"}
               {currentStep === 2 && "Ajoutez quelques détails (optionnel)"}
               {currentStep === 3 && "Sécurisez votre compte"}
@@ -893,23 +899,17 @@ export default function EnterpriseSignUpScreen() {
                 {[1, 2, 3].map((step, index) => (
                   <React.Fragment key={step}>
                     <View
-                      className={`w-10 h-10 rounded-full items-center justify-center ${
-                        step === currentStep
-                          ? "bg-primary-500"
-                          : step < currentStep
-                            ? "bg-green-500"
-                            : "bg-neutral-200"
-                      }`}
+                      className="w-10 h-10 rounded-full items-center justify-center"
+                      style={{
+                        backgroundColor: step === currentStep ? '#10B981' : step < currentStep ? '#22C55E' : colors.tertiary
+                      }}
                     >
                       {step < currentStep ? (
                         <Ionicons name="checkmark" size={20} color="#FFFFFF" />
                       ) : (
                         <Text
-                          className={`font-quicksand-bold text-base ${
-                            step === currentStep
-                              ? "text-white"
-                              : "text-neutral-500"
-                          }`}
+                          className="font-quicksand-bold text-base"
+                          style={{ color: step === currentStep ? '#FFFFFF' : colors.textSecondary }}
                         >
                           {step}
                         </Text>
@@ -917,9 +917,8 @@ export default function EnterpriseSignUpScreen() {
                     </View>
                     {index < 2 && (
                       <View
-                        className={`w-20 h-1 mx-1 ${
-                          step < currentStep ? "bg-green-500" : "bg-neutral-200"
-                        }`}
+                        className="w-20 h-1 mx-1"
+                        style={{ backgroundColor: step < currentStep ? '#22C55E' : colors.tertiary }}
                       />
                     )}
                   </React.Fragment>
@@ -952,8 +951,10 @@ export default function EnterpriseSignUpScreen() {
 
           {/* Bottom Navigation */}
           <View
-            className="px-6 bg-white border-t border-neutral-200"
+            className="px-6 border-t"
             style={{
+              backgroundColor: colors.card,
+              borderColor: colors.border,
               paddingTop: 16,
               paddingBottom: Math.max(insets.bottom, 16) + 8,
             }}
@@ -962,23 +963,25 @@ export default function EnterpriseSignUpScreen() {
               <TouchableOpacity
                 onPress={() => setCurrentStep(3)}
                 activeOpacity={0.7}
-                className="flex-row items-center justify-center border border-neutral-200 rounded-2xl py-3 mb-3"
+                className="flex-row items-center justify-center border rounded-2xl py-3 mb-3"
+                style={{ borderColor: colors.border }}
               >
-                <Text className="font-quicksand-medium text-neutral-500 text-sm mr-1">
+                <Text className="font-quicksand-medium text-sm mr-1" style={{ color: colors.textSecondary }}>
                   Passer cette étape
                 </Text>
-                <Ionicons name="arrow-forward" size={15} color="#6B7280" />
+                <Ionicons name="arrow-forward" size={15} color={colors.textSecondary} />
               </TouchableOpacity>
             )}
             <View className="flex-row items-center mb-3">
               {currentStep > 1 && (
                 <TouchableOpacity
-                  className="flex-1 mr-2 py-3 rounded-2xl border-2 border-neutral-300 flex-row items-center justify-center"
+                  className="flex-1 mr-2 py-3 rounded-2xl border-2 flex-row items-center justify-center"
+                  style={{ borderColor: colors.border }}
                   onPress={handlePreviousStep}
                   activeOpacity={1}
                 >
-                  <Ionicons name="arrow-back" size={20} color="#374151" />
-                  <Text className="text-neutral-700 font-quicksand-semibold text-base ml-2">
+                  <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
+                  <Text className="font-quicksand-semibold text-base ml-2" style={{ color: colors.textPrimary }}>
                     Retour
                   </Text>
                 </TouchableOpacity>
@@ -1021,7 +1024,7 @@ export default function EnterpriseSignUpScreen() {
 
             {/* Sign In Link */}
             <View className="flex-row justify-center">
-              <Text className="text-neutral-600 font-quicksand text-sm">
+              <Text className="font-quicksand text-sm" style={{ color: colors.textSecondary }}>
                 Vous avez déjà un compte ?{" "}
               </Text>
               <TouchableOpacity onPress={handleSignIn} activeOpacity={0.7}>
@@ -1044,9 +1047,9 @@ export default function EnterpriseSignUpScreen() {
             >
               <View className="flex-1 bg-black/50 justify-end">
                 <TouchableWithoutFeedback onPress={() => {}}>
-                  <View className="bg-white rounded-t-3xl max-h-96">
-                    <View className="p-4 border-b border-neutral-200">
-                      <Text className="text-lg font-quicksand-bold text-center text-neutral-900">
+                  <View className="rounded-t-3xl max-h-96" style={{ backgroundColor: colors.card }}>
+                    <View className="p-4 border-b" style={{ borderColor: colors.border }}>
+                      <Text className="text-lg font-quicksand-bold text-center" style={{ color: colors.textPrimary }}>
                         Sélectionner la Ville
                       </Text>
                     </View>
@@ -1055,16 +1058,14 @@ export default function EnterpriseSignUpScreen() {
                       keyExtractor={(item) => item.id.toString()}
                       renderItem={({ item }) => (
                         <TouchableOpacity
-                          className="p-4 border-b border-neutral-100"
+                          className="p-4 border-b"
+                          style={{ borderColor: colors.borderLight }}
                           onPress={() => selectCity(item.name)}
                           activeOpacity={0.7}
                         >
                           <Text
-                            className={`font-quicksand text-base ${
-                              selectedCity === item.name
-                                ? "text-primary-500 font-quicksand-bold"
-                                : "text-neutral-900"
-                            }`}
+                            className={`font-quicksand text-base ${selectedCity === item.name ? "text-primary-500 font-quicksand-bold" : ""}`}
+                            style={{ color: selectedCity === item.name ? undefined : colors.textPrimary }}
                           >
                             {item.name}
                           </Text>
@@ -1089,9 +1090,9 @@ export default function EnterpriseSignUpScreen() {
             >
               <View className="flex-1 bg-black/50 justify-end">
                 <TouchableWithoutFeedback onPress={() => {}}>
-                  <View className="bg-white rounded-t-3xl max-h-96">
-                    <View className="p-4 border-b border-neutral-200">
-                      <Text className="text-lg font-quicksand-bold text-center text-neutral-900">
+                  <View className="rounded-t-3xl max-h-96" style={{ backgroundColor: colors.card }}>
+                    <View className="p-4 border-b" style={{ borderColor: colors.border }}>
+                      <Text className="text-lg font-quicksand-bold text-center" style={{ color: colors.textPrimary }}>
                         Sélectionner le Quartier
                       </Text>
                     </View>
@@ -1100,16 +1101,14 @@ export default function EnterpriseSignUpScreen() {
                       keyExtractor={(item, index) => index.toString()}
                       renderItem={({ item }) => (
                         <TouchableOpacity
-                          className="p-4 border-b border-neutral-100"
+                          className="p-4 border-b"
+                          style={{ borderColor: colors.borderLight }}
                           onPress={() => selectDistrict(item)}
                           activeOpacity={0.7}
                         >
                           <Text
-                            className={`font-quicksand text-base ${
-                              selectedDistrict === item
-                                ? "text-primary-500 font-quicksand-bold"
-                                : "text-neutral-900"
-                            }`}
+                            className={`font-quicksand text-base ${selectedDistrict === item ? "text-primary-500 font-quicksand-bold" : ""}`}
+                            style={{ color: selectedDistrict === item ? undefined : colors.textPrimary }}
                           >
                             {item}
                           </Text>

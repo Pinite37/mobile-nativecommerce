@@ -718,7 +718,7 @@ function EnterpriseSubscriptionsContent() {
                 {loading ? (
                   <>
                     {Array.from({ length: 3 }).map((_, i) => (
-                      <SkeletonCard key={i} />
+                      <SkeletonCard key={i} colors={colors} />
                     ))}
                   </>
                 ) : error ? (
