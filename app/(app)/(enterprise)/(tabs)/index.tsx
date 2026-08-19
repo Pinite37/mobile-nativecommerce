@@ -753,14 +753,6 @@ export default function EnterpriseDashboard() {
         <Text style={{ color: colors.brandPrimary }} className="text-base font-quicksand-bold mb-1">
           {formatPrice(item.price)}
         </Text>
-        {item.stats && (
-          <View className="flex-row items-center">
-            <Ionicons name="star" size={12} color="#FFD700" />
-            <Text style={{ color: colors.textSecondary }} className="text-xs ml-1">
-              {item.stats.averageRating?.toFixed(1) || "0.0"}
-            </Text>
-          </View>
-        )}
       </View>
     </TouchableOpacity>
   );
@@ -812,14 +804,6 @@ export default function EnterpriseDashboard() {
           >
             {item.name}
           </Text>
-          {item.stats && (
-            <View className="flex-row items-center mt-1">
-              <Ionicons name="star" size={12} color="#FFD700" />
-              <Text style={{ color: colors.textSecondary }} className="text-xs ml-1">
-                {item.stats.averageRating?.toFixed(1) || "0.0"}
-              </Text>
-            </View>
-          )}
         </View>
         <View className="flex-row items-center justify-between mt-2">
           <Text style={{ color: colors.brandPrimary }} className="text-base font-quicksand-bold">

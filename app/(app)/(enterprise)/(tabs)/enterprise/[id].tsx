@@ -624,40 +624,6 @@ export default function EnterpriseDetails() {
                     marginBottom: 3,
                   }}
                 >
-                  <Ionicons name="star" size={15} color="#FE8C00" />
-                  <Text
-                    className="text-lg font-quicksand-bold ml-1"
-                    style={{ color: colors.text }}
-                  >
-                    {enterprise.stats.averageRating?.toFixed(1) || "0.0"}
-                  </Text>
-                </View>
-                <Text
-                  className="text-xs font-quicksand-medium"
-                  style={{ color: colors.textSecondary }}
-                >
-                  {i18n.t("client.enterprise.stats.reviews", {
-                    count: enterprise.stats.totalReviews || 0,
-                  })}
-                </Text>
-              </View>
-
-              <View
-                style={{
-                  flex: 1,
-                  borderRadius: 14,
-                  padding: 14,
-                  backgroundColor: isDark ? "#1f2937" : "#f9fafb",
-                  alignItems: "center",
-                }}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    marginBottom: 3,
-                  }}
-                >
                   <Ionicons name="cube" size={15} color="#10B981" />
                   <Text
                     className="text-lg font-quicksand-bold ml-1"

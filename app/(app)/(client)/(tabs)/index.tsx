@@ -760,14 +760,6 @@ export default function ClientHome() {
                     <Text className="text-base font-quicksand-bold text-emerald-600">
                         {formatPrice(item.price)}
                     </Text>
-                    {item.stats && (
-                        <View className="flex-row items-center bg-amber-50 px-1.5 py-0.5 rounded-md">
-                            <Ionicons name="star" size={10} color="#F59E0B" />
-                            <Text className="text-[10px] font-quicksand-bold text-amber-700 ml-1">
-                                {item.stats.averageRating?.toFixed(1) || '5.0'}
-                            </Text>
-                        </View>
-                    )}
                 </View>
             </View>
         </TouchableOpacity>
@@ -974,14 +966,6 @@ export default function ClientHome() {
                     <Text numberOfLines={2} style={{ color: colors.textPrimary }} className="text-sm font-quicksand-semibold">
                         {item.name}
                     </Text>
-                    {item.stats && (
-                        <View className="flex-row items-center mt-1">
-                            <Ionicons name="star" size={12} color="#FFD700" />
-                            <Text style={{ color: colors.textSecondary }} className="text-xs ml-1">
-                                {item.stats.averageRating?.toFixed(1) || '0.0'}
-                            </Text>
-                        </View>
-                    )}
                 </View>
                 <View className="flex-row items-center justify-between mt-2">
                     <Text className="text-base font-quicksand-bold text-primary-600">

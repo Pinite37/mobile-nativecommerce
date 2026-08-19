@@ -160,13 +160,6 @@ export default function ClientFavorites() {
             {item.store}
           </Text>
           
-          <View className="flex-row items-center mb-2">
-            <Ionicons name="star" size={14} color="#FE8C00" />
-            <Text className="text-xs text-neutral-600 ml-1">
-              {item.rating} ({item.reviews} avis)
-            </Text>
-          </View>
-          
           <View className="flex-row items-center justify-between">
             <View>
               <Text className="text-lg font-quicksand-bold text-primary-500">

@@ -361,12 +361,6 @@ export default function CategoryProductsScreen() {
               {enterprise.companyName}
             </Text>
           )}
-          <View className="flex-row items-center mt-1">
-            <Ionicons name="star" size={14} color="#FBBF24" />
-            <Text className="text-xs font-quicksand-medium ml-1" style={{ color: colors.textSecondary }}>
-              {item.stats?.averageRating?.toFixed(1) || '0.0'} ({item.stats?.totalReviews || 0})
-            </Text>
-          </View>
         </View>
       </TouchableOpacity>
     );
@@ -428,12 +422,6 @@ export default function CategoryProductsScreen() {
               {enterprise.companyName}
             </Text>
           )}
-          <View className="flex-row items-center mt-1">
-            <Ionicons name="star" size={14} color="#FBBF24" />
-            <Text className="text-xs font-quicksand-medium ml-1" style={{ color: colors.textSecondary }}>
-              {item.stats?.averageRating?.toFixed(1) || '0.0'} ({item.stats?.totalReviews || 0})
-            </Text>
-          </View>
         </View>
       </TouchableOpacity>
     );

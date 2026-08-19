@@ -303,12 +303,6 @@ export default function CategoryProductsScreen() {
             <Text style={{ color: '#10B981', fontSize: 16, fontFamily: 'Quicksand-Bold' }}>
               {formatPrice(item.price)}
             </Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF9C4', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
-              <Ionicons name="star" size={10} color="#FBBF24" />
-              <Text style={{ color: '#F59E0B', fontSize: 10, fontFamily: 'Quicksand-Bold', marginLeft: 2 }}>
-                {item.stats?.averageRating?.toFixed(1) || '0.0'}
-              </Text>
-            </View>
           </View>
           {enterprise && (
             <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Quicksand-Medium', marginTop: 4 }} numberOfLines={1}>
@@ -378,12 +372,6 @@ export default function CategoryProductsScreen() {
               {enterprise.companyName}
             </Text>
           )}
-          <View className="flex-row items-center mt-1">
-            <Ionicons name="star" size={14} color="#FBBF24" />
-            <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Quicksand-Medium', marginLeft: 4 }}>
-              {item.stats?.averageRating?.toFixed(1) || '0.0'}
-            </Text>
-          </View>
         </View>
       </TouchableOpacity>
     );

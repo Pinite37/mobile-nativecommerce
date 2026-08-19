@@ -325,16 +325,6 @@ export default function ClientEnterpriseDetails() {
 
       {/* Stats pills */}
       <View style={{ flexDirection: "row", justifyContent: "center", gap: 10, marginBottom: 16, paddingHorizontal: 16 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: isDark ? "rgba(245,158,11,0.12)" : "rgba(245,158,11,0.09)", borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, gap: 6 }}>
-          <Ionicons name="star" size={14} color="#F59E0B" />
-          <Text className="font-quicksand-bold text-sm" style={{ color: colors.textPrimary }}>
-            {enterprise.stats?.averageRating?.toFixed(1) || "0.0"}
-          </Text>
-          <Text className="font-quicksand text-xs" style={{ color: colors.textSecondary }}>
-            ({enterprise.stats?.totalReviews || 0})
-          </Text>
-        </View>
-
         <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: isDark ? "rgba(16,185,129,0.12)" : "rgba(16,185,129,0.09)", borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, gap: 6 }}>
           <Ionicons name="cube-outline" size={14} color="#10B981" />
           <Text className="font-quicksand-bold text-sm" style={{ color: colors.textPrimary }}>

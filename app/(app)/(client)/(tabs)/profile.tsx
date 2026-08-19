@@ -19,8 +19,10 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useUnreadNotifications } from "../../../../hooks/useUnreadNotifications";
+import FollowService from "../../../../services/api/FollowService";
 
 export default function ProfileScreen() {
   const { user, logout, refreshUserData, isAuthenticated } = useAuth();
@@ -29,6 +31,13 @@ export default function ProfileScreen() {
   const { colors, isDark } = useTheme();
   const { unreadCount, loadUnreadCount } = useUnreadNotifications();
   const [loading, setLoading] = useState(true);
+
+  const { data: followingList = [] } = useQuery({
+    queryKey: ['my-following'],
+    queryFn: () => FollowService.getMyFollowing(),
+    enabled: !!isAuthenticated,
+    staleTime: 1000 * 60 * 5,
+  });
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [confirmationAction, setConfirmationAction] = useState<{
     type: "logout";
@@ -413,6 +422,37 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
           </View>
+        </View>
+
+        {/* Stat — entreprises suivies */}
+        <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => router.push('/(app)/(client)/marketplace')}
+            style={{
+              backgroundColor: colors.card,
+              borderRadius: 16,
+              paddingVertical: 16,
+              paddingHorizontal: 20,
+              flexDirection: 'row',
+              alignItems: 'center',
+              borderWidth: 1,
+              borderColor: colors.border,
+            }}
+          >
+            <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: isDark ? 'rgba(16,185,129,0.15)' : '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginRight: 14 }}>
+              <Ionicons name="storefront-outline" size={22} color="#10B981" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 12 }}>
+                Entreprises suivies
+              </Text>
+              <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 22, lineHeight: 28 }}>
+                {followingList.length}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+          </TouchableOpacity>
         </View>
 
         {/* Menu — groupé dans une seule carte */}
