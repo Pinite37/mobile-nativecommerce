@@ -83,6 +83,7 @@ export default function ClientHome() {
     );
 
     const loadStatuses = useCallback(async () => {
+        if (!isAuthenticated) return;
         try {
             const result = await StatusService.getAll();
             console.log('[ClientHome] Statuts chargés:', JSON.stringify({ groupCount: result.groups?.length, currentUserId: result.currentUserId }));
@@ -91,7 +92,7 @@ export default function ClientHome() {
         } catch (error) {
             console.error('[ClientHome] Erreur lors du chargement des statuts:', error);
         }
-    }, []);
+    }, [isAuthenticated]);
 
     useFocusEffect(useCallback(() => { loadStatuses(); }, [loadStatuses]));
     // const { getCacheStats } = useSearchCache(); // (non utilisé pour l'instant)

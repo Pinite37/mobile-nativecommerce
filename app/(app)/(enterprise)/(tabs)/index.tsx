@@ -1,5 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocale } from "@/contexts/LocaleContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import i18n from "@/i18n/i18n";
 import { Ionicons } from "@expo/vector-icons";
@@ -74,7 +75,17 @@ export default function EnterpriseDashboard() {
   const insets = useSafeAreaInsets();
   const { user, isAuthenticated, userRole } = useAuth();
   const router = useRouter();
+  const { subscription } = useSubscription();
   const { unreadCount, loadUnreadCount } = useUnreadNotifications();
+
+  const handleOpenStatusCreator = () => {
+    const hasActiveSubscription = subscription?.isActive && subscription?.endDate && new Date(subscription.endDate) > new Date();
+    if (!hasActiveSubscription) {
+      router.push('/(app)/(enterprise)/subscriptions/index');
+      return;
+    }
+    setCreatorVisible(true);
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -97,16 +108,15 @@ export default function EnterpriseDashboard() {
   const [creatorVisible, setCreatorVisible] = useState(false);
 
   const loadStatuses = useCallback(async () => {
-    console.log('[Home] loadStatuses appelé');
+    if (!isAuthenticated) return;
     try {
       const res = await StatusService.getAll();
-      console.log('[Home] ✅ Groupes statuts:', res.groups.length, '| currentUserId:', res.currentUserId);
       setStatusGroups(res.groups);
       setStatusCurrentUserId(res.currentUserId);
     } catch (e: any) {
       console.error('[Home] ❌ loadStatuses failed:', e?.message);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   useFocusEffect(useCallback(() => { loadStatuses(); }, [loadStatuses]));
 
@@ -1331,7 +1341,7 @@ export default function EnterpriseDashboard() {
                 currentUserId={statusCurrentUserId}
                 isEnterprise={userRole === 'ENTERPRISE'}
                 onPressGroup={handlePressStatusGroup}
-                onPressAdd={() => setCreatorVisible(true)}
+                onPressAdd={handleOpenStatusCreator}
               />
             ) : null}
 

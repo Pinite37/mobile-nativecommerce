@@ -36,6 +36,7 @@ interface StatusViewerProps {
   onViewed: (statusId: string) => void;
   onDelete?: (statusId: string) => void;
   onReplyToStatus?: (status: StatusItem, enterpriseUserId: string, text: string) => Promise<{ conversationId: string }>;
+  onNeedAuth?: () => void;
 }
 
 export function StatusViewer({
@@ -47,6 +48,7 @@ export function StatusViewer({
   onViewed,
   onDelete,
   onReplyToStatus,
+  onNeedAuth,
 }: StatusViewerProps) {
   const { isDark, colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -189,13 +191,17 @@ export function StatusViewer({
   };
 
   const handleSendReply = async () => {
-    if (!replyText.trim() || !currentStatus || !onReplyToStatus) return;
+    if (!replyText.trim() || !currentStatus) return;
+    if (!onReplyToStatus) {
+      // Pas connecté → demander la connexion
+      onNeedAuth?.();
+      return;
+    }
     const text = replyText.trim();
     const enterpriseUserId = String(currentGroup.enterprise._id);
-    const preview = currentStatus.type === 'TEXT' ? (currentStatus.text || '') : 'IMAGE';
     setSending(true);
     try {
-      const result = await onReplyToStatus(currentStatus, enterpriseUserId, text);
+      await onReplyToStatus(currentStatus, enterpriseUserId, text);
       setReplyText('');
       Keyboard.dismiss();
       onClose();
@@ -303,7 +309,7 @@ export function StatusViewer({
                 {currentStatus.viewCount ?? 0} vue{(currentStatus.viewCount ?? 0) !== 1 ? 's' : ''}
               </Text>
             </View>
-          ) : onReplyToStatus ? (
+          ) : (onReplyToStatus || onNeedAuth) ? (
             /* Input de réponse */
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }} pointerEvents="box-none">
               <TextInput
