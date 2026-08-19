@@ -2261,8 +2261,33 @@ export default function ConversationDetails() {
         }
       : null,
   });
+  const ChatWallpaper = () => {
+    const opacity = isDark ? 0.07 : 0.09;
+    const color = '#10B981';
+    const icons = [
+      'chatbubble-outline', 'heart-outline', 'star-outline', 'sparkles-outline',
+      'leaf-outline', 'bag-handle-outline', 'storefront-outline', 'happy-outline',
+      'flower-outline', 'ribbon-outline', 'pricetag-outline', 'gift-outline',
+    ] as const;
+    const GAP_X = 72, GAP_Y = 64;
+    const items: React.ReactElement[] = [];
+    for (let r = 0; r < 16; r++) {
+      for (let c = 0; c < 7; c++) {
+        const icon = icons[(r * 5 + c * 3) % icons.length];
+        const rot = ((r * 47 + c * 83) % 360);
+        items.push(
+          <View key={`${r}-${c}`} style={{ position: 'absolute', top: r * GAP_Y + (c % 2 === 1 ? GAP_Y / 2 : 0), left: c * GAP_X, opacity, transform: [{ rotate: `${rot}deg` }] }}>
+            <Ionicons name={icon} size={22} color={color} />
+          </View>
+        );
+      }
+    }
+    return <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} pointerEvents="none">{items}</View>;
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: isDark ? '#0F1923' : '#EEF2F7' }}>
+      <ChatWallpaper />
       <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
       {/* Header */}
       <LinearGradient
