@@ -11,11 +11,13 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Image } from "expo-image";
 import {
   ActivityIndicator,
+  Animated,
   BackHandler,
   Dimensions,
   FlatList,
   Keyboard,
   Modal,
+  Pressable,
   RefreshControl,
   ScrollView,
   Text,
@@ -131,11 +133,15 @@ export default function EnterpriseDashboard() {
   const [selectedNeighborhood, setSelectedNeighborhood] = useState("");
   const [cityModalVisible, setCityModalVisible] = useState(false);
   const [neighborhoodModalVisible, setNeighborhoodModalVisible] = useState(false);
+  const [neighborhoodSearch, setNeighborhoodSearch] = useState('');
+  const [citySearch, setCitySearch] = useState('');
 
   // États pour la recherche
   const [searchQuery, setSearchQuery] = useState("");
   const [searchSuggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [dropdownAnim] = useState(() => new Animated.Value(0));
+  const [resultsAnim] = useState(() => new Animated.Value(0));
   const [loadingSearch, setLoadingSearch] = useState(false);
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [searchTimeout, setSearchTimeout] = useState<any>(null);
@@ -228,6 +234,32 @@ export default function EnterpriseDashboard() {
     loadRecentSearches();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Animation dropdown recherche
+  useEffect(() => {
+    if (showSuggestions || showRecentSearches) {
+      dropdownAnim.setValue(0);
+      Animated.spring(dropdownAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 80,
+        friction: 12,
+      }).start();
+    }
+  }, [showSuggestions, showRecentSearches]);
+
+  // Animation résultats de recherche
+  useEffect(() => {
+    if (showSearchResults) {
+      resultsAnim.setValue(0);
+      Animated.spring(resultsAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 70,
+        friction: 11,
+      }).start();
+    }
+  }, [showSearchResults]);
 
   useEffect(() => {
     setSelectedNeighborhood("");
@@ -491,10 +523,16 @@ export default function EnterpriseDashboard() {
 
   // Fonction pour masquer les résultats de recherche (parité client)
   const hideSearchResults = () => {
-    setShowSearchResults(false);
-    setSearchResults([]);
-    setSearchInfo(null);
     Keyboard.dismiss();
+    Animated.timing(resultsAnim, {
+      toValue: 0,
+      duration: 220,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowSearchResults(false);
+      setSearchResults([]);
+      setSearchInfo(null);
+    });
   };
 
   const getSuggestions = async (query: string) => {
@@ -641,7 +679,13 @@ export default function EnterpriseDashboard() {
   // Fonctions pour les modales de sélection
   const selectCity = (cityName: string) => {
     setSelectedCity(cityName);
+    setCitySearch('');
     setCityModalVisible(false);
+    if (cityName) {
+      setTimeout(() => setNeighborhoodModalVisible(true), 350);
+    } else {
+      setSelectedNeighborhood('');
+    }
   };
 
   const selectNeighborhood = (neighborhoodName: string) => {
@@ -892,65 +936,124 @@ export default function EnterpriseDashboard() {
       </LinearGradient>
 
       {/* Search Section Floating Over Header */}
-      <View className="-mt-14 px-4">
-        <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="rounded-3xl shadow-xl shadow-emerald-900/10 border p-2">
-          <View style={{ backgroundColor: isDark ? colors.tertiary : "#F9FAFB", borderColor: colors.border }} className="flex-row items-center px-3 py-2 rounded-2xl border">
-            <Ionicons name="search" size={22} color={colors.brandPrimary} />
-            <TextInput
-              style={{ color: colors.textPrimary }}
-              className="flex-1 ml-3 font-quicksand-semibold text-base"
-              placeholder={i18n.t("enterprise.dashboard.search.placeholder")}
-              placeholderTextColor={colors.textTertiary}
-              value={searchQuery}
-              onChangeText={handleSearchChange}
-              onFocus={handleSearchInputFocus}
-              onBlur={handleSearchInputBlur}
-              onSubmitEditing={() => performSearch()}
-              returnKeyType="search"
+      <View className="-mt-14 px-4" style={{ zIndex: 50 }}>
+        <View style={{
+          backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1,
+          borderRadius: 20, flexDirection: 'row', alignItems: 'center',
+          paddingLeft: 14, height: 50, overflow: 'hidden',
+        }}>
+          <Ionicons name="search" size={20} color={colors.brandPrimary} />
+          <TextInput
+            style={{ flex: 1, marginLeft: 10, color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 15 }}
+            placeholder={i18n.t("enterprise.dashboard.search.placeholder")}
+            placeholderTextColor={colors.textTertiary}
+            value={searchQuery}
+            onChangeText={handleSearchChange}
+            onFocus={handleSearchInputFocus}
+            onBlur={handleSearchInputBlur}
+            onSubmitEditing={() => performSearch()}
+            returnKeyType="search"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')} style={{ paddingRight: 8 }}>
+              <Ionicons name="close-circle" size={18} color="#9CA3AF" />
+            </TouchableOpacity>
+          )}
+          <View style={{ width: 1, height: 26, backgroundColor: colors.border }} />
+          <TouchableOpacity
+            onPress={() => setCityModalVisible(true)}
+            activeOpacity={0.8}
+            style={{
+              flexDirection: 'row', alignItems: 'center',
+              paddingHorizontal: 12, height: 50,
+              backgroundColor: selectedCity ? (isDark ? 'rgba(16,185,129,0.15)' : '#ECFDF5') : 'transparent',
+            }}
+          >
+            <Ionicons
+              name={selectedCity ? "location" : "location-outline"}
+              size={16}
+              color={selectedCity ? '#10B981' : colors.textSecondary}
             />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery('')} className="mr-2">
-                <Ionicons name="close-circle" size={18} color="#9CA3AF" />
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* Location Chips inside Search Card */}
-          <View className={`flex-row mt-3 ${isSmallScreen ? 'px-0' : 'px-1'} pb-1`}>
-            <View
-              style={{ backgroundColor: selectedCity ? (isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5") : (isDark ? colors.tertiary : "#F3F4F6") }}
-              className={`flex-1 flex-row items-center py-2 px-2 rounded-xl ${isSmallScreen ? 'mr-1' : 'mr-2'}`}
-            >
-              <TouchableOpacity className="flex-1 flex-row items-center" onPress={() => setCityModalVisible(true)}>
-                <Ionicons name="location" size={14} color={selectedCity ? colors.brandSecondary : colors.textSecondary} />
-                <Text style={{ color: selectedCity ? colors.brandSecondary : colors.textSecondary }} numberOfLines={1} className="ml-1.5 text-xs font-quicksand-bold flex-1">
-                  {selectedCity || 'Toutes les villes'}
-                </Text>
-              </TouchableOpacity>
-              {!!selectedCity && (
-                <TouchableOpacity onPress={() => { setSelectedCity(""); setSelectedNeighborhood(""); }} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }} className="ml-1">
-                  <Ionicons name="close-circle" size={14} color={colors.brandSecondary} />
-                </TouchableOpacity>
-              )}
-            </View>
-            <View
-              style={{ backgroundColor: selectedCity ? (isDark ? colors.tertiary : "#F3F4F6") : (isDark ? colors.tertiary : "#F9FAFB"), opacity: selectedCity ? 1 : 0.5 }}
-              className={`flex-1 flex-row items-center py-2 px-2 rounded-xl ${isSmallScreen ? 'ml-1' : 'ml-2'}`}
-            >
-              <TouchableOpacity className="flex-1 flex-row items-center" onPress={() => selectedCity && setNeighborhoodModalVisible(true)} disabled={!selectedCity}>
-                <Ionicons name="map" size={14} color={colors.textSecondary} />
-                <Text style={{ color: colors.textSecondary }} numberOfLines={1} className="ml-1.5 text-xs font-quicksand-bold flex-1">
-                  {selectedNeighborhood || i18n.t("enterprise.dashboard.search.neighborhoodPlaceholder")}
-                </Text>
-              </TouchableOpacity>
-              {!!selectedNeighborhood && (
-                <TouchableOpacity onPress={() => setSelectedNeighborhood("")} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }} className="ml-1">
-                  <Ionicons name="close-circle" size={14} color={colors.textSecondary} />
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
+            <Text numberOfLines={1} style={{
+              marginLeft: 5, fontSize: 13, fontFamily: 'Quicksand-SemiBold',
+              color: selectedCity ? '#059669' : colors.textSecondary,
+              maxWidth: 70,
+            }}>
+              {selectedCity || 'Lieu'}
+            </Text>
+          </TouchableOpacity>
         </View>
+
+        {/* Dropdown — position absolute, animé, par-dessus le contenu */}
+        {(showSuggestions || showRecentSearches) && (
+          <Animated.View style={{
+            position: 'absolute',
+            top: 56, left: 0, right: 0,
+            backgroundColor: colors.card,
+            borderRadius: 16, maxHeight: 360,
+            borderWidth: 1, borderColor: colors.border,
+            zIndex: 100,
+            opacity: dropdownAnim,
+            transform: [{
+              translateY: dropdownAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [-10, 0],
+              })
+            }]
+          }}>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              {showRecentSearches && recentSearches.length > 0 && (
+                <View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 6 }}>
+                    <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Quicksand-SemiBold' }}>
+                      Recherches récentes
+                    </Text>
+                    <TouchableOpacity onPress={clearSearchHistory}>
+                      <Text style={{ color: '#10B981', fontSize: 12, fontFamily: 'Quicksand-SemiBold' }}>
+                        Effacer tout
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  {recentSearches.map((search: RecentSearch, index: number) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 11 }}
+                      onPress={() => { setSearchQuery(search.query); performSearch(search.query); }}
+                    >
+                      <Ionicons name="time-outline" size={15} color={colors.textSecondary} />
+                      <Text style={{ flex: 1, marginLeft: 12, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', fontSize: 14 }} numberOfLines={1}>
+                        {search.query}
+                      </Text>
+                      <TouchableOpacity onPress={() => removeFromSearchHistory(search.query)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                        <Ionicons name="close" size={14} color={colors.textSecondary} />
+                      </TouchableOpacity>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+              {showSuggestions && searchSuggestions.length > 0 && (
+                <View style={showRecentSearches ? { borderTopWidth: 1, borderTopColor: colors.border, marginTop: 4 } : {}}>
+                  {searchSuggestions.map((suggestion: any, index: number) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 11 }}
+                      onPress={() => selectSuggestion(suggestion)}
+                    >
+                      <View style={{ width: 30, height: 30, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.secondary }}>
+                        <Ionicons name="search" size={14} color={colors.textSecondary} />
+                      </View>
+                      <Text style={{ flex: 1, marginLeft: 12, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', fontSize: 14 }} numberOfLines={1}>
+                        {suggestion.text || suggestion.value || suggestion.query || suggestion.name || ''}
+                      </Text>
+                      <Ionicons name="arrow-forward" size={14} color={colors.textSecondary} />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+              <View style={{ height: 8 }} />
+            </ScrollView>
+          </Animated.View>
+        )}
       </View>
     </View>
   );
@@ -972,85 +1075,6 @@ export default function EnterpriseDashboard() {
         <>
           {renderHeader()}
 
-          {/* Search Suggestions - Positioned Absolutely Below Search Card */}
-          {(showSuggestions || showRecentSearches) && (
-            <View
-              style={{
-                backgroundColor: colors.card,
-                borderColor: colors.border,
-                // Header: insets.top + 10 + 80 (paddingBottom)
-                // Search card: -mt-14 (-56px) 
-                // Search card height: ~130px (p-2 + input + chips)
-                // Total: insets.top + 90 - 56 + 130 + 10 (spacing) = insets.top + 174
-                top: insets.top + 174,
-                left: 16,
-                right: 16,
-                maxHeight: 400
-              }}
-              className="absolute rounded-b-2xl shadow-lg border-t z-40"
-            >
-              <ScrollView showsVerticalScrollIndicator={false}>
-                {showSuggestions && searchSuggestions.length > 0 && (
-                  <View className="py-2">
-                    <Text style={{ color: colors.textSecondary }} className="px-4 py-2 text-xs font-quicksand-bold uppercase">
-                      Suggestions
-                    </Text>
-                    {searchSuggestions.map((suggestion: any, index: number) => (
-                      <TouchableOpacity
-                        key={index}
-                        style={{ borderColor: colors.border }}
-                        className="px-4 py-3 flex-row items-center border-b"
-                        onPress={() => selectSuggestion(suggestion)}
-                      >
-                        <Ionicons name="search" size={18} color={colors.textTertiary} />
-                        <Text style={{ color: colors.textPrimary }} className="ml-3 font-quicksand-medium flex-1">
-                          {suggestion.text || suggestion.value || suggestion.query || suggestion.name || ''}
-                        </Text>
-                        <Ionicons name="arrow-forward" size={16} color={colors.textTertiary} />
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                )}
-
-                {showRecentSearches && recentSearches.length > 0 && (
-                  <View className="py-2">
-                    <View className="px-4 py-2 flex-row justify-between items-center">
-                      <Text style={{ color: colors.textSecondary }} className="text-xs font-quicksand-bold uppercase">
-                        Recherches récentes
-                      </Text>
-                      <TouchableOpacity onPress={clearSearchHistory}>
-                        <Text style={{ color: colors.brandPrimary }} className="text-xs font-quicksand-semibold">
-                          Effacer tout
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                    {recentSearches.map((search: RecentSearch, index: number) => (
-                      <TouchableOpacity
-                        key={index}
-                        style={{ borderColor: colors.border }}
-                        className="px-4 py-3 flex-row items-center border-b"
-                        onPress={() => {
-                          setSearchQuery(search.query);
-                          performSearch(search.query);
-                        }}
-                      >
-                        <Ionicons name="time-outline" size={18} color={colors.textTertiary} />
-                        <Text style={{ color: colors.textPrimary }} className="ml-3 font-quicksand-medium flex-1">
-                          {search.query}
-                        </Text>
-                        <TouchableOpacity
-                          onPress={() => removeFromSearchHistory(search.query)}
-                          className="p-1"
-                        >
-                          <Ionicons name="close-circle" size={18} color={colors.textTertiary} />
-                        </TouchableOpacity>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                )}
-              </ScrollView>
-            </View>
-          )}
 
           <ScrollView
             className="flex-1"
@@ -1079,20 +1103,14 @@ export default function EnterpriseDashboard() {
           >
             {renderSearchSection()}
 
-            {/* Statuts */}
-            {statusGroups.length > 0 || userRole === 'ENTERPRISE' ? (
-              <StatusBarComponent
-                groups={statusGroups}
-                currentUserId={statusCurrentUserId}
-                isEnterprise={userRole === 'ENTERPRISE'}
-                onPressGroup={handlePressStatusGroup}
-                onPressAdd={() => setCreatorVisible(true)}
-              />
-            ) : null}
-
-            {/* Résultats de recherche */}
+            {/* Résultats de recherche — avant les statuts */}
             {showSearchResults && (
-              <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="px-4 py-4 border-b">
+              <Animated.View style={{
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+                opacity: resultsAnim,
+                transform: [{ translateY: resultsAnim.interpolate({ inputRange: [0, 1], outputRange: [-20, 0] }) }],
+              }} className="px-4 py-4 border-b">
                 {/* En-tête résultats + toggle vue */}
                 <View className="flex-row items-center justify-between">
                   <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold flex-1">
@@ -1318,8 +1336,19 @@ export default function EnterpriseDashboard() {
                     </TouchableOpacity>
                   </View>
                 )}
-              </View>
+              </Animated.View>
             )}
+
+            {/* Statuts */}
+            {statusGroups.length > 0 || userRole === 'ENTERPRISE' ? (
+              <StatusBarComponent
+                groups={statusGroups}
+                currentUserId={statusCurrentUserId}
+                isEnterprise={userRole === 'ENTERPRISE'}
+                onPressGroup={handlePressStatusGroup}
+                onPressAdd={() => setCreatorVisible(true)}
+              />
+            ) : null}
 
             {/* Boosted Ads Carousel (amélioré avec images et overlay) */}
             <View className="py-4">
@@ -1582,50 +1611,77 @@ export default function EnterpriseDashboard() {
         animationType="slide"
         transparent={true}
         visible={cityModalVisible}
-        onRequestClose={() => setCityModalVisible(false)}
+        onRequestClose={() => { setCityModalVisible(false); setCitySearch(''); }}
       >
-        <View className="flex-1 bg-transparent justify-end">
-          <View style={{ backgroundColor: colors.card }} className="rounded-t-3xl pb-10 pt-4 px-4 shadow-xl">
-            <View className="flex-row justify-between items-center mb-6">
-              <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold">
+        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' }}>
+          <Pressable style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} onPress={() => { setCityModalVisible(false); setCitySearch(''); }} />
+          <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: '80%' }}>
+            {/* Handle */}
+            <View style={{ alignItems: 'center', paddingTop: 10, paddingBottom: 6 }}>
+              <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
+            </View>
+
+            {/* Header */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 14 }}>
+              <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: isDark ? 'rgba(16,185,129,0.2)' : '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+                <Ionicons name="earth" size={18} color="#10B981" />
+              </View>
+              <Text style={{ flex: 1, color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 17 }}>
                 {i18n.t("enterprise.dashboard.modals.city.title")}
               </Text>
-              <TouchableOpacity onPress={() => setCityModalVisible(false)}>
-                <Ionicons name="close" size={24} color={colors.textSecondary} />
+              <TouchableOpacity
+                onPress={() => { setCityModalVisible(false); setCitySearch(''); }}
+                style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Ionicons name="close" size={16} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
-            <FlatList
-              data={beninCities}
-              keyExtractor={(item) => item.id.toString()}
-              ListHeaderComponent={
-                <TouchableOpacity
-                  onPress={() => selectCity("")}
-                  style={{ borderColor: colors.border }}
-                  className="py-3 border-b"
-                >
-                  <Text
-                    style={{ color: !selectedCity ? colors.brandPrimary : colors.textSecondary }}
-                    className="text-base font-quicksand-medium"
-                  >
-                    Toutes les villes
-                  </Text>
-                </TouchableOpacity>
-              }
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  onPress={() => selectCity(item.name)}
-                  style={{ borderColor: colors.border }}
-                  className="py-3 border-b"
-                >
-                  <Text
-                    style={{ color: selectedCity === item.name ? colors.brandPrimary : colors.textPrimary }}
-                    className={`text-base font-quicksand-medium`}
-                  >
-                    {item.name}
-                  </Text>
+            {/* Search */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginBottom: 10, paddingHorizontal: 12, height: 42, borderRadius: 12, backgroundColor: colors.secondary }}>
+              <Ionicons name="search" size={16} color={colors.textSecondary} style={{ marginRight: 8 }} />
+              <TextInput
+                value={citySearch}
+                onChangeText={setCitySearch}
+                placeholder="Rechercher une ville..."
+                placeholderTextColor={colors.textSecondary}
+                style={{ flex: 1, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', fontSize: 14 }}
+              />
+              {citySearch.length > 0 && (
+                <TouchableOpacity onPress={() => setCitySearch('')}>
+                  <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
                 </TouchableOpacity>
               )}
+            </View>
+
+            <FlatList
+              data={[{ id: 0, name: '' }, ...beninCities].filter(c =>
+                c.name === '' || c.name.toLowerCase().includes(citySearch.toLowerCase())
+              )}
+              keyExtractor={(item) => item.id.toString()}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
+              renderItem={({ item }) => {
+                const isAll = item.name === '';
+                const selected = isAll ? !selectedCity : selectedCity === item.name;
+                return (
+                  <TouchableOpacity
+                    onPress={() => { selectCity(item.name); setCitySearch(''); }}
+                    activeOpacity={0.7}
+                    style={{
+                      flexDirection: 'row', alignItems: 'center',
+                      paddingVertical: 13, paddingHorizontal: 12,
+                      marginBottom: 4, borderRadius: 12,
+                      backgroundColor: selected ? (isDark ? 'rgba(16,185,129,0.12)' : '#ECFDF5') : 'transparent',
+                    }}
+                  >
+                    <Text style={{ flex: 1, color: selected ? '#10B981' : colors.textPrimary, fontFamily: selected ? 'Quicksand-Bold' : 'Quicksand-Medium', fontSize: 15 }}>
+                      {isAll ? 'Toutes les villes' : item.name}
+                    </Text>
+                    {selected && <Ionicons name="checkmark-circle" size={18} color="#10B981" />}
+                  </TouchableOpacity>
+                );
+              }}
             />
           </View>
         </View>
@@ -1636,37 +1692,74 @@ export default function EnterpriseDashboard() {
         animationType="slide"
         transparent={true}
         visible={neighborhoodModalVisible}
-        onRequestClose={() => setNeighborhoodModalVisible(false)}
+        onRequestClose={() => { setNeighborhoodModalVisible(false); setNeighborhoodSearch(''); }}
       >
-        <View className="flex-1 bg-transparent justify-end">
-          <View style={{ backgroundColor: colors.card }} className="rounded-t-3xl pb-10 pt-4 px-4 shadow-xl">
-            <View className="flex-row justify-between items-center mb-6">
-              <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold">
+        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' }}>
+          <Pressable style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} onPress={() => { setNeighborhoodModalVisible(false); setNeighborhoodSearch(''); }} />
+          <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: '80%' }}>
+            {/* Handle */}
+            <View style={{ alignItems: 'center', paddingTop: 10, paddingBottom: 6 }}>
+              <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
+            </View>
+
+            {/* Header */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 14 }}>
+              <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: isDark ? 'rgba(16,185,129,0.2)' : '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+                <Ionicons name="location" size={18} color="#10B981" />
+              </View>
+              <Text style={{ flex: 1, color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 17 }}>
                 {i18n.t("enterprise.dashboard.modals.neighborhood.title", { city: selectedCity })}
               </Text>
               <TouchableOpacity
-                onPress={() => setNeighborhoodModalVisible(false)}
+                onPress={() => { setNeighborhoodModalVisible(false); setNeighborhoodSearch(''); }}
+                style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center' }}
               >
-                <Ionicons name="close" size={24} color={colors.textSecondary} />
+                <Ionicons name="close" size={17} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
-            <FlatList
-              data={neighborhoodsByCity[selectedCity] || []}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  onPress={() => selectNeighborhood(item)}
-                  className="py-3 border-b border-gray-100"
-                >
-                  <Text
-                    style={{ color: selectedNeighborhood === item ? colors.brandPrimary : colors.textPrimary }}
-                    className={`text-base font-quicksand-medium`}
-                  >
-                    {item}
-                  </Text>
+            {/* Recherche */}
+            <View style={{ marginHorizontal: 20, marginBottom: 12, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.secondary, borderRadius: 12, paddingHorizontal: 12, borderWidth: 1, borderColor: colors.border }}>
+              <Ionicons name="search" size={16} color={colors.textSecondary} style={{ marginRight: 8 }} />
+              <TextInput
+                value={neighborhoodSearch}
+                onChangeText={setNeighborhoodSearch}
+                placeholder="Rechercher un quartier..."
+                placeholderTextColor={colors.textSecondary}
+                style={{ flex: 1, paddingVertical: 11, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', fontSize: 14 }}
+              />
+              {neighborhoodSearch.length > 0 && (
+                <TouchableOpacity onPress={() => setNeighborhoodSearch('')}>
+                  <Ionicons name="close-circle" size={16} color={colors.textSecondary} />
                 </TouchableOpacity>
               )}
+            </View>
+
+            <FlatList
+              data={(neighborhoodsByCity[selectedCity] || []).filter(n => n.toLowerCase().includes(neighborhoodSearch.toLowerCase()))}
+              keyExtractor={(item, index) => index.toString()}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
+              renderItem={({ item }) => {
+                const selected = selectedNeighborhood === item;
+                return (
+                  <TouchableOpacity
+                    onPress={() => { selectNeighborhood(item); setNeighborhoodSearch(''); }}
+                    activeOpacity={0.7}
+                    style={{
+                      flexDirection: 'row', alignItems: 'center',
+                      paddingVertical: 13, paddingHorizontal: 12,
+                      marginBottom: 4, borderRadius: 12,
+                      backgroundColor: selected ? (isDark ? 'rgba(16,185,129,0.12)' : '#ECFDF5') : 'transparent',
+                    }}
+                  >
+                    <Text style={{ flex: 1, color: selected ? '#10B981' : colors.textPrimary, fontFamily: selected ? 'Quicksand-Bold' : 'Quicksand-Medium', fontSize: 15 }}>
+                      {item}
+                    </Text>
+                    {selected && <Ionicons name="checkmark-circle" size={18} color="#10B981" />}
+                  </TouchableOpacity>
+                );
+              }}
             />
           </View>
         </View>

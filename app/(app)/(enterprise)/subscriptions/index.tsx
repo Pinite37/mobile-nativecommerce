@@ -27,7 +27,7 @@ import SubscriptionService, {
 } from "../../../../services/api/SubscriptionService";
 
 const SkeletonCard = ({ colors }: { colors: any }) => (
-  <View style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 24, padding: 20, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 }}>
+  <View style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 24, padding: 20, marginBottom: 20, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4 }}>
     <View className="flex-row items-start justify-between mb-3">
       <View className="flex-1 mr-3">
         <Shimmer
@@ -364,7 +364,7 @@ function EnterpriseSubscriptionsContent() {
     return (
       <View
         key={plan.id}
-        style={{ backgroundColor: colors.card, borderRadius: 24, marginBottom: 20, overflow: 'hidden', borderWidth: 1, borderColor: colors.border, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 }}
+        style={{ backgroundColor: colors.card, borderRadius: 24, marginBottom: 20, borderWidth: 1, borderColor: colors.border, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6 }}
       >
         {/* Plan Header */}
         <View style={{ padding: 24, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}>
@@ -453,7 +453,7 @@ function EnterpriseSubscriptionsContent() {
             </View>
           ) : (
             <TouchableOpacity
-              style={{ borderRadius: 16, paddingVertical: 16, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', backgroundColor: plan.color, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 3, elevation: 3 }}
+              style={{ borderRadius: 16, paddingVertical: 16, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', backgroundColor: plan.color, elevation: 4, shadowColor: plan.color, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 8 }}
               onPress={() => handleSelectPlan(plan)}
               activeOpacity={0.8}
             >
@@ -560,7 +560,7 @@ function EnterpriseSubscriptionsContent() {
             {/* Active Subscription Card - Moved to content */}
             {subscription && subscription.isActive && (
               <View className="mb-6">
-                <View style={{ backgroundColor: colors.card, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: colors.border, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 }}>
+                <View style={{ backgroundColor: colors.card, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: colors.border, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6 }}>
                   {/* Status Badge */}
                   <View className="flex-row items-center justify-between mb-3">
                     <View className="flex-row items-center">
@@ -749,126 +749,115 @@ function EnterpriseSubscriptionsContent() {
 
             {/* Subscription Details Section */}
             {subscription && (
-              <View className="mt-2 mb-4">
-                <View style={{ backgroundColor: colors.card, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: colors.border, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 }}>
-                  <View className="flex-row items-center mb-4">
-                    <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
-                      <Ionicons
-                        name="information-circle"
-                        size={24}
-                        color="#10B981"
-                      />
-                    </View>
-                    <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 18 }}>
-                      {i18n.t("enterprise.subscriptions.details.title")}
-                    </Text>
+              <View style={{ marginTop: 8, marginBottom: 16 }}>
+                {/* Header */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? 'rgba(16,185,129,0.2)' : '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>
+                    <Ionicons name="information-circle" size={20} color="#10B981" />
                   </View>
+                  <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 17 }}>
+                    {i18n.t("enterprise.subscriptions.details.title")}
+                  </Text>
+                </View>
 
-                  {/* Payment Info */}
-                  <View style={{ backgroundColor: colors.secondary, borderRadius: 12, padding: 16, marginBottom: 16 }}>
-                    <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 14, marginBottom: 12 }}>
+                {/* Payment Info Card */}
+                <View style={{ borderRadius: 14, marginBottom: 12, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6 }}>
+                <View style={{ backgroundColor: colors.card, borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: colors.border }}>
+                  <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 4 }}>
+                    <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
                       {i18n.t("enterprise.subscriptions.details.paymentInfo")}
                     </Text>
-                    <View className="flex-row items-center justify-between mb-2.5">
-                      <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 12 }}>
-                        {i18n.t("enterprise.subscriptions.details.amount")}
-                      </Text>
-                      <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 16 }}>
-                        {subscription.payment.amount
-                          ? `${subscription.payment.amount.toLocaleString()} ${
-                              subscription.plan.price.currency
-                            }`
-                          : "N/A"}
-                      </Text>
-                    </View>
-                    <View className="flex-row items-center justify-between mb-2.5">
-                      <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 12 }}>
-                        {i18n.t("enterprise.subscriptions.details.method")}
-                      </Text>
-                      <View style={{ backgroundColor: colors.card, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 8 }}>
-                        <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 12 }}>
-                          {subscription.payment.method === "TRIAL"
-                            ? i18n.t("enterprise.subscriptions.details.trial")
-                            : subscription.payment.method}
-                        </Text>
-                      </View>
-                    </View>
-                    {subscription.payment.reference && (
-                      <View className="flex-row items-center justify-between">
-                        <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 12 }}>
-                          {i18n.t("enterprise.subscriptions.details.reference")}
-                        </Text>
-                        <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Medium', fontSize: 12 }}>
-                          {subscription.payment.reference}
-                        </Text>
-                      </View>
-                    )}
                   </View>
 
-                  {/* Features Grid */}
-                  <View style={{ backgroundColor: colors.secondary, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: colors.border }}>
-                    <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 14, marginBottom: 12 }}>
-                      {i18n.t("enterprise.subscriptions.details.features")}
+                  {/* Montant */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 13, borderTopWidth: 1, borderTopColor: colors.border }}>
+                    <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 13 }}>
+                      {i18n.t("enterprise.subscriptions.details.amount")}
                     </Text>
-                    <View className="flex-row flex-wrap">
-                      {[
-                        { key: "phone", label: i18n.t("enterprise.subscriptions.details.featuresList.phone"), icon: "call" },
-                        { key: "sms", label: i18n.t("enterprise.subscriptions.details.featuresList.sms"), icon: "chatbox" },
-                        {
-                          key: "whatsapp",
-                          label: i18n.t("enterprise.subscriptions.details.featuresList.whatsapp"),
-                          icon: "logo-whatsapp",
-                        },
-                        { key: "messaging", label: i18n.t("enterprise.subscriptions.details.featuresList.messaging"), icon: "mail" },
-                        {
-                          key: "advertisements",
-                          label: i18n.t("enterprise.subscriptions.details.featuresList.advertisements"),
-                          icon: "megaphone",
-                        },
-                      ].map(({ key, label, icon }) => {
-                        const isEnabled = subscription.plan.features[key];
-                        return (
-                          <View
-                            key={key}
-                            style={{
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              paddingHorizontal: 12,
-                              paddingVertical: 8,
-                              borderRadius: 8,
-                              marginRight: 8,
-                              marginBottom: 8,
-                              backgroundColor: isEnabled ? '#ECFDF5' : colors.card,
-                              borderWidth: 1,
-                              borderColor: isEnabled ? '#D1FAE5' : colors.border,
-                            }}
-                          >
-                            <Ionicons
-                              name={isEnabled ? "checkmark-circle" : "close-circle"}
-                              size={14}
-                              color={isEnabled ? "#10B981" : colors.textSecondary}
-                            />
-                            <Text
-                              style={{
-                                marginLeft: 6,
-                                fontFamily: 'Quicksand-SemiBold',
-                                fontSize: 12,
-                                color: isEnabled ? '#059669' : colors.textSecondary,
-                              }}
-                            >
-                              {label}
-                            </Text>
-                          </View>
-                        );
-                      })}
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 15 }}>
+                      {subscription.payment.amount
+                        ? `${subscription.payment.amount.toLocaleString()} FCFA`
+                        : "N/A"}
+                    </Text>
+                  </View>
+
+                  {/* Méthode */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 13, borderTopWidth: 1, borderTopColor: colors.border }}>
+                    <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 13 }}>
+                      {i18n.t("enterprise.subscriptions.details.method")}
+                    </Text>
+                    <View style={{ backgroundColor: isDark ? 'rgba(16,185,129,0.15)' : '#ECFDF5', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
+                      <Text style={{ color: '#059669', fontFamily: 'Quicksand-Bold', fontSize: 12 }}>
+                        {subscription.payment.method === "TRIAL"
+                          ? i18n.t("enterprise.subscriptions.details.trial")
+                          : subscription.payment.method || "—"}
+                      </Text>
                     </View>
                   </View>
+
+                  {/* Référence */}
+                  {subscription.payment.reference && (
+                    <View style={{ paddingHorizontal: 16, paddingVertical: 13, borderTopWidth: 1, borderTopColor: colors.border }}>
+                      <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 13, marginBottom: 4 }}>
+                        {i18n.t("enterprise.subscriptions.details.reference")}
+                      </Text>
+                      <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Medium', fontSize: 11, lineHeight: 16 }} numberOfLines={2} ellipsizeMode="middle">
+                        {subscription.payment.reference}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                </View>
+
+                {/* Features Card */}
+                <View style={{ borderRadius: 14, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6 }}>
+                <View style={{ backgroundColor: colors.card, borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: colors.border }}>
+                  <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 4 }}>
+                    <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+                      {i18n.t("enterprise.subscriptions.details.features")}
+                    </Text>
+                  </View>
+
+                  {[
+                    { key: "phone", label: i18n.t("enterprise.subscriptions.details.featuresList.phone"), icon: "call-outline" },
+                    { key: "sms", label: i18n.t("enterprise.subscriptions.details.featuresList.sms"), icon: "chatbox-outline" },
+                    { key: "whatsapp", label: i18n.t("enterprise.subscriptions.details.featuresList.whatsapp"), icon: "logo-whatsapp" },
+                    { key: "messaging", label: i18n.t("enterprise.subscriptions.details.featuresList.messaging"), icon: "mail-outline" },
+                    { key: "advertisements", label: i18n.t("enterprise.subscriptions.details.featuresList.advertisements"), icon: "megaphone-outline" },
+                  ].map(({ key, label, icon }, idx, arr) => {
+                    const isEnabled = subscription.plan.features[key];
+                    const isLast = idx === arr.length - 1;
+                    return (
+                      <View
+                        key={key}
+                        style={{
+                          flexDirection: 'row', alignItems: 'center',
+                          paddingHorizontal: 16, paddingVertical: 13,
+                          borderTopWidth: 1, borderTopColor: colors.border,
+                          ...(isLast ? { borderBottomLeftRadius: 14, borderBottomRightRadius: 14 } : {}),
+                        }}
+                      >
+                        <View style={{ width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginRight: 12, backgroundColor: isEnabled ? (isDark ? 'rgba(16,185,129,0.15)' : '#ECFDF5') : (isDark ? colors.secondary : '#F9FAFB') }}>
+                          <Ionicons name={icon as any} size={16} color={isEnabled ? '#10B981' : colors.textSecondary} />
+                        </View>
+                        <Text style={{ flex: 1, fontFamily: 'Quicksand-SemiBold', fontSize: 14, color: isEnabled ? colors.textPrimary : colors.textSecondary }}>
+                          {label}
+                        </Text>
+                        <Ionicons
+                          name={isEnabled ? "checkmark-circle" : "close-circle-outline"}
+                          size={20}
+                          color={isEnabled ? "#10B981" : colors.textSecondary}
+                        />
+                      </View>
+                    );
+                  })}
+                </View>
                 </View>
               </View>
             )}
 
             {/* Help Section */}
-            <View style={{ backgroundColor: colors.card, borderRadius: 16, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: colors.border, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 }}>
+            <View style={{ backgroundColor: colors.card, borderRadius: 16, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: colors.border, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6 }}>
               <View className="flex-row items-start">
                 <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#EFF6FF', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
                   <Ionicons name="help-circle" size={24} color="#3B82F6" />
@@ -880,7 +869,7 @@ function EnterpriseSubscriptionsContent() {
                   <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 12, marginBottom: 12, lineHeight: 18 }}>
                     {i18n.t("enterprise.subscriptions.help.message")}
                   </Text>
-                  <TouchableOpacity style={{ backgroundColor: '#3B82F6', alignSelf: 'flex-start', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 }}>
+                  <TouchableOpacity style={{ backgroundColor: '#3B82F6', alignSelf: 'flex-start', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, elevation: 3, shadowColor: '#3B82F6', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.3, shadowRadius: 6 }}>
                     <Text style={{ color: '#FFFFFF', fontFamily: 'Quicksand-SemiBold', fontSize: 12 }}>
                       {i18n.t("enterprise.subscriptions.help.contact")}
                     </Text>

@@ -26,6 +26,9 @@ import Animated, {
   useAnimatedRef,
   useAnimatedStyle,
   useScrollViewOffset,
+  useSharedValue,
+  withSequence,
+  withSpring,
 } from "react-native-reanimated";
 import { Shimmer } from "../../../../components/ui/Shimmer";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -75,6 +78,15 @@ export default function ProductDetails() {
   const [loadingSimilar, setLoadingSimilar] = useState(false);
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const heartScale = useSharedValue(1);
+  const heartAnimStyle = useAnimatedStyle(() => ({ transform: [{ scale: heartScale.value }] }));
+
+  const animateHeart = () => {
+    heartScale.value = withSequence(
+      withSpring(1.5, { damping: 4, stiffness: 300 }),
+      withSpring(1, { damping: 6, stiffness: 200 })
+    );
+  };
   const [isFollowing, setIsFollowing] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
   const [followLoading, setFollowLoading] = useState(false);
@@ -215,6 +227,7 @@ export default function ProductDetails() {
     if (!requireAuth("Connectez-vous pour ajouter ce produit a vos favoris.")) {
       return;
     }
+    animateHeart();
 
     try {
       if (isFavorite) {
@@ -575,11 +588,13 @@ export default function ProductDetails() {
                 onPress={toggleFavorite}
                 className="w-10 h-10 justify-center items-center mr-1"
               >
-                <Ionicons
-                  name={isFavorite ? "heart" : "heart-outline"}
-                  size={22}
-                  color={isFavorite ? "#EF4444" : "#000"}
-                />
+                <Animated.View style={heartAnimStyle}>
+                  <Ionicons
+                    name={isFavorite ? "heart" : "heart-outline"}
+                    size={22}
+                    color={isFavorite ? "#EF4444" : "#000"}
+                  />
+                </Animated.View>
               </TouchableOpacity>
             )}
             <TouchableOpacity
@@ -651,11 +666,13 @@ export default function ProductDetails() {
             onPress={toggleFavorite}
             className="w-10 h-10 bg-black/30 rounded-full justify-center items-center mr-2"
           >
-            <Ionicons
-              name={isFavorite ? "heart" : "heart-outline"}
-              size={20}
-              color={isFavorite ? "#EF4444" : "#FFFFFF"}
-            />
+            <Animated.View style={heartAnimStyle}>
+              <Ionicons
+                name={isFavorite ? "heart" : "heart-outline"}
+                size={20}
+                color={isFavorite ? "#EF4444" : "#FFFFFF"}
+              />
+            </Animated.View>
           </TouchableOpacity>
         )}
         <TouchableOpacity

@@ -15,7 +15,9 @@ import {
     Dimensions,
     FlatList,
     Keyboard,
+    Animated,
     Modal,
+    Pressable,
     RefreshControl,
     ScrollView,
     Text,
@@ -108,6 +110,8 @@ export default function ClientHome() {
     const [selectedNeighborhood, setSelectedNeighborhood] = useState("");
     const [cityModalVisible, setCityModalVisible] = useState(false);
     const [neighborhoodModalVisible, setNeighborhoodModalVisible] = useState(false);
+    const [neighborhoodSearch, setNeighborhoodSearch] = useState('');
+    const [citySearch, setCitySearch] = useState('');
     // const [currentAdIndex, setCurrentAdIndex] = useState(0); // Removed unused
     const [refreshing, setRefreshing] = useState(false);
     const [imageRefreshKey, setImageRefreshKey] = useState(0); // Clé pour forcer le rechargement des images
@@ -116,6 +120,8 @@ export default function ClientHome() {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchSuggestions, setSuggestions] = useState<any[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [dropdownAnim] = useState(() => new Animated.Value(0));
+    const [resultsAnim] = useState(() => new Animated.Value(0));
     const [loadingSearch, setLoadingSearch] = useState(false);
     const [searchTimeout, setSearchTimeout] = useState<any>(null);
     const [searchResults, setSearchResults] = useState<Product[]>([]);
@@ -207,6 +213,32 @@ export default function ClientHome() {
         setSelectedNeighborhood("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedCity]);
+
+    // Animation dropdown recherche
+    useEffect(() => {
+        if (showSuggestions || showRecentSearches) {
+            dropdownAnim.setValue(0);
+            Animated.spring(dropdownAnim, {
+                toValue: 1,
+                useNativeDriver: true,
+                tension: 80,
+                friction: 12,
+            }).start();
+        }
+    }, [showSuggestions, showRecentSearches]);
+
+    // Animation résultats de recherche
+    useEffect(() => {
+        if (showSearchResults) {
+            resultsAnim.setValue(0);
+            Animated.spring(resultsAnim, {
+                toValue: 1,
+                useNativeDriver: true,
+                tension: 70,
+                friction: 11,
+            }).start();
+        }
+    }, [showSearchResults]);
 
     // Gestion du bouton retour pour masquer les résultats de recherche et suggestions
     useEffect(() => {
@@ -491,10 +523,16 @@ export default function ClientHome() {
 
     // Fonction pour masquer les résultats de recherche
     const hideSearchResults = () => {
-        setShowSearchResults(false);
-        setSearchResults([]);
-        setSearchInfo(null);
         Keyboard.dismiss();
+        Animated.timing(resultsAnim, {
+            toValue: 0,
+            duration: 220,
+            useNativeDriver: true,
+        }).start(() => {
+            setShowSearchResults(false);
+            setSearchResults([]);
+            setSearchInfo(null);
+        });
     };
 
     const getSuggestions = async (query: string) => {
@@ -612,7 +650,13 @@ export default function ClientHome() {
     // Fonction pour sélectionner une ville
     const selectCity = (cityName: string) => {
         setSelectedCity(cityName);
+        setCitySearch('');
         setCityModalVisible(false);
+        if (cityName) {
+            setTimeout(() => setNeighborhoodModalVisible(true), 350);
+        } else {
+            setSelectedNeighborhood('');
+        }
     };
 
     // Fonction pour sélectionner un quartier
@@ -775,65 +819,129 @@ export default function ClientHome() {
             </LinearGradient>
 
             {/* Search Section Floating Over Header */}
-            <View className="-mt-14 px-4">
-                <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="rounded-3xl shadow-xl p-2 border">
-                    <View style={{ backgroundColor: colors.secondary, borderColor: colors.border }} className="flex-row items-center px-3 py-2 rounded-2xl border">
-                        <Ionicons name="search" size={22} color="#10B981" />
-                        <TextInput
-                            style={{ color: colors.textPrimary }}
-                            className="flex-1 ml-3 font-quicksand-semibold text-base"
-                            placeholder={i18n.t('client.home.search.placeholder')}
-                            placeholderTextColor={colors.textSecondary}
-                            value={searchQuery}
-                            onChangeText={handleSearchChange}
-                            onFocus={handleSearchInputFocus}
-                            onBlur={handleSearchInputBlur}
-                            onSubmitEditing={() => performSearch()}
-                            returnKeyType="search"
+            <View className="-mt-14 px-4" style={{ zIndex: 50 }}>
+                <View style={{
+                    backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1,
+                    borderRadius: 20, flexDirection: 'row', alignItems: 'center',
+                    paddingLeft: 14, height: 50, overflow: 'hidden',
+                }}>
+                    <Ionicons name="search" size={20} color="#10B981" />
+                    <TextInput
+                        style={{ flex: 1, marginLeft: 10, color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 15 }}
+                        placeholder={i18n.t('client.home.search.placeholder')}
+                        placeholderTextColor={colors.textSecondary}
+                        value={searchQuery}
+                        onChangeText={handleSearchChange}
+                        onFocus={handleSearchInputFocus}
+                        onBlur={handleSearchInputBlur}
+                        onSubmitEditing={() => performSearch()}
+                        returnKeyType="search"
+                    />
+                    {searchQuery.length > 0 && (
+                        <TouchableOpacity onPress={() => setSearchQuery('')} style={{ paddingRight: 8 }}>
+                            <Ionicons name="close-circle" size={18} color="#9CA3AF" />
+                        </TouchableOpacity>
+                    )}
+                    <View style={{ width: 1, height: 26, backgroundColor: colors.border }} />
+                    <TouchableOpacity
+                        onPress={() => setCityModalVisible(true)}
+                        activeOpacity={0.8}
+                        style={{
+                            flexDirection: 'row', alignItems: 'center',
+                            paddingHorizontal: 12, height: 50,
+                            backgroundColor: selectedCity ? (isDark ? 'rgba(16,185,129,0.15)' : '#ECFDF5') : 'transparent',
+                        }}
+                    >
+                        <Ionicons
+                            name={selectedCity ? "location" : "location-outline"}
+                            size={16}
+                            color={selectedCity ? '#10B981' : colors.textSecondary}
                         />
-                        {searchQuery.length > 0 && (
-                            <TouchableOpacity onPress={() => setSearchQuery('')} className="mr-2">
-                                <Ionicons name="close-circle" size={18} color="#9CA3AF" />
-                            </TouchableOpacity>
-                        )}
-                    </View>
-
-                    {/* Location Chips inside Search Card */}
-                    <View className="flex-row mt-3 px-1 pb-1">
-                        <View
-                            className={`flex-1 flex-row items-center py-2 px-2 rounded-xl ${isSmallScreen ? 'mr-1' : 'mr-2'}`}
-                            style={{ backgroundColor: selectedCity ? (isDark ? 'rgba(16, 185, 129, 0.15)' : '#D1FAE5') : colors.secondary }}
-                        >
-                            <TouchableOpacity className="flex-1 flex-row items-center" onPress={() => setCityModalVisible(true)}>
-                                <Ionicons name="location" size={14} color={selectedCity ? "#059669" : colors.textSecondary} />
-                                <Text style={{ color: selectedCity ? colors.brandSecondary : colors.textSecondary }} numberOfLines={1} className="ml-1.5 text-xs font-quicksand-bold flex-1">
-                                    {selectedCity || 'Toutes les villes'}
-                                </Text>
-                            </TouchableOpacity>
-                            {!!selectedCity && (
-                                <TouchableOpacity onPress={() => { setSelectedCity(""); setSelectedNeighborhood(""); }} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }} className="ml-1">
-                                    <Ionicons name="close-circle" size={14} color="#059669" />
-                                </TouchableOpacity>
-                            )}
-                        </View>
-                        <View
-                            style={{ backgroundColor: selectedCity ? colors.secondary : colors.border, opacity: selectedCity ? 1 : 0.5 }}
-                            className={`flex-1 flex-row items-center py-2 px-2 rounded-xl ${isSmallScreen ? 'ml-1' : 'ml-2'}`}
-                        >
-                            <TouchableOpacity className="flex-1 flex-row items-center" onPress={() => selectedCity && setNeighborhoodModalVisible(true)} disabled={!selectedCity}>
-                                <Ionicons name="map" size={14} color={colors.textSecondary} />
-                                <Text numberOfLines={1} style={{ color: colors.textPrimary }} className="ml-1.5 text-xs font-quicksand-bold flex-1">
-                                    {selectedNeighborhood || i18n.t('client.home.location.neighborhood')}
-                                </Text>
-                            </TouchableOpacity>
-                            {!!selectedNeighborhood && (
-                                <TouchableOpacity onPress={() => setSelectedNeighborhood("")} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }} className="ml-1">
-                                    <Ionicons name="close-circle" size={14} color={colors.textSecondary} />
-                                </TouchableOpacity>
-                            )}
-                        </View>
-                    </View>
+                        <Text numberOfLines={1} style={{
+                            marginLeft: 5, fontSize: 13, fontFamily: 'Quicksand-SemiBold',
+                            color: selectedCity ? '#059669' : colors.textSecondary,
+                            maxWidth: 70,
+                        }}>
+                            {selectedCity || 'Lieu'}
+                        </Text>
+                    </TouchableOpacity>
                 </View>
+
+                {/* Dropdown — position absolute, animé, par-dessus le contenu */}
+                {(showSuggestions || showRecentSearches) && (
+                    <Animated.View style={{
+                        position: 'absolute',
+                        top: 56, left: 0, right: 0,
+                        backgroundColor: colors.card,
+                        borderRadius: 16, maxHeight: 360,
+                        borderWidth: 1, borderColor: colors.border,
+                        zIndex: 100,
+                        opacity: dropdownAnim,
+                        transform: [{
+                            translateY: dropdownAnim.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [-10, 0],
+                            })
+                        }]
+                    }}>
+                        <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                            {showRecentSearches && recentSearches.length > 0 && (
+                                <View>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 6 }}>
+                                        <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Quicksand-SemiBold' }}>
+                                            {i18n.t('client.home.search.recentSearches')}
+                                        </Text>
+                                        <TouchableOpacity onPress={clearSearchHistory}>
+                                            <Text style={{ color: '#10B981', fontSize: 12, fontFamily: 'Quicksand-SemiBold' }}>
+                                                {i18n.t('client.home.search.clearHistory')}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                    {recentSearches.slice(0, 5).map((recentSearch, index) => (
+                                        <TouchableOpacity
+                                            key={index}
+                                            style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 11 }}
+                                            onPress={() => { setSearchQuery(recentSearch.query); performSearch(recentSearch.query); }}
+                                        >
+                                            <Ionicons name="time-outline" size={15} color={colors.textSecondary} />
+                                            <Text style={{ flex: 1, marginLeft: 12, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', fontSize: 14 }} numberOfLines={1}>
+                                                {recentSearch.query}
+                                            </Text>
+                                            <TouchableOpacity onPress={(e) => { e.stopPropagation(); removeFromSearchHistory(recentSearch.query); }} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                                                <Ionicons name="close" size={14} color={colors.textSecondary} />
+                                            </TouchableOpacity>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
+                            {showSuggestions && searchSuggestions.length > 0 && (
+                                <View style={showRecentSearches ? { borderTopWidth: 1, borderTopColor: colors.border, marginTop: 4 } : {}}>
+                                    {searchSuggestions.map((suggestion, index) => {
+                                        const getColor = (type: string) => type === 'product' ? '#10B981' : type === 'category' ? '#8B5CF6' : type === 'enterprise' ? '#F59E0B' : '#6B7280';
+                                        const color = getColor(suggestion.type);
+                                        return (
+                                            <TouchableOpacity
+                                                key={index}
+                                                style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 11 }}
+                                                onPress={() => selectSuggestion(suggestion)}
+                                                activeOpacity={0.7}
+                                            >
+                                                <View style={{ width: 30, height: 30, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: color + '18' }}>
+                                                    <Ionicons name={suggestion.type === 'product' ? 'cube-outline' : suggestion.type === 'category' ? 'folder-outline' : 'business-outline'} size={15} color={color} />
+                                                </View>
+                                                <Text style={{ flex: 1, marginLeft: 12, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', fontSize: 14 }} numberOfLines={1}>
+                                                    {suggestion.text}
+                                                </Text>
+                                                <Ionicons name="arrow-forward" size={14} color={colors.textSecondary} />
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                </View>
+                            )}
+                            <View style={{ height: 8 }} />
+                        </ScrollView>
+                    </Animated.View>
+                )}
             </View>
         </View>
     );
@@ -968,134 +1076,6 @@ export default function ClientHome() {
                 <>
                     {renderHeader()}
 
-                    {/* Suggestions et Recherches récentes - Position absolute pour éviter l'espace blanc */}
-                    {(showSuggestions || showRecentSearches) && (
-                        <View
-                            className="absolute rounded-b-2xl shadow-lg border-t mx-4 z-40"
-                            style={{
-                                backgroundColor: colors.card,
-                                borderTopColor: colors.border,
-                                // Header: insets.top + 10 + 80 (paddingBottom)
-                                // Search card: -mt-14 (-56px) 
-                                // Search card height: ~130px (p-2 + input + chips)
-                                // Total: insets.top + 90 - 56 + 130 + 10 (spacing) = insets.top + 174
-                                top: insets.top + 174,
-                                left: 0,
-                                right: 0,
-                                maxHeight: 400
-                            }}
-                        >
-                            <ScrollView
-                                showsVerticalScrollIndicator={false}
-                                keyboardShouldPersistTaps="handled"
-                            >
-                                {/* Recherches récentes */}
-                                {showRecentSearches && recentSearches.length > 0 && (
-                                    <View>
-                                        <View style={{ backgroundColor: colors.secondary }} className="flex-row items-center justify-between px-4 py-2">
-                                            <Text style={{ color: colors.textSecondary }} className="text-xs font-quicksand-semibold uppercase">
-                                                {i18n.t('client.home.search.recentSearches')}
-                                            </Text>
-                                            <TouchableOpacity onPress={clearSearchHistory}>
-                                                <Text className="text-xs font-quicksand-medium text-primary-500">
-                                                    {i18n.t('client.home.search.clearHistory')}
-                                                </Text>
-                                            </TouchableOpacity>
-                                        </View>
-                                        {recentSearches.slice(0, 5).map((recentSearch, index) => (
-                                            <TouchableOpacity
-                                                key={index}
-                                                style={{ borderBottomColor: colors.border }}
-                                                className="flex-row items-center justify-between px-4 py-3 border-b"
-                                                onPress={() => {
-                                                    setSearchQuery(recentSearch.query);
-                                                    performSearch(recentSearch.query);
-                                                }}
-                                            >
-                                                <View className="flex-row items-center flex-1">
-                                                    <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
-                                                    <Text style={{ color: colors.textPrimary }} className="ml-3 flex-1 font-quicksand-medium">
-                                                        {recentSearch.query}
-                                                    </Text>
-                                                    <Text style={{ color: colors.textSecondary }} className="text-xs font-quicksand-medium mr-2">
-                                                        {i18n.t('client.home.searchResults.resultsCount', { count: recentSearch.resultCount })}
-                                                    </Text>
-                                                </View>
-                                                <TouchableOpacity
-                                                    onPress={(e) => {
-                                                        e.stopPropagation();
-                                                        removeFromSearchHistory(recentSearch.query);
-                                                    }}
-                                                    className="p-1"
-                                                >
-                                                    <Ionicons name="close" size={14} color={colors.textSecondary} />
-                                                </TouchableOpacity>
-                                            </TouchableOpacity>
-                                        ))}
-                                    </View>
-                                )}
-
-                                {/* Suggestions */}
-                                {showSuggestions && searchSuggestions.length > 0 && (
-                                    <View style={{ borderTopColor: colors.border }} className="border-t rounded-b-2xl overflow-hidden">
-                                        <View style={{ backgroundColor: colors.secondary }} className="px-4 py-3">
-                                            <Text style={{ color: colors.brandPrimary }} className="text-xs font-quicksand-bold uppercase tracking-wide">
-                                                {i18n.t('client.home.search.suggestions')}
-                                            </Text>
-                                        </View>
-                                        {searchSuggestions.map((suggestion, index) => {
-                                            const isLast = index === searchSuggestions.length - 1;
-                                            const getIconColor = (type: string) => {
-                                                switch (type) {
-                                                    case 'product': return '#10B981';
-                                                    case 'category': return '#8B5CF6';
-                                                    case 'enterprise': return '#F59E0B';
-                                                    default: return '#6B7280';
-                                                }
-                                            };
-                                            const getTypeColor = (type: string) => {
-                                                switch (type) {
-                                                    case 'product': return '#10B981';
-                                                    case 'category': return '#8B5CF6';
-                                                    case 'enterprise': return '#F59E0B';
-                                                    default: return '#9CA3AF';
-                                                }
-                                            };
-
-                                            return (
-                                                <TouchableOpacity
-                                                    key={index}
-                                                    style={{ borderBottomColor: colors.border }}
-                                                    className={`flex-row items-center px-4 py-3.5 ${!isLast ? 'border-b' : ''}`}
-                                                    onPress={() => selectSuggestion(suggestion)}
-                                                    activeOpacity={0.7}
-                                                >
-                                                    <View className="w-8 h-8 rounded-full items-center justify-center" style={{ backgroundColor: getIconColor(suggestion.type) + '15' }}>
-                                                        <Ionicons
-                                                            name={suggestion.type === 'product' ? 'cube-outline' :
-                                                                suggestion.type === 'category' ? 'folder-outline' : 'business-outline'}
-                                                            size={16}
-                                                            color={getIconColor(suggestion.type)}
-                                                        />
-                                                    </View>
-                                                    <View className="ml-3 flex-1">
-                                                        <Text style={{ color: colors.textPrimary }} className="text-sm font-quicksand-medium" numberOfLines={1}>
-                                                            {suggestion.text}
-                                                        </Text>
-                                                    </View>
-                                                    <View style={{ backgroundColor: colors.secondary }} className="px-2 py-1 rounded-full">
-                                                        <Text className="text-xs font-quicksand-semibold uppercase" style={{ color: getTypeColor(suggestion.type) }}>
-                                                            {i18n.t(`client.home.search.types.${suggestion.type}`)}
-                                                        </Text>
-                                                    </View>
-                                                </TouchableOpacity>
-                                            );
-                                        })}
-                                    </View>
-                                )}
-                            </ScrollView>
-                        </View>
-                    )}
 
                     <ScrollView
                         className="flex-1"
@@ -1127,7 +1107,12 @@ export default function ClientHome() {
 
                         {/* Résultats de recherche */}
                         {showSearchResults && (
-                            <View style={{ backgroundColor: colors.card, borderBottomColor: colors.border }} className="px-4 py-4 border-b">
+                            <Animated.View style={{
+                                backgroundColor: colors.card,
+                                borderBottomColor: colors.border,
+                                opacity: resultsAnim,
+                                transform: [{ translateY: resultsAnim.interpolate({ inputRange: [0, 1], outputRange: [-20, 0] }) }],
+                            }} className="px-4 py-4 border-b">
                                 {/* En-tête résultats + toggle vue */}
                                 <View className="flex-row items-center justify-between">
                                     <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold flex-1">
@@ -1292,7 +1277,7 @@ export default function ClientHome() {
                                         </TouchableOpacity>
                                     </View>
                                 )}
-                            </View>
+                            </Animated.View>
                         )}
 
                         {/* Statuts des entreprises suivies */}
@@ -1476,47 +1461,77 @@ export default function ClientHome() {
                         animationType="slide"
                         transparent={true}
                         visible={cityModalVisible}
-                        onRequestClose={() => setCityModalVisible(false)}
+                        onRequestClose={() => { setCityModalVisible(false); setCitySearch(''); }}
                     >
-                        <View className="flex-1 bg-transparent justify-end">
-                            <View style={{ backgroundColor: colors.card }} className="rounded-t-3xl pb-10 pt-4 px-4">
-                                <View className="flex-row justify-between items-center mb-6">
-                                    <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold">
+                        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' }}>
+                            <Pressable style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} onPress={() => { setCityModalVisible(false); setCitySearch(''); }} />
+                            <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: '80%' }}>
+                                {/* Handle */}
+                                <View style={{ alignItems: 'center', paddingTop: 10, paddingBottom: 6 }}>
+                                    <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
+                                </View>
+
+                                {/* Header */}
+                                <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 14 }}>
+                                    <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: isDark ? 'rgba(16,185,129,0.2)' : '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+                                        <Ionicons name="earth" size={18} color="#10B981" />
+                                    </View>
+                                    <Text style={{ flex: 1, color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 17 }}>
                                         {i18n.t('client.home.modals.city.title')}
                                     </Text>
-                                    <TouchableOpacity onPress={() => setCityModalVisible(false)}>
-                                        <Ionicons name="close" size={24} color={colors.textPrimary} />
+                                    <TouchableOpacity
+                                        onPress={() => { setCityModalVisible(false); setCitySearch(''); }}
+                                        style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center' }}
+                                    >
+                                        <Ionicons name="close" size={16} color={colors.textSecondary} />
                                     </TouchableOpacity>
                                 </View>
 
-                                <FlatList
-                                    data={beninCities}
-                                    keyExtractor={(item) => item.id.toString()}
-                                    ListHeaderComponent={
-                                        <TouchableOpacity
-                                            onPress={() => selectCity("")}
-                                            style={{ borderBottomColor: colors.border }}
-                                            className="py-3 border-b"
-                                        >
-                                            <Text className={`text-base font-quicksand-medium ${!selectedCity ? 'text-primary' : 'text-neutral-500'}`}>
-                                                Toutes les villes
-                                            </Text>
-                                        </TouchableOpacity>
-                                    }
-                                    renderItem={({ item }) => (
-                                        <TouchableOpacity
-                                            onPress={() => selectCity(item.name)}
-                                            style={{ borderBottomColor: colors.border }}
-                                            className="py-3 border-b"
-                                        >
-                                            <Text
-                                                className={`text-base font-quicksand-medium ${selectedCity === item.name ? 'text-primary' : 'text-neutral-700'
-                                                    }`}
-                                            >
-                                                {item.name}
-                                            </Text>
+                                {/* Search */}
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginBottom: 10, paddingHorizontal: 12, height: 42, borderRadius: 12, backgroundColor: colors.secondary }}>
+                                    <Ionicons name="search" size={16} color={colors.textSecondary} style={{ marginRight: 8 }} />
+                                    <TextInput
+                                        value={citySearch}
+                                        onChangeText={setCitySearch}
+                                        placeholder="Rechercher une ville..."
+                                        placeholderTextColor={colors.textSecondary}
+                                        style={{ flex: 1, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', fontSize: 14 }}
+                                    />
+                                    {citySearch.length > 0 && (
+                                        <TouchableOpacity onPress={() => setCitySearch('')}>
+                                            <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
                                         </TouchableOpacity>
                                     )}
+                                </View>
+
+                                <FlatList
+                                    data={[{ id: 0, name: '' }, ...beninCities].filter(c =>
+                                        c.name === '' || c.name.toLowerCase().includes(citySearch.toLowerCase())
+                                    )}
+                                    keyExtractor={(item) => item.id.toString()}
+                                    showsVerticalScrollIndicator={false}
+                                    contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
+                                    renderItem={({ item }) => {
+                                        const isAll = item.name === '';
+                                        const selected = isAll ? !selectedCity : selectedCity === item.name;
+                                        return (
+                                            <TouchableOpacity
+                                                onPress={() => { selectCity(item.name); setCitySearch(''); }}
+                                                activeOpacity={0.7}
+                                                style={{
+                                                    flexDirection: 'row', alignItems: 'center',
+                                                    paddingVertical: 13, paddingHorizontal: 12,
+                                                    marginBottom: 4, borderRadius: 12,
+                                                    backgroundColor: selected ? (isDark ? 'rgba(16,185,129,0.12)' : '#ECFDF5') : 'transparent',
+                                                }}
+                                            >
+                                                <Text style={{ flex: 1, color: selected ? '#10B981' : colors.textPrimary, fontFamily: selected ? 'Quicksand-Bold' : 'Quicksand-Medium', fontSize: 15 }}>
+                                                    {isAll ? 'Toutes les villes' : item.name}
+                                                </Text>
+                                                {selected && <Ionicons name="checkmark-circle" size={18} color="#10B981" />}
+                                            </TouchableOpacity>
+                                        );
+                                    }}
                                 />
                             </View>
                         </View>
@@ -1527,36 +1542,74 @@ export default function ClientHome() {
                         animationType="slide"
                         transparent={true}
                         visible={neighborhoodModalVisible}
-                        onRequestClose={() => setNeighborhoodModalVisible(false)}
+                        onRequestClose={() => { setNeighborhoodModalVisible(false); setNeighborhoodSearch(''); }}
                     >
-                        <View className="flex-1 bg-transparent justify-end">
-                            <View style={{ backgroundColor: colors.card }} className="rounded-t-3xl pb-10 pt-4 px-4">
-                                <View className="flex-row justify-between items-center mb-6">
-                                    <Text className="text-lg font-quicksand-bold text-neutral-800">
+                        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' }}>
+                            <Pressable style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} onPress={() => { setNeighborhoodModalVisible(false); setNeighborhoodSearch(''); }} />
+                            <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: '80%' }}>
+                                {/* Handle */}
+                                <View style={{ alignItems: 'center', paddingTop: 10, paddingBottom: 6 }}>
+                                    <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
+                                </View>
+
+                                {/* Header */}
+                                <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 14 }}>
+                                    <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: isDark ? 'rgba(16,185,129,0.2)' : '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+                                        <Ionicons name="location" size={18} color="#10B981" />
+                                    </View>
+                                    <Text style={{ flex: 1, color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 17 }}>
                                         {i18n.t('client.home.modals.neighborhood.title', { city: selectedCity })}
                                     </Text>
-                                    <TouchableOpacity onPress={() => setNeighborhoodModalVisible(false)}>
-                                        <Ionicons name="close" size={24} color="#374151" />
+                                    <TouchableOpacity
+                                        onPress={() => { setNeighborhoodModalVisible(false); setNeighborhoodSearch(''); }}
+                                        style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center' }}
+                                    >
+                                        <Ionicons name="close" size={17} color={colors.textSecondary} />
                                     </TouchableOpacity>
                                 </View>
 
-                                <FlatList
-                                    data={neighborhoodsByCity[selectedCity] || []}
-                                    keyExtractor={(item, index) => index.toString()}
-                                    renderItem={({ item }) => (
-                                        <TouchableOpacity
-                                            onPress={() => selectNeighborhood(item)}
-                                            style={{ borderBottomColor: colors.border }}
-                                            className="py-3 border-b"
-                                        >
-                                            <Text
-                                                className={`text-base font-quicksand-medium ${selectedNeighborhood === item ? 'text-primary' : 'text-neutral-700'
-                                                    }`}
-                                            >
-                                                {item}
-                                            </Text>
+                                {/* Recherche */}
+                                <View style={{ marginHorizontal: 20, marginBottom: 12, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.secondary, borderRadius: 12, paddingHorizontal: 12, borderWidth: 1, borderColor: colors.border }}>
+                                    <Ionicons name="search" size={16} color={colors.textSecondary} style={{ marginRight: 8 }} />
+                                    <TextInput
+                                        value={neighborhoodSearch}
+                                        onChangeText={setNeighborhoodSearch}
+                                        placeholder="Rechercher un quartier..."
+                                        placeholderTextColor={colors.textSecondary}
+                                        style={{ flex: 1, paddingVertical: 11, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', fontSize: 14 }}
+                                    />
+                                    {neighborhoodSearch.length > 0 && (
+                                        <TouchableOpacity onPress={() => setNeighborhoodSearch('')}>
+                                            <Ionicons name="close-circle" size={16} color={colors.textSecondary} />
                                         </TouchableOpacity>
                                     )}
+                                </View>
+
+                                <FlatList
+                                    data={(neighborhoodsByCity[selectedCity] || []).filter((n: string) => n.toLowerCase().includes(neighborhoodSearch.toLowerCase()))}
+                                    keyExtractor={(item, index) => index.toString()}
+                                    showsVerticalScrollIndicator={false}
+                                    contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
+                                    renderItem={({ item }: { item: string }) => {
+                                        const selected = selectedNeighborhood === item;
+                                        return (
+                                            <TouchableOpacity
+                                                onPress={() => { selectNeighborhood(item); setNeighborhoodSearch(''); }}
+                                                activeOpacity={0.7}
+                                                style={{
+                                                    flexDirection: 'row', alignItems: 'center',
+                                                    paddingVertical: 13, paddingHorizontal: 12,
+                                                    marginBottom: 4, borderRadius: 12,
+                                                    backgroundColor: selected ? (isDark ? 'rgba(16,185,129,0.12)' : '#ECFDF5') : 'transparent',
+                                                }}
+                                            >
+                                                <Text style={{ flex: 1, color: selected ? '#10B981' : colors.textPrimary, fontFamily: selected ? 'Quicksand-Bold' : 'Quicksand-Medium', fontSize: 15 }}>
+                                                    {item}
+                                                </Text>
+                                                {selected && <Ionicons name="checkmark-circle" size={18} color="#10B981" />}
+                                            </TouchableOpacity>
+                                        );
+                                    }}
                                 />
                             </View>
                         </View>
