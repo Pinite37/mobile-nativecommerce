@@ -38,6 +38,11 @@ export interface CreateStatusPayload {
 class StatusService {
   private readonly BASE = '/statuses';
 
+  async getById(statusId: string): Promise<StatusItem> {
+    const res = await ApiService.get<StatusItem>(`${this.BASE}/${statusId}`);
+    return res.data!;
+  }
+
   async getAll(): Promise<{ groups: StatusGroup[]; currentUserId: string }> {
     console.log('[StatusService] GET /statuses - récupération des statuts...');
     try {

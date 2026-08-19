@@ -225,165 +225,164 @@ export default function MessagesPage() {
         );
       }
     }, [isAnimating]);
-    
-    // L'API retourne déjà otherParticipant, sinon on prend le premier participant différent
-    const otherParticipant =
-      conversation?.otherParticipant || conversation?.participants?.[0];
 
-    const lastMessageTime = conversation?.lastMessage
-      ? MessagingService.formatMessageTime(
-        conversation.lastMessage.sentAt ||
-        (conversation.lastMessage as any).createdAt
-      )
-      : conversation?.lastActivity
-        ? MessagingService.formatMessageTime(conversation.lastActivity)
-        : "";
+    const otherParticipant = conversation?.otherParticipant || conversation?.participants?.[0];
 
-    const messagePreview = conversation?.lastMessage
-      ? MessagingService.getMessagePreview(conversation.lastMessage) || ""
-      : i18n.t("enterprise.messages.conversation.newConversation");
+    let lastMessageTime = "";
+    try {
+      lastMessageTime = MessagingService.formatMessageTime(
+        conversation.lastMessage?.sentAt ||
+        (conversation.lastMessage as any)?.createdAt ||
+        conversation.lastActivity ||
+        new Date().toISOString()
+      );
+    } catch {}
 
-    const isUnread = Boolean(
-      conversation?.unreadCount && conversation.unreadCount > 0
-    );
+    let messagePreview = i18n.t("enterprise.messages.conversation.newConversation");
+    try {
+      messagePreview = conversation.lastMessage
+        ? MessagingService.getMessagePreview(conversation.lastMessage) || ""
+        : i18n.t("enterprise.messages.conversation.newConversation");
+    } catch {}
+
+    const isUnread = Boolean(conversation?.unreadCount && conversation.unreadCount > 0);
     const unreadCount = Number(conversation?.unreadCount) || 0;
+
+    // Indicateur d'envoi si dernier message est le mien
+    const lastMsg = conversation.lastMessage;
+    const senderId = lastMsg
+      ? typeof (lastMsg.sender as any) === 'string'
+        ? (lastMsg.sender as any)
+        : lastMsg.sender?._id
+      : null;
+    const isSentByMe = Boolean(lastMsg && user?._id && String(senderId) === String(user._id));
+    const isReadByOther = Boolean(
+      lastMsg?.readBy?.some(r => String(r.user) !== String(user?._id)) ||
+      lastMsg?.deliveryStatus === 'READ'
+    );
+    const sentCheckIcon: any = isReadByOther ? 'checkmark-done' : 'checkmark-done-outline';
+    const sentCheckColor = isReadByOther ? '#10B981' : colors.textSecondary;
+
+    // Indicateur réponse à un statut
+    const isStatusReply = Boolean(conversation.statusOrigin || lastMsg?.statusReply?.statusId);
+
+    const hasProduct = Boolean(conversation.product?.name);
+    const participantName = otherParticipant
+      ? MessagingService.formatParticipantName(otherParticipant) || i18n.t("enterprise.messages.conversation.unknownUser")
+      : i18n.t("enterprise.messages.conversation.unknownUser");
 
     return (
       <Animated.View style={pulseStyle}>
         <TouchableOpacity
           style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.03,
-            shadowRadius: 4,
-            elevation: 1,
-            backgroundColor: isUnread ? (isDark ? colors.tertiary : "#ECFDF5") : colors.card,
-            borderColor: isAnimating ? colors.brandPrimary : 'transparent',
-            borderWidth: isAnimating ? 2 : 0,
+            backgroundColor: isAnimating
+              ? (isDark ? 'rgba(16,185,129,0.08)' : 'rgba(16,185,129,0.05)')
+              : 'transparent',
           }}
-          className="rounded-2xl mx-4 my-2 p-4"
+          className="px-4 py-3"
           activeOpacity={0.7}
-          onPress={() => {
-            router.push(
-              `/(app)/(enterprise)/conversation/${conversation._id}` as any
-            );
-          }}
+          onPress={() => router.push(`/(app)/(enterprise)/conversation/${conversation._id}` as any)}
           onLongPress={() => handleLongPress(conversation)}
           delayLongPress={500}
         >
-        <View className="flex-row items-center">
-          {/* Photo de profil */}
-          <View className="relative">
-            {otherParticipant?.profileImage ? (
-              <Image
-                source={{ uri: otherParticipant.profileImage }}
-                style={{ width: 56, height: 56, borderRadius: 28 }}
-                contentFit="cover"
-              />
-            ) : (
-              <View className="w-14 h-14 bg-primary-100 rounded-full justify-center items-center">
-                <Ionicons
-                  name={
-                    otherParticipant?.role === "ENTERPRISE"
-                      ? "business"
-                      : "person"
-                  }
-                  size={24}
-                  color={colors.brandPrimary}
-                />
-              </View>
-            )}
-
-            {/* Badge de messages non lus */}
-            {isUnread && (
-              <View className="absolute -top-1 -right-1 bg-red-500 rounded-full min-w-6 h-6 justify-center items-center px-2 border-2 border-white">
-                <Text className="text-white text-xs font-quicksand-bold">
-                  {unreadCount > 99 ? "99+" : unreadCount.toString()}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          {/* Informations de la conversation */}
-          <View className="ml-4 flex-1">
-            <View className="flex-row items-center justify-between mb-1">
-              <Text
-                style={{ color: colors.textPrimary }}
-                className="text-lg font-quicksand-bold"
-                numberOfLines={1}
-              >
-                {otherParticipant
-                  ? MessagingService.formatParticipantName(otherParticipant) ||
-                  "Utilisateur inconnu"
-                  : i18n.t("enterprise.messages.conversation.unknownUser")}
-              </Text>
-              <Text
-                style={{
-                  color: isUnread
-                    ? colors.brandPrimary
-                    : colors.textTertiary
-                }}
-                className={`text-xs ${isUnread
-                  ? "font-quicksand-bold"
-                  : "font-quicksand-medium"
-                  }`}
-              >
-                {String(lastMessageTime)}
-              </Text>
-            </View>
-
-            {/* Produit concerné */}
-            <View className="flex-row items-center mb-2">
-              {conversation?.product?.images?.[0] ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {/* Avatar */}
+            <View style={{ position: 'relative', marginRight: 14 }}>
+              {otherParticipant?.profileImage ? (
                 <Image
-                  source={{ uri: conversation.product.images[0] }}
-                  className="w-5 h-5 rounded-md mr-2"
+                  source={{ uri: otherParticipant.profileImage }}
+                  style={{ width: 52, height: 52, borderRadius: 26 }}
                   contentFit="cover"
                 />
               ) : (
-                <Ionicons
-                  name="cube-outline"
-                  size={14}
-                  color={colors.textTertiary}
-                  style={{ marginRight: 4 }}
-                />
+                <View style={{
+                  width: 52, height: 52, borderRadius: 26,
+                  backgroundColor: isDark ? 'rgba(16,185,129,0.12)' : '#ECFDF5',
+                  justifyContent: 'center', alignItems: 'center',
+                }}>
+                  <Ionicons
+                    name={otherParticipant?.role === 'ENTERPRISE' ? 'business' : 'person'}
+                    size={22}
+                    color="#10B981"
+                  />
+                </View>
               )}
-              <Text
-                style={{ color: colors.textSecondary }}
-                className="text-xs font-quicksand-medium"
-                numberOfLines={1}
-              >
-                {conversation?.product?.name && conversation?.product?.price
-                  ? `${String(conversation.product.name)} • ${formatPrice(
-                    Number(conversation.product.price)
-                  )}`
-                  : i18n.t("enterprise.messages.conversation.unknownProduct")}
-              </Text>
+              {isUnread && (
+                <View style={{
+                  position: 'absolute', top: -2, right: -2,
+                  backgroundColor: '#EF4444', borderRadius: 10,
+                  minWidth: 20, height: 20,
+                  justifyContent: 'center', alignItems: 'center',
+                  paddingHorizontal: 4,
+                  borderWidth: 2, borderColor: isDark ? colors.background : '#fff',
+                }}>
+                  <Text style={{ color: '#fff', fontSize: 10, fontFamily: 'Quicksand-Bold' }}>
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </Text>
+                </View>
+              )}
             </View>
 
-            {/* Dernier message */}
-            <Text
-              style={{
-                color: isUnread
-                  ? colors.textPrimary
-                  : colors.textSecondary
-              }}
-              className={`text-sm ${isUnread
-                ? "font-quicksand-bold"
-                : "font-quicksand-medium"
-                }`}
-              numberOfLines={2}
-            >
-              {String(messagePreview)}
-            </Text>
-          </View>
+            {/* Contenu */}
+            <View style={{ flex: 1 }}>
+              {/* Ligne 1 : nom + heure */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
+                <Text
+                  style={{ color: colors.textPrimary, fontFamily: isUnread ? 'Quicksand-Bold' : 'Quicksand-SemiBold', fontSize: 15, flex: 1, marginRight: 8 }}
+                  numberOfLines={1}
+                >
+                  {participantName}
+                </Text>
+                <Text style={{ color: isUnread ? '#10B981' : colors.textTertiary, fontFamily: isUnread ? 'Quicksand-Bold' : 'Quicksand-Medium', fontSize: 11 }}>
+                  {lastMessageTime}
+                </Text>
+              </View>
 
-          {/* Indicateur */}
-          <View className="ml-2">
-            <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+              {/* Ligne 2 : contexte (statut ou produit) */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
+                {isStatusReply ? (
+                  <>
+                    <Ionicons name="play-circle-outline" size={13} color="#8B5CF6" style={{ marginRight: 4 }} />
+                    <Text style={{ color: '#8B5CF6', fontFamily: 'Quicksand-SemiBold', fontSize: 11 }} numberOfLines={1}>
+                      Réponse à un statut
+                    </Text>
+                  </>
+                ) : hasProduct ? (
+                  <>
+                    {conversation.product?.images?.[0] ? (
+                      <Image source={{ uri: conversation.product.images[0] }} style={{ width: 14, height: 14, borderRadius: 3, marginRight: 5 }} contentFit="cover" />
+                    ) : (
+                      <Ionicons name="cube-outline" size={13} color={colors.textTertiary} style={{ marginRight: 4 }} />
+                    )}
+                    <Text style={{ color: colors.textTertiary, fontFamily: 'Quicksand-Medium', fontSize: 11 }} numberOfLines={1}>
+                      {conversation.product?.name && conversation.product?.price
+                        ? `${conversation.product.name} • ${formatPrice(Number(conversation.product.price))}`
+                        : conversation.product?.name || ''}
+                    </Text>
+                  </>
+                ) : null}
+              </View>
+
+              {/* Ligne 3 : aperçu message + indicateur envoi */}
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {isSentByMe && (
+                  <Ionicons name={sentCheckIcon as any} size={14} color={sentCheckColor} style={{ marginRight: 4 }} />
+                )}
+                <Text
+                  style={{ color: isUnread ? colors.textPrimary : colors.textSecondary, fontFamily: isUnread ? 'Quicksand-SemiBold' : 'Quicksand-Medium', fontSize: 13, flex: 1 }}
+                  numberOfLines={1}
+                >
+                  {String(messagePreview)}
+                </Text>
+                {isUnread && (
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#10B981', marginLeft: 6 }} />
+                )}
+              </View>
+            </View>
           </View>
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
+        {/* Séparateur */}
+        <View style={{ height: 1, backgroundColor: colors.border, marginLeft: 52 + 14 + 16 }} />
       </Animated.View>
     );
   };
@@ -519,11 +518,6 @@ export default function MessagesPage() {
           paddingBottom: 24,
           borderBottomLeftRadius: 32,
           borderBottomRightRadius: 32,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 5,
         }}
       >
         <View className="flex-row items-center justify-between mb-6">
@@ -545,11 +539,6 @@ export default function MessagesPage() {
             style={{
               backgroundColor: isDark ? colors.card : '#FFFFFF',
               color: colors.textPrimary,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.05,
-              shadowRadius: 4,
-              elevation: 2,
             }}
             className="rounded-2xl pl-11 pr-4 py-3.5 font-quicksand-medium text-base"
             placeholderTextColor={colors.textTertiary}

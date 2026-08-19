@@ -43,6 +43,8 @@ import MessagingService, {
   Conversation,
   Message,
 } from "../../../../services/api/MessagingService";
+import StatusService, { StatusItem } from "../../../../services/api/StatusService";
+import { StatusViewer } from "../../../../components/ui/StatusViewer";
 
 // Cache simple pour les conversations et messages
 const conversationCache = new Map<
@@ -561,6 +563,7 @@ export default function ConversationDetails() {
   const [sending, setSending] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [statusReplyViewer, setStatusReplyViewer] = useState<{ status: StatusItem; currentUserId: string } | null>(null);
   const [inputHeight, setInputHeight] = useState(0);
   const [attachment, setAttachment] = useState<{
     type: "IMAGE" | "FILE";
@@ -1819,6 +1822,40 @@ export default function ConversationDetails() {
       if (idx !== -1) flatListRef.current?.scrollToIndex({ index: idx, animated: true, viewPosition: 0.5 });
     };
 
+    const hasStatusReply = !!(message as any).statusReply?.statusId;
+    const openStatusReply = async () => {
+      if (!hasStatusReply) return;
+      try {
+        const status = await StatusService.getById((message as any).statusReply.statusId);
+        const uid = getCurrentUserId() || '';
+        setStatusReplyViewer({ status, currentUserId: uid });
+      } catch {}
+    };
+
+    const StatusReplyPreview = () => hasStatusReply ? (
+      <TouchableOpacity onPress={openStatusReply} activeOpacity={0.75} style={{
+        backgroundColor: sentOnLight ? 'rgba(0,0,0,0.06)' : isCurrentUser ? 'rgba(0,0,0,0.22)' : 'rgba(0,0,0,0.06)',
+        borderRadius: 10,
+        borderLeftWidth: 3,
+        borderLeftColor: '#8B5CF6',
+        paddingHorizontal: 10,
+        paddingVertical: 7,
+        marginBottom: 6,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+      }}>
+        <Ionicons name="play-circle-outline" size={16} color="#8B5CF6" />
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 10, fontFamily: 'Quicksand-Bold', color: '#8B5CF6', marginBottom: 1 }}>Statut</Text>
+          <Text style={{ fontSize: 12, fontFamily: 'Quicksand-Medium', color: sentOnLight ? '#374151' : isCurrentUser ? 'rgba(255,255,255,0.75)' : colors.textSecondary }} numberOfLines={1}>
+            {(message as any).statusReply.preview === 'IMAGE' ? '📷 Image' : ((message as any).statusReply.preview || 'Voir le statut')}
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={14} color="#8B5CF6" />
+      </TouchableOpacity>
+    ) : null;
+
     const ReplyPreview = () => hasReply ? (
       <TouchableOpacity onPress={scrollToReplied} activeOpacity={0.7} style={{ backgroundColor: sentOnLight ? 'rgba(0,0,0,0.06)' : isCurrentUser ? 'rgba(0,0,0,0.22)' : 'rgba(0,0,0,0.06)', borderRadius: 10, borderLeftWidth: 3, borderLeftColor: sentOnLight ? '#10B981' : isCurrentUser ? 'rgba(255,255,255,0.6)' : '#10B981', paddingHorizontal: 10, paddingVertical: 6, marginBottom: 6 }}>
         <Text style={{ fontSize: 11, fontFamily: 'Quicksand-Bold', color: sentOnLight ? '#10B981' : isCurrentUser ? 'rgba(255,255,255,0.9)' : '#10B981', marginBottom: 2 }}>
@@ -1867,6 +1904,7 @@ export default function ConversationDetails() {
                   shadowRadius: 5,
                   elevation: 3,
                 }}>
+                  <StatusReplyPreview />
                   <ReplyPreview />
                   <Text style={{ fontSize: 15, lineHeight: 22, color: isDark ? '#D1FAE5' : '#000000', fontFamily: 'Quicksand-Medium' }}>
                     {message.text}
@@ -1892,6 +1930,7 @@ export default function ConversationDetails() {
                   shadowRadius: 3,
                   elevation: 1,
                 }}>
+                  {!isDeleted && <StatusReplyPreview />}
                   {!isDeleted && <ReplyPreview />}
                   <Text style={{ fontSize: 15, lineHeight: 22, fontFamily: 'Quicksand-Medium', color: isDeleted ? colors.textSecondary : colors.textPrimary, fontStyle: isDeleted ? 'italic' : 'normal' }}>
                     {isDeleted ? '[Message supprimé]' : message.text}
@@ -3666,6 +3705,21 @@ export default function ConversationDetails() {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+
+      {/* StatusViewer pour afficher le statut depuis la conversation */}
+      {statusReplyViewer && (
+        <StatusViewer
+          visible={true}
+          groups={[{
+            enterprise: (statusReplyViewer.status as any).enterprise,
+            statuses: [statusReplyViewer.status],
+          }]}
+          initialGroupIndex={0}
+          currentUserId={statusReplyViewer.currentUserId}
+          onClose={() => setStatusReplyViewer(null)}
+          onViewed={() => {}}
+        />
+      )}
     </View>
   );
 }

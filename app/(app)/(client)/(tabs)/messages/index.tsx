@@ -408,193 +408,174 @@ export default function ClientMessagesPage() {
         );
       }
     }, [isAnimating]);
-    
-    // Déterminer le participant non-utilisateur avec vérification
+
     const otherParticipant =
       conversation.otherParticipant ||
-      conversation.participants?.find(
-        (p) => (p as any)?._id !== (conversation as any)?.userId
-      ) ||
+      conversation.participants?.find((p) => (p as any)?._id !== (conversation as any)?.userId) ||
       null;
 
-    // Formater l'heure du dernier message avec fallback
-    let lastMessageTime: string = "N/A";
+    let lastMessageTime = "";
     try {
-      lastMessageTime = conversation.lastMessage
-        ? MessagingService.formatMessageTime(
-            conversation.lastMessage.sentAt ||
-              (conversation.lastMessage as any).createdAt ||
-              conversation.lastActivity ||
-              new Date().toISOString()
-          )
-        : MessagingService.formatMessageTime(
-            conversation.lastActivity || new Date().toISOString()
-          );
-      if (typeof lastMessageTime !== "string") {
-        lastMessageTime = new Date().toLocaleTimeString("fr-FR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-      }
-    } catch (error) {
-      console.error("Erreur formatMessageTime:", error);
-      lastMessageTime = new Date().toLocaleTimeString("fr-FR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    }
+      lastMessageTime = MessagingService.formatMessageTime(
+        conversation.lastMessage?.sentAt ||
+        (conversation.lastMessage as any)?.createdAt ||
+        conversation.lastActivity ||
+        new Date().toISOString()
+      );
+    } catch {}
 
-    // Obtenir un aperçu du dernier message avec fallback
-    let messagePreview: string = "Nouvelle conversation";
+    let messagePreview = "Nouvelle conversation";
     try {
       messagePreview = conversation.lastMessage
-        ? MessagingService.getMessagePreview(conversation.lastMessage) ||
-          "Aucun message"
+        ? MessagingService.getMessagePreview(conversation.lastMessage) || "Aucun message"
         : "Nouvelle conversation";
-      if (typeof messagePreview !== "string") {
-        messagePreview = "Aucun message";
-      }
-    } catch (error) {
-      console.error("Erreur getMessagePreview:", error);
-      messagePreview = "Aucun message";
-    }
+    } catch {}
 
-    // Vérifier que otherParticipant existe avant d'appeler formatParticipantName
-    let participantName: string = "Utilisateur inconnu";
+    let participantName = "Utilisateur inconnu";
     try {
       participantName = otherParticipant
-        ? MessagingService.formatParticipantName(otherParticipant) ||
-          "Utilisateur inconnu"
+        ? MessagingService.formatParticipantName(otherParticipant) || "Utilisateur inconnu"
         : "Utilisateur inconnu";
-      if (typeof participantName !== "string") {
-        participantName = "Utilisateur inconnu";
-      }
-    } catch (error) {
-      console.error("Erreur formatParticipantName:", error);
-      participantName = "Utilisateur inconnu";
-    }
+    } catch {}
 
-    const isUnread = Boolean(
-      conversation?.unreadCount && conversation.unreadCount > 0
-    );
+    const isUnread = Boolean(conversation?.unreadCount && conversation.unreadCount > 0);
     const unreadCount = Number(conversation?.unreadCount) || 0;
+
+    // Indicateur d'envoi si dernier message est le mien
+    const lastMsg = conversation.lastMessage;
+    const senderId = lastMsg
+      ? typeof (lastMsg.sender as any) === 'string'
+        ? (lastMsg.sender as any)
+        : lastMsg.sender?._id
+      : null;
+    const isSentByMe = Boolean(lastMsg && user?._id && String(senderId) === String(user._id));
+    // Le backend ne persiste pas DELIVERED, il va SENT → READ via readBy
+    // Vu = readBy contient quelqu'un d'autre que moi, OU deliveryStatus READ
+    const isReadByOther = Boolean(
+      lastMsg?.readBy?.some(r => String(r.user) !== String(user?._id)) ||
+      lastMsg?.deliveryStatus === 'READ'
+    );
+    const sentCheckIcon: any = isReadByOther ? 'checkmark-done' : 'checkmark-done-outline';
+    const sentCheckColor = isReadByOther ? '#10B981' : colors.textSecondary;
+
+    // Indicateur de réponse à un statut
+    const isStatusReply = Boolean(conversation.statusOrigin || lastMsg?.statusReply?.statusId);
+
+    // Contexte de la conversation (produit ou statut)
+    const hasProduct = Boolean(conversation.product?.name);
 
     return (
       <Animated.View style={pulseStyle}>
         <TouchableOpacity
           style={{
-            backgroundColor: isUnread ? colors.secondary : colors.card,
-            borderColor: isAnimating ? colors.brandPrimary : colors.border,
-            borderWidth: isAnimating ? 2 : 1,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.03,
-            shadowRadius: 4,
-            elevation: 1,
+            backgroundColor: isAnimating
+              ? (isDark ? 'rgba(16,185,129,0.08)' : 'rgba(16,185,129,0.05)')
+              : 'transparent',
           }}
-          className="rounded-2xl mx-4 my-2 p-4"
-          onPress={() => {
-            router.push(`/(app)/(client)/conversation/${conversation._id}`);
-          }}
+          className="px-4 py-3"
+          onPress={() => router.push(`/(app)/(client)/conversation/${conversation._id}`)}
           onLongPress={() => handleLongPress(conversation)}
           delayLongPress={500}
+          activeOpacity={0.7}
         >
-        <View className="flex-row items-center">
-          {/* Photo de profil */}
-          <View className="relative">
-            {otherParticipant?.profileImage ? (
-              <Image
-                source={{ uri: otherParticipant.profileImage }}
-                className="w-14 h-14 rounded-full"
-                contentFit="cover"
-              />
-            ) : (
-              <View style={{ backgroundColor: colors.secondary }} className="w-14 h-14 rounded-full justify-center items-center">
-                <Ionicons
-                  name={
-                    otherParticipant?.role === "ENTERPRISE"
-                      ? "business"
-                      : "person"
-                  }
-                  size={24}
-                  color={colors.brandPrimary}
-                />
-              </View>
-            )}
-
-            {/* Badge de messages non lus */}
-            {isUnread && (
-              <View className="absolute -top-1 -right-1 bg-red-500 rounded-full min-w-6 h-6 justify-center items-center px-2 border-2 border-white">
-                <Text className="text-white text-xs font-quicksand-bold">
-                  {unreadCount > 99 ? "99+" : unreadCount.toString()}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          {/* Informations de la conversation */}
-          <View className="ml-4 flex-1">
-            <View className="flex-row items-center justify-between mb-1">
-              <Text
-                style={{ color: colors.textPrimary }}
-                className="text-lg font-quicksand-bold"
-                numberOfLines={1}
-              >
-                {participantName}
-              </Text>
-              <Text
-                style={{ color: isUnread ? colors.brandPrimary : colors.textSecondary }}
-                className="text-xs font-quicksand-medium"
-              >
-                {lastMessageTime}
-              </Text>
-            </View>
-
-            {/* Produit concerné */}
-            <View className="flex-row items-center mb-2">
-              {conversation.product?.images?.[0] ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {/* Avatar */}
+            <View style={{ position: 'relative', marginRight: 14 }}>
+              {otherParticipant?.profileImage ? (
                 <Image
-                  source={{ uri: conversation.product.images[0] }}
-                  className="w-5 h-5 rounded-md mr-2"
+                  source={{ uri: otherParticipant.profileImage }}
+                  style={{ width: 52, height: 52, borderRadius: 26 }}
                   contentFit="cover"
                 />
               ) : (
-                <Ionicons
-                  name="cube-outline"
-                  size={14}
-                  color={colors.textSecondary}
-                  style={{ marginRight: 4 }}
-                />
+                <View style={{
+                  width: 52, height: 52, borderRadius: 26,
+                  backgroundColor: isDark ? 'rgba(16,185,129,0.12)' : '#ECFDF5',
+                  justifyContent: 'center', alignItems: 'center',
+                }}>
+                  <Ionicons
+                    name={otherParticipant?.role === 'ENTERPRISE' ? 'business' : 'person'}
+                    size={22}
+                    color="#10B981"
+                  />
+                </View>
               )}
-              <Text
-                style={{ color: colors.textSecondary }}
-                className="text-xs font-quicksand-medium"
-                numberOfLines={1}
-              >
-                {conversation.product?.name && conversation.product?.price
-                  ? `${String(conversation.product.name)} • ${formatPrice(
-                      conversation.product.price
-                    )}`
-                  : "Produit inconnu"}
-              </Text>
+              {isUnread && (
+                <View style={{
+                  position: 'absolute', top: -2, right: -2,
+                  backgroundColor: '#EF4444', borderRadius: 10,
+                  minWidth: 20, height: 20,
+                  justifyContent: 'center', alignItems: 'center',
+                  paddingHorizontal: 4,
+                  borderWidth: 2, borderColor: isDark ? colors.background : '#fff',
+                }}>
+                  <Text style={{ color: '#fff', fontSize: 10, fontFamily: 'Quicksand-Bold' }}>
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </Text>
+                </View>
+              )}
             </View>
 
-            {/* Dernier message */}
-            <Text
-              style={{ color: isUnread ? colors.textPrimary : colors.textSecondary }}
-              className="text-sm font-quicksand-medium"
-              numberOfLines={2}
-            >
-              {String(messagePreview)}
-            </Text>
-          </View>
+            {/* Contenu */}
+            <View style={{ flex: 1 }}>
+              {/* Ligne 1 : nom + heure */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
+                <Text
+                  style={{ color: colors.textPrimary, fontFamily: isUnread ? 'Quicksand-Bold' : 'Quicksand-SemiBold', fontSize: 15, flex: 1, marginRight: 8 }}
+                  numberOfLines={1}
+                >
+                  {participantName}
+                </Text>
+                <Text style={{ color: isUnread ? '#10B981' : colors.textTertiary, fontFamily: isUnread ? 'Quicksand-Bold' : 'Quicksand-Medium', fontSize: 11 }}>
+                  {lastMessageTime}
+                </Text>
+              </View>
 
-          {/* Indicateur */}
-          <View className="ml-2">
-            <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+              {/* Ligne 2 : contexte (produit ou statut) */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
+                {isStatusReply ? (
+                  <>
+                    <Ionicons name="play-circle-outline" size={13} color="#8B5CF6" style={{ marginRight: 4 }} />
+                    <Text style={{ color: '#8B5CF6', fontFamily: 'Quicksand-SemiBold', fontSize: 11 }} numberOfLines={1}>
+                      Réponse à un statut
+                    </Text>
+                  </>
+                ) : hasProduct ? (
+                  <>
+                    {conversation.product?.images?.[0] ? (
+                      <Image source={{ uri: conversation.product.images[0] }} style={{ width: 14, height: 14, borderRadius: 3, marginRight: 5 }} contentFit="cover" />
+                    ) : (
+                      <Ionicons name="cube-outline" size={13} color={colors.textTertiary} style={{ marginRight: 4 }} />
+                    )}
+                    <Text style={{ color: colors.textTertiary, fontFamily: 'Quicksand-Medium', fontSize: 11 }} numberOfLines={1}>
+                      {conversation.product?.name && conversation.product?.price
+                        ? `${conversation.product.name} • ${formatPrice(conversation.product.price)}`
+                        : conversation.product?.name || ''}
+                    </Text>
+                  </>
+                ) : null}
+              </View>
+
+              {/* Ligne 3 : aperçu message + indicateur envoi */}
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {isSentByMe && (
+                  <Ionicons name={sentCheckIcon as any} size={14} color={sentCheckColor} style={{ marginRight: 4 }} />
+                )}
+                <Text
+                  style={{ color: isUnread ? colors.textPrimary : colors.textSecondary, fontFamily: isUnread ? 'Quicksand-SemiBold' : 'Quicksand-Medium', fontSize: 13, flex: 1 }}
+                  numberOfLines={1}
+                >
+                  {String(messagePreview)}
+                </Text>
+                {isUnread && (
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#10B981', marginLeft: 6 }} />
+                )}
+              </View>
+            </View>
           </View>
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
+        {/* Séparateur */}
+        <View style={{ height: 1, backgroundColor: colors.border, marginLeft: 66 + 14 }} />
       </Animated.View>
     );
   };
@@ -668,11 +649,6 @@ export default function ClientMessagesPage() {
           paddingBottom: 24,
           borderBottomLeftRadius: 32,
           borderBottomRightRadius: 32,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 5,
         }}
       >
         <View className="flex-row items-center justify-between mb-6">
@@ -699,11 +675,6 @@ export default function ClientMessagesPage() {
             style={{
               backgroundColor: colors.card,
               color: colors.textPrimary,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.05,
-              shadowRadius: 4,
-              elevation: 2,
             }}
             className="rounded-2xl pl-11 pr-4 py-3.5 font-quicksand-medium text-base"
             placeholderTextColor={colors.textSecondary}

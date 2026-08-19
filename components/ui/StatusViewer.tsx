@@ -4,10 +4,14 @@ import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Dimensions,
+  ActivityIndicator,
+  Keyboard,
+  KeyboardEvent,
   Modal,
+  Platform,
   Pressable,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -20,7 +24,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusGroup, StatusItem } from '../../services/api/StatusService';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = require('react-native').Dimensions.get('window');
 const STATUS_DURATION = 15000;
 
 interface StatusViewerProps {
@@ -31,6 +35,7 @@ interface StatusViewerProps {
   onClose: () => void;
   onViewed: (statusId: string) => void;
   onDelete?: (statusId: string) => void;
+  onReplyToStatus?: (status: StatusItem, enterpriseUserId: string, text: string) => Promise<{ conversationId: string }>;
 }
 
 export function StatusViewer({
@@ -41,13 +46,11 @@ export function StatusViewer({
   onClose,
   onViewed,
   onDelete,
+  onReplyToStatus,
 }: StatusViewerProps) {
-  const { isDark } = useTheme();
+  const { isDark, colors } = useTheme();
   const insets = useSafeAreaInsets();
 
-  // Inverser les statuses dans le viewer : du plus ancien au plus récent.
-  // Le backend envoie newest-first (utile pour le preview dans StatusBar),
-  // mais en lecture on part du premier posté et on avance vers le plus récent.
   const viewerGroups = useMemo(
     () => groups.map(g => ({ ...g, statuses: [...g.statuses].reverse() })),
     [groups]
@@ -55,13 +58,17 @@ export function StatusViewer({
 
   const [groupIndex, setGroupIndex] = useState(initialGroupIndex);
   const [statusIndex, setStatusIndex] = useState(0);
+  const [replyText, setReplyText] = useState('');
+  const [sending, setSending] = useState(false);
+  const [inputFocused, setInputFocused] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   const progress = useSharedValue(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Pour la pause : on stocke le temps écoulé au moment du pressIn
   const elapsedRef = useRef(0);
   const startTimeRef = useRef(0);
   const isPausedRef = useRef(false);
+  const inputRef = useRef<TextInput>(null);
 
   const currentGroup = viewerGroups[groupIndex];
   const currentStatus: StatusItem | undefined = currentGroup?.statuses[statusIndex];
@@ -75,6 +82,29 @@ export function StatusViewer({
     if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
   };
 
+  const pauseProgress = useCallback(() => {
+    if (isPausedRef.current) return;
+    isPausedRef.current = true;
+    const elapsed = Date.now() - startTimeRef.current + elapsedRef.current;
+    elapsedRef.current = elapsed;
+    cancelAnimation(progress);
+    clearTimer();
+  }, []);
+
+  const resumeProgress = useCallback(() => {
+    if (!isPausedRef.current) return;
+    isPausedRef.current = false;
+    const remaining = Math.max(STATUS_DURATION - elapsedRef.current, 0);
+    const fromProgress = elapsedRef.current / STATUS_DURATION;
+    startTimeRef.current = Date.now();
+    progress.value = fromProgress;
+    progress.value = withTiming(1, { duration: remaining });
+    clearTimer();
+    timerRef.current = setTimeout(() => {
+      if (!isPausedRef.current) goNext();
+    }, remaining);
+  }, []);
+
   const goNext = useCallback(() => {
     clearTimer();
     cancelAnimation(progress);
@@ -82,7 +112,6 @@ export function StatusViewer({
       const group = viewerGroups[groupIndex];
       if (!group) return si;
       if (si < group.statuses.length - 1) return si + 1;
-      // Groupe suivant
       setGroupIndex(gi => {
         if (gi < viewerGroups.length - 1) return gi + 1;
         onClose();
@@ -103,7 +132,6 @@ export function StatusViewer({
     }
   }, [groupIndex, statusIndex]);
 
-  // Démarre (ou reprend) l'animation et le timer
   const startOrResume = useCallback((remainingMs: number, fromProgress: number) => {
     isPausedRef.current = false;
     startTimeRef.current = Date.now();
@@ -115,7 +143,6 @@ export function StatusViewer({
     }, remainingMs);
   }, [goNext]);
 
-  // Quand le statut courant change, on repart de 0
   useEffect(() => {
     if (!visible || !currentStatus) return;
     elapsedRef.current = 0;
@@ -124,35 +151,56 @@ export function StatusViewer({
     return () => { clearTimer(); cancelAnimation(progress); };
   }, [visible, groupIndex, statusIndex]);
 
-  // Sync groupIndex à l'ouverture
   useEffect(() => {
-    if (visible) { setGroupIndex(initialGroupIndex); setStatusIndex(0); }
+    if (visible) { setGroupIndex(initialGroupIndex); setStatusIndex(0); setReplyText(''); }
   }, [visible, initialGroupIndex]);
 
-  // ── Pause / reprise ──────────────────────────────────────────
+  // Pause quand input est focus
+  useEffect(() => {
+    if (inputFocused) pauseProgress();
+    else resumeProgress();
+  }, [inputFocused]);
+
+  // Gestion clavier
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const onShow = (e: KeyboardEvent) => setKeyboardHeight(e.endCoordinates.height);
+    const onHide = () => setKeyboardHeight(0);
+    const sub1 = Keyboard.addListener(showEvent, onShow);
+    const sub2 = Keyboard.addListener(hideEvent, onHide);
+    return () => { sub1.remove(); sub2.remove(); };
+  }, []);
+
   const handlePressIn = () => {
-    if (isPausedRef.current) return;
-    isPausedRef.current = true;
-    const elapsed = Date.now() - startTimeRef.current + elapsedRef.current;
-    elapsedRef.current = elapsed;
-    cancelAnimation(progress);
-    clearTimer();
+    if (inputFocused) return;
+    pauseProgress();
   };
 
   const handlePressOut = () => {
-    if (!isPausedRef.current) return;
-    const remaining = Math.max(STATUS_DURATION - elapsedRef.current, 0);
-    const fromProgress = elapsedRef.current / STATUS_DURATION;
-    startOrResume(remaining, fromProgress);
+    if (inputFocused) return;
+    resumeProgress();
   };
 
-  // Tap gauche / droite pour naviguer
   const handlePress = (e: any) => {
-    if (e.nativeEvent.pageX < SCREEN_WIDTH * 0.38) {
-      goPrev();
-    } else {
-      goNext();
-    }
+    if (inputFocused) { Keyboard.dismiss(); return; }
+    if (e.nativeEvent.pageX < SCREEN_WIDTH * 0.38) goPrev();
+    else goNext();
+  };
+
+  const handleSendReply = async () => {
+    if (!replyText.trim() || !currentStatus || !onReplyToStatus) return;
+    const text = replyText.trim();
+    const enterpriseUserId = String(currentGroup.enterprise._id);
+    const preview = currentStatus.type === 'TEXT' ? (currentStatus.text || '') : 'IMAGE';
+    setSending(true);
+    try {
+      const result = await onReplyToStatus(currentStatus, enterpriseUserId, text);
+      setReplyText('');
+      Keyboard.dismiss();
+      onClose();
+    } catch {}
+    setSending(false);
   };
 
   if (!currentGroup || !currentStatus) return null;
@@ -185,13 +233,15 @@ export function StatusViewer({
     );
   };
 
+  const bottomInset = insets.bottom > 0 ? insets.bottom : 16;
+
   return (
     <Modal visible={visible} transparent={false} animationType="fade" statusBarTranslucent onRequestClose={onClose}>
       <StatusBar style="light" />
       <View style={{ flex: 1, backgroundColor: '#000' }}>
         {renderContent()}
 
-        {/* Zone tactile principale : pause au pressIn, reprise au pressOut, navigation au tap */}
+        {/* Zone tactile principale */}
         <Pressable
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
           onPressIn={handlePressIn}
@@ -211,7 +261,7 @@ export function StatusViewer({
           ))}
         </View>
 
-        {/* Header : avatar + nom + actions */}
+        {/* Header */}
         <View style={{ position: 'absolute', top: insets.top + 20, left: 12, right: 12, flexDirection: 'row', alignItems: 'center' }}>
           <View style={{ width: 36, height: 36, borderRadius: 18, overflow: 'hidden', backgroundColor: '#333', marginRight: 10 }}>
             {currentGroup.enterprise.profileImage ? (
@@ -238,6 +288,68 @@ export function StatusViewer({
           <TouchableOpacity onPress={onClose} style={{ padding: 6 }}>
             <Ionicons name="close" size={24} color="#fff" />
           </TouchableOpacity>
+        </View>
+
+        {/* Bas : vues (si mon statut) ou input de réponse (si statut d'un autre) */}
+        <View
+          style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingBottom: keyboardHeight > 0 ? keyboardHeight + 12 : bottomInset, paddingHorizontal: 16, paddingTop: 12 }}
+          pointerEvents="box-none"
+        >
+          {isMyGroup ? (
+            /* Compteur de vues */
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              <Ionicons name="eye-outline" size={18} color="rgba(255,255,255,0.85)" />
+              <Text style={{ color: 'rgba(255,255,255,0.85)', fontFamily: 'Quicksand-SemiBold', fontSize: 14 }}>
+                {currentStatus.viewCount ?? 0} vue{(currentStatus.viewCount ?? 0) !== 1 ? 's' : ''}
+              </Text>
+            </View>
+          ) : onReplyToStatus ? (
+            /* Input de réponse */
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }} pointerEvents="box-none">
+              <TextInput
+                ref={inputRef}
+                value={replyText}
+                onChangeText={setReplyText}
+                onFocus={() => setInputFocused(true)}
+                onBlur={() => setInputFocused(false)}
+                placeholder="Répondre au statut..."
+                placeholderTextColor="rgba(255,255,255,0.5)"
+                style={{
+                  flex: 1,
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  borderRadius: 24,
+                  paddingHorizontal: 18,
+                  paddingVertical: Platform.OS === 'ios' ? 12 : 8,
+                  color: '#fff',
+                  fontFamily: 'Quicksand-Medium',
+                  fontSize: 15,
+                  borderWidth: 1,
+                  borderColor: 'rgba(255,255,255,0.25)',
+                }}
+                returnKeyType="send"
+                onSubmitEditing={handleSendReply}
+                blurOnSubmit={false}
+              />
+              <TouchableOpacity
+                onPress={handleSendReply}
+                disabled={!replyText.trim() || sending}
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: replyText.trim() ? '#10B981' : 'rgba(255,255,255,0.2)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {sending ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Ionicons name="send" size={20} color="#fff" />
+                )}
+              </TouchableOpacity>
+            </View>
+          ) : null}
         </View>
       </View>
     </Modal>

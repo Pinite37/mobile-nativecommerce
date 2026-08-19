@@ -47,6 +47,7 @@ import { StatusBar as StatusBarComponent } from "../../../../components/ui/Statu
 import { StatusViewer } from "../../../../components/ui/StatusViewer";
 import { StatusCreator } from "../../../../components/ui/StatusCreator";
 import StatusService, { StatusGroup } from "../../../../services/api/StatusService";
+import MessagingService from "../../../../services/api/MessagingService";
 
 // Catégories orientées entreprise (fallback)
 const staticCategories = [
@@ -1758,6 +1759,13 @@ export default function EnterpriseDashboard() {
         onClose={() => setViewerVisible(false)}
         onViewed={handleStatusViewed}
         onDelete={handleDeleteStatus}
+        onReplyToStatus={async (status, enterpriseUserId, text) => {
+          const preview = status.type === 'TEXT' ? (status.text || '') : 'IMAGE';
+          const result = await MessagingService.replyToStatus(enterpriseUserId, status._id, text, preview);
+          const convId = result.conversation._id;
+          router.push(`/(app)/(enterprise)/conversation/${convId}`);
+          return { conversationId: convId };
+        }}
       />
 
       {/* Status Creator (enterprise only) */}

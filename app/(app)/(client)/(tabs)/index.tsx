@@ -38,7 +38,8 @@ import i18n from "../../../../i18n/i18n";
 import { useUnreadNotifications } from "../../../../hooks/useUnreadNotifications";
 import ProductService from "../../../../services/api/ProductService";
 import SearchService from "../../../../services/api/SearchService";
-import StatusService, { StatusGroup } from "../../../../services/api/StatusService";
+import StatusService, { StatusGroup, StatusItem } from "../../../../services/api/StatusService";
+import MessagingService from "../../../../services/api/MessagingService";
 import { StatusBar as StatusBarComponent } from "../../../../components/ui/StatusBar";
 import { StatusViewer } from "../../../../components/ui/StatusViewer";
 import SearchCacheService, { RecentSearch } from "../../../../services/SearchCacheService";
@@ -84,14 +85,15 @@ export default function ClientHome() {
     const loadStatuses = useCallback(async () => {
         try {
             const result = await StatusService.getAll();
+            console.log('[ClientHome] Statuts chargés:', JSON.stringify({ groupCount: result.groups?.length, currentUserId: result.currentUserId }));
             setStatusGroups(result.groups);
             setStatusCurrentUserId(result.currentUserId);
-        } catch {}
+        } catch (error) {
+            console.error('[ClientHome] Erreur lors du chargement des statuts:', error);
+        }
     }, []);
 
-    useFocusEffect(useCallback(() => {
-        if (isAuthenticated) loadStatuses();
-    }, [isAuthenticated, loadStatuses]));
+    useFocusEffect(useCallback(() => { loadStatuses(); }, [loadStatuses]));
     // const { getCacheStats } = useSearchCache(); // (non utilisé pour l'instant)
 
     // Calcul responsive pour la largeur des produits
@@ -203,6 +205,7 @@ export default function ClientHome() {
                 queryClient.invalidateQueries({ queryKey: ['products', 'featured'] }),
                 queryClient.invalidateQueries({ queryKey: ['favorites'] }),
                 queryClient.invalidateQueries({ queryKey: ['categories', 'active'] }),
+                loadStatuses(),
             ]);
         } finally {
             setRefreshing(false);
@@ -1610,6 +1613,13 @@ export default function ClientHome() {
                 currentUserId={statusCurrentUserId}
                 onClose={() => setViewerVisible(false)}
                 onViewed={(statusId) => StatusService.markViewed(statusId).catch(() => {})}
+                onReplyToStatus={async (status, enterpriseUserId, text) => {
+                    const preview = status.type === 'TEXT' ? (status.text || '') : 'IMAGE';
+                    const result = await MessagingService.replyToStatus(enterpriseUserId, status._id, text, preview);
+                    const convId = result.conversation._id;
+                    router.push(`/(app)/(client)/conversation/${convId}`);
+                    return { conversationId: convId };
+                }}
             />
         </View >
     );

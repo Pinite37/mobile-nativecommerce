@@ -149,7 +149,7 @@ function StatusCard({
               height: AVATAR_SIZE + 4,
               borderRadius: (AVATAR_SIZE + 4) / 2,
               padding: 2,
-              backgroundColor: hasUnviewed ? '#10B981' : 'rgba(255,255,255,0.5)',
+              backgroundColor: hasUnviewed ? '#10B981' : (isDark ? '#4B5563' : '#D1D5DB'),
             }}
           >
             {profileImage ? (
@@ -213,7 +213,12 @@ function StatusCard({
 
 export function StatusBar({ groups, currentUserId, isEnterprise, onPressGroup, onPressAdd }: StatusBarProps) {
   const myGroup = groups.find(g => String(g.enterprise._id) === String(currentUserId));
-  const othersGroups = groups.filter(g => String(g.enterprise._id) !== String(currentUserId));
+  const othersRaw = groups.filter(g => String(g.enterprise._id) !== String(currentUserId));
+  // Statuts non vus en premier, vus à la fin
+  const othersGroups = [
+    ...othersRaw.filter(g => g.hasUnviewed),
+    ...othersRaw.filter(g => !g.hasUnviewed),
+  ];
 
   return (
     <View style={{ paddingVertical: 12 }}>

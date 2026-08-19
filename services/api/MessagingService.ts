@@ -11,13 +11,14 @@ export interface Conversation {
     profileImage?: string;
   }[];
   type: 'CLIENT_ENTERPRISE' | 'ENTERPRISE_ENTERPRISE';
-  product: {
+  product?: {
     _id: string;
     name: string;
     price: number;
     images: string[];
     enterprise: any;
   };
+  statusOrigin?: string;
   subject: string;
   lastMessage?: Message;
   lastActivity: string;
@@ -58,10 +59,14 @@ export interface Message {
     deletedAt?: string;
     deletedBy?: string[];
   };
+  statusReply?: {
+    statusId: string;
+    preview?: string;
+  };
   // Champs locaux pour gestion optimiste de l'envoi
-  _localId?: string; // ID temporaire pour les messages en cours d'envoi
-  _sendingStatus?: 'pending' | 'sent' | 'failed'; // Statut d'envoi local
-  _sendError?: string; // Message d'erreur en cas d'échec
+  _localId?: string;
+  _sendingStatus?: 'pending' | 'sent' | 'failed';
+  _sendError?: string;
 }
 
 export interface ConversationCreationResponse {
@@ -107,6 +112,17 @@ export interface MessagesResponse {
 
 class MessagingService {
   private baseUrl = '/messaging';
+
+  /**
+   * Répondre à un statut (crée/récupère conv + envoie message)
+   */
+  async replyToStatus(enterpriseUserId: string, statusId: string, text: string, preview: string): Promise<{ message: Message; conversation: Conversation }> {
+    const response = await ApiService.post<any>(
+      `${this.baseUrl}/conversations/status-reply`,
+      { enterpriseUserId, statusId, text, preview }
+    );
+    return response.data!;
+  }
 
   /**
    * Créer ou récupérer une conversation pour un produit
