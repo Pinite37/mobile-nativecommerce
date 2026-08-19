@@ -418,190 +418,97 @@ export default function AdvertisementDetails() {
         </View>
 
         {/* Contenu */}
-        <View className="px-5 py-6">
-          {/* Titre avec design amélioré */}
-          <View className="mb-5">
-            <Text
-              className="text-2xl font-quicksand-bold leading-tight"
-              style={{ color: colors.textPrimary }}
-            >
+        <View style={{ paddingHorizontal: 20, paddingTop: 24, gap: 20 }}>
+          {/* Titre */}
+          <View>
+            <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 22, lineHeight: 30 }}>
               {advertisement.title}
             </Text>
-            <View
-              className="h-1 w-16 rounded-full mt-3"
-              style={{ backgroundColor: "#10B981" }}
-            />
+            <View style={{ height: 3, width: 48, backgroundColor: '#10B981', borderRadius: 2, marginTop: 10 }} />
           </View>
 
-          {/* Description avec meilleur espacement */}
-          <Text
-            className="text-base font-quicksand-medium leading-7 mb-7"
-            style={{ color: colors.textSecondary }}
-          >
+          {/* Description */}
+          <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 15, lineHeight: 24 }}>
             {advertisement.description}
           </Text>
 
-          {/* Informations avec design carte moderne */}
-          <View
-            style={{
-              backgroundColor: colors.secondary,
-              borderColor: colors.border,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3,
-            }}
-            className="rounded-3xl p-5 mb-6 border"
-          >
-            <View className="flex-row items-center mb-5">
-              <View
-                className="w-10 h-10 rounded-full items-center justify-center mr-3"
-                style={{ backgroundColor: "#10B98120" }}
-              >
-                <Ionicons name="information-circle" size={20} color="#10B981" />
+          {/* Informations */}
+          <View style={{ backgroundColor: colors.card, borderRadius: 20, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#10B98118', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+                <Ionicons name="information-circle" size={18} color="#10B981" />
               </View>
-              <Text
-                className="text-lg font-quicksand-bold"
-                style={{ color: colors.textPrimary }}
-              >
+              <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 15 }}>
                 {i18n.t("enterprise.advertisementDetails.info.title")}
               </Text>
             </View>
 
-            <View>
-              <View
-                style={{ backgroundColor: colors.card }}
-                className="flex-row items-center rounded-xl p-3 shadow-sm mb-3"
-              >
-                <View
-                  className="w-9 h-9 rounded-full items-center justify-center mr-3"
-                  style={{ backgroundColor: "#10B98120" }}
-                >
-                  <Ionicons name="calendar-outline" size={18} color="#10B981" />
-                </View>
-                <View className="flex-1">
-                  <Text
-                    className="text-xs font-quicksand-medium mb-1"
-                    style={{ color: colors.textSecondary }}
-                  >
-                    {i18n.t("enterprise.advertisementDetails.info.validity")}
-                  </Text>
-                  <Text
-                    className="text-sm font-quicksand-semibold"
-                    numberOfLines={1}
-                    style={{ color: colors.textPrimary }}
-                  >
-                    {i18n.t("enterprise.advertisementDetails.info.validUntil", {
-                      date: formatDate(advertisement.endDate),
-                    })}
-                  </Text>
-                </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#10B98118', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+                <Ionicons name="calendar-outline" size={17} color="#10B981" />
               </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 12, marginBottom: 2 }}>
+                  {i18n.t("enterprise.advertisementDetails.info.validity")}
+                </Text>
+                <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 14 }}>
+                  {i18n.t("enterprise.advertisementDetails.info.validUntil", { date: formatDate(advertisement.endDate) })}
+                </Text>
+              </View>
+            </View>
 
-              <View
-                style={{ backgroundColor: colors.card }}
-                className="flex-row items-center rounded-xl p-3 shadow-sm"
-              >
-                <View
-                  className="w-9 h-9 rounded-full items-center justify-center mr-3"
-                  style={{ backgroundColor: "#3B82F620" }}
-                >
-                  <Ionicons name="eye-outline" size={18} color="#3B82F6" />
-                </View>
-                <View className="flex-1">
-                  <Text
-                    className="text-xs font-quicksand-medium mb-1"
-                    style={{ color: colors.textSecondary }}
-                  >
-                    {i18n.t("enterprise.advertisementDetails.info.views")}
-                  </Text>
-                  <Text
-                    className="text-sm font-quicksand-semibold"
-                    numberOfLines={1}
-                    style={{ color: colors.textPrimary }}
-                  >
-                    {i18n.t("enterprise.advertisementDetails.info.viewsCount", {
-                      count: advertisement.views || 0,
-                    })}
-                  </Text>
-                </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
+              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#3B82F618', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+                <Ionicons name="eye-outline" size={17} color="#3B82F6" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 12, marginBottom: 2 }}>
+                  {i18n.t("enterprise.advertisementDetails.info.views")}
+                </Text>
+                <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 14 }}>
+                  {i18n.t("enterprise.advertisementDetails.info.viewsCount", { count: advertisement.views || 0 })}
+                </Text>
               </View>
             </View>
           </View>
 
-          {/* Boutons d'action avec design moderne et espacement */}
-          <View className="mb-6">
+          {/* Boutons d'action */}
+          <View style={{ gap: 12 }}>
             <TouchableOpacity
               onPress={handleContact}
-              className="py-4 rounded-2xl flex-row items-center justify-center shadow-lg mb-3"
-              style={{ backgroundColor: "#10B981", elevation: 5 }}
-              activeOpacity={0.8}
+              style={{ backgroundColor: '#10B981', borderRadius: 16, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}
+              activeOpacity={0.85}
             >
-              <View
-                className="w-8 h-8 rounded-full items-center justify-center mr-2"
-                style={{ backgroundColor: "rgba(255,255,255,0.2)" }}
-              >
-                <Ionicons name="chatbubble-outline" size={16} color="white" />
-              </View>
-              <Text className="text-white font-quicksand-bold text-base">
+              <Ionicons name="chatbubble-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Text style={{ color: '#FFFFFF', fontFamily: 'Quicksand-Bold', fontSize: 15 }}>
                 {i18n.t("enterprise.advertisementDetails.actions.contact")}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={handleShare}
-              style={{ backgroundColor: colors.card, borderColor: "#10B981" }}
-              className="py-4 rounded-2xl flex-row items-center justify-center border-2"
-              activeOpacity={0.8}
+              style={{ backgroundColor: colors.card, borderRadius: 16, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#10B981' }}
+              activeOpacity={0.85}
             >
-              <View
-                className="w-8 h-8 rounded-full items-center justify-center mr-2"
-                style={{ backgroundColor: "#10B98120" }}
-              >
-                <Ionicons name="share-outline" size={16} color="#10B981" />
-              </View>
-              <Text
-                className="font-quicksand-bold text-base"
-                style={{ color: "#10B981" }}
-              >
+              <Ionicons name="share-outline" size={18} color="#10B981" style={{ marginRight: 8 }} />
+              <Text style={{ color: '#10B981', fontFamily: 'Quicksand-Bold', fontSize: 15 }}>
                 {i18n.t("enterprise.advertisementDetails.actions.share")}
               </Text>
             </TouchableOpacity>
           </View>
 
-          {/* Note avec design élégant */}
-          <View
-            style={{
-              backgroundColor: colors.secondary,
-              borderLeftColor: "#F59E0B",
-              borderLeftWidth: 4,
-            }}
-            className="rounded-2xl p-4 shadow-sm"
-          >
-            <View className="flex-row items-start">
-              <View
-                className="w-8 h-8 rounded-full items-center justify-center mr-3 mt-0.5"
-                style={{ backgroundColor: "#F59E0B20" }}
-              >
-                <Ionicons name="time-outline" size={16} color="#F59E0B" />
-              </View>
-              <View className="flex-1 pr-1">
-                <Text
-                  className="font-quicksand-bold text-base mb-2"
-                  style={{ color: colors.textPrimary }}
-                >
-                  {i18n.t("enterprise.advertisementDetails.limitedOffer.title")}
-                </Text>
-                <Text
-                  className="font-quicksand-medium text-sm leading-6"
-                  style={{ color: colors.textSecondary }}
-                >
-                  {i18n.t(
-                    "enterprise.advertisementDetails.limitedOffer.message",
-                  )}
-                </Text>
-              </View>
+          {/* Note */}
+          <View style={{ backgroundColor: colors.card, borderRadius: 16, borderWidth: 1, borderColor: colors.border, padding: 16, flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 }}>
+            <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#10B98118', alignItems: 'center', justifyContent: 'center', marginRight: 12, marginTop: 2 }}>
+              <Ionicons name="time-outline" size={17} color="#10B981" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 14, marginBottom: 6 }}>
+                {i18n.t("enterprise.advertisementDetails.limitedOffer.title")}
+              </Text>
+              <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 13, lineHeight: 20 }}>
+                {i18n.t("enterprise.advertisementDetails.limitedOffer.message")}
+              </Text>
             </View>
           </View>
         </View>

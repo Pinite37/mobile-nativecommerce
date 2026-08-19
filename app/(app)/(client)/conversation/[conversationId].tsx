@@ -10,6 +10,7 @@ import {
   Image,
   KeyboardAvoidingView,
   Modal,
+  PanResponder,
   Platform,
   Text,
   TextInput,
@@ -37,15 +38,83 @@ const conversationCache = new Map<
   { conversation: Conversation; messages: Message[]; participants: any[]; timestamp: number }
 >();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes en millisecondes
+const SWIPE_THRESHOLD = 65;
+
+const SwipeableRow = ({
+  children,
+  onReply,
+  enabled = true,
+}: {
+  children: React.ReactNode;
+  onReply: () => void;
+  enabled?: boolean;
+}) => {
+  const translateX = React.useRef(new Animated.Value(0)).current;
+  const triggered = React.useRef(false);
+
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onStartShouldSetPanResponderCapture: () => false,
+      onMoveShouldSetPanResponder: (evt, gs) => {
+        if (!enabled) return false;
+        // Capture seulement si : clairement horizontal, nettement vers la droite, pas du bord gauche
+        return gs.dx > 22 && Math.abs(gs.dx) > Math.abs(gs.dy) * 3;
+      },
+      onMoveShouldSetPanResponderCapture: () => false,
+      onPanResponderMove: (_, gs) => {
+        if (gs.dx > 0) {
+          translateX.setValue(Math.min(gs.dx, SWIPE_THRESHOLD + 20));
+          if (gs.dx >= SWIPE_THRESHOLD && !triggered.current) {
+            triggered.current = true;
+          }
+        }
+      },
+      onPanResponderRelease: (_, gs) => {
+        const didTrigger = triggered.current;
+        triggered.current = false;
+        Animated.spring(translateX, { toValue: 0, useNativeDriver: true, damping: 18, stiffness: 220 }).start();
+        if (didTrigger) onReply();
+      },
+      onPanResponderTerminate: () => {
+        triggered.current = false;
+        Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start();
+      },
+    })
+  ).current;
+
+  const iconOpacity = translateX.interpolate({ inputRange: [0, 20, SWIPE_THRESHOLD], outputRange: [0, 0.4, 1], extrapolate: 'clamp' });
+  const iconScale = translateX.interpolate({ inputRange: [0, SWIPE_THRESHOLD], outputRange: [0.5, 1], extrapolate: 'clamp' });
+
+  return (
+    <View>
+      <Animated.View style={{ position: 'absolute', left: 6, top: 0, bottom: 0, justifyContent: 'center', opacity: iconOpacity, transform: [{ scale: iconScale }] }}>
+        <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#10B981', justifyContent: 'center', alignItems: 'center', shadowColor: '#10B981', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.4, shadowRadius: 4, elevation: 4 }}>
+          <Ionicons name="return-up-forward" size={15} color="#FFFFFF" />
+        </View>
+      </Animated.View>
+      <Animated.View {...panResponder.panHandlers} style={{ transform: [{ translateX }] }}>
+        {children}
+      </Animated.View>
+    </View>
+  );
+};
 
 export default function ConversationDetails() {
   const router = useRouter();
   const flatListRef = useRef<FlatList>(null);
   const textInputRef = useRef<TextInput>(null);
   const { user } = useAuth(); // Récupérer l'utilisateur connecté
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+
+  // Animations send + actions modal
+  const sendAnim = useRef(new Animated.Value(1)).current;
+  const sendTranslateY = useRef(new Animated.Value(0)).current;
+  const lastSentLocalId = useRef<string | null>(null);
+  const slideActionsAnim = useRef(new Animated.Value(400)).current;
+  const backdropActionsAnim = useRef(new Animated.Value(0)).current;
 
   // Hook Socket.IO pour la communication temps réel
   const {
@@ -580,6 +649,15 @@ export default function ConversationDetails() {
     // Ajouter immédiatement le message optimiste à la liste
     setMessages((prev) => [...prev, optimisticMessage]);
 
+    // Animation d'envoi - bulle qui monte
+    lastSentLocalId.current = localId;
+    sendTranslateY.setValue(40);
+    sendAnim.setValue(0);
+    Animated.parallel([
+      Animated.spring(sendTranslateY, { toValue: 0, damping: 14, stiffness: 180, useNativeDriver: true }),
+      Animated.timing(sendAnim, { toValue: 1, duration: 220, useNativeDriver: true }),
+    ]).start();
+
     // Réinitialiser les états immédiatement pour meilleure UX
     setNewMessage("");
     setReplyingTo(null);
@@ -1021,14 +1099,9 @@ export default function ConversationDetails() {
         );
       case "read":
         return (
-          <View className="flex-row">
-            <Ionicons name="checkmark" size={12} color="#10B981" />
-            <Ionicons
-              name="checkmark"
-              size={12}
-              color="#10B981"
-              style={{ marginLeft: -6 }}
-            />
+          <View style={{ flexDirection: 'row' }}>
+            <Ionicons name="checkmark" size={12} color="#53BDEB" />
+            <Ionicons name="checkmark" size={12} color="#53BDEB" style={{ marginLeft: -6 }} />
           </View>
         );
       default:
@@ -1039,153 +1112,132 @@ export default function ConversationDetails() {
   // Composant pour un message
   const MessageBubble = ({ message }: { message: Message }) => {
     const currentUserId = getCurrentUserId();
-
-    // Logique améliorée pour déterminer si c'est un message de l'utilisateur actuel
-    // Vérifier plusieurs champs possibles pour l'ID de l'expéditeur
     const senderId = message.sender?._id || (message as any).senderId;
-    const isCurrentUser =
-      currentUserId && senderId && senderId === currentUserId;
-
+    const isCurrentUser = !!(currentUserId && senderId && senderId === currentUserId);
     const isDeleted = message.metadata?.deleted || false;
+    const msgTime = formatMessageTime(message.createdAt || message.sentAt || '');
+    const receivedBg = isDark ? '#1E2A3A' : '#F0F2F5';
+    const hasReply = !!(message.replyTo && !message.replyTo.metadata?.deleted && message.replyTo.text);
+
+    const sentOnLight = isCurrentUser && !isDark;
+    const replyToSenderId = message.replyTo?.sender?._id;
+    const meId = getCurrentUserId();
+    const replyFromMe = !!(replyToSenderId && meId && String(replyToSenderId) === String(meId));
+    const replyAuthorName = (() => {
+      if (!message.replyTo) return '';
+      if (replyFromMe) return 'Vous';
+      // 1. Nom directement dans replyTo.sender
+      const s = message.replyTo.sender;
+      const fromSender = `${s?.firstName ?? ''} ${s?.lastName ?? ''}`.trim();
+      if (fromSender) return fromSender;
+      // 2. Cherche dans le state participants
+      if (replyToSenderId) {
+        const p = participants.find(pt => String(pt._id) === String(replyToSenderId));
+        if (p) return `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim();
+      }
+      // 3. Dans une conversation à 2, si c'est pas moi c'est forcément l'autre
+      if (otherParticipant) return `${otherParticipant.firstName ?? ''} ${otherParticipant.lastName ?? ''}`.trim();
+      return 'Contact';
+    })();
+
+    const scrollToReplied = () => {
+      if (!message.replyTo?._id) return;
+      const idx = messages.findIndex(m => m._id === message.replyTo!._id);
+      if (idx !== -1) flatListRef.current?.scrollToIndex({ index: idx, animated: true, viewPosition: 0.5 });
+    };
+
+    const ReplyPreview = () => hasReply ? (
+      <TouchableOpacity onPress={scrollToReplied} activeOpacity={0.7} style={{
+        backgroundColor: sentOnLight ? 'rgba(0,0,0,0.06)' : isCurrentUser ? 'rgba(0,0,0,0.22)' : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'),
+        borderRadius: 10,
+        borderLeftWidth: 3,
+        borderLeftColor: sentOnLight ? '#10B981' : isCurrentUser ? 'rgba(255,255,255,0.6)' : '#10B981',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        marginBottom: 6,
+      }}>
+        <Text style={{ fontSize: 11, fontFamily: 'Quicksand-Bold', color: sentOnLight ? '#10B981' : isCurrentUser ? 'rgba(255,255,255,0.9)' : '#10B981', marginBottom: 2 }}>
+          {replyAuthorName}
+        </Text>
+        <Text style={{ fontSize: 12, fontFamily: 'Quicksand-Medium', color: sentOnLight ? '#374151' : isCurrentUser ? 'rgba(255,255,255,0.75)' : colors.textSecondary }} numberOfLines={2}>
+          {message.replyTo!.text}
+        </Text>
+      </TouchableOpacity>
+    ) : null;
 
     return (
-      <View className={`mb-4 ${isCurrentUser ? "items-end" : "items-start"}`}>
-        <View className="flex-row items-end max-w-xs">
+      <View style={{ marginBottom: 4, alignItems: isCurrentUser ? 'flex-end' : 'flex-start', paddingHorizontal: 12 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', maxWidth: '80%' }}>
+
+          {/* Avatar — messages reçus uniquement */}
           {!isCurrentUser && (
-            <View className="mr-2">
+            <View style={{ marginRight: 6, marginBottom: 2, flexShrink: 0 }}>
               {message.sender.profileImage ? (
-                <Image
-                  source={{ uri: message.sender.profileImage }}
-                  className="w-8 h-8 rounded-full"
-                  resizeMode="cover"
-                />
+                <Image source={{ uri: message.sender.profileImage }} style={{ width: 30, height: 30, borderRadius: 15 }} resizeMode="cover" />
               ) : (
-                <View className="w-8 h-8 bg-neutral-200 rounded-full justify-center items-center">
-                  <Ionicons
-                    name={
-                      message.sender.role === "ENTERPRISE"
-                        ? "business"
-                        : "person"
-                    }
-                    size={14}
-                    color="#9CA3AF"
-                  />
+                <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: isDark ? '#2D3748' : '#E5E7EB', justifyContent: 'center', alignItems: 'center' }}>
+                  <Ionicons name={message.sender.role === 'ENTERPRISE' ? 'business' : 'person'} size={14} color="#9CA3AF" />
                 </View>
               )}
             </View>
           )}
 
-          <View className="flex-1">
-            {/* Message de réponse */}
-            {message.replyTo && !message.replyTo.metadata.deleted && (
-              <View
-                className="mb-2 px-3 py-2 rounded-xl border-l-4"
-                style={{
-                  backgroundColor: isCurrentUser ? '#ECFDF5' : colors.secondary,
-                  borderLeftColor: isCurrentUser ? '#10B981' : colors.border
-                }}
-              >
-                <Text className="text-xs font-quicksand-medium mb-1" style={{ color: colors.textSecondary }}>
-                  {i18n.t('client.messages.conversationDetail.replyTo')} {message.replyTo.sender.firstName}{" "}
-                  {message.replyTo.sender.lastName}
+          {/* Bulle — taille collée au contenu */}
+          <TouchableOpacity
+            onLongPress={() => { if (!isDeleted) openActionsModal(message); }}
+            activeOpacity={0.85}
+          >
+            {isCurrentUser && !isDeleted ? (
+              <View style={{
+                paddingHorizontal: 12,
+                paddingTop: 9,
+                paddingBottom: 24,
+                borderRadius: 18,
+                borderBottomRightRadius: 5,
+                backgroundColor: isDark ? '#064E3B' : '#E0FCD7',
+                shadowColor: '#10B981',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.15,
+                shadowRadius: 5,
+                elevation: 3,
+              }}>
+                <ReplyPreview />
+                <Text style={{ fontSize: 15, lineHeight: 21, color: isDark ? '#D1FAE5' : '#000000', fontFamily: 'Quicksand-Medium' }}>
+                  {message.text}
                 </Text>
-                <Text className="text-sm" numberOfLines={2} style={{ color: colors.textPrimary }}>
-                  {message.replyTo.metadata.deleted
-                    ? i18n.t('client.messages.conversationDetail.messageDeleted')
-                    : message.replyTo.text}
+                <View style={{ position: 'absolute', bottom: 6, right: 9, flexDirection: 'row', alignItems: 'center' }}>
+                  <Text style={{ fontSize: 10, color: isDark ? 'rgba(209,250,229,0.6)' : '#667781', fontFamily: 'Quicksand-Medium', marginRight: 3 }}>
+                    {msgTime}
+                  </Text>
+                  <MessageStatusIndicator message={message} />
+                </View>
+              </View>
+            ) : (
+              <View style={{
+                paddingHorizontal: 12,
+                paddingTop: 9,
+                paddingBottom: isDeleted ? 10 : 24,
+                borderRadius: 18,
+                borderBottomLeftRadius: 5,
+                backgroundColor: isDeleted ? (isDark ? '#1A2332' : '#F3F4F6') : receivedBg,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.05,
+                shadowRadius: 2,
+                elevation: 1,
+              }}>
+                <ReplyPreview />
+                <Text style={{ fontSize: 15, lineHeight: 21, fontFamily: 'Quicksand-Medium', color: isDeleted ? colors.textSecondary : colors.textPrimary, fontStyle: isDeleted ? 'italic' : 'normal' }}>
+                  {isDeleted ? i18n.t('client.messages.conversationDetail.messageDeleted') : message.text}
                 </Text>
+                {!isDeleted && (
+                  <Text style={{ position: 'absolute', bottom: 6, right: 9, fontSize: 10, color: colors.textSecondary, fontFamily: 'Quicksand-Medium' }}>
+                    {msgTime}
+                  </Text>
+                )}
               </View>
             )}
-
-            {/* Bulle du message */}
-            <TouchableOpacity
-              onLongPress={() => {
-                if (!isDeleted) {
-                  setMessageActionsModal({ visible: true, message });
-                }
-              }}
-              activeOpacity={0.9}
-              className="rounded-2xl overflow-hidden"
-            >
-              {isCurrentUser && !isDeleted ? (
-                <LinearGradient
-                  colors={["#047857", "#10B981"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{
-                    paddingHorizontal: 16,
-                    paddingVertical: 12,
-                    borderRadius: 16,
-                    shadowColor: "#10B981",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.15,
-                    shadowRadius: 8,
-                    elevation: 3,
-                  }}
-                >
-                  <Text
-                    className="font-quicksand-medium text-white"
-                    style={{ fontSize: 15, lineHeight: 20 }}
-                  >
-                    {message.text}
-                  </Text>
-                </LinearGradient>
-              ) : (
-                <View
-                  style={{
-                    paddingHorizontal: 16,
-                    paddingVertical: 12,
-                    borderRadius: 16,
-                    backgroundColor: colors.card,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                  }}
-                >
-                  <Text
-                    className="font-quicksand-medium"
-                    style={{ fontSize: 15, lineHeight: 20, color: isDeleted ? colors.textSecondary : colors.textPrimary, fontStyle: isDeleted ? 'italic' : 'normal' }}
-                  >
-                    {isDeleted ? i18n.t('client.messages.conversationDetail.messageDeleted') : message.text}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-
-            {/* Heure et statut */}
-            <View
-              className={`flex-row items-center mt-1 ${isCurrentUser ? "justify-end" : "justify-start"
-                }`}
-            >
-              <Text className="text-xs font-quicksand-medium mr-1" style={{ color: colors.textSecondary }}>
-                {formatMessageTime(message.createdAt || message.sentAt || "")}
-              </Text>
-              {isCurrentUser && <MessageStatusIndicator message={message} />}
-            </View>
-          </View>
-
-          {isCurrentUser && (
-            <View className="ml-2">
-              {message.sender.profileImage ? (
-                <Image
-                  source={{ uri: message.sender.profileImage }}
-                  className="w-8 h-8 rounded-full"
-                  resizeMode="cover"
-                />
-              ) : (
-                <View className="w-8 h-8 rounded-full justify-center items-center" style={{ backgroundColor: colors.border }}>
-                  <Ionicons
-                    name={
-                      message.sender.role === "ENTERPRISE"
-                        ? "business"
-                        : "person"
-                    }
-                    size={14}
-                    color={colors.textSecondary}
-                  />
-                </View>
-              )}
-            </View>
-          )}
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -1259,6 +1311,23 @@ export default function ConversationDetails() {
     setDeleteOptionsModal({ visible: true, messageId });
   };
 
+  const openActionsModal = (message: Message) => {
+    slideActionsAnim.setValue(400);
+    backdropActionsAnim.setValue(0);
+    setMessageActionsModal({ visible: true, message });
+    Animated.parallel([
+      Animated.spring(slideActionsAnim, { toValue: 0, damping: 22, stiffness: 220, useNativeDriver: true }),
+      Animated.timing(backdropActionsAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+    ]).start();
+  };
+
+  const closeActionsModal = () => {
+    Animated.parallel([
+      Animated.timing(slideActionsAnim, { toValue: 400, duration: 240, useNativeDriver: true }),
+      Animated.timing(backdropActionsAnim, { toValue: 0, duration: 180, useNativeDriver: true }),
+    ]).start(() => setMessageActionsModal({ visible: false, message: null }));
+  };
+
   // Séparateurs de date
   const isSameDay = (a?: string, b?: string) => {
     if (!a || !b) return false;
@@ -1316,18 +1385,34 @@ export default function ConversationDetails() {
       if (!isSameDay(currentTs, prevTs)) showSep = true;
     }
 
+    const senderId = item.sender?._id || (item as any).senderId;
+    const isCurrentUser = !!(getCurrentUserId() && senderId && senderId === getCurrentUserId());
+    const isDeleted = item.metadata?.deleted || false;
+    const isAnimated = item._localId === lastSentLocalId.current;
+
+    const bubble = <MessageBubble message={item} />;
+    const wrappedBubble = !isCurrentUser ? (
+      <SwipeableRow onReply={() => setReplyingTo(item)} enabled={!isDeleted}>
+        {bubble}
+      </SwipeableRow>
+    ) : bubble;
+
     return (
       <View>
         {showSep && currentTs ? (
-          <View className="py-2 items-center">
-            <View className="bg-neutral-100 rounded-full px-3 py-1">
-              <Text className="text-xs text-neutral-600 font-quicksand-medium">
+          <View style={{ paddingVertical: 10, alignItems: 'center' }}>
+            <View style={{ backgroundColor: 'rgba(16,185,129,0.10)', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, borderWidth: 1, borderColor: 'rgba(16,185,129,0.18)' }}>
+              <Text style={{ fontSize: 11, color: '#10B981', fontFamily: 'Quicksand-SemiBold', letterSpacing: 0.3 }}>
                 {dayLabel(currentTs)}
               </Text>
             </View>
           </View>
         ) : null}
-        <MessageBubble message={item} />
+        {isAnimated ? (
+          <Animated.View style={{ opacity: sendAnim, transform: [{ translateY: sendTranslateY }] }}>
+            {wrappedBubble}
+          </Animated.View>
+        ) : wrappedBubble}
       </View>
     );
   };
@@ -1393,54 +1478,63 @@ export default function ConversationDetails() {
   })();
 
   return (
-    <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
+    <View style={{ flex: 1, backgroundColor: isDark ? '#0F1923' : '#EEF2F7' }}>
       <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
       {/* Header */}
       <LinearGradient
         colors={["#047857", "#10B981"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        className="rounded-b-3xl shadow-sm"
         style={{
           position: "absolute",
           top: 0,
           left: 0,
           right: 0,
           zIndex: 1000,
-          paddingTop: insets.top + 16,
-          paddingLeft: insets.left + 24,
-          paddingRight: insets.right + 24,
-          paddingBottom: 16,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 4,
-          borderBottomLeftRadius: 24,
-          borderBottomRightRadius: 24,
+          paddingTop: insets.top + 12,
+          paddingLeft: insets.left + 16,
+          paddingRight: insets.right + 16,
+          paddingBottom: 14,
+          shadowColor: "#059669",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.25,
+          shadowRadius: 12,
+          elevation: 8,
+          borderBottomLeftRadius: 20,
+          borderBottomRightRadius: 20,
         }}
       >
-        <View className="flex-row items-center justify-between">
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <TouchableOpacity
             onPress={() => router.back()}
-            className="flex-row items-center"
+            style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center', marginRight: 10 }}
           >
-            <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
-            <View className="ml-2 flex-1">
-              <Text
-                className="text-base font-quicksand-bold text-white"
-                numberOfLines={1}
-              >
-                {correspondentName}
-              </Text>
-              <Text className="text-xs text-white/90" numberOfLines={1}>
-                {effectiveProduct?.name || "Discussion produit"}
-              </Text>
-            </View>
+            <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
           </TouchableOpacity>
 
-          <TouchableOpacity className="flex-row items-center">
-            <Ionicons name="ellipsis-vertical" size={20} color="#FFFFFF" />
+          {/* Avatar correspondant */}
+          {otherParticipant?.profileImage ? (
+            <Image source={{ uri: otherParticipant.profileImage }} style={{ width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: 'rgba(255,255,255,0.4)', marginRight: 10 }} resizeMode="cover" />
+          ) : (
+            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginRight: 10, borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)' }}>
+              <Ionicons name="person" size={20} color="#FFFFFF" />
+            </View>
+          )}
+
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 16, fontFamily: 'Quicksand-Bold', color: '#FFFFFF' }} numberOfLines={1}>
+              {correspondentName}
+            </Text>
+            <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontFamily: 'Quicksand-Medium' }} numberOfLines={1}>
+              {effectiveProduct?.name || "Discussion produit"}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' }}
+            onPress={() => router.push(`/(app)/(client)/product/${effectiveProduct?._id}` as any)}
+          >
+            <Ionicons name="storefront-outline" size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -1460,19 +1554,25 @@ export default function ConversationDetails() {
             renderItem={renderMessageItem}
             keyExtractor={(item) => item._id}
             className="flex-1 px-4"
+            onScrollToIndexFailed={() => { flatListRef.current?.scrollToOffset({ offset: 0, animated: true }); }}
             ListHeaderComponent={
               effectiveProduct ? (
                 <TouchableOpacity
-                  className="mb-4 rounded-2xl p-4 flex-row items-center"
                   style={{
+                    marginBottom: 16,
+                    borderRadius: 20,
+                    overflow: 'hidden',
                     backgroundColor: colors.card,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.03,
-                    shadowRadius: 4,
-                    elevation: 1,
+                    shadowColor: '#10B981',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 8,
+                    elevation: 3,
                     borderWidth: 1,
                     borderColor: colors.border,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    padding: 12,
                   }}
                   onPress={() => {
                     router.push(
@@ -1486,22 +1586,25 @@ export default function ConversationDetails() {
                         effectiveProduct.images?.[0] ||
                         "https://via.placeholder.com/60x60/CCCCCC/FFFFFF?text=No+Image",
                     }}
-                    className="w-12 h-12 rounded-xl"
+                    style={{ width: 56, height: 56, borderRadius: 14 }}
                     resizeMode="cover"
                   />
-                  <View className="ml-3 flex-1">
+                  <View style={{ marginLeft: 12, flex: 1 }}>
                     <Text
-                      className="text-sm font-quicksand-semibold"
+                      style={{ fontSize: 14, fontFamily: 'Quicksand-SemiBold', color: colors.textPrimary, marginBottom: 4 }}
                       numberOfLines={1}
-                      style={{ color: colors.textPrimary }}
                     >
                       {effectiveProduct.name || i18n.t('client.messages.conversationDetail.productFallback')}
                     </Text>
-                    <Text className="text-base font-quicksand-bold text-primary-600">
-                      {effectiveProduct.price
-                        ? formatPrice(effectiveProduct.price)
-                        : i18n.t('client.messages.conversationDetail.priceUnavailable')}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={{ backgroundColor: 'rgba(16,185,129,0.1)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}>
+                        <Text style={{ fontSize: 13, fontFamily: 'Quicksand-Bold', color: '#10B981' }}>
+                          {effectiveProduct.price
+                            ? formatPrice(effectiveProduct.price)
+                            : i18n.t('client.messages.conversationDetail.priceUnavailable')}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
                   <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
                 </TouchableOpacity>
@@ -1529,18 +1632,14 @@ export default function ConversationDetails() {
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="interactive"
             ListEmptyComponent={
-              <View className="flex-1 justify-center items-center py-20">
-                <View className="bg-neutral-50 rounded-full w-16 h-16 justify-center items-center mb-4">
-                  <Ionicons
-                    name="chatbubble-outline"
-                    size={24}
-                    color="#9CA3AF"
-                  />
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 80, paddingHorizontal: 32 }}>
+                <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(16,185,129,0.08)', justifyContent: 'center', alignItems: 'center', marginBottom: 16, borderWidth: 1.5, borderColor: 'rgba(16,185,129,0.15)' }}>
+                  <Ionicons name="chatbubbles-outline" size={30} color="#10B981" />
                 </View>
-                <Text className="text-lg font-quicksand-bold text-neutral-600 mb-2">
+                <Text style={{ fontSize: 17, fontFamily: 'Quicksand-Bold', color: '#1F2937', marginBottom: 8, textAlign: 'center' }}>
                   {i18n.t('client.messages.conversationDetail.emptyConversation.title')}
                 </Text>
-                <Text className="text-neutral-500 font-quicksand-medium text-center px-6">
+                <Text style={{ fontSize: 13, fontFamily: 'Quicksand-Medium', color: '#9CA3AF', textAlign: 'center', lineHeight: 20 }}>
                   {i18n.t('client.messages.conversationDetail.emptyConversation.subtitle')}
                 </Text>
               </View>
@@ -1549,7 +1648,7 @@ export default function ConversationDetails() {
 
           {/* Zone de réponse améliorée */}
           {replyingTo && (
-            <View className="bg-gradient-to-r from-primary-50 to-blue-50 mx-4 mb-2 rounded-2xl p-4 border-l-4 border-primary-400 shadow-sm">
+            <View style={{ backgroundColor: '#ECFDF5', marginHorizontal: 16, marginBottom: 8, borderRadius: 16, padding: 16, borderLeftWidth: 4, borderLeftColor: '#10B981', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 }}>
               <View className="flex-row items-start justify-between">
                 <View className="flex-1">
                   <View className="flex-row items-center mb-2">
@@ -1580,117 +1679,40 @@ export default function ConversationDetails() {
             </View>
           )}
 
-          {/* Zone de saisie Android */}
-          <View
-            className="px-4"
-            style={{
-              backgroundColor: colors.secondary,
-              borderTopWidth: 1,
-              borderTopColor: colors.border,
-              paddingTop: 12,
-              paddingBottom: Math.max(insets.bottom, 2),
-            }}
-          >
-            <View
-              className="flex-row items-center rounded-3xl p-2"
-              style={{
-                backgroundColor: colors.card,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.08,
-                shadowRadius: 12,
-                elevation: 4,
-                borderWidth: 1,
-                borderColor: colors.border,
-              }}
-            >
-              {/* Zone de texte */}
-              <View className="flex-1 min-h-[40px] max-h-32 justify-center">
-                <TextInput
-                  ref={textInputRef}
-                  value={newMessage}
-                  onChangeText={setNewMessage}
-                  placeholder={i18n.t('client.messages.conversationDetail.placeholder')}
-                  multiline
-                  maxLength={2000}
-                  onContentSizeChange={(e) => {
-                    const height = Math.max(
-                      40,
-                      Math.min(128, e.nativeEvent.contentSize.height)
-                    );
-                    setInputHeight(height);
-                  }}
-                  className="font-quicksand-medium text-base px-4 py-2"
-                  placeholderTextColor={colors.textSecondary}
-                  style={{
-                    color: colors.textPrimary,
-                    height: Math.max(40, inputHeight),
-                    opacity: sending ? 0.95 : 1,
-                  }}
-                  editable={!sending}
-                  textAlignVertical="center"
-                />
-              </View>
-
-              {/* Compteur de caractères */}
+          {/* Zone de saisie */}
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 10, paddingVertical: 8, paddingBottom: Math.max(insets.bottom + 4, 10), backgroundColor: isDark ? '#0F1923' : '#EEF2F7', gap: 8 }}>
+            {/* Pill input */}
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-end', backgroundColor: colors.card, borderRadius: 26, paddingHorizontal: 14, paddingVertical: 9, minHeight: 42, maxHeight: 120, borderWidth: 1, borderColor: colors.border }}>
+              <TextInput
+                ref={textInputRef}
+                value={newMessage}
+                onChangeText={setNewMessage}
+                placeholder={i18n.t('client.messages.conversationDetail.placeholder')}
+                multiline
+                maxLength={2000}
+                onContentSizeChange={(e) => {
+                  const h = Math.max(24, Math.min(100, e.nativeEvent.contentSize.height));
+                  setInputHeight(h);
+                }}
+                placeholderTextColor={colors.textSecondary}
+                style={{ flex: 1, fontFamily: 'Quicksand-Medium', fontSize: 15, color: colors.textPrimary, height: Math.max(24, inputHeight), paddingVertical: 0, textAlignVertical: 'center' }}
+                editable={!sending}
+              />
               {newMessage.length > 1800 && (
-                <View className="absolute top-1 right-20 rounded-full px-2 py-1" style={{ backgroundColor: colors.card }}>
-                  <Text
-                    className={`text-xs font-quicksand-medium ${newMessage.length > 1950
-                        ? "text-red-500"
-                        : "text-orange-500"
-                      }`}
-                  >
-                    {2000 - newMessage.length}
-                  </Text>
-                </View>
-              )}
-
-              {/* Bouton d'envoi amélioré */}
-              {newMessage.trim() ? (
-                <LinearGradient
-                  colors={["#047857", "#10B981"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 24,
-                    marginLeft: 8,
-                    shadowColor: "#10B981",
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 8,
-                    elevation: 8,
-                  }}
-                >
-                  <TouchableOpacity
-                    onPress={handleSendPress}
-                    disabled={sending}
-                    className="w-full h-full justify-center items-center"
-                    style={{
-                      transform: [{ scale: sending ? 0.95 : 1 }],
-                    }}
-                  >
-                    <Ionicons name="send" size={20} color="#FFFFFF" />
-                  </TouchableOpacity>
-                </LinearGradient>
-              ) : (
-                <View
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 24,
-                    marginLeft: 8,
-                    backgroundColor: "#E5E7EB",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <Ionicons name="send-outline" size={20} color="#9CA3AF" />
-                </View>
+                <Text style={{ fontSize: 10, color: newMessage.length > 1950 ? '#EF4444' : '#F97316', fontFamily: 'Quicksand-Medium', marginBottom: 2, marginLeft: 4 }}>
+                  {2000 - newMessage.length}
+                </Text>
               )}
             </View>
+
+            {/* Bouton envoi */}
+            <TouchableOpacity
+              onPress={handleSendPress}
+              disabled={sending || !newMessage.trim()}
+              style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: newMessage.trim() ? '#10B981' : (isDark ? '#1E2A3A' : '#D1D5DB'), justifyContent: 'center', alignItems: 'center', shadowColor: '#10B981', shadowOffset: { width: 0, height: 3 }, shadowOpacity: newMessage.trim() ? 0.3 : 0, shadowRadius: 6, elevation: newMessage.trim() ? 4 : 0 }}
+            >
+              <Ionicons name="send" size={18} color={newMessage.trim() ? '#FFFFFF' : (isDark ? '#4B5563' : '#9CA3AF')} style={{ marginLeft: 2 }} />
+            </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
       ) : (
@@ -1706,19 +1728,25 @@ export default function ConversationDetails() {
             renderItem={renderMessageItem}
             keyExtractor={(item) => item._id}
             className="flex-1 px-4"
+            onScrollToIndexFailed={() => { flatListRef.current?.scrollToOffset({ offset: 0, animated: true }); }}
             ListHeaderComponent={
               effectiveProduct ? (
                 <TouchableOpacity
-                  className="mb-4 rounded-2xl p-4 flex-row items-center"
                   style={{
+                    marginBottom: 16,
+                    borderRadius: 20,
+                    overflow: 'hidden',
                     backgroundColor: colors.card,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.03,
-                    shadowRadius: 4,
-                    elevation: 1,
+                    shadowColor: '#10B981',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 8,
+                    elevation: 3,
                     borderWidth: 1,
                     borderColor: colors.border,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    padding: 12,
                   }}
                   onPress={() => {
                     router.push(
@@ -1732,22 +1760,25 @@ export default function ConversationDetails() {
                         effectiveProduct.images?.[0] ||
                         "https://via.placeholder.com/60x60/CCCCCC/FFFFFF?text=No+Image",
                     }}
-                    className="w-12 h-12 rounded-xl"
+                    style={{ width: 56, height: 56, borderRadius: 14 }}
                     resizeMode="cover"
                   />
-                  <View className="ml-3 flex-1">
+                  <View style={{ marginLeft: 12, flex: 1 }}>
                     <Text
-                      className="text-sm font-quicksand-semibold"
+                      style={{ fontSize: 14, fontFamily: 'Quicksand-SemiBold', color: colors.textPrimary, marginBottom: 4 }}
                       numberOfLines={1}
-                      style={{ color: colors.textPrimary }}
                     >
                       {effectiveProduct.name || i18n.t('client.messages.conversationDetail.productFallback')}
                     </Text>
-                    <Text className="text-base font-quicksand-bold text-primary-600">
-                      {effectiveProduct.price
-                        ? formatPrice(effectiveProduct.price)
-                        : i18n.t('client.messages.conversationDetail.priceUnavailable')}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={{ backgroundColor: 'rgba(16,185,129,0.1)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}>
+                        <Text style={{ fontSize: 13, fontFamily: 'Quicksand-Bold', color: '#10B981' }}>
+                          {effectiveProduct.price
+                            ? formatPrice(effectiveProduct.price)
+                            : i18n.t('client.messages.conversationDetail.priceUnavailable')}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
                   <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
                 </TouchableOpacity>
@@ -1775,18 +1806,14 @@ export default function ConversationDetails() {
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="interactive"
             ListEmptyComponent={
-              <View className="flex-1 justify-center items-center py-20">
-                <View className="bg-neutral-50 rounded-full w-16 h-16 justify-center items-center mb-4">
-                  <Ionicons
-                    name="chatbubble-outline"
-                    size={24}
-                    color="#9CA3AF"
-                  />
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 80, paddingHorizontal: 32 }}>
+                <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(16,185,129,0.08)', justifyContent: 'center', alignItems: 'center', marginBottom: 16, borderWidth: 1.5, borderColor: 'rgba(16,185,129,0.15)' }}>
+                  <Ionicons name="chatbubbles-outline" size={30} color="#10B981" />
                 </View>
-                <Text className="text-lg font-quicksand-bold text-neutral-600 mb-2">
+                <Text style={{ fontSize: 17, fontFamily: 'Quicksand-Bold', color: '#1F2937', marginBottom: 8, textAlign: 'center' }}>
                   {i18n.t('client.messages.conversationDetail.emptyConversation.title')}
                 </Text>
-                <Text className="text-neutral-500 font-quicksand-medium text-center px-6">
+                <Text style={{ fontSize: 13, fontFamily: 'Quicksand-Medium', color: '#9CA3AF', textAlign: 'center', lineHeight: 20 }}>
                   {i18n.t('client.messages.conversationDetail.emptyConversation.subtitle')}
                 </Text>
               </View>
@@ -1795,7 +1822,7 @@ export default function ConversationDetails() {
 
           {/* Zone de réponse améliorée */}
           {replyingTo && (
-            <View className="bg-gradient-to-r from-primary-50 to-blue-50 mx-4 mb-2 rounded-2xl p-4 border-l-4 border-primary-400 shadow-sm">
+            <View style={{ backgroundColor: '#ECFDF5', marginHorizontal: 16, marginBottom: 8, borderRadius: 16, padding: 16, borderLeftWidth: 4, borderLeftColor: '#10B981', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 }}>
               <View className="flex-row items-start justify-between">
                 <View className="flex-1">
                   <View className="flex-row items-center mb-2">
@@ -1828,116 +1855,36 @@ export default function ConversationDetails() {
 
           {/* Zone de saisie iOS */}
           {!isUserAloneInConversation() && (
-            <View
-              className="px-4"
-              style={{
-                backgroundColor: colors.secondary,
-                borderTopWidth: 1,
-                borderTopColor: colors.border,
-                paddingTop: 12,
-                paddingBottom: Math.max(insets.bottom, 12),
-              }}
-            >
-              <View
-                className="flex-row items-center rounded-3xl p-2"
-                style={{
-                  backgroundColor: colors.card,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.08,
-                  shadowRadius: 12,
-                  elevation: 4,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                }}
-              >
-                {/* Zone de texte */}
-                <View className="flex-1 min-h-[40px] max-h-32 justify-center">
-                  <TextInput
-                    ref={textInputRef}
-                    value={newMessage}
-                    onChangeText={setNewMessage}
-                    placeholder={i18n.t('client.messages.conversationDetail.placeholder')}
-                    multiline
-                    maxLength={2000}
-                    onContentSizeChange={(e) => {
-                      const height = Math.max(
-                        40,
-                        Math.min(128, e.nativeEvent.contentSize.height)
-                      );
-                      setInputHeight(height);
-                    }}
-                    className="font-quicksand-medium text-base px-4 py-2"
-                    placeholderTextColor={colors.textSecondary}
-                    style={{
-                      color: colors.textPrimary,
-                      height: Math.max(40, inputHeight),
-                      opacity: sending ? 0.95 : 1,
-                    }}
-                    editable={!sending}
-                    textAlignVertical="center"
-                  />
-                </View>
-
-                {/* Compteur de caractères */}
+            <View style={{ flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 10, paddingVertical: 8, paddingBottom: Math.max(insets.bottom + 4, 10), backgroundColor: isDark ? '#0F1923' : '#EEF2F7', gap: 8 }}>
+              <View style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-end', backgroundColor: colors.card, borderRadius: 26, paddingHorizontal: 14, paddingVertical: 9, minHeight: 42, maxHeight: 120, borderWidth: 1, borderColor: colors.border }}>
+                <TextInput
+                  ref={textInputRef}
+                  value={newMessage}
+                  onChangeText={setNewMessage}
+                  placeholder={i18n.t('client.messages.conversationDetail.placeholder')}
+                  multiline
+                  maxLength={2000}
+                  onContentSizeChange={(e) => {
+                    const h = Math.max(24, Math.min(100, e.nativeEvent.contentSize.height));
+                    setInputHeight(h);
+                  }}
+                  placeholderTextColor={colors.textSecondary}
+                  style={{ flex: 1, fontFamily: 'Quicksand-Medium', fontSize: 15, color: colors.textPrimary, height: Math.max(24, inputHeight), paddingVertical: 0, textAlignVertical: 'center' }}
+                  editable={!sending}
+                />
                 {newMessage.length > 1800 && (
-                  <View className="absolute top-1 right-20 rounded-full px-2 py-1" style={{ backgroundColor: colors.card }}>
-                    <Text
-                      className={`text-xs font-quicksand-medium ${newMessage.length > 1950
-                          ? "text-red-500"
-                          : "text-orange-500"
-                        }`}
-                    >
-                      {2000 - newMessage.length}
-                    </Text>
-                  </View>
-                )}
-
-                {/* Bouton d'envoi amélioré */}
-                {newMessage.trim() ? (
-                  <LinearGradient
-                    colors={["#047857", "#10B981"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 24,
-                      marginLeft: 8,
-                      shadowColor: "#10B981",
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.3,
-                      shadowRadius: 8,
-                      elevation: 8,
-                    }}
-                  >
-                    <TouchableOpacity
-                      onPress={handleSendPress}
-                      disabled={sending}
-                      className="w-full h-full justify-center items-center"
-                      style={{
-                        transform: [{ scale: sending ? 0.95 : 1 }],
-                      }}
-                    >
-                      <Ionicons name="send" size={20} color="#FFFFFF" />
-                    </TouchableOpacity>
-                  </LinearGradient>
-                ) : (
-                  <View
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 24,
-                      marginLeft: 8,
-                      backgroundColor: "#E5E7EB",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Ionicons name="send-outline" size={20} color="#9CA3AF" />
-                  </View>
+                  <Text style={{ fontSize: 10, color: newMessage.length > 1950 ? '#EF4444' : '#F97316', fontFamily: 'Quicksand-Medium', marginBottom: 2, marginLeft: 4 }}>
+                    {2000 - newMessage.length}
+                  </Text>
                 )}
               </View>
+              <TouchableOpacity
+                onPress={handleSendPress}
+                disabled={sending || !newMessage.trim()}
+                style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: newMessage.trim() ? '#10B981' : (isDark ? '#1E2A3A' : '#D1D5DB'), justifyContent: 'center', alignItems: 'center', shadowColor: '#10B981', shadowOffset: { width: 0, height: 3 }, shadowOpacity: newMessage.trim() ? 0.3 : 0, shadowRadius: 6, elevation: newMessage.trim() ? 4 : 0 }}
+              >
+                <Ionicons name="send" size={18} color={newMessage.trim() ? '#FFFFFF' : (isDark ? '#4B5563' : '#9CA3AF')} style={{ marginLeft: 2 }} />
+              </TouchableOpacity>
             </View>
           )}
         </KeyboardAvoidingView>
@@ -2058,114 +2005,91 @@ export default function ConversationDetails() {
         />
       )}
 
-      {/* Modal Actions du message */}
+      {/* Modal Actions du message — slide-up animé */}
       <Modal
         visible={messageActionsModal.visible}
         transparent={true}
-        animationType="fade"
-        onRequestClose={() =>
-          setMessageActionsModal({ visible: false, message: null })
-        }
+        animationType="none"
+        onRequestClose={closeActionsModal}
       >
-        <TouchableOpacity
-          className="flex-1 bg-black/50"
-          activeOpacity={1}
-          onPress={() =>
-            setMessageActionsModal({ visible: false, message: null })
-          }
-        >
-          <View className="flex-1 justify-end">
-            <TouchableOpacity
-              className="bg-white rounded-t-3xl"
-              activeOpacity={1}
-              onPress={() => { }}
-            >
-              {/* Handle bar */}
-              <View className="w-full items-center pt-3 pb-2">
-                <View className="w-12 h-1 bg-neutral-300 rounded-full" />
+        <Animated.View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', opacity: backdropActionsAnim, justifyContent: 'flex-end' }}>
+          <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={closeActionsModal} />
+          <Animated.View style={{ transform: [{ translateY: slideActionsAnim }] }}>
+            <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 28, borderTopRightRadius: 28, overflow: 'hidden', paddingBottom: Math.max(insets.bottom, 12) }}>
+              {/* Handle */}
+              <View style={{ alignItems: 'center', paddingTop: 12, paddingBottom: 8 }}>
+                <View style={{ width: 40, height: 4, backgroundColor: colors.border, borderRadius: 2 }} />
               </View>
 
-              {/* Header */}
-              <View className="px-6 pb-4 border-b border-neutral-100">
-                <Text className="text-lg font-quicksand-bold text-neutral-800">
-                  Actions du message
-                </Text>
-              </View>
+              {/* Aperçu du message */}
+              {messageActionsModal.message && !messageActionsModal.message.metadata?.deleted && (
+                <View style={{ marginHorizontal: 16, marginBottom: 16, backgroundColor: colors.secondary, borderRadius: 14, padding: 12, borderLeftWidth: 3, borderLeftColor: '#10B981' }}>
+                  <Text style={{ fontSize: 11, fontFamily: 'Quicksand-SemiBold', color: '#10B981', marginBottom: 4 }}>
+                    {messageActionsModal.message.sender.firstName} {messageActionsModal.message.sender.lastName}
+                  </Text>
+                  <Text style={{ fontSize: 13, fontFamily: 'Quicksand-Medium', color: colors.textSecondary }} numberOfLines={2}>
+                    {messageActionsModal.message.text}
+                  </Text>
+                </View>
+              )}
 
-              {/* Options */}
-              <View className="px-6 py-2">
+              {/* Actions groupées */}
+              <View style={{ marginHorizontal: 16, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.border }}>
                 <TouchableOpacity
                   onPress={() => {
                     const msg = messageActionsModal.message;
-                    setMessageActionsModal({ visible: false, message: null });
-                    if (msg) setReplyingTo(msg);
+                    closeActionsModal();
+                    setTimeout(() => { if (msg) setReplyingTo(msg); }, 280);
                   }}
-                  className="flex-row items-center py-4 border-b border-neutral-50"
+                  style={{ flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: colors.card }}
                   activeOpacity={0.7}
                 >
-                  <View className="w-10 h-10 rounded-full bg-blue-50 items-center justify-center mr-4">
-                    <Ionicons
-                      name="return-up-forward"
-                      size={20}
-                      color="#3B82F6"
-                    />
+                  <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(16,185,129,0.10)', justifyContent: 'center', alignItems: 'center', marginRight: 14 }}>
+                    <Ionicons name="return-up-forward" size={20} color="#10B981" />
                   </View>
-                  <View className="flex-1">
-                    <Text className="text-base font-quicksand-semibold text-neutral-800">
-                      Répondre
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+                  <Text style={{ fontSize: 15, fontFamily: 'Quicksand-SemiBold', color: colors.textPrimary, flex: 1 }}>
+                    {i18n.t('client.messages.conversationDetail.replyTo').replace(':', '') || 'Répondre'}
+                  </Text>
+                  <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
                 </TouchableOpacity>
 
-                {messageActionsModal.message &&
-                  messageActionsModal.message.sender._id === user?._id && (
+                {messageActionsModal.message && messageActionsModal.message.sender._id === user?._id && (
+                  <>
+                    <View style={{ height: 1, backgroundColor: colors.border }} />
                     <TouchableOpacity
                       onPress={() => {
                         const msgId = messageActionsModal.message?._id;
-                        setMessageActionsModal({
-                          visible: false,
-                          message: null,
-                        });
-                        if (msgId) showDeleteConfirmation(msgId);
+                        closeActionsModal();
+                        setTimeout(() => { if (msgId) showDeleteConfirmation(msgId); }, 280);
                       }}
-                      className="flex-row items-center py-4"
+                      style={{ flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: colors.card }}
                       activeOpacity={0.7}
                     >
-                      <View className="w-10 h-10 rounded-full bg-red-50 items-center justify-center mr-4">
+                      <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(239,68,68,0.10)', justifyContent: 'center', alignItems: 'center', marginRight: 14 }}>
                         <Ionicons name="trash" size={20} color="#EF4444" />
                       </View>
-                      <View className="flex-1">
-                        <Text className="text-base font-quicksand-semibold text-red-500">
-                          Supprimer
-                        </Text>
-                      </View>
-                      <Ionicons
-                        name="chevron-forward"
-                        size={16}
-                        color="#9CA3AF"
-                      />
+                      <Text style={{ fontSize: 15, fontFamily: 'Quicksand-SemiBold', color: '#EF4444', flex: 1 }}>
+                        Supprimer
+                      </Text>
+                      <Ionicons name="chevron-forward" size={16} color="#EF444470" />
                     </TouchableOpacity>
-                  )}
+                  </>
+                )}
               </View>
 
-              {/* Cancel Button */}
-              <View className="px-6 pb-6 pt-2">
-                <TouchableOpacity
-                  onPress={() =>
-                    setMessageActionsModal({ visible: false, message: null })
-                  }
-                  className="w-full bg-neutral-100 py-4 rounded-2xl items-center"
-                  activeOpacity={0.7}
-                >
-                  <Text className="text-base font-quicksand-semibold text-neutral-700">
-                    Annuler
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
+              {/* Annuler */}
+              <TouchableOpacity
+                onPress={closeActionsModal}
+                style={{ margin: 16, marginTop: 10, backgroundColor: colors.secondary, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.border }}
+                activeOpacity={0.7}
+              >
+                <Text style={{ fontSize: 15, fontFamily: 'Quicksand-SemiBold', color: colors.textSecondary }}>
+                  Annuler
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </Animated.View>
       </Modal>
 
       {/* Modal Options de suppression */}

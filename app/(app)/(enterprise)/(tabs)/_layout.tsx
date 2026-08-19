@@ -81,11 +81,11 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Board",
+          title: "Accueil",
           headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
-              name={focused ? "analytics" : "analytics-outline"}
+              name={focused ? "home" : "home-outline"}
               size={focused ? 26 : 24}
               color={color}
             />
@@ -99,7 +99,7 @@ export default function TabsLayout() {
           headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
-              name={focused ? "cube" : "cube-outline"}
+              name={focused ? "storefront" : "storefront-outline"}
               size={focused ? 26 : 24}
               color={color}
             />
@@ -128,7 +128,7 @@ export default function TabsLayout() {
           headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
-              name={focused ? "bicycle" : "bicycle-outline"}
+              name={focused ? "pricetag" : "pricetag-outline"}
               size={focused ? 26 : 24}
               color={color}
             />
