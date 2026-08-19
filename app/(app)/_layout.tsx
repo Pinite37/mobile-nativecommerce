@@ -2,34 +2,58 @@ import * as Notifications from 'expo-notifications';
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+
 export default function AppLayout() {
   const router = useRouter();
   const { userRole, isAuthenticated } = useAuth();
   const lastNotificationResponse = Notifications.useLastNotificationResponse();
   const coldStartHandled = useRef(false);
 
-  const handleNotificationData = (data: Record<string, any>) => {
+  const navigate = (path: string, delay = 0) => {
+    if (delay > 0) {
+      setTimeout(() => router.push(path as any), delay);
+    } else {
+      router.push(path as any);
+    }
+  };
+
+  const handleNotificationData = (data: Record<string, any>, isColdStart = false) => {
     if (!data?.type || !isAuthenticated) return;
 
     const isEnterprise = userRole === 'ENTERPRISE';
+    // Cold start : laisser la navigation s'initialiser avant de pousser
+    const delay = isColdStart ? 300 : 0;
 
     switch (data.type) {
       case 'NEW_PRODUCT':
         if (data.productId) {
-          router.push(
+          navigate(
             isEnterprise
-              ? `/(app)/(enterprise)/product/${data.productId}` as any
-              : `/(app)/(client)/product/${data.productId}` as any
+              ? `/(app)/(enterprise)/product/${data.productId}`
+              : `/(app)/(client)/product/${data.productId}`,
+            delay
           );
         }
         break;
 
       case 'NEW_MESSAGE':
         if (data.conversationId) {
-          router.push(
+          navigate(
             isEnterprise
-              ? `/(app)/(enterprise)/conversation/${data.conversationId}` as any
-              : `/(app)/(client)/conversation/${data.conversationId}` as any
+              ? `/(app)/(enterprise)/conversation/${data.conversationId}`
+              : `/(app)/(client)/conversation/${data.conversationId}`,
+            delay
+          );
+        }
+        break;
+
+      case 'STATUS_REPLY':
+        if (data.conversationId) {
+          navigate(
+            isEnterprise
+              ? `/(app)/(enterprise)/conversation/${data.conversationId}`
+              : `/(app)/(client)/conversation/${data.conversationId}`,
+            delay
           );
         }
         break;
@@ -38,7 +62,7 @@ export default function AppLayout() {
       case 'SUBSCRIPTION':
       case 'UNUSED_PRODUCT_SLOTS':
         if (isEnterprise) {
-          router.push('/(app)/(enterprise)/subscriptions/index');
+          navigate('/(app)/(enterprise)/subscriptions/index', delay);
         }
         break;
 
@@ -46,27 +70,27 @@ export default function AppLayout() {
       case 'OFFER_CREATED':
       case 'OFFER_ACCEPTED':
         if (isEnterprise) {
-          router.push('/(app)/(enterprise)/(tabs)/offers/index');
+          navigate('/(app)/(enterprise)/(tabs)/offers/index', delay);
         }
         break;
 
       case 'ORDER':
       case 'DELIVERY_COMPLETED':
         if (!isEnterprise) {
-          router.push('/(app)/(client)/profile/orders');
+          navigate('/(app)/(client)/profile/orders', delay);
         }
         break;
 
       case 'ACCOUNT_APPROVED':
       case 'ACCOUNT_REJECTED':
-        router.push(
+        navigate(
           isEnterprise
-            ? '/(app)/(enterprise)/profile/info' as any
-            : '/(app)/(client)/profile/details' as any
+            ? '/(app)/(enterprise)/profile/info'
+            : '/(app)/(client)/profile/details',
+          delay
         );
         break;
 
-      // DELIVERY_PROMO → pas de redirection spécifique
       default:
         break;
     }
@@ -76,7 +100,7 @@ export default function AppLayout() {
   useEffect(() => {
     const subscription = Notifications.addNotificationResponseReceivedListener(response => {
       const data = response.notification.request.content.data as Record<string, any>;
-      handleNotificationData(data);
+      handleNotificationData(data, false);
     });
     return () => subscription.remove();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -87,7 +111,7 @@ export default function AppLayout() {
     if (!isAuthenticated || !lastNotificationResponse || coldStartHandled.current) return;
     coldStartHandled.current = true;
     const data = lastNotificationResponse.notification.request.content.data as Record<string, any>;
-    handleNotificationData(data);
+    handleNotificationData(data, true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, userRole, lastNotificationResponse]);
 

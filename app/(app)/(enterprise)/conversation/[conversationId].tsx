@@ -10,6 +10,7 @@ import {
   Easing,
   FlatList,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   PanResponder,
@@ -527,6 +528,16 @@ export default function ConversationDetails() {
   const insets = useSafeAreaInsets();
   const flatListRef = useRef<FlatList>(null);
   const textInputRef = useRef<TextInput>(null);
+
+  // Scroll vers le bas quand le clavier s'ouvre
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const sub = Keyboard.addListener(showEvent, () => {
+      setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+    });
+    return () => sub.remove();
+  }, []);
+
   const { user } = useAuth(); // Récupérer l'utilisateur connecté
   const {
     isConnected,

@@ -180,10 +180,29 @@ export default function MessagesPage() {
 
         // Écouter les messages marqués comme lus
         const handleMessagesRead = (data: any) => {
+          if (!data?.conversationId) return;
+          const readerId: string = data.userId;
           queryClient.setQueryData(['conversations'], (prev: Conversation[] = []) =>
-            prev.map((conv) =>
-              conv._id === data.conversationId ? { ...conv, unreadCount: 0 } : conv
-            )
+            prev.map((conv) => {
+              if (conv._id !== data.conversationId) return conv;
+              const updated: any = { ...conv, unreadCount: 0 };
+              if (readerId && readerId !== user?._id && updated.lastMessage) {
+                const alreadyRead = updated.lastMessage.readBy?.some(
+                  (r: any) => String(r.user) === String(readerId)
+                );
+                if (!alreadyRead) {
+                  updated.lastMessage = {
+                    ...updated.lastMessage,
+                    deliveryStatus: 'READ',
+                    readBy: [
+                      ...(updated.lastMessage.readBy || []),
+                      { user: readerId, readAt: data.readAt || new Date().toISOString() },
+                    ],
+                  };
+                }
+              }
+              return updated;
+            })
           );
         };
 

@@ -366,18 +366,33 @@ export default function ClientMessagesPage() {
     const cleanupMessagesRead = onMessagesRead((data: any) => {
       try {
         if (!data?.conversationId) return;
+        const readerId: string = data.userId;
 
         queryClient.setQueryData(['conversations'], (prev: Conversation[] = []) =>
-          prev.map((conv) =>
-            conv._id === data.conversationId ? { ...conv, unreadCount: 0 } as any : conv
-          )
+          prev.map((conv) => {
+            if (conv._id !== data.conversationId) return conv;
+            const updated: any = { ...conv, unreadCount: 0 };
+            // Si c'est l'autre personne qui a lu, marquer le lastMessage comme lu
+            if (readerId && readerId !== user?._id && updated.lastMessage) {
+              const alreadyRead = updated.lastMessage.readBy?.some(
+                (r: any) => String(r.user) === String(readerId)
+              );
+              if (!alreadyRead) {
+                updated.lastMessage = {
+                  ...updated.lastMessage,
+                  deliveryStatus: 'READ',
+                  readBy: [
+                    ...(updated.lastMessage.readBy || []),
+                    { user: readerId, readAt: data.readAt || new Date().toISOString() },
+                  ],
+                };
+              }
+            }
+            return updated;
+          })
         );
       } catch (e) {
         console.error("❌ Erreur critique Socket.IO messages_read:", e);
-        notifyError(
-          i18n.t("client.messages.notifications.readStatusError.title"),
-          i18n.t("client.messages.notifications.readStatusError.message")
-        );
       }
     });
 
