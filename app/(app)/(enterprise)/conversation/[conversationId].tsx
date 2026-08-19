@@ -2471,13 +2471,10 @@ export default function ConversationDetails() {
       </LinearGradient>
 
       {/* Zone de contenu principal avec KeyboardAvoidingView */}
+      {/* Sur Android, softwareKeyboardLayoutMode="pan" gère déjà le décalage —
+          un KeyboardAvoidingView en plus créerait un double offset (espace vide). */}
       {Platform.OS === "android" ? (
-        <KeyboardAvoidingView
-          className="flex-1"
-          behavior="padding"
-          keyboardVerticalOffset={0}
-          style={{ flex: 1 }}
-        >
+        <View style={{ flex: 1 }}>
           <FlatList
             ref={flatListRef}
             data={messages}
@@ -2647,11 +2644,11 @@ export default function ConversationDetails() {
               <Ionicons name="send" size={18} color={(newMessage.trim() || attachment) ? '#FFFFFF' : (isDark ? '#4B5563' : '#9CA3AF')} style={{ marginLeft: 2 }} />
             </TouchableOpacity>
           </View>
-        </KeyboardAvoidingView>
+        </View>
       ) : (
         <KeyboardAvoidingView
           className="flex-1"
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior="padding"
           style={{ flex: 1 }}
         >
           <FlatList

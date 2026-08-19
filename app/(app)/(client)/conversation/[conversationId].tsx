@@ -1572,13 +1572,9 @@ export default function ConversationDetails() {
 
       {/* Messages et input */}
       {Platform.OS === "android" ? (
-        // Layout pour Android avec KeyboardAvoidingView
-        <KeyboardAvoidingView
-          className="flex-1"
-          behavior="padding"
-          keyboardVerticalOffset={0}
-          style={{ flex: 1 }}
-        >
+        // Sur Android, softwareKeyboardLayoutMode="pan" gère déjà le décalage.
+        // Un KeyboardAvoidingView en plus créerait un double offset (espace vide).
+        <View style={{ flex: 1 }}>
           <FlatList
             ref={flatListRef}
             data={messages}
@@ -1745,12 +1741,12 @@ export default function ConversationDetails() {
               <Ionicons name="send" size={18} color={newMessage.trim() ? '#FFFFFF' : (isDark ? '#4B5563' : '#9CA3AF')} style={{ marginLeft: 2 }} />
             </TouchableOpacity>
           </View>
-        </KeyboardAvoidingView>
+        </View>
       ) : (
         // Layout pour iOS avec KeyboardAvoidingView
         <KeyboardAvoidingView
           className="flex-1"
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior="padding"
           style={{ flex: 1 }}
         >
           <FlatList
