@@ -179,7 +179,7 @@ export default function ConversationDetails() {
   const [sending, setSending] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
-  const [inputHeight, setInputHeight] = useState(50);
+  const [inputHeight, setInputHeight] = useState(0);
   // État pour suivre si le produit est en cours de chargement
   const [productLoading, setProductLoading] = useState(false);
 
@@ -1709,7 +1709,7 @@ export default function ConversationDetails() {
           {/* Zone de saisie */}
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 10, paddingVertical: 8, paddingBottom: Math.max(insets.bottom + 4, 10), backgroundColor: isDark ? '#0F1923' : '#EEF2F7', gap: 8 }}>
             {/* Pill input */}
-            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-end', backgroundColor: colors.card, borderRadius: 26, paddingHorizontal: 14, paddingVertical: 9, minHeight: 42, maxHeight: 120, borderWidth: 1, borderColor: colors.border }}>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 21, paddingHorizontal: 14, minHeight: 42, maxHeight: 120, borderWidth: 1, borderColor: colors.border }}>
               <TextInput
                 ref={textInputRef}
                 value={newMessage}
@@ -1883,7 +1883,7 @@ export default function ConversationDetails() {
           {/* Zone de saisie iOS */}
           {!isUserAloneInConversation() && (
             <View style={{ flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 10, paddingVertical: 8, paddingBottom: Math.max(insets.bottom + 4, 10), backgroundColor: isDark ? '#0F1923' : '#EEF2F7', gap: 8 }}>
-              <View style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-end', backgroundColor: colors.card, borderRadius: 26, paddingHorizontal: 14, paddingVertical: 9, minHeight: 42, maxHeight: 120, borderWidth: 1, borderColor: colors.border }}>
+              <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 21, paddingHorizontal: 14, minHeight: 42, maxHeight: 120, borderWidth: 1, borderColor: colors.border }}>
                 <TextInput
                   ref={textInputRef}
                   value={newMessage}

@@ -27,6 +27,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import NotificationModal, {
   useNotification,
 } from "../../../../components/ui/NotificationModal";
@@ -542,7 +543,7 @@ export default function ConversationDetails() {
   const [sending, setSending] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
-  const [inputHeight, setInputHeight] = useState(50);
+  const [inputHeight, setInputHeight] = useState(0);
   const [attachment, setAttachment] = useState<{
     type: "IMAGE" | "FILE";
     data: string;
@@ -573,6 +574,11 @@ export default function ConversationDetails() {
   const [tempPickerDate, setTempPickerDate] = useState<Date>(
     new Date(Date.now() + 60 * 60 * 1000)
   );
+
+  const zoneInputRef = useRef<any>(null);
+  const feeInputRef = useRef<any>(null);
+  const instructionsInputRef = useRef<any>(null);
+  const formScrollRef = useRef<ScrollView>(null);
 
   const openOfferModal = () => {
     if (!offerForm.expiresAt) {
@@ -2614,7 +2620,7 @@ export default function ConversationDetails() {
 
           {/* Zone de saisie Android */}
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 10, paddingVertical: 8, paddingBottom: Math.max(insets.bottom + 4, 10), backgroundColor: isDark ? '#0F1923' : '#EEF2F7', gap: 8 }}>
-            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-end', backgroundColor: colors.card, borderRadius: 26, paddingHorizontal: 14, paddingVertical: 9, minHeight: 42, maxHeight: 120, borderWidth: 1, borderColor: colors.border }}>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 21, paddingHorizontal: 14, minHeight: 42, maxHeight: 120, borderWidth: 1, borderColor: colors.border }}>
               <TextInput
                 ref={textInputRef}
                 value={newMessage}
@@ -2789,7 +2795,7 @@ export default function ConversationDetails() {
 
           {/* Zone de saisie iOS */}
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 10, paddingVertical: 8, paddingBottom: Math.max(insets.bottom + 4, 10), backgroundColor: isDark ? '#0F1923' : '#EEF2F7', gap: 8 }}>
-            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-end', backgroundColor: colors.card, borderRadius: 26, paddingHorizontal: 14, paddingVertical: 9, minHeight: 42, maxHeight: 120, borderWidth: 1, borderColor: colors.border }}>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 21, paddingHorizontal: 14, minHeight: 42, maxHeight: 120, borderWidth: 1, borderColor: colors.border }}>
               <TextInput
                 ref={textInputRef}
                 value={newMessage}
@@ -2933,393 +2939,293 @@ export default function ConversationDetails() {
         animationType="slide"
         onRequestClose={closeOfferModal}
       >
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
-          <Pressable style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} onPress={closeOfferModal} />
-          <View style={{ maxHeight: '85%' }}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-            style={{ flex: 1 }}
-          >
-            <View
-              style={{ borderTopLeftRadius: 32, borderTopRightRadius: 32, backgroundColor: colors.card, overflow: 'hidden', flex: 1 }}
-            >
-              {/* Header avec dégradé - FIXE */}
-              <LinearGradient
-                colors={["#10B981", "#34D399"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                className="px-6 pt-6 pb-4 rounded-t-[32px]"
-                style={{
-                  paddingTop: 24,
-                  paddingBottom: 16,
-                  paddingLeft: 12,
-                  paddingRight: 12,
-                }}
-              >
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center flex-1">
-                    <View className="w-10 h-10 bg-card/20 rounded-full justify-center items-center mr-3">
-                      <Ionicons name="car" size={20} color="#FFFFFF" />
-                    </View>
-                    <Text className="text-xl font-quicksand-bold text-white flex-1">
-                      {i18n.t('enterprise.messages.conversationDetail.deliveryOffer')}
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    onPress={closeOfferModal}
-                    className="w-10 h-10 bg-card/20 rounded-full justify-center items-center"
-                  >
-                    <Ionicons name="close" size={22} color="#FFFFFF" />
-                  </TouchableOpacity>
-                </View>
-              </LinearGradient>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1, justifyContent: 'flex-end' }}
+        >
+          {/* Backdrop */}
+          <Pressable
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)' }}
+            onPress={closeOfferModal}
+          />
 
-              {/* Contenu scrollable - flex-1 pour prendre tout l'espace disponible */}
-              <ScrollView
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={true}
-                className="flex-1 px-6"
-                contentContainerStyle={{ paddingTop: 20, paddingBottom: 290 }}
-                nestedScrollEnabled={true}
-              >
-                {/* Zone de livraison */}
-                <View className="mb-5">
-                  <View className="flex-row items-center mb-2">
-                    <Ionicons name="location" size={16} color="#10B981" />
-                    <Text style={{ color: colors.textPrimary }} className="text-sm font-quicksand-semibold ml-2">
-                      {i18n.t('enterprise.messages.conversationDetail.offerForm.deliveryZone')}
-                    </Text>
-                  </View>
-                  <View style={{ backgroundColor: colors.secondary, borderColor: colors.border }} className="rounded-2xl border-2 overflow-hidden">
-                    <TextInput
-                      value={offerForm.deliveryZone}
-                      onChangeText={(text) =>
-                        setOfferForm({ ...offerForm, deliveryZone: text })
-                      }
-                      placeholder={i18n.t('enterprise.messages.conversationDetail.offerForm.deliveryZonePlaceholder')}
-                      className="px-4 py-3 font-quicksand-medium text-base"
-                      style={{ color: colors.textPrimary }}
-                      placeholderTextColor={colors.textSecondary}
-                      returnKeyType="next"
-                    />
-                  </View>
-                </View>
+          {/* Sheet */}
+          <View style={{ flex: 1, maxHeight: '90%', borderTopLeftRadius: 28, borderTopRightRadius: 28, backgroundColor: colors.card, overflow: 'hidden' }}>
 
-                {/* Frais de livraison */}
-                <View className="mb-5">
-                  <View className="flex-row items-center mb-2">
-                    <Ionicons name="cash" size={16} color="#10B981" />
-                    <Text style={{ color: colors.textPrimary }} className="text-sm font-quicksand-semibold ml-2">
-                      {i18n.t('enterprise.messages.conversationDetail.offerForm.deliveryFee')}
-                    </Text>
-                  </View>
-                  <View style={{ backgroundColor: colors.secondary, borderColor: colors.border }} className="rounded-2xl border-2 overflow-hidden flex-row items-center">
-                    <TextInput
-                      value={offerForm.deliveryFee}
-                      onChangeText={(text) =>
-                        setOfferForm({ ...offerForm, deliveryFee: text })
-                      }
-                      placeholder="0"
-                      keyboardType="numeric"
-                      className="flex-1 px-4 py-3 font-quicksand-semibold text-base"
-                      style={{ color: colors.textPrimary }}
-                      placeholderTextColor={colors.textSecondary}
-                      returnKeyType="next"
-                    />
-                    <Text style={{ color: colors.textSecondary }} className="font-quicksand-medium text-sm pr-4">
-                      FCFA
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Urgence */}
-                <View className="mb-5">
-                  <View className="flex-row items-center mb-2">
-                    <Ionicons name="speedometer" size={16} color="#10B981" />
-                    <Text style={{ color: colors.textPrimary }} className="text-sm font-quicksand-semibold ml-2">
-                      {i18n.t('enterprise.messages.conversationDetail.offerForm.urgencyLevel')}
-                    </Text>
-                  </View>
-                  <View className="flex-row gap-2">
-                    <TouchableOpacity
-                      onPress={() =>
-                        setOfferForm({ ...offerForm, urgency: "LOW" })
-                      }
-                      style={{
-                        backgroundColor: offerForm.urgency === "LOW" ? (isDark ? "rgba(16, 185, 129, 0.15)" : "#ECFDF5") : colors.secondary,
-                        borderColor: offerForm.urgency === "LOW" ? "#10B981" : colors.border,
-                        borderWidth: 2
-                      }}
-                      className="flex-1 rounded-2xl px-4 py-4 justify-center items-center"
-                      activeOpacity={1}
-                    >
-                      <Ionicons
-                        name="walk"
-                        size={20}
-                        color={
-                          offerForm.urgency === "LOW" ? "#10B981" : colors.textSecondary
-                        }
-                      />
-                      <Text
-                        style={{
-                          color: offerForm.urgency === "LOW" ? "#10B981" : colors.textSecondary
-                        }}
-                        className="font-quicksand-semibold text-xs mt-1"
-                      >
-                        {i18n.t('enterprise.messages.conversationDetail.offerForm.urgencyLow')}
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() =>
-                        setOfferForm({ ...offerForm, urgency: "MEDIUM" })
-                      }
-                      style={{
-                        backgroundColor: offerForm.urgency === "MEDIUM" ? (isDark ? "rgba(249, 115, 22, 0.15)" : "#FFF7ED") : colors.secondary,
-                        borderColor: offerForm.urgency === "MEDIUM" ? "#F97316" : colors.border,
-                        borderWidth: 2
-                      }}
-                      className="flex-1 rounded-2xl px-4 py-4 justify-center items-center"
-                      activeOpacity={1}
-                    >
-                      <Ionicons
-                        name="bicycle"
-                        size={20}
-                        color={
-                          offerForm.urgency === "MEDIUM" ? "#F97316" : colors.textSecondary
-                        }
-                      />
-                      <Text
-                        style={{
-                          color: offerForm.urgency === "MEDIUM" ? "#F97316" : colors.textSecondary
-                        }}
-                        className="font-quicksand-semibold text-xs mt-1"
-                      >
-                        {i18n.t('enterprise.messages.conversationDetail.offerForm.urgencyMedium')}
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() =>
-                        setOfferForm({ ...offerForm, urgency: "HIGH" })
-                      }
-                      style={{
-                        backgroundColor: offerForm.urgency === "HIGH" ? (isDark ? "rgba(239, 68, 68, 0.15)" : "#FEF2F2") : colors.secondary,
-                        borderColor: offerForm.urgency === "HIGH" ? "#EF4444" : colors.border,
-                        borderWidth: 2
-                      }}
-                      className="flex-1 rounded-2xl px-4 py-4 justify-center items-center"
-                      activeOpacity={1}
-                    >
-                      <Ionicons
-                        name="rocket"
-                        size={20}
-                        color={
-                          offerForm.urgency === "HIGH" ? "#EF4444" : colors.textSecondary
-                        }
-                      />
-                      <Text
-                        style={{
-                          color: offerForm.urgency === "HIGH" ? "#EF4444" : colors.textSecondary
-                        }}
-                        className="font-quicksand-semibold text-xs mt-1"
-                      >
-                        {i18n.t('enterprise.messages.conversationDetail.offerForm.urgencyHigh')}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                {/* Date d'expiration */}
-                <View className="mb-5">
-                  <View className="flex-row items-center mb-2">
-                    <Ionicons name="time" size={16} color="#10B981" />
-                    <Text style={{ color: colors.textPrimary }} className="text-sm font-quicksand-semibold ml-2">
-                      {i18n.t('enterprise.messages.conversationDetail.offerForm.expirationDate')}
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => {
-                      if (Platform.OS === "ios") {
-                        setTempPickerDate(
-                          offerForm.expiresAt
-                            ? new Date(offerForm.expiresAt)
-                            : new Date(Date.now() + 60 * 60 * 1000)
-                        );
-                        closeOfferModal();
-                        setTimeout(() => setShowDatePicker(true), 300);
-                      } else {
-                        setShowDatePicker(true);
-                      }
-                    }}
-                    style={{ backgroundColor: colors.secondary, borderColor: colors.border }}
-                    className="rounded-2xl border-2 px-4 py-3 flex-row items-center justify-between"
-                  >
-                    <Text
-                      style={{
-                        color: offerForm.expiresAt ? colors.textPrimary : colors.textSecondary
-                      }}
-                      className="font-quicksand-medium text-base"
-                    >
-                      {offerForm.expiresAt
-                        ? new Date(offerForm.expiresAt).toLocaleString(
-                            "fr-FR",
-                            {
-                              day: "2-digit",
-                              month: "short",
-                              year: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }
-                          )
-                        : i18n.t('enterprise.messages.conversationDetail.offerForm.chooseDateTime')}
-                    </Text>
-                    <Ionicons name="calendar" size={18} color="#10B981" />
-                  </TouchableOpacity>
-                  {Platform.OS === "android" && showDatePicker && (
-                    <DateTimePicker
-                      value={
-                        offerForm.expiresAt
-                          ? new Date(offerForm.expiresAt)
-                          : new Date(Date.now() + 60 * 60 * 1000)
-                      }
-                      mode={"date"}
-                      display={"default"}
-                      minimumDate={new Date()}
-                      onChange={(
-                        event: DateTimePickerEvent,
-                        selectedDate?: Date
-                      ) => {
-                        setShowDatePicker(false);
-                        if ((event as any).type === "dismissed") return;
-                        const picked = selectedDate || new Date();
-                        setTempExpiryDate(picked);
-                        setShowTimePicker(true);
-                      }}
-                    />
-                  )}
-                  {Platform.OS === "android" && showTimePicker && (
-                    <DateTimePicker
-                      value={tempExpiryDate || new Date()}
-                      mode={"time"}
-                      display={"default"}
-                      onChange={(
-                        event: DateTimePickerEvent,
-                        selectedTime?: Date
-                      ) => {
-                        setShowTimePicker(false);
-                        if ((event as any).type === "dismissed") return;
-                        const base = tempExpiryDate || new Date();
-                        const time = selectedTime || new Date();
-                        const final = new Date(base);
-                        final.setHours(
-                          time.getHours(),
-                          time.getMinutes(),
-                          0,
-                          0
-                        );
-                        setOfferForm({
-                          ...offerForm,
-                          expiresAt: final.toISOString(),
-                        });
-                        setTempExpiryDate(null);
-                      }}
-                    />
-                  )}
-                </View>
-
-                {/* Instructions spéciales */}
-                <View className="mb-5">
-                  <View className="flex-row items-center mb-2">
-                    <Ionicons name="document-text" size={16} color="#10B981" />
-                    <Text style={{ color: colors.textPrimary }} className="text-sm font-quicksand-semibold ml-2">
-                      {i18n.t('enterprise.messages.conversationDetail.offerForm.specialInstructions')}
-                    </Text>
-                  </View>
-                  <View style={{ backgroundColor: colors.secondary, borderColor: colors.border }} className="rounded-2xl border-2 overflow-hidden">
-                    <TextInput
-                      value={offerForm.specialInstructions}
-                      onChangeText={(text) =>
-                        setOfferForm({
-                          ...offerForm,
-                          specialInstructions: text,
-                        })
-                      }
-                      placeholder={i18n.t('enterprise.messages.conversationDetail.offerForm.specialInstructionsPlaceholder')}
-                      className="px-4 py-3 font-quicksand-medium text-base min-h-[100px]"
-                      style={{ color: colors.textPrimary }}
-                      placeholderTextColor={colors.textSecondary}
-                      multiline
-                      textAlignVertical="top"
-                      returnKeyType="done"
-                    />
-                  </View>
-                </View>
-              </ScrollView>
-
-              {/* Actions - Fixés en bas avec safe area */}
-              <View
-                className="px-6 py-4 flex-row gap-3"
-                style={{ 
-                  paddingBottom: Math.max(insets.bottom, 16),
-                  backgroundColor: colors.card,
-                  borderTopWidth: 1,
-                  borderTopColor: colors.border
-                }}
-              >
-                <TouchableOpacity
-                  onPress={closeOfferModal}
-                  style={{ backgroundColor: colors.secondary }}
-                  className="flex-1 py-4 rounded-2xl justify-center items-center"
-                  disabled={creatingOffer}
-                >
-                  <Text style={{ color: colors.textPrimary }} className="font-quicksand-bold text-base">
-                    {i18n.t('enterprise.messages.conversationDetail.cancel')}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={submitOffer}
-                  disabled={creatingOffer}
-                  className="flex-1"
-                  style={{
-                    opacity: creatingOffer ? 0.7 : 1,
-                    borderRadius: 16,
-                    overflow: "hidden",
-                  }}
-                  activeOpacity={1}
-                >
-                  <LinearGradient
-                    colors={["#10B981", "#059669"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={{
-                      width: "100%",
-                      paddingVertical: 16,
-                      justifyContent: "center",
-                      alignItems: "center",
-                      borderRadius: 16,
-                    }}
-                  >
-                    {creatingOffer ? (
-                      <ActivityIndicator size="small" color="#FFFFFF" />
-                    ) : (
-                      <View className="flex-row items-center">
-                        <Ionicons
-                          name="checkmark-circle"
-                          size={20}
-                          color="#FFFFFF"
-                        />
-                        <Text className="text-white font-quicksand-bold text-base ml-2">
-                          {i18n.t('enterprise.messages.conversationDetail.offerForm.publishOffer')}
-                        </Text>
-                      </View>
-                    )}
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
+            {/* Handle pill */}
+            <View style={{ alignItems: 'center', paddingTop: 10, paddingBottom: 4 }}>
+              <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
             </View>
-          </KeyboardAvoidingView>
+
+            {/* Header compact */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16 }}>
+              <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: 'rgba(16,185,129,0.12)', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                <Ionicons name="car" size={20} color="#10B981" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 18, lineHeight: 22 }}>
+                  {i18n.t('enterprise.messages.conversationDetail.deliveryOffer')}
+                </Text>
+                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 12, marginTop: 1 }}>
+                  Renseignez les détails de votre offre
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={closeOfferModal}
+                style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: colors.secondary, justifyContent: 'center', alignItems: 'center' }}
+              >
+                <Ionicons name="close" size={18} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Séparateur */}
+            <View style={{ height: 1, backgroundColor: colors.border, marginHorizontal: 20 }} />
+
+            {/* Formulaire scrollable */}
+            <ScrollView
+              ref={formScrollRef}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              style={{ flex: 1 }}
+              contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 32 }}
+            >
+              {/* Zone de livraison */}
+              <View style={{ marginBottom: 18 }}>
+                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+                  {i18n.t('enterprise.messages.conversationDetail.offerForm.deliveryZone')}
+                </Text>
+                <View style={{
+                  flexDirection: 'row', alignItems: 'center',
+                  backgroundColor: colors.secondary,
+                  borderWidth: 1.5,
+                  borderColor: colors.border,
+                  borderRadius: 14,
+                  paddingHorizontal: 14,
+                }}>
+                  <Ionicons name="location-outline" size={16} color="#10B981" style={{ marginRight: 8 }} />
+                  <TextInput
+                    ref={zoneInputRef}
+                    value={offerForm.deliveryZone}
+                    onChangeText={(text) => setOfferForm({ ...offerForm, deliveryZone: text })}
+                    placeholder={i18n.t('enterprise.messages.conversationDetail.offerForm.deliveryZonePlaceholder')}
+                    style={{ flex: 1, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', fontSize: 15, paddingVertical: 13 }}
+                    placeholderTextColor={colors.textSecondary}
+                    returnKeyType="next"
+                    onSubmitEditing={() => feeInputRef.current?.focus()}
+                    blurOnSubmit={false}
+                    onFocus={() => formScrollRef.current?.scrollTo({ y: 0, animated: true })}
+                  />
+                </View>
+              </View>
+
+              {/* Frais de livraison */}
+              <View style={{ marginBottom: 18 }}>
+                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+                  {i18n.t('enterprise.messages.conversationDetail.offerForm.deliveryFee')}
+                </Text>
+                <View style={{
+                  flexDirection: 'row', alignItems: 'center',
+                  backgroundColor: colors.secondary,
+                  borderWidth: 1.5,
+                  borderColor: colors.border,
+                  borderRadius: 14,
+                  paddingHorizontal: 14,
+                }}>
+                  <Ionicons name="cash-outline" size={16} color="#10B981" style={{ marginRight: 8 }} />
+                  <TextInput
+                    ref={feeInputRef}
+                    value={offerForm.deliveryFee}
+                    onChangeText={(text) => setOfferForm({ ...offerForm, deliveryFee: text })}
+                    placeholder="0"
+                    keyboardType="numeric"
+                    style={{ flex: 1, color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 15, paddingVertical: 13 }}
+                    placeholderTextColor={colors.textSecondary}
+                    returnKeyType="next"
+                    onSubmitEditing={() => instructionsInputRef.current?.focus()}
+                    blurOnSubmit={false}
+                    onFocus={() => formScrollRef.current?.scrollTo({ y: 0, animated: true })}
+                  />
+                  <View style={{ backgroundColor: 'rgba(16,185,129,0.1)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
+                    <Text style={{ color: '#10B981', fontFamily: 'Quicksand-Bold', fontSize: 12 }}>FCFA</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Urgence — chips horizontaux */}
+              <View style={{ marginBottom: 18 }}>
+                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>
+                  {i18n.t('enterprise.messages.conversationDetail.offerForm.urgencyLevel')}
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  {([
+                    { value: 'LOW',    label: i18n.t('enterprise.messages.conversationDetail.offerForm.urgencyLow'),    icon: 'walk',    activeColor: '#10B981', activeBg: isDark ? 'rgba(16,185,129,0.15)' : '#ECFDF5' },
+                    { value: 'MEDIUM', label: i18n.t('enterprise.messages.conversationDetail.offerForm.urgencyMedium'), icon: 'bicycle', activeColor: '#F97316', activeBg: isDark ? 'rgba(249,115,22,0.15)' : '#FFF7ED' },
+                    { value: 'HIGH',   label: i18n.t('enterprise.messages.conversationDetail.offerForm.urgencyHigh'),   icon: 'rocket',  activeColor: '#EF4444', activeBg: isDark ? 'rgba(239,68,68,0.15)' : '#FEF2F2' },
+                  ] as const).map(({ value, label, icon, activeColor, activeBg }) => {
+                    const active = offerForm.urgency === value;
+                    return (
+                      <TouchableOpacity
+                        key={value}
+                        onPress={() => setOfferForm({ ...offerForm, urgency: value })}
+                        activeOpacity={0.75}
+                        style={{
+                          flex: 1,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 6,
+                          paddingVertical: 10,
+                          paddingHorizontal: 6,
+                          borderRadius: 12,
+                          borderWidth: 1.5,
+                          borderColor: active ? activeColor : colors.border,
+                          backgroundColor: active ? activeBg : colors.secondary,
+                        }}
+                      >
+                        <Ionicons name={icon as any} size={15} color={active ? activeColor : colors.textSecondary} />
+                        <Text style={{ color: active ? activeColor : colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 12 }}>
+                          {label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* Date d'expiration */}
+              <View style={{ marginBottom: 18 }}>
+                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+                  {i18n.t('enterprise.messages.conversationDetail.offerForm.expirationDate')}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    if (Platform.OS === "ios") {
+                      setTempPickerDate(offerForm.expiresAt ? new Date(offerForm.expiresAt) : new Date(Date.now() + 60 * 60 * 1000));
+                      closeOfferModal();
+                      setTimeout(() => setShowDatePicker(true), 300);
+                    } else {
+                      setShowDatePicker(true);
+                    }
+                  }}
+                  style={{
+                    flexDirection: 'row', alignItems: 'center',
+                    backgroundColor: colors.secondary,
+                    borderWidth: 1.5, borderColor: colors.border, borderRadius: 14,
+                    paddingHorizontal: 14, paddingVertical: 13,
+                  }}
+                >
+                  <Ionicons name="calendar-outline" size={16} color="#10B981" style={{ marginRight: 10 }} />
+                  <Text style={{ flex: 1, color: offerForm.expiresAt ? colors.textPrimary : colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 15 }}>
+                    {offerForm.expiresAt
+                      ? new Date(offerForm.expiresAt).toLocaleString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+                      : i18n.t('enterprise.messages.conversationDetail.offerForm.chooseDateTime')}
+                  </Text>
+                  <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
+                </TouchableOpacity>
+                {Platform.OS === "android" && showDatePicker && (
+                  <DateTimePicker
+                    value={offerForm.expiresAt ? new Date(offerForm.expiresAt) : new Date(Date.now() + 60 * 60 * 1000)}
+                    mode={"date"}
+                    display={"default"}
+                    minimumDate={new Date()}
+                    onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
+                      setShowDatePicker(false);
+                      if ((event as any).type === "dismissed") return;
+                      const picked = selectedDate || new Date();
+                      setTempExpiryDate(picked);
+                      setShowTimePicker(true);
+                    }}
+                  />
+                )}
+                {Platform.OS === "android" && showTimePicker && (
+                  <DateTimePicker
+                    value={tempExpiryDate || new Date()}
+                    mode={"time"}
+                    display={"default"}
+                    onChange={(event: DateTimePickerEvent, selectedTime?: Date) => {
+                      setShowTimePicker(false);
+                      if ((event as any).type === "dismissed") return;
+                      const base = tempExpiryDate || new Date();
+                      const time = selectedTime || new Date();
+                      const final = new Date(base);
+                      final.setHours(time.getHours(), time.getMinutes(), 0, 0);
+                      setOfferForm({ ...offerForm, expiresAt: final.toISOString() });
+                      setTempExpiryDate(null);
+                    }}
+                  />
+                )}
+              </View>
+
+              {/* Instructions spéciales */}
+              <View style={{ marginBottom: 4 }}>
+                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+                  {i18n.t('enterprise.messages.conversationDetail.offerForm.specialInstructions')}
+                </Text>
+                <View style={{
+                  backgroundColor: colors.secondary,
+                  borderWidth: 1.5, borderColor: colors.border, borderRadius: 14,
+                  padding: 14,
+                }}>
+                  <TextInput
+                    ref={instructionsInputRef}
+                    value={offerForm.specialInstructions}
+                    onChangeText={(text) => setOfferForm({ ...offerForm, specialInstructions: text })}
+                    placeholder={i18n.t('enterprise.messages.conversationDetail.offerForm.specialInstructionsPlaceholder')}
+                    style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Medium', fontSize: 15, minHeight: 90, textAlignVertical: 'top' }}
+                    placeholderTextColor={colors.textSecondary}
+                    multiline
+                    returnKeyType="done"
+                    blurOnSubmit={true}
+                    onFocus={() => setTimeout(() => formScrollRef.current?.scrollToEnd({ animated: true }), 100)}
+                  />
+                </View>
+              </View>
+            </ScrollView>
+
+            {/* Actions fixées en bas */}
+            <View style={{
+              flexDirection: 'row', gap: 10,
+              paddingHorizontal: 20, paddingTop: 12,
+              paddingBottom: Math.max(insets.bottom + 4, 20),
+              borderTopWidth: 1, borderTopColor: colors.border,
+              backgroundColor: colors.card,
+            }}>
+              <TouchableOpacity
+                onPress={closeOfferModal}
+                disabled={creatingOffer}
+                style={{ flex: 1, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.secondary, justifyContent: 'center', alignItems: 'center' }}
+              >
+                <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 15 }}>
+                  {i18n.t('enterprise.messages.conversationDetail.cancel')}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={submitOffer}
+                disabled={creatingOffer}
+                style={{ flex: 2, borderRadius: 14, overflow: 'hidden', opacity: creatingOffer ? 0.7 : 1 }}
+                activeOpacity={0.85}
+              >
+                <LinearGradient
+                  colors={["#10B981", "#059669"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{ paddingVertical: 14, justifyContent: 'center', alignItems: 'center', flexDirection: 'row', gap: 8 }}
+                >
+                  {creatingOffer ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <>
+                      <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
+                      <Text style={{ color: '#FFFFFF', fontFamily: 'Quicksand-Bold', fontSize: 15 }}>
+                        {i18n.t('enterprise.messages.conversationDetail.offerForm.publishOffer')}
+                      </Text>
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Modal iOS pour le sélecteur de date */}
