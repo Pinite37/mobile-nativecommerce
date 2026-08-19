@@ -22,6 +22,7 @@ import i18n from "../../../../../i18n/i18n";
 import EnterpriseService, {
   Enterprise,
 } from "../../../../../services/api/EnterpriseService";
+import FollowService from "../../../../../services/api/FollowService";
 import { Product } from "../../../../../types/product";
 import {
   openPhoneCall,
@@ -58,6 +59,10 @@ export default function EnterpriseDetails() {
     message: "",
   });
 
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followLoading, setFollowLoading] = useState(false);
+
   useEffect(() => {
     if (id) {
       loadEnterpriseData();
@@ -84,6 +89,12 @@ export default function EnterpriseDetails() {
           pages: 0,
         },
       );
+      if (id) {
+        FollowService.getStatus(id).then(s => {
+          setIsFollowing(s.isFollowing);
+          setFollowerCount(s.followerCount);
+        }).catch(() => {});
+      }
     } catch (error) {
       console.log("❌ Erreur chargement entreprise:", error);
       setErrorModal({
@@ -121,6 +132,23 @@ export default function EnterpriseDetails() {
     setRefreshing(true);
     await loadEnterpriseData();
     setRefreshing(false);
+  };
+
+  const handleToggleFollow = async () => {
+    setFollowLoading(true);
+    try {
+      if (isFollowing) {
+        const res = await FollowService.unfollow(id!);
+        setIsFollowing(false);
+        setFollowerCount(res.followerCount);
+      } else {
+        const res = await FollowService.follow(id!);
+        setIsFollowing(true);
+        setFollowerCount(res.followerCount);
+      }
+    } catch {} finally {
+      setFollowLoading(false);
+    }
   };
 
   const formatPrice = (price: number) => {
@@ -531,6 +559,46 @@ export default function EnterpriseDetails() {
               </View>
             ) : null}
 
+            {/* Bouton S'abonner */}
+            <View style={{ marginHorizontal: 20, marginBottom: 16 }}>
+              <TouchableOpacity
+                onPress={handleToggleFollow}
+                disabled={followLoading}
+                activeOpacity={0.8}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: isFollowing
+                    ? (isDark ? "rgba(139,92,246,0.15)" : "rgba(139,92,246,0.10)")
+                    : "#8B5CF6",
+                  borderRadius: 14,
+                  paddingVertical: 12,
+                  gap: 8,
+                  borderWidth: isFollowing ? 1.5 : 0,
+                  borderColor: isFollowing ? "#8B5CF6" : "transparent",
+                }}
+              >
+                {followLoading ? (
+                  <ActivityIndicator size="small" color={isFollowing ? "#8B5CF6" : "#fff"} />
+                ) : (
+                  <>
+                    <Ionicons
+                      name={isFollowing ? "checkmark-circle" : "add-circle-outline"}
+                      size={18}
+                      color={isFollowing ? "#8B5CF6" : "#fff"}
+                    />
+                    <Text
+                      className="font-quicksand-bold text-sm"
+                      style={{ color: isFollowing ? "#8B5CF6" : "#fff" }}
+                    >
+                      {isFollowing ? "Abonné" : "S'abonner"}
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+
             {/* Stats row */}
             <View
               style={{
@@ -605,6 +673,26 @@ export default function EnterpriseDetails() {
                   {i18n.t(
                     "enterprise.profile.modals.enterpriseDetails.products",
                   )}
+                </Text>
+              </View>
+
+              <View
+                style={{
+                  flex: 1,
+                  borderRadius: 14,
+                  padding: 14,
+                  backgroundColor: isDark ? "#1f2937" : "#f9fafb",
+                  alignItems: "center",
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 3 }}>
+                  <Ionicons name="people" size={15} color="#8B5CF6" />
+                  <Text className="text-lg font-quicksand-bold ml-1" style={{ color: colors.text }}>
+                    {followerCount}
+                  </Text>
+                </View>
+                <Text className="text-xs font-quicksand-medium" style={{ color: colors.textSecondary }}>
+                  abonnés
                 </Text>
               </View>
             </View>

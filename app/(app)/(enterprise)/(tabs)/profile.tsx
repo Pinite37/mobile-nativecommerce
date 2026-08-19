@@ -35,6 +35,7 @@ import EnterpriseService, {
   EnterpriseProfile,
   SocialLink,
 } from "../../../../services/api/EnterpriseService";
+import FollowService from "../../../../services/api/FollowService";
 
 interface EditProfileModalProps {
   visible: boolean;
@@ -902,6 +903,8 @@ function EnterpriseProfilePage() {
     onConfirm: () => void;
   } | null>(null);
 
+  const [followerCount, setFollowerCount] = useState(0);
+
   // Abonnement et restrictions
   const { subscription, canUseFeature } = useSubscription();
 
@@ -1222,6 +1225,7 @@ function EnterpriseProfilePage() {
       setLoading(true);
       const data = await EnterpriseService.getProfile();
       setProfileData(data);
+      FollowService.getMyFollowers().then(r => setFollowerCount(r.total)).catch(() => {});
     } catch (error: any) {
       console.error("❌ Erreur chargement profil:", error);
       notifyError(i18n.t("messages.error"), error.message || i18n.t("enterprise.profile.messages.loadError"));
@@ -1579,6 +1583,19 @@ function EnterpriseProfilePage() {
                 {i18n.t("enterprise.profile.placeholders.noDescription")}
               </Text>
             )}
+
+            {/* Compteur d'abonnés */}
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: isDark ? "rgba(139,92,246,0.12)" : "rgba(139,92,246,0.09)", borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, gap: 6 }}>
+                <Ionicons name="people-outline" size={14} color="#8B5CF6" />
+                <Text className="font-quicksand-bold text-sm" style={{ color: colors.textPrimary }}>
+                  {followerCount}
+                </Text>
+                <Text className="font-quicksand text-xs" style={{ color: colors.textSecondary }}>
+                  abonné{followerCount !== 1 ? "s" : ""}
+                </Text>
+              </View>
+            </View>
 
             {/* Séparateur */}
             <View style={{ height: 1, backgroundColor: colors.border, marginBottom: 14 }} />

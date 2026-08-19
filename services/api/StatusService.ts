@@ -6,6 +6,7 @@ export interface StatusItem {
     _id: string;
     firstName: string;
     lastName: string;
+    companyName?: string;
     profileImage?: string;
   };
   type: 'IMAGE' | 'TEXT' | 'IMAGE_TEXT';
@@ -42,7 +43,7 @@ class StatusService {
     try {
       const res = await ApiService.get<{ groups: StatusGroup[]; currentUserId: string }>(this.BASE);
       console.log('[StatusService] ✅ Statuts reçus:', JSON.stringify({ groupCount: res.data?.groups?.length, currentUserId: res.data?.currentUserId }));
-      return res.data;
+      return res.data!;
     } catch (e: any) {
       console.error('[StatusService] ❌ getAll error:', e?.message, e?.response?.data);
       throw e;
@@ -54,7 +55,7 @@ class StatusService {
     try {
       const res = await ApiService.get<StatusItem[]>(`${this.BASE}/mine`);
       console.log('[StatusService] ✅ Mes statuts:', res.data?.length);
-      return res.data;
+      return res.data!;
     } catch (e: any) {
       console.error('[StatusService] ❌ getMine error:', e?.message, e?.response?.data);
       throw e;
@@ -66,7 +67,7 @@ class StatusService {
     try {
       const res = await ApiService.post<StatusItem>(this.BASE, payload);
       console.log('[StatusService] ✅ Statut créé:', res.data?._id);
-      return res.data;
+      return res.data!;
     } catch (e: any) {
       console.error('[StatusService] ❌ create error:', e?.message, e?.response?.data);
       throw e;

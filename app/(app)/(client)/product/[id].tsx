@@ -38,6 +38,7 @@ import { useTheme } from "../../../../contexts/ThemeContext";
 import { ErrorState } from "../../../../components/ui/ErrorState";
 import i18n from "../../../../i18n/i18n";
 import CategoryService from "../../../../services/api/CategoryService";
+import FollowService from "../../../../services/api/FollowService";
 import MessagingService from "../../../../services/api/MessagingService";
 import ProductService from "../../../../services/api/ProductService";
 import { Product } from "../../../../types/product";
@@ -74,6 +75,9 @@ export default function ProductDetails() {
   const [loadingSimilar, setLoadingSimilar] = useState(false);
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followLoading, setFollowLoading] = useState(false);
   const [resolvedCategoryName, setResolvedCategoryName] = useState<string>("");
 
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
@@ -136,6 +140,14 @@ export default function ProductDetails() {
             id!,
           );
           setIsFavorite(favoriteStatus);
+          // Charger le statut d'abonnement à l'enterprise du produit
+          const eid = typeof productData.enterprise === "object" ? productData.enterprise._id : productData.enterprise;
+          if (eid) {
+            FollowService.getStatus(eid).then(s => {
+              setIsFollowing(s.isFollowing);
+              setFollowerCount(s.followerCount);
+            }).catch(() => {});
+          }
         } else {
           setIsFavorite(false);
         }
@@ -356,6 +368,25 @@ export default function ProductDetails() {
     }
   };
 
+  const handleToggleFollow = async () => {
+    if (!requireAuth("Connectez-vous pour vous abonner à cette entreprise.")) return;
+    const eid = typeof product?.enterprise === "object" ? product.enterprise._id : product?.enterprise;
+    if (!eid) return;
+    setFollowLoading(true);
+    try {
+      if (isFollowing) {
+        const res = await FollowService.unfollow(eid);
+        setIsFollowing(false);
+        setFollowerCount(res.followerCount);
+      } else {
+        const res = await FollowService.follow(eid);
+        setIsFollowing(true);
+        setFollowerCount(res.followerCount);
+      }
+    } catch {} finally {
+      setFollowLoading(false);
+    }
+  };
 
   const SkeletonProduct = () => (
     <View className="flex-1" style={{ backgroundColor: "transparent" }}>
@@ -803,6 +834,47 @@ export default function ProductDetails() {
                 color={colors.textSecondary}
               />
             </TouchableOpacity>
+
+            {/* Bouton S'abonner */}
+            {enterprise && (
+              <TouchableOpacity
+                onPress={handleToggleFollow}
+                disabled={followLoading}
+                activeOpacity={0.8}
+                style={{
+                  marginTop: 12,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: isFollowing
+                    ? (isDark ? "rgba(139,92,246,0.15)" : "rgba(139,92,246,0.10)")
+                    : "#8B5CF6",
+                  borderRadius: 14,
+                  paddingVertical: 12,
+                  gap: 8,
+                  borderWidth: isFollowing ? 1.5 : 0,
+                  borderColor: isFollowing ? "#8B5CF6" : "transparent",
+                }}
+              >
+                {followLoading ? (
+                  <ActivityIndicator size="small" color={isFollowing ? "#8B5CF6" : "#fff"} />
+                ) : (
+                  <>
+                    <Ionicons
+                      name={isFollowing ? "checkmark-circle" : "add-circle-outline"}
+                      size={18}
+                      color={isFollowing ? "#8B5CF6" : "#fff"}
+                    />
+                    <Text
+                      className="font-quicksand-bold text-sm"
+                      style={{ color: isFollowing ? "#8B5CF6" : "#fff" }}
+                    >
+                      {isFollowing ? `Abonné · ${followerCount}` : "S'abonner"}
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
 
             {/* Contact Options */}
             {enterprise &&

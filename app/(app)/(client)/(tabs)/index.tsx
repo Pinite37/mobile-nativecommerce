@@ -36,6 +36,9 @@ import i18n from "../../../../i18n/i18n";
 import { useUnreadNotifications } from "../../../../hooks/useUnreadNotifications";
 import ProductService from "../../../../services/api/ProductService";
 import SearchService from "../../../../services/api/SearchService";
+import StatusService, { StatusGroup } from "../../../../services/api/StatusService";
+import { StatusBar as StatusBarComponent } from "../../../../components/ui/StatusBar";
+import { StatusViewer } from "../../../../components/ui/StatusViewer";
 import SearchCacheService, { RecentSearch } from "../../../../services/SearchCacheService";
 import { Category, Product } from "../../../../types/product";
 import { beninCities, neighborhoodsByCity } from "../../../../constants/LocationData";
@@ -75,6 +78,18 @@ export default function ClientHome() {
             if (isAuthenticated) loadUnreadCount();
         }, [isAuthenticated, loadUnreadCount])
     );
+
+    const loadStatuses = useCallback(async () => {
+        try {
+            const result = await StatusService.getAll();
+            setStatusGroups(result.groups);
+            setStatusCurrentUserId(result.currentUserId);
+        } catch {}
+    }, []);
+
+    useFocusEffect(useCallback(() => {
+        if (isAuthenticated) loadStatuses();
+    }, [isAuthenticated, loadStatuses]));
     // const { getCacheStats } = useSearchCache(); // (non utilisé pour l'instant)
 
     // Calcul responsive pour la largeur des produits
@@ -111,6 +126,12 @@ export default function ClientHome() {
     const [searchInputFocused, setSearchInputFocused] = useState(false);
     const [resultsView, setResultsView] = useState<'grid' | 'list'>('grid');
     const [selectedSort, setSelectedSort] = useState<'relevance' | 'priceLow' | 'priceHigh' | 'newest'>('relevance');
+
+    // Statuts
+    const [statusGroups, setStatusGroups] = useState<StatusGroup[]>([]);
+    const [statusCurrentUserId, setStatusCurrentUserId] = useState<string>('');
+    const [viewerVisible, setViewerVisible] = useState(false);
+    const [viewerGroupIndex, setViewerGroupIndex] = useState(0);
 
     const queryClient = useQueryClient();
 
@@ -1274,6 +1295,21 @@ export default function ClientHome() {
                             </View>
                         )}
 
+                        {/* Statuts des entreprises suivies */}
+                        {statusGroups.length > 0 && (
+                            <StatusBarComponent
+                                groups={statusGroups}
+                                currentUserId={statusCurrentUserId}
+                                onPressGroup={(group) => {
+                                    const idx = statusGroups.findIndex(g => String(g.enterprise._id) === String(group.enterprise._id));
+                                    setViewerGroupIndex(idx >= 0 ? idx : 0);
+                                    setViewerVisible(true);
+                                }}
+                                onPressAdd={() => {}}
+                                isEnterprise={false}
+                            />
+                        )}
+
                         {/* Boosted Ads Carousel (amélioré avec images et overlay) */}
                         <View className="py-0">
                             {ads.length > 0 ? (
@@ -1528,6 +1564,16 @@ export default function ClientHome() {
                 </>
             )
             }
+
+            {/* Visionneuse de statuts */}
+            <StatusViewer
+                visible={viewerVisible}
+                groups={statusGroups}
+                initialGroupIndex={viewerGroupIndex}
+                currentUserId={statusCurrentUserId}
+                onClose={() => setViewerVisible(false)}
+                onViewed={(statusId) => StatusService.markViewed(statusId).catch(() => {})}
+            />
         </View >
     );
 }

@@ -35,7 +35,9 @@ function StatusCard({
 
   const latestStatus: StatusItem | undefined = group?.statuses[0];
   const hasUnviewed = group?.hasUnviewed ?? false;
-  const name = isMe ? 'Mon statut' : `${group?.enterprise.firstName ?? ''} ${group?.enterprise.lastName ?? ''}`.trim();
+  const name = isMe
+    ? 'Mon statut'
+    : group?.enterprise.companyName || `${group?.enterprise.firstName ?? ''} ${group?.enterprise.lastName ?? ''}`.trim();
   const profileImage = group?.enterprise.profileImage;
 
   // Fond de la carte selon le type du statut

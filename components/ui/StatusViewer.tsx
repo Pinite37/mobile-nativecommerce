@@ -2,7 +2,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Dimensions,
   Modal,
@@ -45,6 +45,14 @@ export function StatusViewer({
   const { isDark } = useTheme();
   const insets = useSafeAreaInsets();
 
+  // Inverser les statuses dans le viewer : du plus ancien au plus récent.
+  // Le backend envoie newest-first (utile pour le preview dans StatusBar),
+  // mais en lecture on part du premier posté et on avance vers le plus récent.
+  const viewerGroups = useMemo(
+    () => groups.map(g => ({ ...g, statuses: [...g.statuses].reverse() })),
+    [groups]
+  );
+
   const [groupIndex, setGroupIndex] = useState(initialGroupIndex);
   const [statusIndex, setStatusIndex] = useState(0);
 
@@ -55,7 +63,7 @@ export function StatusViewer({
   const startTimeRef = useRef(0);
   const isPausedRef = useRef(false);
 
-  const currentGroup = groups[groupIndex];
+  const currentGroup = viewerGroups[groupIndex];
   const currentStatus: StatusItem | undefined = currentGroup?.statuses[statusIndex];
   const isMyGroup = currentGroup && String(currentGroup.enterprise._id) === String(currentUserId);
 
@@ -71,18 +79,18 @@ export function StatusViewer({
     clearTimer();
     cancelAnimation(progress);
     setStatusIndex(si => {
-      const group = groups[groupIndex];
+      const group = viewerGroups[groupIndex];
       if (!group) return si;
       if (si < group.statuses.length - 1) return si + 1;
       // Groupe suivant
       setGroupIndex(gi => {
-        if (gi < groups.length - 1) return gi + 1;
+        if (gi < viewerGroups.length - 1) return gi + 1;
         onClose();
         return gi;
       });
       return 0;
     });
-  }, [groupIndex, groups, onClose]);
+  }, [groupIndex, viewerGroups, onClose]);
 
   const goPrev = useCallback(() => {
     clearTimer();
@@ -160,14 +168,14 @@ export function StatusViewer({
       );
     }
     return (
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <Image
           source={{ uri: currentStatus.imageUrl! }}
           style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
-          contentFit="cover"
+          contentFit="contain"
         />
         {currentStatus.type === 'IMAGE_TEXT' && currentStatus.text && (
-          <View style={{ position: 'absolute', bottom: 80 + insets.bottom, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.45)', paddingHorizontal: 20, paddingVertical: 14 }}>
+          <View style={{ position: 'absolute', bottom: 80 + insets.bottom, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.55)', paddingHorizontal: 20, paddingVertical: 14 }}>
             <Text style={{ color: '#fff', fontSize: 16, fontFamily: 'Quicksand-SemiBold', textAlign: 'center' }}>
               {currentStatus.text}
             </Text>
@@ -216,7 +224,7 @@ export function StatusViewer({
           </View>
           <View style={{ flex: 1 }}>
             <Text style={{ color: '#fff', fontFamily: 'Quicksand-Bold', fontSize: 14 }}>
-              {currentGroup.enterprise.firstName} {currentGroup.enterprise.lastName}
+              {currentGroup.enterprise.companyName || `${currentGroup.enterprise.firstName} ${currentGroup.enterprise.lastName}`}
             </Text>
           </View>
           {isMyGroup && onDelete && (
