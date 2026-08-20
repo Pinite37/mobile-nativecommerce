@@ -214,10 +214,18 @@ function StatusCard({
 export function StatusBar({ groups, currentUserId, isEnterprise, onPressGroup, onPressAdd }: StatusBarProps) {
   const myGroup = groups.find(g => String(g.enterprise._id) === String(currentUserId));
   const othersRaw = groups.filter(g => String(g.enterprise._id) !== String(currentUserId));
-  // Statuts non vus en premier, vus à la fin
+
+  // Tri : plus récent en premier (date du statut le plus récent du groupe)
+  const byRecent = (a: StatusGroup, b: StatusGroup) => {
+    const dateA = Math.max(...a.statuses.map(s => new Date(s.createdAt).getTime()));
+    const dateB = Math.max(...b.statuses.map(s => new Date(s.createdAt).getTime()));
+    return dateB - dateA;
+  };
+
+  // Non vus en premier (triés par récence), vus à la fin (triés par récence)
   const othersGroups = [
-    ...othersRaw.filter(g => g.hasUnviewed),
-    ...othersRaw.filter(g => !g.hasUnviewed),
+    ...othersRaw.filter(g => g.hasUnviewed).sort(byRecent),
+    ...othersRaw.filter(g => !g.hasUnviewed).sort(byRecent),
   ];
 
   return (

@@ -4,12 +4,15 @@ import { Image } from 'expo-image';
 import * as FileSystem from 'expo-file-system/legacy';
 import { ConfirmModal } from './ConfirmModal';
 import { StatusBar } from 'expo-status-bar';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
+  Animated as RNAnimated,
   ActivityIndicator,
+  Easing,
   Keyboard,
   KeyboardEvent,
   Modal,
+  PanResponder,
   Platform,
   Pressable,
   StyleSheet,
@@ -82,6 +85,183 @@ export function StatusViewer({
   const startTimeRef = useRef(0);
   const isPausedRef = useRef(false);
   const inputRef = useRef<TextInput>(null);
+
+  // ── Gestion du groupe voisin pendant la transition ──
+  const [neighborIndex, setNeighborIndex] = useState<number | null>(null);
+  const groupIndexRef = useRef(groupIndex);
+  const viewerGroupsLengthRef = useRef(viewerGroups.length);
+
+  // Gesture animated values
+  const slideY = useRef(new RNAnimated.Value(0)).current;
+  const groupAnimX = useRef(new RNAnimated.Value(0)).current;
+  // Offset du voisin : SCREEN_WIDTH quand il arrive par la droite, -SCREEN_WIDTH par la gauche
+  const neighborOffsetAnim = useRef(new RNAnimated.Value(SCREEN_WIDTH)).current;
+  // Position effective du voisin = groupAnimX + offset
+  const neighborPosX = useRef(RNAnimated.add(groupAnimX, neighborOffsetAnim)).current;
+
+  const gestureDir = useRef<'v' | 'h' | null>(null);
+  const editingCaptionRef = useRef(false);
+  const inputFocusedRef = useRef(false);
+  // Utilisé pour réinitialiser groupAnimX APRÈS le re-render (évite le snap-back)
+  const pendingResetRef = useRef(false);
+
+  // Fond noir fixe qui s'efface à mesure que le statut glisse vers le bas
+  const bgBlackOpacity = slideY.interpolate({
+    inputRange: [0, SCREEN_HEIGHT * 0.72],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+
+  // ── Rotation autour de Point G (bas du téléphone) ──
+  // θ = posX / SCREEN_HEIGHT  (en radians)
+  // Pour une rotation autour du bas :
+  //   translateX = (H/2) * sin(θ)
+  //   translateY = (H/2) * (1 - cos(θ))   [le centre descend légèrement vers les bords]
+  //   rotate = θ
+  // Le bas de l'écran reste fixe, le haut trace un arc de disque.
+  const R = SCREEN_HEIGHT / 2; // rayon du disque = demi-hauteur
+  const discInputRange = [-SCREEN_WIDTH * 2, -SCREEN_WIDTH, 0, SCREEN_WIDTH, SCREEN_WIDTH * 2];
+  const makeDiscTx = (posX: RNAnimated.Value | RNAnimated.AnimatedAddition<number>) =>
+    posX.interpolate({
+      inputRange: discInputRange,
+      outputRange: discInputRange.map(x => R * Math.sin(x / SCREEN_HEIGHT)),
+      extrapolate: 'clamp',
+    });
+  const makeDiscTy = (posX: RNAnimated.Value | RNAnimated.AnimatedAddition<number>) =>
+    posX.interpolate({
+      inputRange: discInputRange,
+      outputRange: discInputRange.map(x => R * (1 - Math.cos(x / SCREEN_HEIGHT))),
+      extrapolate: 'clamp',
+    });
+  const makeDiscRot = (posX: RNAnimated.Value | RNAnimated.AnimatedAddition<number>) =>
+    posX.interpolate({
+      inputRange: discInputRange,
+      outputRange: discInputRange.map(x => `${(x / SCREEN_HEIGHT).toFixed(5)}rad`),
+      extrapolate: 'clamp',
+    });
+  const makeDiscOpacity = (posX: RNAnimated.Value | RNAnimated.AnimatedAddition<number>) =>
+    posX.interpolate({
+      inputRange: [-SCREEN_WIDTH, 0, SCREEN_WIDTH],
+      outputRange: [0.55, 1, 0.55],
+      extrapolate: 'clamp',
+    });
+
+  const currentTx = makeDiscTx(groupAnimX);
+  const currentTy = makeDiscTy(groupAnimX);
+  const currentRot = makeDiscRot(groupAnimX);
+  const currentOpacity = makeDiscOpacity(groupAnimX);
+
+  const neighborTx = makeDiscTx(neighborPosX);
+  const neighborTy = makeDiscTy(neighborPosX);
+  const neighborRot = makeDiscRot(neighborPosX);
+  const neighborOpacity = makeDiscOpacity(neighborPosX);
+
+  const navigateGroupRef = useRef<(dir: 1 | -1) => void>(() => {});
+  useEffect(() => {
+    groupIndexRef.current = groupIndex;
+    viewerGroupsLengthRef.current = viewerGroups.length;
+  }, [groupIndex, viewerGroups.length]);
+
+  useEffect(() => {
+    navigateGroupRef.current = (dir: 1 | -1) => {
+      const target = groupIndexRef.current + dir;
+      if (target < 0 || target >= viewerGroupsLengthRef.current) {
+        // Pas de voisin dans ce sens — rebond
+        RNAnimated.spring(groupAnimX, { toValue: 0, useNativeDriver: true, tension: 200, friction: 12 }).start();
+        setNeighborIndex(null);
+        return;
+      }
+      // S'assurer que le voisin est prêt (peut déjà être positionné depuis le geste)
+      const exitX = dir === 1 ? -SCREEN_WIDTH * 1.05 : SCREEN_WIDTH * 1.05;
+      neighborOffsetAnim.setValue(dir === 1 ? SCREEN_WIDTH : -SCREEN_WIDTH);
+      setNeighborIndex(target);
+
+      // Le groupe courant pivote et sort, le voisin arrive automatiquement au centre
+      RNAnimated.timing(groupAnimX, {
+        toValue: exitX,
+        duration: 300,
+        easing: Easing.in(Easing.quad),
+        useNativeDriver: true,
+      }).start(() => {
+        // Ne PAS resetGroupAnimX ici : le setState déclenche un re-render,
+        // puis useLayoutEffect reset groupAnimX à 0 AVANT le paint natif.
+        // Cela évite le snap-back de l'ancien contenu au centre.
+        pendingResetRef.current = true;
+        setGroupIndex(target);
+        setStatusIndex(0);
+        setNeighborIndex(null);
+      });
+    };
+  }, [groupIndex, viewerGroups.length]);
+
+  // Reset groupAnimX après le re-render (nouveau contenu en place) → pas de snap-back visible
+  useLayoutEffect(() => {
+    if (pendingResetRef.current) {
+      pendingResetRef.current = false;
+      groupAnimX.setValue(0);
+    }
+  }, [groupIndex]);
+
+  const panResponder = useRef(PanResponder.create({
+    onStartShouldSetPanResponder: () => false,
+    onStartShouldSetPanResponderCapture: () => false,
+    // Phase capture : on vole le geste au Pressable dès qu'il y a un mouvement significatif
+    onMoveShouldSetPanResponderCapture: (_, gs) => {
+      if (editingCaptionRef.current || inputFocusedRef.current) return false;
+      const absX = Math.abs(gs.dx);
+      const absY = Math.abs(gs.dy);
+      if (absX < 8 && absY < 8) return false;
+      gestureDir.current = absY > absX * 1.1 ? 'v' : 'h';
+
+      if (gestureDir.current === 'h') {
+        // Préparer le voisin selon la direction du geste
+        const dir = gs.dx < 0 ? 1 : -1; // gauche → prochain (1), droite → précédent (-1)
+        const ni = groupIndexRef.current + dir;
+        if (ni >= 0 && ni < viewerGroupsLengthRef.current) {
+          neighborOffsetAnim.setValue(dir === 1 ? SCREEN_WIDTH : -SCREEN_WIDTH);
+          setNeighborIndex(ni);
+        }
+      }
+      return true;
+    },
+    onPanResponderGrant: () => {},
+    onPanResponderMove: (_, gs) => {
+      if (gestureDir.current === 'v') {
+        if (gs.dy > 0) slideY.setValue(gs.dy);
+      } else if (gestureDir.current === 'h') {
+        groupAnimX.setValue(gs.dx);
+      }
+    },
+    onPanResponderRelease: (_, gs) => {
+      const dir = gestureDir.current;
+      gestureDir.current = null;
+      if (dir === 'v') {
+        if (gs.dy > 90 || gs.vy > 0.7) {
+          RNAnimated.timing(slideY, { toValue: SCREEN_HEIGHT, duration: 260, easing: Easing.out(Easing.quad), useNativeDriver: true })
+            .start(() => { onClose(); });
+        } else if (gs.dy < -55 || gs.vy < -0.5) {
+          RNAnimated.spring(slideY, { toValue: 0, useNativeDriver: true }).start();
+          setTimeout(() => inputRef.current?.focus(), 50);
+        } else {
+          RNAnimated.spring(slideY, { toValue: 0, useNativeDriver: true }).start();
+        }
+      } else if (dir === 'h') {
+        const THRESHOLD = SCREEN_WIDTH * 0.28;
+        if (gs.dx < -THRESHOLD || gs.vx < -0.55) navigateGroupRef.current(1);
+        else if (gs.dx > THRESHOLD || gs.vx > 0.55) navigateGroupRef.current(-1);
+        else {
+          RNAnimated.spring(groupAnimX, { toValue: 0, useNativeDriver: true, tension: 200, friction: 12 }).start();
+          setNeighborIndex(null);
+        }
+      }
+    },
+    onPanResponderTerminate: () => {
+      gestureDir.current = null;
+      RNAnimated.spring(slideY, { toValue: 0, useNativeDriver: true }).start();
+      RNAnimated.spring(groupAnimX, { toValue: 0, useNativeDriver: true }).start();
+      setNeighborIndex(null);
+    },
+  })).current;
 
   const currentGroup = viewerGroups[groupIndex];
   const currentStatus: StatusItem | undefined = currentGroup?.statuses[statusIndex];
@@ -187,14 +367,25 @@ export function StatusViewer({
   }, [visible, groupIndex, statusIndex]);
 
   useEffect(() => {
-    if (visible) { setGroupIndex(initialGroupIndex); setStatusIndex(0); setReplyText(''); }
+    if (visible) {
+      setGroupIndex(initialGroupIndex);
+      setStatusIndex(0);
+      setReplyText('');
+      slideY.setValue(0); // s'assurer que slideY est à 0 à l'ouverture
+    } else {
+      // Reset après fermeture — le Modal est déjà caché, pas de snap visible
+      slideY.setValue(0);
+    }
   }, [visible, initialGroupIndex]);
 
   // Pause quand input est focus ou en édition de légende
   useEffect(() => {
+    editingCaptionRef.current = editingCaption;
     if (inputFocused || editingCaption) pauseProgress();
     else resumeProgress();
   }, [inputFocused, editingCaption]);
+
+  useEffect(() => { inputFocusedRef.current = inputFocused; }, [inputFocused]);
 
   // Gestion clavier
   useEffect(() => {
@@ -263,6 +454,30 @@ export function StatusViewer({
     setSavingCaption(false);
   };
 
+  // Rendu léger du groupe voisin pendant la transition (image ou couleur du premier statut)
+  const renderNeighborContent = (idx: number) => {
+    const group = viewerGroups[idx];
+    if (!group) return null;
+    const status = group.statuses[0];
+    if (!status) return null;
+    if (status.type === 'TEXT') {
+      return (
+        <View style={{ flex: 1, backgroundColor: status.backgroundColor, justifyContent: 'center', alignItems: 'center', padding: 32 }}>
+          <Text style={{ color: status.textColor, fontSize: 28, fontFamily: 'Quicksand-Bold', textAlign: 'center', lineHeight: 38 }}>
+            {status.text}
+          </Text>
+        </View>
+      );
+    }
+    return (
+      <View style={{ flex: 1, backgroundColor: '#000' }}>
+        {status.imageUrl && (
+          <Image source={{ uri: status.imageUrl }} style={StyleSheet.absoluteFill} contentFit="contain" />
+        )}
+      </View>
+    );
+  };
+
   const renderContent = () => {
     if (currentStatus.type === 'TEXT') {
       return (
@@ -295,9 +510,51 @@ export function StatusViewer({
   const bottomInset = insets.bottom > 0 ? insets.bottom : 16;
 
   return (
-    <Modal visible={visible} transparent={false} animationType="fade" statusBarTranslucent onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose}>
       <StatusBar style="light" />
-      <View style={{ flex: 1, backgroundColor: '#000' }}>
+      {/* Fond noir fixe : s'estompe quand le statut glisse vers le bas, révélant la page en-dessous */}
+      <RNAnimated.View
+        style={[StyleSheet.absoluteFill, { backgroundColor: '#000', opacity: bgBlackOpacity }]}
+        pointerEvents="none"
+      />
+      {/* Wrapper glissant : gère uniquement le slide-down pour fermer */}
+      <RNAnimated.View
+        style={{ flex: 1, transform: [{ translateY: slideY }] }}
+        {...panResponder.panHandlers}
+      >
+        {/* Groupe voisin : apparaît en arrière-plan, arrive depuis le côté */}
+        {neighborIndex !== null && viewerGroups[neighborIndex] && (
+          <RNAnimated.View
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                transform: [
+                  { translateX: neighborTx },
+                  { translateY: neighborTy },
+                  { rotate: neighborRot },
+                ],
+                opacity: neighborOpacity,
+              },
+            ]}
+          >
+            {renderNeighborContent(neighborIndex)}
+          </RNAnimated.View>
+        )}
+
+        {/* Groupe courant : pivote et sort pendant la transition */}
+        <RNAnimated.View
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              transform: [
+                { translateX: currentTx },
+                { translateY: currentTy },
+                { rotate: currentRot },
+              ],
+              opacity: currentOpacity,
+            },
+          ]}
+        >
         {renderContent()}
 
         {/* Zone tactile principale */}
@@ -469,7 +726,8 @@ export function StatusViewer({
             </View>
           ) : null}
         </View>
-      </View>
+        </RNAnimated.View>{/* fin groupe courant */}
+      </RNAnimated.View>{/* fin wrapper externe */}
 
       <ConfirmModal
         visible={confirmDeleteVisible}

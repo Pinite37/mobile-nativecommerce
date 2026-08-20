@@ -61,7 +61,7 @@ export function MyStatusesPage({ visible, onClose, onOpenCreator, currentUserId 
     setLoading(true);
     try {
       const data = await StatusService.getMine();
-      setStatuses([...data].reverse());
+      setStatuses([...data].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     } catch {}
     setLoading(false);
   }, []);
