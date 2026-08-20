@@ -298,7 +298,7 @@ export function StatusViewer({
 
         {/* Bas : vues (si mon statut) ou input de réponse (si statut d'un autre) */}
         <View
-          style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingBottom: keyboardHeight > 0 ? keyboardHeight + 12 : bottomInset, paddingHorizontal: 16, paddingTop: 12 }}
+          style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingBottom: keyboardHeight > 0 ? keyboardHeight + (Platform.OS === 'android' ? 24 : 12) : bottomInset, paddingHorizontal: 16, paddingTop: 12 }}
           pointerEvents="box-none"
         >
           {isMyGroup ? (
@@ -319,10 +319,10 @@ export function StatusViewer({
                 onFocus={() => setInputFocused(true)}
                 onBlur={() => setInputFocused(false)}
                 placeholder="Répondre au statut..."
-                placeholderTextColor="rgba(255,255,255,0.5)"
+                placeholderTextColor="rgba(255,255,255,0.6)"
                 style={{
                   flex: 1,
-                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  backgroundColor: 'rgba(0,0,0,0.45)',
                   borderRadius: 24,
                   paddingHorizontal: 18,
                   paddingVertical: Platform.OS === 'ios' ? 12 : 8,
@@ -330,7 +330,7 @@ export function StatusViewer({
                   fontFamily: 'Quicksand-Medium',
                   fontSize: 15,
                   borderWidth: 1,
-                  borderColor: 'rgba(255,255,255,0.25)',
+                  borderColor: 'rgba(255,255,255,0.3)',
                 }}
                 returnKeyType="send"
                 onSubmitEditing={handleSendReply}
