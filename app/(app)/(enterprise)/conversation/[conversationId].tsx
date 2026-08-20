@@ -2357,108 +2357,12 @@ export default function ConversationDetails() {
     <View style={{ flex: 1, backgroundColor: isDark ? '#0F1923' : '#EEF2F7' }}>
       <ChatWallpaperEnt isDark={isDark} />
       <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
-      {/* Header - spacer de mise en page uniquement, les touches sont gérées par le header absolu */}
-      <LinearGradient
-        pointerEvents="none"
-        colors={["#047857", "#10B981"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        className="px-6 pb-4 rounded-b-3xl"
-        style={{
-          paddingTop: insets.top + 16,
-          paddingBottom: 16,
-          paddingLeft: insets.left + 10,
-          paddingRight: insets.right + 10,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 4,
-        }}
-      >
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center flex-1">
-            <TouchableOpacity
-              onPress={() => router.back()}
-              className="w-10 h-10 bg-card/20 rounded-full justify-center items-center mr-3"
-            >
-              <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
-            </TouchableOpacity>
-
-            {otherParticipant?.profileImage ? (
-              <Image
-                source={{ uri: otherParticipant.profileImage }}
-                className="w-10 h-10 rounded-full mr-3"
-                resizeMode="cover"
-              />
-            ) : (
-              <View className="w-10 h-10 bg-card/25 rounded-full justify-center items-center mr-3">
-                <Ionicons
-                  name={
-                    otherParticipant?.role === "ENTERPRISE"
-                      ? "business"
-                      : "person"
-                  }
-                  size={18}
-                  color="#FFFFFF"
-                />
-              </View>
-            )}
-
-            <View className="flex-1">
-              <Text
-                className="text-base font-quicksand-semibold text-white"
-                numberOfLines={1}
-              >
-                {otherParticipant
-                  ? MessagingService.formatParticipantName(otherParticipant)
-                  : "Conversationn"}
-              </Text>
-              <Text className="text-xs text-white/90" numberOfLines={1}>
-                {typeof conversation.product === "object" &&
-                conversation.product?.name
-                  ? conversation.product.name
-                  : conversation.subject || "Discussion produit"}
-              </Text>
-            </View>
-          </View>
-
-          <View className="flex-row items-center">
-            {isCurrentUserProductOwner(conversation, user?._id) && (
-              <TouchableOpacity
-                className="w-10 h-10 bg-card/20 rounded-full justify-center items-center mr-2"
-                onPress={openOfferModal}
-              >
-                <Ionicons name="car" size={18} color="#FFFFFF" />
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              className="w-10 h-10 bg-card/20 rounded-full justify-center items-center"
-              onPress={() => {
-                const productId =
-                  typeof conversation.product === "string"
-                    ? conversation.product
-                    : conversation.product._id;
-                router.push(`/(app)/(enterprise)/product/${productId}`);
-              }}
-            >
-              <Ionicons name="storefront" size={18} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </LinearGradient>
-
-      {/* Header - Position absolue pour rester fixe */}
+      {/* Header */}
       <LinearGradient
         colors={["#047857", "#10B981"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 1000,
           paddingTop: insets.top + 16,
           paddingBottom: 16,
           paddingLeft: insets.left + 24,
@@ -2545,10 +2449,10 @@ export default function ConversationDetails() {
       </LinearGradient>
 
       {/* Zone de contenu principal avec KeyboardAvoidingView */}
-      {/* Sur Android, softwareKeyboardLayoutMode="pan" gère déjà le décalage —
-          un KeyboardAvoidingView en plus créerait un double offset (espace vide). */}
+      {/* Android edge-to-edge (SDK 35+) : adjustResize est inopérant, le header reste fixe hors du KAV.
+          behavior="padding" ajoute un padding bas = hauteur clavier → input toujours visible. */}
       {Platform.OS === "android" ? (
-        <View style={{ flex: 1 }}>
+        <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
           <FlatList
             ref={flatListRef}
             data={messages}
@@ -2617,7 +2521,7 @@ export default function ConversationDetails() {
               ) : null
             }
             contentContainerStyle={{
-              paddingTop: insets.top + 70,
+              paddingTop: 8,
               paddingBottom: 20,
             }}
             showsVerticalScrollIndicator={false}
@@ -2718,7 +2622,7 @@ export default function ConversationDetails() {
               <Ionicons name="send" size={18} color={(newMessage.trim() || attachment) ? '#FFFFFF' : (isDark ? '#4B5563' : '#9CA3AF')} style={{ marginLeft: 2 }} />
             </TouchableOpacity>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       ) : (
         <KeyboardAvoidingView
           className="flex-1"
@@ -2793,7 +2697,7 @@ export default function ConversationDetails() {
               ) : null
             }
             contentContainerStyle={{
-              paddingTop: insets.top + 70,
+              paddingTop: 8,
               paddingBottom: 120,
             }}
             showsVerticalScrollIndicator={false}

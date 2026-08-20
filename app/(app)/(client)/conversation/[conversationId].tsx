@@ -1580,11 +1580,6 @@ export default function ConversationDetails() {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 1000,
           paddingTop: insets.top + 12,
           paddingLeft: insets.left + 16,
           paddingRight: insets.right + 16,
@@ -1635,9 +1630,9 @@ export default function ConversationDetails() {
 
       {/* Messages et input */}
       {Platform.OS === "android" ? (
-        // Sur Android, softwareKeyboardLayoutMode="pan" gère déjà le décalage.
-        // Un KeyboardAvoidingView en plus créerait un double offset (espace vide).
-        <View style={{ flex: 1 }}>
+        // Android edge-to-edge (SDK 35+) : adjustResize est inopérant, le header reste fixe hors du KAV.
+        // behavior="padding" ajoute un padding bas = hauteur clavier → input toujours visible.
+        <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
           <FlatList
             ref={flatListRef}
             data={messages}
@@ -1701,7 +1696,7 @@ export default function ConversationDetails() {
               ) : null
             }
             contentContainerStyle={{
-              paddingTop: insets.top + 70,
+              paddingTop: 8,
               paddingBottom: 20,
             }}
             showsVerticalScrollIndicator={false}
@@ -1804,7 +1799,7 @@ export default function ConversationDetails() {
               <Ionicons name="send" size={18} color={newMessage.trim() ? '#FFFFFF' : (isDark ? '#4B5563' : '#9CA3AF')} style={{ marginLeft: 2 }} />
             </TouchableOpacity>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       ) : (
         // Layout pour iOS avec KeyboardAvoidingView
         <KeyboardAvoidingView
@@ -1875,7 +1870,7 @@ export default function ConversationDetails() {
               ) : null
             }
             contentContainerStyle={{
-              paddingTop: insets.top + 70,
+              paddingTop: 8,
               paddingBottom: 120,
             }}
             showsVerticalScrollIndicator={false}

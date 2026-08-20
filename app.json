@@ -31,7 +31,7 @@
       },
       "package": "com.axi.axiapp",
       "googleServicesFile": "./google-services.json",
-      "softwareKeyboardLayoutMode": "pan",
+      "softwareKeyboardLayoutMode": "resize",
       "intentFilters": [
         {
           "action": "VIEW",
