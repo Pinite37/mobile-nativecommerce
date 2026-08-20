@@ -208,8 +208,8 @@ export default function ConversationDetails() {
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [statusReplyViewer, setStatusReplyViewer] = useState<{ status: StatusItem; currentUserId: string } | null>(null);
   const [inputHeight, setInputHeight] = useState(0);
-  // État pour suivre si le produit est en cours de chargement
   const [productLoading, setProductLoading] = useState(false);
+  const [productLoadFailed, setProductLoadFailed] = useState(false);
 
   // États pour la gestion des confirmations de suppression
   const [confirmationVisible, setConfirmationVisible] = useState(false);
@@ -594,6 +594,8 @@ export default function ConversationDetails() {
         if (typeof conv.product === "string") {
           const prod = await ProductService.getPublicProductById(conv.product);
           if (!cancelled) setEffectiveProduct(prod);
+        } else if ((conv.product as any)?.isdeleted) {
+          if (!cancelled) { setEffectiveProduct(null); setProductLoadFailed(true); }
         } else {
           if (!cancelled) setEffectiveProduct(conv.product as Product);
         }
@@ -601,6 +603,7 @@ export default function ConversationDetails() {
         if (!cancelled) {
           console.error("❌ Erreur chargement produit:", error);
           setEffectiveProduct(null);
+          setProductLoadFailed(true);
         }
       } finally {
         if (!cancelled) setProductLoading(false);
@@ -1283,7 +1286,7 @@ export default function ConversationDetails() {
               <View style={{
                 paddingHorizontal: 12,
                 paddingTop: 9,
-                paddingBottom: 24,
+                paddingBottom: 7,
                 borderRadius: 18,
                 borderBottomRightRadius: 5,
                 backgroundColor: isDark ? '#064E3B' : '#E0FCD7',
@@ -1298,8 +1301,8 @@ export default function ConversationDetails() {
                 <Text style={{ fontSize: 15, lineHeight: 21, color: isDark ? '#D1FAE5' : '#000000', fontFamily: 'Quicksand-Medium' }}>
                   {message.text}
                 </Text>
-                <View style={{ position: 'absolute', bottom: 6, right: 9, flexDirection: 'row', alignItems: 'center' }}>
-                  <Text style={{ fontSize: 10, color: isDark ? 'rgba(209,250,229,0.6)' : '#667781', fontFamily: 'Quicksand-Medium', marginRight: 3 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 3, gap: 4 }}>
+                  <Text style={{ fontSize: 10, color: isDark ? 'rgba(209,250,229,0.6)' : '#667781', fontFamily: 'Quicksand-Medium' }}>
                     {msgTime}
                   </Text>
                   <MessageStatusIndicator message={message} />
@@ -1309,7 +1312,7 @@ export default function ConversationDetails() {
               <View style={{
                 paddingHorizontal: 12,
                 paddingTop: 9,
-                paddingBottom: isDeleted ? 10 : 24,
+                paddingBottom: 7,
                 borderRadius: 18,
                 borderBottomLeftRadius: 5,
                 backgroundColor: isDeleted ? (isDark ? '#1A2332' : '#F3F4F6') : receivedBg,
@@ -1324,9 +1327,11 @@ export default function ConversationDetails() {
                   {isDeleted ? i18n.t('client.messages.conversationDetail.messageDeleted') : message.text}
                 </Text>
                 {!isDeleted && (
-                  <Text style={{ position: 'absolute', bottom: 6, right: 9, fontSize: 10, color: colors.textSecondary, fontFamily: 'Quicksand-Medium' }}>
-                    {msgTime}
-                  </Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 3 }}>
+                    <Text style={{ fontSize: 10, color: colors.textSecondary, fontFamily: 'Quicksand-Medium' }}>
+                      {msgTime}
+                    </Text>
+                  </View>
                 )}
               </View>
             )}
@@ -1543,7 +1548,7 @@ export default function ConversationDetails() {
   }
 
   // Si la conversation existe mais pas le produit, continuer à charger (cas normal)
-  if (!effectiveProduct) {
+  if (!effectiveProduct && !productLoadFailed) {
     return renderSkeletonConversation();
   }
 
@@ -1693,6 +1698,25 @@ export default function ConversationDetails() {
                   </View>
                   <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
                 </TouchableOpacity>
+              ) : productLoadFailed ? (
+                <View style={{
+                  marginBottom: 16,
+                  borderRadius: 16,
+                  backgroundColor: isDark ? '#1A2332' : '#F3F4F6',
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  padding: 12,
+                  gap: 10,
+                }}>
+                  <View style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: isDark ? '#2D3748' : '#E5E7EB', justifyContent: 'center', alignItems: 'center' }}>
+                    <Ionicons name="cube-outline" size={20} color={colors.textTertiary} />
+                  </View>
+                  <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 13, flex: 1 }}>
+                    Ce produit n'est plus disponible
+                  </Text>
+                </View>
               ) : null
             }
             contentContainerStyle={{
@@ -1765,7 +1789,7 @@ export default function ConversationDetails() {
           )}
 
           {/* Zone de saisie */}
-          <View style={{ flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 10, paddingVertical: 8, paddingBottom: Math.max(insets.bottom + 4, 10), backgroundColor: isDark ? '#0F1923' : '#EEF2F7', gap: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 10, paddingVertical: 8, paddingBottom: Math.max(insets.bottom + 14, 20), backgroundColor: isDark ? '#0F1923' : '#EEF2F7', gap: 8 }}>
             {/* Pill input */}
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 21, paddingHorizontal: 14, minHeight: 42, maxHeight: 120, borderWidth: 1, borderColor: colors.border }}>
               <TextInput
@@ -1867,6 +1891,25 @@ export default function ConversationDetails() {
                   </View>
                   <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
                 </TouchableOpacity>
+              ) : productLoadFailed ? (
+                <View style={{
+                  marginBottom: 16,
+                  borderRadius: 16,
+                  backgroundColor: isDark ? '#1A2332' : '#F3F4F6',
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  padding: 12,
+                  gap: 10,
+                }}>
+                  <View style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: isDark ? '#2D3748' : '#E5E7EB', justifyContent: 'center', alignItems: 'center' }}>
+                    <Ionicons name="cube-outline" size={20} color={colors.textTertiary} />
+                  </View>
+                  <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 13, flex: 1 }}>
+                    Ce produit n'est plus disponible
+                  </Text>
+                </View>
               ) : null
             }
             contentContainerStyle={{

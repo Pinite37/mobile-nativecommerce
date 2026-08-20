@@ -1905,7 +1905,7 @@ export default function ConversationDetails() {
                 <View style={{
                   paddingHorizontal: 14,
                   paddingTop: 10,
-                  paddingBottom: 26,
+                  paddingBottom: 7,
                   borderRadius: 20,
                   borderBottomRightRadius: 5,
                   backgroundColor: isDark ? '#064E3B' : '#E0FCD7',
@@ -1920,7 +1920,7 @@ export default function ConversationDetails() {
                   <Text style={{ fontSize: 15, lineHeight: 22, color: isDark ? '#D1FAE5' : '#000000', fontFamily: 'Quicksand-Medium' }}>
                     {message.text}
                   </Text>
-                  <View style={{ position: 'absolute', bottom: 7, right: 10, flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 3, gap: 4 }}>
                     <Text style={{ fontSize: 10, color: isDark ? 'rgba(209,250,229,0.6)' : '#667781', fontFamily: 'Quicksand-Medium' }}>
                       {msgTime}
                     </Text>
@@ -1931,7 +1931,7 @@ export default function ConversationDetails() {
                 <View style={{
                   paddingHorizontal: 14,
                   paddingTop: 10,
-                  paddingBottom: isDeleted ? 12 : 26,
+                  paddingBottom: 7,
                   borderRadius: 20,
                   borderBottomLeftRadius: isCurrentUser ? 20 : 5,
                   backgroundColor: isDeleted ? (isDark ? '#1A2332' : '#F3F4F6') : receivedBg,
@@ -1947,7 +1947,7 @@ export default function ConversationDetails() {
                     {isDeleted ? '[Message supprimé]' : message.text}
                   </Text>
                   {!isDeleted && (
-                    <View style={{ position: 'absolute', bottom: 7, right: 10 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 3 }}>
                       <Text style={{ fontSize: 10, color: colors.textSecondary, fontFamily: 'Quicksand-Medium' }}>
                         {msgTime}
                       </Text>
@@ -2591,7 +2591,7 @@ export default function ConversationDetails() {
           )}
 
           {/* Zone de saisie Android */}
-          <View style={{ flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 10, paddingVertical: 8, paddingBottom: Platform.OS === 'ios' ? Math.max(insets.bottom + 4, 10) : 8, backgroundColor: isDark ? '#0F1923' : '#EEF2F7', gap: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 10, paddingVertical: 8, paddingBottom: Platform.OS === 'ios' ? Math.max(insets.bottom + 4, 10) : Math.max(insets.bottom + 14, 20), backgroundColor: isDark ? '#0F1923' : '#EEF2F7', gap: 8 }}>
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 21, paddingHorizontal: 14, minHeight: 42, maxHeight: 120, borderWidth: 1, borderColor: colors.border }}>
               <TextInput
                 ref={textInputRef}
@@ -2766,7 +2766,7 @@ export default function ConversationDetails() {
           )}
 
           {/* Zone de saisie iOS */}
-          <View style={{ flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 10, paddingVertical: 8, paddingBottom: Platform.OS === 'ios' ? Math.max(insets.bottom + 4, 10) : 8, backgroundColor: isDark ? '#0F1923' : '#EEF2F7', gap: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 10, paddingVertical: 8, paddingBottom: Platform.OS === 'ios' ? Math.max(insets.bottom + 4, 10) : Math.max(insets.bottom + 14, 20), backgroundColor: isDark ? '#0F1923' : '#EEF2F7', gap: 8 }}>
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 21, paddingHorizontal: 14, minHeight: 42, maxHeight: 120, borderWidth: 1, borderColor: colors.border }}>
               <TextInput
                 ref={textInputRef}
