@@ -1,4 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import * as Device from 'expo-device';
+import { Platform } from 'react-native';
 import { ApiResponse } from '../../types/auth';
 import AuthEventEmitter from '../../utils/AuthEventEmitter';
 import TokenStorageService from '../TokenStorageService';
@@ -41,10 +43,8 @@ class ApiService {
           config.headers['X-Auth-Token'] = `Bearer ${token}`;
         }
 
-        const deviceInfo = this.getDeviceInfo();
-        if (deviceInfo) {
-          config.headers['X-Device-Info'] = JSON.stringify(deviceInfo);
-        }
+        const deviceInfo = await this.getDeviceInfo();
+        config.headers['X-Device-Info'] = JSON.stringify(deviceInfo);
 
         config.headers['Content-Type'] = 'application/json';
         return config;
@@ -159,11 +159,16 @@ class ApiService {
     AuthEventEmitter.emitTokenInvalidated();
   }
 
-  private getDeviceInfo(): object | null {
-    // This will be implemented with device info collection
+  private _cachedDeviceId: string | null = null;
+
+  private async getDeviceInfo(): Promise<object> {
+    if (!this._cachedDeviceId) {
+      this._cachedDeviceId = await TokenStorageService.getOrCreateDeviceId();
+    }
     return {
-      platform: 'mobile',
-      deviceName: 'React Native App',
+      deviceId: this._cachedDeviceId,
+      platform: Platform.OS,
+      deviceName: Device.deviceName ?? Device.modelName ?? Platform.OS,
     };
   }
 

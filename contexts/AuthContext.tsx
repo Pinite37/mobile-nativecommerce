@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { NotificationPermissionModal } from '../components/NotificationPermissionModal';
 import CustomerService from '../services/api/CustomerService';
 import EnterpriseService from '../services/api/EnterpriseService';
@@ -43,47 +43,50 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
 
+  // sessionId : incrémenté à chaque login/logout pour invalider les callbacks asynchrones
+  // d'une session précédente (refreshUserDataInBackground, etc.)
+  const sessionIdRef = useRef(0);
+
   const checkAuthStatus = async () => {
     try {
-      // DÉMARRAGE ULTRA-RAPIDE : Précharger les données puis les utiliser
       StartupPerformanceMonitor.mark('AuthContext - Début vérification');
 
-      // Précharger toutes les données en cache avant de les utiliser
+      // Migration depuis les anciennes clés séparées (une seule fois)
+      await TokenStorageService.migrateFromLegacy();
+
       await PreCacheService.preloadCriticalData();
 
-      // Utiliser une seule méthode optimisée pour éviter les appels multiples
-      const [tokens, storedUserData, storedRole] = await Promise.all([
+      const [tokens, storedUserData, storedRole, storedUserId] = await Promise.all([
         TokenStorageService.getTokens(),
         TokenStorageService.getUserData(),
-        TokenStorageService.getUserRole()
+        TokenStorageService.getUserRole(),
+        TokenStorageService.getUserId(),
       ]);
 
       StartupPerformanceMonitor.mark('AuthContext - Données en cache récupérées');
 
-      // *** NETTOYAGE AUTOMATIQUE DES TOKENS MOCK ***
       if (tokens.accessToken && tokens.accessToken.includes('mock-access-token')) {
         await TokenStorageService.clearAll();
         setIsAuthenticated(false);
         setUser(null);
         setUserRole(null);
         setIsLoading(false);
-        StartupPerformanceMonitor.mark('AuthContext - Nettoyage tokens mock terminé');
         return;
       }
 
-      // Vérification rapide : si on a des tokens, des données utilisateur et un rôle
       if (tokens.accessToken && storedUserData && storedRole) {
-        // Charger immédiatement avec les données disponibles
+        // Nouveau sessionId pour cette session — invalide tout refresh background antérieur
+        const sid = ++sessionIdRef.current;
+
         setIsAuthenticated(true);
         setUser(storedUserData);
         setUserRole(storedRole);
-        setIsLoading(false); // Stopper le loading immédiatement
+        setIsLoading(false);
 
         StartupPerformanceMonitor.mark('AuthContext - Session restaurée (cache)');
 
-        setTimeout(() => { refreshUserDataInBackground(storedRole); }, 10);
+        setTimeout(() => { refreshUserDataInBackground(storedRole, storedUserId, sid); }, 10);
         setTimeout(() => { checkNotificationPermissions(); }, 2000);
-
       } else {
         await TokenStorageService.clearAll();
         setIsAuthenticated(false);
@@ -98,7 +101,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
       setUserRole(null);
       setIsLoading(false);
-      StartupPerformanceMonitor.mark('AuthContext - Erreur de vérification');
     }
   };
 
@@ -113,7 +115,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   // Fonction pour charger les données fraîches en arrière-plan
-  const refreshUserDataInBackground = async (role: string) => {
+  // sid = sessionId capturé au moment du lancement — si la session a changé entretemps, on abandonne
+  const refreshUserDataInBackground = async (role: string, expectedUserId: string | null, sid: number) => {
     try {
       let userData: User | null = null;
 
@@ -125,77 +128,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           try {
             const enterpriseProfile = await EnterpriseService.getProfile();
             userData = enterpriseProfile.user;
-          } catch { /* profil entreprise indisponible, on garde le cache */ }
+          } catch { /* garde le cache si le profil est indisponible */ }
         }
       }
 
-      if (userData) {
-        setUser(userData);
-        await TokenStorageService.setUserData(userData);
+      // Gardes de sécurité : abandonner si la session a changé pendant l'appel
+      if (sid !== sessionIdRef.current) return;
+      if (!userData) return;
+
+      // Vérifier que les données retournées appartiennent bien à la session en cours
+      const fetchedId = userData._id ?? (userData as any).id ?? '';
+      if (expectedUserId && fetchedId && String(fetchedId) !== String(expectedUserId)) {
+        console.error('[Auth] ❌ Mismatch userId dans refreshBackground — session ignorée');
+        return;
       }
+
+      // Vérifier que le rôle n'a pas changé (ne devrait jamais changer côté API)
+      if (userData.role && userData.role !== role) {
+        console.error('[Auth] ❌ Mismatch role dans refreshBackground — session ignorée');
+        return;
+      }
+
+      setUser(userData);
+      await TokenStorageService.setUserData(userData);
     } catch {
-      // Ne pas affecter l'état de l'app si le rafraîchissement échoue
-    }
-  };
-
-  // Fonction pour charger les données fraîches (bloquante)
-  const loadFreshUserData = async (role: string) => {
-    try {
-      let userData: User | null = null;
-
-      if (role === 'CLIENT') {
-        userData = await CustomerService.getProfile();
-      } else if (role === 'ENTERPRISE') {
-        const tokens = await TokenStorageService.getTokens();
-        if (tokens.accessToken) {
-          try {
-            const enterpriseProfile = await EnterpriseService.getProfile();
-            userData = enterpriseProfile.user;
-          } catch { /* garde les données en cache */ }
-        }
-      }
-
-      if (userData) {
-        setIsAuthenticated(true);
-        setUser(userData);
-        setUserRole(role);
-        await TokenStorageService.setUserData(userData);
-      } else {
-        // Si on n'a pas de données utilisateur MAIS qu'on a des tokens valides
-        // On garde la session active (les données sont peut-être déjà en cache)
-        const tokens = await TokenStorageService.getTokens();
-        const cachedUser = await TokenStorageService.getUserData();
-
-        if (tokens.accessToken && tokens.refreshToken && cachedUser) {
-          setIsAuthenticated(true);
-          setUser(cachedUser);
-          setUserRole(role);
-        } else {
-          console.error('❌ Aucune donnée utilisateur disponible - Session invalide');
-          await TokenStorageService.clearAll();
-          setIsAuthenticated(false);
-          setUser(null);
-          setUserRole(null);
-        }
-      }
-    } catch {
-      const tokens = await TokenStorageService.getTokens();
-      const cachedUser = await TokenStorageService.getUserData();
-
-      if (tokens.accessToken && tokens.refreshToken && cachedUser) {
-        setIsAuthenticated(true);
-        setUser(cachedUser);
-        setUserRole(role);
-      } else {
-        await TokenStorageService.clearAll();
-        setIsAuthenticated(false);
-        setUser(null);
-        setUserRole(null);
-      }
+      // Silencieux — ne pas affecter l'état de l'app
     }
   };
 
   const logout = async () => {
+    // Invalider tout refresh background en cours avant de vider la session
+    sessionIdRef.current++;
     try {
       await TokenStorageService.clearAll();
       setIsAuthenticated(false);
@@ -204,6 +167,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       NavigationHelper.navigateToPublicMarketplace();
     } catch (error) {
       console.error('Error during logout:', error);
+      setIsAuthenticated(false);
+      setUser(null);
+      setUserRole(null);
     }
   };
 
@@ -223,15 +189,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Nouvelle méthode pour forcer le rafraîchissement des données
+  // Forcer le rafraîchissement des données (bloquant, ex: après modification de profil)
   const refreshUserData = async () => {
-    if (!userRole) return;
-
-    try {
-      await loadFreshUserData(userRole);
-    } catch (error) {
-      console.error('Error forcing user data refresh:', error);
-    }
+    if (!userRole || !user) return;
+    const sid = sessionIdRef.current;
+    const userId = user._id ?? (user as any).id ?? null;
+    await refreshUserDataInBackground(userRole, userId, sid);
   };
 
   // Nouvelle méthode pour gérer l'état après inscription réussie
@@ -254,12 +217,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }
 
+      const sid = ++sessionIdRef.current;
       setIsAuthenticated(true);
       setUser(userData);
       setUserRole(role);
       setIsLoading(false);
 
-      setTimeout(() => { refreshUserDataInBackground(role); }, 1000);
+      const userId = userData._id ?? (userData as any).id ?? null;
+      setTimeout(() => { refreshUserDataInBackground(role, userId, sid); }, 1000);
       setTimeout(() => { checkNotificationPermissions(); }, 2000);
 
     } catch (error) {

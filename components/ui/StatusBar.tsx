@@ -14,9 +14,9 @@ interface StatusBarProps {
   onPressAdd: () => void;
 }
 
-const CARD_WIDTH = 105;
-const CARD_HEIGHT = 158;
-const AVATAR_SIZE = 34;
+const CARD_WIDTH = 86;
+const CARD_HEIGHT = 118;
+const AVATAR_SIZE = 26;
 
 function StatusCard({
   group,
@@ -51,7 +51,7 @@ function StatusCard({
             borderWidth: 2,
             borderColor: '#10B981',
             borderStyle: 'dashed',
-            borderRadius: 16,
+            borderRadius: 14,
             backgroundColor: isDark ? 'rgba(16,185,129,0.07)' : 'rgba(16,185,129,0.05)',
             justifyContent: 'center',
             alignItems: 'center',
@@ -59,12 +59,12 @@ function StatusCard({
         >
           <View
             style={{
-              width: 36, height: 36, borderRadius: 18,
+              width: 28, height: 28, borderRadius: 14,
               backgroundColor: '#10B981',
               justifyContent: 'center', alignItems: 'center',
             }}
           >
-            <Ionicons name="add" size={22} color="#fff" />
+            <Ionicons name="add" size={17} color="#fff" />
           </View>
         </View>
       );
@@ -74,7 +74,7 @@ function StatusCard({
       return (
         <Image
           source={{ uri: latestStatus.imageUrl! }}
-          style={{ flex: 1, borderRadius: 16 }}
+          style={{ flex: 1, borderRadius: 14 }}
           contentFit="cover"
         />
       );
@@ -85,21 +85,21 @@ function StatusCard({
       <View
         style={{
           flex: 1,
-          borderRadius: 16,
+          borderRadius: 14,
           backgroundColor: latestStatus.backgroundColor,
           justifyContent: 'center',
           alignItems: 'center',
-          padding: 8,
+          padding: 6,
         }}
       >
         <Text
-          numberOfLines={4}
+          numberOfLines={3}
           style={{
             color: latestStatus.textColor,
             fontFamily: 'Quicksand-Bold',
-            fontSize: 12,
+            fontSize: 11,
             textAlign: 'center',
-            lineHeight: 16,
+            lineHeight: 15,
           }}
         >
           {latestStatus.text}
@@ -118,7 +118,7 @@ function StatusCard({
         style={{
           width: CARD_WIDTH,
           height: CARD_HEIGHT,
-          borderRadius: 16,
+          borderRadius: 14,
           overflow: 'hidden',
           position: 'relative',
         }}
@@ -132,9 +132,9 @@ function StatusCard({
             style={{
               position: 'absolute',
               bottom: 0, left: 0, right: 0,
-              height: 60,
-              borderBottomLeftRadius: 16,
-              borderBottomRightRadius: 16,
+              height: 44,
+              borderBottomLeftRadius: 14,
+              borderBottomRightRadius: 14,
             }}
           />
         )}
@@ -179,15 +179,15 @@ function StatusCard({
             onPress={onPressAdd}
             style={{
               position: 'absolute',
-              top: 28, left: 28,
-              width: 18, height: 18,
-              borderRadius: 9,
+              top: 22, left: 22,
+              width: 16, height: 16,
+              borderRadius: 8,
               backgroundColor: '#10B981',
               justifyContent: 'center', alignItems: 'center',
               borderWidth: 1.5, borderColor: '#fff',
             }}
           >
-            <Ionicons name="add" size={11} color="#fff" />
+            <Ionicons name="add" size={10} color="#fff" />
           </TouchableOpacity>
         )}
 
@@ -196,12 +196,12 @@ function StatusCard({
           numberOfLines={2}
           style={{
             position: 'absolute',
-            bottom: 8, left: 6, right: 6,
+            bottom: 6, left: 5, right: 5,
             color: latestStatus ? '#fff' : (isDark ? 'rgba(255,255,255,0.7)' : '#374151'),
             fontFamily: 'Quicksand-SemiBold',
-            fontSize: 11,
+            fontSize: 10,
             textAlign: 'center',
-            lineHeight: 14,
+            lineHeight: 13,
           }}
         >
           {name}
@@ -221,7 +221,7 @@ export function StatusBar({ groups, currentUserId, isEnterprise, onPressGroup, o
   ];
 
   return (
-    <View style={{ paddingVertical: 12 }}>
+    <View style={{ paddingVertical: 8 }}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

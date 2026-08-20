@@ -1,4 +1,4 @@
-import * as Notifications from 'expo-notifications';
+import Notifications from '@/services/notificationsModule';
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';

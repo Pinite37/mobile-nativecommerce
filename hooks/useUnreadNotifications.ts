@@ -1,6 +1,6 @@
-import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useState } from 'react';
 import { AppState } from 'react-native';
+import Notifications from '@/services/notificationsModule';
 import NotificationService from '../services/api/NotificationService';
 
 // ─── Compteur partagé entre toutes les instances du hook ─────────────────────
@@ -11,7 +11,7 @@ function broadcastCount(count: number) {
   _globalCount = count;
   _subscribers.forEach((fn) => fn(count));
   // Met à jour le badge de l'icône de l'app sur iOS et Android
-  Notifications.setBadgeCountAsync(count).catch(() => {});
+  Notifications?.setBadgeCountAsync(count).catch(() => {});
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────

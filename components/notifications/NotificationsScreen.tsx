@@ -2,7 +2,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import notificationService, {
   NotificationData,
 } from "@/services/api/NotificationService";
-import * as Notifications from "expo-notifications";
+import Notifications from "@/services/notificationsModule";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";

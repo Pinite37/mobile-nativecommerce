@@ -25,16 +25,7 @@ class AuthService {
       );
 
       if (response.success && response.data) {
-        await TokenStorageService.clearAll();
-        // Store tokens
-        await ApiService.setAuthTokens(
-          response.data.tokens.accessToken,
-          response.data.tokens.refreshToken,
-        );
-        // Store user role
-        await ApiService.setUserRole(response.data.user.role);
-        // Store user data
-        await TokenStorageService.setUserData(response.data.user);
+        await this._saveSession(response.data);
       }
 
       return {
@@ -58,16 +49,7 @@ class AuthService {
       );
 
       if (response.success && response.data) {
-        await TokenStorageService.clearAll();
-        // Store tokens
-        await ApiService.setAuthTokens(
-          response.data.tokens.accessToken,
-          response.data.tokens.refreshToken,
-        );
-        // Store user role
-        await ApiService.setUserRole(response.data.user.role);
-        // Store user data
-        await TokenStorageService.setUserData(response.data.user);
+        await this._saveSession(response.data);
       }
 
       return {
@@ -85,24 +67,13 @@ class AuthService {
   // Login user
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     try {
-      // Use real API service only
       const response = await ApiService.post<AuthResponse["data"]>(
         `${this.BASE_URL}/login`,
         credentials,
       );
 
       if (response.success && response.data) {
-        // Effacer toute session précédente avant de stocker les nouvelles données
-        await TokenStorageService.clearAll();
-        // Store tokens
-        await ApiService.setAuthTokens(
-          response.data.tokens.accessToken,
-          response.data.tokens.refreshToken,
-        );
-        // Store user role
-        await ApiService.setUserRole(response.data.user.role);
-        // Store user data
-        await TokenStorageService.setUserData(response.data.user);
+        await this._saveSession(response.data);
       }
 
       return {
@@ -115,6 +86,18 @@ class AuthService {
         error.response?.data?.message || error.message || "Login failed",
       );
     }
+  }
+
+  /** Stockage atomique de toute la session — une seule opération SecureStore */
+  private async _saveSession(data: AuthResponse['data']): Promise<void> {
+    await TokenStorageService.clearAll();
+    await TokenStorageService.saveSession({
+      accessToken: data.tokens.accessToken,
+      refreshToken: data.tokens.refreshToken,
+      userId: data.user._id ?? (data.user as any).id ?? '',
+      userRole: data.user.role,
+      userData: data.user,
+    });
   }
 
   // Refresh access token
@@ -292,152 +275,14 @@ class AuthService {
     }
   }
 
-  // Nouvelle méthode pour gérer l'inscription avec connexion automatique
   async registerAndLogin(userData: RegisterRequest): Promise<AuthResponse> {
-    try {
-      console.log("🚀 Inscription et connexion automatique...");
-
-      const response = await ApiService.post<AuthResponse["data"]>(
-        `${this.BASE_URL}/register`,
-        userData,
-      );
-
-      if (response.success && response.data) {
-        console.log(
-          "✅ Inscription réussie, traitement de la connexion automatique...",
-        );
-
-        // Stocker immédiatement les tokens de façon séquentielle pour éviter les conflits
-        await ApiService.setAuthTokens(
-          response.data.tokens.accessToken,
-          response.data.tokens.refreshToken,
-        );
-
-        // Stocker le rôle utilisateur
-        await ApiService.setUserRole(response.data.user.role);
-
-        // Stocker les données utilisateur
-        await TokenStorageService.setUserData(response.data.user);
-
-        // Vérifier que les données sont bien stockées
-        const storedTokens = await TokenStorageService.getTokens();
-        const storedRole = await TokenStorageService.getUserRole();
-        const storedUser = await TokenStorageService.getUserData();
-
-        if (!storedTokens.accessToken || !storedRole || !storedUser) {
-          console.warn(
-            "⚠️ Données non stockées correctement, nouvelle tentative...",
-          );
-
-          // Nouvelle tentative de stockage
-          await ApiService.setAuthTokens(
-            response.data.tokens.accessToken,
-            response.data.tokens.refreshToken,
-          );
-          await ApiService.setUserRole(response.data.user.role);
-          await TokenStorageService.setUserData(response.data.user);
-        }
-
-        console.log("🎉 Tokens et données utilisateur stockés avec succès");
-        console.log(
-          "🔍 Vérification - Access Token:",
-          storedTokens.accessToken ? "Présent" : "Manquant",
-        );
-        console.log("🔍 Vérification - Rôle:", storedRole);
-        console.log("🔍 Vérification - Utilisateur:", storedUser?.email);
-
-        return {
-          success: response.success,
-          message: response.message,
-          data: response.data,
-        };
-      } else {
-        throw new Error("Réponse invalide du serveur");
-      }
-    } catch (error: any) {
-      console.error("❌ Erreur lors de l'inscription:", error);
-      throw new Error(
-        error.response?.data?.message || error.message || "Inscription échouée",
-      );
-    }
+    return this.register(userData);
   }
 
-  // Nouvelle méthode pour gérer l'inscription entreprise avec connexion automatique
   async registerEnterpriseAndLogin(
     userData: EnterpriseRegisterRequest,
   ): Promise<AuthResponse> {
-    try {
-      console.log("🚀 Inscription entreprise et connexion automatique...");
-      console.log(
-        "📤 Envoi des données d'inscription entreprise:",
-        JSON.stringify(userData, null, 2),
-      );
-
-      const response = await ApiService.post<AuthResponse["data"]>(
-        `${this.BASE_URL}/register`,
-        userData,
-      );
-
-      if (response.success && response.data) {
-        console.log(
-          "✅ Inscription entreprise réussie, traitement de la connexion automatique...",
-        );
-
-        // Stocker immédiatement les tokens de façon séquentielle pour éviter les conflits
-        await ApiService.setAuthTokens(
-          response.data.tokens.accessToken,
-          response.data.tokens.refreshToken,
-        );
-
-        // Stocker le rôle utilisateur
-        await ApiService.setUserRole(response.data.user.role);
-
-        // Stocker les données utilisateur
-        await TokenStorageService.setUserData(response.data.user);
-
-        // Vérifier que les données sont bien stockées
-        const storedTokens = await TokenStorageService.getTokens();
-        const storedRole = await TokenStorageService.getUserRole();
-        const storedUser = await TokenStorageService.getUserData();
-
-        if (!storedTokens.accessToken || !storedRole || !storedUser) {
-          console.warn(
-            "⚠️ Données entreprise non stockées correctement, nouvelle tentative...",
-          );
-
-          // Nouvelle tentative de stockage
-          await ApiService.setAuthTokens(
-            response.data.tokens.accessToken,
-            response.data.tokens.refreshToken,
-          );
-          await ApiService.setUserRole(response.data.user.role);
-          await TokenStorageService.setUserData(response.data.user);
-        }
-
-        console.log("🎉 Tokens et données entreprise stockés avec succès");
-        console.log(
-          "🔍 Vérification - Access Token:",
-          storedTokens.accessToken ? "Présent" : "Manquant",
-        );
-        console.log("🔍 Vérification - Rôle:", storedRole);
-        console.log("🔍 Vérification - Entreprise:", storedUser?.email);
-
-        return {
-          success: response.success,
-          message: response.message,
-          data: response.data,
-        };
-      } else {
-        throw new Error("Réponse invalide du serveur");
-      }
-    } catch (error: any) {
-      console.error("❌ Erreur lors de l'inscription entreprise:", error);
-      throw new Error(
-        error.response?.data?.message ||
-          error.message ||
-          "Inscription entreprise échouée",
-      );
-    }
+    return this.registerEnterprise(userData);
   }
 
   // Send forgot-password OTP code

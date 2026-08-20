@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
-import * as Notifications from 'expo-notifications';
+import Notifications from '@/services/notificationsModule';
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,

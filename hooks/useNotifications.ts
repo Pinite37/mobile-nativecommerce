@@ -1,5 +1,5 @@
-import * as Notifications from 'expo-notifications';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import Notifications from '@/services/notificationsModule';
 import NotificationPermissionService from '../services/NotificationPermissionService';
 import ApiService from '../services/api/ApiService';
 
@@ -17,6 +17,7 @@ export const useNotifications = () => {
   const [error, setError] = useState<string | null>(null);
   const [hasPermission, setHasPermission] = useState<boolean>(false);
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
+  const pushTokenListenerRef = useRef<any>(null);
 
   /**
    * Vérifie l'état actuel des permissions
@@ -102,6 +103,22 @@ export const useNotifications = () => {
         // L'utilisateur peut toujours recevoir des notifications locales
       }
 
+      // Écouter les renouvellements automatiques du token push
+      if (pushTokenListenerRef.current) {
+        pushTokenListenerRef.current.remove?.();
+      }
+      pushTokenListenerRef.current = Notifications.addPushTokenListener(
+        async (tokenData: { data: string }) => {
+          const newToken = tokenData.data;
+          if (newToken) {
+            setExpoPushToken(newToken);
+            try {
+              await ApiService.registerExpoPushToken(newToken);
+            } catch { /* silencieux */ }
+          }
+        }
+      );
+
       setHasPermission(true);
       return { success: true, token };
 
@@ -147,18 +164,18 @@ export const useNotifications = () => {
    * Ajoute un listener pour les notifications reçues en foreground
    */
   const addNotificationReceivedListener = useCallback((
-    callback: (notification: Notifications.Notification) => void
+    callback: (notification: any) => void
   ) => {
-    return Notifications.addNotificationReceivedListener(callback);
+    return Notifications?.addNotificationReceivedListener(callback);
   }, []);
 
   /**
    * Ajoute un listener pour les interactions avec les notifications
    */
   const addNotificationResponseReceivedListener = useCallback((
-    callback: (response: Notifications.NotificationResponse) => void
+    callback: (response: any) => void
   ) => {
-    return Notifications.addNotificationResponseReceivedListener(callback);
+    return Notifications?.addNotificationResponseReceivedListener(callback);
   }, []);
 
   /**
@@ -173,6 +190,7 @@ export const useNotifications = () => {
   // Vérifier les permissions au montage
   useEffect(() => {
     checkPermissionStatus();
+    return () => { pushTokenListenerRef.current?.remove?.(); };
   }, [checkPermissionStatus]);
 
   return {
