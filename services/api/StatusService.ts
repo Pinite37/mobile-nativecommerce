@@ -89,6 +89,11 @@ class StatusService {
     }
   }
 
+  async updateText(statusId: string, text: string): Promise<StatusItem> {
+    const res = await ApiService.patch<StatusItem>(`${this.BASE}/${statusId}/text`, { text });
+    return res.data!;
+  }
+
   async remove(statusId: string): Promise<void> {
     console.log('[StatusService] DELETE statusId:', statusId);
     try {

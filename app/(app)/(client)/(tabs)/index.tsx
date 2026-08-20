@@ -142,6 +142,14 @@ export default function ClientHome() {
     const [viewerVisible, setViewerVisible] = useState(false);
     const [viewerGroupIndex, setViewerGroupIndex] = useState(0);
 
+    useEffect(() => {
+        if (!isAuthenticated) {
+            setStatusGroups([]);
+            setStatusCurrentUserId('');
+            setViewerVisible(false);
+        }
+    }, [isAuthenticated]);
+
     const queryClient = useQueryClient();
 
     const { data: categoriesData = [], isLoading: loadingCategories } = useQuery({
@@ -1608,12 +1616,15 @@ export default function ClientHome() {
 
             {/* Visionneuse de statuts */}
             <StatusViewer
-                visible={viewerVisible}
+                visible={isAuthenticated && viewerVisible}
                 groups={statusGroups}
                 initialGroupIndex={viewerGroupIndex}
                 currentUserId={statusCurrentUserId}
                 onClose={() => setViewerVisible(false)}
                 onViewed={(statusId) => StatusService.markViewed(statusId).catch(() => {})}
+                onDelete={async (statusId) => {
+                    try { await StatusService.remove(statusId); await loadStatuses(); } catch {}
+                }}
                 onReplyToStatus={async (status, enterpriseUserId, text) => {
                     const preview = status.type === 'TEXT' ? (status.text || '') : 'IMAGE';
                     const result = await MessagingService.replyToStatus(enterpriseUserId, status._id, text, preview);

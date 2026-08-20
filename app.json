@@ -99,6 +99,14 @@
           "cameraPermission": "Cette application a besoin d'accéder à votre caméra pour prendre des photos."
         }
       ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Cette application a besoin d'accéder à votre galerie photo pour créer des statuts.",
+          "savePhotosPermission": "Cette application a besoin d'accéder à votre galerie photo pour sauvegarder des images.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ],
       "expo-secure-store",
       "expo-font",
       "expo-web-browser",

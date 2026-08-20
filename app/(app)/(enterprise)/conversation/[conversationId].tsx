@@ -538,7 +538,7 @@ export default function ConversationDetails() {
     return () => sub.remove();
   }, []);
 
-  const { user } = useAuth(); // Récupérer l'utilisateur connecté
+  const { user, isAuthenticated } = useAuth(); // Récupérer l'utilisateur connecté
   const {
     isConnected,
     joinConversation,
@@ -3622,7 +3622,7 @@ export default function ConversationDetails() {
       </Modal>
 
       {/* StatusViewer pour afficher le statut depuis la conversation */}
-      {statusReplyViewer && (
+      {isAuthenticated && statusReplyViewer && (
         <StatusViewer
           visible={true}
           groups={[{
@@ -3633,6 +3633,9 @@ export default function ConversationDetails() {
           currentUserId={statusReplyViewer.currentUserId}
           onClose={() => setStatusReplyViewer(null)}
           onViewed={() => {}}
+          onDelete={async (statusId) => {
+            try { await StatusService.remove(statusId); setStatusReplyViewer(null); } catch {}
+          }}
         />
       )}
     </View>

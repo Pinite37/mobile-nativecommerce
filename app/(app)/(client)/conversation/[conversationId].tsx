@@ -161,7 +161,7 @@ export default function ConversationDetails() {
     });
     return () => sub.remove();
   }, []);
-  const { user } = useAuth(); // Récupérer l'utilisateur connecté
+  const { user, isAuthenticated } = useAuth(); // Récupérer l'utilisateur connecté
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
@@ -2354,7 +2354,7 @@ export default function ConversationDetails() {
       </Modal>
 
       {/* Visionneuse de statut depuis une réponse */}
-      {statusReplyViewer && (
+      {isAuthenticated && statusReplyViewer && (
         <StatusViewer
           visible={true}
           groups={[{
@@ -2366,6 +2366,9 @@ export default function ConversationDetails() {
           currentUserId={statusReplyViewer.currentUserId}
           onClose={() => setStatusReplyViewer(null)}
           onViewed={(statusId) => StatusService.markViewed(statusId).catch(() => {})}
+          onDelete={async (statusId) => {
+            try { await StatusService.remove(statusId); setStatusReplyViewer(null); } catch {}
+          }}
         />
       )}
     </View>

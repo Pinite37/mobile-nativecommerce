@@ -1,14 +1,16 @@
 import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Image } from 'expo-image';
-import React, { useState } from 'react';
+import * as MediaLibrary from 'expo-media-library/legacy';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
+  Dimensions,
+  FlatList,
   Modal,
   Platform,
-  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -16,6 +18,13 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import StatusService, { CreateStatusPayload } from '../../services/api/StatusService';
+import { StatusImageEditor } from './StatusImageEditor';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const THUMB_SIZE = Math.floor(SCREEN_WIDTH / 3);
+const BG_COLORS = ['#10B981', '#3B82F6', '#8B5CF6', '#EF4444', '#F59E0B', '#1F2937'];
+
+type Screen = 'gallery' | 'text_editor' | 'image_editing' | 'image_preview';
 
 interface StatusCreatorProps {
   visible: boolean;
@@ -23,219 +32,366 @@ interface StatusCreatorProps {
   onCreated: () => void;
 }
 
-const TEXT_BG_OPTIONS = [
-  { color: '#10B981', label: 'Vert' },
-  { color: '#3B82F6', label: 'Bleu' },
-  { color: '#8B5CF6', label: 'Violet' },
-  { color: '#EF4444', label: 'Rouge' },
-  { color: '#F59E0B', label: 'Ambre' },
-  { color: '#1F2937', label: 'Sombre' },
-];
-
-type TabType = 'TEXT' | 'IMAGE' | 'IMAGE_TEXT';
-
 export function StatusCreator({ visible, onClose, onCreated }: StatusCreatorProps) {
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
 
-  const [tab, setTab] = useState<TabType>('TEXT');
-  const [text, setText] = useState('');
-  const [bgColor, setBgColor] = useState('#10B981');
+  const [screen, setScreen] = useState<Screen>('gallery');
+  const [assets, setAssets] = useState<MediaLibrary.Asset[]>([]);
+  const [permissionStatus, setPermissionStatus] = useState<string | null>(null);
+  const [loadingGallery, setLoadingGallery] = useState(false);
+  const [loadingImage, setLoadingImage] = useState(false);
+
+  const [rawPickedBase64, setRawPickedBase64] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
-  const [imageUri, setImageUri] = useState<string | null>(null);
+  const [imageDisplayUri, setImageDisplayUri] = useState<string | null>(null);
+
+  const [caption, setCaption] = useState('');
+  const [statusText, setStatusText] = useState('');
+  const [bgColor, setBgColor] = useState('#10B981');
   const [submitting, setSubmitting] = useState(false);
 
   const reset = () => {
-    setText('');
-    setBgColor('#10B981');
+    setScreen('gallery');
+    setAssets([]);
+    setRawPickedBase64(null);
     setImageBase64(null);
-    setImageUri(null);
-    setTab('TEXT');
+    setImageDisplayUri(null);
+    setCaption('');
+    setStatusText('');
+    setBgColor('#10B981');
+    setSubmitting(false);
+    setLoadingImage(false);
   };
 
   const handleClose = () => { reset(); onClose(); };
 
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') return;
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      base64: true,
-      quality: 0.8,
-      allowsEditing: true,
-      aspect: [9, 16],
-    });
-    if (!result.canceled && result.assets[0]) {
-      setImageUri(result.assets[0].uri);
-      setImageBase64(result.assets[0].base64 || null);
+  const loadGallery = useCallback(async () => {
+    setLoadingGallery(true);
+    const { status } = await MediaLibrary.requestPermissionsAsync(false, ['photo']);
+    setPermissionStatus(status);
+    if (status === 'granted') {
+      const { assets: a } = await MediaLibrary.getAssetsAsync({
+        mediaType: MediaLibrary.MediaType.photo,
+        first: 60,
+        sortBy: 'creationTime' as any,
+      });
+      setAssets(a);
     }
+    setLoadingGallery(false);
+  }, []);
+
+  useEffect(() => {
+    if (visible) {
+      setScreen('gallery');
+      loadGallery();
+    } else {
+      reset();
+    }
+  }, [visible]);
+
+  const handleSelectAsset = async (asset: MediaLibrary.Asset) => {
+    setLoadingImage(true);
+    let b64: string | null = null;
+
+    // 1er essai : expo-file-system (le plus fiable)
+    try {
+      const info = await MediaLibrary.getAssetInfoAsync(asset);
+      const uri = info.localUri || asset.uri;
+      b64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+    } catch {}
+
+    // 2e essai : fetch + ArrayBuffer sur localUri (ph:// non fetchable, file:// oui)
+    if (!b64) {
+      try {
+        const info2 = await MediaLibrary.getAssetInfoAsync(asset);
+        const uri2 = info2.localUri || asset.uri;
+        const response = await fetch(uri2);
+        const arrayBuffer = await response.arrayBuffer();
+        const bytes = new Uint8Array(arrayBuffer);
+        let binary = '';
+        const chunk = 8192;
+        for (let i = 0; i < bytes.length; i += chunk) {
+          binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+        }
+        b64 = btoa(binary);
+      } catch {}
+    }
+
+    if (b64) {
+      setRawPickedBase64(b64);
+      setScreen('image_editing');
+    }
+    // Si les deux échouent on reste sur la galerie (rien ne se passe)
+    setLoadingImage(false);
   };
 
-  const handleSubmit = async () => {
-    if (tab === 'TEXT' && !text.trim()) return;
-    if ((tab === 'IMAGE' || tab === 'IMAGE_TEXT') && !imageBase64) return;
-    if (tab === 'IMAGE_TEXT' && !text.trim()) return;
+  const handleEditorConfirm = (editedBase64: string) => {
+    setImageBase64(editedBase64);
+    setImageDisplayUri(`data:image/jpeg;base64,${editedBase64}`);
+    setScreen('image_preview');
+  };
 
+  const handleEditorClose = () => {
+    setRawPickedBase64(null);
+    setScreen('gallery');
+  };
+
+  const handleSubmitText = async () => {
+    if (!statusText.trim() || submitting) return;
+    setSubmitting(true);
+    try {
+      await StatusService.create({
+        type: 'TEXT',
+        text: statusText.trim(),
+        backgroundColor: bgColor,
+        textColor: '#FFFFFF',
+      });
+      reset(); onCreated();
+    } catch {}
+    setSubmitting(false);
+  };
+
+  const handleSubmitImage = async () => {
+    if (!imageBase64 || submitting) return;
     setSubmitting(true);
     try {
       const payload: CreateStatusPayload = {
-        type: tab,
-        text: text.trim() || undefined,
-        imageBase64: imageBase64 || undefined,
+        type: caption.trim() ? 'IMAGE_TEXT' : 'IMAGE',
+        text: caption.trim() || undefined,
+        imageBase64,
         backgroundColor: bgColor,
         textColor: '#FFFFFF',
       };
       await StatusService.create(payload);
-      reset();
-      onCreated();
-    } catch (e) {
-      // silently ignore for now
-    } finally {
-      setSubmitting(false);
-    }
+      reset(); onCreated();
+    } catch {}
+    setSubmitting(false);
   };
-
-  const canSubmit =
-    (tab === 'TEXT' && text.trim().length > 0) ||
-    (tab === 'IMAGE' && !!imageBase64) ||
-    (tab === 'IMAGE_TEXT' && !!imageBase64 && text.trim().length > 0);
 
   return (
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={handleClose}>
-      <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
-        {/* Header */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-          <TouchableOpacity onPress={handleClose} style={{ marginRight: 12 }}>
-            <Ionicons name="close" size={24} color={colors.textPrimary} />
-          </TouchableOpacity>
-          <Text style={{ color: colors.textPrimary, fontSize: 18, fontFamily: 'Quicksand-Bold', flex: 1 }}>
-            Nouveau statut
-          </Text>
-          <TouchableOpacity
-            onPress={handleSubmit}
-            disabled={!canSubmit || submitting}
-            style={{ backgroundColor: canSubmit ? '#10B981' : colors.border, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8 }}
-          >
-            {submitting ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={{ color: '#fff', fontFamily: 'Quicksand-Bold', fontSize: 14 }}>Publier</Text>
-            )}
-          </TouchableOpacity>
+
+      {/* ─── Éditeur dessin ─── */}
+      {screen === 'image_editing' && rawPickedBase64 ? (
+        <StatusImageEditor
+          imageBase64={rawPickedBase64}
+          onConfirm={handleEditorConfirm}
+          onClose={handleEditorClose}
+        />
+
+      ) : screen === 'text_editor' ? (
+        /* ─── Éditeur texte plein écran ─── */
+        <View style={{ flex: 1, backgroundColor: bgColor }}>
+          <View style={{
+            paddingTop: insets.top + 6, paddingHorizontal: 16, paddingBottom: 10,
+            flexDirection: 'row', alignItems: 'center',
+          }}>
+            <TouchableOpacity onPress={() => setScreen('gallery')} style={{ padding: 8, marginRight: 8 }}>
+              <Ionicons name="arrow-back" size={24} color="#fff" />
+            </TouchableOpacity>
+            <View style={{ flex: 1 }} />
+            <TouchableOpacity
+              onPress={handleSubmitText}
+              disabled={!statusText.trim() || submitting}
+              style={{
+                backgroundColor: statusText.trim() ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)',
+                borderRadius: 22, paddingHorizontal: 20, paddingVertical: 10,
+                borderWidth: 1.5,
+                borderColor: statusText.trim() ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)',
+              }}
+            >
+              {submitting
+                ? <ActivityIndicator size="small" color="#fff" />
+                : <Text style={{ color: '#fff', fontFamily: 'Quicksand-Bold', fontSize: 15 }}>Publier</Text>}
+            </TouchableOpacity>
+          </View>
+
+          <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 28 }}>
+            <TextInput
+              value={statusText}
+              onChangeText={setStatusText}
+              placeholder="Écrivez votre statut..."
+              placeholderTextColor="rgba(255,255,255,0.45)"
+              multiline
+              autoFocus
+              maxLength={500}
+              style={{
+                color: '#fff', fontFamily: 'Quicksand-Bold', fontSize: 26,
+                textAlign: 'center', textAlignVertical: 'center', lineHeight: 36,
+              }}
+            />
+          </View>
+
+          <View style={{
+            paddingBottom: insets.bottom + 20, paddingHorizontal: 24,
+            flexDirection: 'row', justifyContent: 'center', gap: 14,
+          }}>
+            {BG_COLORS.map(c => (
+              <TouchableOpacity
+                key={c}
+                onPress={() => setBgColor(c)}
+                style={{
+                  width: 34, height: 34, borderRadius: 17, backgroundColor: c,
+                  borderWidth: bgColor === c ? 3 : 1.5,
+                  borderColor: bgColor === c ? '#fff' : 'rgba(255,255,255,0.35)',
+                  transform: [{ scale: bgColor === c ? 1.18 : 1 }],
+                }}
+              />
+            ))}
+          </View>
         </View>
 
-        {/* Type tabs */}
-        <View style={{ flexDirection: 'row', paddingHorizontal: 16, paddingTop: 16, gap: 8 }}>
-          {(['TEXT', 'IMAGE', 'IMAGE_TEXT'] as TabType[]).map(t => {
-            const labels = { TEXT: 'Texte', IMAGE: 'Image', IMAGE_TEXT: 'Image + légende' };
-            return (
-              <TouchableOpacity
-                key={t}
-                onPress={() => setTab(t)}
-                style={{
-                  paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
-                  backgroundColor: tab === t ? '#10B981' : (isDark ? 'rgba(255,255,255,0.08)' : '#F3F4F6'),
-                }}
-              >
-                <Text style={{ color: tab === t ? '#fff' : colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 13 }}>
-                  {labels[t]}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+      ) : screen === 'image_preview' ? (
+        /* ─── Aperçu image (tel que posté) ─── */
+        <View style={{ flex: 1, backgroundColor: '#000' }}>
+          <Image
+            source={{ uri: imageDisplayUri! }}
+            style={StyleSheet.absoluteFill}
+            contentFit="contain"
+          />
+          <View style={{ paddingTop: insets.top + 6, paddingHorizontal: 16 }}>
+            <TouchableOpacity
+              onPress={() => setScreen('gallery')}
+              style={{
+                width: 40, height: 40, borderRadius: 20,
+                backgroundColor: 'rgba(0,0,0,0.45)',
+                alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="arrow-back" size={22} color="#fff" />
+            </TouchableOpacity>
+          </View>
+          <View style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            paddingBottom: insets.bottom + 14,
+            paddingHorizontal: 16, paddingTop: 12,
+            flexDirection: 'row', alignItems: 'center', gap: 10,
+          }}>
+            <TextInput
+              value={caption}
+              onChangeText={setCaption}
+              placeholder="Ajoutez une légende..."
+              placeholderTextColor="rgba(255,255,255,0.55)"
+              maxLength={300}
+              style={{
+                flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
+                borderRadius: 24, paddingHorizontal: 18,
+                paddingVertical: Platform.OS === 'ios' ? 12 : 8,
+                color: '#fff', fontFamily: 'Quicksand-Medium', fontSize: 15,
+                borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
+              }}
+            />
+            <TouchableOpacity
+              onPress={handleSubmitImage}
+              disabled={submitting}
+              style={{
+                width: 50, height: 50, borderRadius: 25,
+                backgroundColor: '#10B981',
+                alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              {submitting
+                ? <ActivityIndicator size="small" color="#fff" />
+                : <Ionicons name="send" size={22} color="#fff" />}
+            </TouchableOpacity>
+          </View>
         </View>
 
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+      ) : (
+        /* ─── Galerie ─── */
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
+          {/* Header */}
+          <View style={{
+            paddingTop: insets.top + 6, paddingHorizontal: 16, paddingBottom: 12,
+            flexDirection: 'row', alignItems: 'center',
+            borderBottomWidth: 1, borderBottomColor: colors.border,
+          }}>
+            <TouchableOpacity onPress={handleClose} style={{ padding: 4, marginRight: 12 }}>
+              <Ionicons name="close" size={24} color={colors.textPrimary} />
+            </TouchableOpacity>
+            <Text style={{ color: colors.textPrimary, fontSize: 18, fontFamily: 'Quicksand-Bold', flex: 1 }}>
+              Nouveau statut
+            </Text>
+          </View>
 
-            {/* Image picker */}
-            {(tab === 'IMAGE' || tab === 'IMAGE_TEXT') && (
+          {/* Contenu */}
+          {loadingGallery ? (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <ActivityIndicator size="large" color="#10B981" />
+            </View>
+          ) : permissionStatus !== 'granted' ? (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 36 }}>
+              <Ionicons name="images-outline" size={60} color={colors.textTertiary} />
+              <Text style={{
+                color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold',
+                fontSize: 16, textAlign: 'center', marginTop: 18, lineHeight: 24,
+              }}>
+                Autorisez l'accès à votre galerie pour choisir une photo
+              </Text>
               <TouchableOpacity
-                onPress={pickImage}
-                style={{
-                  height: 220, borderRadius: 20, overflow: 'hidden',
-                  backgroundColor: isDark ? '#1F2937' : '#F3F4F6',
-                  justifyContent: 'center', alignItems: 'center',
-                  borderWidth: imageUri ? 0 : 2, borderColor: colors.border, borderStyle: 'dashed',
-                }}
+                onPress={loadGallery}
+                style={{ marginTop: 22, backgroundColor: '#10B981', borderRadius: 22, paddingHorizontal: 26, paddingVertical: 11 }}
               >
-                {imageUri ? (
-                  <Image source={{ uri: imageUri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
-                ) : (
-                  <View style={{ alignItems: 'center' }}>
-                    <Ionicons name="image-outline" size={40} color={colors.textTertiary} />
-                    <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold', marginTop: 8 }}>
-                      Choisir une image
-                    </Text>
-                  </View>
-                )}
+                <Text style={{ color: '#fff', fontFamily: 'Quicksand-Bold', fontSize: 15 }}>Autoriser</Text>
               </TouchableOpacity>
-            )}
+            </View>
+          ) : (
+            <FlatList
+              data={assets}
+              keyExtractor={a => a.id}
+              numColumns={3}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  onPress={() => handleSelectAsset(item)}
+                  disabled={loadingImage}
+                  style={{ width: THUMB_SIZE, height: THUMB_SIZE }}
+                >
+                  <Image
+                    source={{ uri: item.uri }}
+                    style={{ width: THUMB_SIZE, height: THUMB_SIZE }}
+                    contentFit="cover"
+                  />
+                </TouchableOpacity>
+              )}
+              contentContainerStyle={{ paddingBottom: insets.bottom + 90 }}
+            />
+          )}
 
-            {/* Text input */}
-            {(tab === 'TEXT' || tab === 'IMAGE_TEXT') && (
-              <View>
-                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 13, marginBottom: 8 }}>
-                  {tab === 'IMAGE_TEXT' ? 'Légende' : 'Votre message'}
-                </Text>
-                <TextInput
-                  value={text}
-                  onChangeText={setText}
-                  placeholder={tab === 'IMAGE_TEXT' ? 'Ajoutez une légende...' : 'Écrivez votre statut...'}
-                  placeholderTextColor={colors.textTertiary}
-                  multiline
-                  maxLength={500}
-                  style={{
-                    color: colors.textPrimary, backgroundColor: isDark ? '#1F2937' : '#F9FAFB',
-                    borderRadius: 16, padding: 16, fontFamily: 'Quicksand-Medium', fontSize: 16,
-                    minHeight: tab === 'TEXT' ? 140 : 80, textAlignVertical: 'top',
-                    borderWidth: 1, borderColor: colors.border,
-                  }}
-                />
-                <Text style={{ color: colors.textTertiary, fontSize: 12, fontFamily: 'Quicksand-Medium', textAlign: 'right', marginTop: 4 }}>
-                  {text.length}/500
-                </Text>
-              </View>
-            )}
+          {/* Bouton "Aa Texte" flottant en bas */}
+          <View style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            paddingBottom: insets.bottom + 10, paddingTop: 12, paddingHorizontal: 24,
+            flexDirection: 'row', justifyContent: 'center',
+            backgroundColor: isDark ? 'rgba(10,10,10,0.85)' : 'rgba(255,255,255,0.92)',
+            borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border,
+          }}>
+            <TouchableOpacity
+              onPress={() => setScreen('text_editor')}
+              style={{
+                flexDirection: 'row', alignItems: 'center', gap: 8,
+                backgroundColor: '#10B981',
+                borderRadius: 26, paddingHorizontal: 28, paddingVertical: 13,
+              }}
+            >
+              <Text style={{ color: '#fff', fontFamily: 'Quicksand-Bold', fontSize: 17 }}>Aa</Text>
+              <Text style={{ color: '#fff', fontFamily: 'Quicksand-SemiBold', fontSize: 15 }}>Statut texte</Text>
+            </TouchableOpacity>
+          </View>
 
-            {/* Background color (TEXT only) */}
-            {tab === 'TEXT' && (
-              <View>
-                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 13, marginBottom: 10 }}>
-                  Couleur de fond
-                </Text>
-                <View style={{ flexDirection: 'row', gap: 10 }}>
-                  {TEXT_BG_OPTIONS.map(opt => (
-                    <TouchableOpacity
-                      key={opt.color}
-                      onPress={() => setBgColor(opt.color)}
-                      style={{
-                        width: 36, height: 36, borderRadius: 18, backgroundColor: opt.color,
-                        borderWidth: bgColor === opt.color ? 3 : 0, borderColor: '#fff',
-                      }}
-                    />
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {/* Aperçu (TEXT) */}
-            {tab === 'TEXT' && text.trim().length > 0 && (
-              <View>
-                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 13, marginBottom: 10 }}>
-                  Aperçu
-                </Text>
-                <View style={{ height: 160, borderRadius: 20, backgroundColor: bgColor, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-                  <Text style={{ color: '#fff', fontFamily: 'Quicksand-Bold', fontSize: 20, textAlign: 'center' }}>
-                    {text}
-                  </Text>
-                </View>
-              </View>
-            )}
-
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </View>
+          {/* Overlay chargement photo sélectionnée */}
+          {loadingImage && (
+            <View style={[StyleSheet.absoluteFill, {
+              backgroundColor: 'rgba(0,0,0,0.45)',
+              justifyContent: 'center', alignItems: 'center',
+            }]}>
+              <ActivityIndicator size="large" color="#10B981" />
+            </View>
+          )}
+        </View>
+      )}
     </Modal>
   );
 }

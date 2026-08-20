@@ -47,6 +47,7 @@ import { beninCities, neighborhoodsByCity } from "../../../../constants/Location
 import { StatusBar as StatusBarComponent } from "../../../../components/ui/StatusBar";
 import { StatusViewer } from "../../../../components/ui/StatusViewer";
 import { StatusCreator } from "../../../../components/ui/StatusCreator";
+import { MyStatusesPage } from "../../../../components/ui/MyStatusesPage";
 import StatusService, { StatusGroup } from "../../../../services/api/StatusService";
 import MessagingService from "../../../../services/api/MessagingService";
 
@@ -105,6 +106,7 @@ export default function EnterpriseDashboard() {
   const [statusCurrentUserId, setStatusCurrentUserId] = useState('');
   const [viewerVisible, setViewerVisible] = useState(false);
   const [viewerGroupIndex, setViewerGroupIndex] = useState(0);
+  const [myStatusesVisible, setMyStatusesVisible] = useState(false);
   const [creatorVisible, setCreatorVisible] = useState(false);
 
   const loadStatuses = useCallback(async () => {
@@ -120,10 +122,24 @@ export default function EnterpriseDashboard() {
 
   useFocusEffect(useCallback(() => { loadStatuses(); }, [loadStatuses]));
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setStatusGroups([]);
+      setStatusCurrentUserId('');
+      setViewerVisible(false);
+      setMyStatusesVisible(false);
+      setCreatorVisible(false);
+    }
+  }, [isAuthenticated]);
+
   const handlePressStatusGroup = (group: StatusGroup) => {
-    const idx = statusGroups.findIndex(g => g.enterprise._id === group.enterprise._id);
-    setViewerGroupIndex(idx >= 0 ? idx : 0);
-    setViewerVisible(true);
+    if (String(group.enterprise._id) === String(statusCurrentUserId)) {
+      setMyStatusesVisible(true);
+    } else {
+      const idx = statusGroups.findIndex(g => g.enterprise._id === group.enterprise._id);
+      setViewerGroupIndex(idx >= 0 ? idx : 0);
+      setViewerVisible(true);
+    }
   };
 
   const handleStatusViewed = async (statusId: string) => {
@@ -1335,7 +1351,7 @@ export default function EnterpriseDashboard() {
             )}
 
             {/* Statuts */}
-            {statusGroups.length > 0 || userRole === 'ENTERPRISE' ? (
+            {isAuthenticated && (statusGroups.length > 0 || userRole === 'ENTERPRISE') ? (
               <StatusBarComponent
                 groups={statusGroups}
                 currentUserId={statusCurrentUserId}
@@ -1781,7 +1797,7 @@ export default function EnterpriseDashboard() {
 
       {/* Status Viewer */}
       <StatusViewer
-        visible={viewerVisible}
+        visible={isAuthenticated && viewerVisible}
         groups={statusGroups}
         initialGroupIndex={viewerGroupIndex}
         currentUserId={statusCurrentUserId}
@@ -1797,9 +1813,17 @@ export default function EnterpriseDashboard() {
         }}
       />
 
+      {/* Mes statuts */}
+      <MyStatusesPage
+        visible={isAuthenticated && myStatusesVisible}
+        onClose={() => setMyStatusesVisible(false)}
+        onOpenCreator={() => { setMyStatusesVisible(false); handleOpenStatusCreator(); }}
+        currentUserId={statusCurrentUserId}
+      />
+
       {/* Status Creator (enterprise only) */}
       <StatusCreator
-        visible={creatorVisible}
+        visible={isAuthenticated && creatorVisible}
         onClose={() => setCreatorVisible(false)}
         onCreated={() => { setCreatorVisible(false); loadStatuses(); }}
       />

@@ -1,6 +1,8 @@
 import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import * as FileSystem from 'expo-file-system/legacy';
+import { ConfirmModal } from './ConfirmModal';
 import { StatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -10,6 +12,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -22,7 +25,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StatusGroup, StatusItem } from '../../services/api/StatusService';
+import StatusService, { StatusGroup, StatusItem } from '../../services/api/StatusService';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = require('react-native').Dimensions.get('window');
 const STATUS_DURATION = 15000;
@@ -37,6 +40,7 @@ interface StatusViewerProps {
   onDelete?: (statusId: string) => void;
   onReplyToStatus?: (status: StatusItem, enterpriseUserId: string, text: string) => Promise<{ conversationId: string }>;
   onNeedAuth?: () => void;
+  onStatusUpdated?: () => void;
 }
 
 export function StatusViewer({
@@ -49,6 +53,7 @@ export function StatusViewer({
   onDelete,
   onReplyToStatus,
   onNeedAuth,
+  onStatusUpdated,
 }: StatusViewerProps) {
   const { isDark, colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -64,6 +69,12 @@ export function StatusViewer({
   const [sending, setSending] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [localImageUri, setLocalImageUri] = useState<string | null>(null);
+  const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
+  const [editingCaption, setEditingCaption] = useState(false);
+  const [editText, setEditText] = useState('');
+  const [localCaption, setLocalCaption] = useState<string | null>(null);
+  const [savingCaption, setSavingCaption] = useState(false);
 
   const progress = useSharedValue(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -148,6 +159,28 @@ export function StatusViewer({
   useEffect(() => {
     if (!visible || !currentStatus) return;
     elapsedRef.current = 0;
+    setLocalImageUri(null);
+    setEditingCaption(false);
+    setEditText('');
+    setLocalCaption(null);
+    if (currentStatus.type !== 'TEXT' && currentStatus.imageUrl) {
+      console.log('[StatusViewer] imageUrl:', currentStatus.imageUrl);
+      const dest = `${FileSystem.cacheDirectory}status_${currentStatus._id}.jpg`;
+      FileSystem.downloadAsync(currentStatus.imageUrl, dest)
+        .then(({ uri }) => {
+          console.log('[StatusViewer] download OK → localUri:', uri);
+          return FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+        })
+        .then(b64 => {
+          const dataUri = `data:image/jpeg;base64,${b64}`;
+          console.log('[StatusViewer] data URI ready, longueur base64:', b64.length);
+          setLocalImageUri(dataUri);
+        })
+        .catch(err => {
+          console.warn('[StatusViewer] download/read error → fallback HTTPS:', err?.message);
+          setLocalImageUri(currentStatus.imageUrl!);
+        });
+    }
     onViewed(currentStatus._id);
     startOrResume(STATUS_DURATION, 0);
     return () => { clearTimer(); cancelAnimation(progress); };
@@ -157,11 +190,11 @@ export function StatusViewer({
     if (visible) { setGroupIndex(initialGroupIndex); setStatusIndex(0); setReplyText(''); }
   }, [visible, initialGroupIndex]);
 
-  // Pause quand input est focus
+  // Pause quand input est focus ou en édition de légende
   useEffect(() => {
-    if (inputFocused) pauseProgress();
+    if (inputFocused || editingCaption) pauseProgress();
     else resumeProgress();
-  }, [inputFocused]);
+  }, [inputFocused, editingCaption]);
 
   // Gestion clavier
   useEffect(() => {
@@ -185,7 +218,7 @@ export function StatusViewer({
   };
 
   const handlePress = (e: any) => {
-    if (inputFocused) { Keyboard.dismiss(); return; }
+    if (inputFocused || editingCaption) { Keyboard.dismiss(); return; }
     if (e.nativeEvent.pageX < SCREEN_WIDTH * 0.38) goPrev();
     else goNext();
   };
@@ -211,6 +244,25 @@ export function StatusViewer({
 
   if (!currentGroup || !currentStatus) return null;
 
+  const captionText = localCaption ?? currentStatus.text ?? '';
+  const canEditCaption = isMyGroup &&
+    currentStatus.type === 'IMAGE_TEXT' &&
+    (Date.now() - new Date(currentStatus.createdAt).getTime()) < 15 * 60 * 1000;
+  const captionBottom = editingCaption && keyboardHeight > 0 ? keyboardHeight + 10 : 80 + insets.bottom;
+
+  const handleSaveCaption = async () => {
+    if (!editText.trim() || savingCaption) return;
+    setSavingCaption(true);
+    try {
+      await StatusService.updateText(currentStatus._id, editText.trim());
+      setLocalCaption(editText.trim());
+      setEditingCaption(false);
+      Keyboard.dismiss();
+      onStatusUpdated?.();
+    } catch {}
+    setSavingCaption(false);
+  };
+
   const renderContent = () => {
     if (currentStatus.type === 'TEXT') {
       return (
@@ -222,18 +274,19 @@ export function StatusViewer({
       );
     }
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Image
-          source={{ uri: currentStatus.imageUrl! }}
-          style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
-          contentFit="contain"
-        />
-        {currentStatus.type === 'IMAGE_TEXT' && currentStatus.text && (
-          <View style={{ position: 'absolute', bottom: 80 + insets.bottom, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.55)', paddingHorizontal: 20, paddingVertical: 14 }}>
-            <Text style={{ color: '#fff', fontSize: 16, fontFamily: 'Quicksand-SemiBold', textAlign: 'center' }}>
-              {currentStatus.text}
-            </Text>
-          </View>
+      <View style={{ flex: 1, backgroundColor: '#000' }}>
+        {localImageUri ? (
+          <Image
+            source={{ uri: localImageUri }}
+            style={StyleSheet.absoluteFill}
+            contentFit="contain"
+          />
+        ) : (
+          <ActivityIndicator
+            size="large"
+            color="rgba(255,255,255,0.5)"
+            style={StyleSheet.absoluteFill}
+          />
         )}
       </View>
     );
@@ -254,6 +307,65 @@ export function StatusViewer({
           onPressOut={handlePressOut}
           onPress={handlePress}
         />
+
+        {/* Légende — rendue après la Pressable (z-order supérieur) */}
+        {currentStatus.type === 'IMAGE_TEXT' && captionText && !editingCaption ? (
+          <View style={{ position: 'absolute', bottom: captionBottom, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.55)', paddingHorizontal: 16, paddingVertical: 12 }}>
+            <View style={{ alignItems: 'center' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                {canEditCaption && (
+                  <TouchableOpacity onPress={() => { setEditText(captionText); setEditingCaption(true); }} style={{ padding: 3 }}>
+                    <Ionicons name="pencil" size={14} color="rgba(255,255,255,0.6)" />
+                  </TouchableOpacity>
+                )}
+                <Text style={{ color: '#fff', fontSize: 15, fontFamily: 'Quicksand-SemiBold', textAlign: 'center', flexShrink: 1 }}>
+                  {captionText}
+                </Text>
+              </View>
+            </View>
+          </View>
+        ) : null}
+
+        {/* Input d'édition de légende — même style que la réponse au statut */}
+        {editingCaption && (
+          <View style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            paddingBottom: keyboardHeight > 0 ? keyboardHeight + (Platform.OS === 'ios' ? 12 : 24) : bottomInset,
+            paddingHorizontal: 16, paddingTop: 12,
+            flexDirection: 'row', alignItems: 'center', gap: 10,
+          }}>
+            <TextInput
+              value={editText}
+              onChangeText={setEditText}
+              autoFocus
+              multiline
+              maxLength={300}
+              placeholder="Modifier la légende..."
+              placeholderTextColor="rgba(255,255,255,0.55)"
+              style={{
+                flex: 1,
+                backgroundColor: 'rgba(0,0,0,0.45)',
+                borderRadius: 24,
+                paddingHorizontal: 18,
+                paddingVertical: Platform.OS === 'ios' ? 12 : 8,
+                color: '#fff',
+                fontFamily: 'Quicksand-Medium',
+                fontSize: 15,
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,0.3)',
+              }}
+            />
+            <TouchableOpacity
+              onPress={handleSaveCaption}
+              disabled={savingCaption}
+              style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#10B981', alignItems: 'center', justifyContent: 'center' }}
+            >
+              {savingCaption
+                ? <ActivityIndicator size="small" color="#fff" />
+                : <Ionicons name="checkmark" size={22} color="#fff" />}
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Barres de progression */}
         <View style={{ position: 'absolute', top: insets.top + 8, left: 8, right: 8, flexDirection: 'row', gap: 3 }}>
@@ -285,7 +397,7 @@ export function StatusViewer({
           </View>
           {isMyGroup && onDelete && (
             <TouchableOpacity
-              onPress={() => { onDelete(currentStatus._id); goNext(); }}
+              onPress={() => setConfirmDeleteVisible(true)}
               style={{ marginRight: 8, padding: 6 }}
             >
               <Ionicons name="trash-outline" size={20} color="#fff" />
@@ -301,7 +413,7 @@ export function StatusViewer({
           style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingBottom: keyboardHeight > 0 ? keyboardHeight + (Platform.OS === 'android' ? 24 : 12) : bottomInset, paddingHorizontal: 16, paddingTop: 12 }}
           pointerEvents="box-none"
         >
-          {isMyGroup ? (
+          {!editingCaption && isMyGroup ? (
             /* Compteur de vues */
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <Ionicons name="eye-outline" size={18} color="rgba(255,255,255,0.85)" />
@@ -309,7 +421,7 @@ export function StatusViewer({
                 {currentStatus.viewCount ?? 0} vue{(currentStatus.viewCount ?? 0) !== 1 ? 's' : ''}
               </Text>
             </View>
-          ) : (onReplyToStatus || onNeedAuth) ? (
+          ) : !editingCaption && (onReplyToStatus || onNeedAuth) ? (
             /* Input de réponse */
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }} pointerEvents="box-none">
               <TextInput
@@ -358,6 +470,18 @@ export function StatusViewer({
           ) : null}
         </View>
       </View>
+
+      <ConfirmModal
+        visible={confirmDeleteVisible}
+        title="Supprimer ce statut ?"
+        message="Cette action est irréversible."
+        onConfirm={() => {
+          setConfirmDeleteVisible(false);
+          onDelete!(currentStatus._id);
+          goNext();
+        }}
+        onCancel={() => setConfirmDeleteVisible(false)}
+      />
     </Modal>
   );
 }
