@@ -11,7 +11,6 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Modal,
-  PanResponder,
   Platform,
   Text,
   TextInput,
@@ -33,6 +32,8 @@ import MessagingService, {
 import ProductService from "../../../../services/api/ProductService";
 import StatusService, { StatusItem } from "../../../../services/api/StatusService";
 import { StatusViewer } from "../../../../components/ui/StatusViewer";
+import ChatWallpaper from "../../../../components/messaging/ChatWallpaper";
+import SwipeableMessageRow from "../../../../components/messaging/SwipeableMessageRow";
 import { Product } from "../../../../types/product";
 
 // Cache simple pour les conversations et messages
@@ -40,113 +41,9 @@ const conversationCache = new Map<
   string,
   { conversation: Conversation; messages: Message[]; participants: any[]; timestamp: number }
 >();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes en millisecondes
-const SWIPE_THRESHOLD = 65;
+const CACHE_DURATION = 5 * 60 * 1000;
 
-const WALLPAPER_ICONS = [
-  'chatbubble-outline', 'heart-outline', 'star-outline', 'sparkles-outline',
-  'leaf-outline', 'bag-handle-outline', 'storefront-outline', 'happy-outline',
-  'flower-outline', 'ribbon-outline', 'pricetag-outline', 'gift-outline',
-  'diamond-outline', 'cart-outline', 'cube-outline', 'megaphone-outline',
-  'thumbs-up-outline', 'shield-checkmark-outline', 'wallet-outline', 'trending-up-outline',
-];
-
-const _rngC = (n: number) => { const x = Math.sin(n + 1) * 73856; return x - Math.floor(x); };
-
-const _COLS_C = 9, _CELL_W_C = 46, _CELL_H_C = 52;
-const WALLPAPER_ITEMS = Array.from({ length: 34 }, (_, r) =>
-  Array.from({ length: _COLS_C }, (_, c) => {
-    const i = r * _COLS_C + c;
-    return {
-      key: `w${i}`,
-      top: r * _CELL_H_C + (_rngC(i * 5 + 0) - 0.5) * _CELL_H_C * 0.9,
-      left: c * _CELL_W_C + (_rngC(i * 5 + 1) - 0.5) * _CELL_W_C * 0.9,
-      icon: WALLPAPER_ICONS[Math.floor(_rngC(i * 5 + 2) * WALLPAPER_ICONS.length)],
-      rot: _rngC(i * 5 + 3) * 360,
-      size: 14 + Math.floor(_rngC(i * 5 + 4) * 14),
-      alpha: 0.055 + _rngC(i * 5 + 0.7) * 0.065,
-    };
-  })
-).flat();
-
-const ChatWallpaper = React.memo(({ isDark }: { isDark: boolean }) => (
-  <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} pointerEvents="none">
-    {WALLPAPER_ITEMS.map(item => (
-      <View
-        key={item.key}
-        style={{
-          position: 'absolute',
-          top: item.top,
-          left: item.left,
-          opacity: isDark ? item.alpha * 0.8 : item.alpha,
-          transform: [{ rotate: `${item.rot}deg` }],
-        }}
-      >
-        <Ionicons name={item.icon as any} size={item.size} color="#10B981" />
-      </View>
-    ))}
-  </View>
-));
-
-const SwipeableRow = ({
-  children,
-  onReply,
-  enabled = true,
-}: {
-  children: React.ReactNode;
-  onReply: () => void;
-  enabled?: boolean;
-}) => {
-  const translateX = React.useRef(new Animated.Value(0)).current;
-  const triggered = React.useRef(false);
-
-  const panResponder = React.useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onStartShouldSetPanResponderCapture: () => false,
-      onMoveShouldSetPanResponder: (evt, gs) => {
-        if (!enabled) return false;
-        // Capture seulement si : clairement horizontal, nettement vers la droite, pas du bord gauche
-        return gs.dx > 22 && Math.abs(gs.dx) > Math.abs(gs.dy) * 3;
-      },
-      onMoveShouldSetPanResponderCapture: () => false,
-      onPanResponderMove: (_, gs) => {
-        if (gs.dx > 0) {
-          translateX.setValue(Math.min(gs.dx, SWIPE_THRESHOLD + 20));
-          if (gs.dx >= SWIPE_THRESHOLD && !triggered.current) {
-            triggered.current = true;
-          }
-        }
-      },
-      onPanResponderRelease: (_, gs) => {
-        const didTrigger = triggered.current;
-        triggered.current = false;
-        Animated.spring(translateX, { toValue: 0, useNativeDriver: true, damping: 18, stiffness: 220 }).start();
-        if (didTrigger) onReply();
-      },
-      onPanResponderTerminate: () => {
-        triggered.current = false;
-        Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start();
-      },
-    })
-  ).current;
-
-  const iconOpacity = translateX.interpolate({ inputRange: [0, 20, SWIPE_THRESHOLD], outputRange: [0, 0.4, 1], extrapolate: 'clamp' });
-  const iconScale = translateX.interpolate({ inputRange: [0, SWIPE_THRESHOLD], outputRange: [0.5, 1], extrapolate: 'clamp' });
-
-  return (
-    <View>
-      <Animated.View style={{ position: 'absolute', left: 6, top: 0, bottom: 0, justifyContent: 'center', opacity: iconOpacity, transform: [{ scale: iconScale }] }}>
-        <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#10B981', justifyContent: 'center', alignItems: 'center', shadowColor: '#10B981', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.4, shadowRadius: 4, elevation: 4 }}>
-          <Ionicons name="return-up-forward" size={15} color="#FFFFFF" />
-        </View>
-      </Animated.View>
-      <Animated.View {...panResponder.panHandlers} style={{ transform: [{ translateX }] }}>
-        {children}
-      </Animated.View>
-    </View>
-  );
-};
+const SwipeableRow = SwipeableMessageRow;
 
 export default function ConversationDetails() {
   const router = useRouter();

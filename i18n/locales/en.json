@@ -33,7 +33,7 @@
                 "messages": "Messages",
                 "newProducts": "New products",
                 "advertisements": "Advertisements",
-                "systemUpdates": "System updates"
+                "systemUpdates": "Subscription reminders"
             },
             "display": {
                 "title": "Display",
@@ -1646,7 +1646,7 @@
                 "messages": "Messages",
                 "newProducts": "New Products",
                 "advertisements": "Advertisements",
-                "systemUpdates": "System Updates"
+                "systemUpdates": "Subscription reminders"
             },
             "display": {
                 "gridView": "Grid View",

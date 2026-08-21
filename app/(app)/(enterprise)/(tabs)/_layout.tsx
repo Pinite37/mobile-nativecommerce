@@ -1,16 +1,41 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import React from "react";
+import React, { useEffect, useRef } from "react";
+import { AppState } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CustomTabBar } from "../../../../components/ui/CustomTabBar";
 import { TabBarIconWithBadge } from "../../../../components/ui/TabBarIconWithBadge";
 import { useUnreadMessages } from "../../../../hooks/useUnreadMessages";
 import { useUnreadNotifications } from "../../../../hooks/useUnreadNotifications";
+import EnterpriseService from "../../../../services/api/EnterpriseService";
+import PreferencesService from "../../../../services/api/PreferencesService";
 
 export default function TabsLayout() {
   const { unreadCount } = useUnreadNotifications();
   const { unreadConversationCount } = useUnreadMessages();
   const insets = useSafeAreaInsets();
+  const autoOnlineRef = useRef(false);
+
+  useEffect(() => {
+    let appStateSub: ReturnType<typeof AppState.addEventListener> | null = null;
+
+    PreferencesService.getPreferences().then((prefs) => {
+      const enabled = prefs.enterprise?.autoOnlineStatus ?? false;
+      autoOnlineRef.current = enabled;
+      if (enabled) EnterpriseService.setOnlineStatus(true);
+
+      appStateSub = AppState.addEventListener('change', (state) => {
+        if (!autoOnlineRef.current) return;
+        if (state === 'active') EnterpriseService.setOnlineStatus(true);
+        else EnterpriseService.setOnlineStatus(false);
+      });
+    }).catch(() => {});
+
+    return () => {
+      if (autoOnlineRef.current) EnterpriseService.setOnlineStatus(false);
+      appStateSub?.remove();
+    };
+  }, []);
 
   const NotificationIcon = ({
     color,

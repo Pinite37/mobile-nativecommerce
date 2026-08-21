@@ -39,15 +39,10 @@ export default function EnterpriseSettingsScreen() {
 
   // Notifications
   const [pushEnabled, setPushEnabled] = useState(true);
-  const [notifDelivery, setNotifDelivery] = useState(true);
   const [notifMessages, setNotifMessages] = useState(true);
   const [notifNewProducts, setNotifNewProducts] = useState(true);
   const [notifAdvertisements, setNotifAdvertisements] = useState(true);
   const [notifSystemUpdates, setNotifSystemUpdates] = useState(true);
-
-  // Display
-  const [productView, setProductView] = useState<"grid" | "list">("grid");
-  const [highQualityImages, setHighQualityImages] = useState(true);
 
   // Enterprise
   const [autoOnlineStatus, setAutoOnlineStatus] = useState(false);
@@ -135,17 +130,12 @@ export default function EnterpriseSettingsScreen() {
 
       // Notifications
       setPushEnabled(prefs.notifications?.pushEnabled ?? true);
-      setNotifDelivery(prefs.notifications?.types?.delivery ?? true);
       setNotifMessages(prefs.notifications?.types?.messages ?? true);
       setNotifNewProducts(prefs.notifications?.types?.newProducts ?? true);
       setNotifAdvertisements(
         prefs.notifications?.types?.advertisements ?? true
       );
       setNotifSystemUpdates(prefs.notifications?.types?.systemUpdates ?? true);
-
-      // Display
-      setProductView(prefs.display?.productView || "grid");
-      setHighQualityImages(prefs.display?.highQualityImages ?? true);
 
       // Enterprise
       setAutoOnlineStatus(prefs.enterprise?.autoOnlineStatus ?? false);
@@ -397,26 +387,6 @@ export default function EnterpriseSettingsScreen() {
 
             <View style={{ borderColor: colors.border }} className="flex-row items-center justify-between px-4 py-4 border-b">
               <View className="flex-row items-center">
-                <Ionicons name="cube-outline" size={20} color={colors.brandPrimary} />
-                <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-medium ml-3">
-                  {i18n.t("enterprise.settings.notifications.delivery")}
-                </Text>
-              </View>
-              <Switch
-                value={notifDelivery}
-                onValueChange={(value) =>
-                  toggleSetting("notifDelivery", notifDelivery, setNotifDelivery, async () => {
-                    await PreferencesService.updateNotifications({ types: { delivery: value } });
-                  })
-                }
-                trackColor={{ false: "#D1D5DB", true: "#C7F4DC" }}
-                thumbColor={notifDelivery ? "#10B981" : "#9CA3AF"}
-                disabled={notifPermission !== 'granted'}
-              />
-            </View>
-
-            <View style={{ borderColor: colors.border }} className="flex-row items-center justify-between px-4 py-4 border-b">
-              <View className="flex-row items-center">
                 <Ionicons name="chatbubble-outline" size={20} color={colors.brandPrimary} />
                 <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-medium ml-3">
                   {i18n.t("enterprise.settings.notifications.messages")}
@@ -477,7 +447,7 @@ export default function EnterpriseSettingsScreen() {
 
             <View className="flex-row items-center justify-between px-4 py-4">
               <View className="flex-row items-center">
-                <Ionicons name="sync-outline" size={20} color={colors.brandPrimary} />
+                <Ionicons name="calendar-outline" size={20} color={colors.brandPrimary} />
                 <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-medium ml-3">
                   {i18n.t("enterprise.settings.notifications.systemUpdates")}
                 </Text>
@@ -675,19 +645,6 @@ export default function EnterpriseSettingsScreen() {
               />
             </View> */}
 
-            <TouchableOpacity className="flex-row items-center justify-between px-4 py-4">
-              <View className="flex-row items-center">
-                <Ionicons
-                  name="document-text-outline"
-                  size={20}
-                  color={colors.brandPrimary}
-                />
-                <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-medium ml-3">
-                  {i18n.t("enterprise.settings.privacy.privacyPolicy")}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
-            </TouchableOpacity>
           </View>
         </View>
 

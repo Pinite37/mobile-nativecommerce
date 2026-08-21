@@ -657,6 +657,15 @@ class EnterpriseService {
       throw new Error(error.response?.data?.message || error.message || 'Échec de dissociation du partenaire');
     }
   }
+
+  async setOnlineStatus(isOnline: boolean): Promise<void> {
+    try {
+      await ApiService.patch<any>(`${this.BASE_URL}/online-status`, { isOnline });
+    } catch (error: any) {
+      // Silencieux — ne pas bloquer l'UX pour une erreur de statut
+      console.warn('⚠️ Erreur mise à jour statut en ligne:', error.message);
+    }
+  }
 }
 
 export default new EnterpriseService();

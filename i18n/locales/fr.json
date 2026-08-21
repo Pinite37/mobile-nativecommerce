@@ -33,7 +33,7 @@
                 "messages": "Messages",
                 "newProducts": "Nouveaux produits",
                 "advertisements": "Publicités",
-                "systemUpdates": "Mises à jour système"
+                "systemUpdates": "Rappels d'abonnement"
             },
             "display": {
                 "title": "Affichage",
@@ -1650,7 +1650,7 @@
                 "messages": "Messages",
                 "newProducts": "Nouveaux produits",
                 "advertisements": "Publicités",
-                "systemUpdates": "Mises à jour système"
+                "systemUpdates": "Rappels d'abonnement"
             },
             "display": {
                 "gridView": "Affichage grille",

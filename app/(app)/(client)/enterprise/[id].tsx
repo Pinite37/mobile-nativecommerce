@@ -284,33 +284,43 @@ export default function ClientEnterpriseDetails() {
 
       {/* Logo — overlap sur le gradient */}
       <View style={{ alignItems: "center", marginTop: -44, marginBottom: 12 }}>
-        <View
-          style={{
-            width: 88,
-            height: 88,
-            borderRadius: 22,
-            borderWidth: 3,
-            borderColor: colors.background,
-            overflow: "hidden",
-            backgroundColor: colors.card,
-            elevation: 6,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.12,
-            shadowRadius: 10,
-          }}
-        >
-          {enterprise.logo ? (
-            <ExpoImage
-              source={{ uri: enterprise.logo }}
-              style={{ width: 82, height: 82 } as any}
-              contentFit="cover"
-              cachePolicy="memory-disk"
-            />
-          ) : (
-            <View style={{ flex: 1, backgroundColor: "#FEF3C7", justifyContent: "center", alignItems: "center" }}>
-              <Ionicons name="business" size={36} color="#FE8C00" />
-            </View>
+        <View style={{ position: "relative" }}>
+          <View
+            style={{
+              width: 88,
+              height: 88,
+              borderRadius: 22,
+              borderWidth: 3,
+              borderColor: colors.background,
+              overflow: "hidden",
+              backgroundColor: colors.card,
+              elevation: 6,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.12,
+              shadowRadius: 10,
+            }}
+          >
+            {enterprise.logo ? (
+              <ExpoImage
+                source={{ uri: enterprise.logo }}
+                style={{ width: 82, height: 82 } as any}
+                contentFit="cover"
+                cachePolicy="memory-disk"
+              />
+            ) : (
+              <View style={{ flex: 1, backgroundColor: "#FEF3C7", justifyContent: "center", alignItems: "center" }}>
+                <Ionicons name="business" size={36} color="#FE8C00" />
+              </View>
+            )}
+          </View>
+          {(enterprise as any).isOnline && (
+            <View style={{
+              position: "absolute", bottom: 4, right: 4,
+              width: 16, height: 16, borderRadius: 8,
+              backgroundColor: "#10B981",
+              borderWidth: 2, borderColor: colors.background,
+            }} />
           )}
         </View>
       </View>
