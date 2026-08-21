@@ -20,7 +20,7 @@ import CategoryService from '../../../../services/api/CategoryService';
 export default function AllCategoriesPage() {
     const insets = useSafeAreaInsets();
     const router = useRouter();
-    const { colors } = useTheme();
+    const { colors, isDark } = useTheme();
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -42,7 +42,7 @@ export default function AllCategoriesPage() {
 
     return (
         <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
-            <ExpoStatusBar style="light" translucent />
+            <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
 
             <LinearGradient
                 colors={['#059669', '#10B981']}

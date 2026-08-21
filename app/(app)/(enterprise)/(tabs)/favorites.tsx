@@ -307,7 +307,7 @@ export default function EnterpriseFavoritesScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.secondary }}>
-      <ExpoStatusBar style={isDark ? "light" : "light"} translucent />
+      <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}

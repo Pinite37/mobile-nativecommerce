@@ -5,9 +5,10 @@ import React, { useEffect, useRef, useState } from "react";
 
 import {
     ActivityIndicator,
+    Animated,
+    Easing,
     FlatList,
     Image,
-    Keyboard,
     KeyboardAvoidingView,
     Linking,
     Modal,
@@ -80,6 +81,9 @@ export default function EnterpriseSignUpScreen() {
   const companyNameRef = useRef<TextInput>(null);
   const descriptionRef = useRef<TextInput>(null);
   const ifuNumberRef = useRef<TextInput>(null);
+  const bar1Anim = useRef(new Animated.Value(0)).current;
+  const bar2Anim = useRef(new Animated.Value(0)).current;
+  const bar3Anim = useRef(new Animated.Value(0)).current;
 
   const toast = useToast();
   const { colors, isDark } = useTheme();
@@ -95,7 +99,7 @@ export default function EnterpriseSignUpScreen() {
   } = useLocationForRegistration();
   const autoFilledCityRef = useRef(false);
 
-  const TOTAL_STEPS = 3;
+  const TOTAL_STEPS = 4;
 
   useEffect(() => {
     // Réinitialiser le quartier si la ville change
@@ -115,6 +119,28 @@ export default function EnterpriseSignUpScreen() {
       }
     }
   }, [locationStatus, detectedCity]);
+
+  // Animer les barres de progression
+  useEffect(() => {
+    Animated.timing(bar1Anim, {
+      toValue: currentStep >= 2 ? 1 : 0,
+      duration: 380,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: false,
+    }).start();
+    Animated.timing(bar2Anim, {
+      toValue: currentStep >= 3 ? 1 : 0,
+      duration: 380,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: false,
+    }).start();
+    Animated.timing(bar3Anim, {
+      toValue: currentStep >= 4 ? 1 : 0,
+      duration: 380,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: false,
+    }).start();
+  }, [currentStep]);
 
   // Reset scroll to top when step changes
   useEffect(() => {
@@ -159,7 +185,7 @@ export default function EnterpriseSignUpScreen() {
     return true;
   };
 
-  // Step 2: all optional details — only validate IFU format if filled
+  // Step 2: localisation & about — only validate IFU format if filled
   const validateStep2 = (): boolean => {
     if (ifuNumber.trim() && !/^\d{13}$/.test(ifuNumber)) {
       toast.showToast({
@@ -171,7 +197,10 @@ export default function EnterpriseSignUpScreen() {
     return true;
   };
 
-  const validateStep3 = (): boolean => {
+  // Step 3: contact details — all optional
+  const validateStep3 = (): boolean => true;
+
+  const validateStep4 = (): boolean => {
     if (!password) {
       toast.showToast({
         title: "Erreur",
@@ -202,6 +231,7 @@ export default function EnterpriseSignUpScreen() {
     }
     return true;
   };
+
 
   // Function to scroll to a specific input
   const scrollToInput = (ref: React.RefObject<TextInput | null>) => {
@@ -236,6 +266,9 @@ export default function EnterpriseSignUpScreen() {
         break;
       case 3:
         isValid = validateStep3();
+        break;
+      case 4:
+        isValid = validateStep4();
         if (isValid) {
           handleSignUp();
           return;
@@ -418,6 +451,8 @@ export default function EnterpriseSignUpScreen() {
         return renderStep2();
       case 3:
         return renderStep3();
+      case 4:
+        return renderStep4();
       default:
         return null;
     }
@@ -428,69 +463,74 @@ export default function EnterpriseSignUpScreen() {
       backgroundColor: colors.card,
       borderWidth: 1,
       borderColor: colors.border,
-      borderRadius: 16,
+      borderRadius: 14,
       paddingVertical: 4,
     },
     flagContainer: {
       backgroundColor: colors.card,
-      borderTopLeftRadius: 16,
-      borderBottomLeftRadius: 16,
+      borderTopLeftRadius: 14,
+      borderBottomLeftRadius: 14,
     },
-    input: {
-      color: colors.textPrimary,
-    },
-    callingCode: {
-      color: colors.textPrimary,
-    },
+    input: { color: colors.textPrimary, fontFamily: "Quicksand-Medium" },
+    callingCode: { color: colors.textPrimary },
   };
 
-  // Step 1: Company essentials (only required fields besides password)
+  const inputRow = (icon: string, content: React.ReactNode, multiline = false) => (
+    <View style={{
+      flexDirection: "row",
+      alignItems: multiline ? "flex-start" : "center",
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 14,
+      paddingHorizontal: 16,
+      ...(multiline ? { paddingVertical: 14, minHeight: 100 } : { height: 56 }),
+    }}>
+      <Ionicons name={icon as any} size={18} color={colors.textTertiary} style={{ marginRight: 12, ...(multiline ? { marginTop: 2 } : {}) }} />
+      {content}
+    </View>
+  );
+
+  const fieldLabel = (label: string) => (
+    <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>
+      {label}
+    </Text>
+  );
+
   const renderStep1 = () => (
     <View>
-      <Text className="text-lg font-quicksand-semibold mb-4" style={{ color: colors.textPrimary }}>
-        Informations Entreprise
-      </Text>
-
-      {/* Company Name */}
-      <View className="mb-4">
-        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-          Nom de l&apos;Entreprise *
-        </Text>
-        <TextInput
-          ref={companyNameRef}
-          className="w-full px-5 py-4 border rounded-2xl font-quicksand shadow-sm"
-          style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
-          placeholder="Votre Entreprise SARL"
-          placeholderTextColor={colors.textTertiary}
-          value={companyName}
-          onChangeText={setCompanyName}
-          onFocus={() => scrollToInput(companyNameRef)}
-          autoFocus={false}
-        />
+      <View style={{ marginBottom: 14 }}>
+        {fieldLabel("Nom de l'entreprise *")}
+        {inputRow("business-outline",
+          <TextInput
+            ref={companyNameRef}
+            value={companyName}
+            onChangeText={setCompanyName}
+            placeholder="Votre Entreprise SARL"
+            placeholderTextColor={colors.textTertiary}
+            onFocus={() => scrollToInput(companyNameRef)}
+            style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 15, color: colors.textPrimary }}
+          />
+        )}
       </View>
 
-      {/* Email */}
-      <View className="mb-4">
-        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-          Email *
-        </Text>
-        <TextInput
-          className="w-full px-5 py-4 border rounded-2xl font-quicksand shadow-sm"
-          style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
-          placeholder="contact@votreentreprise.com"
-          placeholderTextColor={colors.textTertiary}
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
+      <View style={{ marginBottom: 14 }}>
+        {fieldLabel("Email *")}
+        {inputRow("mail-outline",
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            placeholder="contact@votreentreprise.com"
+            placeholderTextColor={colors.textTertiary}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 15, color: colors.textPrimary }}
+          />
+        )}
       </View>
 
-      {/* Company Phone (required) */}
-      <View className="mb-6">
-        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-          Numéro de l&apos;Entreprise *
-        </Text>
+      <View style={{ marginBottom: 6 }}>
+        {fieldLabel("Numéro de l'entreprise *")}
         <PhoneInput
           value={companyPhone}
           onChangePhoneNumber={setCompanyPhone}
@@ -504,27 +544,25 @@ export default function EnterpriseSignUpScreen() {
     </View>
   );
 
-  // Step 2: All optional details (merged)
   const SectionDivider = ({ label }: { label: string }) => (
-    <View className="flex-row items-center mt-2 mb-5">
-      <View className="flex-1 h-px" style={{ backgroundColor: colors.borderLight }} />
-      <Text className="text-xs font-quicksand-medium mx-3 uppercase" style={{ color: colors.textTertiary }}>
+    <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8, marginBottom: 18 }}>
+      <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+      <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 11, color: colors.textTertiary, marginHorizontal: 12, letterSpacing: 0.8, textTransform: "uppercase" }}>
         {label}
       </Text>
-      <View className="flex-1 h-px" style={{ backgroundColor: colors.borderLight }} />
+      <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
     </View>
   );
 
   const renderStep2 = () => (
     <View>
-      <Text className="text-lg font-quicksand-semibold mb-1" style={{ color: colors.textPrimary }}>
-        Détails & Contact
+      <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 17, color: colors.textPrimary, marginBottom: 4 }}>
+        Localisation
       </Text>
-      <Text className="text-sm font-quicksand mb-5" style={{ color: colors.textSecondary }}>
-        Tous ces champs sont optionnels — remplissez ce qui vous convient
+      <Text style={{ fontFamily: "Quicksand-Regular", fontSize: 14, color: colors.textSecondary, marginBottom: 20 }}>
+        Tous ces champs sont optionnels
       </Text>
 
-      {/* ── Localisation ── */}
       <LocationConsentBanner
         status={locationStatus}
         detectedCity={detectedCity}
@@ -533,119 +571,126 @@ export default function EnterpriseSignUpScreen() {
         onReset={resetLocation}
       />
 
-      {/* Ville : affichée seulement si le GPS n'a pas fonctionné */}
       {locationStatus !== "granted" && (
-        <View className="mb-4">
-          <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-            Ville
-          </Text>
+        <View style={{ marginBottom: 14 }}>
+          {fieldLabel("Ville")}
           <TouchableOpacity
-            className="w-full px-5 py-4 border rounded-2xl flex-row justify-between items-center shadow-sm"
-            style={{ backgroundColor: colors.card, borderColor: colors.border }}
+            style={{
+              flexDirection: "row", alignItems: "center",
+              backgroundColor: colors.card, borderWidth: 1,
+              borderColor: colors.border, borderRadius: 14,
+              paddingHorizontal: 16, height: 56,
+            }}
             onPress={() => setCityModalVisible(true)}
             activeOpacity={0.7}
           >
-            <Text className="font-quicksand" style={{ color: colors.textPrimary }}>{selectedCity}</Text>
-            <Ionicons name="chevron-down" size={20} color={colors.textTertiary} />
+            <Ionicons name="location-outline" size={18} color={colors.textTertiary} style={{ marginRight: 12 }} />
+            <Text style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 15, color: colors.textPrimary }}>{selectedCity}</Text>
+            <Ionicons name="chevron-down" size={18} color={colors.textTertiary} />
           </TouchableOpacity>
         </View>
       )}
 
-      {/* Quartier : toujours affiché (le GPS ne détecte pas le quartier) */}
-      <View className="mb-2">
-        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-          Quartier
-        </Text>
+      <View style={{ marginBottom: 14 }}>
+        {fieldLabel("Quartier")}
         <TouchableOpacity
-          className={`w-full px-5 py-4 border rounded-2xl flex-row justify-between items-center shadow-sm ${!selectedCity ? "opacity-50" : ""}`}
-          style={{ backgroundColor: colors.card, borderColor: colors.border }}
+          style={{
+            flexDirection: "row", alignItems: "center",
+            backgroundColor: colors.card, borderWidth: 1,
+            borderColor: colors.border, borderRadius: 14,
+            paddingHorizontal: 16, height: 56,
+            opacity: !selectedCity ? 0.5 : 1,
+          }}
           onPress={() => selectedCity && setDistrictModalVisible(true)}
           disabled={!selectedCity}
           activeOpacity={0.7}
         >
-          <Text className="font-quicksand" style={{ color: selectedDistrict ? colors.textPrimary : colors.textTertiary }}>
+          <Ionicons name="map-outline" size={18} color={colors.textTertiary} style={{ marginRight: 12 }} />
+          <Text style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 15, color: selectedDistrict ? colors.textPrimary : colors.textTertiary }}>
             {selectedDistrict || "Sélectionnez un quartier"}
           </Text>
-          <Ionicons name="chevron-down" size={20} color={colors.textTertiary} />
+          <Ionicons name="chevron-down" size={18} color={colors.textTertiary} />
         </TouchableOpacity>
       </View>
 
-      {/* ── À propos ── */}
       <SectionDivider label="À propos" />
 
-      <View className="mb-4">
-        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-          Description de l&apos;Entreprise
-        </Text>
-        <TextInput
-          ref={descriptionRef}
-          className="w-full px-5 py-4 border rounded-2xl font-quicksand shadow-sm"
-          style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
-          placeholder="Décrivez votre entreprise..."
-          placeholderTextColor={colors.textTertiary}
-          value={description}
-          onChangeText={setDescription}
-          onFocus={() => scrollToInput(descriptionRef)}
-          multiline
-          numberOfLines={3}
-          textAlignVertical="top"
-        />
-      </View>
-
-      <View className="mb-2">
-        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-          Numéro IFU
-        </Text>
-        <TextInput
-          ref={ifuNumberRef}
-          className="w-full px-5 py-4 border rounded-2xl font-quicksand shadow-sm"
-          style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
-          placeholder="1234567890123"
-          placeholderTextColor={colors.textTertiary}
-          value={ifuNumber}
-          onChangeText={setIfuNumber}
-          onFocus={() => scrollToInput(ifuNumberRef)}
-          keyboardType="numeric"
-          maxLength={13}
-        />
-      </View>
-
-      {/* ── Contact & Représentant ── */}
-      <SectionDivider label="Contact & Représentant" />
-
-      <View className="flex-row mb-4">
-        <View className="flex-1 mr-2">
-          <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-            Prénom
-          </Text>
+      <View style={{ marginBottom: 14 }}>
+        {fieldLabel("Description de l'entreprise")}
+        {inputRow("document-text-outline",
           <TextInput
-            className="w-full px-5 py-4 border rounded-2xl font-quicksand shadow-sm"
-            style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
-            placeholder="Jean"
+            ref={descriptionRef}
+            value={description}
+            onChangeText={setDescription}
+            placeholder="Décrivez votre entreprise..."
             placeholderTextColor={colors.textTertiary}
-            value={firstName}
-            onChangeText={setFirstName}
-          />
-        </View>
-        <View className="flex-1 ml-2">
-          <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-            Nom
-          </Text>
+            onFocus={() => scrollToInput(descriptionRef)}
+            multiline
+            numberOfLines={3}
+            textAlignVertical="top"
+            style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 15, color: colors.textPrimary }}
+          />,
+          true
+        )}
+      </View>
+
+      <View style={{ marginBottom: 6 }}>
+        {fieldLabel("Numéro IFU")}
+        {inputRow("card-outline",
           <TextInput
-            className="w-full px-5 py-4 border rounded-2xl font-quicksand shadow-sm"
-            style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
-            placeholder="DOSSOU"
+            ref={ifuNumberRef}
+            value={ifuNumber}
+            onChangeText={setIfuNumber}
+            placeholder="1234567890123"
             placeholderTextColor={colors.textTertiary}
-            value={lastName}
-            onChangeText={setLastName}
+            onFocus={() => scrollToInput(ifuNumberRef)}
+            keyboardType="numeric"
+            maxLength={13}
+            style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 15, color: colors.textPrimary }}
           />
+        )}
+      </View>
+    </View>
+  );
+
+  const renderStep3 = () => (
+    <View>
+      <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 17, color: colors.textPrimary, marginBottom: 4 }}>
+        Contact & Représentant
+      </Text>
+      <Text style={{ fontFamily: "Quicksand-Regular", fontSize: 14, color: colors.textSecondary, marginBottom: 20 }}>
+        Tous ces champs sont optionnels
+      </Text>
+
+      <View style={{ flexDirection: "row", gap: 12, marginBottom: 14 }}>
+        <View style={{ flex: 1 }}>
+          {fieldLabel("Prénom")}
+          {inputRow("person-outline",
+            <TextInput
+              value={firstName}
+              onChangeText={setFirstName}
+              placeholder="Jean"
+              placeholderTextColor={colors.textTertiary}
+              style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 15, color: colors.textPrimary }}
+            />
+          )}
+        </View>
+        <View style={{ flex: 1 }}>
+          {fieldLabel("Nom")}
+          {inputRow("person-outline",
+            <TextInput
+              value={lastName}
+              onChangeText={setLastName}
+              placeholder="DOSSOU"
+              placeholderTextColor={colors.textTertiary}
+              style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 15, color: colors.textPrimary }}
+            />
+          )}
         </View>
       </View>
 
-      <View className="mb-4">
-        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-          Téléphone Personnel
-        </Text>
+      <View style={{ marginBottom: 14 }}>
+        {fieldLabel("Téléphone personnel")}
         <PhoneInput
           value={phone}
           onChangePhoneNumber={setPhone}
@@ -657,40 +702,36 @@ export default function EnterpriseSignUpScreen() {
         />
       </View>
 
-      <View className="mb-4">
-        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-          Adresse
-        </Text>
-        <TextInput
-          className="w-full px-5 py-4 border rounded-2xl font-quicksand shadow-sm"
-          style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
-          placeholder="Cotonou"
-          placeholderTextColor={colors.textTertiary}
-          value={address}
-          onChangeText={setAddress}
-        />
+      <View style={{ marginBottom: 14 }}>
+        {fieldLabel("Adresse")}
+        {inputRow("location-outline",
+          <TextInput
+            value={address}
+            onChangeText={setAddress}
+            placeholder="Cotonou, Akpakpa"
+            placeholderTextColor={colors.textTertiary}
+            style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 15, color: colors.textPrimary }}
+          />
+        )}
       </View>
 
-      <View className="mb-4">
-        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-          Email Entreprise
-        </Text>
-        <TextInput
-          className="w-full px-5 py-4 border rounded-2xl font-quicksand shadow-sm"
-          style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
-          placeholder="contact@votreentreprise.com"
-          placeholderTextColor={colors.textTertiary}
-          value={companyEmail}
-          onChangeText={setCompanyEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
+      <View style={{ marginBottom: 14 }}>
+        {fieldLabel("Email entreprise")}
+        {inputRow("mail-outline",
+          <TextInput
+            value={companyEmail}
+            onChangeText={setCompanyEmail}
+            placeholder="contact@votreentreprise.com"
+            placeholderTextColor={colors.textTertiary}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 15, color: colors.textPrimary }}
+          />
+        )}
       </View>
 
-      <View className="mb-4">
-        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-          Numéro WhatsApp
-        </Text>
+      <View style={{ marginBottom: 14 }}>
+        {fieldLabel("WhatsApp")}
         <PhoneInput
           value={whatsapp}
           onChangePhoneNumber={setWhatsapp}
@@ -702,154 +743,134 @@ export default function EnterpriseSignUpScreen() {
         />
       </View>
 
-      <View className="mb-6">
-        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-          Site Web
-        </Text>
-        <TextInput
-          className="w-full px-5 py-4 border rounded-2xl font-quicksand shadow-sm"
-          style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
-          placeholder="https://votreentreprise.com"
-          placeholderTextColor={colors.textTertiary}
-          value={website}
-          onChangeText={setWebsite}
-          keyboardType="url"
-          autoCapitalize="none"
-        />
+      <View style={{ marginBottom: 6 }}>
+        {fieldLabel("Site web")}
+        {inputRow("globe-outline",
+          <TextInput
+            value={website}
+            onChangeText={setWebsite}
+            placeholder="https://votreentreprise.com"
+            placeholderTextColor={colors.textTertiary}
+            keyboardType="url"
+            autoCapitalize="none"
+            style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 15, color: colors.textPrimary }}
+          />
+        )}
       </View>
     </View>
   );
 
-  // Step 3: Security
-  const renderStep3 = () => (
+  const renderStep4 = () => (
     <View>
-      <Text className="text-lg font-quicksand-semibold mb-4" style={{ color: colors.textPrimary }}>
-        Sécurisez Votre Compte
-      </Text>
-
-      {/* Password */}
-      <View className="mb-4">
-        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-          Mot de Passe *
-        </Text>
-        <View className="relative">
+      <View style={{ marginBottom: 14 }}>
+        {fieldLabel("Mot de passe *")}
+        <View style={{
+          flexDirection: "row", alignItems: "center",
+          backgroundColor: colors.card, borderWidth: 1,
+          borderColor: colors.border, borderRadius: 14,
+          paddingHorizontal: 16, height: 56,
+        }}>
+          <Ionicons name="lock-closed-outline" size={18} color={colors.textTertiary} style={{ marginRight: 12 }} />
           <TextInput
-            className="w-full px-5 py-4 pr-12 border rounded-2xl font-quicksand shadow-sm"
-            style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
-            placeholder="Entrez votre mot de passe"
-            placeholderTextColor={colors.textTertiary}
             value={password}
             onChangeText={setPassword}
+            placeholder="••••••••"
+            placeholderTextColor={colors.textTertiary}
             secureTextEntry={!showPassword}
-            autoFocus={false}
+            style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 15, color: colors.textPrimary }}
           />
-          <TouchableOpacity
-            className="absolute right-4 top-3"
-            onPress={() => setShowPassword(!showPassword)}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name={showPassword ? "eye-off" : "eye"}
-              size={20}
-              color={colors.textTertiary}
-            />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} activeOpacity={0.7}>
+            <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={colors.textTertiary} />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Confirm Password */}
-      <View className="mb-6">
-        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-          Confirmer le Mot de Passe *
-        </Text>
-        <View className="relative">
+      <View style={{ marginBottom: 20 }}>
+        {fieldLabel("Confirmer le mot de passe *")}
+        <View style={{
+          flexDirection: "row", alignItems: "center",
+          backgroundColor: colors.card, borderWidth: 1,
+          borderColor: colors.border, borderRadius: 14,
+          paddingHorizontal: 16, height: 56,
+        }}>
+          <Ionicons name="lock-closed-outline" size={18} color={colors.textTertiary} style={{ marginRight: 12 }} />
           <TextInput
-            className="w-full px-5 py-4 pr-12 border rounded-2xl font-quicksand shadow-sm"
-            style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
-            placeholder="Confirmez votre mot de passe"
-            placeholderTextColor={colors.textTertiary}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
+            placeholder="••••••••"
+            placeholderTextColor={colors.textTertiary}
             secureTextEntry={!showConfirmPassword}
+            style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 15, color: colors.textPrimary }}
           />
-          <TouchableOpacity
-            className="absolute right-4 top-3"
-            onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name={showConfirmPassword ? "eye-off" : "eye"}
-              size={20}
-              color={colors.textTertiary}
-            />
+          <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} activeOpacity={0.7}>
+            <Ionicons name={showConfirmPassword ? "eye-off-outline" : "eye-outline"} size={20} color={colors.textTertiary} />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Password Requirements */}
-      <View className="p-4 rounded-xl mb-6" style={{ backgroundColor: isDark ? '#1E3A5F' : '#EFF6FF' }}>
-        <Text className="text-sm font-quicksand-medium mb-2" style={{ color: isDark ? '#93C5FD' : '#1E40AF' }}>
-          Exigences du Mot de Passe :
-        </Text>
-        <View className="flex-row items-center mb-1">
+      {/* Indicateurs de validité */}
+      <View style={{
+        padding: 16, borderRadius: 14, marginBottom: 20,
+        backgroundColor: isDark ? "rgba(16,185,129,0.08)" : "rgba(16,185,129,0.07)",
+        borderWidth: 1, borderColor: isDark ? "rgba(16,185,129,0.2)" : "rgba(16,185,129,0.15)",
+      }}>
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
           <Ionicons
             name={password.length >= 6 ? "checkmark-circle" : "ellipse-outline"}
             size={16}
             color={password.length >= 6 ? "#10B981" : colors.textTertiary}
           />
-          <Text
-            className={`text-sm font-quicksand ml-2 ${password.length >= 6 ? "text-green-600" : ""}`}
-            style={{ color: password.length >= 6 ? undefined : colors.textSecondary }}
-          >
+          <Text style={{
+            fontFamily: "Quicksand-Medium", fontSize: 13, marginLeft: 8,
+            color: password.length >= 6 ? "#10B981" : colors.textSecondary,
+          }}>
             Au moins 6 caractères
           </Text>
         </View>
-        <View className="flex-row items-center">
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
           <Ionicons
             name={password === confirmPassword && password ? "checkmark-circle" : "ellipse-outline"}
             size={16}
             color={password === confirmPassword && password ? "#10B981" : colors.textTertiary}
           />
-          <Text
-            className={`text-sm font-quicksand ml-2 ${password === confirmPassword && password ? "text-green-600" : ""}`}
-            style={{ color: password === confirmPassword && password ? undefined : colors.textSecondary }}
-          >
+          <Text style={{
+            fontFamily: "Quicksand-Medium", fontSize: 13, marginLeft: 8,
+            color: password === confirmPassword && password ? "#10B981" : colors.textSecondary,
+          }}>
             Les mots de passe correspondent
           </Text>
         </View>
       </View>
 
-      {/* Terms and Conditions */}
-      <View className="flex-row items-center justify-center mt-5 px-1 mb-6">
-        <TouchableOpacity
-          onPress={() => setAgreedToTerms(!agreedToTerms)}
-          className="flex-row items-center mr-3"
-          activeOpacity={0.7}
-        >
-          <View
-            className="w-6 h-6 rounded-md border-2 items-center justify-center"
-            style={agreedToTerms
-              ? { backgroundColor: '#10B981', borderColor: '#10B981' }
-              : { backgroundColor: colors.card, borderColor: colors.border }}
-          >
-            {agreedToTerms && <Text className="text-white text-center">✓</Text>}
-          </View>
-        </TouchableOpacity>
-        <Text className="font-quicksand text-sm flex-1" style={{ color: colors.textSecondary }}>
+      {/* CGU */}
+      <TouchableOpacity
+        onPress={() => setAgreedToTerms(!agreedToTerms)}
+        style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 8 }}
+        activeOpacity={1}
+      >
+        <View style={{
+          width: 20, height: 20, borderRadius: 6, marginRight: 12, marginTop: 1,
+          justifyContent: "center", alignItems: "center", borderWidth: 2,
+          backgroundColor: agreedToTerms ? "#10B981" : colors.card,
+          borderColor: agreedToTerms ? "#10B981" : colors.border,
+        }}>
+          {agreedToTerms && <Ionicons name="checkmark" size={13} color="#fff" />}
+        </View>
+        <Text style={{ fontFamily: "Quicksand-Regular", fontSize: 13, color: colors.textSecondary, flex: 1, lineHeight: 20 }}>
           J&apos;accepte les{" "}
           <Text
-            className="text-primary-600 font-quicksand-semibold underline"
+            style={{ color: "#10B981", fontFamily: "Quicksand-SemiBold" }}
             onPress={() => Linking.openURL("https://axi-contrat.vercel.app")}
           >
             conditions d&apos;utilisation
           </Text>
         </Text>
-      </View>
+      </TouchableOpacity>
     </View>
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.secondary }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar style={isDark ? "light" : "dark"} />
 
       {/* Background Shapes */}
@@ -859,181 +880,150 @@ export default function EnterpriseSignUpScreen() {
         style={{ borderTopRightRadius: 150, borderBottomRightRadius: 150 }}
       />
 
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View className="flex-1">
-          {/* Header */}
-          <View
-            className="px-6"
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+        {/* Header fixe en haut, hors du scroll */}
+        <View style={{ paddingHorizontal: 24, paddingTop: Math.max(insets.top, 16) + 10, paddingBottom: 12 }}>
+          <TouchableOpacity
+            onPress={() => currentStep > 1 ? handlePreviousStep() : router.back()}
             style={{
-              paddingTop: Math.max(insets.top, 16) + 16,
-              paddingBottom: 16,
+              width: 42, height: 42, borderRadius: 21,
+              alignItems: "center", justifyContent: "center",
+              backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,
+              marginBottom: 20,
             }}
           >
-            <TouchableOpacity
-              onPress={() =>
-                currentStep > 1 ? handlePreviousStep() : router.back()
-              }
-              className="mb-6"
-            >
-              <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
-            </TouchableOpacity>
+            <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
+          </TouchableOpacity>
 
-            <Image
-              source={require('../../assets/images/axiLogoo.png')}
-              style={{ width: 120, height: 40 }}
-              resizeMode="contain"
-              className="mb-4"
-            />
-            <Text className="text-3xl font-quicksand-bold mb-2" style={{ color: colors.textPrimary }}>
-              Créer un Compte Entreprise
-            </Text>
-            <Text className="text-base font-quicksand mb-6" style={{ color: colors.textSecondary }}>
-              {currentStep === 1 && "Parlez-nous de votre entreprise"}
-              {currentStep === 2 && "Ajoutez quelques détails (optionnel)"}
-              {currentStep === 3 && "Sécurisez votre compte"}
-            </Text>
+          <Image
+            source={require('../../assets/images/axiLogoo.png')}
+            style={{ width: 110, height: 36, marginBottom: 16 }}
+            resizeMode="contain"
+          />
+          <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 26, color: colors.textPrimary, marginBottom: 4 }}>
+            Compte Entreprise
+          </Text>
+          <Text style={{ fontFamily: "Quicksand-Regular", fontSize: 14, color: colors.textSecondary, marginBottom: 20 }}>
+            {currentStep === 1 && "Parlez-nous de votre entreprise"}
+            {currentStep === 2 && "Localisation & présentation (optionnel)"}
+            {currentStep === 3 && "Contact & représentant (optionnel)"}
+            {currentStep === 4 && "Sécurisez votre compte"}
+          </Text>
 
-            {/* Progress Indicator - Centered */}
-            <View className="items-center justify-center mb-4">
-              <View className="flex-row items-center">
-                {[1, 2, 3].map((step, index) => (
-                  <React.Fragment key={step}>
-                    <View
-                      className="w-10 h-10 rounded-full items-center justify-center"
-                      style={{
-                        backgroundColor: step === currentStep ? '#10B981' : step < currentStep ? '#22C55E' : colors.tertiary
-                      }}
-                    >
-                      {step < currentStep ? (
-                        <Ionicons name="checkmark" size={20} color="#FFFFFF" />
-                      ) : (
-                        <Text
-                          className="font-quicksand-bold text-base"
-                          style={{ color: step === currentStep ? '#FFFFFF' : colors.textSecondary }}
-                        >
-                          {step}
-                        </Text>
-                      )}
+          {/* Progress */}
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            {[1, 2, 3, 4].map((step, index) => {
+              const barAnim = [bar1Anim, bar2Anim, bar3Anim][index];
+              return (
+                <React.Fragment key={step}>
+                  <View style={{
+                    width: 32, height: 32, borderRadius: 16,
+                    alignItems: "center", justifyContent: "center",
+                    backgroundColor: step <= currentStep ? "#10B981" : colors.tertiary,
+                  }}>
+                    {step < currentStep
+                      ? <Ionicons name="checkmark" size={16} color="#fff" />
+                      : <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 13, color: step === currentStep ? "#fff" : colors.textSecondary }}>{step}</Text>
+                    }
+                  </View>
+                  {index < 3 && (
+                    <View style={{ flex: 1, height: 3, marginHorizontal: 5, borderRadius: 2, backgroundColor: colors.tertiary, overflow: "hidden" }}>
+                      <Animated.View style={{
+                        position: "absolute", left: 0, top: 0, bottom: 0,
+                        backgroundColor: "#10B981", borderRadius: 2,
+                        width: barAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ["0%", "100%"],
+                        }),
+                      }} />
                     </View>
-                    {index < 2 && (
-                      <View
-                        className="w-20 h-1 mx-1"
-                        style={{ backgroundColor: step < currentStep ? '#22C55E' : colors.tertiary }}
-                      />
-                    )}
-                  </React.Fragment>
-                ))}
-              </View>
-            </View>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Contenu + boutons dans le scroll */}
+        <ScrollView
+          ref={scrollViewRef}
+          style={{ flex: 1 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 20) + 16 }}
+        >
+          <View style={{ paddingHorizontal: 24, paddingTop: 16 }}>
+            {renderStepContent()}
           </View>
 
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            className="flex-1"
-            keyboardVerticalOffset={0}
-          >
-            <ScrollView
-              ref={scrollViewRef}
-              className="flex-1"
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={{
-                paddingBottom: Math.max(insets.bottom, 20) + 100,
-                flexGrow: 1,
-              }}
-              scrollEventThrottle={16}
-              keyboardDismissMode="interactive"
-            >
-              {/* Form Content */}
-              <View className="px-6 pt-4">{renderStepContent()}</View>
-            </ScrollView>
-          </KeyboardAvoidingView>
-
-          {/* Bottom Navigation */}
-          <View
-            className="px-6 border-t"
-            style={{
-              backgroundColor: colors.card,
-              borderColor: colors.border,
-              paddingTop: 16,
-              paddingBottom: Math.max(insets.bottom, 16) + 8,
-            }}
-          >
-            {currentStep === 2 && (
+          {/* Navigation */}
+          <View style={{ paddingHorizontal: 24, paddingTop: 20 }}>
+            {(currentStep === 2 || currentStep === 3) && (
               <TouchableOpacity
-                onPress={() => setCurrentStep(3)}
+                onPress={() => setCurrentStep(currentStep + 1)}
                 activeOpacity={0.7}
-                className="flex-row items-center justify-center border rounded-2xl py-3 mb-3"
-                style={{ borderColor: colors.border }}
+                style={{
+                  flexDirection: "row", alignItems: "center", justifyContent: "center",
+                  borderWidth: 1, borderColor: colors.border, borderRadius: 14,
+                  paddingVertical: 12, marginBottom: 10,
+                }}
               >
-                <Text className="font-quicksand-medium text-sm mr-1" style={{ color: colors.textSecondary }}>
+                <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: colors.textSecondary, marginRight: 4 }}>
                   Passer cette étape
                 </Text>
                 <Ionicons name="arrow-forward" size={15} color={colors.textSecondary} />
               </TouchableOpacity>
             )}
-            <View className="flex-row items-center mb-3">
+
+            <View style={{ flexDirection: "row", gap: 10, marginBottom: 16 }}>
               {currentStep > 1 && (
                 <TouchableOpacity
-                  className="flex-1 mr-2 py-3 rounded-2xl border-2 flex-row items-center justify-center"
-                  style={{ borderColor: colors.border }}
+                  style={{
+                    flex: 1, height: 54, borderRadius: 14,
+                    borderWidth: 1.5, borderColor: colors.border,
+                    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6,
+                  }}
                   onPress={handlePreviousStep}
-                  activeOpacity={1}
+                  activeOpacity={0.8}
                 >
-                  <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
-                  <Text className="font-quicksand-semibold text-base ml-2" style={{ color: colors.textPrimary }}>
-                    Retour
-                  </Text>
+                  <Ionicons name="arrow-back" size={18} color={colors.textPrimary} />
+                  <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 15, color: colors.textPrimary }}>Retour</Text>
                 </TouchableOpacity>
               )}
 
               <TouchableOpacity
-                className={`py-4 rounded-2xl ${
-                  isLoading ? "bg-primary-300" : "bg-primary-500"
-                } flex-row items-center justify-center ${
-                  currentStep > 1 ? "flex-1 ml-2" : "flex-1"
-                }`}
+                style={{
+                  flex: 1, height: 54, borderRadius: 14,
+                  backgroundColor: "#10B981", opacity: isLoading ? 0.7 : 1,
+                  flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6,
+                }}
                 onPress={handleNextStep}
                 disabled={isLoading}
-                activeOpacity={1}
+                activeOpacity={0.85}
               >
-                {isLoading && (
-                  <ActivityIndicator
-                    size="small"
-                    color="#FFFFFF"
-                    style={{ marginRight: 8 }}
-                  />
-                )}
-                <Text className="text-white text-center font-quicksand-semibold text-base">
-                  {isLoading
-                    ? "Création en cours..."
-                    : currentStep === TOTAL_STEPS
-                      ? "Créer le Compte"
-                      : "Continuer"}
+                {isLoading && <ActivityIndicator size="small" color="#fff" />}
+                <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 15, color: "#fff" }}>
+                  {isLoading ? "Création en cours..." : currentStep === TOTAL_STEPS ? "Créer le compte" : "Continuer"}
                 </Text>
                 {currentStep < TOTAL_STEPS && !isLoading && (
-                  <Ionicons
-                    name="arrow-forward"
-                    size={20}
-                    color="#FFFFFF"
-                    style={{ marginLeft: 8 }}
-                  />
+                  <Ionicons name="arrow-forward" size={18} color="#fff" />
                 )}
               </TouchableOpacity>
             </View>
 
-            {/* Sign In Link */}
-            <View className="flex-row justify-center">
-              <Text className="font-quicksand text-sm" style={{ color: colors.textSecondary }}>
-                Vous avez déjà un compte ?{" "}
+            <View style={{ flexDirection: "row", justifyContent: "center" }}>
+              <Text style={{ fontFamily: "Quicksand-Regular", fontSize: 14, color: colors.textSecondary }}>
+                Déjà un compte ?{" "}
               </Text>
               <TouchableOpacity onPress={handleSignIn} activeOpacity={0.7}>
-                <Text className="text-primary-500 font-quicksand-semibold text-sm">
-                  Se Connecter
+                <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 14, color: "#10B981" }}>
+                  Se connecter
                 </Text>
               </TouchableOpacity>
             </View>
           </View>
+        </ScrollView>
 
           {/* Modal pour sélectionner la ville */}
           <Modal
@@ -1127,8 +1117,7 @@ export default function EnterpriseSignUpScreen() {
             onClose={() => setShowSubscriptionModal(false)}
             userName={firstName}
           />
-        </View>
-      </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </View>
   );
 }

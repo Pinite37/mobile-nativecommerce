@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   Dimensions,
   FlatList,
+  Keyboard,
+  KeyboardEvent,
   Modal,
   Platform,
   StyleSheet,
@@ -50,6 +52,17 @@ export function StatusCreator({ visible, onClose, onCreated }: StatusCreatorProp
   const [statusText, setStatusText] = useState('');
   const [bgColor, setBgColor] = useState('#10B981');
   const [submitting, setSubmitting] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const onShow = (e: KeyboardEvent) => setKeyboardHeight(e.endCoordinates.height);
+    const onHide = () => setKeyboardHeight(0);
+    const s1 = Keyboard.addListener(showEvent, onShow);
+    const s2 = Keyboard.addListener(hideEvent, onHide);
+    return () => { s1.remove(); s2.remove(); };
+  }, []);
 
   const reset = () => {
     setScreen('gallery');
@@ -266,7 +279,9 @@ export function StatusCreator({ visible, onClose, onCreated }: StatusCreatorProp
           </View>
           <View style={{
             position: 'absolute', bottom: 0, left: 0, right: 0,
-            paddingBottom: insets.bottom + 14,
+            paddingBottom: keyboardHeight > 0
+              ? keyboardHeight + (Platform.OS === 'ios' ? 12 : 16)
+              : insets.bottom + 14,
             paddingHorizontal: 16, paddingTop: 12,
             flexDirection: 'row', alignItems: 'center', gap: 10,
           }}>

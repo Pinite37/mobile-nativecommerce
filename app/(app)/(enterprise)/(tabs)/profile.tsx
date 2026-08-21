@@ -587,204 +587,238 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
   colors,
   isDark,
 }) => {
-  return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
+  const insets = useSafeAreaInsets();
+  const hasContact =
+    enterprise.contactInfo?.website ||
+    enterprise.contactInfo?.phone ||
+    enterprise.contactInfo?.whatsapp;
+
+  const openLink = (url: string) => Linking.openURL(url).catch(() => {});
+
+  const ContactRow = ({
+    icon,
+    iconColor,
+    label,
+    value,
+    onPress,
+  }: {
+    icon: any;
+    iconColor: string;
+    label: string;
+    value: string;
+    onPress?: () => void;
+  }) => (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={onPress ? 0.7 : 1}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+        gap: 12,
+      }}
     >
-      <View className="flex-1" style={{ backgroundColor: colors.card }}>
-        <View className="px-6 pt-14 pb-4" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
-          <View className="flex-row items-center justify-between">
-            <TouchableOpacity onPress={onClose}>
-              <Text className="font-quicksand-medium" style={{ color: colors.brandPrimary }}>
-                {i18n.t("enterprise.profile.modals.enterpriseDetails.close")}
-              </Text>
-            </TouchableOpacity>
-            <Text className="text-lg font-quicksand-bold" style={{ color: colors.textPrimary }}>
-              {i18n.t("enterprise.profile.modals.enterpriseDetails.title")}
-            </Text>
-            <View style={{ width: 70 }} />
-          </View>
+      <View style={{
+        width: 36, height: 36, borderRadius: 10,
+        backgroundColor: iconColor + "18",
+        alignItems: "center", justifyContent: "center",
+      }}>
+        <Ionicons name={icon} size={18} color={iconColor} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 11, color: colors.textTertiary, marginBottom: 1 }}>
+          {label}
+        </Text>
+        <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 14, color: onPress ? iconColor : colors.textPrimary }} numberOfLines={1}>
+          {value}
+        </Text>
+      </View>
+      {onPress && <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />}
+    </TouchableOpacity>
+  );
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        {/* Header */}
+        <View style={{
+          paddingTop: 16,
+          paddingBottom: 14,
+          paddingHorizontal: 20,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+          backgroundColor: colors.card,
+        }}>
+          <TouchableOpacity onPress={onClose} style={{ padding: 4 }}>
+            <Ionicons name="close" size={22} color={colors.textSecondary} />
+          </TouchableOpacity>
+          <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 17, color: colors.textPrimary }}>
+            Mon entreprise
+          </Text>
+          <View style={{ width: 30 }} />
         </View>
 
-        <ScrollView className="flex-1 px-6 py-6">
-          {/* Logo et nom */}
-          <View className="items-center mb-6">
+        <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
+          {/* Hero : logo + nom + statut */}
+          <View style={{
+            backgroundColor: colors.card,
+            alignItems: "center",
+            paddingTop: 28,
+            paddingBottom: 24,
+            paddingHorizontal: 20,
+            marginBottom: 12,
+          }}>
             {enterprise.logo ? (
               <Image
                 source={{ uri: enterprise.logo }}
-                className="w-24 h-24 rounded-full mb-4"
+                style={{ width: 88, height: 88, borderRadius: 44, marginBottom: 14 }}
                 resizeMode="cover"
               />
             ) : (
-              <View className="w-24 h-24 rounded-full bg-primary-500 items-center justify-center mb-4">
-                <Text className="text-white font-quicksand-bold text-2xl">
+              <View style={{
+                width: 88, height: 88, borderRadius: 44,
+                backgroundColor: "#10B981",
+                alignItems: "center", justifyContent: "center",
+                marginBottom: 14,
+              }}>
+                <Text style={{ color: "#fff", fontFamily: "Quicksand-Bold", fontSize: 32 }}>
                   {enterprise.companyName?.[0]?.toUpperCase() || "E"}
                 </Text>
               </View>
             )}
-            <Text className="text-xl font-quicksand-bold text-center" style={{ color: colors.textPrimary }}>
+            <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 20, color: colors.textPrimary, textAlign: "center", marginBottom: 6 }}>
               {enterprise.companyName}
             </Text>
-            <View className="flex-row items-center mt-2">
-              <View
-                className={`w-3 h-3 rounded-full mr-2 ${enterprise.isActive ? "bg-success-500" : "bg-neutral-400"
-                  }`}
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <View style={{
+                width: 8, height: 8, borderRadius: 4,
+                backgroundColor: enterprise.isActive ? "#10B981" : "#9CA3AF",
+              }} />
+              <Text style={{
+                fontFamily: "Quicksand-Medium", fontSize: 13,
+                color: enterprise.isActive ? "#10B981" : "#9CA3AF",
+              }}>
+                {enterprise.isActive ? "Entreprise active" : "Inactive"}
+              </Text>
+            </View>
+
+            {enterprise.description ? (
+              <Text style={{
+                fontFamily: "Quicksand-Regular", fontSize: 14,
+                color: colors.textSecondary, textAlign: "center",
+                lineHeight: 20, marginTop: 14, paddingHorizontal: 8,
+              }}>
+                {enterprise.description}
+              </Text>
+            ) : (
+              <Text style={{
+                fontFamily: "Quicksand-Regular", fontSize: 14,
+                color: colors.textTertiary, fontStyle: "italic",
+                marginTop: 14,
+              }}>
+                Aucune description ajoutée
+              </Text>
+            )}
+          </View>
+
+          {/* Contact */}
+          <View style={{
+            marginHorizontal: 16, marginBottom: 12,
+            backgroundColor: colors.card,
+            borderRadius: 16,
+            paddingHorizontal: 16,
+            overflow: "hidden",
+          }}>
+            <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 15, color: colors.textPrimary, paddingTop: 16, paddingBottom: 4 }}>
+              Contact
+            </Text>
+            {enterprise.contactInfo?.website ? (
+              <ContactRow
+                icon="globe-outline"
+                iconColor="#3B82F6"
+                label="Site web"
+                value={enterprise.contactInfo.website}
+                onPress={() => openLink(enterprise.contactInfo.website!)}
               />
-              <Text
-                className={`${enterprise.isActive ? "text-success-500" : "text-neutral-500"
-                  } font-quicksand-medium`}
-              >
-                {enterprise.isActive
-                  ? i18n.t("enterprise.profile.modals.enterpriseDetails.active")
-                  : i18n.t("enterprise.profile.modals.enterpriseDetails.inactive")}
+            ) : null}
+            {enterprise.contactInfo?.phone ? (
+              <ContactRow
+                icon="call-outline"
+                iconColor="#10B981"
+                label="Téléphone"
+                value={enterprise.contactInfo.phone}
+                onPress={() => openLink(`tel:${enterprise.contactInfo.phone}`)}
+              />
+            ) : null}
+            {enterprise.contactInfo?.whatsapp ? (
+              <ContactRow
+                icon="logo-whatsapp"
+                iconColor="#25D366"
+                label="WhatsApp"
+                value={enterprise.contactInfo.whatsapp}
+                onPress={() => openLink(`https://wa.me/${enterprise.contactInfo.whatsapp?.replace(/\D/g, "")}`)}
+              />
+            ) : null}
+            {!hasContact && (
+              <Text style={{
+                fontFamily: "Quicksand-Regular", fontSize: 13,
+                color: colors.textTertiary, fontStyle: "italic",
+                paddingVertical: 16,
+              }}>
+                Aucun contact renseigné — modifiez votre profil entreprise pour en ajouter.
               </Text>
-            </View>
-          </View>
-
-          {/* Informations */}
-          <View className="mb-6">
-            <Text className="text-lg font-quicksand-bold mb-3" style={{ color: colors.textPrimary }}>
-              {i18n.t("enterprise.profile.modals.enterpriseDetails.about")}
-            </Text>
-            <View className="rounded-xl p-4" style={{ backgroundColor: colors.tertiary }}>
-              <Text className="font-quicksand-regular" style={{ color: colors.textPrimary }}>
-                {enterprise.description ||
-                  i18n.t("enterprise.profile.modals.enterpriseDetails.noDescription")}
-              </Text>
-            </View>
-          </View>
-
-          {/* Coordonnées */}
-          <View className="mb-6">
-            <Text className="text-lg font-quicksand-bold mb-3" style={{ color: colors.textPrimary }}>
-              {i18n.t("enterprise.profile.modals.enterpriseDetails.contact")}
-            </Text>
-            <View className="rounded-xl p-4 space-y-3" style={{ backgroundColor: colors.tertiary }}>
-              {enterprise.contactInfo?.website && (
-                <View className="flex-row items-center">
-                  <Ionicons name="globe-outline" size={20} color={colors.brandPrimary} />
-                  <Text className="font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
-                    {enterprise.contactInfo.website}
-                  </Text>
-                </View>
-              )}
-
-              {enterprise.contactInfo?.phone && (
-                <View className="flex-row items-center">
-                  <Ionicons name="call-outline" size={20} color={colors.brandPrimary} />
-                  <Text className="font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
-                    {enterprise.contactInfo.phone}
-                  </Text>
-                </View>
-              )}
-
-              {!enterprise.contactInfo?.website &&
-                !enterprise.contactInfo?.phone && (
-                  <Text className="font-quicksand-regular italic" style={{ color: colors.textSecondary }}>
-                    {i18n.t("enterprise.profile.modals.enterpriseDetails.noContact")}
-                  </Text>
-                )}
-            </View>
-          </View>
-
-          {/* Statistiques */}
-          <View className="mb-6">
-            <Text className="text-lg font-quicksand-bold mb-3" style={{ color: colors.textPrimary }}>
-              {i18n.t("enterprise.profile.modals.enterpriseDetails.stats")}
-            </Text>
-            <View className="rounded-xl p-4 space-y-3" style={{ backgroundColor: colors.tertiary }}>
-              <View className="flex-row justify-between">
-                <Text className="font-quicksand-medium" style={{ color: colors.textSecondary }}>
-                  {i18n.t("enterprise.profile.modals.enterpriseDetails.totalSales")}
-                </Text>
-                <Text className="text-primary-500 font-quicksand-bold">
-                  {enterprise.stats?.totalSales
-                    ? new Intl.NumberFormat("fr-FR").format(
-                      enterprise.stats.totalSales
-                    ) + " FCFA"
-                    : "0 FCFA"}
-                </Text>
-              </View>
-              <View className="flex-row justify-between">
-                <Text className="font-quicksand-medium" style={{ color: colors.textSecondary }}>
-                  {i18n.t("enterprise.profile.modals.enterpriseDetails.orders")}
-                </Text>
-                <Text className="text-success-500 font-quicksand-bold">
-                  {enterprise.stats?.totalOrders || 0}
-                </Text>
-              </View>
-              <View className="flex-row justify-between">
-                <Text className="font-quicksand-medium" style={{ color: colors.textSecondary }}>
-                  {i18n.t("enterprise.profile.modals.enterpriseDetails.averageRating")}
-                </Text>
-                <View className="flex-row items-center">
-                  <Ionicons name="star" size={16} color="#F59E0B" />
-                  <Text className="text-warning-500 font-quicksand-bold ml-1">
-                    {enterprise.stats?.averageRating || 0}
-                  </Text>
-                </View>
-              </View>
-              <View className="flex-row justify-between">
-                <Text className="font-quicksand-medium" style={{ color: colors.textSecondary }}>
-                  {i18n.t("enterprise.profile.modals.enterpriseDetails.reviews")}
-                </Text>
-                <Text className="text-secondary-500 font-quicksand-bold">
-                  {enterprise.stats?.totalReviews || 0}
-                </Text>
-              </View>
-            </View>
+            )}
           </View>
 
           {/* Liens sociaux */}
           {enterprise.socialLinks && enterprise.socialLinks.length > 0 && (
-            <View className="mb-6">
-              <Text className="text-lg font-quicksand-bold mb-3" style={{ color: colors.textPrimary }}>
-                {i18n.t("enterprise.profile.modals.enterpriseDetails.socialLinks")}
+            <View style={{
+              marginHorizontal: 16, marginBottom: 12,
+              backgroundColor: colors.card,
+              borderRadius: 16,
+              paddingHorizontal: 16,
+              overflow: "hidden",
+            }}>
+              <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 15, color: colors.textPrimary, paddingTop: 16, paddingBottom: 4 }}>
+                Réseaux sociaux
               </Text>
-              <View className="rounded-xl p-4 space-y-3" style={{ backgroundColor: colors.tertiary }}>
-                {enterprise.socialLinks.map((link, index) => (
-                  <View key={index} className="flex-row justify-between">
-                    <Text className="font-quicksand-medium" style={{ color: colors.textSecondary }}>
-                      {link.platform}
-                    </Text>
-                    <Text className="font-quicksand-medium" style={{ color: colors.brandPrimary }}>
-                      {link.url}
-                    </Text>
-                  </View>
-                ))}
-              </View>
+              {enterprise.socialLinks.map((link, i) => (
+                <ContactRow
+                  key={i}
+                  icon="link-outline"
+                  iconColor="#8B5CF6"
+                  label={link.platform}
+                  value={link.url}
+                  onPress={() => openLink(link.url)}
+                />
+              ))}
             </View>
           )}
 
-          {/* Date de création */}
-          <View className="mb-6">
-            <Text className="text-lg font-quicksand-bold mb-3" style={{ color: colors.textPrimary }}>
-              {i18n.t("enterprise.profile.modals.enterpriseDetails.additionalInfo")}
+          {/* Infos complémentaires */}
+          <View style={{
+            marginHorizontal: 16,
+            backgroundColor: colors.card,
+            borderRadius: 16,
+            paddingHorizontal: 16,
+            overflow: "hidden",
+          }}>
+            <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 15, color: colors.textPrimary, paddingTop: 16, paddingBottom: 4 }}>
+              Informations
             </Text>
-            <View className="rounded-xl p-4 space-y-3" style={{ backgroundColor: colors.tertiary }}>
-              <View className="flex-row justify-between">
-                <Text className="font-quicksand-medium" style={{ color: colors.textSecondary }}>
-                  {i18n.t("enterprise.profile.modals.enterpriseDetails.creationDate")}
-                </Text>
-                <Text className="font-quicksand-medium" style={{ color: colors.textPrimary }}>
-                  {new Date(enterprise.createdAt).toLocaleDateString("fr-FR", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </Text>
-              </View>
-              <View className="flex-row justify-between">
-                <Text className="font-quicksand-medium" style={{ color: colors.textSecondary }}>
-                  {i18n.t("enterprise.profile.modals.enterpriseDetails.enterpriseId")}
-                </Text>
-                <Text className="font-quicksand-medium" style={{ color: colors.textPrimary }}>
-                  {enterprise._id?.substring(0, 8) || "N/A"}
-                </Text>
-              </View>
-            </View>
+            <ContactRow
+              icon="calendar-outline"
+              iconColor={colors.textTertiary}
+              label="Membre depuis"
+              value={new Date(enterprise.createdAt).toLocaleDateString("fr-FR", {
+                day: "numeric", month: "long", year: "numeric",
+              })}
+            />
           </View>
         </ScrollView>
       </View>

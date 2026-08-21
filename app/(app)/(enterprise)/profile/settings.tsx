@@ -248,7 +248,7 @@ export default function EnterpriseSettingsScreen() {
   if (loading) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.secondary }}>
-        <ExpoStatusBar style="light" translucent />
+        <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
         <LinearGradient
           colors={[colors.brandGradientStart, colors.brandGradientEnd]}
           start={{ x: 0, y: 0 }}

@@ -764,7 +764,7 @@ export default function EnterpriseProducts() {
   if (initialLoading) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.secondary }}>
-        <ExpoStatusBar style={isDark ? "light" : "light"} translucent />
+        <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
         {Header}
         <View style={{ flex: 1, backgroundColor: colors.primary }}>{renderSkeletons()}</View>
         {renderSortModal()}
@@ -774,7 +774,7 @@ export default function EnterpriseProducts() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.secondary, position: 'relative' }}>
-      <ExpoStatusBar style={isDark ? "light" : "light"} translucent />
+      <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
       {Header}
       <View style={{ flex: 1, backgroundColor: colors.primary }}>
         {products.length > 0 ? (

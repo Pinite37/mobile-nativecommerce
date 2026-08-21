@@ -31,7 +31,7 @@ export default function ProfileDetailsScreen() {
   const navigation = useNavigation();
   const { user, refreshUserData } = useAuth();
   const insets = useSafeAreaInsets();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [imagePickerVisible, setImagePickerVisible] = useState(false);
@@ -253,7 +253,7 @@ export default function ProfileDetailsScreen() {
 
   return (
     <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
-      <ExpoStatusBar style="light" translucent />
+      <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
       {/* Header vert */}
       <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="pb-6 rounded-b-3xl shadow-md" style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}>
         <View className="px-6">

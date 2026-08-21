@@ -200,7 +200,7 @@ export default function CreateProduct() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.secondary }}>
-      <ExpoStatusBar style="light" />
+      <ExpoStatusBar style={isDark ? "light" : "dark"} />
 
       {/* Header */}
       <LinearGradient

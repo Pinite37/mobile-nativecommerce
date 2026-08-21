@@ -211,8 +211,23 @@ export default function SignUpScreen() {
     router.back();
   };
 
+  const inputRow = (
+    icon: string,
+    content: React.ReactNode,
+  ) => (
+    <View style={{
+      flexDirection: "row", alignItems: "center",
+      backgroundColor: colors.card, borderWidth: 1,
+      borderColor: colors.border, borderRadius: 14,
+      paddingHorizontal: 16, minHeight: 56,
+    }}>
+      <Ionicons name={icon as any} size={18} color={colors.textTertiary} style={{ marginRight: 12 }} />
+      {content}
+    </View>
+  );
+
   return (
-    <View style={{ flex: 1, backgroundColor: colors.secondary }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar style={isDark ? "light" : "dark"} />
 
       {/* Background Shapes */}
@@ -222,26 +237,25 @@ export default function SignUpScreen() {
         style={{ borderTopRightRadius: 150, borderBottomRightRadius: 150 }}
       />
 
-      {/* Fixed Header with Back Button */}
-      <View
-        className="absolute top-0 left-0 right-0 z-10 px-6"
-        style={{
-          paddingTop: Math.max(insets.top, 16) + 16,
-          paddingBottom: 16,
-        }}
-      >
+      {/* Back Button */}
+      <View style={{
+        position: "absolute", top: 0, left: 0, right: 0, zIndex: 10,
+        paddingHorizontal: 20, paddingTop: Math.max(insets.top, 16) + 10, paddingBottom: 8,
+      }}>
         <TouchableOpacity
           onPress={() => router.back()}
-          className="w-11 h-11 rounded-full shadow-sm items-center justify-center border"
-          style={{ backgroundColor: colors.card, borderColor: colors.border }}
+          style={{
+            width: 42, height: 42, borderRadius: 21,
+            alignItems: "center", justifyContent: "center",
+            backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,
+          }}
         >
-          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
       <KeyboardAwareScrollView
-        className="flex-1"
-        style={{ paddingTop: Math.max(insets.top, 16) + 60 }}
+        style={{ flex: 1, paddingTop: Math.max(insets.top, 16) + 62 }}
         showsVerticalScrollIndicator={false}
         enableOnAndroid={true}
         keyboardShouldPersistTaps="handled"
@@ -250,257 +264,219 @@ export default function SignUpScreen() {
         extraHeight={150}
         resetScrollToCoords={{ x: 0, y: 0 }}
         scrollEnabled={true}
-        contentContainerStyle={{
-          paddingBottom: Math.max(insets.bottom, 30) + 60,
-        }}
+        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 30) + 60, paddingHorizontal: 24 }}
       >
-        {/* Header */}
-        <View className="px-6 pb-6 mt-4">
-          <Image
-            source={require('../../assets/images/axiLogoo.png')}
-            style={{ width: 120, height: 40 }}
-            resizeMode="contain"
-            className="mb-4"
-          />
-          <Text className="text-3xl font-quicksand-bold mb-2" style={{ color: colors.textPrimary }}>
-            Créer un compte
-          </Text>
-          <Text className="text-base font-quicksand" style={{ color: colors.textSecondary }}>
-            Inscrivez-vous pour commencer
-          </Text>
-        </View>
+        {/* Logo + Titre */}
+        <Image
+          source={require('../../assets/images/axiLogoo.png')}
+          style={{ width: 110, height: 36, marginBottom: 22 }}
+          resizeMode="contain"
+        />
+        <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 28, color: colors.textPrimary, marginBottom: 4 }}>
+          Créer un compte
+        </Text>
+        <Text style={{ fontFamily: "Quicksand-Regular", fontSize: 15, color: colors.textSecondary, marginBottom: 28 }}>
+          Inscrivez-vous pour commencer
+        </Text>
 
-        {/* Form */}
-        <View className="px-6">
-          {/* Name Inputs */}
-          <View className="flex-row mb-4">
-            <View className="flex-1 mr-2">
-              <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-                Prénom
-              </Text>
+        {/* Prénom / Nom */}
+        <View style={{ flexDirection: "row", gap: 12, marginBottom: 14 }}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>Prénom</Text>
+            {inputRow("person-outline",
               <TextInput
                 value={firstName}
                 onChangeText={setFirstName}
                 placeholder="Prénom"
                 placeholderTextColor={colors.textTertiary}
-                className="border rounded-2xl px-5 py-4 text-base font-quicksand shadow-sm"
-                style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
+                style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 15, color: colors.textPrimary }}
               />
-            </View>
-            <View className="flex-1 ml-2">
-              <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-                Nom
-              </Text>
+            )}
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>Nom</Text>
+            {inputRow("person-outline",
               <TextInput
                 value={lastName}
                 onChangeText={setLastName}
                 placeholder="Nom"
                 placeholderTextColor={colors.textTertiary}
-                className="border rounded-2xl px-5 py-4 text-base font-quicksand shadow-sm"
-                style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
+                style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 15, color: colors.textPrimary }}
               />
-            </View>
+            )}
           </View>
+        </View>
 
-          {/* Email Input */}
-          <View className="mb-4">
-            <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-              Email
-            </Text>
+        {/* Email */}
+        <View style={{ marginBottom: 14 }}>
+          <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>Email</Text>
+          {inputRow("mail-outline",
             <TextInput
               value={email}
               onChangeText={setEmail}
-              placeholder="Email"
+              placeholder="votre@email.com"
               placeholderTextColor={colors.textTertiary}
               keyboardType="email-address"
               autoCapitalize="none"
-              className="border rounded-2xl px-5 py-4 text-base font-quicksand shadow-sm"
-              style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
+              style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 15, color: colors.textPrimary }}
             />
-          </View>
+          )}
+        </View>
 
-          {/* Phone Input */}
-          <View className="mb-4">
-            <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-              Numéro de téléphone
-            </Text>
-            <PhoneInput
-              value={phone}
-              onChangePhoneNumber={setPhone}
-              selectedCountry={phoneCountry}
-              onChangeSelectedCountry={setPhoneCountry}
-              defaultCountry={DEFAULT_COUNTRY_CCA2}
-              placeholder="XX XX XX XX"
-              phoneInputStyles={{
-                container: {
-                  backgroundColor: colors.card,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  borderRadius: 16,
-                  paddingVertical: 4,
-                },
-                flagContainer: {
-                  backgroundColor: colors.card,
-                  borderTopLeftRadius: 16,
-                  borderBottomLeftRadius: 16,
-                },
-                input: {
-                  color: colors.textPrimary,
-                },
-                callingCode: {
-                  color: colors.textPrimary,
-                },
-              }}
-            />
-          </View>
+        {/* Téléphone */}
+        <View style={{ marginBottom: 14 }}>
+          <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>Téléphone</Text>
+          <PhoneInput
+            value={phone}
+            onChangePhoneNumber={setPhone}
+            selectedCountry={phoneCountry}
+            onChangeSelectedCountry={setPhoneCountry}
+            defaultCountry={DEFAULT_COUNTRY_CCA2}
+            placeholder="XX XX XX XX"
+            phoneInputStyles={{
+              container: {
+                backgroundColor: colors.card,
+                borderWidth: 1,
+                borderColor: colors.border,
+                borderRadius: 14,
+                paddingVertical: 4,
+              },
+              flagContainer: {
+                backgroundColor: colors.card,
+                borderTopLeftRadius: 14,
+                borderBottomLeftRadius: 14,
+              },
+              input: { color: colors.textPrimary, fontFamily: "Quicksand-Medium" },
+              callingCode: { color: colors.textPrimary },
+            }}
+          />
+        </View>
 
-          {/* Address Input */}
-          <View className="mb-4">
-            <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-              Adresse
-            </Text>
+        {/* Adresse */}
+        <View style={{ marginBottom: 14 }}>
+          <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>Adresse</Text>
+          {inputRow("location-outline",
             <TextInput
               value={address}
               onChangeText={setAddress}
               placeholder="Adresse complète"
               placeholderTextColor={colors.textTertiary}
-              className="border rounded-2xl px-5 py-4 text-base font-quicksand shadow-sm"
-              style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
+              style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 15, color: colors.textPrimary }}
             />
-          </View>
+          )}
+        </View>
 
-          {/* Password Input */}
-          <View className="mb-4">
-            <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-              Mot de passe
-            </Text>
-            <View className="relative">
-              <TextInput
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Mot de passe"
-                placeholderTextColor={colors.textTertiary}
-                secureTextEntry={!showPassword}
-                className="border rounded-2xl px-5 py-4 pr-12 text-base font-quicksand shadow-sm"
-                style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
-              />
-              <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-5"
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name={showPassword ? "eye-off" : "eye"}
-                  size={20}
-                  color={colors.textSecondary}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Confirm Password Input */}
-          <View className="mb-6">
-            <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textPrimary }}>
-              Confirmer le mot de passe
-            </Text>
-            <View className="relative">
-              <TextInput
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                placeholder="Confirmez le mot de passe"
-                placeholderTextColor={colors.textTertiary}
-                secureTextEntry={!showConfirmPassword}
-                className="border rounded-2xl px-5 py-4 pr-12 text-base font-quicksand shadow-sm"
-                style={{ backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }}
-              />
-              <TouchableOpacity
-                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-4 top-5"
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name={showConfirmPassword ? "eye-off" : "eye"}
-                  size={20}
-                  color={colors.textSecondary}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Location Detection */}
-          <LocationConsentBanner
-            status={locationStatus}
-            detectedCity={detectedCity}
-            onRequest={requestLocation}
-            onSkip={skipLocation}
-            onReset={resetLocation}
-          />
-
-          {/* Terms and Conditions Checkbox */}
-          <View className="mb-6">
-            <TouchableOpacity
-              onPress={() => setAgreedToTerms(!agreedToTerms)}
-              className="flex-row items-start"
-              activeOpacity={1}
-            >
-              <View
-                className="w-5 h-5 border-2 rounded mr-3 mt-0.5 justify-center items-center"
-                style={agreedToTerms
-                  ? { backgroundColor: '#10B981', borderColor: '#10B981' }
-                  : { borderColor: colors.border, backgroundColor: colors.card }}
-              >
-                {agreedToTerms && (
-                  <Ionicons name="checkmark" size={14} color="#FFFFFF" />
-                )}
-              </View>
-              <Text className="text-sm font-quicksand flex-1" style={{ color: colors.textSecondary }}>
-                J&#39;accepte les{" "}
-                <Text
-                  className="text-primary font-quicksand-medium"
-                  onPress={() =>
-                    Linking.openURL("https://nativecommerce.com/terms")
-                  }
-                >
-                  « termes et conditions »
-                </Text>{" "}
-                et la{" "}
-                <Text
-                  className="text-primary font-quicksand-medium"
-                  onPress={() =>
-                    Linking.openURL("https://nativecommerce.com/privacy")
-                  }
-                >
-                  « politique de confidentialité »
-                </Text>
-              </Text>
+        {/* Mot de passe */}
+        <View style={{ marginBottom: 14 }}>
+          <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>Mot de passe</Text>
+          <View style={{
+            flexDirection: "row", alignItems: "center",
+            backgroundColor: colors.card, borderWidth: 1,
+            borderColor: colors.border, borderRadius: 14,
+            paddingHorizontal: 16, height: 56,
+          }}>
+            <Ionicons name="lock-closed-outline" size={18} color={colors.textTertiary} style={{ marginRight: 12 }} />
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              placeholder="••••••••"
+              placeholderTextColor={colors.textTertiary}
+              secureTextEntry={!showPassword}
+              style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 15, color: colors.textPrimary }}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} activeOpacity={0.7}>
+              <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={colors.textTertiary} />
             </TouchableOpacity>
           </View>
+        </View>
 
-          {/* Sign Up Button */}
+        {/* Confirmer mot de passe */}
+        <View style={{ marginBottom: 20 }}>
+          <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>Confirmer le mot de passe</Text>
+          <View style={{
+            flexDirection: "row", alignItems: "center",
+            backgroundColor: colors.card, borderWidth: 1,
+            borderColor: colors.border, borderRadius: 14,
+            paddingHorizontal: 16, height: 56,
+          }}>
+            <Ionicons name="lock-closed-outline" size={18} color={colors.textTertiary} style={{ marginRight: 12 }} />
+            <TextInput
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              placeholder="••••••••"
+              placeholderTextColor={colors.textTertiary}
+              secureTextEntry={!showConfirmPassword}
+              style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 15, color: colors.textPrimary }}
+            />
+            <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} activeOpacity={0.7}>
+              <Ionicons name={showConfirmPassword ? "eye-off-outline" : "eye-outline"} size={20} color={colors.textTertiary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Localisation */}
+        <LocationConsentBanner
+          status={locationStatus}
+          detectedCity={detectedCity}
+          onRequest={requestLocation}
+          onSkip={skipLocation}
+          onReset={resetLocation}
+        />
+
+        {/* CGU */}
+        <View style={{ marginBottom: 24 }}>
           <TouchableOpacity
-            onPress={handleSignUp}
-            disabled={isLoading}
-            activeOpacity={0.8}
-            className={`rounded-2xl py-4 mb-6 shadow-sm ${
-              isLoading ? "bg-primary/70" : "bg-primary"
-            }`}
+            onPress={() => setAgreedToTerms(!agreedToTerms)}
+            style={{ flexDirection: "row", alignItems: "flex-start" }}
+            activeOpacity={1}
           >
-            <Text className="text-white font-quicksand-semibold text-base text-center">
-              {isLoading ? "Création du compte..." : "Créer le compte"}
+            <View style={{
+              width: 20, height: 20, borderRadius: 6, marginRight: 12, marginTop: 1,
+              justifyContent: "center", alignItems: "center", borderWidth: 2,
+              backgroundColor: agreedToTerms ? "#10B981" : colors.card,
+              borderColor: agreedToTerms ? "#10B981" : colors.border,
+            }}>
+              {agreedToTerms && <Ionicons name="checkmark" size={13} color="#fff" />}
+            </View>
+            <Text style={{ fontFamily: "Quicksand-Regular", fontSize: 13, color: colors.textSecondary, flex: 1, lineHeight: 20 }}>
+              J&#39;accepte les{" "}
+              <Text style={{ color: "#10B981", fontFamily: "Quicksand-SemiBold" }} onPress={() => Linking.openURL("https://nativecommerce.com/terms")}>
+                termes et conditions
+              </Text>{" "}
+              et la{" "}
+              <Text style={{ color: "#10B981", fontFamily: "Quicksand-SemiBold" }} onPress={() => Linking.openURL("https://nativecommerce.com/privacy")}>
+                politique de confidentialité
+              </Text>
             </Text>
           </TouchableOpacity>
+        </View>
 
-          {/* Sign In Link */}
-          <View className="flex-row justify-center items-center pb-6 mt-2">
-            <Text className="font-quicksand text-sm" style={{ color: colors.textSecondary }}>
-              Vous avez déjà un compte ?{" "}
+        {/* Bouton créer compte */}
+        <TouchableOpacity
+          onPress={handleSignUp}
+          disabled={isLoading}
+          activeOpacity={0.85}
+          style={{
+            height: 54, borderRadius: 14, backgroundColor: "#10B981",
+            alignItems: "center", justifyContent: "center",
+            marginBottom: 20, opacity: isLoading ? 0.7 : 1,
+          }}
+        >
+          <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 16, color: "#fff" }}>
+            {isLoading ? "Création du compte..." : "Créer le compte"}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Lien connexion */}
+        <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
+          <Text style={{ fontFamily: "Quicksand-Regular", fontSize: 14, color: colors.textSecondary }}>
+            Vous avez déjà un compte ?{" "}
+          </Text>
+          <TouchableOpacity onPress={handleSignIn}>
+            <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 14, color: "#10B981" }}>
+              Se connecter
             </Text>
-            <TouchableOpacity onPress={handleSignIn}>
-              <Text className="text-primary font-quicksand-bold text-sm underline">
-                Se connecter
-              </Text>
-            </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         </View>
       </KeyboardAwareScrollView>
     </View>
