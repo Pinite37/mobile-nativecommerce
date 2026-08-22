@@ -1,7 +1,7 @@
 import ApiService from './ApiService';
 
 export type UrgencyLevel = 'LOW' | 'MEDIUM' | 'HIGH';
-export type DeliveryStatus = 'OPEN' | 'ASSIGNED' | 'CANCELLED' | 'EXPIRED';
+export type DeliveryStatus = 'OPEN' | 'ASSIGNED' | 'COMPLETED' | 'CANCELLED';
 
 export interface CreateOfferPayload {
   product: string;

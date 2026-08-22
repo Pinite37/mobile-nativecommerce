@@ -5,10 +5,11 @@ import DateTimePicker, {
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { Image } from "expo-image";
 import {
   ActivityIndicator,
+  Animated,
   FlatList,
   KeyboardAvoidingView,
   Modal,
@@ -22,6 +23,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import PhoneInput, { ICountry, getCountryByCca2 } from "react-native-international-phone-number";
 import NotificationModal, {
   useNotification,
 } from "../../../../../components/ui/NotificationModal";
@@ -65,10 +67,6 @@ const getFilters = () => [
   {
     id: "CANCELLED" as const,
     label: i18n.t("enterprise.offers.filters.cancelled"),
-  },
-  {
-    id: "EXPIRED" as const,
-    label: i18n.t("enterprise.offers.filters.expired"),
   },
 ];
 
@@ -140,6 +138,18 @@ export default function EnterpriseOffersScreen() {
   const [viewMode, setViewMode] = useState<ViewMode>("CALLS");
   const [filter, setFilter] = useState<FilterStatus>("ALL");
   const [refreshing, setRefreshing] = useState(false);
+  const [switcherWidth, setSwitcherWidth] = useState(0);
+  const segmentAnim = useRef(new Animated.Value(0)).current;
+
+  const handleSetViewMode = useCallback((mode: ViewMode) => {
+    setViewMode(mode);
+    Animated.spring(segmentAnim, {
+      toValue: mode === 'CALLS' ? 0 : 1,
+      useNativeDriver: false,
+      friction: 8,
+      tension: 120,
+    }).start();
+  }, [segmentAnim]);
   const { notification, showNotification, hideNotification } =
     useNotification();
 
@@ -173,6 +183,10 @@ export default function EnterpriseOffersScreen() {
   const [callForm, setCallForm] = useState<DeliveryCallForm>(
     createInitialCallForm()
   );
+  const [phoneCountry, setPhoneCountry] = useState<ICountry | null>(
+    getCountryByCca2("BJ") ?? null
+  );
+  const [rawPhoneNumber, setRawPhoneNumber] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [tempExpiryDate, setTempExpiryDate] = useState<Date | null>(null);
@@ -210,6 +224,8 @@ export default function EnterpriseOffersScreen() {
 
   const resetCallForm = () => {
     setCallForm(createInitialCallForm());
+    setRawPhoneNumber("");
+    setPhoneCountry(getCountryByCca2("BJ") ?? null);
     setTempExpiryDate(null);
     setTempPickerDate(new Date(Date.now() + 60 * 60 * 1000));
   };
@@ -416,13 +432,13 @@ export default function EnterpriseOffersScreen() {
           text: i18n.t("enterprise.offers.status.cancelled"),
           icon: "close-circle",
         };
-      case "EXPIRED":
+      case "COMPLETED":
       default:
         return {
           color: "#6B7280",
           bg: "#F3F4F6",
-          text: i18n.t("enterprise.offers.status.expired"),
-          icon: "time",
+          text: i18n.t("enterprise.offers.status.completed"),
+          icon: "checkmark-circle",
         };
     }
   };
@@ -823,109 +839,102 @@ export default function EnterpriseOffersScreen() {
         paddingTop: insets.top + 16,
         paddingLeft: insets.left + 24,
         paddingRight: insets.right + 24,
-        paddingBottom: 16,
+        paddingBottom: 20,
       }}
     >
-      <View className="flex-row items-center justify-between mb-4">
-        <View className="flex-1 mr-3">
-          <Text className="text-2xl font-quicksand-bold text-white">
+      {/* Titre + compteur + bouton créer */}
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
+        <View style={{ flex: 1, marginRight: 12 }}>
+          <Text style={{ fontSize: 24, fontFamily: 'Quicksand-Bold', color: '#FFFFFF' }}>
             {i18n.t("enterprise.offers.title")}
           </Text>
-          <Text className="text-white/80 font-quicksand-medium text-sm mt-1">
+          <Text style={{ fontSize: 13, fontFamily: 'Quicksand-Medium', color: 'rgba(255,255,255,0.75)', marginTop: 3 }}>
+            {activeItems.length}{' '}
             {viewMode === "CALLS"
-              ? i18n.t("enterprise.offers.calls.subtitle")
-              : i18n.t("enterprise.offers.offersSubtitle")}
+              ? activeItems.length !== 1 ? i18n.t("enterprise.offers.count.callsPlural") : i18n.t("enterprise.offers.count.calls")
+              : activeItems.length !== 1 ? i18n.t("enterprise.offers.count.offersPlural") : i18n.t("enterprise.offers.count.offers")}
           </Text>
         </View>
-
         {viewMode === "CALLS" && (
           <TouchableOpacity
             onPress={openCreateCallModal}
-            className="w-11 h-11 rounded-2xl justify-center items-center"
-            style={{
-              backgroundColor: isDark
-                ? "rgba(255,255,255,0.18)"
-                : "rgba(255,255,255,0.22)",
-            }}
+            style={{ backgroundColor: '#FFFFFF', width: 42, height: 42, borderRadius: 14, justifyContent: 'center', alignItems: 'center', elevation: 3 }}
             activeOpacity={0.85}
           >
-            <Ionicons name="add" size={24} color="white" />
+            <Ionicons name="add" size={22} color={colors.brandPrimary} />
           </TouchableOpacity>
         )}
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingRight: 6 }}
-        className="mb-3"
+      {/* Segmented control animé — switcher de mode */}
+      <View
+        style={{ flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0.18)', borderRadius: 14, padding: 3, marginBottom: 14, position: 'relative' }}
+        onLayout={(e) => setSwitcherWidth(e.nativeEvent.layout.width)}
       >
-        {VIEW_MODES.map((mode) => (
-          <TouchableOpacity
-            key={mode.id}
-            onPress={() => setViewMode(mode.id)}
-            style={{
-              backgroundColor:
-                viewMode === mode.id
-                  ? isDark
-                    ? "rgba(255,255,255,0.24)"
-                    : "rgba(255,255,255,0.30)"
-                  : isDark
-                    ? "rgba(255,255,255,0.12)"
-                    : "rgba(255,255,255,0.18)",
-            }}
-            className="mr-2 px-4 py-3 rounded-2xl flex-row items-center"
-            activeOpacity={0.8}
-          >
-            <Ionicons name={mode.icon as any} size={16} color="white" />
-            <Text className="text-sm font-quicksand-semibold text-white ml-2">
-              {mode.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingRight: 6 }}
-      >
-        {FILTERS.map((f) => (
-          <TouchableOpacity
-            key={f.id}
-            onPress={() => setFilter(f.id)}
-            style={{
-              backgroundColor:
-                filter === f.id
-                  ? isDark
-                    ? "rgba(255,255,255,0.24)"
-                    : "rgba(255,255,255,0.30)"
-                  : isDark
-                    ? "rgba(255,255,255,0.12)"
-                    : "rgba(255,255,255,0.18)",
-            }}
-            className="mr-2 px-4 py-2 rounded-full"
-            activeOpacity={0.8}
-          >
-            <Text className="text-sm font-quicksand-medium text-white">
-              {f.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      <View className="flex-row justify-between items-center mt-4">
-        <Text className="text-white/80 font-quicksand-medium text-sm">
-          {activeItems.length}{" "}
-          {viewMode === "CALLS"
-            ? activeItems.length !== 1
-              ? i18n.t("enterprise.offers.count.callsPlural")
-              : i18n.t("enterprise.offers.count.calls")
-            : activeItems.length !== 1
-              ? i18n.t("enterprise.offers.count.offersPlural")
-              : i18n.t("enterprise.offers.count.offers")}
-        </Text>
+        {/* Pill blanche glissante */}
+        {switcherWidth > 0 && (
+          <Animated.View style={{
+            position: 'absolute',
+            top: 3,
+            bottom: 3,
+            width: (switcherWidth - 6) / 2,
+            left: segmentAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [3, 3 + (switcherWidth - 6) / 2],
+            }),
+            backgroundColor: '#FFFFFF',
+            borderRadius: 11,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.12,
+            shadowRadius: 3,
+            elevation: 3,
+          }} />
+        )}
+        {VIEW_MODES.map((mode) => {
+          const isActive = viewMode === mode.id;
+          return (
+            <TouchableOpacity
+              key={mode.id}
+              onPress={() => handleSetViewMode(mode.id)}
+              style={{ flex: 1, paddingVertical: 9, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}
+              activeOpacity={0.8}
+            >
+              <Ionicons name={mode.icon as any} size={14} color={isActive ? colors.brandPrimary : 'rgba(255,255,255,0.85)'} />
+              <Text style={{ color: isActive ? colors.brandPrimary : 'rgba(255,255,255,0.85)', fontFamily: 'Quicksand-SemiBold', fontSize: 13, marginLeft: 5 }}>
+                {mode.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
+
+      {/* Pills de filtre */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 6 }}>
+        {FILTERS.map((f) => {
+          const isActive = filter === f.id;
+          return (
+            <TouchableOpacity
+              key={f.id}
+              onPress={() => setFilter(f.id)}
+              style={{
+                backgroundColor: isActive ? 'rgba(255,255,255,0.22)' : 'transparent',
+                borderWidth: 1,
+                borderColor: isActive ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.28)',
+                borderRadius: 20,
+                paddingHorizontal: 14,
+                paddingVertical: 7,
+                marginRight: 8,
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={{ color: '#FFFFFF', fontFamily: isActive ? 'Quicksand-SemiBold' : 'Quicksand-Medium', fontSize: 13 }}>
+                {f.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
     </LinearGradient>
   );
 
@@ -1269,30 +1278,37 @@ export default function EnterpriseOffersScreen() {
                     >
                       {i18n.t("enterprise.offers.calls.form.customerPhone")}
                     </Text>
-                    <View
-                      style={{
-                        backgroundColor: colors.secondary,
-                        borderColor: colors.border,
+                    <PhoneInput
+                      value={rawPhoneNumber}
+                      onChangePhoneNumber={(text) => {
+                        setRawPhoneNumber(text);
+                        const callingCode = phoneCountry?.callingCode ?? "+229";
+                        setCallForm((prev) => ({ ...prev, customerPhone: `${callingCode} ${text}`.trim() }));
                       }}
-                      className="rounded-2xl border-2 overflow-hidden"
-                    >
-                      <TextInput
-                        value={callForm.customerPhone}
-                        onChangeText={(text) =>
-                          setCallForm((prev) => ({
-                            ...prev,
-                            customerPhone: text,
-                          }))
-                        }
-                        placeholder={i18n.t(
-                          "enterprise.offers.calls.form.customerPhonePlaceholder"
-                        )}
-                        keyboardType="phone-pad"
-                        className="px-4 py-3 font-quicksand-medium text-base"
-                        style={{ color: colors.textPrimary }}
-                        placeholderTextColor={colors.textSecondary}
-                      />
-                    </View>
+                      selectedCountry={phoneCountry}
+                      onChangeSelectedCountry={(country) => {
+                        setPhoneCountry(country);
+                        setCallForm((prev) => ({ ...prev, customerPhone: `${country.callingCode} ${rawPhoneNumber}`.trim() }));
+                      }}
+                      defaultCountry="BJ"
+                      placeholder="XX XX XX XX"
+                      phoneInputStyles={{
+                        container: {
+                          backgroundColor: colors.card,
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                          borderRadius: 14,
+                          paddingVertical: 4,
+                        },
+                        flagContainer: {
+                          backgroundColor: colors.card,
+                          borderTopLeftRadius: 14,
+                          borderBottomLeftRadius: 14,
+                        },
+                        input: { color: colors.textPrimary, fontFamily: "Quicksand-Medium" },
+                        callingCode: { color: colors.textPrimary },
+                      }}
+                    />
                   </View>
 
                   <View className="mb-5">

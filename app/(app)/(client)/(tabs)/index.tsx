@@ -785,7 +785,7 @@ export default function ClientHome() {
                 end={{ x: 1, y: 1 }}
                 style={{
                     paddingTop: insets.top + 10,
-                    paddingBottom: 80,
+                    paddingBottom: 60,
                     borderBottomLeftRadius: 30,
                     borderBottomRightRadius: 30,
                 }}
@@ -823,7 +823,7 @@ export default function ClientHome() {
             </LinearGradient>
 
             {/* Search Section Floating Over Header */}
-            <View className="-mt-14 px-4" style={{ zIndex: 50 }}>
+            <View style={{ marginTop: -64, paddingHorizontal: 16, zIndex: 50 }}>
                 <View style={{
                     backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1,
                     borderRadius: 20, flexDirection: 'row', alignItems: 'center',
@@ -870,6 +870,14 @@ export default function ClientHome() {
                         </Text>
                     </TouchableOpacity>
                 </View>
+
+                {/* Overlay transparent pour fermer le dropdown en tapant dans le vide */}
+                {(showSuggestions || showRecentSearches) && (
+                    <Pressable
+                        style={{ position: 'absolute', top: 0, left: -16, right: -16, bottom: -2000, zIndex: 90 }}
+                        onPress={() => { Keyboard.dismiss(); setShowSuggestions(false); setShowRecentSearches(false); }}
+                    />
+                )}
 
                 {/* Dropdown — position absolute, animé, par-dessus le contenu */}
                 {(showSuggestions || showRecentSearches) && (
@@ -1106,6 +1114,9 @@ export default function ClientHome() {
                             <Animated.View style={{
                                 backgroundColor: colors.card,
                                 borderBottomColor: colors.border,
+                                marginTop: 14,
+                                marginHorizontal: 16,
+                                borderRadius: 16,
                                 opacity: resultsAnim,
                                 transform: [{ translateY: resultsAnim.interpolate({ inputRange: [0, 1], outputRange: [-20, 0] }) }],
                             }} className="px-4 py-4 border-b">

@@ -23,6 +23,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import LockedFeatureOverlay from "../../../../../components/enterprise/LockedFeatureOverlay";
+import ConversationPreviewStore from "../../../../../services/ConversationPreviewStore";
 import { useAuth } from "../../../../../contexts/AuthContext";
 import { useLocale } from "../../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../../contexts/ThemeContext";
@@ -300,7 +301,14 @@ export default function MessagesPage() {
           }}
           className="px-4 py-3"
           activeOpacity={0.7}
-          onPress={() => router.push(`/(app)/(enterprise)/conversation/${conversation._id}` as any)}
+          onPress={() => {
+            ConversationPreviewStore.set(conversation._id, {
+              participantName,
+              participantAvatar: otherParticipant?.profileImage,
+              productName: conversation.product?.name,
+            });
+            router.push(`/(app)/(enterprise)/conversation/${conversation._id}` as any);
+          }}
           onLongPress={() => handleLongPress(conversation)}
           delayLongPress={500}
         >

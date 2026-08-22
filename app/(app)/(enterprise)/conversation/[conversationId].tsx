@@ -47,6 +47,8 @@ import StatusService, { StatusItem } from "../../../../services/api/StatusServic
 import { StatusViewer } from "../../../../components/ui/StatusViewer";
 import ChatWallpaper from "../../../../components/messaging/ChatWallpaper";
 import SwipeableMessageRow from "../../../../components/messaging/SwipeableMessageRow";
+import ConversationCacheService from "../../../../services/ConversationCacheService";
+import ConversationPreviewStore from "../../../../services/ConversationPreviewStore";
 
 // Cache simple pour les conversations et messages
 const conversationCache = new Map<
@@ -60,361 +62,6 @@ const conversationCache = new Map<
 >();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes en millisecondes
 
-// DateTimePicker custom iOS avec support du mode sombre
-const IOSLightDateTimePicker = ({
-  value,
-  onChange,
-  colors,
-}: {
-  value: Date;
-  onChange: (date: Date) => void;
-  colors: any;
-}) => {
-  const hours = Array.from({ length: 24 }, (_, i) => i);
-  const minutes = [0, 15, 30, 45];
-
-  const formatNumber = (n: number) => n.toString().padStart(2, "0");
-
-  const handleHourChange = (hour: number) => {
-    const next = new Date(value);
-    next.setHours(hour);
-    onChange(next);
-  };
-
-  const handleMinuteChange = (minute: number) => {
-    const next = new Date(value);
-    next.setMinutes(minute);
-    onChange(next);
-  };
-
-  return (
-    <View
-      style={{
-        backgroundColor: colors.card,
-        paddingVertical: 16,
-        paddingHorizontal: 12,
-      }}
-    >
-      {/* Date affichée */}
-      <Text
-        style={{
-          textAlign: "center",
-          color: colors.textPrimary,
-          fontFamily: "Quicksand-Bold",
-          fontSize: 18,
-          marginBottom: 12,
-        }}
-      >
-        {value.toLocaleDateString("fr-FR", {
-          weekday: "short",
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        })}
-      </Text>
-
-      {/* Sélecteur date (calendrier) + heures / minutes */}
-
-      {/* Calendrier personnalisé */}
-      <View
-        style={{
-          marginBottom: 16,
-          backgroundColor: colors.card,
-          borderRadius: 16,
-          padding: 16,
-        }}
-      >
-        {/* En-tête du mois */}
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 16,
-          }}
-        >
-          <TouchableOpacity
-            activeOpacity={1}
-            onPress={() => {
-              const prev = new Date(value);
-              prev.setMonth(prev.getMonth() - 1);
-              onChange(prev);
-            }}
-            style={{ padding: 8 }}
-          >
-            <Text style={{ fontSize: 18, color: colors.textPrimary }}>‹</Text>
-          </TouchableOpacity>
-          <Text
-            style={{
-              fontSize: 16,
-              fontFamily: "Quicksand-Bold",
-              color: colors.textPrimary,
-            }}
-          >
-            {value.toLocaleDateString("fr-FR", {
-              month: "long",
-              year: "numeric",
-            })}
-          </Text>
-          <TouchableOpacity
-            activeOpacity={1}
-            onPress={() => {
-              const next = new Date(value);
-              next.setMonth(next.getMonth() + 1);
-              onChange(next);
-            }}
-            style={{ padding: 8 }}
-          >
-            <Text style={{ fontSize: 18, color: colors.textPrimary }}>›</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Jours de la semaine */}
-        <View style={{ flexDirection: "row", marginBottom: 8 }}>
-          {["L", "M", "M", "J", "V", "S", "D"].map((day, i) => (
-            <View key={i} style={{ flex: 1, alignItems: "center" }}>
-              <Text
-                style={{
-                  fontSize: 12,
-                  fontFamily: "Quicksand-Medium",
-                  color: colors.textSecondary,
-                }}
-              >
-                {day}
-              </Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Grille des dates */}
-        <View>
-          {(() => {
-            const year = value.getFullYear();
-            const month = value.getMonth();
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            const startDayOfWeek = (firstDay.getDay() + 6) % 7; // Lundi = 0
-            const daysInMonth = lastDay.getDate();
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            const weeks = [];
-            let days = [];
-
-            // Jours vides avant le début du mois
-            for (let i = 0; i < startDayOfWeek; i++) {
-              days.push(
-                <View key={`empty-${i}`} style={{ flex: 1, height: 40 }} />
-              );
-            }
-
-            // Jours du mois
-            for (let day = 1; day <= daysInMonth; day++) {
-              const date = new Date(year, month, day);
-              date.setHours(0, 0, 0, 0);
-              const isSelected =
-                date.getDate() === value.getDate() &&
-                date.getMonth() === value.getMonth() &&
-                date.getFullYear() === value.getFullYear();
-              const isPast = date < today;
-              const isToday = date.getTime() === today.getTime();
-
-              days.push(
-                <TouchableOpacity
-                  key={day}
-                  activeOpacity={1}
-                  disabled={isPast}
-                  onPress={() => {
-                    if (!isPast) {
-                      const next = new Date(value);
-                      next.setDate(day);
-                      onChange(next);
-                    }
-                  }}
-                  style={{
-                    flex: 1,
-                    height: 40,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    borderRadius: 8,
-                    backgroundColor: isSelected ? "#10B981" : "transparent",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontFamily: "Quicksand-Medium",
-                      color: isPast
-                        ? colors.textSecondary + "60"
-                        : isSelected
-                        ? "#FFFFFF"
-                        : isToday
-                        ? "#10B981"
-                        : colors.textPrimary,
-                    }}
-                  >
-                    {day}
-                  </Text>
-                </TouchableOpacity>
-              );
-
-              if (days.length === 7) {
-                weeks.push(
-                  <View
-                    key={`week-${weeks.length}`}
-                    style={{ flexDirection: "row", marginBottom: 4 }}
-                  >
-                    {days}
-                  </View>
-                );
-                days = [];
-              }
-            }
-
-            // Compléter la dernière semaine si nécessaire
-            if (days.length > 0) {
-              while (days.length < 7) {
-                days.push(
-                  <View
-                    key={`empty-end-${days.length}`}
-                    style={{ flex: 1, height: 40 }}
-                  />
-                );
-              }
-              weeks.push(
-                <View
-                  key={`week-${weeks.length}`}
-                  style={{ flexDirection: "row", marginBottom: 4 }}
-                >
-                  {days}
-                </View>
-              );
-            }
-
-            return weeks;
-          })()}
-        </View>
-      </View>
-
-      {/* Sélecteur heures / minutes */}
-      <View style={{ flexDirection: "row", justifyContent: "center", gap: 24 }}>
-        {/* Heures */}
-        <View>
-          <Text
-            style={{
-              textAlign: "center",
-              color: colors.textSecondary,
-              fontFamily: "Quicksand-Medium",
-              marginBottom: 8,
-            }}
-          >
-            {i18n.t("enterprise.messages.conversationDetail.hour")}
-          </Text>
-          <View
-            style={{
-              height: 140,
-              width: 80,
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: colors.border,
-              overflow: "hidden",
-            }}
-          >
-            <ScrollView
-              contentContainerStyle={{ paddingVertical: 8 }}
-              showsVerticalScrollIndicator={false}
-            >
-              {hours.map((h) => {
-                const selected = h === value.getHours();
-                return (
-                  <TouchableOpacity
-                    key={h}
-                    onPress={() => handleHourChange(h)}
-                    style={{
-                      paddingVertical: 6,
-                      alignItems: "center",
-                      backgroundColor: selected ? (colors.textPrimary === "#111827" ? "#ECFDF5" : "rgba(16, 185, 129, 0.15)") : "transparent",
-                    }}
-                    activeOpacity={0.8}
-                  >
-                    <Text
-                      style={{
-                        color: selected ? "#10B981" : colors.textPrimary,
-                        fontFamily: selected
-                          ? "Quicksand-Bold"
-                          : "Quicksand-Medium",
-                        fontSize: 16,
-                      }}
-                    >
-                      {formatNumber(h)}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-        </View>
-
-        {/* Minutes */}
-        <View>
-          <Text
-            style={{
-              textAlign: "center",
-              color: colors.textSecondary,
-              fontFamily: "Quicksand-Medium",
-              marginBottom: 8,
-            }}
-          >
-            {i18n.t("enterprise.messages.conversationDetail.minutes")}
-          </Text>
-          <View
-            style={{
-              height: 140,
-              width: 80,
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: colors.border,
-              overflow: "hidden",
-            }}
-          >
-            <ScrollView
-              contentContainerStyle={{ paddingVertical: 8 }}
-              showsVerticalScrollIndicator={false}
-            >
-              {minutes.map((m) => {
-                const selected = m === value.getMinutes();
-                return (
-                  <TouchableOpacity
-                    key={m}
-                    onPress={() => handleMinuteChange(m)}
-                    style={{
-                      paddingVertical: 6,
-                      alignItems: "center",
-                      backgroundColor: selected ? (colors.textPrimary === "#111827" ? "#ECFDF5" : "rgba(16, 185, 129, 0.15)") : "transparent",
-                    }}
-                    activeOpacity={0.8}
-                  >
-                    <Text
-                      style={{
-                        color: selected ? "#10B981" : colors.textPrimary,
-                        fontFamily: selected
-                          ? "Quicksand-Bold"
-                          : "Quicksand-Medium",
-                        fontSize: 16,
-                      }}
-                    >
-                      {formatNumber(m)}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-        </View>
-      </View>
-    </View>
-  );
-};
 
 const ChatWallpaperEnt = ChatWallpaper;
 const SwipeableRow = SwipeableMessageRow;
@@ -466,7 +113,8 @@ export default function ConversationDetails() {
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [participants, setParticipants] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [initialized, setInitialized] = useState(false);
   const [sending, setSending] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
@@ -850,18 +498,11 @@ export default function ConversationDetails() {
             );
           }
           
-          // Mettre à jour le cache avec le nouveau message
-          if (conversationId && conversation) {
-            const cached = conversationCache.get(conversationId);
-            if (cached) {
-              conversationCache.set(conversationId, {
-                ...cached,
-                messages: updatedMessages,
-                timestamp: Date.now(),
-              });
-            }
+          // Persister le nouveau message dans le cache AsyncStorage
+          if (conversationId) {
+            ConversationCacheService.appendMessage(conversationId, data.message);
           }
-          
+
           return updatedMessages;
         });
 
@@ -953,57 +594,39 @@ export default function ConversationDetails() {
     }
 
     const loadConversationData = async () => {
-      try {
+      // 1. Lire le cache persistant — bloquer "Conversation introuvable" pendant ce temps
+      const cached = await ConversationCacheService.get(conversationId!);
+
+      if (cached) {
+        setConversation(cached.conversation);
+        setMessages(cached.messages);
+        setParticipants(cached.participants || []);
+      } else {
         setLoading(true);
+      }
+      setInitialized(true);
 
-        // Vérifier le cache d'abord
-        const cached = conversationCache.get(conversationId!);
-        const now = Date.now();
-
-        if (cached && now - cached.timestamp < CACHE_DURATION) {
-          console.log("💾 ENTERPRISE - Utilisation du cache");
-          setConversation(cached.conversation);
-          setMessages(cached.messages);
-          setParticipants(cached.participants || []);
-          setLoading(false);
-          loadedConversationRef.current = conversationId;
-          return;
-        }
-
-        console.log("🔄 ENTERPRISE - Chargement depuis API");
-        const data = await MessagingService.getConversationMessages(
-          conversationId!
-        );
-
-        console.log("📦 ENTERPRISE - Données reçues de l'API:", {
-          conversationId: data.conversation._id,
-          participantsCount: data.participants?.length,
-          participants: data.participants,
-          messagesCount: data.messages.length,
-        });
-
+      // 2. Rafraîchir depuis l'API silencieusement en arrière-plan
+      try {
+        const data = await MessagingService.getConversationMessages(conversationId!);
         setConversation(data.conversation);
         setMessages(data.messages);
         setParticipants(data.participants || []);
         loadedConversationRef.current = conversationId;
-
-        // Mettre en cache
-        conversationCache.set(conversationId!, {
+        ConversationCacheService.set(conversationId!, {
           conversation: data.conversation,
           messages: data.messages,
           participants: data.participants || [],
-          timestamp: now,
         });
-
-        // Marquer comme lu
-        await MessagingService.markMessagesAsRead(conversationId!);
+        MessagingService.markMessagesAsRead(conversationId!).catch(() => {});
       } catch (error) {
-        console.error("❌ Erreur chargement conversation:", error);
-        showNotification(
-          "error",
-          i18n.t("messages.error"),
-          i18n.t("enterprise.messages.conversationDetail.errors.loadConversation")
-        );
+        if (!cached) {
+          showNotification(
+            "error",
+            i18n.t("messages.error"),
+            i18n.t("enterprise.messages.conversationDetail.errors.loadConversation")
+          );
+        }
       } finally {
         setLoading(false);
       }
@@ -1013,16 +636,8 @@ export default function ConversationDetails() {
       loadConversationData();
     }
 
-    // Cleanup: reset le ref si la conversation change et invalider le cache
     return () => {
-      if (loadedConversationRef.current !== conversationId) {
-        loadedConversationRef.current = null;
-      }
-      // Invalider le cache quand on quitte la conversation
-      if (conversationId) {
-        conversationCache.delete(conversationId);
-        console.log("🗑️ ENTERPRISE - Cache invalidé pour:", conversationId);
-      }
+      loadedConversationRef.current = null;
     };
   }, [conversationId, showNotification]);
 
@@ -1188,33 +803,11 @@ export default function ConversationDetails() {
           )
         );
 
-        // 🔥 IMPORTANT: Mettre à jour le cache avec le nouveau message
-        const cached = conversationCache.get(conversationId!);
-        if (cached) {
-          const updatedMessages = cached.messages.map((msg) =>
-            msg._localId === localId
-              ? { ...sentMessage.message, _sendingStatus: "sent" as const }
-              : msg
-          );
-
-          // Si le message n'était pas dans le cache (nouveau message), l'ajouter
-          const messageExists = updatedMessages.some(
-            (msg) => msg._id === sentMessage.message._id
-          );
-          if (!messageExists) {
-            updatedMessages.push({
-              ...sentMessage.message,
-              _sendingStatus: "sent" as const,
-            });
-          }
-
-          conversationCache.set(conversationId!, {
-            ...cached,
-            messages: updatedMessages,
-            timestamp: Date.now(),
-          });
-          console.log("✅ Cache mis à jour avec le nouveau message");
-        }
+        // Persister le message envoyé dans le cache AsyncStorage
+        ConversationCacheService.appendMessage(conversationId!, {
+          ...sentMessage.message,
+          _sendingStatus: "sent" as const,
+        });
       }
 
       setSending(false);
@@ -2125,7 +1718,41 @@ export default function ConversationDetails() {
     );
   };
 
-  // Si la conversation est en cours de chargement, afficher le skeleton
+  // Pendant la lecture du cache (~50ms) — header immédiat depuis le store
+  if (!initialized) {
+    const preview = ConversationPreviewStore.get(conversationId!);
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.secondary }}>
+        <ChatWallpaperEnt isDark={isDark} />
+        <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
+        <LinearGradient
+          colors={["#047857", "#10B981"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ paddingTop: insets.top + 16, paddingBottom: 16, paddingLeft: insets.left + 24, paddingRight: insets.right + 24, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity onPress={() => router.back()} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+              <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+            {preview?.participantAvatar ? (
+              <Image source={{ uri: preview.participantAvatar }} style={{ width: 40, height: 40, borderRadius: 20, marginRight: 12 }} resizeMode="cover" />
+            ) : (
+              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.25)', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                <Ionicons name="person" size={18} color="#FFFFFF" />
+              </View>
+            )}
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 16, fontFamily: 'Quicksand-SemiBold', color: '#FFFFFF' }} numberOfLines={1}>{preview?.participantName || 'Conversation'}</Text>
+              {preview?.productName && <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', fontFamily: 'Quicksand-Medium' }} numberOfLines={1}>{preview.productName}</Text>}
+            </View>
+          </View>
+        </LinearGradient>
+      </View>
+    );
+  }
+
+  // Skeleton uniquement si pas de cache et attente API (première visite)
   if (loading) {
     return renderSkeletonConversation();
   }
@@ -3130,25 +2757,19 @@ export default function ConversationDetails() {
                 </Text>
               </View>
 
-              {/* DateTimePicker custom iOS en mode clair */}
               <View
-                style={{
-                  marginHorizontal: 16,
-                  borderRadius: 16,
-                  overflow: "hidden",
-                  backgroundColor: colors.card,
-                }}
+                style={{ marginHorizontal: 16, borderRadius: 16, overflow: "hidden", backgroundColor: colors.card }}
               >
-                <IOSLightDateTimePicker
+                <DateTimePicker
                   value={tempPickerDate}
-                  colors={colors}
-                  onChange={(nextDate) => {
-                    // Empêcher la sélection d'une date passée
-                    const now = new Date();
-                    if (nextDate > now) {
-                      setTempPickerDate(nextDate);
-                    }
+                  mode="datetime"
+                  display="spinner"
+                  minimumDate={new Date()}
+                  onChange={(_, selectedDate) => {
+                    if (!selectedDate) return;
+                    if (selectedDate > new Date()) setTempPickerDate(selectedDate);
                   }}
+                  style={{ alignSelf: "center" }}
                 />
               </View>
 

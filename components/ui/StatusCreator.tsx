@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Image } from 'expo-image';
 import * as MediaLibrary from 'expo-media-library/legacy';
+import * as ImagePicker from 'expo-image-picker';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -139,6 +140,21 @@ export function StatusCreator({ visible, onClose, onCreated }: StatusCreatorProp
     }
     // Si les deux échouent on reste sur la galerie (rien ne se passe)
     setLoadingImage(false);
+  };
+
+  const handlePickFromLibrary = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.9,
+      base64: true,
+      allowsEditing: false,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
+    const asset = result.assets[0];
+    if (asset.base64) {
+      setRawPickedBase64(asset.base64);
+      setScreen('image_editing');
+    }
   };
 
   const handleEditorConfirm = (editedBase64: string) => {
@@ -375,14 +391,15 @@ export function StatusCreator({ visible, onClose, onCreated }: StatusCreatorProp
             />
           )}
 
-          {/* Bouton "Aa Texte" flottant en bas */}
+          {/* Barre flottante en bas */}
           <View style={{
             position: 'absolute', bottom: 0, left: 0, right: 0,
             paddingBottom: insets.bottom + 10, paddingTop: 12, paddingHorizontal: 24,
-            flexDirection: 'row', justifyContent: 'center',
+            flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
             backgroundColor: isDark ? 'rgba(10,10,10,0.85)' : 'rgba(255,255,255,0.92)',
             borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border,
           }}>
+            {/* Bouton Statut texte — centré */}
             <TouchableOpacity
               onPress={() => setScreen('text_editor')}
               style={{
@@ -393,6 +410,22 @@ export function StatusCreator({ visible, onClose, onCreated }: StatusCreatorProp
             >
               <Text style={{ color: '#fff', fontFamily: 'Quicksand-Bold', fontSize: 17 }}>Aa</Text>
               <Text style={{ color: '#fff', fontFamily: 'Quicksand-SemiBold', fontSize: 15 }}>Statut texte</Text>
+            </TouchableOpacity>
+
+            {/* Bouton galerie système — flottant en bas à droite */}
+            <TouchableOpacity
+              onPress={handlePickFromLibrary}
+              style={{
+                position: 'absolute', right: 24, bottom: insets.bottom + 10,
+                width: 48, height: 48, borderRadius: 24,
+                backgroundColor: isDark ? colors.card : '#F3F4F6',
+                borderWidth: 1, borderColor: colors.border,
+                alignItems: 'center', justifyContent: 'center',
+                shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.12, shadowRadius: 4, elevation: 4,
+              }}
+            >
+              <Ionicons name="images-outline" size={22} color={colors.textPrimary} />
             </TouchableOpacity>
           </View>
 

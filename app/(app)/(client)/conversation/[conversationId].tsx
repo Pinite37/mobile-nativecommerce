@@ -34,6 +34,8 @@ import StatusService, { StatusItem } from "../../../../services/api/StatusServic
 import { StatusViewer } from "../../../../components/ui/StatusViewer";
 import ChatWallpaper from "../../../../components/messaging/ChatWallpaper";
 import SwipeableMessageRow from "../../../../components/messaging/SwipeableMessageRow";
+import ConversationCacheService from "../../../../services/ConversationCacheService";
+import ConversationPreviewStore from "../../../../services/ConversationPreviewStore";
 import { Product } from "../../../../types/product";
 
 // Cache simple pour les conversations et messages
@@ -99,7 +101,8 @@ export default function ConversationDetails() {
   const [effectiveProduct, setEffectiveProduct] = useState<Product | null>(
     null
   );
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [initialized, setInitialized] = useState(false);
   const [sending, setSending] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
@@ -330,16 +333,9 @@ export default function ConversationDetails() {
             updatedMessages = [...prev, data.message];
           }
 
-          // Mettre à jour le cache avec le nouveau message
-          if (conversationId && conversation) {
-            const cached = conversationCache.get(conversationId);
-            if (cached) {
-              conversationCache.set(conversationId, {
-                ...cached,
-                messages: updatedMessages,
-                timestamp: Date.now(),
-              });
-            }
+          // Persister le nouveau message dans le cache AsyncStorage
+          if (conversationId) {
+            ConversationCacheService.appendMessage(conversationId, data.message);
           }
 
           return updatedMessages;
@@ -419,46 +415,35 @@ export default function ConversationDetails() {
 
     let cancelled = false;
     const load = async () => {
-      try {
-        setLoading(true);
+      // 1. Lire le cache persistant — bloquer "Conversation introuvable" pendant ce temps
+      const cached = await ConversationCacheService.get(conversationId!);
+      if (cancelled) return;
 
-        // Toujours charger depuis l'API pour avoir les derniers messages
-        console.log("🔄 CLIENT - Chargement conversation depuis l'API:", conversationId);
-        const data = await MessagingService.getConversationMessages(
-          conversationId!
-        );
+      if (cached) {
+        setConversation(cached.conversation);
+        setMessages(cached.messages);
+        setParticipants(cached.participants || []);
+      } else {
+        setLoading(true);
+      }
+      setInitialized(true);
+
+      // 2. Rafraîchir depuis l'API silencieusement en arrière-plan
+      try {
+        const data = await MessagingService.getConversationMessages(conversationId!);
         if (cancelled) return;
-        console.log("📦 CLIENT - Données reçues de l'API:", {
-          conversationId: data.conversation._id,
-          participantsCount: data.participants?.length,
-          participants: data.participants,
-          messagesCount: data.messages.length,
-        });
         setConversation(data.conversation);
         setMessages(data.messages);
         setParticipants(data.participants || []);
-
-        // Mettre à jour le cache avec les données fraîches de l'API
-        conversationCache.set(conversationId!, {
+        ConversationCacheService.set(conversationId!, {
           conversation: data.conversation,
           messages: data.messages,
           participants: data.participants || [],
-          timestamp: Date.now(),
         });
-        console.log("💾 CLIENT - Cache mis à jour avec", data.messages.length, "messages");
-
-        // Marquer comme lu immédiatement (fire & forget)
-        MessagingService.markMessagesAsRead(conversationId!).catch((e) =>
-          console.warn("markMessagesAsRead échoué", e)
-        );
+        MessagingService.markMessagesAsRead(conversationId!).catch(() => {});
       } catch (error) {
-        if (!cancelled) {
-          console.error("❌ Erreur chargement conversation:", error);
-          showNotification(
-            "error",
-            "Erreur",
-            "Impossible de charger la conversation"
-          );
+        if (!cancelled && !cached) {
+          showNotification("error", "Erreur", "Impossible de charger la conversation");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -467,12 +452,6 @@ export default function ConversationDetails() {
     load();
     return () => {
       cancelled = true;
-      // Invalider le cache quand on quitte la conversation
-      // pour forcer un rechargement complet la prochaine fois
-      if (conversationId) {
-        conversationCache.delete(conversationId);
-        console.log("🗑️ CLIENT - Cache invalidé pour:", conversationId);
-      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId]);
@@ -661,34 +640,11 @@ export default function ConversationDetails() {
           )
         );
 
-        // 🔥 IMPORTANT: Mettre à jour le cache avec le nouveau message
-        const cached = conversationCache.get(conversationId!);
-        if (cached) {
-          const updatedMessages = cached.messages.map((msg) =>
-            msg._localId === localId
-              ? { ...sentMessage.message, _sendingStatus: "sent" as const }
-              : msg
-          );
-
-          // Si le message n'était pas dans le cache (nouveau message), l'ajouter
-          const messageExists = updatedMessages.some(
-            (msg) => msg._id === sentMessage.message._id
-          );
-          if (!messageExists) {
-            updatedMessages.push({
-              ...sentMessage.message,
-              _sendingStatus: "sent" as const,
-            });
-          }
-
-          conversationCache.set(conversationId!, {
-            ...cached,
-            messages: updatedMessages,
-            participants: cached.participants || [],
-            timestamp: Date.now(),
-          });
-          console.log("✅ Cache mis à jour avec le nouveau message");
-        }
+        // Persister le message envoyé dans le cache AsyncStorage
+        ConversationCacheService.appendMessage(conversationId!, {
+          ...sentMessage.message,
+          _sendingStatus: "sent" as const,
+        });
       }
 
       setSending(false);
@@ -1255,24 +1211,7 @@ export default function ConversationDetails() {
         )
       );
 
-      // Mettre à jour le cache
-      const cached = conversationCache.get(conversationId!);
-      if (cached) {
-        conversationCache.set(conversationId!, {
-          ...cached,
-          messages: cached.messages.map((msg) =>
-            msg._id === messageId
-              ? {
-                ...msg,
-                text: i18n.t('client.messages.conversationDetail.messageDeleted'),
-                metadata: { ...msg.metadata, deleted: true },
-              }
-              : msg
-          ),
-          participants: cached.participants || [],
-          timestamp: Date.now(),
-        });
-      }
+      // Le cache sera mis à jour lors du prochain rafraîchissement API
 
       console.log(
         `✅ Message supprimé ${forEveryone ? "pour tout le monde" : "pour moi seulement"
@@ -1412,8 +1351,43 @@ export default function ConversationDetails() {
     );
   };
 
-  // Afficher le skeleton si on charge la conversation OU le produit
-  if (loading || productLoading) {
+  // Pendant la lecture du cache (~50ms) — header immédiat depuis le store
+  if (!initialized) {
+    const preview = ConversationPreviewStore.get(conversationId!);
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.secondary }}>
+        <ChatWallpaper isDark={isDark} />
+        <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
+        <LinearGradient
+          colors={["#047857", "#10B981"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ paddingTop: insets.top + 12, paddingLeft: insets.left + 16, paddingRight: insets.right + 16, paddingBottom: 14, shadowColor: "#059669", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 12, elevation: 8, borderBottomLeftRadius: 20, borderBottomRightRadius: 20 }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity onPress={() => router.back()} style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center', marginRight: 10 }}>
+              <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
+            </TouchableOpacity>
+            {preview?.participantAvatar ? (
+              <Image source={{ uri: preview.participantAvatar }} style={{ width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: 'rgba(255,255,255,0.4)', marginRight: 10 }} resizeMode="cover" />
+            ) : (
+              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginRight: 10, borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)' }}>
+                <Ionicons name="person" size={20} color="#FFFFFF" />
+              </View>
+            )}
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 16, fontFamily: 'Quicksand-Bold', color: '#FFFFFF' }} numberOfLines={1}>{preview?.participantName || ''}</Text>
+              <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontFamily: 'Quicksand-Medium' }} numberOfLines={1}>{preview?.productName || 'Discussion produit'}</Text>
+            </View>
+            <View style={{ width: 38, height: 38 }} />
+          </View>
+        </LinearGradient>
+      </View>
+    );
+  }
+
+  // Skeleton uniquement si pas de cache et attente API (première visite)
+  if (loading) {
     return renderSkeletonConversation();
   }
 
@@ -1442,11 +1416,6 @@ export default function ConversationDetails() {
         </TouchableOpacity>
       </View>
     );
-  }
-
-  // Si la conversation existe mais pas le produit, continuer à charger (cas normal)
-  if (!effectiveProduct && !productLoadFailed) {
-    return renderSkeletonConversation();
   }
 
   // Déterminer le nom du correspondant depuis le tableau participants de l'API

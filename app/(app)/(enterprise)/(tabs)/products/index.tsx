@@ -3,10 +3,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Image } from "expo-image";
 import {
   ActivityIndicator,
+  Animated,
   FlatList,
   Modal,
   RefreshControl,
@@ -59,7 +60,21 @@ export default function EnterpriseProducts() {
 
   const [showSortModal, setShowSortModal] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const listAnim = useRef(new Animated.Value(1)).current;
+  const toggleIconRotation = useRef(new Animated.Value(0)).current;
   const [refreshing, setRefreshing] = useState(false);
+
+  const toggleViewMode = useCallback(() => {
+    const next = viewMode === "list" ? "grid" : "list";
+    Animated.parallel([
+      Animated.timing(listAnim, { toValue: 0, duration: 140, useNativeDriver: true }),
+      Animated.timing(toggleIconRotation, { toValue: 1, duration: 200, useNativeDriver: true }),
+    ]).start(() => {
+      setViewMode(next);
+      toggleIconRotation.setValue(0);
+      Animated.timing(listAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+    });
+  }, [viewMode, listAnim, toggleIconRotation]);
 
   const queryClient = useQueryClient();
 
@@ -614,39 +629,16 @@ export default function EnterpriseProducts() {
               {products.length} {products.length !== 1 ? i18n.t("enterprise.products.catalogPlural") : i18n.t("enterprise.products.catalog")}
             </Text>
           </View>
-          <View className="flex-row items-center gap-2">
-            <TouchableOpacity
-              onPress={() =>
-                setViewMode((prev) => (prev === "list" ? "grid" : "list"))
-              }
-              style={{
-                backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.20)',
-                borderColor: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.30)'
-              }}
-              className="backdrop-blur-sm rounded-2xl p-3 border"
-            >
-              <Ionicons
-                name={viewMode === "list" ? "grid" : "list"}
-                size={20}
-                color="#FFFFFF"
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() =>
-                router.push("/(app)/(enterprise)/(tabs)/products/create")
-              }
-              style={{
-                backgroundColor: isDark ? colors.card : '#FFFFFF',
-                elevation: 3
-              }}
-              className="rounded-2xl px-5 py-3 flex-row items-center shadow-md"
-            >
-              <Ionicons name="add-circle" size={20} color={colors.brandPrimary} />
-              <Text style={{ color: colors.brandPrimary }} className="font-quicksand-bold ml-2 text-sm">
-                {i18n.t("enterprise.products.addButton")}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            onPress={() => router.push("/(app)/(enterprise)/(tabs)/products/create")}
+            style={{ backgroundColor: isDark ? colors.card : '#FFFFFF', elevation: 3 }}
+            className="rounded-2xl px-4 py-2.5 flex-row items-center shadow-md"
+          >
+            <Ionicons name="add" size={18} color={colors.brandPrimary} />
+            <Text style={{ color: colors.brandPrimary }} className="font-quicksand-bold ml-1.5 text-sm">
+              {i18n.t("enterprise.products.addButton")}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Search Bar */}
@@ -723,7 +715,7 @@ export default function EnterpriseProducts() {
         />
       </View>
 
-      {/* Sort and Filter Row */}
+      {/* Sort and View Toggle Row */}
       <View className="flex-row items-center justify-between px-6 pt-2">
         <TouchableOpacity
           onPress={() => setShowSortModal(true)}
@@ -737,29 +729,39 @@ export default function EnterpriseProducts() {
           <Text style={{ color: isDark ? '#FFFFFF' : colors.textPrimary }} className="font-quicksand-semibold ml-2 text-sm">
             {sortOptions.find((o) => o.id === selectedSort)?.name}
           </Text>
-          <Ionicons
-            name="chevron-down"
-            size={14}
-            color={isDark ? '#FFFFFF' : colors.textSecondary}
-            style={{ marginLeft: 4 }}
-          />
+          <Ionicons name="chevron-down" size={14} color={isDark ? '#FFFFFF' : colors.textSecondary} style={{ marginLeft: 4 }} />
         </TouchableOpacity>
-        {searchQuery.trim().length > 0 && (
-          <View
+
+        <View className="flex-row items-center gap-2">
+          {searchQuery.trim().length > 0 && (
+            <View
+              style={{
+                backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.20)',
+                borderColor: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.30)'
+              }}
+              className="backdrop-blur-sm rounded-full px-3 py-2 border"
+            >
+              <Text className="text-white font-quicksand-semibold text-sm">
+                {products.length} {products.length !== 1 ? i18n.t("enterprise.products.resultsPlural") : i18n.t("enterprise.products.results")}
+              </Text>
+            </View>
+          )}
+          <TouchableOpacity
+            onPress={toggleViewMode}
             style={{
-              backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.20)',
-              borderColor: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.30)'
+              backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.95)',
+              elevation: 2
             }}
-            className="backdrop-blur-sm rounded-full px-4 py-2 border"
+            className="backdrop-blur-sm rounded-full p-2.5 shadow-sm"
           >
-            <Text className="text-white font-quicksand-semibold text-sm">
-              {products.length} {products.length !== 1 ? i18n.t("enterprise.products.resultsPlural") : i18n.t("enterprise.products.results")}
-            </Text>
-          </View>
-        )}
+            <Animated.View style={{ transform: [{ rotate: toggleIconRotation.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] }) }] }}>
+              <Ionicons name={viewMode === "list" ? "grid-outline" : "list-outline"} size={18} color={isDark ? '#FFFFFF' : colors.brandPrimary} />
+            </Animated.View>
+          </TouchableOpacity>
+        </View>
       </View>
     </LinearGradient>
-  ), [searchQuery, categories, selectedCategory, viewMode, selectedSort, products.length, colors, isDark, insets.top, sortOptions]);
+  ), [searchQuery, categories, selectedCategory, viewMode, selectedSort, products.length, colors, isDark, insets.top, sortOptions, toggleViewMode, toggleIconRotation]);
 
   if (initialLoading) {
     return (
@@ -776,7 +778,7 @@ export default function EnterpriseProducts() {
     <View style={{ flex: 1, backgroundColor: colors.secondary, position: 'relative' }}>
       <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
       {Header}
-      <View style={{ flex: 1, backgroundColor: colors.primary }}>
+      <Animated.View style={{ flex: 1, backgroundColor: colors.primary, opacity: listAnim, transform: [{ scale: listAnim.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1] }) }] }}>
         {products.length > 0 ? (
           <FlatList
             data={products}
@@ -810,7 +812,7 @@ export default function EnterpriseProducts() {
         ) : (
           <View className="flex-1">{renderEmptyState()}</View>
         )}
-      </View>
+      </Animated.View>
       {renderSortModal()}
 
       {/* Modern Confirmation Modal */}

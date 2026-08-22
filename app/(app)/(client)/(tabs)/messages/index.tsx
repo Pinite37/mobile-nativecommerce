@@ -1,3 +1,4 @@
+import ConversationPreviewStore from "../../../../../services/ConversationPreviewStore";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -488,7 +489,14 @@ export default function ClientMessagesPage() {
               : 'transparent',
           }}
           className="px-4 py-3"
-          onPress={() => router.push(`/(app)/(client)/conversation/${conversation._id}`)}
+          onPress={() => {
+            ConversationPreviewStore.set(conversation._id, {
+              participantName,
+              participantAvatar: otherParticipant?.profileImage,
+              productName: conversation.product?.name,
+            });
+            router.push(`/(app)/(client)/conversation/${conversation._id}`);
+          }}
           onLongPress={() => handleLongPress(conversation)}
           delayLongPress={500}
           activeOpacity={0.7}
