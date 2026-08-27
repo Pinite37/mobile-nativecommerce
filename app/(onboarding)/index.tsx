@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
@@ -6,7 +7,7 @@ import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import OnboardingService from '../../services/OnboardingService';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const PRIMARY_COLOR = '#10B981';
 
@@ -14,7 +15,6 @@ interface OnboardingSlide {
 	id: string;
 	title: string;
 	description: string;
-	icon: keyof typeof Ionicons.glyphMap;
 	imageUri: string;
 }
 
@@ -23,22 +23,19 @@ const slides: OnboardingSlide[] = [
 		id: '1',
 		title: 'Découvrez des milliers de produits',
 		description: 'Explorez une vaste sélection de produits provenant d\'entreprises vérifiées et de confiance.',
-		icon: 'storefront-outline',
-		imageUri: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=800&q=80&fit=crop',
+		imageUri: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=1200&q=80&fit=crop',
 	},
 	{
 		id: '2',
 		title: 'Connectez-vous aux entreprises',
 		description: 'Mettez-vous en relation directe avec des entreprises locales et découvrez leurs meilleures offres.',
-		icon: 'business-outline',
-		imageUri: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80&fit=crop',
+		imageUri: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&q=80&fit=crop',
 	},
 	{
 		id: '3',
 		title: 'Commandez en toute sécurité',
 		description: 'Profitez d\'une expérience d\'achat sécurisée avec suivi de commande en temps réel.',
-		icon: 'shield-checkmark-outline',
-		imageUri: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80&fit=crop',
+		imageUri: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1200&q=80&fit=crop',
 	},
 ];
 
@@ -68,15 +65,12 @@ export default function OnboardingScreen() {
 				animated: true,
 			});
 		} else {
-			// Marquer l'onboarding comme complété
 			await OnboardingService.markOnboardingComplete();
-			// Navigate to marketplace public
 			router.replace('/(app)/(client)/(tabs)');
 		}
 	};
 
 	const handleSkip = async () => {
-		// Marquer l'onboarding comme complété même si skip
 		await OnboardingService.markOnboardingComplete();
 		router.replace('/(app)/(client)/(tabs)');
 	};
@@ -91,21 +85,9 @@ export default function OnboardingScreen() {
 
 	return (
 		<View style={styles.container}>
-			<StatusBar style="dark" />
+			<StatusBar style="light" />
 
-			{/* Header avec logo */}
-			<View style={[styles.header, { paddingTop: insets.top + 20 }]}>
-				<Image
-					source={require('../../assets/images/axiLogoo.png')}
-					style={styles.logo}
-					resizeMode="contain"
-				/>
-				<TouchableOpacity onPress={handleSkip} style={[styles.skipButton, { top: insets.top + 20 }]}>
-					<Text style={styles.skipText}>Passer</Text>
-				</TouchableOpacity>
-			</View>
-
-			{/* Slides */}
+			{/* Slides plein cadre : photo + voile sombre + texte en bas */}
 			<ScrollView
 				ref={scrollViewRef}
 				horizontal
@@ -115,26 +97,43 @@ export default function OnboardingScreen() {
 				scrollEventThrottle={16}
 				bounces={false}
 			>
-				{slides.map((slide, index) => (
-					<View key={slide.id} style={styles.slideContainer}>
-						<View style={styles.imageContainer}>
-							<Image
-								source={{ uri: slide.imageUri }}
-								style={styles.slideImage}
-								resizeMode="cover"
-							/>
-							<View style={styles.imageOverlay} />
-						</View>
+				{slides.map((slide) => (
+					<View key={slide.id} style={styles.slide}>
+						<Image
+							source={{ uri: slide.imageUri }}
+							style={StyleSheet.absoluteFill}
+							resizeMode="cover"
+						/>
+						<LinearGradient
+							colors={['rgba(0,0,0,0.55)', 'rgba(0,0,0,0.1)', 'rgba(0,0,0,0.15)', 'rgba(0,0,0,0.92)']}
+							locations={[0, 0.28, 0.55, 1]}
+							style={StyleSheet.absoluteFill}
+						/>
 
-						<Text style={styles.title}>{slide.title}</Text>
-						<Text style={styles.description}>{slide.description}</Text>
+						<View style={[styles.slideContent, { paddingBottom: insets.bottom + 210 }]}>
+							<Text style={styles.title}>{slide.title}</Text>
+							<Text style={styles.description}>{slide.description}</Text>
+						</View>
 					</View>
 				))}
 			</ScrollView>
 
-			{/* Footer avec indicateurs et bouton */}
-			<View style={styles.footer}>
-				{/* Indicateurs de pagination */}
+			{/* Header flottant : logo + Passer */}
+			<View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+				<View style={styles.logoBadge}>
+					<Image
+						source={require('../../assets/images/axiLogoo.png')}
+						style={styles.logo}
+						resizeMode="contain"
+					/>
+				</View>
+				<TouchableOpacity onPress={handleSkip} style={styles.skipButton} activeOpacity={0.75}>
+					<Text style={styles.skipText}>Passer</Text>
+				</TouchableOpacity>
+			</View>
+
+			{/* Footer flottant : pagination + bouton */}
+			<View style={[styles.footer, { paddingBottom: insets.bottom + 24 }]}>
 				<View style={styles.pagination}>
 					{slides.map((_, index) => (
 						<View
@@ -147,22 +146,15 @@ export default function OnboardingScreen() {
 					))}
 				</View>
 
-				{/* Bouton Suivant */}
-				<TouchableOpacity
-					onPress={handleNext}
-					style={styles.nextButton}
-					activeOpacity={0.8}
-				>
-					<View style={styles.nextButtonGradient}>
-						<Text style={styles.nextButtonText}>
-							{currentIndex === slides.length - 1 ? 'Commencer' : 'Suivant'}
-						</Text>
-						<Ionicons
-							name={currentIndex === slides.length - 1 ? 'checkmark' : 'arrow-forward'}
-							size={24}
-							color="white"
-						/>
-					</View>
+				<TouchableOpacity onPress={handleNext} style={styles.nextButton} activeOpacity={0.85}>
+					<Text style={styles.nextButtonText}>
+						{currentIndex === slides.length - 1 ? 'Commencer' : 'Suivant'}
+					</Text>
+					<Ionicons
+						name={currentIndex === slides.length - 1 ? 'checkmark' : 'arrow-forward'}
+						size={22}
+						color="#FFFFFF"
+					/>
 				</TouchableOpacity>
 			</View>
 		</View>
@@ -172,120 +164,103 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#F9FAFB',
+		backgroundColor: '#000000',
+	},
+	slide: {
+		width: SCREEN_WIDTH,
+		height: SCREEN_HEIGHT,
+	},
+	slideContent: {
+		flex: 1,
+		justifyContent: 'flex-end',
+		paddingHorizontal: 28,
 	},
 	header: {
+		position: 'absolute',
+		top: 0,
+		left: 0,
+		right: 0,
 		flexDirection: 'row',
-		justifyContent: 'center',
 		alignItems: 'center',
+		justifyContent: 'space-between',
 		paddingHorizontal: 20,
-		paddingBottom: 20,
+		paddingBottom: 12,
+	},
+	logoBadge: {
+		paddingHorizontal: 14,
+		paddingVertical: 8,
+		borderRadius: 16,
+		backgroundColor: 'rgba(255,255,255,0.94)',
 	},
 	logo: {
-		width: 120,
-		height: 40,
+		width: 90,
+		height: 30,
 	},
 	skipButton: {
-		position: 'absolute',
-		right: 20,
 		paddingHorizontal: 16,
 		paddingVertical: 8,
+		borderRadius: 20,
+		backgroundColor: 'rgba(255,255,255,0.16)',
 	},
 	skipText: {
-		fontSize: 16,
-		color: '#6B7280',
+		fontSize: 14,
+		color: '#FFFFFF',
 		fontFamily: 'Poppins-SemiBold',
 	},
-	slideContainer: {
-		width: SCREEN_WIDTH,
-		flex: 1,
-		alignItems: 'center',
-		justifyContent: 'center',
-		paddingHorizontal: 32,
-	},
-	imageContainer: {
-		width: SCREEN_WIDTH * 0.78,
-		height: SCREEN_WIDTH * 0.78,
-		borderRadius: 32,
-		overflow: 'hidden',
-		marginBottom: 36,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 8 },
-		shadowOpacity: 0.18,
-		shadowRadius: 20,
-		elevation: 12,
-	},
-	slideImage: {
-		width: '100%',
-		height: '100%',
-	},
-	imageOverlay: {
-		...StyleSheet.absoluteFillObject,
-		backgroundColor: 'rgba(6, 95, 70, 0.18)',
-	},
 	title: {
-		fontSize: 26,
+		fontSize: 30,
 		fontFamily: 'Poppins-Bold',
-		color: '#111827',
-		textAlign: 'center',
-		marginBottom: 14,
+		color: '#FFFFFF',
+		marginBottom: 12,
 	},
 	description: {
 		fontSize: 15,
 		fontFamily: 'Poppins-Regular',
-		color: '#6B7280',
-		textAlign: 'center',
-		lineHeight: 24,
-		paddingHorizontal: 6,
+		color: 'rgba(255,255,255,0.85)',
+		lineHeight: 23,
 	},
 	footer: {
-		paddingHorizontal: 20,
-		paddingBottom: 40,
+		position: 'absolute',
+		bottom: 0,
+		left: 0,
+		right: 0,
+		paddingHorizontal: 28,
 	},
 	pagination: {
 		flexDirection: 'row',
-		justifyContent: 'center',
 		alignItems: 'center',
-		marginBottom: 32,
+		marginBottom: 20,
+		gap: 6,
 	},
 	dot: {
-		width: 10,
-		height: 10,
-		borderRadius: 5,
-		marginHorizontal: 6,
+		height: 6,
+		borderRadius: 3,
 	},
 	dotActive: {
 		backgroundColor: PRIMARY_COLOR,
-		width: 32,
+		width: 28,
 	},
 	dotInactive: {
-		backgroundColor: '#D1D5DB',
+		backgroundColor: 'rgba(255,255,255,0.35)',
+		width: 6,
 	},
 	nextButton: {
-		borderRadius: 16,
-		overflow: 'hidden',
-		shadowColor: PRIMARY_COLOR,
-		shadowOffset: {
-			width: 0,
-			height: 4,
-		},
-		shadowOpacity: 0.3,
-		shadowRadius: 8,
-		elevation: 8,
-	},
-	nextButtonGradient: {
 		flexDirection: 'row',
 		alignItems: 'center',
 		justifyContent: 'center',
-		paddingVertical: 18,
-		paddingHorizontal: 32,
-		gap: 12,
-		backgroundColor: PRIMARY_COLOR,
+		gap: 10,
+		paddingVertical: 17,
 		borderRadius: 16,
+		backgroundColor: PRIMARY_COLOR,
+		shadowColor: PRIMARY_COLOR,
+		shadowOffset: { width: 0, height: 6 },
+		shadowOpacity: 0.4,
+		shadowRadius: 12,
+		elevation: 8,
 	},
 	nextButtonText: {
-		fontSize: 18,
+		fontSize: 17,
 		fontFamily: 'Poppins-Bold',
-		color: 'white',
+		color: '#FFFFFF',
 	},
 });
