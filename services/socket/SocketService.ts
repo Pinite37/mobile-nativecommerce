@@ -43,6 +43,13 @@ interface ConversationDeletedData {
   timestamp: string;
 }
 
+interface DelivererPositionData {
+  missionId: string;
+  latitude: number;
+  longitude: number;
+  at: string;
+}
+
 class SocketService {
   private socket: Socket | null = null;
   private isConnected: boolean = false;
@@ -368,6 +375,16 @@ class SocketService {
         this._emitToHandlers('error', { event: 'user_stop_typing', error });
       }
     });
+
+    // Position du livreur mise à jour (suivi live d'une mission)
+    this.socket.on('deliverer_position_update', (data: DelivererPositionData) => {
+      try {
+        this._emitToHandlers('deliverer_position_update', data);
+      } catch (error) {
+        console.error('❌ Erreur traitement deliverer_position_update:', error);
+        this._emitToHandlers('error', { event: 'deliverer_position_update', error });
+      }
+    });
   }
 
   /**
@@ -416,6 +433,25 @@ class SocketService {
       console.error('❌ Erreur lors de la sortie de la conversation:', error);
       this._emitToHandlers('error', { action: 'leave_conversation', error });
     }
+  }
+
+  /**
+   * Rejoindre le suivi live d'une mission de livraison (position du livreur)
+   */
+  joinMission(missionId: string): void {
+    if (!this.socket || !this.isConnected) {
+      console.warn('⚠️ Socket non connecté, impossible de rejoindre le suivi mission');
+      return;
+    }
+    this.socket.emit('join_mission', missionId);
+  }
+
+  /**
+   * Quitter le suivi live d'une mission
+   */
+  leaveMission(missionId: string): void {
+    if (!this.socket || !this.isConnected) return;
+    this.socket.emit('leave_mission', missionId);
   }
 
   /**

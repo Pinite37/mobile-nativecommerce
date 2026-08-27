@@ -26,6 +26,26 @@ class TokenStorageService {
   private cacheTs = 0;
   private readonly CACHE_TTL = 30_000;
 
+  // Verrou séquentiel : chaîne toutes les opérations lecture-modification-
+  // écriture les unes après les autres, jamais en parallèle. Sans ça, deux
+  // écritures concurrentes (ex: un refresh de token qui écrit les nouveaux
+  // tokens, en même temps qu'un rafraîchissement de profil qui écrit juste
+  // userData) peuvent se marcher dessus — la seconde, partie d'un état lu
+  // AVANT l'écriture de la première, écrase silencieusement ses changements
+  // en réécrivant l'ancienne valeur. Concrètement : ça peut effacer des
+  // tokens fraîchement renouvelés et les remplacer par les anciens (déjà
+  // invalides), causant une "session expirée" au prochain appel.
+  private queue: Promise<void> = Promise.resolve();
+
+  private runExclusive<T>(fn: () => Promise<T>): Promise<T> {
+    const result = this.queue.then(fn, fn);
+    this.queue = result.then(
+      () => undefined,
+      () => undefined
+    );
+    return result;
+  }
+
   private isCacheValid(): boolean {
     return this.cached !== undefined && Date.now() - this.cacheTs < this.CACHE_TTL;
   }
@@ -35,9 +55,9 @@ class TokenStorageService {
     this.cacheTs = 0;
   }
 
-  // ── Lecture ───────────────────────────────────────────────────────────────────
+  // ── Lecture / écriture (toujours appelées depuis l'intérieur de runExclusive) ──
 
-  private async read(): Promise<AuthData | null> {
+  private async readRaw(): Promise<AuthData | null> {
     if (this.isCacheValid()) return this.cached ?? null;
     try {
       const raw = await SecureStore.getItemAsync(AUTH_KEY);
@@ -49,7 +69,7 @@ class TokenStorageService {
     }
   }
 
-  private async write(data: AuthData): Promise<void> {
+  private async writeRaw(data: AuthData): Promise<void> {
     await SecureStore.setItemAsync(AUTH_KEY, JSON.stringify(data));
     this.cached = data;
     this.cacheTs = Date.now();
@@ -58,105 +78,123 @@ class TokenStorageService {
   // ── API publique ──────────────────────────────────────────────────────────────
 
   async getTokens(): Promise<{ accessToken: string | null; refreshToken: string | null }> {
-    const d = await this.read();
-    return { accessToken: d?.accessToken ?? null, refreshToken: d?.refreshToken ?? null };
+    return this.runExclusive(async () => {
+      const d = await this.readRaw();
+      return { accessToken: d?.accessToken ?? null, refreshToken: d?.refreshToken ?? null };
+    });
   }
 
   async getAccessToken(): Promise<string | null> {
-    return (await this.read())?.accessToken ?? null;
+    return this.runExclusive(async () => (await this.readRaw())?.accessToken ?? null);
   }
 
   async getRefreshToken(): Promise<string | null> {
-    return (await this.read())?.refreshToken ?? null;
+    return this.runExclusive(async () => (await this.readRaw())?.refreshToken ?? null);
   }
 
   async getUserData(): Promise<any | null> {
-    return (await this.read())?.userData ?? null;
+    return this.runExclusive(async () => (await this.readRaw())?.userData ?? null);
   }
 
   async getUserRole(): Promise<string | null> {
-    return (await this.read())?.userRole ?? null;
+    return this.runExclusive(async () => (await this.readRaw())?.userRole ?? null);
   }
 
   async getUserId(): Promise<string | null> {
-    return (await this.read())?.userId ?? null;
+    return this.runExclusive(async () => (await this.readRaw())?.userId ?? null);
   }
 
   /** Écriture atomique complète à la connexion */
   async saveSession(data: AuthData): Promise<void> {
-    await this.write(data);
+    await this.runExclusive(() => this.writeRaw(data));
   }
 
   /** Met à jour uniquement les tokens (à l'issue d'un refresh) */
   async setTokens(accessToken: string, refreshToken: string): Promise<void> {
-    const existing = await this.read();
-    if (!existing) return; // pas de session en cours, rien à faire
-    await this.write({ ...existing, accessToken, refreshToken });
+    await this.runExclusive(async () => {
+      const existing = await this.readRaw();
+      if (!existing) return; // pas de session en cours, rien à faire
+      await this.writeRaw({ ...existing, accessToken, refreshToken });
+    });
   }
 
   // Compatibilité avec les appels existants (login via AuthService)
   async setAccessToken(token: string): Promise<void> {
-    const existing = await this.read();
-    if (existing) {
-      await this.write({ ...existing, accessToken: token });
-    } else {
-      // Session partielle pendant le login — on ne peut pas écrire sans l'ensemble
-      // Les anciennes clés séparées sont conservées en transit, saveSession() finalisera
-      this._pendingAccessToken = token;
-    }
+    await this.runExclusive(async () => {
+      const existing = await this.readRaw();
+      if (existing) {
+        await this.writeRaw({ ...existing, accessToken: token });
+      } else {
+        // Session partielle pendant le login — on ne peut pas écrire sans l'ensemble
+        // Les anciennes clés séparées sont conservées en transit, saveSession() finalisera
+        this._pendingAccessToken = token;
+      }
+    });
   }
   private _pendingAccessToken: string | null = null;
 
   async setRefreshToken(token: string): Promise<void> {
-    const existing = await this.read();
-    if (existing) {
-      await this.write({ ...existing, refreshToken: token });
-    } else {
-      this._pendingRefreshToken = token;
-    }
+    await this.runExclusive(async () => {
+      const existing = await this.readRaw();
+      if (existing) {
+        await this.writeRaw({ ...existing, refreshToken: token });
+      } else {
+        this._pendingRefreshToken = token;
+      }
+    });
   }
   private _pendingRefreshToken: string | null = null;
 
   async setUserData(userData: any): Promise<void> {
-    const existing = await this.read();
-    if (existing) {
-      await this.write({ ...existing, userData });
-    }
+    await this.runExclusive(async () => {
+      const existing = await this.readRaw();
+      if (existing) {
+        await this.writeRaw({ ...existing, userData });
+      }
+    });
   }
 
   async setUserRole(role: string): Promise<void> {
-    const existing = await this.read();
-    if (existing) {
-      await this.write({ ...existing, userRole: role });
-    }
+    await this.runExclusive(async () => {
+      const existing = await this.readRaw();
+      if (existing) {
+        await this.writeRaw({ ...existing, userRole: role });
+      }
+    });
   }
 
   async isLoggedIn(): Promise<boolean> {
-    const d = await this.read();
-    return !!(d?.accessToken && d?.refreshToken);
+    return this.runExclusive(async () => {
+      const d = await this.readRaw();
+      return !!(d?.accessToken && d?.refreshToken);
+    });
   }
 
   async clearAll(): Promise<void> {
-    try {
-      await SecureStore.deleteItemAsync(AUTH_KEY);
-      // Nettoyer aussi les anciennes clés séparées (migration)
-      await Promise.allSettled([
-        SecureStore.deleteItemAsync('access_token'),
-        SecureStore.deleteItemAsync('refresh_token'),
-        SecureStore.deleteItemAsync('user_data'),
-        SecureStore.deleteItemAsync('user_role'),
-      ]);
-    } catch {}
-    this.invalidate();
-    this._pendingAccessToken = null;
-    this._pendingRefreshToken = null;
+    await this.runExclusive(async () => {
+      try {
+        await SecureStore.deleteItemAsync(AUTH_KEY);
+        // Nettoyer aussi les anciennes clés séparées (migration)
+        await Promise.allSettled([
+          SecureStore.deleteItemAsync('access_token'),
+          SecureStore.deleteItemAsync('refresh_token'),
+          SecureStore.deleteItemAsync('user_data'),
+          SecureStore.deleteItemAsync('user_role'),
+        ]);
+      } catch {}
+      this.invalidate();
+      this._pendingAccessToken = null;
+      this._pendingRefreshToken = null;
+    });
   }
 
   async clearTokens(): Promise<void> {
-    const existing = await this.read();
-    if (existing) {
-      await this.write({ ...existing, accessToken: '', refreshToken: '' });
-    }
+    await this.runExclusive(async () => {
+      const existing = await this.readRaw();
+      if (existing) {
+        await this.writeRaw({ ...existing, accessToken: '', refreshToken: '' });
+      }
+    });
   }
 
   /** Identifiant stable de l'appareil — généré une seule fois, persisté dans SecureStore */
@@ -186,13 +224,15 @@ class TokenStorageService {
       ]);
       if (at && rt && rawUser && role) {
         const userData = JSON.parse(rawUser);
-        await this.write({
-          accessToken: at,
-          refreshToken: rt,
-          userId: userData._id ?? userData.id ?? '',
-          userRole: role,
-          userData,
-        });
+        await this.runExclusive(() =>
+          this.writeRaw({
+            accessToken: at,
+            refreshToken: rt,
+            userId: userData._id ?? userData.id ?? '',
+            userRole: role,
+            userData,
+          })
+        );
         await Promise.allSettled([
           SecureStore.deleteItemAsync('access_token'),
           SecureStore.deleteItemAsync('refresh_token'),

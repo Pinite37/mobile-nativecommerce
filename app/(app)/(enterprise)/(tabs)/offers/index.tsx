@@ -3,6 +3,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
+import { router } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useCallback, useRef, useState } from "react";
 import { Image } from "expo-image";
@@ -39,6 +40,7 @@ import DeliveryService, {
   DeliveryStatus,
   UrgencyLevel,
 } from "../../../../../services/api/DeliveryService";
+import { requestPickupCoordinates } from "../../../../../utils/SilentLocation";
 
 type FilterStatus = "ALL" | DeliveryStatus;
 type ViewMode = "OFFERS" | "CALLS";
@@ -270,6 +272,8 @@ export default function EnterpriseOffersScreen() {
 
       setCreatingCall(true);
 
+      const pickupCoordinates = await requestPickupCoordinates();
+
       const payload: CreateDeliveryCallPayload = {
         productName: callForm.productName.trim(),
         description: callForm.description.trim(),
@@ -283,6 +287,7 @@ export default function EnterpriseOffersScreen() {
         urgency: callForm.urgency,
         specialInstructions: callForm.specialInstructions.trim(),
         expiresAt: expires.toISOString(),
+        ...(pickupCoordinates ? { pickupCoordinates } : {}),
       };
 
       await DeliveryService.createCall(payload);
@@ -580,6 +585,19 @@ export default function EnterpriseOffersScreen() {
               </Text>
             </TouchableOpacity>
           )}
+          {item.status === "ASSIGNED" && (
+            <TouchableOpacity
+              style={{ backgroundColor: colors.brandPrimary }}
+              className="rounded-lg px-3 py-2 flex-row items-center"
+              activeOpacity={0.8}
+              onPress={() => router.push(`/(app)/(enterprise)/tracking/${item._id}` as any)}
+            >
+              <Ionicons name="navigate" size={14} color="#FFFFFF" />
+              <Text className="text-sm font-poppins-semibold text-white ml-1">
+                Suivre en direct
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     );
@@ -820,6 +838,19 @@ export default function EnterpriseOffersScreen() {
                 style={{ color: colors.error }}
               >
                 {i18n.t("enterprise.offers.labels.delete")}
+              </Text>
+            </TouchableOpacity>
+          )}
+          {item.status === "ASSIGNED" && (
+            <TouchableOpacity
+              style={{ backgroundColor: colors.brandPrimary }}
+              className="rounded-lg px-3 py-2 flex-row items-center"
+              activeOpacity={0.8}
+              onPress={() => router.push(`/(app)/(enterprise)/tracking/${item._id}` as any)}
+            >
+              <Ionicons name="navigate" size={14} color="#FFFFFF" />
+              <Text className="text-sm font-poppins-semibold text-white ml-1">
+                Suivre en direct
               </Text>
             </TouchableOpacity>
           )}

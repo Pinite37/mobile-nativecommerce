@@ -436,6 +436,17 @@ export default function ProfileDetailsScreen() {
                 Aucune localisation enregistrée
               </Text>
             )}
+            <TouchableOpacity
+              onPress={() => router.push("/(app)/(client)/profile/location-picker" as any)}
+              className="flex-row items-center justify-center rounded-xl py-3.5 mb-3"
+              style={{ backgroundColor: colors.brandPrimary }}
+              activeOpacity={0.88}
+            >
+              <Ionicons name="map" size={17} color="#FFFFFF" />
+              <Text className="font-poppins-bold text-sm text-white ml-2">
+                Choisir précisément sur la carte
+              </Text>
+            </TouchableOpacity>
             <LocationConsentBanner
               status={locationStatus}
               detectedCity={detectedCity}

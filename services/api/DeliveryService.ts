@@ -11,6 +11,10 @@ export interface CreateOfferPayload {
   urgency?: UrgencyLevel;
   specialInstructions?: string;
   expiresAt: string; // ISO string
+  // [longitude, latitude] du point de retrait — optionnel, capturé
+  // silencieusement (position de l'appareil au moment de la création) pour
+  // permettre au livreur de trier les offres par proximité.
+  pickupCoordinates?: [number, number];
 }
 
 export interface CreateDeliveryCallPayload {
@@ -26,6 +30,8 @@ export interface CreateDeliveryCallPayload {
   urgency?: UrgencyLevel;
   specialInstructions?: string;
   expiresAt: string; // ISO string
+  // [longitude, latitude] du point de retrait — optionnel, voir CreateOfferPayload.
+  pickupCoordinates?: [number, number];
 }
 
 export interface DeliveryOffer {

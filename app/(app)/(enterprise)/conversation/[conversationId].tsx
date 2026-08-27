@@ -38,6 +38,7 @@ import DeliveryService, {
   CreateOfferPayload,
   UrgencyLevel,
 } from "../../../../services/api/DeliveryService";
+import { requestPickupCoordinates } from "../../../../utils/SilentLocation";
 import MessagingService, {
   Conversation,
   Message,
@@ -939,6 +940,9 @@ export default function ConversationDetails() {
       }
 
       setCreatingOffer(true);
+
+      const pickupCoordinates = await requestPickupCoordinates();
+
       const payload: CreateOfferPayload = {
         product: productId,
         customer: customerId,
@@ -947,6 +951,7 @@ export default function ConversationDetails() {
         urgency: offerForm.urgency,
         specialInstructions: offerForm.specialInstructions.trim(),
         expiresAt: expires.toISOString(),
+        ...(pickupCoordinates ? { pickupCoordinates } : {}),
       };
 
       await DeliveryService.createOffer(payload);
