@@ -45,31 +45,31 @@ export interface Colors {
 }
 
 export const lightColors: Colors = {
-    // Backgrounds
-    background: "#FFFFFF",
-    surface: "#F9FAFB",
+    // Backgrounds — fond légèrement teinté, pas blanc pur
+    background: "#F7F8FA",
+    surface: "#FFFFFF",
     primary: "#FFFFFF",
-    secondary: "#F9FAFB", // gray-50
-    tertiary: "#F3F4F6", // gray-100
+    secondary: "#F7F8FA",
+    tertiary: "#EFF0F3",
 
     // Text
-    text: "#1F2937",
+    text: "#111827",
     textSecondary: "#6B7280",
-    textPrimary: "#1F2937", // gray-800
-    textTertiary: "#9CA3AF", // gray-400
+    textPrimary: "#111827",
+    textTertiary: "#9CA3AF",
     textInverse: "#FFFFFF",
     textOnBrand: "#FFFFFF",
 
-    // Brand Colors
-    brandPrimary: "#10B981", // Emerald-500
-    brandSecondary: "#047857", // Emerald-700
-    brandLight: "#D1FAE5", // Emerald-100
+    // Brand Colors (on garde l'emerald)
+    brandPrimary: "#10B981",
+    brandSecondary: "#047857",
+    brandLight: "#D1FAE5",
     brandGradientStart: "#047857",
     brandGradientEnd: "#10B981",
 
     // Borders
-    border: "#E5E7EB", // gray-200
-    borderLight: "#F3F4F6", // gray-100
+    border: "#E8EAED",
+    borderLight: "#F0F1F4",
 
     // Status
     success: "#10B981",
@@ -78,18 +78,18 @@ export const lightColors: Colors = {
     info: "#3B82F6",
 
     // Special
-    overlay: "rgba(0, 0, 0, 0.5)",
+    overlay: "rgba(0, 0, 0, 0.45)",
     card: "#FFFFFF",
     cardElevated: "#FFFFFF",
 };
 
 export const darkColors: Colors = {
     // Backgrounds
-    background: "#111827",
-    surface: "#1F2937",
-    primary: "#111827", // gray-900
-    secondary: "#1F2937", // gray-800
-    tertiary: "#374151", // gray-700
+    background: "#0F1117",
+    surface: "#1A1D27",
+    primary: "#0F1117",
+    secondary: "#1A1D27",
+    tertiary: "#252836",
 
     // Text
     text: "#F9FAFB",

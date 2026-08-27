@@ -1,6 +1,6 @@
+import { AppHeader } from "@/components/ui/AppHeader";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import Notifications from '@/services/notificationsModule';
@@ -239,33 +239,10 @@ export default function EnterpriseSettingsScreen() {
     return (
       <View style={{ flex: 1, backgroundColor: colors.secondary }}>
         <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
-        <LinearGradient
-          colors={[colors.brandGradientStart, colors.brandGradientEnd]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={{
-            paddingTop: insets.top + 16,
-            paddingBottom: 32,
-            paddingLeft: insets.left + 24,
-            paddingRight: insets.right + 24,
-          }}
-        >
-          <View className="flex-row items-center justify-between">
-            <TouchableOpacity
-              onPress={() => router.back()}
-              className="w-10 h-10 rounded-full bg-white/20 items-center justify-center"
-            >
-              <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
-            </TouchableOpacity>
-            <Text className="text-xl font-quicksand-bold text-white">
-              {i18n.t("enterprise.settings.title")}
-            </Text>
-            <View className="w-10 h-10" />
-          </View>
-        </LinearGradient>
+        <AppHeader title={i18n.t("enterprise.settings.title")} />
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color={isDark ? colors.brandPrimary : "#10B981"} />
-          <Text style={{ marginTop: 16, color: colors.textSecondary }} className="font-quicksand-medium">
+          <Text style={{ marginTop: 16, color: colors.textSecondary }} className="font-poppins-medium">
             {i18n.t("enterprise.settings.loading")}
           </Text>
         </View>
@@ -275,50 +252,25 @@ export default function EnterpriseSettingsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.secondary }}>
-      <ExpoStatusBar style="light" translucent />
-      {/* Header avec gradient vert */}
-      <LinearGradient
-        colors={[colors.brandGradientStart, colors.brandGradientEnd]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={{
-          paddingTop: insets.top + 16,
-          paddingBottom: 32,
-          paddingLeft: insets.left + 24,
-          paddingRight: insets.right + 24,
-        }}
-      >
-        <View className="flex-row items-center justify-between">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="w-10 h-10 rounded-full bg-white/20 items-center justify-center"
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
-          <Text className="text-xl font-quicksand-bold text-white">
-            {i18n.t("enterprise.settings.title")}
-          </Text>
-          <View className="w-10 h-10" />
-        </View>
-      </LinearGradient>
+      <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
+      <AppHeader title={i18n.t("enterprise.settings.title")} />
 
       <ScrollView
         style={{ backgroundColor: colors.secondary }}
-        className="-mt-6 rounded-t-[32px] flex-1 pt-8"
+        className="flex-1 pt-4"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
       >
         {/* Général */}
         <View className="px-4">
-          <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold mb-3 pl-1">
+          <Text style={{ color: colors.textPrimary }} className="text-lg font-poppins-bold mb-3 pl-1">
             {i18n.t("enterprise.settings.general.title")}
           </Text>
           <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="rounded-2xl shadow-sm border overflow-hidden">
             <View style={{ borderColor: colors.border }} className="flex-row items-center justify-between px-4 py-4 border-b">
               <View className="flex-row items-center">
                 <Ionicons name="contrast-outline" size={20} color={colors.brandPrimary} />
-                <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-medium ml-3">
+                <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-medium ml-3">
                   {i18n.t("enterprise.settings.general.theme")}
                 </Text>
               </View>
@@ -342,12 +294,12 @@ export default function EnterpriseSettingsScreen() {
             >
               <View className="flex-row items-center">
                 <Ionicons name="language-outline" size={20} color="#10B981" />
-                <Text className="text-base font-quicksand-medium text-neutral-800 ml-3">
+                <Text className="text-base font-poppins-medium text-neutral-800 ml-3">
                   {i18n.t("enterprise.settings.general.language")}
                 </Text>
               </View>
               <View className="flex-row items-center">
-                <Text className="text-neutral-500 font-quicksand-medium mr-2">
+                <Text className="text-neutral-500 font-poppins-medium mr-2">
                   {language === "fr" ? "Français" : "English"}
                 </Text>
                 <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
@@ -358,14 +310,14 @@ export default function EnterpriseSettingsScreen() {
 
         {/* Notifications */}
         <View className="mt-6 px-4">
-          <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold mb-3 pl-1">
+          <Text style={{ color: colors.textPrimary }} className="text-lg font-poppins-bold mb-3 pl-1">
             {i18n.t("enterprise.settings.notifications.title")}
           </Text>
           <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="rounded-2xl shadow-sm border overflow-hidden">
             <View style={{ borderColor: colors.border }} className="flex-row items-center justify-between px-4 py-4 border-b">
               <View className="flex-row items-center">
                 <Ionicons name="notifications-outline" size={20} color={colors.brandPrimary} />
-                <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-medium ml-3">
+                <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-medium ml-3">
                   {i18n.t("enterprise.settings.notifications.pushEnabled")}
                 </Text>
               </View>
@@ -388,7 +340,7 @@ export default function EnterpriseSettingsScreen() {
             <View style={{ borderColor: colors.border }} className="flex-row items-center justify-between px-4 py-4 border-b">
               <View className="flex-row items-center">
                 <Ionicons name="chatbubble-outline" size={20} color={colors.brandPrimary} />
-                <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-medium ml-3">
+                <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-medium ml-3">
                   {i18n.t("enterprise.settings.notifications.messages")}
                 </Text>
               </View>
@@ -408,7 +360,7 @@ export default function EnterpriseSettingsScreen() {
             <View style={{ borderColor: colors.border }} className="flex-row items-center justify-between px-4 py-4 border-b">
               <View className="flex-row items-center">
                 <Ionicons name="sparkles-outline" size={20} color={colors.brandPrimary} />
-                <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-medium ml-3">
+                <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-medium ml-3">
                   {i18n.t("enterprise.settings.notifications.newProducts")}
                 </Text>
               </View>
@@ -428,7 +380,7 @@ export default function EnterpriseSettingsScreen() {
             <View style={{ borderColor: colors.border }} className="flex-row items-center justify-between px-4 py-4 border-b">
               <View className="flex-row items-center">
                 <Ionicons name="megaphone-outline" size={20} color={colors.brandPrimary} />
-                <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-medium ml-3">
+                <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-medium ml-3">
                   {i18n.t("enterprise.settings.notifications.advertisements")}
                 </Text>
               </View>
@@ -448,7 +400,7 @@ export default function EnterpriseSettingsScreen() {
             <View className="flex-row items-center justify-between px-4 py-4">
               <View className="flex-row items-center">
                 <Ionicons name="calendar-outline" size={20} color={colors.brandPrimary} />
-                <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-medium ml-3">
+                <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-medium ml-3">
                   {i18n.t("enterprise.settings.notifications.systemUpdates")}
                 </Text>
               </View>
@@ -469,14 +421,14 @@ export default function EnterpriseSettingsScreen() {
 
         {/* Affichage */}
         {/* <View className="mt-6 px-4">
-          <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold mb-3 pl-1">
+          <Text style={{ color: colors.textPrimary }} className="text-lg font-poppins-bold mb-3 pl-1">
             {i18n.t("enterprise.settings.display.title")}
           </Text>
           <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="rounded-2xl shadow-sm border overflow-hidden">
             <View style={{ borderColor: colors.border }} className="flex-row items-center justify-between px-4 py-4 border-b">
               <View className="flex-row items-center">
                 <Ionicons name="grid-outline" size={20} color={colors.brandPrimary} />
-                <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-medium ml-3">
+                <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-medium ml-3">
                   {i18n.t("enterprise.settings.display.gridView")}
                 </Text>
               </View>
@@ -502,7 +454,7 @@ export default function EnterpriseSettingsScreen() {
             <View className="flex-row items-center justify-between px-4 py-4">
               <View className="flex-row items-center">
                 <Ionicons name="image-outline" size={20} color={colors.brandPrimary} />
-                <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-medium ml-3">
+                <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-medium ml-3">
                   {i18n.t("enterprise.settings.display.highQualityImages")}
                 </Text>
               </View>
@@ -529,14 +481,14 @@ export default function EnterpriseSettingsScreen() {
 
         {/* Entreprise */}
         <View className="mt-6 px-4">
-          <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold mb-3 pl-1">
+          <Text style={{ color: colors.textPrimary }} className="text-lg font-poppins-bold mb-3 pl-1">
             {i18n.t("enterprise.settings.enterprise.title")}
           </Text>
           <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="rounded-2xl shadow-sm border overflow-hidden">
             <View style={{ borderColor: colors.border }} className="flex-row items-center justify-between px-4 py-4 border-b">
               <View className="flex-row items-center">
                 <Ionicons name="power-outline" size={20} color={colors.brandPrimary} />
-                <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-medium ml-3">
+                <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-medium ml-3">
                   {i18n.t("enterprise.settings.enterprise.autoOnlineStatus")}
                 </Text>
               </View>
@@ -563,14 +515,14 @@ export default function EnterpriseSettingsScreen() {
 
         {/* Localisation */}
         <View className="mt-6 px-4">
-          <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold mb-3 pl-1">
+          <Text style={{ color: colors.textPrimary }} className="text-lg font-poppins-bold mb-3 pl-1">
             Localisation
           </Text>
           <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="rounded-2xl shadow-sm border overflow-hidden">
             {user?.location?.address ? (
               <View className="px-4 pt-4 pb-3 flex-row items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
                 <Ionicons name="location" size={18} color={colors.brandPrimary} />
-                <Text className="text-sm font-quicksand-medium ml-2 flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
+                <Text className="text-sm font-poppins-medium ml-2 flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
                   {user.location.address}
                 </Text>
               </View>
@@ -589,14 +541,14 @@ export default function EnterpriseSettingsScreen() {
 
         {/* Confidentialité */}
         <View className="mt-6 px-4">
-          <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold mb-3 pl-1">
+          <Text style={{ color: colors.textPrimary }} className="text-lg font-poppins-bold mb-3 pl-1">
             {i18n.t("enterprise.settings.privacy.title")}
           </Text>
           <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="rounded-2xl shadow-sm border overflow-hidden">
             <View style={{ borderColor: colors.border }} className="flex-row items-center justify-between px-4 py-4 border-b">
               <View className="flex-row items-center">
                 <Ionicons name="eye-outline" size={20} color={colors.brandPrimary} />
-                <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-medium ml-3">
+                <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-medium ml-3">
                   {i18n.t("enterprise.settings.privacy.publicProfile")}
                 </Text>
               </View>
@@ -622,7 +574,7 @@ export default function EnterpriseSettingsScreen() {
             {/* <View style={{ borderColor: colors.border }} className="flex-row items-center justify-between px-4 py-4 border-b">
               <View className="flex-row items-center">
                 <Ionicons name="analytics-outline" size={20} color={colors.brandPrimary} />
-                <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-medium ml-3">
+                <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-medium ml-3">
                   {i18n.t("enterprise.settings.privacy.dataAnalytics")}
                 </Text>
               </View>
@@ -650,7 +602,7 @@ export default function EnterpriseSettingsScreen() {
 
         {/* Suppression de compte */}
         <View className="mt-6 px-4">
-          <Text style={{ color: colors.textPrimary }} className="text-lg font-quicksand-bold mb-3 pl-1">
+          <Text style={{ color: colors.textPrimary }} className="text-lg font-poppins-bold mb-3 pl-1">
             {i18n.t("enterprise.settings.deleteAccount.sectionTitle")}
           </Text>
           <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="rounded-2xl shadow-sm border overflow-hidden">
@@ -674,7 +626,7 @@ export default function EnterpriseSettingsScreen() {
                     color="#DC2626"
                     style={{ marginRight: 8 }}
                   />
-                  <Text style={{ color: "#DC2626" }} className="text-base font-quicksand-bold">
+                  <Text style={{ color: "#DC2626" }} className="text-base font-poppins-bold">
                     {i18n.t("enterprise.settings.deleteAccount.button")}
                   </Text>
                 </View>
@@ -704,7 +656,7 @@ export default function EnterpriseSettingsScreen() {
           >
             {/* Header */}
             <View className="flex-row items-center justify-between mb-6">
-              <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold">
+              <Text style={{ color: colors.textPrimary }} className="text-xl font-poppins-bold">
                 {i18n.t("enterprise.settings.languageModal.title")}
               </Text>
               <TouchableOpacity
@@ -726,15 +678,15 @@ export default function EnterpriseSettingsScreen() {
               className={`flex-row items-center p-4 rounded-2xl mb-3 border`}
             >
               <View className="w-8 h-8 rounded-full bg-emerald-500 items-center justify-center mr-4">
-                <Text className="text-white text-xs font-quicksand-bold">
+                <Text className="text-white text-xs font-poppins-bold">
                   FR
                 </Text>
               </View>
               <View className="flex-1">
-                <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-bold">
+                <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-bold">
                   {i18n.t("enterprise.settings.languageModal.french")}
                 </Text>
-                <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand-medium">
+                <Text style={{ color: colors.textSecondary }} className="text-sm font-poppins-medium">
                   {i18n.t("enterprise.settings.languageModal.frenchSubtitle")}
                 </Text>
               </View>
@@ -752,15 +704,15 @@ export default function EnterpriseSettingsScreen() {
               className={`flex-row items-center p-4 rounded-2xl border`}
             >
               <View className="w-8 h-8 rounded-full bg-emerald-500 items-center justify-center mr-4">
-                <Text className="text-white text-xs font-quicksand-bold">
+                <Text className="text-white text-xs font-poppins-bold">
                   EN
                 </Text>
               </View>
               <View className="flex-1">
-                <Text style={{ color: colors.textPrimary }} className="text-base font-quicksand-bold">
+                <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-bold">
                   {i18n.t("enterprise.settings.languageModal.english")}
                 </Text>
-                <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand-medium">
+                <Text style={{ color: colors.textSecondary }} className="text-sm font-poppins-medium">
                   {i18n.t("enterprise.settings.languageModal.englishSubtitle")}
                 </Text>
               </View>
@@ -797,10 +749,10 @@ export default function EnterpriseSettingsScreen() {
                 >
                   <Ionicons name="warning-outline" size={32} color="#EF4444" />
                 </View>
-                <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold text-center mb-2">
+                <Text style={{ color: colors.textPrimary }} className="text-xl font-poppins-bold text-center mb-2">
                   {i18n.t("enterprise.settings.deleteAccount.modalTitle")}
                 </Text>
-                <Text style={{ color: colors.textSecondary }} className="text-base font-quicksand-medium text-center leading-6">
+                <Text style={{ color: colors.textSecondary }} className="text-base font-poppins-medium text-center leading-6">
                   {i18n.t("enterprise.settings.deleteAccount.modalMessage")}
                 </Text>
               </View>
@@ -810,30 +762,18 @@ export default function EnterpriseSettingsScreen() {
                   onPress={confirmDeleteAccount}
                   disabled={saving}
                   className="rounded-xl py-4 items-center"
-                  style={{ overflow: "hidden", position: "relative" }}
+                  style={{ backgroundColor: "#EF4444" }}
                   activeOpacity={0.8}
                 >
-                  <LinearGradient
-                    colors={["#EF4444", "#DC2626"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                    }}
-                  />
                   {saving ? (
                     <View className="flex-row items-center">
                       <ActivityIndicator color="#FFFFFF" size="small" />
-                      <Text className="font-quicksand-bold text-white ml-2">
+                      <Text className="font-poppins-bold text-white ml-2">
                         {i18n.t("enterprise.settings.deleteAccount.inProgress")}
                       </Text>
                     </View>
                   ) : (
-                    <Text className="font-quicksand-bold text-white">
+                    <Text className="font-poppins-bold text-white">
                       {i18n.t("enterprise.settings.deleteAccount.confirmButton")}
                     </Text>
                   )}
@@ -846,7 +786,7 @@ export default function EnterpriseSettingsScreen() {
                   className="rounded-xl py-4 items-center mt-4"
                   activeOpacity={0.7}
                 >
-                  <Text style={{ color: colors.textPrimary }} className="font-quicksand-semibold">
+                  <Text style={{ color: colors.textPrimary }} className="font-poppins-semibold">
                     {i18n.t("enterprise.settings.deleteAccount.cancelButton")}
                   </Text>
                 </TouchableOpacity>

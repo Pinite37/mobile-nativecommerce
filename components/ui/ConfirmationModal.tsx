@@ -143,10 +143,10 @@ export default function ConfirmationModal({
                       color={iconColor}
                     />
                   </View>
-                  <Text className="text-xl font-quicksand-bold text-neutral-800 text-center mb-2">
+                  <Text className="text-xl font-poppins-bold text-neutral-800 text-center mb-2">
                     {title}
                   </Text>
-                  <Text className="text-base text-neutral-600 font-quicksand-medium text-center leading-6">
+                  <Text className="text-base text-neutral-600 font-poppins-medium text-center leading-6">
                     {message}
                   </Text>
                 </View>
@@ -173,12 +173,12 @@ export default function ConfirmationModal({
                     {loading ? (
                       <View className="flex-row items-center">
                         <ActivityIndicator color="#FFFFFF" size="small" />
-                        <Text className="font-quicksand-bold text-white ml-2">
+                        <Text className="font-poppins-bold text-white ml-2">
                           En cours...
                         </Text>
                       </View>
                     ) : (
-                      <Text className="font-quicksand-bold text-white">
+                      <Text className="font-poppins-bold text-white">
                         {confirmText}
                       </Text>
                     )}
@@ -191,7 +191,7 @@ export default function ConfirmationModal({
                     className="bg-neutral-100 rounded-xl py-4 items-center"
                     activeOpacity={0.7}
                   >
-                    <Text className="font-quicksand-semibold text-neutral-700">
+                    <Text className="font-poppins-semibold text-neutral-700">
                       {cancelText}
                     </Text>
                   </TouchableOpacity>

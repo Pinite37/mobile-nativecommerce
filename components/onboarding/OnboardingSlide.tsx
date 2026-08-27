@@ -54,7 +54,7 @@ export default function OnboardingSlide({
             className="px-4 py-2"
             activeOpacity={1}
           >
-            <Text className="text-neutral-500 font-quicksand-medium text-sm">
+            <Text className="text-neutral-500 font-poppins-medium text-sm">
               Passer
             </Text>
           </TouchableOpacity>
@@ -73,7 +73,7 @@ export default function OnboardingSlide({
 
           {/* Title and Subtitle */}
           <View className="items-center mb-8">
-            <Text className="text-2xl font-quicksand-bold text-neutral-900 text-center mb-4">
+            <Text className="text-2xl font-poppins-bold text-neutral-900 text-center mb-4">
               {title}
             </Text>
             <Text className="text-base font-quicksand text-neutral-600 text-center leading-6">
@@ -107,7 +107,7 @@ export default function OnboardingSlide({
               className="border border-neutral-300 rounded-full py-4 px-8 mr-4"
               activeOpacity={1}
             >
-              <Text className="text-neutral-700 font-quicksand-semibold text-base">
+              <Text className="text-neutral-700 font-poppins-semibold text-base">
                 Précédent
               </Text>
             </TouchableOpacity>
@@ -118,7 +118,7 @@ export default function OnboardingSlide({
             className={`bg-primary rounded-full py-4 px-8 ${!isFirst ? 'flex-1' : 'min-w-32'}`}
             activeOpacity={1}
           >
-            <Text className="text-white font-quicksand-semibold text-base text-center">
+            <Text className="text-white font-poppins-semibold text-base text-center">
               {isLast ? 'Commencer' : 'Suivant'}
             </Text>
           </TouchableOpacity>

@@ -1,7 +1,6 @@
 import { router, useRootNavigationState } from "expo-router";
 import { useEffect, useState } from "react";
-import { View } from "react-native";
-import { LoadingOverlay } from "../components/ui/LoadingOverlay";
+import { ActivityIndicator, Image, View } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
 import OnboardingService from "../services/OnboardingService";
 import { NavigationHelper } from "../utils/NavigationHelper";
@@ -76,13 +75,12 @@ export default function Index() {
   ]);
 
   return (
-    <View className="flex-1 bg-white">
-      <LoadingOverlay
-        isLoading={isLoading || !hasCheckedOnboarding}
-        message="Démarrage rapide..."
-        showSlowWarning={false} // Désactivé pour éviter le spam
-        slowWarningDelay={5000} // Augmenté à 5s si réactivé
+    <View style={{ flex: 1, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' }}>
+      <Image
+        source={require('../assets/images/axiLogo.png')}
+        style={{ width: 140, height: 140, resizeMode: 'contain', marginBottom: 40 }}
       />
+      <ActivityIndicator size="large" color="#10B981" />
     </View>
   );
 }

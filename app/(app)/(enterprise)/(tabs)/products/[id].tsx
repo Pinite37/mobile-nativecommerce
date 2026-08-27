@@ -669,7 +669,7 @@ export default function ProductDetails() {
         <View className="flex-1 justify-center items-center px-6">
           <Ionicons name="warning" size={64} color="#EF4444" />
           <Text
-            className="text-xl font-quicksand-bold mt-4 text-center"
+            className="text-xl font-poppins-bold mt-4 text-center"
             style={{ color: colors.textPrimary }}
           >
             {i18n.t("enterprise.productsDetails.error.title")}
@@ -689,7 +689,7 @@ export default function ProductDetails() {
               borderRadius: 16,
             }}
           >
-            <Text className="text-white font-quicksand-semibold">
+            <Text className="text-white font-poppins-semibold">
               {i18n.t("enterprise.productsDetails.error.retry")}
             </Text>
           </TouchableOpacity>
@@ -743,7 +743,7 @@ export default function ProductDetails() {
 
           <Text
             style={[styles.compactTitle, { color: isDark ? "#FFF" : "#000" }]}
-            className="font-quicksand-bold"
+            className="font-poppins-bold"
             numberOfLines={1}
           >
             {product.name}
@@ -859,10 +859,10 @@ export default function ProductDetails() {
             bigTitleStyle,
           ]}
         >
-          <Text style={styles.bigTitle} className="font-quicksand-bold">
+          <Text style={styles.bigTitle} className="font-poppins-bold">
             {product.name}
           </Text>
-          <Text style={styles.subTitle} className="font-quicksand-medium">
+          <Text style={styles.subTitle} className="font-poppins-medium">
             {typeof product.category === "object" && product.category?.name
               ? product.category.name
               : "Produit"}{" "}
@@ -933,11 +933,11 @@ export default function ProductDetails() {
             <View>
               <Text
                 style={{ color: colors.textSecondary }}
-                className="text-sm font-quicksand-medium mb-1"
+                className="text-sm font-poppins-medium mb-1"
               >
                 Prix de vente
               </Text>
-              <Text className="text-3xl font-quicksand-bold text-emerald-600">
+              <Text className="text-3xl font-poppins-bold text-emerald-600">
                 {formatPrice(product.price)}
               </Text>
             </View>
@@ -979,7 +979,7 @@ export default function ProductDetails() {
           <View className="mb-8">
             <Text
               style={{ color: colors.textPrimary }}
-              className="text-lg font-quicksand-bold mb-3"
+              className="text-lg font-poppins-bold mb-3"
             >
               Description
             </Text>
@@ -991,7 +991,7 @@ export default function ProductDetails() {
             >
               <Text
                 style={{ color: colors.textSecondary }}
-                className="font-quicksand-medium leading-7 text-base"
+                className="font-poppins-medium leading-7 text-base"
                 numberOfLines={showFullDescription ? undefined : 4}
               >
                 {product.description}
@@ -1018,7 +1018,7 @@ export default function ProductDetails() {
             <View className="mb-8">
               <Text
                 style={{ color: colors.textPrimary }}
-                className="text-lg font-quicksand-bold mb-4"
+                className="text-lg font-poppins-bold mb-4"
               >
                 {i18n.t("enterprise.productsDetails.sections.specifications")}
               </Text>
@@ -1053,13 +1053,13 @@ export default function ProductDetails() {
                     }}
                   >
                     <Text
-                      className="flex-1 font-quicksand-medium text-base"
+                      className="flex-1 font-poppins-medium text-base"
                       style={{ color: colors.textSecondary }}
                     >
                       {String(spec.key)}
                     </Text>
                     <Text
-                      className="font-quicksand-bold text-base"
+                      className="font-poppins-bold text-base"
                       style={{ color: colors.textPrimary }}
                     >
                       {String(spec.value)}
@@ -1074,7 +1074,7 @@ export default function ProductDetails() {
           <View className="mb-8">
             <Text
               style={{ color: colors.textPrimary }}
-              className="text-lg font-quicksand-bold mb-4"
+              className="text-lg font-poppins-bold mb-4"
             >
               {i18n.t("enterprise.productsDetails.sections.enterprise")}
             </Text>
@@ -1104,7 +1104,7 @@ export default function ProductDetails() {
 
                 <View className="flex-1 ml-4">
                   <Text
-                    className="font-quicksand-bold text-lg mb-1"
+                    className="font-poppins-bold text-lg mb-1"
                     style={{ color: colors.textPrimary }}
                   >
                     {typeof product.enterprise === "object" &&
@@ -1116,7 +1116,7 @@ export default function ProductDetails() {
                     <Ionicons name="location-sharp" size={12} color="#10B981" />
                     <Text
                       style={{ color: colors.textSecondary }}
-                      className="text-xs ml-1 font-quicksand-medium"
+                      className="text-xs ml-1 font-poppins-medium"
                     >
                       {typeof product.enterprise === "object" &&
                       product.enterprise.location
@@ -1135,7 +1135,7 @@ export default function ProductDetails() {
           <View className="pb-8 pt-2">
             <Text
               style={{ color: colors.textPrimary }}
-              className="text-lg font-quicksand-bold mb-4"
+              className="text-lg font-poppins-bold mb-4"
             >
               Actions rapides
             </Text>
@@ -1160,7 +1160,7 @@ export default function ProductDetails() {
                   style={{
                     color: product.isActive ? "#10B981" : colors.textSecondary,
                   }}
-                  className="ml-2 text-base font-quicksand-bold"
+                  className="ml-2 text-base font-poppins-bold"
                 >
                   {product.isActive ? "Produit visible" : "Produit masqué"}
                 </Text>
@@ -1210,7 +1210,7 @@ export default function ProductDetails() {
               >
                 <Ionicons name="close" size={24} color="#FFFFFF" />
               </TouchableOpacity>
-              <Text className="text-white font-quicksand-medium">
+              <Text className="text-white font-poppins-medium">
                 {`${currentImageIndex + 1}/${product.images.length}`}
               </Text>
               <View className="w-12" />
@@ -1281,7 +1281,7 @@ export default function ProductDetails() {
                 />
               </View>
               <Text
-                className="text-xl font-quicksand-bold text-center"
+                className="text-xl font-poppins-bold text-center"
                 style={{ color: colors.textPrimary }}
               >
                 {confirmationAction?.title}
@@ -1289,7 +1289,7 @@ export default function ProductDetails() {
             </View>
 
             <Text
-              className="text-base font-quicksand-medium mb-6 text-center"
+              className="text-base font-poppins-medium mb-6 text-center"
               style={{ color: colors.textSecondary }}
             >
               {confirmationAction?.message}
@@ -1302,7 +1302,7 @@ export default function ProductDetails() {
                 onPress={closeConfirmation}
               >
                 <Text
-                  className="font-quicksand-bold text-center text-base"
+                  className="font-poppins-bold text-center text-base"
                   style={{ color: colors.textPrimary }}
                 >
                   {i18n.t(
@@ -1315,7 +1315,7 @@ export default function ProductDetails() {
                 style={{ backgroundColor: confirmationAction?.confirmColor }}
                 onPress={executeConfirmedAction}
               >
-                <Text className="text-white font-quicksand-bold text-center text-base">
+                <Text className="text-white font-poppins-bold text-center text-base">
                   {confirmationAction?.confirmText}
                 </Text>
               </TouchableOpacity>

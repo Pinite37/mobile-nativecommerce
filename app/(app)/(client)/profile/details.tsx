@@ -1,6 +1,6 @@
+import { AppHeader } from "@/components/ui/AppHeader";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useEffect, useLayoutEffect, useState } from "react";
@@ -254,29 +254,7 @@ export default function ProfileDetailsScreen() {
   return (
     <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
       <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
-      {/* Header vert */}
-      <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="pb-6 rounded-b-3xl shadow-md" style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}>
-        <View className="px-6">
-          <View className="flex-row items-center justify-between">
-            <TouchableOpacity
-              onPress={() => router.back()}
-              className="w-10 h-10 bg-white/20 rounded-full justify-center items-center"
-            >
-              <Ionicons name="chevron-back" size={20} color="white" />
-            </TouchableOpacity>
-            <View className="flex-1 mx-4">
-              <Text className="text-lg font-quicksand-bold text-white text-center">
-                {i18n.t("client.details.title")}
-              </Text>
-            </View>
-            <View className="w-10 h-10">
-              {loading && (
-                <ActivityIndicator size="small" color="white" />
-              )}
-            </View>
-          </View>
-        </View>
-      </LinearGradient>
+      <AppHeader title={i18n.t("client.details.title")} />
 
       {loading ? (
         <SkeletonForm />
@@ -318,20 +296,20 @@ export default function ProfileDetailsScreen() {
                 <Ionicons name="camera" size={16} color="#FFFFFF" />
               </View>
             </TouchableOpacity>
-            <Text className="text-center font-quicksand-semibold" style={{ color: colors.brandPrimary }}>
+            <Text className="text-center font-poppins-semibold" style={{ color: colors.brandPrimary }}>
               {i18n.t("client.details.photo.change")}
             </Text>
           </View>
 
           {/* Informations personnelles */}
           <View className="rounded-2xl mt-6 p-4" style={{ backgroundColor: colors.card }}>
-            <Text className="text-lg font-quicksand-bold mb-4" style={{ color: colors.textPrimary }}>
+            <Text className="text-lg font-poppins-bold mb-4" style={{ color: colors.textPrimary }}>
               {i18n.t("client.details.sections.personal")}
             </Text>
             
             {/* Prénom */}
             <View className="mb-4">
-              <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textSecondary }}>
+              <Text className="text-sm font-poppins-medium mb-2" style={{ color: colors.textSecondary }}>
                 {i18n.t("client.details.fields.firstName")}
               </Text>
               <TextInput
@@ -345,7 +323,7 @@ export default function ProfileDetailsScreen() {
 
             {/* Nom */}
             <View className="mb-4">
-              <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textSecondary }}>
+              <Text className="text-sm font-poppins-medium mb-2" style={{ color: colors.textSecondary }}>
                 {i18n.t("client.details.fields.lastName")}
               </Text>
               <TextInput
@@ -359,7 +337,7 @@ export default function ProfileDetailsScreen() {
 
             {/* Email */}
             <View className="mb-4">
-              <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textSecondary }}>
+              <Text className="text-sm font-poppins-medium mb-2" style={{ color: colors.textSecondary }}>
                 {i18n.t("client.details.fields.email")}
               </Text>
               <TextInput
@@ -375,7 +353,7 @@ export default function ProfileDetailsScreen() {
 
             {/* Téléphone */}
             <View className="mb-4">
-              <Text className="text-sm font-quicksand-medium mb-2" style={{ color: colors.textSecondary }}>
+              <Text className="text-sm font-poppins-medium mb-2" style={{ color: colors.textSecondary }}>
                 {i18n.t("client.details.fields.phone")}
               </Text>
               <TextInput
@@ -391,7 +369,7 @@ export default function ProfileDetailsScreen() {
 
           {/* Sécurité */}
           {/* <View className="rounded-2xl mt-6 p-4" style={{ backgroundColor: colors.card }}>
-            <Text className="text-lg font-quicksand-bold mb-4" style={{ color: colors.textPrimary }}>
+            <Text className="text-lg font-poppins-bold mb-4" style={{ color: colors.textPrimary }}>
               {i18n.t("client.details.sections.security")}
             </Text>
             
@@ -401,7 +379,7 @@ export default function ProfileDetailsScreen() {
             >
               <View className="flex-row items-center">
                 <Ionicons name="lock-closed-outline" size={20} color={colors.textSecondary} />
-                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
+                <Text className="text-base font-poppins-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.details.security.changePassword")}
                 </Text>
               </View>
@@ -414,7 +392,7 @@ export default function ProfileDetailsScreen() {
             >
               <View className="flex-row items-center">
                 <Ionicons name="finger-print-outline" size={20} color={colors.textSecondary} />
-                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
+                <Text className="text-base font-poppins-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.details.security.biometric")}
                 </Text>
               </View>
@@ -428,7 +406,7 @@ export default function ProfileDetailsScreen() {
             >
               <View className="flex-row items-center">
                 <Ionicons name="notifications-outline" size={20} color={colors.textSecondary} />
-                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
+                <Text className="text-base font-poppins-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.details.security.loginNotifications")}
                 </Text>
               </View>
@@ -442,7 +420,7 @@ export default function ProfileDetailsScreen() {
           <View className="rounded-2xl mt-6 p-4" style={{ backgroundColor: colors.card }}>
             <View className="flex-row items-center mb-3">
               <Ionicons name="location-outline" size={18} color={colors.textSecondary} />
-              <Text className="text-lg font-quicksand-bold ml-2" style={{ color: colors.textPrimary }}>
+              <Text className="text-lg font-poppins-bold ml-2" style={{ color: colors.textPrimary }}>
                 Localisation
               </Text>
             </View>
@@ -477,7 +455,7 @@ export default function ProfileDetailsScreen() {
               {saving ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <Text className="text-white text-center font-quicksand-bold text-base">
+                <Text className="text-white text-center font-poppins-bold text-base">
                   {i18n.t("client.details.actions.save")}
                 </Text>
               )}

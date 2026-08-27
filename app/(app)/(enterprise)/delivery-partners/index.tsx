@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -87,54 +86,31 @@ export default function DeliveryPartnersScreen() {
 
 	const renderSkeletonPartners = () => (
 		<View className="flex-1">
-			{/* Header avec gradient */}
-			<LinearGradient
-				colors={['#047857', '#10B981']}
-				start={{ x: 0, y: 0 }}
-				end={{ x: 1, y: 0 }}
-				className="px-6"
-				style={{
-					paddingTop: insets.top + 16,
-					paddingLeft: insets.left + 24,
-					paddingRight: insets.right + 24,
-					paddingBottom: 24
-				}}
-			>
-				<View className="flex-row items-center justify-between mb-6">
-					<TouchableOpacity
-						className="w-10 h-10 rounded-full bg-white/20 items-center justify-center"
-					>
-						<Ionicons name="arrow-back" size={20} color="#FFFFFF" />
-					</TouchableOpacity>
-					<Text className="text-xl font-quicksand-bold text-white flex-1 text-center mr-10">
-						{i18n.t("enterprise.deliveryPartners.title")}
-					</Text>
+			{/* Header skeleton */}
+			<View style={{ backgroundColor: colors.surface, paddingTop: insets.top + 8, paddingLeft: insets.left + 16, paddingRight: insets.right + 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
+				<View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+					<ShimmerBlock style={{ width: 38, height: 38, borderRadius: 12, marginRight: 10 }} />
+					<ShimmerBlock style={{ height: 20, borderRadius: 10, width: 150 }} />
 				</View>
-
-				{/* Barre de recherche skeleton */}
-				<View className="bg-white/20 rounded-2xl px-4 py-3 mb-3">
+				<View style={{ backgroundColor: colors.tertiary, borderRadius: 15, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 10 }}>
 					<ShimmerBlock style={{ height: 16, borderRadius: 8, width: '60%' }} />
 				</View>
-
-				{/* City chips skeleton */}
-				<View className="flex-row mb-4">
+				<View style={{ flexDirection: 'row', marginBottom: 10 }}>
 					{[80, 70, 90, 65].map((w, i) => (
 						<ShimmerBlock key={i} style={{ width: w, height: 28, borderRadius: 14, marginRight: 8 }} />
 					))}
 				</View>
-
-				{/* Statistiques skeleton */}
-				<View className="flex-row justify-between">
-					<View className="items-center">
+				<View style={{ flexDirection: 'row', justifyContent: 'space-between', backgroundColor: colors.tertiary, borderRadius: 12, padding: 12 }}>
+					<View style={{ alignItems: 'center' }}>
 						<ShimmerBlock style={{ height: 20, borderRadius: 10, width: 40, marginBottom: 4 }} />
 						<ShimmerBlock style={{ height: 14, borderRadius: 7, width: 60 }} />
 					</View>
-					<View className="items-center">
+					<View style={{ alignItems: 'center' }}>
 						<ShimmerBlock style={{ height: 20, borderRadius: 10, width: 40, marginBottom: 4 }} />
 						<ShimmerBlock style={{ height: 14, borderRadius: 7, width: 60 }} />
 					</View>
 				</View>
-			</LinearGradient>
+			</View>
 
 			{/* Liste skeleton */}
 			<View className="px-4 pt-6">
@@ -167,16 +143,11 @@ export default function DeliveryPartnersScreen() {
 		}
 
 		return (
-			<LinearGradient
-				colors={['#34D399', '#10B981']}
-				start={{ x: 0, y: 0 }}
-				end={{ x: 1, y: 1 }}
-				style={{ width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center' }}
-			>
-				<Text className="text-white font-quicksand-bold text-base">
+			<View style={{ width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.brandPrimary }}>
+				<Text className="text-white font-poppins-bold text-base">
 					{initials}
 				</Text>
-			</LinearGradient>
+			</View>
 		);
 	};
 
@@ -264,15 +235,15 @@ export default function DeliveryPartnersScreen() {
 						</View>
 
 						<View className="flex-1">
-							<Text className="font-quicksand-semibold text-base" style={{ color: colors.textPrimary }} numberOfLines={1}>
+							<Text className="font-poppins-semibold text-base" style={{ color: colors.textPrimary }} numberOfLines={1}>
 								{item.firstName} {item.lastName}
 							</Text>
 							<View className="flex-row items-center mt-1">
-								<Text className="text-sm font-quicksand-medium" style={{ color: colors.textSecondary }}>
+								<Text className="text-sm font-poppins-medium" style={{ color: colors.textSecondary }}>
 									{item.availability ? i18n.t("enterprise.deliveryPartners.status.available") : i18n.t("enterprise.deliveryPartners.status.unavailable")}
 								</Text>
 								{item.vehicleType && (
-									<Text className="text-sm font-quicksand-medium ml-2" style={{ color: colors.textTertiary }}>
+									<Text className="text-sm font-poppins-medium ml-2" style={{ color: colors.textTertiary }}>
 										• {item.vehicleType}
 									</Text>
 								)}
@@ -285,12 +256,12 @@ export default function DeliveryPartnersScreen() {
 						<View className="flex-row items-center flex-wrap">
 							{item.isVerified && (
 								<View className="mr-2 px-2 py-1 bg-success-100 rounded-full">
-									<Text className="text-xs font-quicksand-semibold text-success-700">✓ {i18n.t("enterprise.deliveryPartners.badges.verified")}</Text>
+									<Text className="text-xs font-poppins-semibold text-success-700">✓ {i18n.t("enterprise.deliveryPartners.badges.verified")}</Text>
 								</View>
 							)}
 							{item.isAssociated && (
 								<View className="px-2 py-1 bg-primary-100 rounded-full">
-									<Text className="text-xs font-quicksand-semibold text-primary-700">{i18n.t("enterprise.deliveryPartners.badges.associated")}</Text>
+									<Text className="text-xs font-poppins-semibold text-primary-700">{i18n.t("enterprise.deliveryPartners.badges.associated")}</Text>
 								</View>
 							)}
 						</View>
@@ -298,7 +269,7 @@ export default function DeliveryPartnersScreen() {
 						{item.rating !== undefined && (
 							<View className="flex-row items-center">
 								<Ionicons name="star" size={14} color="#F59E0B" />
-								<Text className="text-sm font-quicksand-semibold text-warning-600 ml-1">
+								<Text className="text-sm font-poppins-semibold text-warning-600 ml-1">
 									{item.rating.toFixed(1)}
 								</Text>
 							</View>
@@ -311,7 +282,7 @@ export default function DeliveryPartnersScreen() {
 							{item.city && (
 								<View className="flex-row items-center mb-2">
 									<Ionicons name="location" size={14} color={colors.textTertiary} />
-									<Text className="text-sm font-quicksand-medium ml-2 flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
+									<Text className="text-sm font-poppins-medium ml-2 flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
 										{item.city}
 									</Text>
 								</View>
@@ -319,7 +290,7 @@ export default function DeliveryPartnersScreen() {
 							{item.phone && (
 								<View className="flex-row items-center mb-2">
 									<Ionicons name="call" size={14} color={colors.textTertiary} />
-									<Text className="text-sm font-quicksand-medium ml-2 flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
+									<Text className="text-sm font-poppins-medium ml-2 flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
 										{item.phone}
 									</Text>
 								</View>
@@ -327,7 +298,7 @@ export default function DeliveryPartnersScreen() {
 							{item.email && (
 								<View className="flex-row items-center">
 									<Ionicons name="mail" size={14} color={colors.textTertiary} />
-									<Text className="text-sm font-quicksand-medium ml-2 flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
+									<Text className="text-sm font-poppins-medium ml-2 flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
 										{item.email}
 									</Text>
 								</View>
@@ -341,7 +312,7 @@ export default function DeliveryPartnersScreen() {
 							<View className="rounded-xl px-4 py-3 items-center" style={{ backgroundColor: colors.tertiary }}>
 								<View className="flex-row items-center">
 									<Ionicons name="checkmark-circle" size={16} color={colors.textSecondary} />
-									<Text className="font-quicksand-semibold text-sm ml-2" style={{ color: colors.textSecondary }}>
+									<Text className="font-poppins-semibold text-sm ml-2" style={{ color: colors.textSecondary }}>
 										{i18n.t("enterprise.deliveryPartners.actions.alreadyAssociated")}
 									</Text>
 								</View>
@@ -350,31 +321,19 @@ export default function DeliveryPartnersScreen() {
 							<TouchableOpacity
 								disabled={associating === item._id}
 								onPress={() => handleAssociate(item._id)}
-								className="rounded-xl overflow-hidden"
+								style={{ borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.brandPrimary }}
 								activeOpacity={0.85}
 							>
-								<LinearGradient
-									colors={['#10B981', '#34D399']}
-									start={{ x: 0, y: 0 }}
-									end={{ x: 1, y: 0 }}
-									style={{
-										paddingHorizontal: 16,
-										paddingVertical: 12,
-										alignItems: 'center',
-										justifyContent: 'center'
-									}}
-								>
-									{associating === item._id ? (
-										<ActivityIndicator size="small" color="#FFFFFF" />
-									) : (
-										<View className="flex-row items-center justify-center">
-											<Ionicons name="add-circle" size={16} color="#FFFFFF" />
-											<Text className="font-quicksand-semibold text-sm text-white ml-2">
-												{i18n.t("enterprise.deliveryPartners.actions.associate")}
-											</Text>
-										</View>
-									)}
-								</LinearGradient>
+								{associating === item._id ? (
+									<ActivityIndicator size="small" color="#FFFFFF" />
+								) : (
+									<View className="flex-row items-center justify-center">
+										<Ionicons name="add-circle" size={16} color="#FFFFFF" />
+										<Text className="font-poppins-semibold text-sm text-white ml-2">
+											{i18n.t("enterprise.deliveryPartners.actions.associate")}
+										</Text>
+									</View>
+								)}
 							</TouchableOpacity>
 						)}
 					</View>
@@ -391,70 +350,52 @@ export default function DeliveryPartnersScreen() {
 				renderSkeletonPartners()
 			) : (
 				<>
-					{/* Header avec gradient moderne */}
-					<LinearGradient
-						colors={['#047857', '#10B981']}
-						start={{ x: 0, y: 0 }}
-						end={{ x: 1, y: 0 }}
-						className="px-6"
-						style={{
-							paddingTop: insets.top + 16,
-							paddingLeft: insets.left + 24,
-							paddingRight: insets.right + 24,
-							paddingBottom: 32
-						}}
-					>
-						<View className="flex-row items-center justify-between mb-6">
+					{/* Header */}
+					<View style={{ backgroundColor: colors.surface, paddingTop: insets.top + 8, paddingLeft: insets.left + 16, paddingRight: insets.right + 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
+						<View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
 							<TouchableOpacity
 								onPress={() => router.back()}
-								className="w-10 h-10 rounded-full bg-white/20 items-center justify-center"
+								style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.tertiary, justifyContent: 'center', alignItems: 'center', marginRight: 10 }}
 							>
-								<Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+								<Ionicons name="arrow-back" size={20} color={colors.text} />
 							</TouchableOpacity>
-							<Text className="text-xl font-quicksand-bold text-white flex-1 text-center mr-10">
+							<Text style={{ fontSize: 20, fontFamily: 'Poppins-Bold', color: colors.text }}>
 								{i18n.t("enterprise.deliveryPartners.title")}
 							</Text>
 						</View>
 
-						{/* Statistiques dans le header */}
-						<View className="bg-white/10 rounded-2xl p-4 mb-6">
-							<View className="flex-row justify-between">
-								<View className="items-center flex-1">
-									<Text className="text-white/80 font-quicksand-medium text-sm">{i18n.t("enterprise.deliveryPartners.stats.total")}</Text>
-									<Text className="text-white font-quicksand-bold text-2xl">{totals.total}</Text>
-								</View>
-								<View className="items-center flex-1">
-									<Text className="text-white/80 font-quicksand-medium text-sm">{i18n.t("enterprise.deliveryPartners.stats.associated")}</Text>
-									<Text className="text-white font-quicksand-bold text-2xl">{totals.associatedCount}</Text>
-								</View>
-								<View className="items-center flex-1">
-									<Text className="text-white/80 font-quicksand-medium text-sm">{i18n.t("enterprise.deliveryPartners.stats.available")}</Text>
-									<Text className="text-white font-quicksand-bold text-2xl">
-										{partners.filter(p => p.availability).length}
-									</Text>
-								</View>
+						{/* Statistiques */}
+						<View style={{ flexDirection: 'row', backgroundColor: colors.tertiary, borderRadius: 12, padding: 12, marginBottom: 10 }}>
+							<View style={{ alignItems: 'center', flex: 1 }}>
+								<Text style={{ fontSize: 13, fontFamily: 'Poppins-Medium', color: colors.textSecondary }}>{i18n.t("enterprise.deliveryPartners.stats.total")}</Text>
+								<Text style={{ fontSize: 22, fontFamily: 'Poppins-Bold', color: colors.text }}>{totals.total}</Text>
+							</View>
+							<View style={{ alignItems: 'center', flex: 1 }}>
+								<Text style={{ fontSize: 13, fontFamily: 'Poppins-Medium', color: colors.textSecondary }}>{i18n.t("enterprise.deliveryPartners.stats.associated")}</Text>
+								<Text style={{ fontSize: 22, fontFamily: 'Poppins-Bold', color: colors.text }}>{totals.associatedCount}</Text>
+							</View>
+							<View style={{ alignItems: 'center', flex: 1 }}>
+								<Text style={{ fontSize: 13, fontFamily: 'Poppins-Medium', color: colors.textSecondary }}>{i18n.t("enterprise.deliveryPartners.stats.available")}</Text>
+								<Text style={{ fontSize: 22, fontFamily: 'Poppins-Bold', color: colors.text }}>
+									{partners.filter(p => p.availability).length}
+								</Text>
 							</View>
 						</View>
 
-						{/* Barre de recherche dans le header */}
-						<View className="relative">
-							<View className="bg-white/20 rounded-2xl pl-12 pr-12 py-3">
-								<TextInput
-									value={search}
-									onChangeText={setSearch}
-									placeholder={i18n.t("enterprise.deliveryPartners.searchPlaceholder")}
-									placeholderTextColor="#FFFFFF80"
-									className="text-white font-quicksand-medium"
-									autoCapitalize="none"
-								/>
-							</View>
-							<Ionicons name="search" size={20} color="#FFFFFF" style={{ position: 'absolute', left: 16, top: 12 }} />
+						{/* Barre de recherche */}
+						<View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.tertiary, borderRadius: 15, paddingHorizontal: 12, height: 44, marginBottom: 10 }}>
+							<Ionicons name="search" size={18} color={colors.textSecondary} style={{ marginRight: 8 }} />
+							<TextInput
+								value={search}
+								onChangeText={setSearch}
+								placeholder={i18n.t("enterprise.deliveryPartners.searchPlaceholder")}
+								placeholderTextColor={colors.textSecondary}
+								style={{ flex: 1, color: colors.text, fontFamily: 'Poppins-Medium' }}
+								autoCapitalize="none"
+							/>
 							{search.length > 0 && (
-								<TouchableOpacity
-									onPress={() => setSearch('')}
-									style={{ position: 'absolute', right: 16, top: 12 }}
-								>
-									<Ionicons name="close-circle" size={20} color="#FFFFFF" />
+								<TouchableOpacity onPress={() => setSearch('')}>
+									<Ionicons name="close-circle" size={18} color={colors.textSecondary} />
 								</TouchableOpacity>
 							)}
 						</View>
@@ -463,15 +404,13 @@ export default function DeliveryPartnersScreen() {
 						<ScrollView
 							horizontal
 							showsHorizontalScrollIndicator={false}
-							className="mt-3"
 							contentContainerStyle={{ paddingRight: 8 }}
 						>
 							<TouchableOpacity
 								onPress={() => setSelectedCity('')}
-								className="mr-2 px-3 py-1.5 rounded-full"
-								style={{ backgroundColor: !selectedCity ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.2)' }}
+								style={{ marginRight: 8, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, backgroundColor: !selectedCity ? colors.brandPrimary : colors.tertiary }}
 							>
-								<Text className="text-xs font-quicksand-semibold" style={{ color: !selectedCity ? '#047857' : '#FFFFFF' }}>
+								<Text style={{ fontSize: 12, fontFamily: 'Poppins-SemiBold', color: !selectedCity ? '#FFFFFF' : colors.textSecondary }}>
 									Toutes
 								</Text>
 							</TouchableOpacity>
@@ -479,19 +418,18 @@ export default function DeliveryPartnersScreen() {
 								<TouchableOpacity
 									key={city.id}
 									onPress={() => setSelectedCity(city.name)}
-									className="mr-2 px-3 py-1.5 rounded-full"
-									style={{ backgroundColor: selectedCity === city.name ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.2)' }}
+									style={{ marginRight: 8, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, backgroundColor: selectedCity === city.name ? colors.brandPrimary : colors.tertiary }}
 								>
-									<Text className="text-xs font-quicksand-semibold" style={{ color: selectedCity === city.name ? '#047857' : '#FFFFFF' }}>
+									<Text style={{ fontSize: 12, fontFamily: 'Poppins-SemiBold', color: selectedCity === city.name ? '#FFFFFF' : colors.textSecondary }}>
 										{city.name}
 									</Text>
 								</TouchableOpacity>
 							))}
 						</ScrollView>
-					</LinearGradient>
+					</View>
 
 					{/* Contenu principal */}
-					<View className="flex-1 -mt-6 rounded-t-[32px]" style={{ backgroundColor: colors.secondary }}>
+					<View className="flex-1" style={{ backgroundColor: colors.secondary }}>
 						<FlatList
 							data={filtered}
 							keyExtractor={(item) => item._id}
@@ -502,7 +440,7 @@ export default function DeliveryPartnersScreen() {
 									<View className="w-20 h-20 rounded-full items-center justify-center mb-4" style={{ backgroundColor: colors.tertiary }}>
 										<Ionicons name="people" size={32} color={colors.textTertiary} />
 									</View>
-									<Text className="font-quicksand-semibold text-lg text-center mb-2" style={{ color: colors.textPrimary }}>
+									<Text className="font-poppins-semibold text-lg text-center mb-2" style={{ color: colors.textPrimary }}>
 										{i18n.t("enterprise.deliveryPartners.empty.title")}
 									</Text>
 									<Text className="font-quicksand-regular text-center" style={{ color: colors.textSecondary }}>

@@ -69,10 +69,10 @@ export default function UpgradeConfirmationModal({
               </TouchableOpacity>
             </View>
             
-            <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 24, marginBottom: 4 }}>
+            <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 24, marginBottom: 4 }}>
               {isUpgrade ? `${i18n.t('enterprise.subscription.upgrade.switchTo')} ` : `${i18n.t('enterprise.subscription.upgrade.activate')} `}{plan.name}
             </Text>
-            <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 14, lineHeight: 20 }}>
+            <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 14, lineHeight: 20 }}>
               {isUpgrade 
                 ? i18n.t('enterprise.subscription.upgrade.switchingFromTo', { from: currentPlanName, to: plan.name })
                 : i18n.t('enterprise.subscription.upgrade.activatingPlan', { plan: plan.name })
@@ -88,17 +88,17 @@ export default function UpgradeConfirmationModal({
             <View className="p-6 pt-5">
               {/* Price Section */}
               <View style={{ backgroundColor: colors.secondary, borderRadius: 16, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: colors.border }}>
-                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 }}>
+                <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 }}>
                   {i18n.t('enterprise.subscription.upgrade.price')}
                 </Text>
                 <View className="flex-row items-baseline">
                   <Text 
-                    style={{ fontSize: 30, fontFamily: 'Quicksand-Bold', color: plan.color }}
+                    style={{ fontSize: 30, fontFamily: 'Poppins-Bold', color: plan.color }}
                   >
                     {plan.price}
                   </Text>
                   {plan.period && (
-                    <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 14, marginLeft: 8 }}>
+                    <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 14, marginLeft: 8 }}>
                       {plan.period}
                     </Text>
                   )}
@@ -107,7 +107,7 @@ export default function UpgradeConfirmationModal({
 
               {/* Features List */}
               <View className="mb-5">
-                <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 14, marginBottom: 12 }}>
+                <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 14, marginBottom: 12 }}>
                   {i18n.t('enterprise.subscription.upgrade.whatsIncluded')}
                 </Text>
                 {plan.features.map((feature, idx) => (
@@ -118,7 +118,7 @@ export default function UpgradeConfirmationModal({
                     >
                       <Ionicons name="checkmark" size={14} color={plan.color} />
                     </View>
-                    <Text style={{ flex: 1, color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 14, lineHeight: 20 }}>
+                    <Text style={{ flex: 1, color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 14, lineHeight: 20 }}>
                       {feature}
                     </Text>
                   </View>
@@ -133,10 +133,10 @@ export default function UpgradeConfirmationModal({
                       <Ionicons name="card" size={16} color="#3B82F6" />
                     </View>
                     <View className="flex-1">
-                      <Text style={{ color: '#1E3A8A', fontFamily: 'Quicksand-Bold', fontSize: 14, marginBottom: 4 }}>
+                      <Text style={{ color: '#1E3A8A', fontFamily: 'Poppins-Bold', fontSize: 14, marginBottom: 4 }}>
                         {i18n.t('enterprise.subscription.upgrade.securePayment')}
                       </Text>
-                      <Text style={{ color: '#1D4ED8', fontFamily: 'Quicksand-Medium', fontSize: 12, lineHeight: 18 }}>
+                      <Text style={{ color: '#1D4ED8', fontFamily: 'Poppins-Medium', fontSize: 12, lineHeight: 18 }}>
                         {i18n.t('enterprise.subscription.upgrade.paymentProcessedVia')}
                       </Text>
                     </View>
@@ -148,7 +148,7 @@ export default function UpgradeConfirmationModal({
               <View className="bg-amber-50 rounded-xl p-4 border border-amber-200">
                 <View className="flex-row items-start">
                   <Ionicons name="information-circle" size={20} color="#F59E0B" style={{ marginTop: 1, marginRight: 8 }} />
-                  <Text style={{ flex: 1, color: '#92400E', fontFamily: 'Quicksand-Medium', fontSize: 12, lineHeight: 18 }}>
+                  <Text style={{ flex: 1, color: '#92400E', fontFamily: 'Poppins-Medium', fontSize: 12, lineHeight: 18 }}>
                     {isUpgrade 
                       ? i18n.t('enterprise.subscription.upgrade.upgradeNotice')
                       : isFree
@@ -174,7 +174,7 @@ export default function UpgradeConfirmationModal({
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
                 <View className="flex-row items-center">
-                  <Text style={{ color: '#FFFFFF', fontFamily: 'Quicksand-Bold', fontSize: 16 }}>
+                  <Text style={{ color: '#FFFFFF', fontFamily: 'Poppins-Bold', fontSize: 16 }}>
                     {isFree ? i18n.t('enterprise.subscription.upgrade.activateFree') : i18n.t('enterprise.subscription.upgrade.confirmAndPay')}
                   </Text>
                   <Ionicons name="arrow-forward" size={18} color="#FFFFFF" style={{ marginLeft: 8 }} />
@@ -187,7 +187,7 @@ export default function UpgradeConfirmationModal({
               disabled={loading}
               style={{ borderRadius: 12, paddingVertical: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}
             >
-              <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 16 }}>
+              <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-SemiBold', fontSize: 16 }}>
                 {i18n.t('common.actions.cancel')}
               </Text>
             </TouchableOpacity>

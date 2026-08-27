@@ -55,7 +55,7 @@ export default function WelcomeScreen() {
             resizeMode="contain"
           />
 
-          <Text className="text-3xl font-quicksand-bold text-center mb-3 mt-4" style={{ color: colors.textPrimary }}>
+          <Text className="text-3xl font-poppins-bold text-center mb-3 mt-4" style={{ color: colors.textPrimary }}>
             Connectez-vous
           </Text>
 
@@ -72,7 +72,7 @@ export default function WelcomeScreen() {
             className="bg-primary rounded-2xl py-4 mb-4 shadow-sm"
             activeOpacity={1}
           >
-            <Text className="text-white font-quicksand-semibold text-base text-center">
+            <Text className="text-white font-poppins-semibold text-base text-center">
               Se connecter avec mot de passe
             </Text>
           </TouchableOpacity>
@@ -84,7 +84,7 @@ export default function WelcomeScreen() {
             style={{ backgroundColor: colors.background }}
             activeOpacity={1}
           >
-            <Text className="text-primary font-quicksand-semibold text-base text-center">
+            <Text className="text-primary font-poppins-semibold text-base text-center">
               Créer un compte
             </Text>
           </TouchableOpacity>

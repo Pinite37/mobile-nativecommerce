@@ -80,7 +80,7 @@ export default function LockedFeatureOverlay({
               paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20,
             }}>
               <Ionicons name="diamond" size={14} color="#10B981" />
-              <Text style={{ color: '#10B981', fontSize: 12, fontFamily: 'Quicksand-Bold', letterSpacing: 1 }}>
+              <Text style={{ color: '#10B981', fontSize: 12, fontFamily: 'Poppins-Bold', letterSpacing: 1 }}>
                 FONCTIONNALITÉ PREMIUM
               </Text>
             </View>
@@ -103,7 +103,7 @@ export default function LockedFeatureOverlay({
           {itemCount !== undefined && itemCount > 0 && (
             <Text style={{
               color: '#10B981', textAlign: 'center',
-              fontSize: 15, fontFamily: 'Quicksand-Bold', marginBottom: 6,
+              fontSize: 15, fontFamily: 'Poppins-Bold', marginBottom: 6,
             }}>
               {itemCount} {featureTitle} {itemCount > 1 ? 'vous attendent' : 'vous attend'} 
             </Text>
@@ -111,7 +111,7 @@ export default function LockedFeatureOverlay({
 
           <Text style={{
             color: '#fff', textAlign: 'center',
-            fontSize: 22, fontFamily: 'Quicksand-Bold',
+            fontSize: 22, fontFamily: 'Poppins-Bold',
             lineHeight: 30, marginBottom: 12,
           }}>
             {teaser}
@@ -128,7 +128,7 @@ export default function LockedFeatureOverlay({
                 }}>
                   <Ionicons name="checkmark" size={12} color="#10B981" />
                 </View>
-                <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, fontFamily: 'Quicksand-Medium', flex: 1 }}>
+                <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, fontFamily: 'Poppins-Medium', flex: 1 }}>
                   {b}
                 </Text>
               </View>
@@ -148,7 +148,7 @@ export default function LockedFeatureOverlay({
                 }}
               >
                 <Ionicons name="rocket" size={18} color="#fff" />
-                <Text style={{ color: '#fff', fontSize: 16, fontFamily: 'Quicksand-Bold' }}>
+                <Text style={{ color: '#fff', fontSize: 16, fontFamily: 'Poppins-Bold' }}>
                   Activer ma boutique
                 </Text>
               </LinearGradient>
@@ -159,7 +159,7 @@ export default function LockedFeatureOverlay({
           {Platform.OS === 'ios' ? (
             <Text style={{
               color: 'rgba(255,255,255,0.45)', textAlign: 'center',
-              fontSize: 12, fontFamily: 'Quicksand-Medium', marginTop: 14, lineHeight: 18,
+              fontSize: 12, fontFamily: 'Poppins-Medium', marginTop: 14, lineHeight: 18,
             }}>
               Gestion des abonnements disponible sur{'\n'}
               <Text style={{ color: 'rgba(16,185,129,0.8)' }}>aximarketplace.com</Text>
@@ -167,7 +167,7 @@ export default function LockedFeatureOverlay({
           ) : (
             <Text style={{
               color: 'rgba(255,255,255,0.45)', textAlign: 'center',
-              fontSize: 12, fontFamily: 'Quicksand-Medium', marginTop: 14,
+              fontSize: 12, fontFamily: 'Poppins-Medium', marginTop: 14,
             }}>
               Sans engagement · Résiliable à tout moment
             </Text>

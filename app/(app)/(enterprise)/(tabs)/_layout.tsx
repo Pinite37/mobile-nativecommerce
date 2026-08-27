@@ -88,7 +88,7 @@ export default function TabsLayout() {
         // Les styles ci-dessous sont moins critiques car la CustomTabBar gère désormais l'affichage
         tabBarLabelStyle: {
           fontSize: 11,
-          fontFamily: "Quicksand-SemiBold",
+          fontFamily: "Poppins-SemiBold",
           marginTop: 6,
           marginBottom: 2,
           lineHeight: 13,
@@ -102,7 +102,7 @@ export default function TabsLayout() {
         },
         headerTitleStyle: {
           fontSize: 18,
-          fontFamily: "Quicksand-SemiBold",
+          fontFamily: "Poppins-SemiBold",
           color: "#1F2937",
         },
       }}
@@ -157,7 +157,7 @@ export default function TabsLayout() {
           headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
-              name={focused ? "pricetag" : "pricetag-outline"}
+              name={focused ? "bicycle" : "bicycle-outline"}
               size={focused ? 26 : 24}
               color={color}
             />

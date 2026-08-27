@@ -114,7 +114,7 @@ export function ErrorState({
 
       {/* Titre */}
       <Text
-        className="font-quicksand-bold text-xl text-center"
+        className="font-poppins-bold text-xl text-center"
         style={{ color: colors.textPrimary, marginBottom: 10 }}
       >
         {title ?? v.defaultTitle}
@@ -122,7 +122,7 @@ export function ErrorState({
 
       {/* Message */}
       <Text
-        className="font-quicksand-medium text-sm text-center"
+        className="font-poppins-medium text-sm text-center"
         style={{
           color: colors.textSecondary,
           lineHeight: 20,
@@ -151,7 +151,7 @@ export function ErrorState({
           >
             <Ionicons name="refresh-outline" size={18} color="#fff" />
             <Text
-              className="font-quicksand-bold text-sm"
+              className="font-poppins-bold text-sm"
               style={{ color: "#fff" }}
             >
               {retryLabel}
@@ -173,7 +173,7 @@ export function ErrorState({
             }}
           >
             <Text
-              className="font-quicksand-semibold text-sm"
+              className="font-poppins-semibold text-sm"
               style={{ color: colors.textSecondary }}
             >
               {secondaryLabel}

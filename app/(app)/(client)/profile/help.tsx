@@ -1,10 +1,9 @@
+import { AppHeader } from "@/components/ui/AppHeader";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRouter } from "expo-router";
 import React, { useLayoutEffect, useState } from "react";
 import {
   Linking,
-  SafeAreaView,
   ScrollView,
   Text,
   TextInput,
@@ -70,28 +69,8 @@ export default function HelpScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background-secondary">
-      {/* Header vert */}
-      <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="pt-16 pb-6 rounded-b-3xl shadow-md">
-        <View className="px-6">
-          <View className="flex-row items-center justify-between">
-            <TouchableOpacity
-              onPress={() => router.back()}
-              className="w-10 h-10 bg-white/20 rounded-full justify-center items-center"
-            >
-              <Ionicons name="chevron-back" size={20} color="white" />
-            </TouchableOpacity>
-            <View className="flex-1 mx-4">
-              <Text className="text-lg font-quicksand-bold text-white text-center">
-                Aide et support
-              </Text>
-            </View>
-            <View className="w-10 h-10">
-              {/* Espace pour équilibrer le layout */}
-            </View>
-          </View>
-        </View>
-      </LinearGradient>
+    <View className="flex-1 bg-background-secondary">
+      <AppHeader title="Aide et support" />
 
       <ScrollView className="flex-1">
         {/* Barre de recherche */}
@@ -114,7 +93,7 @@ export default function HelpScreen() {
 
         {/* FAQ */}
         <View className="px-4 mb-6">
-          <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4">
+          <Text className="text-lg font-poppins-bold text-neutral-800 mb-4">
             Questions fréquentes
           </Text>
           <View className="bg-white rounded-2xl overflow-hidden">
@@ -129,7 +108,7 @@ export default function HelpScreen() {
                   className="flex-row justify-between items-center p-4"
                   onPress={() => toggleFaq(item.id)}
                 >
-                  <Text className="text-base font-quicksand-medium text-neutral-800 flex-1 pr-4">
+                  <Text className="text-base font-poppins-medium text-neutral-800 flex-1 pr-4">
                     {item.question}
                   </Text>
                   <Ionicons
@@ -152,7 +131,7 @@ export default function HelpScreen() {
 
         {/* Options de contact */}
         <View className="px-4 mb-6">
-          <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4">
+          <Text className="text-lg font-poppins-bold text-neutral-800 mb-4">
             Contactez-nous
           </Text>
           <View className="bg-white rounded-2xl overflow-hidden">
@@ -166,7 +145,7 @@ export default function HelpScreen() {
                 <Ionicons name="mail-outline" size={20} color="#3B82F6" />
               </View>
               <View className="flex-1">
-                <Text className="text-base font-quicksand-medium text-neutral-800">
+                <Text className="text-base font-poppins-medium text-neutral-800">
                   Email
                 </Text>
                 <Text className="text-sm font-quicksand text-neutral-500">
@@ -186,7 +165,7 @@ export default function HelpScreen() {
                 <Ionicons name="call-outline" size={20} color="#10B981" />
               </View>
               <View className="flex-1">
-                <Text className="text-base font-quicksand-medium text-neutral-800">
+                <Text className="text-base font-poppins-medium text-neutral-800">
                   Téléphone
                 </Text>
                 <Text className="text-sm font-quicksand text-neutral-500">
@@ -206,7 +185,7 @@ export default function HelpScreen() {
                 <Ionicons name="chatbubble-outline" size={20} color="#8B5CF6" />
               </View>
               <View className="flex-1">
-                <Text className="text-base font-quicksand-medium text-neutral-800">
+                <Text className="text-base font-poppins-medium text-neutral-800">
                   Chat en direct
                 </Text>
                 <Text className="text-sm font-quicksand text-neutral-500">
@@ -220,12 +199,12 @@ export default function HelpScreen() {
 
         {/* Formulaire de contact */}
         <View className="px-4 mb-8">
-          <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4">
+          <Text className="text-lg font-poppins-bold text-neutral-800 mb-4">
             Envoyez-nous un message
           </Text>
           <View className="bg-white rounded-2xl p-4">
             <View className="mb-4">
-              <Text className="text-sm font-quicksand-medium text-neutral-600 mb-2">
+              <Text className="text-sm font-poppins-medium text-neutral-600 mb-2">
                 Sujet
               </Text>
               <TextInput
@@ -234,7 +213,7 @@ export default function HelpScreen() {
               />
             </View>
             <View className="mb-4">
-              <Text className="text-sm font-quicksand-medium text-neutral-600 mb-2">
+              <Text className="text-sm font-poppins-medium text-neutral-600 mb-2">
                 Message
               </Text>
               <TextInput
@@ -245,7 +224,7 @@ export default function HelpScreen() {
               />
             </View>
             <TouchableOpacity className="bg-primary py-3 rounded-xl">
-              <Text className="text-white text-center font-quicksand-bold">
+              <Text className="text-white text-center font-poppins-bold">
                 Envoyer
               </Text>
             </TouchableOpacity>
@@ -254,7 +233,7 @@ export default function HelpScreen() {
 
         {/* Guides */}
         <View className="px-4 mb-8">
-          <Text className="text-lg font-quicksand-bold text-neutral-800 mb-4">
+          <Text className="text-lg font-poppins-bold text-neutral-800 mb-4">
             Guides et tutoriels
           </Text>
           <ScrollView
@@ -267,7 +246,7 @@ export default function HelpScreen() {
                 <Ionicons name="book-outline" size={32} color="#3B82F6" />
               </View>
               <View className="p-3">
-                <Text className="text-base font-quicksand-semibold text-neutral-800">
+                <Text className="text-base font-poppins-semibold text-neutral-800">
                   Guide d&apos;achat
                 </Text>
                 <Text className="text-xs font-quicksand text-neutral-500 mt-1">
@@ -281,7 +260,7 @@ export default function HelpScreen() {
                 <Ionicons name="shield-checkmark-outline" size={32} color="#F59E0B" />
               </View>
               <View className="p-3">
-                <Text className="text-base font-quicksand-semibold text-neutral-800">
+                <Text className="text-base font-poppins-semibold text-neutral-800">
                   Sécurité des paiements
                 </Text>
                 <Text className="text-xs font-quicksand text-neutral-500 mt-1">
@@ -295,7 +274,7 @@ export default function HelpScreen() {
                 <Ionicons name="swap-horizontal-outline" size={32} color="#10B981" />
               </View>
               <View className="p-3">
-                <Text className="text-base font-quicksand-semibold text-neutral-800">
+                <Text className="text-base font-poppins-semibold text-neutral-800">
                   Retours et remboursements
                 </Text>
                 <Text className="text-xs font-quicksand text-neutral-500 mt-1">
@@ -306,6 +285,6 @@ export default function HelpScreen() {
           </ScrollView>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

@@ -1,5 +1,5 @@
+import { AppHeader } from "@/components/ui/AppHeader";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import Notifications from '@/services/notificationsModule';
@@ -293,34 +293,12 @@ export default function SettingsScreen() {
   return (
     <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
       <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
-      {/* Header vert */}
-      <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="pb-6 rounded-b-3xl shadow-md" style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}>
-        <View className="px-6">
-          <View className="flex-row items-center justify-between">
-            <TouchableOpacity
-              onPress={() => router.back()}
-              className="w-10 h-10 bg-white/20 rounded-full justify-center items-center"
-            >
-              <Ionicons name="chevron-back" size={20} color="white" />
-            </TouchableOpacity>
-            <View className="flex-1 mx-4">
-              <Text className="text-lg font-quicksand-bold text-white text-center">
-                {i18n.t("client.settings.title")}
-              </Text>
-            </View>
-            <View className="w-10 h-10">
-              {loading && (
-                <ActivityIndicator size="small" color="white" />
-              )}
-            </View>
-          </View>
-        </View>
-      </LinearGradient>
+      <AppHeader title={i18n.t("client.settings.title")} />
 
       <ScrollView className="flex-1">
         {/* Section GÉNÉRAL */}
         <View className="mt-6 mx-4">
-          <Text className="text-sm font-quicksand-semibold mb-2" style={{ color: colors.textSecondary }}>
+          <Text className="text-sm font-poppins-semibold mb-2" style={{ color: colors.textSecondary }}>
             {i18n.t("client.settings.sections.general")}
           </Text>
           <View className="rounded-2xl" style={{ backgroundColor: colors.card }}>
@@ -331,7 +309,7 @@ export default function SettingsScreen() {
                   size={20}
                   color={colors.textSecondary}
                 />
-                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
+                <Text className="text-base font-poppins-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.general.darkMode")}
                 </Text>
               </View>
@@ -349,7 +327,7 @@ export default function SettingsScreen() {
             >
               <View className="flex-row items-center">
                 <Ionicons name="language-outline" size={20} color={colors.brandPrimary} />
-                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
+                <Text className="text-base font-poppins-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.display.language")}
                 </Text>
               </View>
@@ -365,14 +343,14 @@ export default function SettingsScreen() {
 
         {/* Paramètres des notifications */}
         <View className="mt-6 mx-4">
-          <Text className="text-sm font-quicksand-semibold mb-2" style={{ color: colors.textSecondary }}>
+          <Text className="text-sm font-poppins-semibold mb-2" style={{ color: colors.textSecondary }}>
             {i18n.t("client.settings.sections.notifications")}
           </Text>
           <View className="rounded-2xl overflow-hidden" style={{ backgroundColor: colors.card }}>
             <View className="px-4 py-4 flex-row justify-between items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
               <View className="flex-row items-center">
                 <Ionicons name="notifications-outline" size={20} color={colors.brandPrimary} />
-                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
+                <Text className="text-base font-poppins-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.notifications.pushEnabled")}
                 </Text>
               </View>
@@ -393,7 +371,7 @@ export default function SettingsScreen() {
             <View className="px-4 py-4 flex-row justify-between items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
               <View className="flex-row items-center">
                 <Ionicons name="chatbubble-outline" size={20} color={colors.brandPrimary} />
-                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
+                <Text className="text-base font-poppins-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.notifications.messages")}
                 </Text>
               </View>
@@ -408,7 +386,7 @@ export default function SettingsScreen() {
             <View className="px-4 py-4 flex-row justify-between items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
               <View className="flex-row items-center">
                 <Ionicons name="sparkles-outline" size={20} color={colors.brandPrimary} />
-                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
+                <Text className="text-base font-poppins-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.notifications.newProducts")}
                 </Text>
               </View>
@@ -423,7 +401,7 @@ export default function SettingsScreen() {
             <View className="px-4 py-4 flex-row justify-between items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
               <View className="flex-row items-center">
                 <Ionicons name="megaphone-outline" size={20} color={colors.brandPrimary} />
-                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
+                <Text className="text-base font-poppins-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.notifications.advertisements")}
                 </Text>
               </View>
@@ -438,7 +416,7 @@ export default function SettingsScreen() {
             <View className="px-4 py-4 flex-row justify-between items-center">
               <View className="flex-row items-center">
                 <Ionicons name="calendar-outline" size={20} color={colors.brandPrimary} />
-                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
+                <Text className="text-base font-poppins-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.notifications.systemUpdates")}
                 </Text>
               </View>
@@ -455,14 +433,14 @@ export default function SettingsScreen() {
 
         {/* Paramètres d'affichage */}
         {/* <View className="mt-6 mx-4">
-          <Text className="text-sm font-quicksand-semibold mb-2" style={{ color: colors.textSecondary }}>
+          <Text className="text-sm font-poppins-semibold mb-2" style={{ color: colors.textSecondary }}>
             {i18n.t("client.settings.sections.display")}
           </Text>
           <View className="rounded-2xl" style={{ backgroundColor: colors.card }}>
             <View className="px-4 py-4 flex-row justify-between items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
               <View className="flex-row items-center">
                 <Ionicons name="grid-outline" size={20} color={colors.brandPrimary} />
-                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
+                <Text className="text-base font-poppins-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.display.gridView")}
                 </Text>
               </View>
@@ -476,7 +454,7 @@ export default function SettingsScreen() {
             <View className="px-4 py-4 flex-row justify-between items-center">
               <View className="flex-row items-center">
                 <Ionicons name="image-outline" size={20} color={colors.brandPrimary} />
-                <Text className="text-base font-quicksand-medium ml-3" style={{ color: colors.textPrimary }}>
+                <Text className="text-base font-poppins-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.display.highQualityImages")}
                 </Text>
               </View>
@@ -492,14 +470,14 @@ export default function SettingsScreen() {
 
         {/* Localisation */}
         <View className="mt-6 mx-4">
-          <Text className="text-sm font-quicksand-semibold mb-2" style={{ color: colors.textSecondary }}>
+          <Text className="text-sm font-poppins-semibold mb-2" style={{ color: colors.textSecondary }}>
             Localisation
           </Text>
           <View className="rounded-2xl overflow-hidden" style={{ backgroundColor: colors.card }}>
             {user?.location?.address ? (
               <View className="px-4 pt-4 pb-2 flex-row items-center" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
                 <Ionicons name="location" size={18} color="#10B981" />
-                <Text className="text-sm font-quicksand-medium ml-2 flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
+                <Text className="text-sm font-poppins-medium ml-2 flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
                   {user.location.address}
                 </Text>
               </View>
@@ -518,7 +496,7 @@ export default function SettingsScreen() {
 
         {/* Suppression de compte */}
         <View className="mt-6 mx-4">
-          <Text className="text-sm font-quicksand-semibold mb-2" style={{ color: colors.textSecondary }}>
+          <Text className="text-sm font-poppins-semibold mb-2" style={{ color: colors.textSecondary }}>
             {i18n.t("client.settings.deleteAccount.sectionTitle")}
           </Text>
           <View className="rounded-2xl" style={{ backgroundColor: colors.card }}>
@@ -542,7 +520,7 @@ export default function SettingsScreen() {
                     color="#DC2626"
                     style={{ marginRight: 8 }}
                   />
-                  <Text style={{ color: "#DC2626" }} className="text-base font-quicksand-bold">
+                  <Text style={{ color: "#DC2626" }} className="text-base font-poppins-bold">
                     {i18n.t("enterprise.settings.deleteAccount.button")}
                   </Text>
                 </View>
@@ -564,7 +542,7 @@ export default function SettingsScreen() {
               ) : (
                 <>
                   <Ionicons name="trash-outline" size={20} color="#EF4444" />
-                  <Text className="text-red-500 font-quicksand-bold ml-2">
+                  <Text className="text-red-500 font-poppins-bold ml-2">
                     {i18n.t("client.settings.actions.clearData")}
                   </Text>
                 </>
@@ -602,7 +580,7 @@ export default function SettingsScreen() {
           >
             {/* Header */}
             <View className="flex-row items-center justify-between mb-6">
-              <Text className="text-xl font-quicksand-bold" style={{ color: colors.textPrimary }}>
+              <Text className="text-xl font-poppins-bold" style={{ color: colors.textPrimary }}>
                 {i18n.t("client.settings.languageModal.title")}
               </Text>
               <TouchableOpacity
@@ -621,15 +599,15 @@ export default function SettingsScreen() {
               style={{ backgroundColor: locale === 'fr' ? '#ECFDF5' : colors.secondary, borderColor: locale === 'fr' ? '#10B981' : 'transparent', borderWidth: locale === 'fr' ? 1 : 0 }}
             >
               <View className="w-8 h-8 rounded-full bg-emerald-500 items-center justify-center mr-4">
-                <Text className="text-white text-xs font-quicksand-bold">
+                <Text className="text-white text-xs font-poppins-bold">
                   FR
                 </Text>
               </View>
               <View className="flex-1">
-                <Text className="text-base font-quicksand-bold" style={{ color: colors.textPrimary }}>
+                <Text className="text-base font-poppins-bold" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.languageModal.french")}
                 </Text>
-                <Text className="text-sm font-quicksand-medium" style={{ color: colors.textSecondary }}>
+                <Text className="text-sm font-poppins-medium" style={{ color: colors.textSecondary }}>
                   {i18n.t("client.settings.languageModal.frenchDescription")}
                 </Text>
               </View>
@@ -644,15 +622,15 @@ export default function SettingsScreen() {
               style={{ backgroundColor: locale === 'en' ? '#ECFDF5' : colors.secondary, borderColor: locale === 'en' ? '#10B981' : 'transparent', borderWidth: locale === 'en' ? 1 : 0 }}
             >
               <View className="w-8 h-8 rounded-full bg-blue-500 items-center justify-center mr-4">
-                <Text className="text-white text-xs font-quicksand-bold">
+                <Text className="text-white text-xs font-poppins-bold">
                   EN
                 </Text>
               </View>
               <View className="flex-1">
-                <Text className="text-base font-quicksand-bold" style={{ color: colors.textPrimary }}>
+                <Text className="text-base font-poppins-bold" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.settings.languageModal.english")}
                 </Text>
-                <Text className="text-sm font-quicksand-medium" style={{ color: colors.textSecondary }}>
+                <Text className="text-sm font-poppins-medium" style={{ color: colors.textSecondary }}>
                   {i18n.t("client.settings.languageModal.englishDescription")}
                 </Text>
               </View>
@@ -689,10 +667,10 @@ export default function SettingsScreen() {
               >
                 <Ionicons name="warning-outline" size={32} color="#EF4444" />
               </View>
-              <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold text-center mb-2">
+              <Text style={{ color: colors.textPrimary }} className="text-xl font-poppins-bold text-center mb-2">
                 {i18n.t("client.settings.deleteAccount.modalTitle")}
               </Text>
-              <Text style={{ color: colors.textSecondary }} className="text-base font-quicksand-medium text-center leading-6">
+              <Text style={{ color: colors.textSecondary }} className="text-base font-poppins-medium text-center leading-6">
                 {i18n.t("client.settings.deleteAccount.modalMessage")}
               </Text>
             </View>
@@ -702,30 +680,18 @@ export default function SettingsScreen() {
                 onPress={confirmDeleteAccount}
                 disabled={saving}
                 className="rounded-xl py-4 items-center"
-                style={{ overflow: "hidden", position: "relative" }}
+                style={{ backgroundColor: "#EF4444" }}
                 activeOpacity={0.8}
               >
-                <LinearGradient
-                  colors={["#EF4444", "#DC2626"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                  }}
-                />
                 {saving ? (
                   <View className="flex-row items-center">
                     <ActivityIndicator color="#FFFFFF" size="small" />
-                    <Text className="font-quicksand-bold text-white ml-2">
+                    <Text className="font-poppins-bold text-white ml-2">
                       {i18n.t("client.settings.deleteAccount.inProgress")}
                     </Text>
                   </View>
                 ) : (
-                  <Text className="font-quicksand-bold text-white">
+                  <Text className="font-poppins-bold text-white">
                     {i18n.t("client.settings.deleteAccount.confirmButton")}
                   </Text>
                 )}
@@ -738,7 +704,7 @@ export default function SettingsScreen() {
                 className="rounded-xl py-4 items-center mt-4"
                 activeOpacity={0.7}
               >
-                <Text style={{ color: colors.textPrimary }} className="font-quicksand-semibold">
+                <Text style={{ color: colors.textPrimary }} className="font-poppins-semibold">
                   {i18n.t("client.settings.deleteAccount.cancelButton")}
                 </Text>
               </TouchableOpacity>

@@ -61,7 +61,7 @@ export default function AddressesScreen() {
         >
           <Ionicons name="arrow-back" size={20} color="#374151" />
         </TouchableOpacity>
-        <Text className="text-xl font-quicksand-bold text-neutral-800">
+        <Text className="text-xl font-poppins-bold text-neutral-800">
           Mes adresses
         </Text>
       </View>
@@ -77,12 +77,12 @@ export default function AddressesScreen() {
             >
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center">
-                  <Text className="text-lg font-quicksand-semibold text-neutral-800">
+                  <Text className="text-lg font-poppins-semibold text-neutral-800">
                     {address.title}
                   </Text>
                   {address.isDefault && (
                     <View className="bg-primary/10 px-2 py-1 rounded ml-2">
-                      <Text className="text-xs font-quicksand-bold text-primary">
+                      <Text className="text-xs font-poppins-bold text-primary">
                         Par défaut
                       </Text>
                     </View>
@@ -103,7 +103,7 @@ export default function AddressesScreen() {
 
               <View className="my-3 border-b border-gray-100" />
 
-              <Text className="text-neutral-800 font-quicksand-medium mb-1">
+              <Text className="text-neutral-800 font-poppins-medium mb-1">
                 {address.recipient}
               </Text>
               <Text className="text-neutral-600 font-quicksand mb-1">
@@ -121,7 +121,7 @@ export default function AddressesScreen() {
 
               {!address.isDefault && (
                 <TouchableOpacity className="mt-3">
-                  <Text className="text-primary font-quicksand-semibold">
+                  <Text className="text-primary font-poppins-semibold">
                     Définir comme adresse par défaut
                   </Text>
                 </TouchableOpacity>
@@ -133,7 +133,7 @@ export default function AddressesScreen() {
         {/* Bouton ajouter une adresse */}
         <TouchableOpacity className="bg-white rounded-2xl p-4 mb-6 flex-row items-center justify-center">
           <Ionicons name="add-circle" size={24} color="#FE8C00" />
-          <Text className="text-primary font-quicksand-bold text-base ml-2">
+          <Text className="text-primary font-poppins-bold text-base ml-2">
             Ajouter une nouvelle adresse
           </Text>
         </TouchableOpacity>

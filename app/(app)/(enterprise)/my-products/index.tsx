@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { AppHeader } from '@/components/ui/AppHeader';
 import { useRouter } from 'expo-router';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -120,41 +120,41 @@ export default function MyProductsPage() {
         {/* Badge pour les produits avec beaucoup de ventes */}
         {item.stats?.totalSales > 10 && (
           <View style={{ position: 'absolute', top: 8, left: 8, backgroundColor: '#10B981', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
-            <Text style={{ color: '#FFFFFF', fontFamily: 'Quicksand-Bold', fontSize: 12 }}>
+            <Text style={{ color: '#FFFFFF', fontFamily: 'Poppins-Bold', fontSize: 12 }}>
               {i18n.t('enterprise.myProducts.popular')}
             </Text>
           </View>
         )}
         {/* Badge pour le statut */}
         <View style={{ position: 'absolute', top: 8, right: 8, backgroundColor: item.isActive ? '#10B981' : '#EF4444', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
-          <Text style={{ color: '#FFFFFF', fontFamily: 'Quicksand-Bold', fontSize: 12 }}>
+          <Text style={{ color: '#FFFFFF', fontFamily: 'Poppins-Bold', fontSize: 12 }}>
             {item.isActive ? i18n.t('enterprise.myProducts.active') : i18n.t('enterprise.myProducts.inactive')}
           </Text>
         </View>
       </View>
       <View style={{ padding: 12 }}>
-        <Text numberOfLines={2} style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 16, marginBottom: 8 }}>
+        <Text numberOfLines={2} style={{ color: colors.textPrimary, fontFamily: 'Poppins-SemiBold', fontSize: 16, marginBottom: 8 }}>
           {item.name}
         </Text>
-        <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Regular', fontSize: 14, marginBottom: 8 }} numberOfLines={2}>
+        <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Regular', fontSize: 14, marginBottom: 8 }} numberOfLines={2}>
           {item.description}
         </Text>
         <View className="flex-row items-center justify-between">
-          <Text style={{ color: '#10B981', fontFamily: 'Quicksand-Bold', fontSize: 18 }}>
+          <Text style={{ color: '#10B981', fontFamily: 'Poppins-Bold', fontSize: 18 }}>
             {formatPrice(item.price)}
           </Text>
           <View className="flex-row items-center">
             <Ionicons name="star" size={14} color="#FFD700" />
-            <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Regular', fontSize: 14, marginLeft: 4 }}>
+            <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Regular', fontSize: 14, marginLeft: 4 }}>
               {item.stats?.averageRating?.toFixed(1) || '0.0'}
             </Text>
           </View>
         </View>
         <View className="flex-row items-center justify-between mt-2">
-          <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Regular', fontSize: 12 }}>
+          <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Regular', fontSize: 12 }}>
             {item.stats?.totalSales || 0} {i18n.t((item.stats?.totalSales || 0) > 1 ? 'enterprise.myProducts.sales.plural' : 'enterprise.myProducts.sales.singular')}
           </Text>
-          <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Regular', fontSize: 12 }}>
+          <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Regular', fontSize: 12 }}>
             {typeof item.category === 'object' ? item.category.name : item.category || i18n.t('enterprise.myProducts.noCategory')}
           </Text>
         </View>
@@ -187,32 +187,7 @@ export default function MyProductsPage() {
     return (
       <View style={{ flex: 1, backgroundColor: colors.secondary }}>
         <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
-        {/* Header */}
-        <LinearGradient
-          colors={['#047857', '#10B981']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          className="px-6"
-          style={{
-            paddingTop: insets.top + 16,
-            paddingLeft: insets.left + 24,
-            paddingRight: insets.right + 24,
-            paddingBottom: 16
-          }}
-        >
-          <View className="flex-row items-center justify-between">
-            <TouchableOpacity
-              onPress={() => router.back()}
-              className="w-10 h-10 bg-white/20 rounded-full items-center justify-center"
-            >
-              <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
-            </TouchableOpacity>
-            <Text style={{ fontFamily: 'Quicksand-Bold' }} className="text-xl text-white flex-1 text-center">
-              {i18n.t('enterprise.myProducts.title')}
-            </Text>
-            <View style={{ width: 40 }} />
-          </View>
-        </LinearGradient>
+        <AppHeader title={i18n.t('enterprise.myProducts.title')} />
         {renderSkeleton()}
       </View>
     );
@@ -221,44 +196,18 @@ export default function MyProductsPage() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.secondary }}>
       <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
-      {/* Header */}
-      <LinearGradient
-        colors={['#047857', '#10B981']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        className="px-6"
-        style={{
-          paddingTop: insets.top + 16,
-          paddingLeft: insets.left + 24,
-          paddingRight: insets.right + 24,
-          paddingBottom: 16
-        }}
-      >
-        <View className="flex-row items-center justify-between">
+      <AppHeader
+        title={i18n.t('enterprise.myProducts.title')}
+        subtitle={i18n.t('enterprise.myProducts.subtitle')}
+        rightElement={
           <TouchableOpacity
-            onPress={() => router.back()}
-            className="w-10 h-10 bg-white/20 rounded-full items-center justify-center"
+            onPress={() => router.push('/(app)/(enterprise)/(tabs)/products/create')}
+            style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: colors.tertiary, alignItems: 'center', justifyContent: 'center' }}
           >
-            <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+            <Ionicons name="add" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
-          <View className="flex-1 items-center">
-            <Text style={{ fontFamily: 'Quicksand-Bold' }} className="text-xl text-white">
-              {i18n.t('enterprise.myProducts.title')}
-            </Text>
-            <Text style={{ fontFamily: 'Quicksand-Medium' }} className="text-sm text-white/80">
-              {i18n.t('enterprise.myProducts.subtitle')}
-            </Text>
-          </View>
-          <TouchableOpacity
-            onPress={() => {
-              router.push('/(app)/(enterprise)/(tabs)/products/create');
-            }}
-            className="w-10 h-10 bg-white/20 rounded-full items-center justify-center"
-          >
-            <Ionicons name="add" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
+        }
+      />
 
       {/* Contenu */}
       <ScrollView
@@ -284,29 +233,29 @@ export default function MyProductsPage() {
         <View className="px-4 py-4">
           <View style={{ backgroundColor: colors.card, borderRadius: 16, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2, borderWidth: 1, borderColor: colors.border }}>
             <View className="flex-row items-center justify-between mb-3">
-              <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 14 }}>
+              <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-SemiBold', fontSize: 14 }}>
                 {i18n.t('enterprise.myProducts.stats.overview')}
               </Text>
               <Ionicons name="stats-chart" size={16} color="#10B981" />
             </View>
             <View className="flex-row justify-between">
               <View className="items-center flex-1">
-                <Text style={{ color: '#10B981', fontFamily: 'Quicksand-Bold', fontSize: 18 }}>
+                <Text style={{ color: '#10B981', fontFamily: 'Poppins-Bold', fontSize: 18 }}>
                   {products.filter(p => p.isActive).length}
                 </Text>
-                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Regular', fontSize: 12 }}>{i18n.t('enterprise.myProducts.stats.active')}</Text>
+                <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Regular', fontSize: 12 }}>{i18n.t('enterprise.myProducts.stats.active')}</Text>
               </View>
               <View className="items-center flex-1">
-                <Text style={{ color: '#F59E0B', fontFamily: 'Quicksand-Bold', fontSize: 18 }}>
+                <Text style={{ color: '#F59E0B', fontFamily: 'Poppins-Bold', fontSize: 18 }}>
                   {products.filter(p => !p.isActive).length}
                 </Text>
-                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Regular', fontSize: 12 }}>{i18n.t('enterprise.myProducts.stats.inactive')}</Text>
+                <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Regular', fontSize: 12 }}>{i18n.t('enterprise.myProducts.stats.inactive')}</Text>
               </View>
               <View className="items-center flex-1">
-                <Text style={{ color: '#10B981', fontFamily: 'Quicksand-Bold', fontSize: 18 }}>
+                <Text style={{ color: '#10B981', fontFamily: 'Poppins-Bold', fontSize: 18 }}>
                   {products.reduce((sum, p) => sum + (p.stats?.totalSales || 0), 0)}
                 </Text>
-                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Regular', fontSize: 12 }}>{i18n.t('enterprise.myProducts.stats.sales')}</Text>
+                <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Regular', fontSize: 12 }}>{i18n.t('enterprise.myProducts.stats.sales')}</Text>
               </View>
             </View>
           </View>
@@ -320,17 +269,17 @@ export default function MyProductsPage() {
               {loadingMore && (
                 <View className="items-center py-4">
                   <ActivityIndicator size="small" color="#10B981" />
-                  <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Regular', fontSize: 14, marginTop: 8 }}>{i18n.t('enterprise.myProducts.loading')}</Text>
+                  <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Regular', fontSize: 14, marginTop: 8 }}>{i18n.t('enterprise.myProducts.loading')}</Text>
                 </View>
               )}
             </>
           ) : (
             <View className="items-center justify-center py-12">
               <Ionicons name="storefront-outline" size={48} color={colors.textSecondary} />
-              <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 18, marginTop: 16 }}>
+              <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-SemiBold', fontSize: 18, marginTop: 16 }}>
                 {i18n.t('enterprise.myProducts.empty.title')}
               </Text>
-              <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Regular', fontSize: 14, textAlign: 'center', marginTop: 8 }}>
+              <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Regular', fontSize: 14, textAlign: 'center', marginTop: 8 }}>
                 {i18n.t('enterprise.myProducts.empty.message')}
               </Text>
               <TouchableOpacity
@@ -339,7 +288,7 @@ export default function MyProductsPage() {
                 }}
                 style={{ backgroundColor: '#10B981', marginTop: 24, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 }}
               >
-                <Text style={{ color: '#FFFFFF', fontFamily: 'Quicksand-SemiBold' }}>{i18n.t('enterprise.myProducts.empty.addButton')}</Text>
+                <Text style={{ color: '#FFFFFF', fontFamily: 'Poppins-SemiBold' }}>{i18n.t('enterprise.myProducts.empty.addButton')}</Text>
               </TouchableOpacity>
             </View>
           )}

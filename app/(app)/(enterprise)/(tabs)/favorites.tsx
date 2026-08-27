@@ -1,6 +1,5 @@
 import ProductService from "@/services/api/ProductService";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
@@ -135,29 +134,17 @@ export default function EnterpriseFavoritesScreen() {
       contentContainerStyle={{ paddingBottom: 90 }}
     >
       {/* Header Skeleton */}
-      <LinearGradient
-        colors={[colors.brandGradientStart, colors.brandGradientEnd]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        className="rounded-b-3xl shadow-md"
-        style={{
-          paddingTop: insets.top + 16,
-          paddingLeft: insets.left + 24,
-          paddingRight: insets.right + 24,
-          paddingBottom: 16,
-        }}
-      >
-        <View className="flex-row items-center justify-between mb-4">
-          <Shimmer
-            style={{ height: 24, borderRadius: 12, width: "40%" }}
-          />
-        </View>
-        <View className="flex-row justify-between items-center">
-          <Shimmer
-            style={{ height: 32, borderRadius: 16, width: "35%" }}
-          />
-        </View>
-      </LinearGradient>
+      <View style={{
+        backgroundColor: colors.surface,
+        paddingTop: insets.top + 16,
+        paddingHorizontal: 20,
+        paddingBottom: 14,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.borderLight,
+      }}>
+        <Shimmer style={{ height: 24, borderRadius: 12, width: "40%", marginBottom: 12 }} />
+        <Shimmer style={{ height: 32, borderRadius: 16, width: "35%" }} />
+      </View>
 
       {/* Content Skeleton */}
       <View className="py-4 px-4">
@@ -225,7 +212,7 @@ export default function EnterpriseFavoritesScreen() {
             <View>
               <Text
                 style={{ color: colors.textPrimary }}
-                className="text-lg font-quicksand-bold"
+                className="text-lg font-poppins-bold"
                 numberOfLines={2}
               >
                 {favoriteItem.product.name}
@@ -244,7 +231,7 @@ export default function EnterpriseFavoritesScreen() {
             {/* Prix et infos */}
             <View className="mt-2">
               <View className="flex-row items-center justify-between">
-                <Text style={{ color: colors.brandPrimary }} className="text-xl font-quicksand-bold">
+                <Text style={{ color: colors.brandPrimary }} className="text-xl font-poppins-bold">
                   {favoriteItem.product.price.toLocaleString("fr-FR")} FCFA
                 </Text>
               </View>
@@ -289,7 +276,7 @@ export default function EnterpriseFavoritesScreen() {
     return (
       <View style={{ flex: 1, backgroundColor: colors.secondary }} className="justify-center items-center p-6">
         <Ionicons name="alert-circle-outline" size={64} color={colors.error} />
-        <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold mt-4 text-center">
+        <Text style={{ color: colors.textPrimary }} className="text-xl font-poppins-bold mt-4 text-center">
           {i18n.t("enterprise.favorites.error.title")}
         </Text>
         <Text style={{ color: colors.textSecondary }} className="text-base font-quicksand mt-2 text-center">
@@ -299,7 +286,7 @@ export default function EnterpriseFavoritesScreen() {
           className="mt-6 bg-primary rounded-2xl px-6 py-3"
           onPress={() => fetchFavoriteProducts()}
         >
-          <Text className="text-white font-quicksand-bold">{i18n.t("enterprise.favorites.error.retry")}</Text>
+          <Text className="text-white font-poppins-bold">{i18n.t("enterprise.favorites.error.retry")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -311,7 +298,7 @@ export default function EnterpriseFavoritesScreen() {
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 90 }}
+        contentContainerStyle={favoriteItems.length === 0 ? { flexGrow: 1, paddingBottom: 90 } : { paddingBottom: 90 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -321,56 +308,44 @@ export default function EnterpriseFavoritesScreen() {
         }
       >
         {/* Header */}
-        <LinearGradient
-          colors={[colors.brandGradientStart, colors.brandGradientEnd]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          className="rounded-b-3xl shadow-md"
-          style={{
-            paddingTop: insets.top + 16,
-            paddingLeft: insets.left + 24,
-            paddingRight: insets.right + 24,
-            paddingBottom: 16,
-          }}
-        >
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-2xl font-quicksand-bold text-white">
+        <View style={{
+          backgroundColor: colors.surface,
+          paddingTop: insets.top + 16,
+          paddingHorizontal: 20,
+          paddingBottom: 14,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.borderLight,
+        }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 24, color: colors.textPrimary }}>
               {i18n.t("enterprise.favorites.title")}
             </Text>
-          </View>
-
-          {/* Compteur de favoris */}
-          <View className="flex-row justify-between items-center">
-            <View className="flex-row items-center px-4 py-2 rounded-full bg-white/20">
-              <Ionicons
-                name="heart"
-                size={16}
-                color="white"
-                style={{ marginRight: 8 }}
-              />
-              <Text className="text-white font-quicksand-medium text-sm">
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.tertiary, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 }}>
+              <Ionicons name="heart" size={14} color={colors.brandPrimary} style={{ marginRight: 6 }} />
+              <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 13, color: colors.textPrimary }}>
                 {favoriteItems.length}{" "}
                 {favoriteItems.length > 1 ? i18n.t("enterprise.favorites.count.products") : i18n.t("enterprise.favorites.count.product")}
               </Text>
             </View>
           </View>
-        </LinearGradient>
+        </View>
 
         {/* Contenu principal */}
         {favoriteItems.length === 0 ? (
-          <View className="flex-1 justify-center items-center py-20 px-6">
+          <View className="flex-1 justify-center items-center px-6">
             <Ionicons name="heart-outline" size={64} color={colors.textTertiary} />
-            <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold mt-4 text-center">
+            <Text style={{ color: colors.textPrimary }} className="text-xl font-poppins-bold mt-4 text-center">
               {i18n.t("enterprise.favorites.empty.title")}
             </Text>
             <Text style={{ color: colors.textSecondary }} className="text-base font-quicksand mt-2 text-center">
               {i18n.t("enterprise.favorites.empty.message")}
             </Text>
             <TouchableOpacity
+              onPress={() => router.push('/(app)/(enterprise)/marketplace')}
               style={{ backgroundColor: colors.brandPrimary }}
               className="mt-6 rounded-2xl px-6 py-3"
             >
-              <Text style={{ color: colors.textOnBrand }} className="font-quicksand-bold">
+              <Text style={{ color: colors.textOnBrand }} className="font-poppins-bold">
                 {i18n.t("enterprise.favorites.empty.exploreButton")}
               </Text>
             </TouchableOpacity>
@@ -418,12 +393,12 @@ export default function EnterpriseFavoritesScreen() {
             </View>
 
             {/* Titre */}
-            <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold text-center mb-2">
+            <Text style={{ color: colors.textPrimary }} className="text-xl font-poppins-bold text-center mb-2">
               {i18n.t("enterprise.favorites.deleteModal.title")}
             </Text>
 
             {/* Message */}
-            <Text style={{ color: colors.textSecondary }} className="text-base font-quicksand-medium text-center mb-6">
+            <Text style={{ color: colors.textSecondary }} className="text-base font-poppins-medium text-center mb-6">
               {i18n.t("enterprise.favorites.deleteModal.message")}
             </Text>
 
@@ -437,7 +412,7 @@ export default function EnterpriseFavoritesScreen() {
                 className="flex-1 py-3 rounded-xl"
                 activeOpacity={0.7}
               >
-                <Text style={{ color: colors.textPrimary }} className="font-quicksand-bold text-center">
+                <Text style={{ color: colors.textPrimary }} className="font-poppins-bold text-center">
                   {i18n.t("enterprise.favorites.deleteModal.cancel")}
                 </Text>
               </TouchableOpacity>
@@ -447,7 +422,7 @@ export default function EnterpriseFavoritesScreen() {
                 className="flex-1 py-3 rounded-xl"
                 activeOpacity={0.7}
               >
-                <Text style={{ color: colors.textOnBrand }} className="font-quicksand-bold text-center">
+                <Text style={{ color: colors.textOnBrand }} className="font-poppins-bold text-center">
                   {i18n.t("enterprise.favorites.deleteModal.confirm")}
                 </Text>
               </TouchableOpacity>
@@ -485,12 +460,12 @@ export default function EnterpriseFavoritesScreen() {
             </View>
 
             {/* Titre */}
-            <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold text-center mb-2">
+            <Text style={{ color: colors.textPrimary }} className="text-xl font-poppins-bold text-center mb-2">
               {i18n.t("enterprise.favorites.errorModal.title")}
             </Text>
 
             {/* Message */}
-            <Text style={{ color: colors.textSecondary }} className="text-base font-quicksand-medium text-center mb-6">
+            <Text style={{ color: colors.textSecondary }} className="text-base font-poppins-medium text-center mb-6">
               {errorModal.message}
             </Text>
 
@@ -501,7 +476,7 @@ export default function EnterpriseFavoritesScreen() {
               className="py-3 rounded-xl"
               activeOpacity={0.7}
             >
-              <Text style={{ color: colors.textOnBrand }} className="font-quicksand-bold text-center">
+              <Text style={{ color: colors.textOnBrand }} className="font-poppins-bold text-center">
                 {i18n.t("enterprise.favorites.errorModal.ok")}
               </Text>
             </TouchableOpacity>

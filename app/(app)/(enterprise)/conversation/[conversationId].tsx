@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -390,32 +389,20 @@ export default function ConversationDetails() {
     <View style={{ flex: 1, backgroundColor: colors.card }}>
       <ExpoStatusBar style={isDark ? "light" : "dark"} translucent backgroundColor="transparent" />
       {/* Header skeleton */}
-      <LinearGradient
-        colors={["#047857", "#10B981"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        className="px-6 pb-4 rounded-b-3xl"
-        style={{
-          paddingTop: insets.top + 16,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 4,
-        }}
-      >
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center flex-1">
-            <ShimmerBlock width={32} height={32} borderRadius={16} />
-            <ShimmerBlock width={32} height={32} borderRadius={16} />
-            <View className="flex-1 ml-3">
-              <ShimmerBlock width="60%" height={16} borderRadius={4} />
-              <ShimmerBlock width="40%" height={12} borderRadius={4} />
-            </View>
+      <View style={{ backgroundColor: colors.surface, paddingTop: insets.top + 8, paddingLeft: insets.left + 16, paddingRight: insets.right + 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <ShimmerBlock width={38} height={38} borderRadius={12} />
+          <View style={{ width: 10 }} />
+          <ShimmerBlock width={38} height={38} borderRadius={19} />
+          <View style={{ width: 10 }} />
+          <View style={{ flex: 1 }}>
+            <ShimmerBlock width="60%" height={16} borderRadius={4} />
+            <View style={{ height: 4 }} />
+            <ShimmerBlock width="40%" height={12} borderRadius={4} />
           </View>
-          <ShimmerBlock width={32} height={32} borderRadius={16} />
+          <ShimmerBlock width={32} height={32} borderRadius={12} />
         </View>
-      </LinearGradient>
+      </View>
 
       {/* Product info skeleton */}
       <View className="mx-4 mt-4 rounded-2xl p-4 flex-row items-center" style={{ backgroundColor: colors.card }}>
@@ -1347,8 +1334,8 @@ export default function ConversationDetails() {
       }}>
         <Ionicons name="play-circle-outline" size={16} color="#8B5CF6" />
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 10, fontFamily: 'Quicksand-Bold', color: '#8B5CF6', marginBottom: 1 }}>Statut</Text>
-          <Text style={{ fontSize: 12, fontFamily: 'Quicksand-Medium', color: sentOnLight ? '#374151' : isCurrentUser ? 'rgba(255,255,255,0.75)' : colors.textSecondary }} numberOfLines={1}>
+          <Text style={{ fontSize: 10, fontFamily: 'Poppins-Bold', color: '#8B5CF6', marginBottom: 1 }}>Statut</Text>
+          <Text style={{ fontSize: 12, fontFamily: 'Poppins-Medium', color: sentOnLight ? '#374151' : isCurrentUser ? 'rgba(255,255,255,0.75)' : colors.textSecondary }} numberOfLines={1}>
             {(message as any).statusReply.preview === 'IMAGE' ? '📷 Image' : ((message as any).statusReply.preview || 'Voir le statut')}
           </Text>
         </View>
@@ -1358,10 +1345,10 @@ export default function ConversationDetails() {
 
     const ReplyPreview = () => hasReply ? (
       <TouchableOpacity onPress={scrollToReplied} activeOpacity={0.7} style={{ backgroundColor: sentOnLight ? 'rgba(0,0,0,0.06)' : isCurrentUser ? 'rgba(0,0,0,0.22)' : 'rgba(0,0,0,0.06)', borderRadius: 10, borderLeftWidth: 3, borderLeftColor: sentOnLight ? '#10B981' : isCurrentUser ? 'rgba(255,255,255,0.6)' : '#10B981', paddingHorizontal: 10, paddingVertical: 6, marginBottom: 6 }}>
-        <Text style={{ fontSize: 11, fontFamily: 'Quicksand-Bold', color: sentOnLight ? '#10B981' : isCurrentUser ? 'rgba(255,255,255,0.9)' : '#10B981', marginBottom: 2 }}>
+        <Text style={{ fontSize: 11, fontFamily: 'Poppins-Bold', color: sentOnLight ? '#10B981' : isCurrentUser ? 'rgba(255,255,255,0.9)' : '#10B981', marginBottom: 2 }}>
           {replyAuthorName}
         </Text>
-        <Text style={{ fontSize: 12, fontFamily: 'Quicksand-Medium', color: sentOnLight ? '#374151' : isCurrentUser ? 'rgba(255,255,255,0.75)' : colors.textSecondary }} numberOfLines={2}>
+        <Text style={{ fontSize: 12, fontFamily: 'Poppins-Medium', color: sentOnLight ? '#374151' : isCurrentUser ? 'rgba(255,255,255,0.75)' : colors.textSecondary }} numberOfLines={2}>
           {message.replyTo!.text}
         </Text>
       </TouchableOpacity>
@@ -1406,11 +1393,11 @@ export default function ConversationDetails() {
                 }}>
                   <StatusReplyPreview />
                   <ReplyPreview />
-                  <Text style={{ fontSize: 15, lineHeight: 22, color: isDark ? '#D1FAE5' : '#000000', fontFamily: 'Quicksand-Medium' }}>
+                  <Text style={{ fontSize: 15, lineHeight: 22, color: isDark ? '#D1FAE5' : '#000000', fontFamily: 'Poppins-Medium' }}>
                     {message.text}
                   </Text>
                   <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 3, gap: 4 }}>
-                    <Text style={{ fontSize: 10, color: isDark ? 'rgba(209,250,229,0.6)' : '#667781', fontFamily: 'Quicksand-Medium' }}>
+                    <Text style={{ fontSize: 10, color: isDark ? 'rgba(209,250,229,0.6)' : '#667781', fontFamily: 'Poppins-Medium' }}>
                       {msgTime}
                     </Text>
                     {!isDeleted && <MessageStatusIndicator message={message} />}
@@ -1432,12 +1419,12 @@ export default function ConversationDetails() {
                 }}>
                   {!isDeleted && <StatusReplyPreview />}
                   {!isDeleted && <ReplyPreview />}
-                  <Text style={{ fontSize: 15, lineHeight: 22, fontFamily: 'Quicksand-Medium', color: isDeleted ? colors.textSecondary : colors.textPrimary, fontStyle: isDeleted ? 'italic' : 'normal' }}>
+                  <Text style={{ fontSize: 15, lineHeight: 22, fontFamily: 'Poppins-Medium', color: isDeleted ? colors.textSecondary : colors.textPrimary, fontStyle: isDeleted ? 'italic' : 'normal' }}>
                     {isDeleted ? '[Message supprimé]' : message.text}
                   </Text>
                   {!isDeleted && (
                     <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 3 }}>
-                      <Text style={{ fontSize: 10, color: colors.textSecondary, fontFamily: 'Quicksand-Medium' }}>
+                      <Text style={{ fontSize: 10, color: colors.textSecondary, fontFamily: 'Poppins-Medium' }}>
                         {msgTime}
                       </Text>
                     </View>
@@ -1563,7 +1550,7 @@ export default function ConversationDetails() {
                   style={{
                     fontSize: 10,
                     color: "#059669",
-                    fontFamily: "Quicksand-Bold",
+                    fontFamily: "Poppins-Bold",
                     textTransform: "uppercase",
                     letterSpacing: 0.5,
                     marginBottom: 4,
@@ -1575,7 +1562,7 @@ export default function ConversationDetails() {
                   style={{
                     fontSize: 14,
                     color: colors.textPrimary,
-                    fontFamily: "Quicksand-SemiBold",
+                    fontFamily: "Poppins-SemiBold",
                     lineHeight: 20,
                   }}
                 >
@@ -1595,7 +1582,7 @@ export default function ConversationDetails() {
                 style={{
                   fontSize: 10,
                   color: colors.textSecondary,
-                  fontFamily: "Quicksand-Medium",
+                  fontFamily: "Poppins-Medium",
                   textAlign: "center",
                 }}
               >
@@ -1626,7 +1613,7 @@ export default function ConversationDetails() {
             style={{
               fontSize: 12,
               color: colors.textSecondary,
-              fontFamily: "Quicksand-Medium",
+              fontFamily: "Poppins-Medium",
               textAlign: "center",
             }}
           >
@@ -1703,7 +1690,7 @@ export default function ConversationDetails() {
         {showSeparator && currentTs ? (
           <View style={{ paddingVertical: 10, alignItems: 'center' }}>
             <View style={{ backgroundColor: 'rgba(16,185,129,0.10)', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, borderWidth: 1, borderColor: 'rgba(16,185,129,0.18)' }}>
-              <Text style={{ fontSize: 11, color: '#10B981', fontFamily: 'Quicksand-SemiBold', letterSpacing: 0.3 }}>
+              <Text style={{ fontSize: 11, color: '#10B981', fontFamily: 'Poppins-SemiBold', letterSpacing: 0.3 }}>
                 {dayLabel(currentTs)}
               </Text>
             </View>
@@ -1724,30 +1711,25 @@ export default function ConversationDetails() {
     return (
       <View style={{ flex: 1, backgroundColor: colors.secondary }}>
         <ChatWallpaperEnt isDark={isDark} />
-        <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
-        <LinearGradient
-          colors={["#047857", "#10B981"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ paddingTop: insets.top + 16, paddingBottom: 16, paddingLeft: insets.left + 24, paddingRight: insets.right + 24, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 }}
-        >
+        <ExpoStatusBar style={isDark ? "light" : "dark"} translucent backgroundColor="transparent" />
+        <View style={{ backgroundColor: colors.surface, paddingTop: insets.top + 8, paddingLeft: insets.left + 16, paddingRight: insets.right + 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <TouchableOpacity onPress={() => router.back()} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
-              <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
+            <TouchableOpacity onPress={() => router.back()} style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.tertiary, justifyContent: 'center', alignItems: 'center', marginRight: 10 }}>
+              <Ionicons name="chevron-back" size={20} color={colors.text} />
             </TouchableOpacity>
             {preview?.participantAvatar ? (
-              <Image source={{ uri: preview.participantAvatar }} style={{ width: 40, height: 40, borderRadius: 20, marginRight: 12 }} resizeMode="cover" />
+              <Image source={{ uri: preview.participantAvatar }} style={{ width: 40, height: 40, borderRadius: 20, marginRight: 10 }} resizeMode="cover" />
             ) : (
-              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.25)', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
-                <Ionicons name="person" size={18} color="#FFFFFF" />
+              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.tertiary, justifyContent: 'center', alignItems: 'center', marginRight: 10 }}>
+                <Ionicons name="person" size={18} color={colors.textSecondary} />
               </View>
             )}
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 16, fontFamily: 'Quicksand-SemiBold', color: '#FFFFFF' }} numberOfLines={1}>{preview?.participantName || 'Conversation'}</Text>
-              {preview?.productName && <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', fontFamily: 'Quicksand-Medium' }} numberOfLines={1}>{preview.productName}</Text>}
+              <Text style={{ fontSize: 16, fontFamily: 'Poppins-SemiBold', color: colors.text }} numberOfLines={1}>{preview?.participantName || 'Conversation'}</Text>
+              {preview?.productName && <Text style={{ fontSize: 12, color: colors.textSecondary, fontFamily: 'Poppins-Medium' }} numberOfLines={1}>{preview.productName}</Text>}
             </View>
           </View>
-        </LinearGradient>
+        </View>
       </View>
     );
   }
@@ -1765,17 +1747,17 @@ export default function ConversationDetails() {
       >
         <View className="flex-1 justify-center items-center">
           <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
-          <Text className="mt-4 text-xl font-quicksand-bold" style={{ color: colors.textPrimary }}>
+          <Text className="mt-4 text-xl font-poppins-bold" style={{ color: colors.textPrimary }}>
             Paramètre manquant
           </Text>
-          <Text className="mt-2 text-neutral-600 font-quicksand-medium text-center px-6">
+          <Text className="mt-2 text-neutral-600 font-poppins-medium text-center px-6">
             L&apos;identifiant de la conversation est requis.
           </Text>
           <TouchableOpacity
             className="mt-6 bg-primary-500 rounded-2xl px-6 py-3"
             onPress={() => router.back()}
           >
-            <Text className="text-white font-quicksand-semibold">Retour</Text>
+            <Text className="text-white font-poppins-semibold">Retour</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -1790,17 +1772,17 @@ export default function ConversationDetails() {
       >
         <View className="flex-1 justify-center items-center">
           <Ionicons name="chatbubble-outline" size={64} color="#EF4444" />
-          <Text className="mt-4 text-xl font-quicksand-bold text-textPrimary">
+          <Text className="mt-4 text-xl font-poppins-bold text-textPrimary">
             Conversation introuvable
           </Text>
-          <Text className="mt-2 text-neutral-600 font-quicksand-medium text-center px-6">
+          <Text className="mt-2 text-neutral-600 font-poppins-medium text-center px-6">
             Cette conversation n&apos;existe pas ou n&apos;est plus accessible.
           </Text>
           <TouchableOpacity
             className="mt-6 bg-primary-500 rounded-2xl px-6 py-3"
             onPress={() => router.back()}
           >
-            <Text className="text-white font-quicksand-semibold">Retour</Text>
+            <Text className="text-white font-poppins-semibold">Retour</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -1879,84 +1861,57 @@ export default function ConversationDetails() {
   return (
     <View style={{ flex: 1, backgroundColor: isDark ? '#0F1923' : '#EEF2F7' }}>
       <ChatWallpaperEnt isDark={isDark} />
-      <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
+      <ExpoStatusBar style={isDark ? "light" : "dark"} translucent backgroundColor="transparent" />
       {/* Header */}
-      <LinearGradient
-        colors={["#047857", "#10B981"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{
-          paddingTop: insets.top + 16,
-          paddingBottom: 16,
-          paddingLeft: insets.left + 24,
-          paddingRight: insets.right + 24,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 4,
-          borderBottomLeftRadius: 24,
-          borderBottomRightRadius: 24,
-        }}
-      >
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center flex-1">
-            <TouchableOpacity
-              onPress={() => router.back()}
-              className="w-10 h-10 bg-card/20 rounded-full justify-center items-center mr-3"
-            >
-              <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
-            </TouchableOpacity>
+      <View style={{ backgroundColor: colors.surface, paddingTop: insets.top + 8, paddingLeft: insets.left + 16, paddingRight: insets.right + 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.tertiary, justifyContent: 'center', alignItems: 'center', marginRight: 10 }}
+          >
+            <Ionicons name="chevron-back" size={20} color={colors.text} />
+          </TouchableOpacity>
 
-            {otherParticipant?.profileImage ? (
-              <Image
-                source={{ uri: otherParticipant.profileImage }}
-                className="w-10 h-10 rounded-full mr-3"
-                resizeMode="cover"
+          {otherParticipant?.profileImage ? (
+            <Image
+              source={{ uri: otherParticipant.profileImage }}
+              style={{ width: 40, height: 40, borderRadius: 20, marginRight: 10 }}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.tertiary, justifyContent: 'center', alignItems: 'center', marginRight: 10 }}>
+              <Ionicons
+                name={otherParticipant?.role === "ENTERPRISE" ? "business" : "person"}
+                size={18}
+                color={colors.textSecondary}
               />
-            ) : (
-              <View className="w-10 h-10 bg-card/25 rounded-full justify-center items-center mr-3">
-                <Ionicons
-                  name={
-                    otherParticipant?.role === "ENTERPRISE"
-                      ? "business"
-                      : "person"
-                  }
-                  size={18}
-                  color="#FFFFFF"
-                />
-              </View>
-            )}
-
-            <View className="flex-1">
-              <Text
-                className="text-base font-quicksand-semibold text-white"
-                numberOfLines={1}
-              >
-                {otherParticipant
-                  ? MessagingService.formatParticipantName(otherParticipant)
-                  : "Conversation"}
-              </Text>
-              <Text className="text-xs text-white/90" numberOfLines={1}>
-                {typeof conversation.product === "object" &&
-                conversation.product?.name
-                  ? conversation.product.name
-                  : conversation.subject || "Discussion produit"}
-              </Text>
             </View>
+          )}
+
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 16, fontFamily: 'Poppins-SemiBold', color: colors.text }} numberOfLines={1}>
+              {otherParticipant
+                ? MessagingService.formatParticipantName(otherParticipant)
+                : "Conversation"}
+            </Text>
+            <Text style={{ fontSize: 12, color: colors.textSecondary, fontFamily: 'Poppins-Medium' }} numberOfLines={1}>
+              {typeof conversation.product === "object" && conversation.product?.name
+                ? conversation.product.name
+                : conversation.subject || "Discussion produit"}
+            </Text>
           </View>
 
-          <View className="flex-row items-center">
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             {isCurrentUserProductOwner(conversation, user?._id) && (
               <TouchableOpacity
-                className="w-10 h-10 bg-card/20 rounded-full justify-center items-center mr-2"
+                style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.tertiary, justifyContent: 'center', alignItems: 'center' }}
                 onPress={openOfferModal}
               >
-                <Ionicons name="car" size={18} color="#FFFFFF" />
+                <Ionicons name="car" size={18} color={colors.text} />
               </TouchableOpacity>
             )}
             <TouchableOpacity
-              className="w-10 h-10 bg-card/20 rounded-full justify-center items-center"
+              style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.tertiary, justifyContent: 'center', alignItems: 'center' }}
               onPress={() => {
                 const productId =
                   typeof conversation.product === "string"
@@ -1965,11 +1920,11 @@ export default function ConversationDetails() {
                 router.push(`/(app)/(enterprise)/product/${productId}`);
               }}
             >
-              <Ionicons name="storefront" size={18} color="#FFFFFF" />
+              <Ionicons name="storefront" size={18} color={colors.text} />
             </TouchableOpacity>
           </View>
         </View>
-      </LinearGradient>
+      </View>
 
       {/* Zone de contenu principal avec KeyboardAvoidingView */}
       {/* Android edge-to-edge (SDK 35+) : adjustResize est inopérant, le header reste fixe hors du KAV.
@@ -2024,14 +1979,14 @@ export default function ConversationDetails() {
                   />
                   <View style={{ marginLeft: 12, flex: 1 }}>
                     <Text
-                      style={{ fontSize: 14, fontFamily: 'Quicksand-SemiBold', color: colors.textPrimary, marginBottom: 4 }}
+                      style={{ fontSize: 14, fontFamily: 'Poppins-SemiBold', color: colors.textPrimary, marginBottom: 4 }}
                       numberOfLines={1}
                     >
                       {conversation.product.name || "Produit"}
                     </Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <View style={{ backgroundColor: 'rgba(16,185,129,0.1)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}>
-                        <Text style={{ fontSize: 13, fontFamily: 'Quicksand-Bold', color: '#10B981' }}>
+                        <Text style={{ fontSize: 13, fontFamily: 'Poppins-Bold', color: '#10B981' }}>
                           {conversation.product.price
                             ? formatPrice(conversation.product.price)
                             : "Prix non disponible"}
@@ -2070,10 +2025,10 @@ export default function ConversationDetails() {
                 <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(16,185,129,0.08)', justifyContent: 'center', alignItems: 'center', marginBottom: 16, borderWidth: 1.5, borderColor: 'rgba(16,185,129,0.15)' }}>
                   <Ionicons name="chatbubbles-outline" size={30} color="#10B981" />
                 </View>
-                <Text style={{ fontSize: 17, fontFamily: 'Quicksand-Bold', color: '#1F2937', marginBottom: 8, textAlign: 'center' }}>
+                <Text style={{ fontSize: 17, fontFamily: 'Poppins-Bold', color: '#1F2937', marginBottom: 8, textAlign: 'center' }}>
                   Début de la conversation
                 </Text>
-                <Text style={{ fontSize: 13, fontFamily: 'Quicksand-Medium', color: '#9CA3AF', textAlign: 'center', lineHeight: 20 }}>
+                <Text style={{ fontSize: 13, fontFamily: 'Poppins-Medium', color: '#9CA3AF', textAlign: 'center', lineHeight: 20 }}>
                   Commencez la discussion à propos de ce produit
                 </Text>
               </View>
@@ -2091,13 +2046,13 @@ export default function ConversationDetails() {
                       size={14}
                       color="#10B981"
                     />
-                    <Text className="text-xs text-primary-600 font-quicksand-semibold ml-1">
+                    <Text className="text-xs text-primary-600 font-poppins-semibold ml-1">
                       Réponse à {replyingTo.sender.firstName}{" "}
                       {replyingTo.sender.lastName}
                     </Text>
                   </View>
                   <Text
-                    className="text-sm text-neutral-700 font-quicksand-medium"
+                    className="text-sm text-neutral-700 font-poppins-medium"
                     numberOfLines={2}
                   >
                     {replyingTo.text}
@@ -2128,11 +2083,11 @@ export default function ConversationDetails() {
                   setInputHeight(h);
                 }}
                 placeholderTextColor="#9CA3AF"
-                style={{ flex: 1, fontFamily: 'Quicksand-Medium', fontSize: 15, color: colors.textPrimary, height: Math.max(24, inputHeight), paddingVertical: 0, textAlignVertical: 'center' }}
+                style={{ flex: 1, fontFamily: 'Poppins-Medium', fontSize: 15, color: colors.textPrimary, height: Math.max(24, inputHeight), paddingVertical: 0, textAlignVertical: 'center' }}
                 editable={!sending}
               />
               {newMessage.length > 1800 && (
-                <Text style={{ fontSize: 10, color: newMessage.length > 1950 ? '#EF4444' : '#F97316', fontFamily: 'Quicksand-Medium', marginBottom: 2, marginLeft: 4 }}>
+                <Text style={{ fontSize: 10, color: newMessage.length > 1950 ? '#EF4444' : '#F97316', fontFamily: 'Poppins-Medium', marginBottom: 2, marginLeft: 4 }}>
                   {2000 - newMessage.length}
                 </Text>
               )}
@@ -2200,14 +2155,14 @@ export default function ConversationDetails() {
                   />
                   <View style={{ marginLeft: 12, flex: 1 }}>
                     <Text
-                      style={{ fontSize: 14, fontFamily: 'Quicksand-SemiBold', color: colors.textPrimary, marginBottom: 4 }}
+                      style={{ fontSize: 14, fontFamily: 'Poppins-SemiBold', color: colors.textPrimary, marginBottom: 4 }}
                       numberOfLines={1}
                     >
                       {conversation.product.name || "Produit"}
                     </Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <View style={{ backgroundColor: 'rgba(16,185,129,0.1)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}>
-                        <Text style={{ fontSize: 13, fontFamily: 'Quicksand-Bold', color: '#10B981' }}>
+                        <Text style={{ fontSize: 13, fontFamily: 'Poppins-Bold', color: '#10B981' }}>
                           {conversation.product.price
                             ? formatPrice(conversation.product.price)
                             : "Prix non disponible"}
@@ -2245,10 +2200,10 @@ export default function ConversationDetails() {
                 <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(16,185,129,0.08)', justifyContent: 'center', alignItems: 'center', marginBottom: 16, borderWidth: 1.5, borderColor: 'rgba(16,185,129,0.15)' }}>
                   <Ionicons name="chatbubbles-outline" size={30} color="#10B981" />
                 </View>
-                <Text style={{ fontSize: 17, fontFamily: 'Quicksand-Bold', color: '#1F2937', marginBottom: 8, textAlign: 'center' }}>
+                <Text style={{ fontSize: 17, fontFamily: 'Poppins-Bold', color: '#1F2937', marginBottom: 8, textAlign: 'center' }}>
                   Début de la conversation
                 </Text>
-                <Text style={{ fontSize: 13, fontFamily: 'Quicksand-Medium', color: '#9CA3AF', textAlign: 'center', lineHeight: 20 }}>
+                <Text style={{ fontSize: 13, fontFamily: 'Poppins-Medium', color: '#9CA3AF', textAlign: 'center', lineHeight: 20 }}>
                   Commencez la discussion à propos de ce produit
                 </Text>
               </View>
@@ -2266,13 +2221,13 @@ export default function ConversationDetails() {
                       size={14}
                       color="#FE8C00"
                     />
-                    <Text className="text-xs text-primary-600 font-quicksand-semibold ml-1">
+                    <Text className="text-xs text-primary-600 font-poppins-semibold ml-1">
                       Réponse à {replyingTo.sender.firstName}{" "}
                       {replyingTo.sender.lastName}
                     </Text>
                   </View>
                   <Text
-                    className="text-sm text-neutral-700 font-quicksand-medium"
+                    className="text-sm text-neutral-700 font-poppins-medium"
                     numberOfLines={2}
                   >
                     {replyingTo.text}
@@ -2303,11 +2258,11 @@ export default function ConversationDetails() {
                   setInputHeight(h);
                 }}
                 placeholderTextColor="#9CA3AF"
-                style={{ flex: 1, fontFamily: 'Quicksand-Medium', fontSize: 15, color: colors.textPrimary, height: Math.max(24, inputHeight), paddingVertical: 0, textAlignVertical: 'center' }}
+                style={{ flex: 1, fontFamily: 'Poppins-Medium', fontSize: 15, color: colors.textPrimary, height: Math.max(24, inputHeight), paddingVertical: 0, textAlignVertical: 'center' }}
                 editable={!sending}
               />
               {newMessage.length > 1800 && (
-                <Text style={{ fontSize: 10, color: newMessage.length > 1950 ? '#EF4444' : '#F97316', fontFamily: 'Quicksand-Medium', marginBottom: 2, marginLeft: 4 }}>
+                <Text style={{ fontSize: 10, color: newMessage.length > 1950 ? '#EF4444' : '#F97316', fontFamily: 'Poppins-Medium', marginBottom: 2, marginLeft: 4 }}>
                   {2000 - newMessage.length}
                 </Text>
               )}
@@ -2379,10 +2334,10 @@ export default function ConversationDetails() {
 
               {/* Content */}
               <View className="px-6 pb-6">
-                <Text className="text-xl font-quicksand-bold text-textPrimary text-center mb-2">
+                <Text className="text-xl font-poppins-bold text-textPrimary text-center mb-2">
                   {confirmationAction?.title}
                 </Text>
-                <Text className="text-base text-neutral-600 font-quicksand-medium text-center leading-5">
+                <Text className="text-base text-neutral-600 font-poppins-medium text-center leading-5">
                   {confirmationAction?.message}
                 </Text>
               </View>
@@ -2393,7 +2348,7 @@ export default function ConversationDetails() {
                   onPress={closeConfirmation}
                   className="flex-1 bg-neutral-100 py-4 rounded-2xl items-center"
                 >
-                  <Text className="text-base font-quicksand-semibold text-neutral-700">
+                  <Text className="text-base font-poppins-semibold text-neutral-700">
                     Annuler
                   </Text>
                 </TouchableOpacity>
@@ -2406,7 +2361,7 @@ export default function ConversationDetails() {
                   className="flex-1 py-4 rounded-2xl items-center"
                   style={{ backgroundColor: confirmationAction?.confirmColor }}
                 >
-                  <Text className="text-base font-quicksand-semibold text-white">
+                  <Text className="text-base font-poppins-semibold text-white">
                     {confirmationAction?.confirmText}
                   </Text>
                 </TouchableOpacity>
@@ -2458,10 +2413,10 @@ export default function ConversationDetails() {
                 <Ionicons name="car" size={20} color="#10B981" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 18, lineHeight: 22 }}>
+                <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 18, lineHeight: 22 }}>
                   {i18n.t('enterprise.messages.conversationDetail.deliveryOffer')}
                 </Text>
-                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 12, marginTop: 1 }}>
+                <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 12, marginTop: 1 }}>
                   Renseignez les détails de votre offre
                 </Text>
               </View>
@@ -2486,7 +2441,7 @@ export default function ConversationDetails() {
             >
               {/* Zone de livraison */}
               <View style={{ marginBottom: 18 }}>
-                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+                <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
                   {i18n.t('enterprise.messages.conversationDetail.offerForm.deliveryZone')}
                 </Text>
                 <View style={{
@@ -2503,7 +2458,7 @@ export default function ConversationDetails() {
                     value={offerForm.deliveryZone}
                     onChangeText={(text) => setOfferForm({ ...offerForm, deliveryZone: text })}
                     placeholder={i18n.t('enterprise.messages.conversationDetail.offerForm.deliveryZonePlaceholder')}
-                    style={{ flex: 1, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', fontSize: 15, paddingVertical: 13 }}
+                    style={{ flex: 1, color: colors.textPrimary, fontFamily: 'Poppins-Medium', fontSize: 15, paddingVertical: 13 }}
                     placeholderTextColor={colors.textSecondary}
                     returnKeyType="next"
                     onSubmitEditing={() => feeInputRef.current?.focus()}
@@ -2515,7 +2470,7 @@ export default function ConversationDetails() {
 
               {/* Frais de livraison */}
               <View style={{ marginBottom: 18 }}>
-                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+                <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
                   {i18n.t('enterprise.messages.conversationDetail.offerForm.deliveryFee')}
                 </Text>
                 <View style={{
@@ -2533,7 +2488,7 @@ export default function ConversationDetails() {
                     onChangeText={(text) => setOfferForm({ ...offerForm, deliveryFee: text })}
                     placeholder="0"
                     keyboardType="numeric"
-                    style={{ flex: 1, color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold', fontSize: 15, paddingVertical: 13 }}
+                    style={{ flex: 1, color: colors.textPrimary, fontFamily: 'Poppins-SemiBold', fontSize: 15, paddingVertical: 13 }}
                     placeholderTextColor={colors.textSecondary}
                     returnKeyType="next"
                     onSubmitEditing={() => instructionsInputRef.current?.focus()}
@@ -2541,14 +2496,14 @@ export default function ConversationDetails() {
                     onFocus={() => formScrollRef.current?.scrollTo({ y: 0, animated: true })}
                   />
                   <View style={{ backgroundColor: 'rgba(16,185,129,0.1)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
-                    <Text style={{ color: '#10B981', fontFamily: 'Quicksand-Bold', fontSize: 12 }}>FCFA</Text>
+                    <Text style={{ color: '#10B981', fontFamily: 'Poppins-Bold', fontSize: 12 }}>FCFA</Text>
                   </View>
                 </View>
               </View>
 
               {/* Urgence — chips horizontaux */}
               <View style={{ marginBottom: 18 }}>
-                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>
+                <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>
                   {i18n.t('enterprise.messages.conversationDetail.offerForm.urgencyLevel')}
                 </Text>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -2578,7 +2533,7 @@ export default function ConversationDetails() {
                         }}
                       >
                         <Ionicons name={icon as any} size={15} color={active ? activeColor : colors.textSecondary} />
-                        <Text style={{ color: active ? activeColor : colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 12 }}>
+                        <Text style={{ color: active ? activeColor : colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 12 }}>
                           {label}
                         </Text>
                       </TouchableOpacity>
@@ -2589,7 +2544,7 @@ export default function ConversationDetails() {
 
               {/* Date d'expiration */}
               <View style={{ marginBottom: 18 }}>
-                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+                <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
                   {i18n.t('enterprise.messages.conversationDetail.offerForm.expirationDate')}
                 </Text>
                 <TouchableOpacity
@@ -2610,7 +2565,7 @@ export default function ConversationDetails() {
                   }}
                 >
                   <Ionicons name="calendar-outline" size={16} color="#10B981" style={{ marginRight: 10 }} />
-                  <Text style={{ flex: 1, color: offerForm.expiresAt ? colors.textPrimary : colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 15 }}>
+                  <Text style={{ flex: 1, color: offerForm.expiresAt ? colors.textPrimary : colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 15 }}>
                     {offerForm.expiresAt
                       ? new Date(offerForm.expiresAt).toLocaleString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
                       : i18n.t('enterprise.messages.conversationDetail.offerForm.chooseDateTime')}
@@ -2653,7 +2608,7 @@ export default function ConversationDetails() {
 
               {/* Instructions spéciales */}
               <View style={{ marginBottom: 4 }}>
-                <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+                <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
                   {i18n.t('enterprise.messages.conversationDetail.offerForm.specialInstructions')}
                 </Text>
                 <View style={{
@@ -2666,7 +2621,7 @@ export default function ConversationDetails() {
                     value={offerForm.specialInstructions}
                     onChangeText={(text) => setOfferForm({ ...offerForm, specialInstructions: text })}
                     placeholder={i18n.t('enterprise.messages.conversationDetail.offerForm.specialInstructionsPlaceholder')}
-                    style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Medium', fontSize: 15, minHeight: 90, textAlignVertical: 'top' }}
+                    style={{ color: colors.textPrimary, fontFamily: 'Poppins-Medium', fontSize: 15, minHeight: 90, textAlignVertical: 'top' }}
                     placeholderTextColor={colors.textSecondary}
                     multiline
                     returnKeyType="done"
@@ -2690,33 +2645,26 @@ export default function ConversationDetails() {
                 disabled={creatingOffer}
                 style={{ flex: 1, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.secondary, justifyContent: 'center', alignItems: 'center' }}
               >
-                <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 15 }}>
+                <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 15 }}>
                   {i18n.t('enterprise.messages.conversationDetail.cancel')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={submitOffer}
                 disabled={creatingOffer}
-                style={{ flex: 2, borderRadius: 14, overflow: 'hidden', opacity: creatingOffer ? 0.7 : 1 }}
+                style={{ flex: 2, borderRadius: 14, overflow: 'hidden', opacity: creatingOffer ? 0.7 : 1, backgroundColor: colors.brandPrimary, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', flexDirection: 'row', gap: 8 }}
                 activeOpacity={0.85}
               >
-                <LinearGradient
-                  colors={["#10B981", "#059669"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={{ paddingVertical: 14, justifyContent: 'center', alignItems: 'center', flexDirection: 'row', gap: 8 }}
-                >
-                  {creatingOffer ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <>
-                      <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
-                      <Text style={{ color: '#FFFFFF', fontFamily: 'Quicksand-Bold', fontSize: 15 }}>
-                        {i18n.t('enterprise.messages.conversationDetail.offerForm.publishOffer')}
-                      </Text>
-                    </>
-                  )}
-                </LinearGradient>
+                {creatingOffer ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <>
+                    <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
+                    <Text style={{ color: '#FFFFFF', fontFamily: 'Poppins-Bold', fontSize: 15 }}>
+                      {i18n.t('enterprise.messages.conversationDetail.offerForm.publishOffer')}
+                    </Text>
+                  </>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -2749,10 +2697,10 @@ export default function ConversationDetails() {
             >
               {/* Header */}
               <View className="px-6 pt-6 pb-4">
-                <Text style={{ color: colors.textPrimary }} className="text-xl font-quicksand-bold text-center mb-2">
+                <Text style={{ color: colors.textPrimary }} className="text-xl font-poppins-bold text-center mb-2">
                   {i18n.t('enterprise.messages.conversationDetail.offerForm.expirationDate')}
                 </Text>
-                <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand-medium text-center">
+                <Text style={{ color: colors.textSecondary }} className="text-sm font-poppins-medium text-center">
                   {i18n.t('enterprise.messages.conversationDetail.offerForm.chooseDateTimeDescription')}
                 </Text>
               </View>
@@ -2784,7 +2732,7 @@ export default function ConversationDetails() {
                   className="flex-1 py-4 rounded-2xl"
                   activeOpacity={0.7}
                 >
-                  <Text style={{ color: colors.textPrimary }} className="font-quicksand-bold text-base text-center">
+                  <Text style={{ color: colors.textPrimary }} className="font-poppins-bold text-base text-center">
                     {i18n.t('enterprise.messages.conversationDetail.cancel')}
                   </Text>
                 </TouchableOpacity>
@@ -2801,7 +2749,7 @@ export default function ConversationDetails() {
                   style={{ backgroundColor: "#10B981" }}
                   activeOpacity={0.7}
                 >
-                  <Text className="text-white font-quicksand-bold text-base text-center">
+                  <Text className="text-white font-poppins-bold text-base text-center">
                     {i18n.t('common.actions.understood')}
                   </Text>
                 </TouchableOpacity>
@@ -2837,12 +2785,12 @@ export default function ConversationDetails() {
             </View>
 
             {/* Titre */}
-            <Text className="text-xl font-quicksand-bold text-textPrimary text-center mb-2">
+            <Text className="text-xl font-poppins-bold text-textPrimary text-center mb-2">
               {i18n.t("enterprise.messages.conversationDetail.retry.title")}
             </Text>
 
             {/* Message */}
-            <Text className="text-base font-quicksand-medium text-center mb-6" style={{ color: colors.textSecondary }}>
+            <Text className="text-base font-poppins-medium text-center mb-6" style={{ color: colors.textSecondary }}>
               {retryModal.message?._sendError ||
                 i18n.t("enterprise.messages.conversationDetail.retry.message")}
             </Text>
@@ -2855,7 +2803,7 @@ export default function ConversationDetails() {
                 style={{ backgroundColor: colors.tertiary }}
                 activeOpacity={0.7}
               >
-                <Text className="font-quicksand-bold text-center" style={{ color: colors.textPrimary }}>
+                <Text className="font-poppins-bold text-center" style={{ color: colors.textPrimary }}>
                   {i18n.t("enterprise.messages.conversationDetail.retry.cancel")}
                 </Text>
               </TouchableOpacity>
@@ -2869,7 +2817,7 @@ export default function ConversationDetails() {
                 className="flex-1 bg-red-500 py-3 rounded-xl"
                 activeOpacity={0.7}
               >
-                <Text className="text-white font-quicksand-bold text-center">
+                <Text className="text-white font-poppins-bold text-center">
                   {i18n.t("enterprise.messages.conversationDetail.retry.retry")}
                 </Text>
               </TouchableOpacity>
@@ -2897,10 +2845,10 @@ export default function ConversationDetails() {
               {/* Aperçu du message */}
               {messageActionsModal.message && !messageActionsModal.message.metadata?.deleted && (
                 <View style={{ marginHorizontal: 16, marginBottom: 16, backgroundColor: colors.secondary, borderRadius: 14, padding: 12, borderLeftWidth: 3, borderLeftColor: '#10B981' }}>
-                  <Text style={{ fontSize: 11, fontFamily: 'Quicksand-SemiBold', color: '#10B981', marginBottom: 4 }}>
+                  <Text style={{ fontSize: 11, fontFamily: 'Poppins-SemiBold', color: '#10B981', marginBottom: 4 }}>
                     {messageActionsModal.message.sender?.firstName} {messageActionsModal.message.sender?.lastName}
                   </Text>
-                  <Text style={{ fontSize: 13, fontFamily: 'Quicksand-Medium', color: colors.textSecondary }} numberOfLines={2}>
+                  <Text style={{ fontSize: 13, fontFamily: 'Poppins-Medium', color: colors.textSecondary }} numberOfLines={2}>
                     {messageActionsModal.message.text}
                   </Text>
                 </View>
@@ -2920,7 +2868,7 @@ export default function ConversationDetails() {
                   <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(16,185,129,0.10)', justifyContent: 'center', alignItems: 'center', marginRight: 14 }}>
                     <Ionicons name="return-up-forward" size={20} color="#10B981" />
                   </View>
-                  <Text style={{ fontSize: 15, fontFamily: 'Quicksand-SemiBold', color: colors.textPrimary, flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontFamily: 'Poppins-SemiBold', color: colors.textPrimary, flex: 1 }}>
                     {i18n.t("enterprise.messages.conversationDetail.messageActions.reply")}
                   </Text>
                   <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
@@ -2947,7 +2895,7 @@ export default function ConversationDetails() {
                       <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(239,68,68,0.10)', justifyContent: 'center', alignItems: 'center', marginRight: 14 }}>
                         <Ionicons name="trash" size={20} color="#EF4444" />
                       </View>
-                      <Text style={{ fontSize: 15, fontFamily: 'Quicksand-SemiBold', color: '#EF4444', flex: 1 }}>
+                      <Text style={{ fontSize: 15, fontFamily: 'Poppins-SemiBold', color: '#EF4444', flex: 1 }}>
                         {i18n.t("enterprise.messages.conversationDetail.messageActions.delete")}
                       </Text>
                       <Ionicons name="chevron-forward" size={16} color="#EF444470" />
@@ -2962,7 +2910,7 @@ export default function ConversationDetails() {
                 style={{ margin: 16, marginTop: 10, backgroundColor: colors.secondary, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.border }}
                 activeOpacity={0.7}
               >
-                <Text style={{ fontSize: 15, fontFamily: 'Quicksand-SemiBold', color: colors.textSecondary }}>
+                <Text style={{ fontSize: 15, fontFamily: 'Poppins-SemiBold', color: colors.textSecondary }}>
                   {i18n.t("enterprise.messages.conversationDetail.cancel")}
                 </Text>
               </TouchableOpacity>
@@ -2996,10 +2944,10 @@ export default function ConversationDetails() {
             <View className="w-12 h-1.5 bg-neutral-300 rounded-full self-center mb-6" />
 
             {/* Titre */}
-            <Text className="text-xl font-quicksand-bold text-textPrimary mb-2">
+            <Text className="text-xl font-poppins-bold text-textPrimary mb-2">
               {i18n.t("enterprise.messages.conversationDetail.deleteOptions.title")}
             </Text>
-            <Text className="text-neutral-600 font-quicksand-medium mb-4">
+            <Text className="text-neutral-600 font-poppins-medium mb-4">
               Choisissez comment supprimer le message
             </Text>
 
@@ -3019,7 +2967,7 @@ export default function ConversationDetails() {
                 <View className="w-10 h-10 bg-orange-100 rounded-full justify-center items-center mr-3">
                   <Ionicons name="eye-off" size={20} color="#F97316" />
                 </View>
-                <Text className="text-textPrimary font-quicksand-semibold flex-1">
+                <Text className="text-textPrimary font-poppins-semibold flex-1">
                   {i18n.t("enterprise.messages.conversationDetail.deleteOptions.forMe")}
                 </Text>
               </TouchableOpacity>
@@ -3038,7 +2986,7 @@ export default function ConversationDetails() {
                 <View className="w-10 h-10 bg-red-100 rounded-full justify-center items-center mr-3">
                   <Ionicons name="trash" size={20} color="#EF4444" />
                 </View>
-                <Text className="text-textPrimary font-quicksand-semibold flex-1">
+                <Text className="text-textPrimary font-poppins-semibold flex-1">
                   {i18n.t("enterprise.messages.conversationDetail.deleteOptions.forEveryone")}
                 </Text>
               </TouchableOpacity>
@@ -3053,7 +3001,7 @@ export default function ConversationDetails() {
               style={{ backgroundColor: colors.tertiary }}
               activeOpacity={0.7}
             >
-              <Text className="font-quicksand-bold text-center" style={{ color: colors.textPrimary }}>
+              <Text className="font-poppins-bold text-center" style={{ color: colors.textPrimary }}>
                 Annuler
               </Text>
             </TouchableOpacity>
@@ -3082,7 +3030,7 @@ export default function ConversationDetails() {
             <View className="w-12 h-1.5 bg-neutral-300 rounded-full self-center mb-6" />
 
             {/* Titre */}
-            <Text className="text-xl font-quicksand-bold text-textPrimary mb-4">
+            <Text className="text-xl font-poppins-bold text-textPrimary mb-4">
               {i18n.t("enterprise.messages.conversationDetail.attachmentOptions.title")}
             </Text>
 
@@ -3100,7 +3048,7 @@ export default function ConversationDetails() {
                 <View className="w-10 h-10 bg-primary-100 rounded-full justify-center items-center mr-3">
                   <Ionicons name="camera" size={20} color="#10B981" />
                 </View>
-                <Text className="text-textPrimary font-quicksand-semibold flex-1">
+                <Text className="text-textPrimary font-poppins-semibold flex-1">
                   {i18n.t("enterprise.messages.conversationDetail.attachmentOptions.camera")}
                 </Text>
               </TouchableOpacity>
@@ -3117,7 +3065,7 @@ export default function ConversationDetails() {
                 <View className="w-10 h-10 bg-green-100 rounded-full justify-center items-center mr-3">
                   <Ionicons name="images" size={20} color="#22C55E" />
                 </View>
-                <Text className="text-textPrimary font-quicksand-semibold flex-1">
+                <Text className="text-textPrimary font-poppins-semibold flex-1">
                   {i18n.t("enterprise.messages.conversationDetail.attachmentOptions.gallery")}
                 </Text>
               </TouchableOpacity>
@@ -3130,7 +3078,7 @@ export default function ConversationDetails() {
               style={{ backgroundColor: colors.tertiary }}
               activeOpacity={0.7}
             >
-              <Text className="font-quicksand-bold text-center" style={{ color: colors.textPrimary }}>
+              <Text className="font-poppins-bold text-center" style={{ color: colors.textPrimary }}>
                 Annuler
               </Text>
             </TouchableOpacity>

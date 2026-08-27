@@ -280,12 +280,12 @@ export default function VerifyEmailScreen() {
           <View className="w-20 h-20 rounded-full items-center justify-center mb-4" style={{ backgroundColor: colors.brandLight }}>
             <Ionicons name="mail-open-outline" size={40} color="#10B981" />
           </View>
-          <Text className="text-2xl font-quicksand-bold text-center" style={{ color: colors.textPrimary }}>
+          <Text className="text-2xl font-poppins-bold text-center" style={{ color: colors.textPrimary }}>
             Vérifiez votre email
           </Text>
           <Text className="text-base font-quicksand text-center mt-2 px-4" style={{ color: colors.textSecondary }}>
             Nous avons envoyé un code de vérification à{"\n"}
-            <Text className="font-quicksand-semibold" style={{ color: colors.textPrimary }}>
+            <Text className="font-poppins-semibold" style={{ color: colors.textPrimary }}>
               {maskedEmail}
             </Text>
           </Text>
@@ -305,7 +305,7 @@ export default function VerifyEmailScreen() {
               keyboardType="number-pad"
               maxLength={index === 0 ? OTP_LENGTH : 1}
               selectTextOnFocus
-              className="w-12 h-14 rounded-xl text-center text-xl font-quicksand-bold border-2"
+              className="w-12 h-14 rounded-xl text-center text-xl font-poppins-bold border-2"
               style={digit
                 ? { borderColor: '#10B981', backgroundColor: colors.brandLight, color: colors.textPrimary }
                 : { borderColor: colors.border, backgroundColor: colors.secondary, color: colors.textPrimary }}
@@ -326,7 +326,7 @@ export default function VerifyEmailScreen() {
           {isVerifying ? (
             <ActivityIndicator color="white" />
           ) : (
-            <Text className="text-white text-center text-base font-quicksand-bold">
+            <Text className="text-white text-center text-base font-poppins-bold">
               Vérifier
             </Text>
           )}
@@ -338,7 +338,7 @@ export default function VerifyEmailScreen() {
             Vous n&apos;avez pas reçu le code ?
           </Text>
           {cooldown > 0 ? (
-            <Text className="text-sm font-quicksand-semibold" style={{ color: colors.textTertiary }}>
+            <Text className="text-sm font-poppins-semibold" style={{ color: colors.textTertiary }}>
               Renvoyer dans {cooldown}s
             </Text>
           ) : (
@@ -349,7 +349,7 @@ export default function VerifyEmailScreen() {
               {isResending ? (
                 <ActivityIndicator size="small" color="#10B981" />
               ) : (
-                <Text className="text-sm font-quicksand-bold text-emerald-600">
+                <Text className="text-sm font-poppins-bold text-emerald-600">
                   Renvoyer le code
                 </Text>
               )}
@@ -360,7 +360,7 @@ export default function VerifyEmailScreen() {
         {/* Wrong email escape hatch */}
         <View className="items-center mt-8">
           <TouchableOpacity onPress={handleExit} activeOpacity={0.7}>
-            <Text className="text-sm font-quicksand-semibold underline" style={{ color: colors.textSecondary }}>
+            <Text className="text-sm font-poppins-semibold underline" style={{ color: colors.textSecondary }}>
               Mauvaise adresse email ? Revenir à la connexion
             </Text>
           </TouchableOpacity>

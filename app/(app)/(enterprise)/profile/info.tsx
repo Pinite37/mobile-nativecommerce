@@ -163,7 +163,7 @@ export default function EnterpriseInfoScreen() {
     return (
       <SafeAreaView className="flex-1 bg-white justify-center items-center">
         <ActivityIndicator size="large" color="#FE8C00" />
-        <Text className="mt-4 text-neutral-600 font-quicksand-medium">
+        <Text className="mt-4 text-neutral-600 font-poppins-medium">
           Chargement des informations...
         </Text>
       </SafeAreaView>
@@ -176,7 +176,7 @@ export default function EnterpriseInfoScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#374151" />
         </TouchableOpacity>
-        <Text className="text-lg font-quicksand-bold text-neutral-800">
+        <Text className="text-lg font-poppins-bold text-neutral-800">
           Informations entreprise
         </Text>
         <View style={{ width: 24 }} />
@@ -205,14 +205,14 @@ export default function EnterpriseInfoScreen() {
                 <Ionicons name="camera-outline" size={16} color="#FFF" />
               </View>
             </TouchableOpacity>
-            <Text className="text-primary-600 font-quicksand-medium">
+            <Text className="text-primary-600 font-poppins-medium">
               Modifier le logo
             </Text>
           </View>
 
           {/* Nom de l'entreprise */}
           <View className="mb-4">
-            <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
+            <Text className="text-neutral-700 font-poppins-semibold mb-2 pl-1">
               Nom de l&apos;entreprise*
             </Text>
             <TextInput
@@ -225,7 +225,7 @@ export default function EnterpriseInfoScreen() {
 
           {/* Description */}
           <View className="mb-4">
-            <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
+            <Text className="text-neutral-700 font-poppins-semibold mb-2 pl-1">
               Description
             </Text>
             <TextInput
@@ -241,12 +241,12 @@ export default function EnterpriseInfoScreen() {
 
           {/* Coordonnées */}
           <View className="mb-6">
-            <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3 pl-1">
+            <Text className="text-lg font-poppins-bold text-neutral-800 mb-3 pl-1">
               Coordonnées
             </Text>
             
             <View className="mb-4">
-              <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
+              <Text className="text-neutral-700 font-poppins-semibold mb-2 pl-1">
                 Site web
               </Text>
               <TextInput
@@ -258,7 +258,7 @@ export default function EnterpriseInfoScreen() {
             </View>
             
             <View className="mb-4">
-              <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
+              <Text className="text-neutral-700 font-poppins-semibold mb-2 pl-1">
                 Téléphone
               </Text>
               <TextInput
@@ -271,7 +271,7 @@ export default function EnterpriseInfoScreen() {
             </View>
             
             <View>
-              <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
+              <Text className="text-neutral-700 font-poppins-semibold mb-2 pl-1">
                 Adresse
               </Text>
               <TextInput
@@ -288,7 +288,7 @@ export default function EnterpriseInfoScreen() {
 
           {/* Ville & Quartier */}
           <View className="mb-6">
-            <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3 pl-1">
+            <Text className="text-lg font-poppins-bold text-neutral-800 mb-3 pl-1">
               Localisation
             </Text>
 
@@ -302,7 +302,7 @@ export default function EnterpriseInfoScreen() {
 
             {locationStatus !== "granted" && (
               <View className="mb-4">
-                <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
+                <Text className="text-neutral-700 font-poppins-semibold mb-2 pl-1">
                   Ville
                 </Text>
                 <TouchableOpacity
@@ -319,7 +319,7 @@ export default function EnterpriseInfoScreen() {
             )}
 
             <View>
-              <Text className="text-neutral-700 font-quicksand-semibold mb-2 pl-1">
+              <Text className="text-neutral-700 font-poppins-semibold mb-2 pl-1">
                 Quartier
               </Text>
               <TouchableOpacity
@@ -338,7 +338,7 @@ export default function EnterpriseInfoScreen() {
 
           {/* Réseaux sociaux */}
           <View className="mb-6">
-            <Text className="text-lg font-quicksand-bold text-neutral-800 mb-3 pl-1">
+            <Text className="text-lg font-poppins-bold text-neutral-800 mb-3 pl-1">
               Réseaux sociaux
             </Text>
             
@@ -371,7 +371,7 @@ export default function EnterpriseInfoScreen() {
               className="flex-row items-center mt-2"
             >
               <Ionicons name="add-circle" size={20} color="#FE8C00" />
-              <Text className="text-primary-500 font-quicksand-medium ml-1">
+              <Text className="text-primary-500 font-poppins-medium ml-1">
                 Ajouter un réseau social
               </Text>
             </TouchableOpacity>
@@ -386,7 +386,7 @@ export default function EnterpriseInfoScreen() {
             {saving ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
-              <Text className="text-white font-quicksand-bold text-center">
+              <Text className="text-white font-poppins-bold text-center">
                 Enregistrer les modifications
               </Text>
             )}
@@ -401,7 +401,7 @@ export default function EnterpriseInfoScreen() {
             <TouchableWithoutFeedback onPress={() => {}}>
               <View className="bg-white rounded-t-3xl max-h-96">
                 <View className="p-4 border-b border-neutral-200">
-                  <Text className="text-lg font-quicksand-bold text-center text-neutral-900">
+                  <Text className="text-lg font-poppins-bold text-center text-neutral-900">
                     Sélectionner la Ville
                   </Text>
                 </View>
@@ -414,7 +414,7 @@ export default function EnterpriseInfoScreen() {
                       onPress={() => { setCity(item.name); setDistrict(""); setCityModalVisible(false); }}
                       activeOpacity={0.7}
                     >
-                      <Text className={`font-quicksand text-base ${city === item.name ? "text-primary-500 font-quicksand-bold" : "text-neutral-900"}`}>
+                      <Text className={`font-quicksand text-base ${city === item.name ? "text-primary-500 font-poppins-bold" : "text-neutral-900"}`}>
                         {item.name}
                       </Text>
                     </TouchableOpacity>
@@ -433,7 +433,7 @@ export default function EnterpriseInfoScreen() {
             <TouchableWithoutFeedback onPress={() => {}}>
               <View className="bg-white rounded-t-3xl max-h-96">
                 <View className="p-4 border-b border-neutral-200">
-                  <Text className="text-lg font-quicksand-bold text-center text-neutral-900">
+                  <Text className="text-lg font-poppins-bold text-center text-neutral-900">
                     Sélectionner le Quartier
                   </Text>
                 </View>
@@ -446,7 +446,7 @@ export default function EnterpriseInfoScreen() {
                       onPress={() => { setDistrict(item); setDistrictModalVisible(false); }}
                       activeOpacity={0.7}
                     >
-                      <Text className={`font-quicksand text-base ${district === item ? "text-primary-500 font-quicksand-bold" : "text-neutral-900"}`}>
+                      <Text className={`font-quicksand text-base ${district === item ? "text-primary-500 font-poppins-bold" : "text-neutral-900"}`}>
                         {item}
                       </Text>
                     </TouchableOpacity>

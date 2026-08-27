@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -345,19 +344,19 @@ export default function CategoryProductsScreen() {
           )}
           {item.stock === 0 && (
             <View className="absolute top-2 left-2 bg-red-500 px-2 py-1 rounded-lg">
-              <Text className="text-white text-xs font-quicksand-bold">{i18n.t("client.category.product.outOfStock")}</Text>
+              <Text className="text-white text-xs font-poppins-bold">{i18n.t("client.category.product.outOfStock")}</Text>
             </View>
           )}
         </View>
         <View className="mt-2">
-          <Text className="text-sm font-quicksand-semibold" style={{ color: colors.textPrimary }} numberOfLines={2}>
+          <Text className="text-sm font-poppins-semibold" style={{ color: colors.textPrimary }} numberOfLines={2}>
             {item.name}
           </Text>
-          <Text className="text-lg font-quicksand-bold mt-1" style={{ color: colors.brandPrimary }}>
+          <Text className="text-lg font-poppins-bold mt-1" style={{ color: colors.brandPrimary }}>
             {formatPrice(item.price)}
           </Text>
           {enterprise && (
-            <Text className="text-xs font-quicksand-medium mt-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
+            <Text className="text-xs font-poppins-medium mt-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
               {enterprise.companyName}
             </Text>
           )}
@@ -395,13 +394,13 @@ export default function CategoryProductsScreen() {
           />
           {item.stock === 0 && (
             <View className="absolute inset-0 bg-black/50 rounded-xl items-center justify-center">
-              <Text className="text-white text-xs font-quicksand-bold">{i18n.t("client.category.product.outOfStock")}</Text>
+              <Text className="text-white text-xs font-poppins-bold">{i18n.t("client.category.product.outOfStock")}</Text>
             </View>
           )}
         </View>
         <View className="flex-1">
           <View className="flex-row justify-between items-start">
-            <Text className="text-sm font-quicksand-semibold flex-1" style={{ color: colors.textPrimary }} numberOfLines={2}>
+            <Text className="text-sm font-poppins-semibold flex-1" style={{ color: colors.textPrimary }} numberOfLines={2}>
               {item.name}
             </Text>
             {isAuthenticated && (
@@ -414,11 +413,11 @@ export default function CategoryProductsScreen() {
               </TouchableOpacity>
             )}
           </View>
-          <Text className="text-lg font-quicksand-bold mt-1" style={{ color: colors.brandPrimary }}>
+          <Text className="text-lg font-poppins-bold mt-1" style={{ color: colors.brandPrimary }}>
             {formatPrice(item.price)}
           </Text>
           {enterprise && (
-            <Text className="text-xs font-quicksand-medium mt-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
+            <Text className="text-xs font-poppins-medium mt-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
               {enterprise.companyName}
             </Text>
           )}
@@ -429,54 +428,43 @@ export default function CategoryProductsScreen() {
 
   return (
     <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
-      <ExpoStatusBar style="light" translucent />
+      <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
 
-      {/* Header vert conventionnel avec gradient */}
-      <LinearGradient
-        colors={['#059669', '#10B981']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        className="rounded-b-3xl shadow-md"
-        style={{
-          paddingTop: insets.top + 16,
-          paddingLeft: insets.left + 24,
-          paddingRight: insets.right + 24,
-          paddingBottom: 16
-        }}
-      >
-        <View className="flex-row items-center justify-between mb-4">
+      {/* Header */}
+      <View style={{ backgroundColor: colors.surface, paddingTop: insets.top + 8, paddingLeft: insets.left + 16, paddingRight: insets.right + 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
           <TouchableOpacity
             onPress={() => router.back()}
-            className="mr-3"
+            style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.tertiary, justifyContent: 'center', alignItems: 'center', marginRight: 10 }}
           >
-            <Ionicons name="arrow-back" size={24} color="white" />
+            <Ionicons name="arrow-back" size={22} color={colors.text} />
           </TouchableOpacity>
-          <View className="flex-1">
-            <Text className="text-white text-lg font-quicksand-bold" numberOfLines={1}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: colors.text }} numberOfLines={1}>
               {loading && !category ? i18n.t("client.category.loading") : category?.name || i18n.t("client.category.defaultTitle")}
             </Text>
             {!loading && (
-              <Text className="text-white/80 text-xs font-quicksand-medium">
+              <Text style={{ fontSize: 12, color: colors.textSecondary, fontFamily: 'Poppins-Medium' }}>
                 {totalProducts} {totalProducts > 1 ? i18n.t("client.category.productCount.plural") : i18n.t("client.category.productCount.singular")}
               </Text>
             )}
           </View>
-          <View className="flex-row items-center">
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <TouchableOpacity
               onPress={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-              className="mr-3"
+              style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.tertiary, justifyContent: 'center', alignItems: 'center' }}
             >
               <Ionicons
                 name={viewMode === 'grid' ? 'list' : 'grid'}
-                size={22}
-                color="white"
+                size={20}
+                color={colors.text}
               />
             </TouchableOpacity>
             <TouchableOpacity onPress={openFilters}>
-              <View className="relative">
-                <Ionicons name="options" size={22} color="white" />
+              <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.tertiary, justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name="options" size={20} color={colors.text} />
                 {(minPrice || maxPrice || inStockOnly) && (
-                  <View className="absolute -top-1 -right-1 bg-red-500 w-3 h-3 rounded-full" />
+                  <View style={{ position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444' }} />
                 )}
               </View>
             </TouchableOpacity>
@@ -484,10 +472,10 @@ export default function CategoryProductsScreen() {
         </View>
 
         {/* Barre de recherche */}
-        <View className="flex-row items-center rounded-xl px-3 py-2 mb-3" style={{ backgroundColor: colors.card }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.tertiary, borderRadius: 15, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 10 }}>
           <Ionicons name="search" size={20} color={colors.textSecondary} />
           <TextInput
-            className="flex-1 ml-2 font-quicksand-medium"
+            className="flex-1 ml-2 font-poppins-medium"
             style={{ color: colors.textPrimary }}
             placeholder={i18n.t("client.category.search.placeholder")}
             placeholderTextColor={colors.textSecondary}
@@ -503,7 +491,7 @@ export default function CategoryProductsScreen() {
                 className="mr-2 rounded-lg px-3 py-1"
                 style={{ backgroundColor: colors.brandPrimary }}
               >
-                <Text className="text-white text-xs font-quicksand-semibold">{i18n.t("client.category.search.button")}</Text>
+                <Text className="text-white text-xs font-poppins-semibold">{i18n.t("client.category.search.button")}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => {
                 setSearchQuery('');
@@ -531,28 +519,22 @@ export default function CategoryProductsScreen() {
             <TouchableOpacity
               key={sort.value}
               onPress={() => setSortBy(sort.value as SortOption)}
-              className="flex-row items-center px-3 py-1.5 rounded-lg"
-              style={{
-                backgroundColor: sortBy === sort.value ? colors.card : 'rgba(255, 255, 255, 0.2)'
-              }}
+              style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, backgroundColor: sortBy === sort.value ? colors.brandPrimary : colors.tertiary }}
             >
               <Ionicons
                 name={sort.icon as any}
                 size={14}
-                color={sortBy === sort.value ? colors.brandPrimary : 'white'}
+                color={sortBy === sort.value ? '#FFFFFF' : colors.textSecondary}
               />
               <Text
-                className="ml-1 text-xs font-quicksand-semibold"
-                style={{
-                  color: sortBy === sort.value ? colors.brandPrimary : 'white'
-                }}
+                style={{ marginLeft: 4, fontSize: 12, fontFamily: 'Poppins-SemiBold', color: sortBy === sort.value ? '#FFFFFF' : colors.textSecondary }}
               >
                 {sort.label}
               </Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
-      </LinearGradient>
+      </View>
 
       {/* Contenu */}
       {loading ? (
@@ -569,10 +551,10 @@ export default function CategoryProductsScreen() {
       ) : products.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
           <Ionicons name="cube-outline" size={64} color={colors.textSecondary} />
-          <Text className="text-lg font-quicksand-bold mt-4" style={{ color: colors.textPrimary }}>
+          <Text className="text-lg font-poppins-bold mt-4" style={{ color: colors.textPrimary }}>
             {i18n.t("client.category.empty.title")}
           </Text>
-          <Text className="font-quicksand-medium text-center mt-2" style={{ color: colors.textSecondary }}>
+          <Text className="font-poppins-medium text-center mt-2" style={{ color: colors.textSecondary }}>
             {i18n.t("client.category.empty.message")}
           </Text>
           {(minPrice || maxPrice || inStockOnly || searchQuery) && (
@@ -580,7 +562,7 @@ export default function CategoryProductsScreen() {
               onPress={handleResetFilters}
               className="mt-4 bg-[#10b981] px-6 py-3 rounded-xl"
             >
-              <Text className="text-white font-quicksand-semibold">{i18n.t("client.category.empty.resetFilters")}</Text>
+              <Text className="text-white font-poppins-semibold">{i18n.t("client.category.empty.resetFilters")}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -616,7 +598,7 @@ export default function CategoryProductsScreen() {
 
           {/* Pagination info */}
           {!loadingMore && products.length > 0 && (
-            <Text className="text-center font-quicksand-medium text-sm mt-4" style={{ color: colors.textSecondary }}>
+            <Text className="text-center font-poppins-medium text-sm mt-4" style={{ color: colors.textSecondary }}>
               {i18n.t("client.category.pagination", { current: currentPage, total: totalPages })}
             </Text>
           )}
@@ -649,7 +631,7 @@ export default function CategoryProductsScreen() {
             </View>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-              <Text className="text-xl font-quicksand-bold" style={{ color: colors.textPrimary }}>
+              <Text className="text-xl font-poppins-bold" style={{ color: colors.textPrimary }}>
                 {i18n.t("client.category.filters.title")}
               </Text>
               <TouchableOpacity
@@ -662,13 +644,13 @@ export default function CategoryProductsScreen() {
 
             <ScrollView showsVerticalScrollIndicator={false}>
               <View style={{ marginBottom: 20 }}>
-                <Text className="text-xs font-quicksand-bold" style={{ color: colors.textSecondary, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                <Text className="text-xs font-poppins-bold" style={{ color: colors.textSecondary, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.6 }}>
                   {i18n.t("client.category.filters.price.label")}
                 </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <TextInput
                     style={{ flex: 1, backgroundColor: colors.secondary, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontSize: 14 }}
-                    className="font-quicksand-medium"
+                    className="font-poppins-medium"
                     placeholder={i18n.t("client.category.filters.price.min")}
                     placeholderTextColor={colors.textSecondary}
                     keyboardType="numeric"
@@ -678,7 +660,7 @@ export default function CategoryProductsScreen() {
                   <Text style={{ color: colors.textSecondary, fontSize: 16 }}>–</Text>
                   <TextInput
                     style={{ flex: 1, backgroundColor: colors.secondary, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontSize: 14 }}
-                    className="font-quicksand-medium"
+                    className="font-poppins-medium"
                     placeholder={i18n.t("client.category.filters.price.max")}
                     placeholderTextColor={colors.textSecondary}
                     keyboardType="numeric"
@@ -692,7 +674,7 @@ export default function CategoryProductsScreen() {
                 onPress={() => setInStockOnly(!inStockOnly)}
                 style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, marginBottom: 20, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.borderLight }}
               >
-                <Text className="text-sm font-quicksand-semibold" style={{ color: colors.textPrimary }}>
+                <Text className="text-sm font-poppins-semibold" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.category.filters.stock")}
                 </Text>
                 <View style={{ width: 48, height: 26, borderRadius: 13, backgroundColor: inStockOnly ? colors.brandPrimary : colors.borderLight, justifyContent: 'center' }}>
@@ -705,7 +687,7 @@ export default function CategoryProductsScreen() {
                   style={{ flex: 1, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.secondary, alignItems: 'center' }}
                   onPress={handleResetFilters}
                 >
-                  <Text className="font-quicksand-semibold" style={{ color: colors.textPrimary }}>
+                  <Text className="font-poppins-semibold" style={{ color: colors.textPrimary }}>
                     {i18n.t("client.category.filters.reset")}
                   </Text>
                 </TouchableOpacity>
@@ -713,7 +695,7 @@ export default function CategoryProductsScreen() {
                   style={{ flex: 1, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.brandPrimary, alignItems: 'center' }}
                   onPress={handleApplyFilters}
                 >
-                  <Text className="text-white font-quicksand-bold">
+                  <Text className="text-white font-poppins-bold">
                     {i18n.t("client.category.filters.apply")}
                   </Text>
                 </TouchableOpacity>

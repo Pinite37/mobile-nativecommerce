@@ -1,5 +1,5 @@
+import { AppHeader } from '@/components/ui/AppHeader';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
@@ -46,34 +46,10 @@ export default function AllCategoriesPage() {
         <View style={{ flex: 1, backgroundColor: colors.secondary }}>
             <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
 
-            <LinearGradient
-                colors={['#047857', '#10B981']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                className="rounded-b-3xl shadow-md"
-                style={{
-                    paddingTop: insets.top + 16,
-                    paddingLeft: insets.left + 24,
-                    paddingRight: insets.right + 24,
-                    paddingBottom: 20
-                }}
-            >
-                <View className="flex-row items-center mb-3">
-                    <TouchableOpacity onPress={() => router.back()} className="mr-3">
-                        <Ionicons name="arrow-back" size={24} color="white" />
-                    </TouchableOpacity>
-                    <View className="flex-1">
-                        <Text className="text-white text-xl font-quicksand-bold">
-                            {i18n.t("enterprise.categories.title")}
-                        </Text>
-                        {!loading && (
-                            <Text className="text-white/80 text-xs font-quicksand-medium mt-1">
-                                {categories.length} {categories.length > 1 ? i18n.t("enterprise.categories.count.plural") : i18n.t("enterprise.categories.count.singular")} {categories.length > 1 ? i18n.t("enterprise.categories.count.availables") : i18n.t("enterprise.categories.count.available")}
-                            </Text>
-                        )}
-                    </View>
-                </View>
-            </LinearGradient>
+            <AppHeader
+                title={i18n.t("enterprise.categories.title")}
+                subtitle={!loading ? `${categories.length} ${categories.length > 1 ? i18n.t("enterprise.categories.count.plural") : i18n.t("enterprise.categories.count.singular")} ${categories.length > 1 ? i18n.t("enterprise.categories.count.availables") : i18n.t("enterprise.categories.count.available")}` : undefined}
+            />
 
             {loading ? (
                 <View className="flex-1 items-center justify-center">
@@ -82,7 +58,7 @@ export default function AllCategoriesPage() {
             ) : categories.length === 0 ? (
                 <View className="flex-1 items-center justify-center px-6">
                     <Ionicons name="file-tray-outline" size={64} color={colors.textSecondary} />
-                    <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 18, marginTop: 16 }}>
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 18, marginTop: 16 }}>
                         {i18n.t("enterprise.categories.empty.title")}
                     </Text>
                 </View>
@@ -128,16 +104,16 @@ export default function AllCategoriesPage() {
                                 </View>
 
                                 <View style={{ flex: 1 }}>
-                                    <Text style={{ color: colors.textPrimary, fontSize: 16, fontFamily: 'Quicksand-Bold', marginBottom: 4 }}>
+                                    <Text style={{ color: colors.textPrimary, fontSize: 16, fontFamily: 'Poppins-Bold', marginBottom: 4 }}>
                                         {category.name}
                                     </Text>
                                     {category.description && (
-                                        <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Quicksand-Medium' }} numberOfLines={1}>
+                                        <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Poppins-Medium' }} numberOfLines={1}>
                                             {category.description}
                                         </Text>
                                     )}
                                     {category.productCount !== undefined && (
-                                        <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Quicksand-Medium', marginTop: 4 }}>
+                                        <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Poppins-Medium', marginTop: 4 }}>
                                             {category.productCount} {category.productCount > 1 ? i18n.t("enterprise.categories.products.plural") : i18n.t("enterprise.categories.products.singular")}
                                         </Text>
                                     )}

@@ -41,11 +41,11 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    "Quicksand-Regular": require("../assets/fonts/Quicksand-Regular.ttf"),
-    "Quicksand-Bold": require("../assets/fonts/Quicksand-Bold.ttf"),
-    "Quicksand-SemiBold": require("../assets/fonts/Quicksand-SemiBold.ttf"),
-    "Quicksand-Medium": require("../assets/fonts/Quicksand-Medium.ttf"),
-    "Quicksand-Light": require("../assets/fonts/Quicksand-Light.ttf"),
+    "Poppins-Regular": require("@expo-google-fonts/poppins/400Regular/Poppins_400Regular.ttf"),
+    "Poppins-Medium": require("@expo-google-fonts/poppins/500Medium/Poppins_500Medium.ttf"),
+    "Poppins-SemiBold": require("@expo-google-fonts/poppins/600SemiBold/Poppins_600SemiBold.ttf"),
+    "Poppins-Bold": require("@expo-google-fonts/poppins/700Bold/Poppins_700Bold.ttf"),
+    "Poppins-Light": require("@expo-google-fonts/poppins/300Light/Poppins_300Light.ttf"),
   });
 
   useEffect(() => {

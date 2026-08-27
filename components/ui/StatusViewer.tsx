@@ -23,6 +23,7 @@ import {
 } from 'react-native';
 import Animated, {
   cancelAnimation,
+  Easing as ReanimatedEasing,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -32,6 +33,8 @@ import StatusService, { StatusGroup, StatusItem } from '../../services/api/Statu
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = require('react-native').Dimensions.get('window');
 const STATUS_DURATION = 15000;
+// Durée à partir de laquelle un appui est considéré comme "long" (pause) plutôt qu'un tap de navigation
+const LONG_PRESS_THRESHOLD = 180;
 
 interface StatusViewerProps {
   visible: boolean;
@@ -80,6 +83,10 @@ export function StatusViewer({
   const [savingCaption, setSavingCaption] = useState(false);
 
   const progress = useSharedValue(0);
+  // Opacité des barres de progression : masquées pendant un appui long
+  const barsOpacity = useSharedValue(1);
+  const hideBarsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pressStartTimeRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const elapsedRef = useRef(0);
   const startTimeRef = useRef(0);
@@ -271,8 +278,16 @@ export function StatusViewer({
     width: `${progress.value * 100}%`,
   }));
 
+  const barsStyle = useAnimatedStyle(() => ({
+    opacity: barsOpacity.value,
+  }));
+
   const clearTimer = () => {
     if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+  };
+
+  const clearHideBarsTimer = () => {
+    if (hideBarsTimerRef.current) { clearTimeout(hideBarsTimerRef.current); hideBarsTimerRef.current = null; }
   };
 
   const pauseProgress = useCallback(() => {
@@ -363,7 +378,10 @@ export function StatusViewer({
     }
     onViewed(currentStatus._id);
     startOrResume(STATUS_DURATION, 0);
-    return () => { clearTimer(); cancelAnimation(progress); };
+    // Les barres sont toujours visibles à l'ouverture d'un nouveau statut
+    clearHideBarsTimer();
+    barsOpacity.value = 1;
+    return () => { clearTimer(); clearHideBarsTimer(); cancelAnimation(progress); };
   }, [visible, groupIndex, statusIndex]);
 
   useEffect(() => {
@@ -400,16 +418,32 @@ export function StatusViewer({
 
   const handlePressIn = () => {
     if (inputFocused) return;
+    pressStartTimeRef.current = Date.now();
     pauseProgress();
+    // Masquer les barres + header seulement si l'appui se prolonge (évite le clignotement sur un tap)
+    clearHideBarsTimer();
+    hideBarsTimerRef.current = setTimeout(() => {
+      barsOpacity.value = withTiming(0, {
+        duration: 320,
+        easing: ReanimatedEasing.out(ReanimatedEasing.quad),
+      });
+    }, LONG_PRESS_THRESHOLD);
   };
 
   const handlePressOut = () => {
     if (inputFocused) return;
     resumeProgress();
+    clearHideBarsTimer();
+    barsOpacity.value = withTiming(1, {
+      duration: 160,
+      easing: ReanimatedEasing.out(ReanimatedEasing.quad),
+    });
   };
 
   const handlePress = (e: any) => {
     if (inputFocused || editingCaption) { Keyboard.dismiss(); return; }
+    // Un appui long (relâché après le seuil) ne doit pas déclencher la navigation
+    if (Date.now() - pressStartTimeRef.current > LONG_PRESS_THRESHOLD) return;
     if (e.nativeEvent.pageX < SCREEN_WIDTH * 0.38) goPrev();
     else goNext();
   };
@@ -463,7 +497,7 @@ export function StatusViewer({
     if (status.type === 'TEXT') {
       return (
         <View style={{ flex: 1, backgroundColor: status.backgroundColor, justifyContent: 'center', alignItems: 'center', padding: 32 }}>
-          <Text style={{ color: status.textColor, fontSize: 28, fontFamily: 'Quicksand-Bold', textAlign: 'center', lineHeight: 38 }}>
+          <Text style={{ color: status.textColor, fontSize: 28, fontFamily: 'Poppins-Bold', textAlign: 'center', lineHeight: 38 }}>
             {status.text}
           </Text>
         </View>
@@ -482,7 +516,7 @@ export function StatusViewer({
     if (currentStatus.type === 'TEXT') {
       return (
         <View style={{ flex: 1, backgroundColor: currentStatus.backgroundColor, justifyContent: 'center', alignItems: 'center', padding: 32 }}>
-          <Text style={{ color: currentStatus.textColor, fontSize: 28, fontFamily: 'Quicksand-Bold', textAlign: 'center', lineHeight: 38 }}>
+          <Text style={{ color: currentStatus.textColor, fontSize: 28, fontFamily: 'Poppins-Bold', textAlign: 'center', lineHeight: 38 }}>
             {currentStatus.text}
           </Text>
         </View>
@@ -575,7 +609,7 @@ export function StatusViewer({
                     <Ionicons name="pencil" size={14} color="rgba(255,255,255,0.6)" />
                   </TouchableOpacity>
                 )}
-                <Text style={{ color: '#fff', fontSize: 15, fontFamily: 'Quicksand-SemiBold', textAlign: 'center', flexShrink: 1 }}>
+                <Text style={{ color: '#fff', fontSize: 15, fontFamily: 'Poppins-SemiBold', textAlign: 'center', flexShrink: 1 }}>
                   {captionText}
                 </Text>
               </View>
@@ -606,7 +640,7 @@ export function StatusViewer({
                 paddingHorizontal: 18,
                 paddingVertical: Platform.OS === 'ios' ? 12 : 8,
                 color: '#fff',
-                fontFamily: 'Quicksand-Medium',
+                fontFamily: 'Poppins-Medium',
                 fontSize: 15,
                 borderWidth: 1,
                 borderColor: 'rgba(255,255,255,0.3)',
@@ -625,7 +659,10 @@ export function StatusViewer({
         )}
 
         {/* Barres de progression */}
-        <View style={{ position: 'absolute', top: insets.top + 8, left: 8, right: 8, flexDirection: 'row', gap: 3 }}>
+        <Animated.View
+          pointerEvents="none"
+          style={[{ position: 'absolute', top: insets.top + 8, left: 8, right: 8, flexDirection: 'row', gap: 3 }, barsStyle]}
+        >
           {currentGroup.statuses.map((_, i) => (
             <View key={i} style={{ flex: 1, height: 2.5, backgroundColor: 'rgba(255,255,255,0.35)', borderRadius: 2, overflow: 'hidden' }}>
               {i < statusIndex && <View style={{ flex: 1, backgroundColor: '#fff' }} />}
@@ -634,10 +671,10 @@ export function StatusViewer({
               )}
             </View>
           ))}
-        </View>
+        </Animated.View>
 
         {/* Header */}
-        <View style={{ position: 'absolute', top: insets.top + 20, left: 12, right: 12, flexDirection: 'row', alignItems: 'center' }}>
+        <Animated.View style={[{ position: 'absolute', top: insets.top + 20, left: 12, right: 12, flexDirection: 'row', alignItems: 'center' }, barsStyle]}>
           <View style={{ width: 36, height: 36, borderRadius: 18, overflow: 'hidden', backgroundColor: '#333', marginRight: 10 }}>
             {currentGroup.enterprise.profileImage ? (
               <Image source={{ uri: currentGroup.enterprise.profileImage }} style={{ width: 36, height: 36 }} contentFit="cover" />
@@ -648,22 +685,19 @@ export function StatusViewer({
             )}
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ color: '#fff', fontFamily: 'Quicksand-Bold', fontSize: 14 }}>
+            <Text style={{ color: '#fff', fontFamily: 'Poppins-Bold', fontSize: 14 }}>
               {currentGroup.enterprise.companyName || `${currentGroup.enterprise.firstName} ${currentGroup.enterprise.lastName}`}
             </Text>
           </View>
           {isMyGroup && onDelete && (
             <TouchableOpacity
               onPress={() => setConfirmDeleteVisible(true)}
-              style={{ marginRight: 8, padding: 6 }}
+              style={{ padding: 6 }}
             >
               <Ionicons name="trash-outline" size={20} color="#fff" />
             </TouchableOpacity>
           )}
-          <TouchableOpacity onPress={onClose} style={{ padding: 6 }}>
-            <Ionicons name="close" size={24} color="#fff" />
-          </TouchableOpacity>
-        </View>
+        </Animated.View>
 
         {/* Bas : vues (si mon statut) ou input de réponse (si statut d'un autre) */}
         <View
@@ -674,7 +708,7 @@ export function StatusViewer({
             /* Compteur de vues */
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <Ionicons name="eye-outline" size={18} color="rgba(255,255,255,0.85)" />
-              <Text style={{ color: 'rgba(255,255,255,0.85)', fontFamily: 'Quicksand-SemiBold', fontSize: 14 }}>
+              <Text style={{ color: 'rgba(255,255,255,0.85)', fontFamily: 'Poppins-SemiBold', fontSize: 14 }}>
                 {currentStatus.viewCount ?? 0} vue{(currentStatus.viewCount ?? 0) !== 1 ? 's' : ''}
               </Text>
             </View>
@@ -696,7 +730,7 @@ export function StatusViewer({
                   paddingHorizontal: 18,
                   paddingVertical: Platform.OS === 'ios' ? 12 : 8,
                   color: '#fff',
-                  fontFamily: 'Quicksand-Medium',
+                  fontFamily: 'Poppins-Medium',
                   fontSize: 15,
                   borderWidth: 1,
                   borderColor: 'rgba(255,255,255,0.3)',

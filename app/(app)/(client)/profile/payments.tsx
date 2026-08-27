@@ -69,7 +69,7 @@ export default function PaymentsScreen() {
         >
           <Ionicons name="arrow-back" size={20} color="#374151" />
         </TouchableOpacity>
-        <Text className="text-xl font-quicksand-bold text-neutral-800">
+        <Text className="text-xl font-poppins-bold text-neutral-800">
           Moyens de paiement
         </Text>
       </View>
@@ -93,12 +93,12 @@ export default function PaymentsScreen() {
                   </View>
                   <View>
                     <View className="flex-row items-center">
-                      <Text className="text-base font-quicksand-bold text-neutral-800 mr-2">
+                      <Text className="text-base font-poppins-bold text-neutral-800 mr-2">
                         {method.name}
                       </Text>
                       {method.isDefault && (
                         <View className="bg-primary/10 px-2 py-1 rounded">
-                          <Text className="text-xs font-quicksand-bold text-primary">
+                          <Text className="text-xs font-poppins-bold text-primary">
                             Par défaut
                           </Text>
                         </View>
@@ -131,7 +131,7 @@ export default function PaymentsScreen() {
 
               {!method.isDefault && (
                 <TouchableOpacity className="mt-3">
-                  <Text className="text-primary font-quicksand-semibold">
+                  <Text className="text-primary font-poppins-semibold">
                     Définir par défaut
                   </Text>
                 </TouchableOpacity>
@@ -144,7 +144,7 @@ export default function PaymentsScreen() {
         <View className="mb-8">
           <TouchableOpacity className="bg-white rounded-2xl p-4 flex-row items-center justify-center">
             <Ionicons name="add-circle" size={24} color="#FE8C00" />
-            <Text className="text-primary font-quicksand-bold text-base ml-2">
+            <Text className="text-primary font-poppins-bold text-base ml-2">
               Ajouter un moyen de paiement
             </Text>
           </TouchableOpacity>
@@ -154,7 +154,7 @@ export default function PaymentsScreen() {
         <View className="bg-gray-50 rounded-xl p-4 mb-6">
           <View className="flex-row items-center mb-2">
             <Ionicons name="shield-checkmark-outline" size={20} color="#10B981" />
-            <Text className="text-base font-quicksand-bold text-neutral-800 ml-2">
+            <Text className="text-base font-poppins-bold text-neutral-800 ml-2">
               Paiements sécurisés
             </Text>
           </View>

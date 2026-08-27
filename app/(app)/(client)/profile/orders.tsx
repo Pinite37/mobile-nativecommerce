@@ -123,7 +123,7 @@ export default function OrdersScreen() {
         >
           <Ionicons name="arrow-back" size={20} color="#374151" />
         </TouchableOpacity>
-        <Text className="text-xl font-quicksand-bold text-neutral-800">
+        <Text className="text-xl font-poppins-bold text-neutral-800">
           Mes commandes
         </Text>
       </View>
@@ -137,7 +137,7 @@ export default function OrdersScreen() {
           }`}
         >
           <Text
-            className={`font-quicksand-medium ${
+            className={`font-poppins-medium ${
               activeTab === "all" ? "text-primary" : "text-gray-500"
             }`}
           >
@@ -151,7 +151,7 @@ export default function OrdersScreen() {
           }`}
         >
           <Text
-            className={`font-quicksand-medium ${
+            className={`font-poppins-medium ${
               activeTab === "processing" ? "text-primary" : "text-gray-500"
             }`}
           >
@@ -165,7 +165,7 @@ export default function OrdersScreen() {
           }`}
         >
           <Text
-            className={`font-quicksand-medium ${
+            className={`font-poppins-medium ${
               activeTab === "delivered" ? "text-primary" : "text-gray-500"
             }`}
           >
@@ -179,7 +179,7 @@ export default function OrdersScreen() {
           }`}
         >
           <Text
-            className={`font-quicksand-medium ${
+            className={`font-poppins-medium ${
               activeTab === "cancelled" ? "text-primary" : "text-gray-500"
             }`}
           >
@@ -201,7 +201,7 @@ export default function OrdersScreen() {
           >
             <View className="flex-row justify-between items-center mb-2">
               <View className="flex-row items-center">
-                <Text className="text-base font-quicksand-bold text-neutral-800">
+                <Text className="text-base font-poppins-bold text-neutral-800">
                   {item.id}
                 </Text>
                 <View
@@ -209,7 +209,7 @@ export default function OrdersScreen() {
                   style={{ backgroundColor: `${getStatusColor(item.status)}20` }}
                 >
                   <Text
-                    className="text-xs font-quicksand-bold"
+                    className="text-xs font-poppins-bold"
                     style={{ color: getStatusColor(item.status) }}
                   >
                     {getStatusText(item.status)}
@@ -235,7 +235,7 @@ export default function OrdersScreen() {
                 ))}
                 {item.items.length > 3 && (
                   <View className="w-12 h-12 rounded-md bg-gray-100 justify-center items-center">
-                    <Text className="font-quicksand-bold text-neutral-700">
+                    <Text className="font-poppins-bold text-neutral-700">
                       +{item.items.length - 3}
                     </Text>
                   </View>
@@ -244,11 +244,11 @@ export default function OrdersScreen() {
             </View>
 
             <View className="flex-row justify-between items-center mt-3">
-              <Text className="text-sm font-quicksand-medium text-neutral-600">
+              <Text className="text-sm font-poppins-medium text-neutral-600">
                 {item.totalItems} {item.totalItems > 1 ? 'articles' : 'article'}
               </Text>
               <View className="flex-row items-center">
-                <Text className="text-base font-quicksand-bold text-neutral-800">
+                <Text className="text-base font-poppins-bold text-neutral-800">
                   {formatPrice(item.totalAmount)}
                 </Text>
                 <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
@@ -258,12 +258,12 @@ export default function OrdersScreen() {
             {item.status === "delivered" && (
               <View className="mt-3 flex-row">
                 <TouchableOpacity className="flex-1 bg-primary/10 py-2 rounded-lg mr-2">
-                  <Text className="text-center text-primary font-quicksand-semibold">
+                  <Text className="text-center text-primary font-poppins-semibold">
                     Acheter à nouveau
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity className="flex-1 bg-neutral-100 py-2 rounded-lg">
-                  <Text className="text-center text-neutral-700 font-quicksand-semibold">
+                  <Text className="text-center text-neutral-700 font-poppins-semibold">
                     Évaluer
                   </Text>
                 </TouchableOpacity>

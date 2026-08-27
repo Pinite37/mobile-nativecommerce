@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from 'expo-image-picker';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {

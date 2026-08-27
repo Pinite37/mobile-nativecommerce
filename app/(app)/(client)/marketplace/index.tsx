@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -54,6 +53,30 @@ export default function ClientMarketplacePage() {
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const slideAnim = useRef(new Animated.Value(500)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
+  const viewToggleScale = useRef(new Animated.Value(1)).current;
+  const contentOpacity = useRef(new Animated.Value(1)).current;
+  const pendingFadeInRef = useRef(false);
+
+  const handleToggleViewMode = useCallback(() => {
+    Animated.sequence([
+      Animated.timing(viewToggleScale, { toValue: 0.8, duration: 90, useNativeDriver: true }),
+      Animated.spring(viewToggleScale, { toValue: 1, friction: 4, useNativeDriver: true }),
+    ]).start();
+    // Fondu de la grille de produits : disparition, puis changement d'état, puis réapparition
+    Animated.timing(contentOpacity, { toValue: 0, duration: 140, useNativeDriver: true }).start(() => {
+      pendingFadeInRef.current = true;
+      setViewMode((prev) => (prev === 'grid' ? 'list' : 'grid'));
+    });
+  }, [viewToggleScale, contentOpacity]);
+
+  // Le fondu d'apparition démarre seulement une fois que React a bien committé le nouveau
+  // format (évite de voir l'ancien format flasher avant le nouveau)
+  useEffect(() => {
+    if (pendingFadeInRef.current) {
+      pendingFadeInRef.current = false;
+      Animated.timing(contentOpacity, { toValue: 1, duration: 220, useNativeDriver: true }).start();
+    }
+  }, [viewMode, contentOpacity]);
 
   const openFilters = useCallback(() => {
     setFilterModalVisible(true);
@@ -336,19 +359,19 @@ export default function ClientMarketplacePage() {
           </TouchableOpacity>
           {item.stock === 0 && (
             <View className="absolute top-2 left-2 bg-red-500 px-2 py-1 rounded-lg">
-              <Text className="text-white text-xs font-quicksand-bold">{i18n.t("client.marketplace.product.outOfStock")}</Text>
+              <Text className="text-white text-xs font-poppins-bold">{i18n.t("client.marketplace.product.outOfStock")}</Text>
             </View>
           )}
         </View>
         <View className="mt-2">
-          <Text className="text-sm font-quicksand-semibold" style={{ color: colors.text }} numberOfLines={2}>
+          <Text className="text-sm font-poppins-semibold" style={{ color: colors.text }} numberOfLines={2}>
             {item.name}
           </Text>
-          <Text className="text-lg font-quicksand-bold mt-1" style={{ color: colors.brandPrimary }}>
+          <Text className="text-lg font-poppins-bold mt-1" style={{ color: colors.brandPrimary }}>
             {formatPrice(item.price)}
           </Text>
           {enterprise && (
-            <Text className="text-xs font-quicksand-medium mt-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
+            <Text className="text-xs font-poppins-medium mt-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
               {enterprise.companyName}
             </Text>
           )}
@@ -384,13 +407,13 @@ export default function ClientMarketplacePage() {
           />
           {item.stock === 0 && (
             <View className="absolute inset-0 rounded-xl items-center justify-center" style={{ backgroundColor: isDark ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.5)' }}>
-              <Text className="text-white text-xs font-quicksand-bold">{i18n.t("client.marketplace.product.outOfStock")}</Text>
+              <Text className="text-white text-xs font-poppins-bold">{i18n.t("client.marketplace.product.outOfStock")}</Text>
             </View>
           )}
         </View>
         <View className="flex-1">
           <View className="flex-row justify-between items-start">
-            <Text className="text-sm font-quicksand-semibold flex-1" style={{ color: colors.text }} numberOfLines={2}>
+            <Text className="text-sm font-poppins-semibold flex-1" style={{ color: colors.text }} numberOfLines={2}>
               {item.name}
             </Text>
             <TouchableOpacity onPress={() => toggleFavorite(item._id)} className="ml-2">
@@ -401,11 +424,11 @@ export default function ClientMarketplacePage() {
               />
             </TouchableOpacity>
           </View>
-          <Text className="text-lg font-quicksand-bold mt-1" style={{ color: colors.brandPrimary }}>
+          <Text className="text-lg font-poppins-bold mt-1" style={{ color: colors.brandPrimary }}>
             {formatPrice(item.price)}
           </Text>
           {enterprise && (
-            <Text className="text-xs font-quicksand-medium mt-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
+            <Text className="text-xs font-poppins-medium mt-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
               {enterprise.companyName}
             </Text>
           )}
@@ -418,59 +441,55 @@ export default function ClientMarketplacePage() {
     <View className="flex-1" style={{ backgroundColor: colors.background }}>
       <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
 
-      {/* Header vert conventionnel avec gradient */}
-      <LinearGradient
-        colors={['#059669', '#10B981']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        className="rounded-b-3xl shadow-md"
-        style={{
-          paddingTop: insets.top + 16,
-          paddingLeft: insets.left + 24,
-          paddingRight: insets.right + 24,
-          paddingBottom: 16
-        }}
-      >
-        <View className="flex-row items-center justify-between mb-4">
+      {/* Header */}
+      <View style={{
+        backgroundColor: colors.surface,
+        paddingTop: insets.top + 16,
+        paddingHorizontal: 20,
+        paddingBottom: 14,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.borderLight,
+      }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
           <TouchableOpacity
             onPress={() => router.back()}
-            className="mr-3"
+            style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: colors.tertiary, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}
           >
-            <Ionicons name="arrow-back" size={24} color="white" />
+            <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
-          <View className="flex-1">
-            <Text className="text-white text-lg font-quicksand-bold" numberOfLines={1}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 20, color: colors.textPrimary }} numberOfLines={1}>
               {i18n.t("client.marketplace.title")}
             </Text>
             {!loading && (
-              <Text className="text-white/80 text-sm font-quicksand-medium">
+              <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 13, color: colors.textSecondary }}>
                 {i18n.t(totalProducts === 1 ? "client.marketplace.subtitle.singular" : "client.marketplace.subtitle.plural", { count: totalProducts })}
               </Text>
             )}
           </View>
-          <View className="flex-row items-center">
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <TouchableOpacity
-              onPress={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-              className="mr-3"
+              onPress={handleToggleViewMode}
+              style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: colors.tertiary, alignItems: 'center', justifyContent: 'center' }}
             >
-              <Ionicons
-                name={viewMode === 'grid' ? 'list' : 'grid'}
-                size={22}
-                color="white"
-              />
+              <Animated.View style={{ transform: [{ scale: viewToggleScale }] }}>
+                <Ionicons name={viewMode === 'grid' ? 'grid' : 'list'} size={20} color={colors.textPrimary} />
+              </Animated.View>
             </TouchableOpacity>
-            <TouchableOpacity onPress={openFilters}>
-              <Ionicons name="options" size={22} color="white" />
+            <TouchableOpacity
+              onPress={openFilters}
+              style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: colors.tertiary, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Ionicons name="options" size={20} color={colors.textPrimary} />
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Barre de recherche */}
-        <View className="flex-row items-center rounded-xl px-3 py-2 mb-3" style={{ backgroundColor: colors.card }}>
-          <Ionicons name="search" size={20} color={isDark ? colors.textTertiary : "#6B7280"} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.tertiary, borderRadius: 15, height: 48, paddingHorizontal: 14, marginBottom: 12 }}>
+          <Ionicons name="search" size={20} color={colors.textTertiary} />
           <TextInput
-            className="flex-1 ml-2 font-quicksand-medium"
-            style={{ color: colors.text }}
+            style={{ flex: 1, marginLeft: 8, color: colors.textPrimary, fontFamily: 'Poppins-Medium', fontSize: 14 }}
             placeholder={i18n.t("client.marketplace.search.placeholder")}
             placeholderTextColor={colors.textTertiary}
             value={searchQuery}
@@ -482,28 +501,19 @@ export default function ClientMarketplacePage() {
             <>
               <TouchableOpacity
                 onPress={handleSearch}
-                className="mr-2 rounded-lg px-3 py-1"
-                style={{ backgroundColor: colors.brandPrimary }}
+                style={{ marginRight: 8, backgroundColor: colors.brandPrimary, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}
               >
                 <Ionicons name="search" size={16} color="white" />
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => {
-                setSearchQuery('');
-                setCurrentPage(1);
-                loadMarketplaceProducts(1, false);
-              }}>
-                <Ionicons name="close-circle" size={20} color={isDark ? colors.textTertiary : "#6B7280"} />
+              <TouchableOpacity onPress={() => { setSearchQuery(''); setCurrentPage(1); loadMarketplaceProducts(1, false); }}>
+                <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             </>
           ) : null}
         </View>
 
         {/* Tri rapide */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 8 }}
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
           {[
             { value: 'popular', label: i18n.t("client.marketplace.sort.popular"), icon: 'trending-up' },
             { value: 'newest', label: i18n.t("client.marketplace.sort.newest"), icon: 'time' },
@@ -513,26 +523,16 @@ export default function ClientMarketplacePage() {
             <TouchableOpacity
               key={sort.value}
               onPress={() => setSortBy(sort.value as SortOption)}
-              className="flex-row items-center px-3 py-1.5 rounded-lg"
-              style={{
-                backgroundColor: sortBy === sort.value ? colors.card : (isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.2)')
-              }}
+              style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, backgroundColor: sortBy === sort.value ? colors.brandPrimary : colors.tertiary }}
             >
-              <Ionicons
-                name={sort.icon as any}
-                size={14}
-                color={sortBy === sort.value ? colors.brandPrimary : 'white'}
-              />
-              <Text
-                className="ml-1 text-xs font-quicksand-semibold"
-                style={{ color: sortBy === sort.value ? colors.brandPrimary : 'white' }}
-              >
+              <Ionicons name={sort.icon as any} size={14} color={sortBy === sort.value ? '#fff' : colors.textSecondary} />
+              <Text style={{ marginLeft: 4, fontSize: 12, fontFamily: 'Poppins-SemiBold', color: sortBy === sort.value ? '#fff' : colors.textSecondary }}>
                 {sort.label}
               </Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
-      </LinearGradient>
+      </View>
 
       {/* Contenu */}
       {loading ? (
@@ -549,10 +549,10 @@ export default function ClientMarketplacePage() {
       ) : products.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
           <Ionicons name="cube-outline" size={64} color={isDark ? colors.textTertiary : "#D1D5DB"} />
-          <Text className="text-lg font-quicksand-bold mt-4" style={{ color: colors.textSecondary }}>
+          <Text className="text-lg font-poppins-bold mt-4" style={{ color: colors.textSecondary }}>
             {i18n.t("client.marketplace.empty.title")}
           </Text>
-          <Text className="font-quicksand-medium text-center mt-2" style={{ color: colors.textSecondary }}>
+          <Text className="font-poppins-medium text-center mt-2" style={{ color: colors.textSecondary }}>
             {i18n.t("client.marketplace.empty.message")}
           </Text>
           {(minPrice || maxPrice || inStockOnly || searchQuery) && (
@@ -561,7 +561,7 @@ export default function ClientMarketplacePage() {
               className="mt-4 px-6 py-3 rounded-xl"
               style={{ backgroundColor: colors.brandPrimary }}
             >
-              <Text className="text-white font-quicksand-semibold">{i18n.t("client.marketplace.empty.resetFilters")}</Text>
+              <Text className="text-white font-poppins-semibold">{i18n.t("client.marketplace.empty.resetFilters")}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -585,11 +585,14 @@ export default function ClientMarketplacePage() {
           }}
           scrollEventThrottle={16}
         >
-          <View className={viewMode === 'grid' ? 'flex-row flex-wrap justify-between' : ''}>
+          <Animated.View
+            style={{ opacity: contentOpacity }}
+            className={viewMode === 'grid' ? 'flex-row flex-wrap justify-between' : ''}
+          >
             {products.map((product) =>
               viewMode === 'grid' ? renderProductGrid(product) : renderProductList(product)
             )}
-          </View>
+          </Animated.View>
 
           {/* Indicateur de chargement supplémentaire */}
           {loadingMore && (
@@ -600,7 +603,7 @@ export default function ClientMarketplacePage() {
 
           {/* Pagination info */}
           {!loadingMore && products.length > 0 && (
-            <Text className="text-center font-quicksand-medium text-sm mt-4" style={{ color: colors.textSecondary }}>
+            <Text className="text-center font-poppins-medium text-sm mt-4" style={{ color: colors.textSecondary }}>
               {i18n.t("client.marketplace.pagination", { current: currentPage, total: totalPages })}
             </Text>
           )}
@@ -645,7 +648,7 @@ export default function ClientMarketplacePage() {
             </View>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-              <Text className="text-xl font-quicksand-bold" style={{ color: colors.text }}>
+              <Text className="text-xl font-poppins-bold" style={{ color: colors.text }}>
                 {i18n.t("client.marketplace.filters.title")}
               </Text>
               <TouchableOpacity
@@ -663,7 +666,7 @@ export default function ClientMarketplacePage() {
             <ScrollView showsVerticalScrollIndicator={false}>
               {/* Filtre de prix */}
               <View style={{ marginBottom: 20 }}>
-                <Text className="text-sm font-quicksand-bold" style={{ color: colors.textSecondary, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                <Text className="text-sm font-poppins-bold" style={{ color: colors.textSecondary, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.6 }}>
                   {i18n.t("client.marketplace.filters.price.label")}
                 </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -673,7 +676,7 @@ export default function ClientMarketplacePage() {
                       borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12,
                       color: colors.text, fontSize: 14,
                     }}
-                    className="font-quicksand-medium"
+                    className="font-poppins-medium"
                     placeholder={i18n.t("client.marketplace.filters.price.min")}
                     placeholderTextColor={colors.textTertiary}
                     keyboardType="numeric"
@@ -687,7 +690,7 @@ export default function ClientMarketplacePage() {
                       borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12,
                       color: colors.text, fontSize: 14,
                     }}
-                    className="font-quicksand-medium"
+                    className="font-poppins-medium"
                     placeholder={i18n.t("client.marketplace.filters.price.max")}
                     placeholderTextColor={colors.textTertiary}
                     keyboardType="numeric"
@@ -708,7 +711,7 @@ export default function ClientMarketplacePage() {
                   borderColor: colors.borderLight,
                 }}
               >
-                <Text className="text-sm font-quicksand-semibold" style={{ color: colors.text }}>
+                <Text className="text-sm font-poppins-semibold" style={{ color: colors.text }}>
                   {i18n.t("client.marketplace.filters.stock")}
                 </Text>
                 <View
@@ -737,7 +740,7 @@ export default function ClientMarketplacePage() {
                   }}
                   onPress={handleResetFilters}
                 >
-                  <Text className="font-quicksand-semibold" style={{ color: colors.text }}>
+                  <Text className="font-poppins-semibold" style={{ color: colors.text }}>
                     {i18n.t("client.marketplace.filters.reset")}
                   </Text>
                 </TouchableOpacity>
@@ -749,7 +752,7 @@ export default function ClientMarketplacePage() {
                   }}
                   onPress={handleApplyFilters}
                 >
-                  <Text className="text-white font-quicksand-bold">
+                  <Text className="text-white font-poppins-bold">
                     {i18n.t("client.marketplace.filters.apply")}
                   </Text>
                 </TouchableOpacity>

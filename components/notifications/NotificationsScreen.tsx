@@ -4,8 +4,8 @@ import notificationService, {
 } from "@/services/api/NotificationService";
 import Notifications from "@/services/notificationsModule";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
+import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
@@ -17,6 +17,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AppHeader } from "@/components/ui/AppHeader";
 
 interface NotificationsScreenProps {
   title: string;
@@ -61,7 +62,7 @@ export default function NotificationsScreen({
 }: NotificationsScreenProps) {
   const router = useRouter();
   const { colors, isDark } = useTheme();
-  const insets = useSafeAreaInsets();
+  const insets = useSafeAreaInsets(); // pour paddingBottom
 
   const [notifications, setNotifications] = useState<DisplayNotification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -118,43 +119,8 @@ export default function NotificationsScreen({
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.secondary }}>
-      {/* Header gradient */}
-      <LinearGradient
-        colors={[colors.brandGradientStart, colors.brandGradientEnd]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{
-          paddingTop: insets.top + 12,
-          paddingBottom: 20,
-          paddingHorizontal: 16,
-        }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={{
-              width: 38,
-              height: 38,
-              backgroundColor: "rgba(255,255,255,0.2)",
-              borderRadius: 19,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Ionicons name="chevron-back" size={20} color="#fff" />
-          </TouchableOpacity>
-
-          <Text
-            className="font-quicksand-bold text-white text-lg"
-            style={{ flex: 1, textAlign: "center" }}
-          >
-            {title}
-          </Text>
-
-          {/* Espace équilibrant le bouton back */}
-          <View style={{ width: 38 }} />
-        </View>
-      </LinearGradient>
+      <ExpoStatusBar style={isDark ? "light" : "dark"} />
+      <AppHeader title={title} onBack={() => router.back()} />
 
       {loading ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -209,13 +175,13 @@ export default function NotificationsScreen({
                 />
               </View>
               <Text
-                className="font-quicksand-bold text-base"
+                className="font-poppins-bold text-base"
                 style={{ color: colors.textPrimary, marginBottom: 6 }}
               >
                 Tout est calme ici
               </Text>
               <Text
-                className="font-quicksand-medium text-sm text-center"
+                className="font-poppins-medium text-sm text-center"
                 style={{ color: colors.textSecondary, maxWidth: 260 }}
               >
                 {emptyMessage}
@@ -271,13 +237,13 @@ export default function NotificationsScreen({
                     />
                   )}
                   <Text
-                    className="font-quicksand-bold"
+                    className="font-poppins-bold"
                     style={{ color: colors.textPrimary, fontSize: 14 }}
                   >
                     {item.title}
                   </Text>
                   <Text
-                    className="font-quicksand-medium"
+                    className="font-poppins-medium"
                     style={{
                       color: colors.textSecondary,
                       fontSize: 13,

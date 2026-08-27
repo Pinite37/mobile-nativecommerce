@@ -2,7 +2,6 @@ import { useLocale } from "@/contexts/LocaleContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import i18n from "@/i18n/i18n";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, type Href } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useState } from "react";
@@ -16,7 +15,6 @@ import {
   Text,
   TouchableOpacity,
   View,
-  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
@@ -55,28 +53,6 @@ export default function ProfileScreen() {
     }, [loadUnreadCount])
   );
 
-  const { width } = useWindowDimensions();
-  const isSmallPhone = width < 360;
-  const isTablet = width >= 768 && width < 1024;
-  const isLargeTablet = width >= 1024;
-
-  // Header bottom padding (augmenté pour laisser plus d'espace)
-  const headerBottomPadding = isLargeTablet
-    ? 80
-    : isTablet
-    ? 72
-    : isSmallPhone
-    ? 56
-    : 64;
-
-  // Overlay lift (réduit pour ne pas cacher le contenu du header)
-  const overlayLift = isLargeTablet
-    ? -48
-    : isTablet
-    ? -40
-    : isSmallPhone
-    ? -32
-    : -36;
 
   // Rafraîchir les données utilisateur au chargement de la page
   useEffect(() => {
@@ -170,54 +146,32 @@ export default function ProfileScreen() {
 
   const renderSkeletonProfile = () => (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
-      {/* Header — même gradient que le vrai layout */}
-      <LinearGradient
-        colors={["#047857", "#10B981"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={{ paddingTop: insets.top + 16, paddingHorizontal: 24, paddingBottom: 20 }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <View>
-            <ShimmerBlock style={{ height: 22, borderRadius: 11, width: 120, marginBottom: 8, backgroundColor: "rgba(255,255,255,0.25)" }} />
-            <ShimmerBlock style={{ height: 14, borderRadius: 7, width: 90, backgroundColor: "rgba(255,255,255,0.18)" }} />
-          </View>
-          <ShimmerBlock style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.25)" }} />
+      {/* Hero skeleton */}
+      <View style={{ backgroundColor: '#065F46', paddingTop: insets.top + 16, overflow: 'hidden' }}>
+        <View style={{ position: 'absolute', top: -70, right: -40, width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(255,255,255,0.06)' }} />
+        <View style={{ position: 'absolute', bottom: -20, left: -50, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(255,255,255,0.04)' }} />
+        <View style={{ alignItems: 'center', paddingHorizontal: 24, paddingBottom: 32, paddingTop: 8 }}>
+          <ShimmerBlock style={{ width: 86, height: 86, borderRadius: 43, marginBottom: 14, backgroundColor: 'rgba(255,255,255,0.15)' }} />
+          <ShimmerBlock style={{ height: 16, borderRadius: 8, width: '50%', marginBottom: 8, backgroundColor: 'rgba(255,255,255,0.15)' }} />
+          <ShimmerBlock style={{ height: 12, borderRadius: 6, width: '38%', backgroundColor: 'rgba(255,255,255,0.1)' }} />
         </View>
-      </LinearGradient>
+      </View>
 
-      {/* User card skeleton — correspond au vrai user card */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
-        <View style={{ backgroundColor: colors.card, borderRadius: 20, padding: 20 }}>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            {/* Avatar */}
-            <ShimmerBlock style={{ width: 64, height: 64, borderRadius: 32, marginRight: 16 }} />
-            {/* Nom + email */}
-            <View style={{ flex: 1 }}>
-              <ShimmerBlock style={{ height: 18, borderRadius: 9, width: "70%", marginBottom: 10 }} />
-              <ShimmerBlock style={{ height: 13, borderRadius: 6, width: "55%" }} />
-            </View>
-            {/* Bouton édition */}
-            <ShimmerBlock style={{ width: 36, height: 36, borderRadius: 18, marginLeft: 10 }} />
+      {/* Stats card skeleton */}
+      <View style={{ marginTop: -24, paddingHorizontal: 16, marginBottom: 16 }}>
+        <View style={{ backgroundColor: colors.card, borderRadius: 20, flexDirection: 'row', paddingVertical: 18 }}>
+          <View style={{ flex: 1, alignItems: 'center', gap: 6 }}>
+            <ShimmerBlock style={{ width: 38, height: 20, borderRadius: 10 }} />
+            <ShimmerBlock style={{ width: 70, height: 11, borderRadius: 6 }} />
           </View>
         </View>
       </View>
 
-      {/* Menu skeleton — card unique avec dividers */}
-      <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
+      {/* Menu skeleton */}
+      <View style={{ paddingHorizontal: 16 }}>
         <View style={{ backgroundColor: colors.card, borderRadius: 20, overflow: "hidden" }}>
           {Array.from({ length: 4 }).map((_, i) => (
-            <View
-              key={i}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingHorizontal: 20,
-                paddingVertical: 15,
-                borderBottomWidth: i < 3 ? 1 : 0,
-                borderBottomColor: colors.border,
-              }}
-            >
+            <View key={i} style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 15, borderBottomWidth: i < 3 ? 1 : 0, borderBottomColor: colors.border }}>
               <ShimmerBlock style={{ width: 40, height: 40, borderRadius: 20, marginRight: 14 }} />
               <ShimmerBlock style={{ height: 14, borderRadius: 7, flex: 1 }} />
               <ShimmerBlock style={{ width: 18, height: 18, borderRadius: 9, marginLeft: 12 }} />
@@ -292,7 +246,7 @@ export default function ProfileScreen() {
         <Ionicons name="person-circle-outline" size={72} color="#10B981" />
         <Text
           style={{ color: colors.textPrimary }}
-          className="text-2xl font-quicksand-bold mt-4 text-center"
+          className="text-2xl font-poppins-bold mt-4 text-center"
         >
           Connexion requise
         </Text>
@@ -306,7 +260,7 @@ export default function ProfileScreen() {
           className="mt-6 bg-primary rounded-2xl px-6 py-3"
           onPress={() => router.push("/(auth)/signin")}
         >
-          <Text className="text-white font-quicksand-bold">Se connecter</Text>
+          <Text className="text-white font-poppins-bold">Se connecter</Text>
         </TouchableOpacity>
       </View>
     );
@@ -315,148 +269,79 @@ export default function ProfileScreen() {
   if (loading) {
     return (
       <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
-        <ExpoStatusBar style="light" translucent />
+        <ExpoStatusBar style="light" />
         {renderSkeletonProfile()}
       </View>
     );
   }
 
+  const userInitials = `${user?.firstName?.[0] || ""}${user?.lastName?.[0] || ""}`.toUpperCase() || "?";
+  const userName = user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : i18n.t("client.profile.placeholders.userName");
+
   return (
     <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
-      <ExpoStatusBar style="light" translucent />
+      <ExpoStatusBar style="light" />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 90 }} // Add bottom padding to ensure content isn't hidden by tab bar
+        contentContainerStyle={{ paddingBottom: 90 }}
       >
-        {/* Header */}
-        <LinearGradient
-          colors={["#047857", "#10B981"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          className="px-6"
-          style={{
-            paddingTop: insets.top + 16,
-            paddingLeft: insets.left + 24,
-            paddingRight: insets.right + 24,
-            paddingBottom: 20,
-          }}
-        >
-          <View className="flex-row items-center justify-between">
-            <View>
-              <Text className="text-2xl font-quicksand-bold text-white">
-                {i18n.t("client.profile.title")}
-              </Text>
-              {user && (
-                <View className="flex-row items-center mt-1">
-                  <Ionicons
-                    name="person"
-                    size={14}
-                    color="rgba(255,255,255,0.85)"
-                  />
-                  <Text className="text-sm font-quicksand-medium text-white/90 ml-1">
-                    {user.firstName} {user.lastName}
-                  </Text>
-                </View>
-              )}
-            </View>
-            <TouchableOpacity
-              className="relative"
-              onPress={() => router.push("/(app)/(client)/profile/notifications")}
-            >
-              <Ionicons name="notifications-outline" size={24} color="#FFFFFF" />
-              {unreadCount > 0 && (
-                <View className="absolute -top-1 -right-1 w-3 h-3 bg-error-500 rounded-full" />
-              )}
-            </TouchableOpacity>
-          </View>
-        </LinearGradient>
+        {/* Hero Section */}
+        <View style={{ backgroundColor: '#065F46', overflow: 'hidden' }}>
+          {/* Decorative circles */}
+          <View style={{ position: 'absolute', top: -70, right: -40, width: 230, height: 230, borderRadius: 115, backgroundColor: 'rgba(255,255,255,0.07)' }} />
+          <View style={{ position: 'absolute', top: 40, right: 60, width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(255,255,255,0.05)' }} />
+          <View style={{ position: 'absolute', bottom: -30, left: -50, width: 190, height: 190, borderRadius: 95, backgroundColor: 'rgba(255,255,255,0.05)' }} />
 
-        {/* User Card */}
-        <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
-          <View style={{ backgroundColor: colors.card, borderRadius: 20, padding: 20 }}>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              {user?.profileImage ? (
-                <Image
-                  source={{ uri: user.profileImage }}
-                  style={{ width: 64, height: 64, borderRadius: 32, marginRight: 16 }}
-                  resizeMode="cover"
-                />
-              ) : (
-                <View
-                  style={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: 32,
-                    backgroundColor: isDark ? "#1f2937" : "#F3F4F6",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginRight: 16,
-                  }}
-                >
-                  <Text className="font-quicksand-bold text-xl" style={{ color: colors.brandPrimary }}>
-                    {user?.firstName?.[0]?.toUpperCase() || user?.lastName?.[0]?.toUpperCase() || "?"}
-                  </Text>
-                </View>
-              )}
-              <View style={{ flex: 1 }}>
-                <Text className="text-lg font-quicksand-bold" style={{ color: colors.textPrimary }} numberOfLines={1}>
-                  {user ? `${user.firstName} ${user.lastName}`.trim() : i18n.t("client.profile.placeholders.userName")}
-                </Text>
-                <Text className="text-sm font-quicksand-medium mt-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
-                  {user?.email || i18n.t("client.profile.placeholders.email")}
-                </Text>
+          {/* Edit button */}
+          <TouchableOpacity
+            onPress={() => router.push("/(app)/(client)/profile/details")}
+            style={{ position: 'absolute', top: insets.top + 16, right: 20, zIndex: 10, width: 38, height: 38, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Ionicons name="create" size={17} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          {/* Avatar + name */}
+          <View style={{ alignItems: 'center', paddingTop: insets.top + 20, paddingBottom: 60, paddingHorizontal: 24 }}>
+            <View style={{ position: 'relative', marginBottom: 14 }}>
+              <View style={{ width: 86, height: 86, borderRadius: 43, borderWidth: 3, borderColor: 'rgba(255,255,255,0.4)', alignItems: 'center', justifyContent: 'center' }}>
+                {user?.profileImage ? (
+                  <Image source={{ uri: user.profileImage }} style={{ width: 80, height: 80, borderRadius: 40 }} resizeMode="cover" />
+                ) : (
+                  <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 28, color: '#FFFFFF' }}>{userInitials}</Text>
+                  </View>
+                )}
               </View>
-              <TouchableOpacity
-                onPress={() => router.push("/(app)/(client)/profile/details")}
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
-                  backgroundColor: isDark ? colors.brandPrimary + "20" : "#D1FAE5",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginLeft: 10,
-                }}
-              >
-                <Ionicons name="create-outline" size={17} color={colors.brandPrimary} />
-              </TouchableOpacity>
             </View>
+            <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 20, color: '#FFFFFF', textAlign: 'center' }} numberOfLines={1}>
+              {userName}
+            </Text>
+            <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4 }} numberOfLines={1}>
+              {user?.email || i18n.t("client.profile.placeholders.email")}
+            </Text>
           </View>
         </View>
 
-        {/* Stat — entreprises suivies */}
-        <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
+        {/* Stats card — overlap hero */}
+        <View style={{ marginTop: -46, paddingHorizontal: 16 }}>
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={() => router.push('/(app)/(client)/marketplace')}
-            style={{
-              backgroundColor: colors.card,
-              borderRadius: 16,
-              paddingVertical: 16,
-              paddingHorizontal: 20,
-              flexDirection: 'row',
-              alignItems: 'center',
-              borderWidth: 1,
-              borderColor: colors.border,
-            }}
+            style={{ backgroundColor: isDark ? colors.cardElevated : colors.card, borderRadius: 22, flexDirection: 'row', alignItems: 'center', paddingVertical: 18, paddingHorizontal: 20, borderWidth: isDark ? 1 : 0, borderColor: 'rgba(255,255,255,0.08)', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: isDark ? 0.45 : 0.12, shadowRadius: 18, elevation: 8 }}
           >
-            <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: isDark ? 'rgba(16,185,129,0.15)' : '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginRight: 14 }}>
-              <Ionicons name="storefront-outline" size={22} color="#10B981" />
+            <View style={{ width: 42, height: 42, borderRadius: 14, backgroundColor: isDark ? 'rgba(16,185,129,0.15)' : '#D1FAE5', alignItems: 'center', justifyContent: 'center', marginRight: 14 }}>
+              <Ionicons name="storefront-outline" size={20} color={colors.brandPrimary} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 12 }}>
-                Entreprises suivies
-              </Text>
-              <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-Bold', fontSize: 22, lineHeight: 28 }}>
-                {followingList.length}
-              </Text>
+              <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 22, color: colors.textPrimary, lineHeight: 26 }}>{followingList.length}</Text>
+              <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 12, color: colors.textSecondary }}>Entreprises suivies</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
           </TouchableOpacity>
         </View>
 
         {/* Menu — groupé dans une seule carte */}
-        <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
+        <View style={{ paddingHorizontal: 16, marginTop: 20 }}>
           <View style={{ backgroundColor: colors.card, borderRadius: 20, overflow: "hidden" }}>
             {menuItems.map((item, index) => (
               <TouchableOpacity
@@ -485,7 +370,7 @@ export default function ProfileScreen() {
                   <Ionicons name={item.icon as any} size={20} color={colors.brandPrimary} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text className="font-quicksand-semibold text-base" style={{ color: colors.textPrimary }}>
+                  <Text className="font-poppins-semibold text-base" style={{ color: colors.textPrimary }}>
                     {item.title}
                   </Text>
                 </View>
@@ -517,7 +402,7 @@ export default function ProfileScreen() {
             }}
           >
             <Ionicons name="log-out-outline" size={20} color="#EF4444" />
-            <Text className="font-quicksand-semibold" style={{ color: "#EF4444" }}>
+            <Text className="font-poppins-semibold" style={{ color: "#EF4444" }}>
               {i18n.t("client.profile.logout.button")}
             </Text>
           </TouchableOpacity>
@@ -533,10 +418,10 @@ export default function ProfileScreen() {
       >
         <View className="flex-1 justify-center items-center bg-black/50 px-4">
           <View className="rounded-2xl p-6 w-full max-w-sm" style={{ backgroundColor: colors.card }}>
-            <Text className="text-xl font-quicksand-bold mb-2" style={{ color: colors.textPrimary }}>
+            <Text className="text-xl font-poppins-bold mb-2" style={{ color: colors.textPrimary }}>
               {confirmationAction?.title}
             </Text>
-            <Text className="text-base font-quicksand-medium mb-6" style={{ color: colors.textSecondary }}>
+            <Text className="text-base font-poppins-medium mb-6" style={{ color: colors.textSecondary }}>
               {confirmationAction?.message}
             </Text>
             <View className="flex-row space-x-3">
@@ -545,7 +430,7 @@ export default function ProfileScreen() {
                 style={{ backgroundColor: colors.secondary }}
                 onPress={closeConfirmation}
               >
-                <Text className="font-quicksand-semibold text-center" style={{ color: colors.textPrimary }}>
+                <Text className="font-poppins-semibold text-center" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.profile.logout.modal.cancel")}
                 </Text>
               </TouchableOpacity>
@@ -554,7 +439,7 @@ export default function ProfileScreen() {
                 style={{ backgroundColor: confirmationAction?.confirmColor }}
                 onPress={executeConfirmedAction}
               >
-                <Text className="text-white font-quicksand-semibold text-center">
+                <Text className="text-white font-poppins-semibold text-center">
                   {confirmationAction?.confirmText}
                 </Text>
               </TouchableOpacity>

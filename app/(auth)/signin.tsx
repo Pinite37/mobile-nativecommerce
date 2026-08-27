@@ -195,16 +195,16 @@ export default function SignInScreen() {
             style={{ width: 120, height: 38, marginBottom: 28 }}
             resizeMode="contain"
           />
-          <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 30, color: colors.textPrimary, lineHeight: 38, marginBottom: 6 }}>
+          <Text style={{ fontFamily: "Poppins-Bold", fontSize: 30, color: colors.textPrimary, lineHeight: 38, marginBottom: 6 }}>
             Bienvenue
           </Text>
-          <Text style={{ fontFamily: "Quicksand-Regular", fontSize: 15, color: colors.textSecondary, marginBottom: 36 }}>
+          <Text style={{ fontFamily: "Poppins-Regular", fontSize: 15, color: colors.textSecondary, marginBottom: 36 }}>
             Connectez-vous à votre compte
           </Text>
 
           {/* Email */}
           <View style={{ marginBottom: 14 }}>
-            <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>
+            <Text style={{ fontFamily: "Poppins-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>
               Email
             </Text>
             <View style={{
@@ -221,14 +221,14 @@ export default function SignInScreen() {
                 placeholderTextColor={colors.textTertiary}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 15, color: colors.textPrimary }}
+                style={{ flex: 1, fontFamily: "Poppins-Medium", fontSize: 15, color: colors.textPrimary }}
               />
             </View>
           </View>
 
           {/* Mot de passe */}
           <View style={{ marginBottom: 10 }}>
-            <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>
+            <Text style={{ fontFamily: "Poppins-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>
               Mot de passe
             </Text>
             <View style={{
@@ -244,7 +244,7 @@ export default function SignInScreen() {
                 placeholder="••••••••"
                 placeholderTextColor={colors.textTertiary}
                 secureTextEntry={!showPassword}
-                style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 15, color: colors.textPrimary }}
+                style={{ flex: 1, fontFamily: "Poppins-Medium", fontSize: 15, color: colors.textPrimary }}
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)} activeOpacity={0.7}>
                 <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={colors.textTertiary} />
@@ -254,7 +254,7 @@ export default function SignInScreen() {
 
           {/* Mot de passe oublié */}
           <TouchableOpacity onPress={handleForgotPassword} style={{ alignSelf: "flex-end", marginBottom: 32 }}>
-            <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 13, color: "#10B981" }}>
+            <Text style={{ fontFamily: "Poppins-SemiBold", fontSize: 13, color: "#10B981" }}>
               Mot de passe oublié ?
             </Text>
           </TouchableOpacity>
@@ -271,18 +271,18 @@ export default function SignInScreen() {
             }}
           >
             {isLoading && <ActivityIndicator size="small" color="#fff" style={{ marginRight: 10 }} />}
-            <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 16, color: "#fff" }}>
-              {isLoading ? "Connexion..." : "Se connecter"}
+            <Text style={{ fontFamily: "Poppins-Bold", fontSize: 16, color: "#fff" }}>
+              {isLoading ? null : "Se connecter"}
             </Text>
           </TouchableOpacity>
 
           {/* Lien inscription */}
           <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
-            <Text style={{ fontFamily: "Quicksand-Regular", fontSize: 14, color: colors.textSecondary }}>
+            <Text style={{ fontFamily: "Poppins-Regular", fontSize: 14, color: colors.textSecondary }}>
               Pas encore de compte ?{" "}
             </Text>
             <TouchableOpacity onPress={handleSignUp}>
-              <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 14, color: "#10B981" }}>
+              <Text style={{ fontFamily: "Poppins-Bold", fontSize: 14, color: "#10B981" }}>
                 S&apos;inscrire
               </Text>
             </TouchableOpacity>

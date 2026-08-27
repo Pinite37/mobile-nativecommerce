@@ -96,13 +96,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 17,
-    fontFamily: 'Quicksand-Bold',
+    fontFamily: 'Poppins-Bold',
     textAlign: 'center',
     marginBottom: 8,
   },
   message: {
     fontSize: 14,
-    fontFamily: 'Quicksand-Medium',
+    fontFamily: 'Poppins-Medium',
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 4,
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   },
   confirmBtnText: {
     color: '#fff',
-    fontFamily: 'Quicksand-Bold',
+    fontFamily: 'Poppins-Bold',
     fontSize: 15,
   },
   cancelBtn: {
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   cancelBtnText: {
-    fontFamily: 'Quicksand-SemiBold',
+    fontFamily: 'Poppins-SemiBold',
     fontSize: 15,
   },
 });

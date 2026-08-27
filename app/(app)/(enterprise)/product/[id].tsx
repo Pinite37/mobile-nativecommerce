@@ -213,11 +213,11 @@ export default function ProductDetails() {
         <Text
           numberOfLines={2}
           style={{ color: colors.textPrimary, fontSize: 12, lineHeight: 17, marginBottom: 6 }}
-          className="font-quicksand-semibold"
+          className="font-poppins-semibold"
         >
           {similarProduct.name}
         </Text>
-        <Text style={{ color: "#10B981", fontSize: 13 }} className="font-quicksand-bold">
+        <Text style={{ color: "#10B981", fontSize: 13 }} className="font-poppins-bold">
           {formatPrice(similarProduct.price)}
         </Text>
       </View>
@@ -395,7 +395,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
 
           <Text
             style={[styles.compactTitle, { color: "#000" }]}
-            className="font-quicksand-bold"
+            className="font-poppins-bold"
             numberOfLines={1}
           >
             {product.name}
@@ -507,10 +507,10 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
             bigTitleStyle,
           ]}
         >
-          <Text style={styles.bigTitle} className="font-quicksand-bold">
+          <Text style={styles.bigTitle} className="font-poppins-bold">
             {product.name}
           </Text>
-          <Text style={styles.subTitle} className="font-quicksand-medium">
+          <Text style={styles.subTitle} className="font-poppins-medium">
             {typeof product.category === "object" && product.category?.name
               ? product.category.name
               : i18n.t("enterprise.productDetails.category.default")}{" "}
@@ -573,12 +573,12 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
 
           {/* Price and Description */}
           <View className="mb-6">
-            <Text className="text-3xl font-quicksand-bold text-primary-600 mb-2">
+            <Text className="text-3xl font-poppins-bold text-primary-600 mb-2">
               {formatPrice(product.price)}
             </Text>
             <Text
               style={{ color: colors.textSecondary }}
-              className="font-quicksand-medium leading-6"
+              className="font-poppins-medium leading-6"
             >
               {product.description}
             </Text>
@@ -625,7 +625,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                 </View>
               )}
               <View style={{ marginLeft: 12, flex: 1 }}>
-                <Text style={{ color: colors.textPrimary, fontSize: 15 }} className="font-quicksand-bold">
+                <Text style={{ color: colors.textPrimary, fontSize: 15 }} className="font-poppins-bold">
                   {typeof product.enterprise === "object"
                     ? product.enterprise.companyName
                     : product.enterprise}
@@ -634,7 +634,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                   product.enterprise.location && (
                     <View style={{ flexDirection: "row", alignItems: "center", marginTop: 3 }}>
                       <Ionicons name="location-sharp" size={12} color={colors.textSecondary} />
-                      <Text style={{ color: colors.textSecondary, fontSize: 12, marginLeft: 3 }} className="font-quicksand-medium">
+                      <Text style={{ color: colors.textSecondary, fontSize: 12, marginLeft: 3 }} className="font-poppins-medium">
                         {product.enterprise.location.city},{" "}
                         {product.enterprise.location.district}
                       </Text>
@@ -675,7 +675,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                       color={isFollowing ? "#8B5CF6" : "#fff"}
                     />
                     <Text
-                      className="font-quicksand-bold text-sm"
+                      className="font-poppins-bold text-sm"
                       style={{ color: isFollowing ? "#8B5CF6" : "#fff" }}
                     >
                       {isFollowing ? "Ne plus suivre" : "Suivre"}
@@ -704,7 +704,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                     }}
                   >
                     <Ionicons name="logo-whatsapp" size={19} color="#16A34A" />
-                    <Text style={{ color: "#16A34A", marginLeft: 7, fontSize: 14 }} className="font-quicksand-bold">
+                    <Text style={{ color: "#16A34A", marginLeft: 7, fontSize: 14 }} className="font-poppins-bold">
                       {i18n.t("enterprise.productDetails.store.whatsapp")}
                     </Text>
                   </TouchableOpacity>
@@ -724,7 +724,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                     }}
                   >
                     <Ionicons name="call" size={19} color="#EA580C" />
-                    <Text style={{ color: "#EA580C", marginLeft: 7, fontSize: 14 }} className="font-quicksand-bold">
+                    <Text style={{ color: "#EA580C", marginLeft: 7, fontSize: 14 }} className="font-poppins-bold">
                       {i18n.t("enterprise.productDetails.store.call")}
                     </Text>
                   </TouchableOpacity>
@@ -756,7 +756,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
               }}
             >
               <Ionicons name="chatbubbles" size={19} color="#fff" />
-              <Text style={{ color: "#fff", marginLeft: 8, fontSize: 15 }} className="font-quicksand-bold">
+              <Text style={{ color: "#fff", marginLeft: 8, fontSize: 15 }} className="font-poppins-bold">
                 {i18n.t("enterprise.productDetails.store.negotiate")}
               </Text>
             </TouchableOpacity>
@@ -767,7 +767,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
             <View style={{ borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border, paddingTop: 20, marginBottom: 8 }}>
               <Text
                 style={{ color: colors.textPrimary, fontSize: 18, marginBottom: 14 }}
-                className="font-quicksand-bold"
+                className="font-poppins-bold"
               >
                 {i18n.t("enterprise.productDetails.similar.title")}
               </Text>
@@ -814,7 +814,7 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
               >
                 <Ionicons name="close" size={20} color="#FFFFFF" />
               </TouchableOpacity>
-              <Text className="text-white font-quicksand-medium">
+              <Text className="text-white font-poppins-medium">
                 {currentImageIndex + 1}/{product.images.length}
               </Text>
               <View className="w-10" />
@@ -899,7 +899,7 @@ const styles = StyleSheet.create({
   compactTitle: {
     color: "#fff",
     fontSize: 18,
-    // fontWeight: "700", // Removed in favor of font-quicksand-bold
+    // fontWeight: "700", // Removed in favor of font-poppins-bold
     flex: 1,
     textAlign: "center",
     marginHorizontal: 10,
@@ -928,7 +928,7 @@ const styles = StyleSheet.create({
   bigTitle: {
     color: "#fff",
     fontSize: 32,
-    // fontWeight: "900", // Removed in favor of font-quicksand-bold
+    // fontWeight: "900", // Removed in favor of font-poppins-bold
     textShadowColor: "rgba(0,0,0,0.7)",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 10,
@@ -937,7 +937,7 @@ const styles = StyleSheet.create({
   subTitle: {
     color: "#eee",
     fontSize: 16,
-    // fontWeight: '600', // Removed in favor of font-quicksand-medium
+    // fontWeight: '600', // Removed in favor of font-poppins-medium
     opacity: 0.9,
     textShadowColor: "rgba(0,0,0,0.5)",
     textShadowOffset: { width: 0, height: 1 },

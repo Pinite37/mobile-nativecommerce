@@ -25,7 +25,7 @@ export function LocationConsentBanner({
           <Ionicons name="location-outline" size={13} color="#9CA3AF" />
           <Text className="text-xs font-quicksand text-neutral-400 ml-1">
             Localisation ignorée —{" "}
-            <Text className="text-primary font-quicksand-medium">
+            <Text className="text-primary font-poppins-medium">
               Utiliser ma position
             </Text>
           </Text>
@@ -58,7 +58,7 @@ export function LocationConsentBanner({
                 Position détectée
               </Text>
               {detectedCity ? (
-                <Text className="font-quicksand-semibold text-emerald-900 text-sm">
+                <Text className="font-poppins-semibold text-emerald-900 text-sm">
                   {detectedCity}
                 </Text>
               ) : (
@@ -86,7 +86,7 @@ export function LocationConsentBanner({
             <Ionicons name="location-outline" size={16} color="#F59E0B" />
           </View>
           <View className="flex-1">
-            <Text className="font-quicksand-medium text-amber-800 text-sm mb-0.5">
+            <Text className="font-poppins-medium text-amber-800 text-sm mb-0.5">
               Localisation désactivée
             </Text>
             <Text className="font-quicksand text-amber-700 text-xs leading-4">
@@ -106,7 +106,7 @@ export function LocationConsentBanner({
             <Ionicons name="warning-outline" size={16} color="#9CA3AF" />
           </View>
           <View className="flex-1">
-            <Text className="font-quicksand-medium text-neutral-700 text-sm mb-0.5">
+            <Text className="font-poppins-medium text-neutral-700 text-sm mb-0.5">
               Position indisponible
             </Text>
             <Text className="font-quicksand text-neutral-500 text-xs">
@@ -120,7 +120,7 @@ export function LocationConsentBanner({
             activeOpacity={0.8}
             className="flex-1 bg-neutral-200 rounded-xl py-2 items-center mr-2"
           >
-            <Text className="font-quicksand-medium text-neutral-700 text-sm">
+            <Text className="font-poppins-medium text-neutral-700 text-sm">
               Réessayer
             </Text>
           </TouchableOpacity>
@@ -146,7 +146,7 @@ export function LocationConsentBanner({
           <Ionicons name="locate-outline" size={18} color="#10B981" />
         </View>
         <View className="flex-1">
-          <Text className="font-quicksand-medium text-neutral-800 text-sm">
+          <Text className="font-poppins-medium text-neutral-800 text-sm">
             Détecter ma ville automatiquement
           </Text>
           <Text className="font-quicksand text-neutral-400 text-xs">
@@ -160,7 +160,7 @@ export function LocationConsentBanner({
           activeOpacity={0.8}
           className="flex-1 bg-emerald-500 rounded-xl py-2.5 items-center mr-2"
         >
-          <Text className="font-quicksand-semibold text-white text-sm">
+          <Text className="font-poppins-semibold text-white text-sm">
             Détecter ma position
           </Text>
         </TouchableOpacity>

@@ -288,7 +288,7 @@ export default function ForgotPasswordScreen() {
           <View className="w-20 h-20 rounded-full items-center justify-center mb-5" style={{ backgroundColor: colors.brandLight }}>
             <Ionicons name={current.icon as any} size={40} color="#10B981" />
           </View>
-          <Text className="text-2xl font-quicksand-bold text-center mb-2" style={{ color: colors.textPrimary }}>
+          <Text className="text-2xl font-poppins-bold text-center mb-2" style={{ color: colors.textPrimary }}>
             {current.title}
           </Text>
           <Text className="text-sm font-quicksand text-center px-4" style={{ color: colors.textSecondary }}>
@@ -323,7 +323,7 @@ export default function ForgotPasswordScreen() {
                 {isSending && (
                   <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
                 )}
-                <Text className="text-white font-quicksand-bold text-base">
+                <Text className="text-white font-poppins-bold text-base">
                   {isSending ? "Envoi en cours..." : "Envoyer le code"}
                 </Text>
               </TouchableOpacity>
@@ -336,7 +336,7 @@ export default function ForgotPasswordScreen() {
               {/* Countdown visuel */}
               <View className="items-center mb-5">
                 <Text
-                  className={`text-sm font-quicksand-semibold ${
+                  className={`text-sm font-poppins-semibold ${
                     countdown === 0
                       ? "text-red-500"
                       : countdown <= 60
@@ -363,7 +363,7 @@ export default function ForgotPasswordScreen() {
                     keyboardType="number-pad"
                     maxLength={index === 0 ? OTP_LENGTH : 1}
                     selectTextOnFocus
-                    className="w-12 h-14 rounded-xl text-center text-xl font-quicksand-bold border-2"
+                    className="w-12 h-14 rounded-xl text-center text-xl font-poppins-bold border-2"
                     style={digit
                       ? { borderColor: '#10B981', backgroundColor: colors.brandLight, color: colors.textPrimary }
                       : { borderColor: colors.border, backgroundColor: colors.secondary, color: colors.textPrimary }}
@@ -380,7 +380,7 @@ export default function ForgotPasswordScreen() {
                   otpCode.length !== OTP_LENGTH ? "bg-emerald-300" : "bg-emerald-500"
                 }`}
               >
-                <Text className="text-white font-quicksand-bold text-base">Continuer</Text>
+                <Text className="text-white font-poppins-bold text-base">Continuer</Text>
               </TouchableOpacity>
 
               {/* Renvoyer */}
@@ -389,7 +389,7 @@ export default function ForgotPasswordScreen() {
                   Vous n&apos;avez pas reçu le code ?
                 </Text>
                 {resendCooldown > 0 ? (
-                  <Text className="text-sm font-quicksand-semibold" style={{ color: colors.textTertiary }}>
+                  <Text className="text-sm font-poppins-semibold" style={{ color: colors.textTertiary }}>
                     Renvoyer dans {resendCooldown}s
                   </Text>
                 ) : (
@@ -397,7 +397,7 @@ export default function ForgotPasswordScreen() {
                     {isResending ? (
                       <ActivityIndicator size="small" color="#10B981" />
                     ) : (
-                      <Text className="text-sm font-quicksand-bold text-emerald-600">
+                      <Text className="text-sm font-poppins-bold text-emerald-600">
                         Renvoyer le code
                       </Text>
                     )}
@@ -475,7 +475,7 @@ export default function ForgotPasswordScreen() {
                 {isSubmitting && (
                   <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
                 )}
-                <Text className="text-white font-quicksand-bold text-base">
+                <Text className="text-white font-poppins-bold text-base">
                   {isSubmitting ? "Réinitialisation..." : "Réinitialiser le mot de passe"}
                 </Text>
               </TouchableOpacity>

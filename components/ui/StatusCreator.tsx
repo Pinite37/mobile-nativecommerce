@@ -234,7 +234,7 @@ export function StatusCreator({ visible, onClose, onCreated }: StatusCreatorProp
             >
               {submitting
                 ? <ActivityIndicator size="small" color="#fff" />
-                : <Text style={{ color: '#fff', fontFamily: 'Quicksand-Bold', fontSize: 15 }}>Publier</Text>}
+                : <Text style={{ color: '#fff', fontFamily: 'Poppins-Bold', fontSize: 15 }}>Publier</Text>}
             </TouchableOpacity>
           </View>
 
@@ -248,7 +248,7 @@ export function StatusCreator({ visible, onClose, onCreated }: StatusCreatorProp
               autoFocus
               maxLength={500}
               style={{
-                color: '#fff', fontFamily: 'Quicksand-Bold', fontSize: 26,
+                color: '#fff', fontFamily: 'Poppins-Bold', fontSize: 26,
                 textAlign: 'center', textAlignVertical: 'center', lineHeight: 36,
               }}
             />
@@ -311,7 +311,7 @@ export function StatusCreator({ visible, onClose, onCreated }: StatusCreatorProp
                 flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
                 borderRadius: 24, paddingHorizontal: 18,
                 paddingVertical: Platform.OS === 'ios' ? 12 : 8,
-                color: '#fff', fontFamily: 'Quicksand-Medium', fontSize: 15,
+                color: '#fff', fontFamily: 'Poppins-Medium', fontSize: 15,
                 borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
               }}
             />
@@ -343,7 +343,7 @@ export function StatusCreator({ visible, onClose, onCreated }: StatusCreatorProp
             <TouchableOpacity onPress={handleClose} style={{ padding: 4, marginRight: 12 }}>
               <Ionicons name="close" size={24} color={colors.textPrimary} />
             </TouchableOpacity>
-            <Text style={{ color: colors.textPrimary, fontSize: 18, fontFamily: 'Quicksand-Bold', flex: 1 }}>
+            <Text style={{ color: colors.textPrimary, fontSize: 18, fontFamily: 'Poppins-Bold', flex: 1 }}>
               Nouveau statut
             </Text>
           </View>
@@ -357,7 +357,7 @@ export function StatusCreator({ visible, onClose, onCreated }: StatusCreatorProp
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 36 }}>
               <Ionicons name="images-outline" size={60} color={colors.textTertiary} />
               <Text style={{
-                color: colors.textSecondary, fontFamily: 'Quicksand-SemiBold',
+                color: colors.textSecondary, fontFamily: 'Poppins-SemiBold',
                 fontSize: 16, textAlign: 'center', marginTop: 18, lineHeight: 24,
               }}>
                 Autorisez l'accès à votre galerie pour choisir une photo
@@ -366,7 +366,7 @@ export function StatusCreator({ visible, onClose, onCreated }: StatusCreatorProp
                 onPress={loadGallery}
                 style={{ marginTop: 22, backgroundColor: '#10B981', borderRadius: 22, paddingHorizontal: 26, paddingVertical: 11 }}
               >
-                <Text style={{ color: '#fff', fontFamily: 'Quicksand-Bold', fontSize: 15 }}>Autoriser</Text>
+                <Text style={{ color: '#fff', fontFamily: 'Poppins-Bold', fontSize: 15 }}>Autoriser</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -408,8 +408,8 @@ export function StatusCreator({ visible, onClose, onCreated }: StatusCreatorProp
                 borderRadius: 26, paddingHorizontal: 28, paddingVertical: 13,
               }}
             >
-              <Text style={{ color: '#fff', fontFamily: 'Quicksand-Bold', fontSize: 17 }}>Aa</Text>
-              <Text style={{ color: '#fff', fontFamily: 'Quicksand-SemiBold', fontSize: 15 }}>Statut texte</Text>
+              <Text style={{ color: '#fff', fontFamily: 'Poppins-Bold', fontSize: 17 }}>Aa</Text>
+              <Text style={{ color: '#fff', fontFamily: 'Poppins-SemiBold', fontSize: 15 }}>Statut texte</Text>
             </TouchableOpacity>
 
             {/* Bouton galerie système — flottant en bas à droite */}

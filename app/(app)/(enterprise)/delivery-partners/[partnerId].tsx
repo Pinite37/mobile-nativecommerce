@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -128,31 +127,23 @@ export default function DeliveryPartnerDetailScreen() {
 
 	const renderSkeletonDetail = () => (
 		<ScrollView className="flex-1">
-			{/* Header avec gradient */}
-			<LinearGradient
-				colors={['#047857', '#10B981']}
-				start={{ x: 0, y: 0 }}
-				end={{ x: 1, y: 0 }}
-				className="px-6 pt-12 pb-8"
-			>
-				<View className="flex-row items-center justify-between mb-6">
-					<TouchableOpacity className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
-						<Ionicons name="arrow-back" size={20} color="#FFFFFF" />
-					</TouchableOpacity>
+			{/* Header skeleton */}
+			<View style={{ backgroundColor: colors.surface, paddingTop: insets.top + 8, paddingLeft: insets.left + 16, paddingRight: insets.right + 16, paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
+				<View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
+					<Shimmer style={{ width: 38, height: 38, borderRadius: 12, marginRight: 10 }} />
 					<Shimmer style={{ height: 20, borderRadius: 10, width: 120 }} />
-					<View className="w-10" />
 				</View>
 
 				{/* Photo de profil skeleton */}
-				<View className="items-center mb-6">
+				<View style={{ alignItems: 'center' }}>
 					<Shimmer style={{ width: 100, height: 100, borderRadius: 50, marginBottom: 16 }} />
 					<Shimmer style={{ height: 18, borderRadius: 9, width: 140, marginBottom: 8 }} />
 					<Shimmer style={{ height: 14, borderRadius: 7, width: 100 }} />
 				</View>
-			</LinearGradient>
+			</View>
 
 			{/* Contenu skeleton */}
-			<View className="px-6 pt-6 -mt-6 rounded-t-[32px]" style={{ backgroundColor: colors.secondary }}>
+			<View className="px-6 pt-6" style={{ backgroundColor: colors.secondary }}>
 				{Array.from({ length: 4 }).map((_, index) => (
 					<View
 						key={index}
@@ -218,16 +209,11 @@ export default function DeliveryPartnerDetailScreen() {
 		}
 
 		return (
-			<LinearGradient
-				colors={['#94A3B8', '#475569']}
-				start={{ x: 0, y: 0 }}
-				end={{ x: 1, y: 1 }}
-				style={circle}
-			>
-				<Text className="text-white font-quicksand-bold" style={{ fontSize: size / 2.8 }}>
+			<View style={[circle, { backgroundColor: colors.tertiary }]}>
+				<Text style={{ fontSize: size / 2.8, fontFamily: 'Poppins-Bold', color: colors.textSecondary }}>
 					{initials}
 				</Text>
-			</LinearGradient>
+			</View>
 		);
 	};
 
@@ -245,37 +231,27 @@ export default function DeliveryPartnerDetailScreen() {
 			<View className="flex-1" style={{ backgroundColor: colors.secondary }}>
 				<ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
 
-				{/* Header avec gradient */}
-				<LinearGradient
-					colors={['#047857', '#10B981']}
-					start={{ x: 0, y: 0 }}
-					end={{ x: 1, y: 0 }}
-					style={{
-						paddingTop: insets.top + 16,
-						paddingBottom: 32,
-						paddingLeft: insets.left + 24,
-						paddingRight: insets.right + 24,
-					}}
-				>
-					<View className="flex-row items-center justify-between mb-6">
+				{/* Header */}
+				<View style={{ backgroundColor: colors.surface, paddingTop: insets.top + 8, paddingLeft: insets.left + 16, paddingRight: insets.right + 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
+					<View style={{ flexDirection: 'row', alignItems: 'center' }}>
 						<TouchableOpacity
 							onPress={() => router.back()}
-							className="w-10 h-10 rounded-full bg-white/20 items-center justify-center"
+							style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.tertiary, justifyContent: 'center', alignItems: 'center', marginRight: 10 }}
 						>
-							<Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+							<Ionicons name="arrow-back" size={20} color={colors.text} />
 						</TouchableOpacity>
-						<Text className="text-xl font-quicksand-bold text-white flex-1 text-center mr-10">
+						<Text style={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: colors.text }}>
 							{i18n.t("enterprise.deliveryPartners.detail.notFound.title")}
 						</Text>
 					</View>
-				</LinearGradient>
+				</View>
 
 				{/* Message d'erreur */}
 				<View className="flex-1 items-center justify-center px-6">
 					<View className="w-20 h-20 rounded-full items-center justify-center mb-4" style={{ backgroundColor: colors.tertiary }}>
 						<Ionicons name="alert-circle" size={32} color={colors.error} />
 					</View>
-					<Text className="font-quicksand-semibold text-lg text-center mb-2" style={{ color: colors.textPrimary }}>
+					<Text className="font-poppins-semibold text-lg text-center mb-2" style={{ color: colors.textPrimary }}>
 						{i18n.t("enterprise.deliveryPartners.detail.notFound.message")}
 					</Text>
 					<Text className="font-quicksand-regular text-center mb-6" style={{ color: colors.textSecondary }}>
@@ -286,7 +262,7 @@ export default function DeliveryPartnerDetailScreen() {
 						className="rounded-xl px-6 py-3"
 						style={{ backgroundColor: colors.brandPrimary }}
 					>
-						<Text className="font-quicksand-semibold text-white">{i18n.t("enterprise.deliveryPartners.detail.notFound.backButton")}</Text>
+						<Text className="font-poppins-semibold text-white">{i18n.t("enterprise.deliveryPartners.detail.notFound.backButton")}</Text>
 					</TouchableOpacity>
 				</View>
 			</View>
@@ -297,31 +273,20 @@ export default function DeliveryPartnerDetailScreen() {
 		<View className="flex-1" style={{ backgroundColor: colors.secondary }}>
 			<ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
 
-			{/* Header fixe avec gradient moderne */}
-			<LinearGradient
-				colors={['#047857', '#10B981']}
-				start={{ x: 0, y: 0 }}
-				end={{ x: 1, y: 0 }}
-				style={{
-					paddingTop: insets.top + 16,
-					paddingBottom: 16,
-					paddingLeft: insets.left + 24,
-					paddingRight: insets.right + 24,
-					zIndex: 10,
-				}}
-			>
-				<View className="flex-row items-center justify-between">
+			{/* Header */}
+			<View style={{ backgroundColor: colors.surface, paddingTop: insets.top + 8, paddingLeft: insets.left + 16, paddingRight: insets.right + 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.borderLight, zIndex: 10 }}>
+				<View style={{ flexDirection: 'row', alignItems: 'center' }}>
 					<TouchableOpacity
 						onPress={() => router.back()}
-						className="w-10 h-10 rounded-full bg-white/20 items-center justify-center"
+						style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.tertiary, justifyContent: 'center', alignItems: 'center', marginRight: 10 }}
 					>
-						<Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+						<Ionicons name="arrow-back" size={20} color={colors.text} />
 					</TouchableOpacity>
-					<Text className="text-xl font-quicksand-bold text-white flex-1 text-center mr-10">
+					<Text style={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: colors.text }}>
 						{i18n.t("enterprise.deliveryPartners.detail.title")}
 					</Text>
 				</View>
-			</LinearGradient>
+			</View>
 
 			<ScrollView
 				className="flex-1"
@@ -337,49 +302,36 @@ export default function DeliveryPartnerDetailScreen() {
 					/>
 				}
 			>
-				{/* Partie supérieure scrollable avec le reste du gradient */}
-				<LinearGradient
-					colors={['#047857', '#10B981']}
-					start={{ x: 0, y: 0 }}
-					end={{ x: 1, y: 0 }}
-					style={{
-						paddingTop: 8,
-						paddingBottom: 32,
-						paddingLeft: insets.left + 24,
-						paddingRight: insets.right + 24,
-					}}
-				>
-					{/* Profil principal */}
-					<View className="items-center">
-						{/* Photo de profil */}
-						<View className="relative mb-4">
-							<Avatar uri={partner.profileImage} firstName={partner.firstName} lastName={partner.lastName} size={100} />
-							<View className={`absolute -bottom-2 -right-2 w-6 h-6 rounded-full border-3`} style={{ backgroundColor: partner.availability ? colors.success : colors.textSecondary, borderColor: 'rgba(255,255,255,0.2)' }} />
-						</View>
-
-						{/* Nom et statut */}
-						<Text className="text-white font-quicksand-bold text-2xl text-center mb-2">
-							{partner.firstName} {partner.lastName}
-						</Text>
-
-						<View className="flex-row items-center space-x-3">
-							<View className={`px-3 py-1 rounded-full ${partner.availability ? '' : ''}`} style={{ backgroundColor: partner.availability ? colors.success + '20' : colors.textSecondary + '20' }}>
-								<Text className={`font-quicksand-semibold text-sm`} style={{ color: partner.availability ? colors.success : colors.textSecondary }}>
-									{partner.availability ? i18n.t("enterprise.deliveryPartners.status.available") : i18n.t("enterprise.deliveryPartners.status.unavailable")}
-								</Text>
-							</View>
-
-							{partner.isVerified && (
-								<View className="px-3 py-1 rounded-full" style={{ backgroundColor: colors.info + '20' }}>
-									<Text className="font-quicksand-semibold text-sm" style={{ color: colors.info }}>✓ {i18n.t("enterprise.deliveryPartners.badges.verified")}</Text>
-								</View>
-							)}
-						</View>
+				{/* Profil principal */}
+				<View style={{ backgroundColor: colors.surface, paddingTop: 20, paddingBottom: 24, paddingLeft: insets.left + 24, paddingRight: insets.right + 24, alignItems: 'center' }}>
+					{/* Photo de profil */}
+					<View style={{ position: 'relative', marginBottom: 16 }}>
+						<Avatar uri={partner.profileImage} firstName={partner.firstName} lastName={partner.lastName} size={100} />
+						<View style={{ position: 'absolute', bottom: -2, right: -2, width: 22, height: 22, borderRadius: 11, backgroundColor: partner.availability ? colors.success : colors.textSecondary, borderWidth: 3, borderColor: colors.surface }} />
 					</View>
-				</LinearGradient>
+
+					{/* Nom et statut */}
+					<Text style={{ fontSize: 22, fontFamily: 'Poppins-Bold', color: colors.text, textAlign: 'center', marginBottom: 8 }}>
+						{partner.firstName} {partner.lastName}
+					</Text>
+
+					<View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+						<View style={{ paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, backgroundColor: partner.availability ? colors.success + '20' : colors.textSecondary + '20' }}>
+							<Text style={{ fontSize: 13, fontFamily: 'Poppins-SemiBold', color: partner.availability ? colors.success : colors.textSecondary }}>
+								{partner.availability ? i18n.t("enterprise.deliveryPartners.status.available") : i18n.t("enterprise.deliveryPartners.status.unavailable")}
+							</Text>
+						</View>
+
+						{partner.isVerified && (
+							<View style={{ paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, backgroundColor: colors.info + '20' }}>
+								<Text style={{ fontSize: 13, fontFamily: 'Poppins-SemiBold', color: colors.info }}>✓ {i18n.t("enterprise.deliveryPartners.badges.verified")}</Text>
+							</View>
+						)}
+					</View>
+				</View>
 
 				{/* Contenu principal */}
-				<View className="px-6 pt-6 -mt-6 rounded-t-[32px]" style={{ backgroundColor: colors.secondary }}>
+				<View className="px-6 pt-6" style={{ backgroundColor: colors.secondary }}>
 					{/* Section informations générales */}
 					<View
 						className="rounded-2xl p-4 mb-4"
@@ -392,7 +344,7 @@ export default function DeliveryPartnerDetailScreen() {
 							elevation: 3,
 						}}
 					>
-						<Text className="font-quicksand-bold text-lg mb-4" style={{ color: colors.textPrimary }}>
+						<Text className="font-poppins-bold text-lg mb-4" style={{ color: colors.textPrimary }}>
 							{i18n.t("enterprise.deliveryPartners.detail.sections.generalInfo")}
 						</Text>
 
@@ -403,8 +355,8 @@ export default function DeliveryPartnerDetailScreen() {
 									<Ionicons name="mail" size={16} color={colors.brandPrimary} />
 								</View>
 								<View className="flex-1">
-									<Text className="font-quicksand-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.email")}</Text>
-									<Text className="font-quicksand-semibold" style={{ color: colors.textPrimary }}>{partner.email}</Text>
+									<Text className="font-poppins-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.email")}</Text>
+									<Text className="font-poppins-semibold" style={{ color: colors.textPrimary }}>{partner.email}</Text>
 								</View>
 							</View>
 						)}
@@ -416,8 +368,8 @@ export default function DeliveryPartnerDetailScreen() {
 									<Ionicons name="call" size={16} color={colors.brandPrimary} />
 								</View>
 								<View className="flex-1">
-									<Text className="font-quicksand-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.phone")}</Text>
-									<Text className="font-quicksand-semibold" style={{ color: colors.textPrimary }}>{partner.phone}</Text>
+									<Text className="font-poppins-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.phone")}</Text>
+									<Text className="font-poppins-semibold" style={{ color: colors.textPrimary }}>{partner.phone}</Text>
 								</View>
 							</View>
 						)}
@@ -429,8 +381,8 @@ export default function DeliveryPartnerDetailScreen() {
 									<Ionicons name="bicycle" size={16} color={colors.brandPrimary} />
 								</View>
 								<View className="flex-1">
-									<Text className="font-quicksand-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.vehicle")}</Text>
-									<Text className="font-quicksand-semibold" style={{ color: colors.textPrimary }}>{partner.vehicleType}</Text>
+									<Text className="font-poppins-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.vehicle")}</Text>
+									<Text className="font-poppins-semibold" style={{ color: colors.textPrimary }}>{partner.vehicleType}</Text>
 								</View>
 							</View>
 						)}
@@ -449,7 +401,7 @@ export default function DeliveryPartnerDetailScreen() {
 								elevation: 3,
 							}}
 						>
-							<Text className="font-quicksand-bold text-lg mb-4" style={{ color: colors.textPrimary }}>
+							<Text className="font-poppins-bold text-lg mb-4" style={{ color: colors.textPrimary }}>
 								{i18n.t("enterprise.deliveryPartners.detail.sections.workingHours")}
 							</Text>
 
@@ -458,8 +410,8 @@ export default function DeliveryPartnerDetailScreen() {
 									<Ionicons name="time" size={16} color={colors.warning} />
 								</View>
 								<View className="flex-1">
-									<Text className="font-quicksand-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.timeRange")}</Text>
-									<Text className="font-quicksand-semibold" style={{ color: colors.textPrimary }}>
+									<Text className="font-poppins-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.timeRange")}</Text>
+									<Text className="font-poppins-semibold" style={{ color: colors.textPrimary }}>
 										{(partner as any).workingHours.start} - {(partner as any).workingHours.end}
 									</Text>
 								</View>
@@ -480,7 +432,7 @@ export default function DeliveryPartnerDetailScreen() {
 								elevation: 3,
 							}}
 						>
-							<Text className="font-quicksand-bold text-lg mb-4" style={{ color: colors.textPrimary }}>
+							<Text className="font-poppins-bold text-lg mb-4" style={{ color: colors.textPrimary }}>
 								{i18n.t("enterprise.deliveryPartners.detail.sections.performance")}
 							</Text>
 
@@ -490,8 +442,8 @@ export default function DeliveryPartnerDetailScreen() {
 										<Ionicons name="star" size={16} color={colors.warning} />
 									</View>
 									<View className="flex-1">
-										<Text className="font-quicksand-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.averageRating")}</Text>
-										<Text className="font-quicksand-semibold" style={{ color: colors.textPrimary }}>
+										<Text className="font-poppins-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.averageRating")}</Text>
+										<Text className="font-poppins-semibold" style={{ color: colors.textPrimary }}>
 											{partner.rating.toFixed(1)} / 5
 										</Text>
 									</View>
@@ -501,7 +453,7 @@ export default function DeliveryPartnerDetailScreen() {
 							{/* Statistiques supplémentaires si disponibles */}
 							{(partner as any).stats && Object.keys((partner as any).stats).length > 0 && (
 								<View className="pt-3" style={{ borderTopColor: colors.borderLight }}>
-									<Text className="font-quicksand-medium text-sm mb-2" style={{ color: colors.textSecondary }}>
+									<Text className="font-poppins-medium text-sm mb-2" style={{ color: colors.textSecondary }}>
 										{i18n.t("enterprise.deliveryPartners.detail.labels.detailedStats")}
 									</Text>
 								</View>
@@ -521,7 +473,7 @@ export default function DeliveryPartnerDetailScreen() {
 							elevation: 3,
 						}}
 					>
-						<Text className="font-quicksand-bold text-lg mb-4" style={{ color: colors.textPrimary }}>
+						<Text className="font-poppins-bold text-lg mb-4" style={{ color: colors.textPrimary }}>
 							{i18n.t("enterprise.deliveryPartners.detail.sections.associationStatus")}
 						</Text>
 
@@ -529,7 +481,7 @@ export default function DeliveryPartnerDetailScreen() {
 							// Loading state for association check
 							<View className="items-center py-4">
 								<ActivityIndicator size="small" color={colors.brandPrimary} />
-								<Text className="font-quicksand-medium text-sm mt-2" style={{ color: colors.textSecondary }}>
+								<Text className="font-poppins-medium text-sm mt-2" style={{ color: colors.textSecondary }}>
 									{i18n.t("enterprise.deliveryPartners.detail.status.checking")}
 								</Text>
 							</View>
@@ -537,11 +489,11 @@ export default function DeliveryPartnerDetailScreen() {
 							<View className="rounded-xl p-4 mb-4" style={{ backgroundColor: colors.success + '20', borderColor: colors.success + '40', borderWidth: 1 }}>
 								<View className="flex-row items-center justify-center mb-2">
 									<Ionicons name="checkmark-circle" size={24} color={colors.success} />
-									<Text className="font-quicksand-bold text-lg ml-2" style={{ color: colors.success }}>
+									<Text className="font-poppins-bold text-lg ml-2" style={{ color: colors.success }}>
 										{i18n.t("enterprise.deliveryPartners.detail.status.associated.title")}
 									</Text>
 								</View>
-								<Text className="font-quicksand-medium text-center mb-4" style={{ color: colors.success }}>
+								<Text className="font-poppins-medium text-center mb-4" style={{ color: colors.success }}>
 									{i18n.t("enterprise.deliveryPartners.detail.status.associated.description")}
 								</Text>
 
@@ -557,7 +509,7 @@ export default function DeliveryPartnerDetailScreen() {
 									) : (
 										<View className="flex-row items-center">
 											<Ionicons name="remove-circle" size={18} color="#FFFFFF" />
-											<Text className="font-quicksand-semibold text-white ml-2">
+											<Text className="font-poppins-semibold text-white ml-2">
 												{i18n.t("enterprise.deliveryPartners.detail.actions.dissociate")}
 											</Text>
 										</View>
@@ -569,11 +521,11 @@ export default function DeliveryPartnerDetailScreen() {
 								<View className="rounded-xl p-4 mb-4" style={{ backgroundColor: colors.tertiary, borderColor: colors.border, borderWidth: 1 }}>
 									<View className="flex-row items-center justify-center mb-2">
 										<Ionicons name="information-circle" size={24} color={colors.textSecondary} />
-										<Text className="font-quicksand-bold text-lg ml-2" style={{ color: colors.textPrimary }}>
+										<Text className="font-poppins-bold text-lg ml-2" style={{ color: colors.textPrimary }}>
 											{i18n.t("enterprise.deliveryPartners.detail.status.notAssociated.title")}
 										</Text>
 									</View>
-									<Text className="font-quicksand-medium text-center" style={{ color: colors.textSecondary }}>
+									<Text className="font-poppins-medium text-center" style={{ color: colors.textSecondary }}>
 										{i18n.t("enterprise.deliveryPartners.detail.status.notAssociated.description")}
 									</Text>
 								</View>
@@ -581,21 +533,15 @@ export default function DeliveryPartnerDetailScreen() {
 								<TouchableOpacity
 									disabled={associating}
 									onPress={handleAssociate}
-									className="rounded-xl py-4 items-center overflow-hidden"
+									style={{ borderRadius: 12, paddingVertical: 14, alignItems: 'center', backgroundColor: colors.brandPrimary }}
 									activeOpacity={0.85}
 								>
-									<LinearGradient
-										colors={['#047857', '#10B981']}
-										start={{ x: 0, y: 0 }}
-										end={{ x: 1, y: 0 }}
-										className="absolute inset-0"
-									/>
 									{associating ? (
 										<ActivityIndicator size="small" color="#FFFFFF" />
 									) : (
-										<View className="flex-row items-center">
+										<View style={{ flexDirection: 'row', alignItems: 'center' }}>
 											<Ionicons name="add-circle" size={20} color="#FFFFFF" />
-											<Text className="font-quicksand-bold text-white ml-2">
+											<Text style={{ fontFamily: 'Poppins-Bold', color: '#FFFFFF', marginLeft: 8 }}>
 												{i18n.t("enterprise.deliveryPartners.detail.actions.associate")}
 											</Text>
 										</View>
@@ -635,10 +581,10 @@ export default function DeliveryPartnerDetailScreen() {
 
 							{/* Content */}
 							<View className="px-6 pb-6">
-								<Text className="text-xl font-quicksand-bold text-center mb-2" style={{ color: colors.textPrimary }}>
+								<Text className="text-xl font-poppins-bold text-center mb-2" style={{ color: colors.textPrimary }}>
 									{i18n.t("enterprise.deliveryPartners.detail.modal.dissociate.title")}
 								</Text>
-								<Text className="text-base font-quicksand-medium text-center leading-5" style={{ color: colors.textSecondary }}>
+								<Text className="text-base font-poppins-medium text-center leading-5" style={{ color: colors.textSecondary }}>
 									{i18n.t("enterprise.deliveryPartners.detail.modal.dissociate.message", { name: `${partner?.firstName} ${partner?.lastName}` })}
 								</Text>
 							</View>
@@ -650,7 +596,7 @@ export default function DeliveryPartnerDetailScreen() {
 									className="flex-1 py-4 rounded-2xl items-center"
 									style={{ backgroundColor: colors.tertiary }}
 								>
-									<Text className="text-base font-quicksand-semibold" style={{ color: colors.textPrimary }}>
+									<Text className="text-base font-poppins-semibold" style={{ color: colors.textPrimary }}>
 										{i18n.t("enterprise.deliveryPartners.detail.modal.dissociate.cancel")}
 									</Text>
 								</TouchableOpacity>
@@ -659,7 +605,7 @@ export default function DeliveryPartnerDetailScreen() {
 									className="flex-1 py-4 rounded-2xl items-center"
 									style={{ backgroundColor: colors.error }}
 								>
-									<Text className="text-base font-quicksand-semibold text-white">
+									<Text className="text-base font-poppins-semibold text-white">
 										{i18n.t("enterprise.deliveryPartners.detail.modal.dissociate.confirm")}
 									</Text>
 								</TouchableOpacity>

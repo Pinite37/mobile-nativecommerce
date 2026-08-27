@@ -272,10 +272,10 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
             <View className="bg-white/20 rounded-full mt-6 p-4 mb-4">
               <Ionicons name="shield-checkmark" size={44} color="#FFFFFF" />
             </View>
-            <Text className="text-3xl font-quicksand-bold text-white text-center mb-2">
+            <Text className="text-3xl font-poppins-bold text-white text-center mb-2">
               Compte entreprise
             </Text>
-            <Text className="text-white/90 font-quicksand-medium text-center text-base">
+            <Text className="text-white/90 font-poppins-medium text-center text-base">
               Fonctionnalité réservée aux comptes entreprise actifs.
             </Text>
           </View>
@@ -287,10 +287,10 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
           showsVerticalScrollIndicator={false}
         >
           <View className="bg-neutral-50 rounded-2xl p-5 border border-neutral-200">
-            <Text className="text-neutral-800 font-quicksand-bold text-base mb-2">
+            <Text className="text-neutral-800 font-poppins-bold text-base mb-2">
               Vérification du compte
             </Text>
-            <Text className="text-neutral-600 font-quicksand-medium text-sm leading-6">
+            <Text className="text-neutral-600 font-poppins-medium text-sm leading-6">
               Si votre abonnement est déjà actif, appuyez sur le bouton ci-dessous pour actualiser votre accès.
             </Text>
           </View>
@@ -308,7 +308,7 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
             ) : (
               <>
                 <Ionicons name="refresh" size={20} color="#FFFFFF" />
-                <Text className="ml-2 text-white font-quicksand-bold text-base">
+                <Text className="ml-2 text-white font-poppins-bold text-base">
                   Actualiser mon accès
                 </Text>
               </>
@@ -321,7 +321,7 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
             className="bg-white border border-neutral-300 rounded-2xl py-4 mt-4 flex-row items-center justify-center"
             activeOpacity={0.8}
           >
-            <Text className="text-neutral-700 font-quicksand-bold text-base">
+            <Text className="text-neutral-700 font-poppins-bold text-base">
               Continuer
             </Text>
           </TouchableOpacity>
@@ -348,10 +348,10 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
             <View className="bg-white/20 rounded-full mt-6 p-4 mb-4">
               <Ionicons name="rocket" size={48} color="#FFFFFF" />
             </View>
-            <Text className="text-3xl font-quicksand-bold text-white text-center mb-2">
+            <Text className="text-3xl font-poppins-bold text-white text-center mb-2">
               Bienvenue{userName ? ` ${userName}` : ''} !
             </Text>
-            <Text className="text-white/90 font-quicksand-medium text-center text-base">
+            <Text className="text-white/90 font-poppins-medium text-center text-base">
               Prêt à développer votre activité ?
             </Text>
           </View>
@@ -367,7 +367,7 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
             <View className="bg-gradient-to-br from-primary-50 to-primary-100 rounded-3xl p-6 mb-6 border-2 border-primary-500">
               <View className="items-center py-8">
                 <ActivityIndicator size="large" color="#10B981" />
-                <Text className="text-neutral-600 font-quicksand-medium mt-4">
+                <Text className="text-neutral-600 font-poppins-medium mt-4">
                   Chargement des informations...
                 </Text>
               </View>
@@ -379,15 +379,15 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
                 <View className="flex-1">
                   <View className="flex-row items-center mb-2">
                     <View className="bg-primary-500 rounded-full px-3 py-1">
-                      <Text className="text-white font-quicksand-bold text-xs">
+                      <Text className="text-white font-poppins-bold text-xs">
                         RECOMMANDÉ
                       </Text>
                     </View>
                   </View>
-                  <Text className="text-2xl font-quicksand-bold text-neutral-800 mb-1">
+                  <Text className="text-2xl font-poppins-bold text-neutral-800 mb-1">
                     {trialPlan?.name || 'Essai Gratuit'}
                   </Text>
-                  <Text className="text-lg font-quicksand-semibold text-primary-600">
+                  <Text className="text-lg font-poppins-semibold text-primary-600">
                     {trialPlan?.price || 'Gratuit'} {trialPlan?.period ? `• ${trialPlan.period}` : '• 1 mois offert'}
                   </Text>
                 </View>
@@ -395,7 +395,7 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
               </View>
 
               <View className="mb-4">
-                <Text className="text-neutral-700 font-quicksand-medium mb-3">
+                <Text className="text-neutral-700 font-poppins-medium mb-3">
                   Découvrez toutes les fonctionnalités sans engagement :
                 </Text>
                 {(trialPlan?.features || []).map((feature, index) => (
@@ -406,7 +406,7 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
                       color="#10B981"
                       style={{ marginTop: 2 }}
                     />
-                    <Text className="ml-2 text-neutral-700 font-quicksand-medium flex-1">
+                    <Text className="ml-2 text-neutral-700 font-poppins-medium flex-1">
                       {feature}
                     </Text>
                   </View>
@@ -425,12 +425,12 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
                   <View className="flex-col items-center">
                     <View className="flex-row items-center mb-2">
                       <ActivityIndicator size="small" color="#FFFFFF" />
-                      <Text className="ml-2 text-white font-quicksand-bold text-base">
+                      <Text className="ml-2 text-white font-poppins-bold text-base">
                         Activation en cours...
                       </Text>
                     </View>
                     {activationProgress && (
-                      <Text className="text-white/80 font-quicksand-medium text-xs">
+                      <Text className="text-white/80 font-poppins-medium text-xs">
                         {activationProgress}
                       </Text>
                     )}
@@ -438,14 +438,14 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
                 ) : (
                   <>
                     <Ionicons name="rocket" size={20} color="#FFFFFF" />
-                    <Text className="ml-2 text-white font-quicksand-bold text-base">
+                    <Text className="ml-2 text-white font-poppins-bold text-base">
                       Commencer l&apos;essai gratuit
                     </Text>
                   </>
                 )}
               </TouchableOpacity>
 
-              <Text className="text-neutral-500 font-quicksand-medium text-xs text-center mt-3">
+              <Text className="text-neutral-500 font-poppins-medium text-xs text-center mt-3">
                 Aucun paiement requis • Annulez à tout moment
               </Text>
 
@@ -453,7 +453,7 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
                 <View className="bg-blue-50 border border-blue-200 rounded-xl p-3 mt-3">
                   <View className="flex-row items-center">
                     <Ionicons name="information-circle" size={16} color="#3B82F6" />
-                    <Text className="ml-2 text-blue-600 font-quicksand-medium text-xs flex-1">
+                    <Text className="ml-2 text-blue-600 font-poppins-medium text-xs flex-1">
                       L&apos;activation peut prendre quelques secondes. Merci de patienter...
                     </Text>
                   </View>
@@ -465,7 +465,7 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
           {/* Divider */}
           <View className="flex-row items-center my-6">
             <View className="flex-1 h-px bg-neutral-200" />
-            <Text className="mx-4 text-neutral-500 font-quicksand-medium text-sm">
+            <Text className="mx-4 text-neutral-500 font-poppins-medium text-sm">
               OU
             </Text>
             <View className="flex-1 h-px bg-neutral-200" />
@@ -478,12 +478,12 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
             className="bg-white border-2 border-primary-500 rounded-2xl py-4 flex-row items-center justify-center"
           >
             <Ionicons name="list" size={20} color="#10B981" />
-            <Text className="ml-2 text-primary-500 font-quicksand-bold text-base">
+            <Text className="ml-2 text-primary-500 font-poppins-bold text-base">
               Voir tous les plans
             </Text>
           </TouchableOpacity>
 
-          <Text className="text-neutral-500 font-quicksand-medium text-xs text-center mt-4">
+          <Text className="text-neutral-500 font-poppins-medium text-xs text-center mt-4">
             Choisissez le plan qui correspond le mieux à vos besoins
           </Text>
 
@@ -496,7 +496,7 @@ const ModalContent: React.FC<SubscriptionWelcomeModalProps> = ({
                 color="#10B981"
                 style={{ marginTop: 2 }}
               />
-              <Text className="ml-3 text-neutral-600 font-quicksand-medium text-sm flex-1">
+              <Text className="ml-3 text-neutral-600 font-poppins-medium text-sm flex-1">
                 Vous pourrez changer de plan à tout moment depuis vos paramètres.
                 Profitez de l&apos;essai gratuit pour tester la plateforme sans risque !
               </Text>

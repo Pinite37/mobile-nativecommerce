@@ -1,5 +1,5 @@
+import { AppHeader } from '@/components/ui/AppHeader';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
@@ -44,34 +44,10 @@ export default function AllCategoriesPage() {
         <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
             <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
 
-            <LinearGradient
-                colors={['#059669', '#10B981']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                className="rounded-b-3xl shadow-md"
-                style={{
-                    paddingTop: insets.top + 16,
-                    paddingLeft: insets.left + 24,
-                    paddingRight: insets.right + 24,
-                    paddingBottom: 20
-                }}
-            >
-                <View className="flex-row items-center mb-3">
-                    <TouchableOpacity onPress={() => router.back()} className="mr-3">
-                        <Ionicons name="arrow-back" size={24} color="white" />
-                    </TouchableOpacity>
-                    <View className="flex-1">
-                        <Text className="text-white text-xl font-quicksand-bold">
-                            {i18n.t("client.categories.title")}
-                        </Text>
-                        {!loading && (
-                            <Text className="text-white/80 text-xs font-quicksand-medium mt-1">
-                                {i18n.t(categories.length === 1 ? "client.categories.subtitle.singular" : "client.categories.subtitle.plural", { count: categories.length })}
-                            </Text>
-                        )}
-                    </View>
-                </View>
-            </LinearGradient>
+            <AppHeader
+                title={i18n.t("client.categories.title")}
+                subtitle={!loading ? i18n.t(categories.length === 1 ? "client.categories.subtitle.singular" : "client.categories.subtitle.plural", { count: categories.length }) : undefined}
+            />
 
             {loading ? (
                 <View className="flex-1 items-center justify-center">
@@ -80,7 +56,7 @@ export default function AllCategoriesPage() {
             ) : categories.length === 0 ? (
                 <View className="flex-1 items-center justify-center px-6">
                     <Ionicons name="file-tray-outline" size={64} color={colors.textSecondary} />
-                    <Text className="text-lg font-quicksand-bold mt-4" style={{ color: colors.textPrimary }}>
+                    <Text className="text-lg font-poppins-bold mt-4" style={{ color: colors.textPrimary }}>
                         {i18n.t("client.categories.empty")}
                     </Text>
                 </View>
@@ -121,16 +97,16 @@ export default function AllCategoriesPage() {
                                 </View>
 
                                 <View className="flex-1">
-                                    <Text className="text-base font-quicksand-bold mb-1" style={{ color: colors.textPrimary }}>
+                                    <Text className="text-base font-poppins-bold mb-1" style={{ color: colors.textPrimary }}>
                                         {category.name}
                                     </Text>
                                     {category.description && (
-                                        <Text className="text-xs font-quicksand-medium" numberOfLines={1} style={{ color: colors.textSecondary }}>
+                                        <Text className="text-xs font-poppins-medium" numberOfLines={1} style={{ color: colors.textSecondary }}>
                                             {category.description}
                                         </Text>
                                     )}
                                     {category.productCount !== undefined && (
-                                        <Text className="text-xs font-quicksand-medium mt-1" style={{ color: colors.textSecondary }}>
+                                        <Text className="text-xs font-poppins-medium mt-1" style={{ color: colors.textSecondary }}>
                                             {i18n.t(category.productCount === 1 ? "client.categories.productCount.singular" : "client.categories.productCount.plural", { count: category.productCount })}
                                         </Text>
                                     )}

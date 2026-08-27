@@ -185,7 +185,7 @@ export default function ImagePickerModal({
       <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
         <View className="px-6 pt-4 pb-4" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
           <View className="flex-row justify-between items-center">
-            <Text className="text-xl font-quicksand-bold" style={{ color: colors.textPrimary }}>
+            <Text className="text-xl font-poppins-bold" style={{ color: colors.textPrimary }}>
               {i18n.t('client.details.photo.modal.title')}
             </Text>
             <TouchableOpacity
@@ -216,7 +216,7 @@ export default function ImagePickerModal({
                 <Ionicons name="camera" size={24} color={colors.brandPrimary} />
               </View>
               <View>
-                <Text className="text-lg font-quicksand-semibold" style={{ color: colors.textPrimary }}>
+                <Text className="text-lg font-poppins-semibold" style={{ color: colors.textPrimary }}>
                   {i18n.t('client.details.photo.modal.takePhoto')}
                 </Text>
                 <Text className="text-sm font-quicksand" style={{ color: colors.textSecondary }}>
@@ -234,7 +234,7 @@ export default function ImagePickerModal({
                 <Ionicons name="images" size={24} color="#3B82F6" />
               </View>
               <View>
-                <Text className="text-lg font-quicksand-semibold" style={{ color: colors.textPrimary }}>
+                <Text className="text-lg font-poppins-semibold" style={{ color: colors.textPrimary }}>
                   {i18n.t('client.details.photo.modal.pickFromGallery')}
                 </Text>
                 <Text className="text-sm font-quicksand" style={{ color: colors.textSecondary }}>
@@ -252,7 +252,7 @@ export default function ImagePickerModal({
                 <Ionicons name="trash" size={24} color="#EF4444" />
               </View>
               <View>
-                <Text className="text-lg font-quicksand-semibold" style={{ color: '#DC2626' }}>
+                <Text className="text-lg font-poppins-semibold" style={{ color: '#DC2626' }}>
                   {i18n.t('client.details.photo.modal.removePhoto')}
                 </Text>
                 <Text className="text-sm font-quicksand" style={{ color: colors.textSecondary }}>

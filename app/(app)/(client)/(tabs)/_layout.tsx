@@ -51,7 +51,7 @@ export default function ClientTabsLayout() {
         tabBarInactiveTintColor: "#9CA3AF",
         headerShown: false,
         tabBarLabelStyle: {
-          fontFamily: "Quicksand-SemiBold",
+          fontFamily: "Poppins-SemiBold",
           fontSize: 12,
           marginBottom: 4,
         },
@@ -61,7 +61,7 @@ export default function ClientTabsLayout() {
         },
         headerTitleStyle: {
           fontSize: 18,
-          fontFamily: "Quicksand-SemiBold",
+          fontFamily: "Poppins-SemiBold",
           color: "#1F2937",
         },
       }}
@@ -72,7 +72,7 @@ export default function ClientTabsLayout() {
           title: "Accueil",
           headerShown: false,
           tabBarLabelStyle: {
-            fontFamily: "Quicksand-SemiBold",
+            fontFamily: "Poppins-SemiBold",
             fontSize: 12,
           },
           tabBarIcon: ({ color, focused }) => (
@@ -90,7 +90,7 @@ export default function ClientTabsLayout() {
           title: "Rechercher",
           headerShown: false,
           tabBarLabelStyle: {
-            fontFamily: 'Quicksand-SemiBold',
+            fontFamily: 'Poppins-SemiBold',
             fontSize: 12,
           },
           tabBarIcon: ({ color, focused }) => (
@@ -108,7 +108,7 @@ export default function ClientTabsLayout() {
           title: "Favoris",
           headerShown: false,
           tabBarLabelStyle: {
-            fontFamily: "Quicksand-SemiBold",
+            fontFamily: "Poppins-SemiBold",
             fontSize: 12,
           },
           tabBarIcon: ({ color, focused }) => (
@@ -141,7 +141,7 @@ export default function ClientTabsLayout() {
           title: "Profil",
           headerShown: false,
           tabBarLabelStyle: {
-            fontFamily: "Quicksand-SemiBold",
+            fontFamily: "Poppins-SemiBold",
             fontSize: 12,
           },
           tabBarIcon: ({ color, focused }) => (

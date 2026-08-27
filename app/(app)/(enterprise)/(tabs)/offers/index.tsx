@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
-import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useCallback, useRef, useState } from "react";
@@ -500,7 +499,7 @@ export default function EnterpriseOffersScreen() {
             <View className="ml-3 flex-1">
               <Text
                 style={{ color: colors.textPrimary }}
-                className="text-sm font-quicksand-semibold"
+                className="text-sm font-poppins-semibold"
                 numberOfLines={1}
               >
                 {productData.name || i18n.t("enterprise.offers.labels.product")}
@@ -520,7 +519,7 @@ export default function EnterpriseOffersScreen() {
               color={statusPill.color}
             />
             <Text
-              className="text-xs font-quicksand-semibold ml-1"
+              className="text-xs font-poppins-semibold ml-1"
               style={{ color: statusPill.color }}
             >
               {statusPill.text}
@@ -535,7 +534,7 @@ export default function EnterpriseOffersScreen() {
             </Text>
             <Text
               style={{ color: colors.textPrimary }}
-              className="text-sm font-quicksand-medium"
+              className="text-sm font-poppins-medium"
               numberOfLines={1}
             >
               {customer.firstName || customer.lastName
@@ -549,7 +548,7 @@ export default function EnterpriseOffersScreen() {
             </Text>
             <Text
               style={{ color: colors.textPrimary }}
-              className="text-sm font-quicksand-semibold"
+              className="text-sm font-poppins-semibold"
             >
               {formatDateTime(item.expiresAt)}
             </Text>
@@ -562,7 +561,7 @@ export default function EnterpriseOffersScreen() {
         >
           <Text
             style={{ color: colors.brandPrimary }}
-            className="text-base font-quicksand-bold"
+            className="text-base font-poppins-bold"
           >
             {formatPrice(item.deliveryFee)}
           </Text>
@@ -574,7 +573,7 @@ export default function EnterpriseOffersScreen() {
               onPress={() => openDeleteModal(item._id, "offer")}
             >
               <Text
-                className="text-sm font-quicksand-semibold"
+                className="text-sm font-poppins-semibold"
                 style={{ color: colors.error }}
               >
                 {i18n.t("enterprise.offers.labels.delete")}
@@ -619,14 +618,14 @@ export default function EnterpriseOffersScreen() {
             <View className="ml-3 flex-1">
               <Text
                 style={{ color: colors.textPrimary }}
-                className="text-base font-quicksand-bold"
+                className="text-base font-poppins-bold"
                 numberOfLines={1}
               >
                 {item.productName}
               </Text>
               <Text
                 style={{ color: colors.textSecondary }}
-                className="text-sm font-quicksand-medium mt-1"
+                className="text-sm font-poppins-medium mt-1"
                 numberOfLines={2}
               >
                 {item.description?.trim() ||
@@ -644,7 +643,7 @@ export default function EnterpriseOffersScreen() {
               color={statusPill.color}
             />
             <Text
-              className="text-xs font-quicksand-semibold ml-1"
+              className="text-xs font-poppins-semibold ml-1"
               style={{ color: statusPill.color }}
             >
               {statusPill.text}
@@ -663,7 +662,7 @@ export default function EnterpriseOffersScreen() {
               color={urgencyPill.color}
             />
             <Text
-              className="text-xs font-quicksand-semibold ml-1"
+              className="text-xs font-poppins-semibold ml-1"
               style={{ color: urgencyPill.color }}
             >
               {urgencyPill.text}
@@ -677,7 +676,7 @@ export default function EnterpriseOffersScreen() {
           >
             <Ionicons name="time" size={14} color="#3B82F6" />
             <Text
-              className="text-xs font-quicksand-semibold ml-1"
+              className="text-xs font-poppins-semibold ml-1"
               style={{ color: "#3B82F6" }}
             >
               {formatDateTime(item.expiresAt)}
@@ -699,13 +698,13 @@ export default function EnterpriseOffersScreen() {
             <View className="ml-3 flex-1">
               <Text
                 style={{ color: colors.textTertiary }}
-                className="text-xs font-quicksand-medium"
+                className="text-xs font-poppins-medium"
               >
                 {i18n.t("enterprise.offers.calls.labels.pickup")}
               </Text>
               <Text
                 style={{ color: colors.textPrimary }}
-                className="text-sm font-quicksand-semibold"
+                className="text-sm font-poppins-semibold"
               >
                 {item.pickupLocation}
               </Text>
@@ -722,13 +721,13 @@ export default function EnterpriseOffersScreen() {
             <View className="ml-3 flex-1">
               <Text
                 style={{ color: colors.textTertiary }}
-                className="text-xs font-quicksand-medium"
+                className="text-xs font-poppins-medium"
               >
                 {i18n.t("enterprise.offers.calls.labels.delivery")}
               </Text>
               <Text
                 style={{ color: colors.textPrimary }}
-                className="text-sm font-quicksand-semibold"
+                className="text-sm font-poppins-semibold"
               >
                 {item.deliveryLocation}
               </Text>
@@ -745,20 +744,20 @@ export default function EnterpriseOffersScreen() {
             <View className="ml-3 flex-1">
               <Text
                 style={{ color: colors.textTertiary }}
-                className="text-xs font-quicksand-medium"
+                className="text-xs font-poppins-medium"
               >
                 {i18n.t("enterprise.offers.calls.labels.customerInfo")}
               </Text>
               <Text
                 style={{ color: colors.textPrimary }}
-                className="text-sm font-quicksand-semibold"
+                className="text-sm font-poppins-semibold"
               >
                 {customerInfo.name || i18n.t("enterprise.offers.calls.labels.noCustomerName")}
               </Text>
               {!!customerInfo.phone && (
                 <Text
                   style={{ color: colors.textSecondary }}
-                  className="text-xs font-quicksand-medium mt-1"
+                  className="text-xs font-poppins-medium mt-1"
                 >
                   {customerInfo.phone}
                 </Text>
@@ -766,7 +765,7 @@ export default function EnterpriseOffersScreen() {
               {!customerInfo.phone && (
                 <Text
                   style={{ color: colors.textSecondary }}
-                  className="text-xs font-quicksand-medium mt-1"
+                  className="text-xs font-poppins-medium mt-1"
                 >
                   {i18n.t("enterprise.offers.calls.labels.noCustomerPhone")}
                 </Text>
@@ -784,7 +783,7 @@ export default function EnterpriseOffersScreen() {
           >
             <Text
               style={{ color: colors.textTertiary }}
-              className="text-xs font-quicksand-medium mb-1"
+              className="text-xs font-poppins-medium mb-1"
             >
               {i18n.t(
                 "enterprise.messages.conversationDetail.offerForm.specialInstructions"
@@ -792,7 +791,7 @@ export default function EnterpriseOffersScreen() {
             </Text>
             <Text
               style={{ color: colors.textPrimary }}
-              className="text-sm font-quicksand-medium"
+              className="text-sm font-poppins-medium"
             >
               {item.specialInstructions}
             </Text>
@@ -805,7 +804,7 @@ export default function EnterpriseOffersScreen() {
         >
           <Text
             style={{ color: colors.brandPrimary }}
-            className="text-base font-quicksand-bold"
+            className="text-base font-poppins-bold"
           >
             {formatPrice(item.deliveryFee)}
           </Text>
@@ -817,7 +816,7 @@ export default function EnterpriseOffersScreen() {
               onPress={() => openDeleteModal(item._id, "call")}
             >
               <Text
-                className="text-sm font-quicksand-semibold"
+                className="text-sm font-poppins-semibold"
                 style={{ color: colors.error }}
               >
                 {i18n.t("enterprise.offers.labels.delete")}
@@ -830,25 +829,21 @@ export default function EnterpriseOffersScreen() {
   };
 
   const renderHeader = () => (
-    <LinearGradient
-      colors={[colors.brandGradientStart, colors.brandGradientEnd]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
-      className="rounded-b-3xl shadow-md"
-      style={{
-        paddingTop: insets.top + 16,
-        paddingLeft: insets.left + 24,
-        paddingRight: insets.right + 24,
-        paddingBottom: 20,
-      }}
-    >
+    <View style={{
+      backgroundColor: colors.surface,
+      paddingTop: insets.top + 16,
+      paddingHorizontal: 20,
+      paddingBottom: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderLight,
+    }}>
       {/* Titre + compteur + bouton créer */}
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
         <View style={{ flex: 1, marginRight: 12 }}>
-          <Text style={{ fontSize: 24, fontFamily: 'Quicksand-Bold', color: '#FFFFFF' }}>
+          <Text style={{ fontSize: 24, fontFamily: 'Poppins-Bold', color: colors.textPrimary }}>
             {i18n.t("enterprise.offers.title")}
           </Text>
-          <Text style={{ fontSize: 13, fontFamily: 'Quicksand-Medium', color: 'rgba(255,255,255,0.75)', marginTop: 3 }}>
+          <Text style={{ fontSize: 13, fontFamily: 'Poppins-Medium', color: colors.textSecondary, marginTop: 3 }}>
             {activeItems.length}{' '}
             {viewMode === "CALLS"
               ? activeItems.length !== 1 ? i18n.t("enterprise.offers.count.callsPlural") : i18n.t("enterprise.offers.count.calls")
@@ -858,20 +853,20 @@ export default function EnterpriseOffersScreen() {
         {viewMode === "CALLS" && (
           <TouchableOpacity
             onPress={openCreateCallModal}
-            style={{ backgroundColor: '#FFFFFF', width: 42, height: 42, borderRadius: 14, justifyContent: 'center', alignItems: 'center', elevation: 3 }}
+            style={{ backgroundColor: colors.brandPrimary, width: 42, height: 42, borderRadius: 14, justifyContent: 'center', alignItems: 'center' }}
             activeOpacity={0.85}
           >
-            <Ionicons name="add" size={22} color={colors.brandPrimary} />
+            <Ionicons name="add" size={22} color="#FFFFFF" />
           </TouchableOpacity>
         )}
       </View>
 
       {/* Segmented control animé — switcher de mode */}
       <View
-        style={{ flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0.18)', borderRadius: 14, padding: 3, marginBottom: 14, position: 'relative' }}
+        style={{ flexDirection: 'row', backgroundColor: colors.tertiary, borderRadius: 14, padding: 3, marginBottom: 12, position: 'relative' }}
         onLayout={(e) => setSwitcherWidth(e.nativeEvent.layout.width)}
       >
-        {/* Pill blanche glissante */}
+        {/* Pill glissante */}
         {switcherWidth > 0 && (
           <Animated.View style={{
             position: 'absolute',
@@ -882,13 +877,13 @@ export default function EnterpriseOffersScreen() {
               inputRange: [0, 1],
               outputRange: [3, 3 + (switcherWidth - 6) / 2],
             }),
-            backgroundColor: '#FFFFFF',
+            backgroundColor: colors.surface,
             borderRadius: 11,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.12,
+            shadowOpacity: 0.08,
             shadowRadius: 3,
-            elevation: 3,
+            elevation: 2,
           }} />
         )}
         {VIEW_MODES.map((mode) => {
@@ -900,8 +895,8 @@ export default function EnterpriseOffersScreen() {
               style={{ flex: 1, paddingVertical: 9, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}
               activeOpacity={0.8}
             >
-              <Ionicons name={mode.icon as any} size={14} color={isActive ? colors.brandPrimary : 'rgba(255,255,255,0.85)'} />
-              <Text style={{ color: isActive ? colors.brandPrimary : 'rgba(255,255,255,0.85)', fontFamily: 'Quicksand-SemiBold', fontSize: 13, marginLeft: 5 }}>
+              <Ionicons name={mode.icon as any} size={14} color={isActive ? colors.brandPrimary : colors.textSecondary} />
+              <Text style={{ color: isActive ? colors.brandPrimary : colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 13, marginLeft: 5 }}>
                 {mode.label}
               </Text>
             </TouchableOpacity>
@@ -918,9 +913,7 @@ export default function EnterpriseOffersScreen() {
               key={f.id}
               onPress={() => setFilter(f.id)}
               style={{
-                backgroundColor: isActive ? 'rgba(255,255,255,0.22)' : 'transparent',
-                borderWidth: 1,
-                borderColor: isActive ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.28)',
+                backgroundColor: isActive ? colors.brandPrimary : colors.tertiary,
                 borderRadius: 20,
                 paddingHorizontal: 14,
                 paddingVertical: 7,
@@ -928,20 +921,20 @@ export default function EnterpriseOffersScreen() {
               }}
               activeOpacity={0.8}
             >
-              <Text style={{ color: '#FFFFFF', fontFamily: isActive ? 'Quicksand-SemiBold' : 'Quicksand-Medium', fontSize: 13 }}>
+              <Text style={{ color: isActive ? '#FFFFFF' : colors.textSecondary, fontFamily: isActive ? 'Poppins-SemiBold' : 'Poppins-Medium', fontSize: 13 }}>
                 {f.label}
               </Text>
             </TouchableOpacity>
           );
         })}
       </ScrollView>
-    </LinearGradient>
+    </View>
   );
 
   if (loading) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.secondary }}>
-        <ExpoStatusBar style="light" translucent />
+        <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
         {renderHeader()}
         <View style={{ flex: 1, backgroundColor: colors.primary }}>
           {renderSkeletons()}
@@ -953,7 +946,7 @@ export default function EnterpriseOffersScreen() {
   if (error) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.secondary }}>
-        <ExpoStatusBar style="light" translucent />
+        <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
         {renderHeader()}
         <View
           style={{ flex: 1, backgroundColor: colors.primary }}
@@ -962,13 +955,13 @@ export default function EnterpriseOffersScreen() {
           <Ionicons name="warning" size={80} color={colors.error} />
           <Text
             style={{ color: colors.textPrimary }}
-            className="font-quicksand-bold text-lg mt-4 mb-2"
+            className="font-poppins-bold text-lg mt-4 mb-2"
           >
             {i18n.t("enterprise.offers.error.title")}
           </Text>
           <Text
             style={{ color: colors.textSecondary }}
-            className="font-quicksand-medium text-center mt-1"
+            className="font-poppins-medium text-center mt-1"
           >
             {error}
           </Text>
@@ -979,7 +972,7 @@ export default function EnterpriseOffersScreen() {
           >
             <Text
               style={{ color: colors.textOnBrand }}
-              className="font-quicksand-semibold"
+              className="font-poppins-semibold"
             >
               {i18n.t("enterprise.offers.error.retry")}
             </Text>
@@ -991,7 +984,7 @@ export default function EnterpriseOffersScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.secondary, position: 'relative' }}>
-      <ExpoStatusBar style="light" translucent />
+      <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
       {renderHeader()}
 
       <View style={{ flex: 1, backgroundColor: colors.primary }}>
@@ -1024,7 +1017,7 @@ export default function EnterpriseOffersScreen() {
               />
               <Text
                 style={{ color: colors.textPrimary }}
-                className="text-xl font-quicksand-bold mt-4 mb-2 text-center"
+                className="text-xl font-poppins-bold mt-4 mb-2 text-center"
               >
                 {viewMode === "CALLS"
                   ? i18n.t("enterprise.offers.calls.empty.title")
@@ -1032,7 +1025,7 @@ export default function EnterpriseOffersScreen() {
               </Text>
               <Text
                 style={{ color: colors.textSecondary }}
-                className="text-center font-quicksand-medium"
+                className="text-center font-poppins-medium"
               >
                 {viewMode === "CALLS"
                   ? i18n.t("enterprise.offers.calls.empty.message")
@@ -1047,7 +1040,7 @@ export default function EnterpriseOffersScreen() {
                   style={{ backgroundColor: colors.brandPrimary }}
                 >
                   <Ionicons name="add-circle" size={18} color="white" />
-                  <Text className="text-white font-quicksand-bold ml-2">
+                  <Text className="text-white font-poppins-bold ml-2">
                     {i18n.t("enterprise.offers.calls.create.button")}
                   </Text>
                 </TouchableOpacity>
@@ -1089,7 +1082,7 @@ export default function EnterpriseOffersScreen() {
                 <View className="flex-row items-center justify-between mb-2">
                   <Text
                     style={{ color: colors.textPrimary }}
-                    className="text-xl font-quicksand-bold"
+                    className="text-xl font-poppins-bold"
                   >
                     {i18n.t("enterprise.offers.calls.create.title")}
                   </Text>
@@ -1104,7 +1097,7 @@ export default function EnterpriseOffersScreen() {
                 </View>
                 <Text
                   style={{ color: colors.textSecondary }}
-                  className="font-quicksand-medium"
+                  className="font-poppins-medium"
                 >
                   {i18n.t("enterprise.offers.calls.create.subtitle")}
                 </Text>
@@ -1118,7 +1111,7 @@ export default function EnterpriseOffersScreen() {
                   <View className="mb-5">
                     <Text
                       style={{ color: colors.textPrimary }}
-                      className="text-sm font-quicksand-semibold mb-2"
+                      className="text-sm font-poppins-semibold mb-2"
                     >
                       {i18n.t("enterprise.offers.calls.form.productName")}
                     </Text>
@@ -1137,7 +1130,7 @@ export default function EnterpriseOffersScreen() {
                         placeholder={i18n.t(
                           "enterprise.offers.calls.form.productNamePlaceholder"
                         )}
-                        className="px-4 py-3 font-quicksand-medium text-base"
+                        className="px-4 py-3 font-poppins-medium text-base"
                         style={{ color: colors.textPrimary }}
                         placeholderTextColor={colors.textSecondary}
                       />
@@ -1147,7 +1140,7 @@ export default function EnterpriseOffersScreen() {
                   <View className="mb-5">
                     <Text
                       style={{ color: colors.textPrimary }}
-                      className="text-sm font-quicksand-semibold mb-2"
+                      className="text-sm font-poppins-semibold mb-2"
                     >
                       {i18n.t("enterprise.offers.calls.form.description")}
                     </Text>
@@ -1166,7 +1159,7 @@ export default function EnterpriseOffersScreen() {
                         placeholder={i18n.t(
                           "enterprise.offers.calls.form.descriptionPlaceholder"
                         )}
-                        className="px-4 py-3 font-quicksand-medium text-base min-h-[96px]"
+                        className="px-4 py-3 font-poppins-medium text-base min-h-[96px]"
                         style={{ color: colors.textPrimary }}
                         placeholderTextColor={colors.textSecondary}
                         multiline
@@ -1178,7 +1171,7 @@ export default function EnterpriseOffersScreen() {
                   <View className="mb-5">
                     <Text
                       style={{ color: colors.textPrimary }}
-                      className="text-sm font-quicksand-semibold mb-2"
+                      className="text-sm font-poppins-semibold mb-2"
                     >
                       {i18n.t("enterprise.offers.calls.form.pickupLocation")}
                     </Text>
@@ -1200,7 +1193,7 @@ export default function EnterpriseOffersScreen() {
                         placeholder={i18n.t(
                           "enterprise.offers.calls.form.pickupLocationPlaceholder"
                         )}
-                        className="px-4 py-3 font-quicksand-medium text-base"
+                        className="px-4 py-3 font-poppins-medium text-base"
                         style={{ color: colors.textPrimary }}
                         placeholderTextColor={colors.textSecondary}
                       />
@@ -1210,7 +1203,7 @@ export default function EnterpriseOffersScreen() {
                   <View className="mb-5">
                     <Text
                       style={{ color: colors.textPrimary }}
-                      className="text-sm font-quicksand-semibold mb-2"
+                      className="text-sm font-poppins-semibold mb-2"
                     >
                       {i18n.t("enterprise.offers.calls.form.deliveryLocation")}
                     </Text>
@@ -1232,7 +1225,7 @@ export default function EnterpriseOffersScreen() {
                         placeholder={i18n.t(
                           "enterprise.offers.calls.form.deliveryLocationPlaceholder"
                         )}
-                        className="px-4 py-3 font-quicksand-medium text-base"
+                        className="px-4 py-3 font-poppins-medium text-base"
                         style={{ color: colors.textPrimary }}
                         placeholderTextColor={colors.textSecondary}
                       />
@@ -1242,7 +1235,7 @@ export default function EnterpriseOffersScreen() {
                   <View className="mb-5">
                     <Text
                       style={{ color: colors.textPrimary }}
-                      className="text-sm font-quicksand-semibold mb-2"
+                      className="text-sm font-poppins-semibold mb-2"
                     >
                       {i18n.t("enterprise.offers.calls.form.customerName")}
                     </Text>
@@ -1264,7 +1257,7 @@ export default function EnterpriseOffersScreen() {
                         placeholder={i18n.t(
                           "enterprise.offers.calls.form.customerNamePlaceholder"
                         )}
-                        className="px-4 py-3 font-quicksand-medium text-base"
+                        className="px-4 py-3 font-poppins-medium text-base"
                         style={{ color: colors.textPrimary }}
                         placeholderTextColor={colors.textSecondary}
                       />
@@ -1274,7 +1267,7 @@ export default function EnterpriseOffersScreen() {
                   <View className="mb-5">
                     <Text
                       style={{ color: colors.textPrimary }}
-                      className="text-sm font-quicksand-semibold mb-2"
+                      className="text-sm font-poppins-semibold mb-2"
                     >
                       {i18n.t("enterprise.offers.calls.form.customerPhone")}
                     </Text>
@@ -1305,7 +1298,7 @@ export default function EnterpriseOffersScreen() {
                           borderTopLeftRadius: 14,
                           borderBottomLeftRadius: 14,
                         },
-                        input: { color: colors.textPrimary, fontFamily: "Quicksand-Medium" },
+                        input: { color: colors.textPrimary, fontFamily: "Poppins-Medium" },
                         callingCode: { color: colors.textPrimary },
                       }}
                     />
@@ -1314,7 +1307,7 @@ export default function EnterpriseOffersScreen() {
                   <View className="mb-5">
                     <Text
                       style={{ color: colors.textPrimary }}
-                      className="text-sm font-quicksand-semibold mb-2"
+                      className="text-sm font-poppins-semibold mb-2"
                     >
                       {i18n.t(
                         "enterprise.messages.conversationDetail.offerForm.deliveryFee"
@@ -1334,7 +1327,7 @@ export default function EnterpriseOffersScreen() {
                         }
                         placeholder="2500"
                         keyboardType="numeric"
-                        className="px-4 py-3 font-quicksand-medium text-base"
+                        className="px-4 py-3 font-poppins-medium text-base"
                         style={{ color: colors.textPrimary }}
                         placeholderTextColor={colors.textSecondary}
                       />
@@ -1344,7 +1337,7 @@ export default function EnterpriseOffersScreen() {
                   <View className="mb-5">
                     <Text
                       style={{ color: colors.textPrimary }}
-                      className="text-sm font-quicksand-semibold mb-3"
+                      className="text-sm font-poppins-semibold mb-3"
                     >
                       {i18n.t(
                         "enterprise.messages.conversationDetail.offerForm.urgencyLevel"
@@ -1387,7 +1380,7 @@ export default function EnterpriseOffersScreen() {
                                     ? urgencyPill.color
                                     : colors.textSecondary,
                                 }}
-                                className="font-quicksand-semibold text-xs mt-1"
+                                className="font-poppins-semibold text-xs mt-1"
                               >
                                 {urgencyPill.text}
                               </Text>
@@ -1401,7 +1394,7 @@ export default function EnterpriseOffersScreen() {
                   <View className="mb-5">
                     <Text
                       style={{ color: colors.textPrimary }}
-                      className="text-sm font-quicksand-semibold mb-2"
+                      className="text-sm font-poppins-semibold mb-2"
                     >
                       {i18n.t(
                         "enterprise.messages.conversationDetail.offerForm.expirationDate"
@@ -1432,7 +1425,7 @@ export default function EnterpriseOffersScreen() {
                             ? colors.textPrimary
                             : colors.textSecondary,
                         }}
-                        className="font-quicksand-medium text-base"
+                        className="font-poppins-medium text-base"
                       >
                         {callForm.expiresAt
                           ? new Date(callForm.expiresAt).toLocaleString("fr-FR", {
@@ -1502,7 +1495,7 @@ export default function EnterpriseOffersScreen() {
                   <View className="mb-2">
                     <Text
                       style={{ color: colors.textPrimary }}
-                      className="text-sm font-quicksand-semibold mb-2"
+                      className="text-sm font-poppins-semibold mb-2"
                     >
                       {i18n.t(
                         "enterprise.messages.conversationDetail.offerForm.specialInstructions"
@@ -1526,7 +1519,7 @@ export default function EnterpriseOffersScreen() {
                         placeholder={i18n.t(
                           "enterprise.messages.conversationDetail.offerForm.specialInstructionsPlaceholder"
                         )}
-                        className="px-4 py-3 font-quicksand-medium text-base min-h-[100px]"
+                        className="px-4 py-3 font-poppins-medium text-base min-h-[100px]"
                         style={{ color: colors.textPrimary }}
                         placeholderTextColor={colors.textSecondary}
                         multiline
@@ -1554,7 +1547,7 @@ export default function EnterpriseOffersScreen() {
                 >
                   <Text
                     style={{ color: colors.textPrimary }}
-                    className="font-quicksand-bold text-base"
+                    className="font-poppins-bold text-base"
                   >
                     {i18n.t("enterprise.messages.conversationDetail.cancel")}
                   </Text>
@@ -1571,33 +1564,18 @@ export default function EnterpriseOffersScreen() {
                   }}
                   activeOpacity={0.9}
                 >
-                  <LinearGradient
-                    colors={["#10B981", "#059669"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={{
-                      width: "100%",
-                      paddingVertical: 16,
-                      justifyContent: "center",
-                      alignItems: "center",
-                      borderRadius: 16,
-                    }}
-                  >
+                  <View style={{ width: "100%", paddingVertical: 16, justifyContent: "center", alignItems: "center", borderRadius: 16, backgroundColor: colors.brandPrimary }}>
                     {creatingCall ? (
                       <ActivityIndicator size="small" color="#FFFFFF" />
                     ) : (
                       <View className="flex-row items-center">
-                        <Ionicons
-                          name="checkmark-circle"
-                          size={20}
-                          color="#FFFFFF"
-                        />
-                        <Text className="text-white font-quicksand-bold text-base ml-2">
+                        <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+                        <Text className="text-white font-poppins-bold text-base ml-2">
                           {i18n.t("enterprise.offers.calls.create.submit")}
                         </Text>
                       </View>
                     )}
-                  </LinearGradient>
+                  </View>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1631,7 +1609,7 @@ export default function EnterpriseOffersScreen() {
               <View className="px-6 pt-6 pb-4">
                 <Text
                   style={{ color: colors.textPrimary }}
-                  className="text-xl font-quicksand-bold text-center mb-2"
+                  className="text-xl font-poppins-bold text-center mb-2"
                 >
                   {i18n.t(
                     "enterprise.messages.conversationDetail.offerForm.expirationDate"
@@ -1639,7 +1617,7 @@ export default function EnterpriseOffersScreen() {
                 </Text>
                 <Text
                   style={{ color: colors.textSecondary }}
-                  className="text-sm font-quicksand-medium text-center"
+                  className="text-sm font-poppins-medium text-center"
                 >
                   {i18n.t(
                     "enterprise.messages.conversationDetail.offerForm.chooseDateTimeDescription"
@@ -1682,7 +1660,7 @@ export default function EnterpriseOffersScreen() {
                 >
                   <Text
                     style={{ color: colors.textPrimary }}
-                    className="font-quicksand-bold text-base text-center"
+                    className="font-poppins-bold text-base text-center"
                   >
                     {i18n.t("enterprise.messages.conversationDetail.cancel")}
                   </Text>
@@ -1701,7 +1679,7 @@ export default function EnterpriseOffersScreen() {
                   style={{ backgroundColor: "#10B981" }}
                   activeOpacity={0.8}
                 >
-                  <Text className="text-white font-quicksand-bold text-base text-center">
+                  <Text className="text-white font-poppins-bold text-base text-center">
                     {i18n.t("common.actions.understood")}
                   </Text>
                 </TouchableOpacity>
@@ -1757,7 +1735,7 @@ export default function EnterpriseOffersScreen() {
                 textAlign: "center",
                 marginBottom: 8,
               }}
-              className="font-quicksand-bold"
+              className="font-poppins-bold"
             >
               {selectedDeletion?.type === "call"
                 ? i18n.t("enterprise.offers.deleteModal.callTitle")
@@ -1771,7 +1749,7 @@ export default function EnterpriseOffersScreen() {
                 textAlign: "center",
                 marginBottom: 24,
               }}
-              className="font-quicksand-medium"
+              className="font-poppins-medium"
             >
               {selectedDeletion?.type === "call"
                 ? i18n.t("enterprise.offers.deleteModal.callMessage")
@@ -1792,7 +1770,7 @@ export default function EnterpriseOffersScreen() {
               >
                 <Text
                   style={{ color: colors.textPrimary }}
-                  className="font-quicksand-semibold"
+                  className="font-poppins-semibold"
                 >
                   {i18n.t("enterprise.offers.deleteModal.cancel")}
                 </Text>
@@ -1816,14 +1794,14 @@ export default function EnterpriseOffersScreen() {
                 {confirmLoading ? (
                   <Text
                     style={{ color: colors.textOnBrand }}
-                    className="font-quicksand-semibold"
+                    className="font-poppins-semibold"
                   >
                     {i18n.t("enterprise.offers.deleteModal.deleting")}
                   </Text>
                 ) : (
                   <Text
                     style={{ color: colors.textOnBrand }}
-                    className="font-quicksand-semibold"
+                    className="font-poppins-semibold"
                   >
                     {i18n.t("enterprise.offers.deleteModal.confirm")}
                   </Text>

@@ -298,7 +298,7 @@ export default function ProductDetails() {
         {/* Badge stock si faible */}
         {/* {similarProduct.stock <= 5 && similarProduct.stock > 0 && (
           <View className="absolute top-2 left-2 bg-warning-500 rounded-full px-2 py-1">
-            <Text className="text-white text-xs font-quicksand-bold">
+            <Text className="text-white text-xs font-poppins-bold">
               {similarProduct.stock} {i18n.t("client.product.stock.remaining")}
             </Text>
           </View>
@@ -309,12 +309,12 @@ export default function ProductDetails() {
         <Text
           numberOfLines={2}
           style={{ color: colors.textPrimary }}
-          className="text-sm font-quicksand-semibold mb-2 leading-5"
+          className="text-sm font-poppins-semibold mb-2 leading-5"
         >
           {similarProduct.name}
         </Text>
 
-        <Text className="text-base font-quicksand-bold text-emerald-600">
+        <Text className="text-base font-poppins-bold text-emerald-600">
           {formatPrice(similarProduct.price)}
         </Text>
       </View>
@@ -560,7 +560,7 @@ export default function ProductDetails() {
 
           <Text
             style={[styles.compactTitle, { color: "#000" }]}
-            className="font-quicksand-bold"
+            className="font-poppins-bold"
             numberOfLines={1}
           >
             {product.name}
@@ -713,10 +713,10 @@ export default function ProductDetails() {
             bigTitleStyle,
           ]}
         >
-          <Text style={styles.bigTitle} className="font-quicksand-bold">
+          <Text style={styles.bigTitle} className="font-poppins-bold">
             {product.name}
           </Text>
-          <Text style={styles.subTitle} className="font-quicksand-medium">
+          <Text style={styles.subTitle} className="font-poppins-medium">
             {categoryLabel} • {formatPrice(product.price)}
           </Text>
         </Animated.View>
@@ -775,12 +775,12 @@ export default function ProductDetails() {
 
           {/* Price and Description */}
           <View className="mb-6">
-            <Text className="text-3xl font-quicksand-bold text-primary-600 mb-2">
+            <Text className="text-3xl font-poppins-bold text-primary-600 mb-2">
               {formatPrice(product.price)}
             </Text>
             <Text
               style={{ color: colors.textSecondary }}
-              className="font-quicksand-medium leading-6"
+              className="font-poppins-medium leading-6"
             >
               {product.description}
             </Text>
@@ -797,7 +797,7 @@ export default function ProductDetails() {
           >
             <Text
               style={{ color: colors.textPrimary }}
-              className="text-lg font-quicksand-bold mb-3"
+              className="text-lg font-poppins-bold mb-3"
             >
               {i18n.t("client.product.enterprise.title")}
             </Text>
@@ -829,7 +829,7 @@ export default function ProductDetails() {
               <View className="ml-4 flex-1">
                 <Text
                   style={{ color: colors.textPrimary }}
-                  className="text-lg font-quicksand-bold"
+                  className="text-lg font-poppins-bold"
                 >
                   {enterpriseName}
                 </Text>
@@ -838,7 +838,7 @@ export default function ProductDetails() {
                     <Ionicons name="location-sharp" size={13} color={colors.textSecondary} />
                     <Text
                       style={{ color: colors.textSecondary, marginLeft: 3, fontSize: 13 }}
-                      className="font-quicksand-medium"
+                      className="font-poppins-medium"
                     >
                       {enterprise.location.city}, {enterprise.location.district}
                     </Text>
@@ -883,7 +883,7 @@ export default function ProductDetails() {
                       color={isFollowing ? "#8B5CF6" : "#fff"}
                     />
                     <Text
-                      className="font-quicksand-bold text-sm"
+                      className="font-poppins-bold text-sm"
                       style={{ color: isFollowing ? "#8B5CF6" : "#fff" }}
                     >
                       {isFollowing ? "Ne plus suivre" : "Suivre"}
@@ -902,7 +902,7 @@ export default function ProductDetails() {
                 >
                   <Text
                     style={{ color: colors.textSecondary }}
-                    className="text-sm font-quicksand-bold mb-3 uppercase tracking-wider"
+                    className="text-sm font-poppins-bold mb-3 uppercase tracking-wider"
                   >
                     {i18n.t("client.enterprise.contact.title")}
                   </Text>
@@ -921,7 +921,7 @@ export default function ProductDetails() {
                         }}
                       >
                         <Ionicons name="logo-whatsapp" size={18} color="#fff" />
-                        <Text style={{ color: "#fff", marginLeft: 8, fontSize: 14 }} className="font-quicksand-bold">
+                        <Text style={{ color: "#fff", marginLeft: 8, fontSize: 14 }} className="font-poppins-bold">
                           WhatsApp
                         </Text>
                       </TouchableOpacity>
@@ -941,7 +941,7 @@ export default function ProductDetails() {
                         }}
                       >
                         <Ionicons name="call" size={18} color="#FE8C00" />
-                        <Text style={{ color: "#FE8C00", marginLeft: 8, fontSize: 14 }} className="font-quicksand-bold">
+                        <Text style={{ color: "#FE8C00", marginLeft: 8, fontSize: 14 }} className="font-poppins-bold">
                           {i18n.t("client.enterprise.contact.call")}
                         </Text>
                       </TouchableOpacity>
@@ -961,7 +961,7 @@ export default function ProductDetails() {
                       }}
                     >
                       <Ionicons name="globe-outline" size={18} color="#3B82F6" />
-                      <Text style={{ color: "#3B82F6", marginLeft: 8, fontSize: 14 }} className="font-quicksand-bold">
+                      <Text style={{ color: "#3B82F6", marginLeft: 8, fontSize: 14 }} className="font-poppins-bold">
                         Site web
                       </Text>
                     </TouchableOpacity>
@@ -976,13 +976,13 @@ export default function ProductDetails() {
               >
                 <Text
                   style={{ color: colors.textSecondary }}
-                  className="text-sm font-quicksand-bold mb-2 uppercase tracking-wider"
+                  className="text-sm font-poppins-bold mb-2 uppercase tracking-wider"
                 >
                   A propos de la boutique
                 </Text>
                 <Text
                   style={{ color: colors.textSecondary }}
-                  className="font-quicksand-medium leading-6"
+                  className="font-poppins-medium leading-6"
                 >
                   {enterprise.description}
                 </Text>
@@ -1024,7 +1024,7 @@ export default function ProductDetails() {
               }}
             >
               <Ionicons name="chatbubbles" size={18} color="#fff" />
-              <Text style={{ color: "#fff", marginLeft: 8, fontSize: 14 }} className="font-quicksand-bold">
+              <Text style={{ color: "#fff", marginLeft: 8, fontSize: 14 }} className="font-poppins-bold">
                 {i18n.t("client.product.actions.negotiate")}
               </Text>
             </TouchableOpacity>
@@ -1039,7 +1039,7 @@ export default function ProductDetails() {
               <View className="flex-row justify-between items-center mb-4">
                 <Text
                   style={{ color: colors.textPrimary }}
-                  className="text-xl font-quicksand-bold"
+                  className="text-xl font-poppins-bold"
                 >
                   {i18n.t("client.product.similar.title")}
                 </Text>
@@ -1085,7 +1085,7 @@ export default function ProductDetails() {
               >
                 <Ionicons name="close" size={20} color="#FFFFFF" />
               </TouchableOpacity>
-              <Text className="text-white font-quicksand-medium">
+              <Text className="text-white font-poppins-medium">
                 {currentImageIndex + 1}/{productImages.length}
               </Text>
               <View className="w-10" />
@@ -1171,7 +1171,7 @@ const styles = StyleSheet.create({
   compactTitle: {
     color: "#fff",
     fontSize: 18,
-    // fontWeight: "700", // Removed in favor of font-quicksand-bold
+    // fontWeight: "700", // Removed in favor of font-poppins-bold
     flex: 1,
     textAlign: "center",
     marginHorizontal: 10,
@@ -1200,7 +1200,7 @@ const styles = StyleSheet.create({
   bigTitle: {
     color: "#fff",
     fontSize: 32,
-    // fontWeight: "900", // Removed in favor of font-quicksand-bold
+    // fontWeight: "900", // Removed in favor of font-poppins-bold
     textShadowColor: "rgba(0,0,0,0.7)",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 10,
@@ -1209,7 +1209,7 @@ const styles = StyleSheet.create({
   subTitle: {
     color: "#eee",
     fontSize: 16,
-    // fontWeight: '600', // Removed in favor of font-quicksand-medium
+    // fontWeight: '600', // Removed in favor of font-poppins-medium
     opacity: 0.9,
     textShadowColor: "rgba(0,0,0,0.5)",
     textShadowOffset: { width: 0, height: 1 },

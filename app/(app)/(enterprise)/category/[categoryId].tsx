@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -291,21 +290,21 @@ export default function CategoryProductsScreen() {
           </TouchableOpacity>
           {item.stock === 0 && (
             <View className="absolute top-2 left-2 bg-red-500 px-2 py-1 rounded-lg">
-              <Text className="text-white text-xs font-quicksand-bold">Épuisé</Text>
+              <Text className="text-white text-xs font-poppins-bold">Épuisé</Text>
             </View>
           )}
         </View>
         <View style={{ padding: 8 }}>
-          <Text style={{ color: colors.textPrimary, fontSize: 14, fontFamily: 'Quicksand-Bold' }} numberOfLines={2}>
+          <Text style={{ color: colors.textPrimary, fontSize: 14, fontFamily: 'Poppins-Bold' }} numberOfLines={2}>
             {item.name}
           </Text>
           <View className="flex-row items-center justify-between mt-1">
-            <Text style={{ color: '#10B981', fontSize: 16, fontFamily: 'Quicksand-Bold' }}>
+            <Text style={{ color: '#10B981', fontSize: 16, fontFamily: 'Poppins-Bold' }}>
               {formatPrice(item.price)}
             </Text>
           </View>
           {enterprise && (
-            <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Quicksand-Medium', marginTop: 4 }} numberOfLines={1}>
+            <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Poppins-Medium', marginTop: 4 }} numberOfLines={1}>
               {enterprise.companyName}
             </Text>
           )}
@@ -347,13 +346,13 @@ export default function CategoryProductsScreen() {
           />
           {item.stock === 0 && (
             <View className="absolute inset-0 bg-black/50 rounded-xl items-center justify-center">
-              <Text className="text-white text-xs font-quicksand-bold">Épuisé</Text>
+              <Text className="text-white text-xs font-poppins-bold">Épuisé</Text>
             </View>
           )}
         </View>
         <View className="flex-1">
           <View className="flex-row justify-between items-start">
-            <Text style={{ color: colors.textPrimary, fontSize: 14, fontFamily: 'Quicksand-SemiBold', flex: 1 }} numberOfLines={2}>
+            <Text style={{ color: colors.textPrimary, fontSize: 14, fontFamily: 'Poppins-SemiBold', flex: 1 }} numberOfLines={2}>
               {item.name}
             </Text>
             <TouchableOpacity onPress={() => toggleFavorite(item._id)} className="ml-2">
@@ -364,11 +363,11 @@ export default function CategoryProductsScreen() {
               />
             </TouchableOpacity>
           </View>
-          <Text style={{ color: '#10B981', fontSize: 18, fontFamily: 'Quicksand-Bold', marginTop: 4 }}>
+          <Text style={{ color: '#10B981', fontSize: 18, fontFamily: 'Poppins-Bold', marginTop: 4 }}>
             {formatPrice(item.price)}
           </Text>
           {enterprise && (
-            <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Quicksand-Medium', marginTop: 4 }} numberOfLines={1}>
+            <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Poppins-Medium', marginTop: 4 }} numberOfLines={1}>
               {enterprise.companyName}
             </Text>
           )}
@@ -381,52 +380,41 @@ export default function CategoryProductsScreen() {
     <View style={{ flex: 1, backgroundColor: colors.secondary }}>
       <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
 
-      {/* Header vert conventionnel avec gradient */}
-      <LinearGradient
-        colors={['#047857', '#10B981']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        className="rounded-b-3xl shadow-md"
-        style={{
-          paddingTop: insets.top + 16,
-          paddingLeft: insets.left + 24,
-          paddingRight: insets.right + 24,
-          paddingBottom: 16
-        }}
-      >
+      {/* Header */}
+      <View style={{ backgroundColor: colors.surface, paddingTop: insets.top + 8, paddingLeft: insets.left + 16, paddingRight: insets.right + 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
         <View className="flex-row items-center justify-between mb-4">
           <TouchableOpacity
             onPress={() => router.back()}
-            className="mr-3"
+            style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.tertiary, justifyContent: 'center', alignItems: 'center', marginRight: 10 }}
           >
-            <Ionicons name="arrow-back" size={24} color="white" />
+            <Ionicons name="arrow-back" size={22} color={colors.text} />
           </TouchableOpacity>
-          <View className="flex-1">
-            <Text className="text-white text-lg font-quicksand-bold" numberOfLines={1}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: colors.text }} numberOfLines={1}>
               {loading && !category ? 'Chargement...' : category?.name || 'Catégorie'}
             </Text>
             {!loading && (
-              <Text className="text-white/80 text-xs font-quicksand-medium">
+              <Text style={{ fontSize: 12, color: colors.textSecondary, fontFamily: 'Poppins-Medium' }}>
                 {totalProducts} produit{totalProducts > 1 ? 's' : ''}
               </Text>
             )}
           </View>
-          <View className="flex-row items-center">
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <TouchableOpacity
               onPress={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-              className="mr-3"
+              style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.tertiary, justifyContent: 'center', alignItems: 'center' }}
             >
               <Ionicons
                 name={viewMode === 'grid' ? 'list' : 'grid'}
-                size={22}
-                color="white"
+                size={20}
+                color={colors.text}
               />
             </TouchableOpacity>
             <TouchableOpacity onPress={openFilters}>
-              <View className="relative">
-                <Ionicons name="options" size={22} color="white" />
+              <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.tertiary, justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name="options" size={20} color={colors.text} />
                 {(minPrice || maxPrice || inStockOnly || searchQuery) && (
-                  <View className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+                  <View style={{ position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444' }} />
                 )}
               </View>
             </TouchableOpacity>
@@ -434,10 +422,10 @@ export default function CategoryProductsScreen() {
         </View>
 
         {/* Barre de recherche */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 12 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.tertiary, borderRadius: 15, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 10, marginTop: 10 }}>
           <Ionicons name="search" size={20} color={colors.textSecondary} />
           <TextInput
-            style={{ flex: 1, marginLeft: 8, color: colors.textPrimary, fontFamily: 'Quicksand-Medium' }}
+            style={{ flex: 1, marginLeft: 8, color: colors.textPrimary, fontFamily: 'Poppins-Medium' }}
             placeholder="Rechercher dans cette catégorie..."
             placeholderTextColor={colors.textSecondary}
             value={searchQuery}
@@ -449,7 +437,7 @@ export default function CategoryProductsScreen() {
             <>
               <TouchableOpacity
                 onPress={handleSearch}
-                style={{ marginRight: 8, backgroundColor: '#10B981', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 4 }}
+                style={{ marginRight: 8, backgroundColor: colors.brandPrimary, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 4 }}
               >
                 <Ionicons name="search" size={16} color="white" />
               </TouchableOpacity>
@@ -479,24 +467,22 @@ export default function CategoryProductsScreen() {
             <TouchableOpacity
               key={sort.value}
               onPress={() => setSortBy(sort.value as SortOption)}
-              className={`flex-row items-center px-3 py-1.5 rounded-lg ${sortBy === sort.value ? 'bg-white' : 'bg-white/20'
-                }`}
+              style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, backgroundColor: sortBy === sort.value ? colors.brandPrimary : colors.tertiary }}
             >
               <Ionicons
                 name={sort.icon as any}
                 size={14}
-                color={sortBy === sort.value ? '#10b981' : 'white'}
+                color={sortBy === sort.value ? '#FFFFFF' : colors.textSecondary}
               />
               <Text
-                className={`ml-1 text-xs font-quicksand-semibold ${sortBy === sort.value ? 'text-[#10b981]' : 'text-white'
-                  }`}
+                style={{ marginLeft: 4, fontSize: 12, fontFamily: 'Poppins-SemiBold', color: sortBy === sort.value ? '#FFFFFF' : colors.textSecondary }}
               >
                 {sort.label}
               </Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
-      </LinearGradient>
+      </View>
 
       {/* Contenu */}
       {loading ? (
@@ -513,10 +499,10 @@ export default function CategoryProductsScreen() {
       ) : products.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
           <Ionicons name="cube-outline" size={64} color={colors.textSecondary} />
-          <Text style={{ color: colors.textPrimary, fontSize: 18, fontFamily: 'Quicksand-Bold', marginTop: 16 }}>
+          <Text style={{ color: colors.textPrimary, fontSize: 18, fontFamily: 'Poppins-Bold', marginTop: 16 }}>
             Aucun produit trouvé
           </Text>
-          <Text style={{ color: colors.textSecondary, fontFamily: 'Quicksand-Medium', textAlign: 'center', marginTop: 8 }}>
+          <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', textAlign: 'center', marginTop: 8 }}>
             Essayez de modifier vos filtres ou votre recherche
           </Text>
           {(minPrice || maxPrice || inStockOnly || searchQuery) && (
@@ -524,7 +510,7 @@ export default function CategoryProductsScreen() {
               onPress={handleResetFilters}
               style={{ marginTop: 16, backgroundColor: '#10B981', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 }}
             >
-              <Text style={{ color: '#FFFFFF', fontFamily: 'Quicksand-SemiBold' }}>Réinitialiser les filtres</Text>
+              <Text style={{ color: '#FFFFFF', fontFamily: 'Poppins-SemiBold' }}>Réinitialiser les filtres</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -560,7 +546,7 @@ export default function CategoryProductsScreen() {
 
           {/* Pagination info */}
           {!loadingMore && products.length > 0 && (
-            <Text style={{ textAlign: 'center', color: colors.textSecondary, fontFamily: 'Quicksand-Medium', fontSize: 14, marginTop: 16 }}>
+            <Text style={{ textAlign: 'center', color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 14, marginTop: 16 }}>
               Page {currentPage} sur {totalPages}
             </Text>
           )}
@@ -593,7 +579,7 @@ export default function CategoryProductsScreen() {
             </View>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-              <Text style={{ color: colors.textPrimary, fontSize: 20, fontFamily: 'Quicksand-Bold' }}>Filtres</Text>
+              <Text style={{ color: colors.textPrimary, fontSize: 20, fontFamily: 'Poppins-Bold' }}>Filtres</Text>
               <TouchableOpacity
                 onPress={closeFilters}
                 style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center' }}
@@ -604,12 +590,12 @@ export default function CategoryProductsScreen() {
 
             <ScrollView showsVerticalScrollIndicator={false}>
               <View style={{ marginBottom: 20 }}>
-                <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Quicksand-Bold', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Poppins-Bold', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.6 }}>
                   Prix (FCFA)
                 </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <TextInput
-                    style={{ flex: 1, backgroundColor: colors.secondary, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', fontSize: 14 }}
+                    style={{ flex: 1, backgroundColor: colors.secondary, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontFamily: 'Poppins-Medium', fontSize: 14 }}
                     placeholder="Min"
                     placeholderTextColor={colors.textSecondary}
                     keyboardType="numeric"
@@ -618,7 +604,7 @@ export default function CategoryProductsScreen() {
                   />
                   <Text style={{ color: colors.textSecondary, fontSize: 16 }}>–</Text>
                   <TextInput
-                    style={{ flex: 1, backgroundColor: colors.secondary, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontFamily: 'Quicksand-Medium', fontSize: 14 }}
+                    style={{ flex: 1, backgroundColor: colors.secondary, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontFamily: 'Poppins-Medium', fontSize: 14 }}
                     placeholder="Max"
                     placeholderTextColor={colors.textSecondary}
                     keyboardType="numeric"
@@ -632,7 +618,7 @@ export default function CategoryProductsScreen() {
                 onPress={() => setInStockOnly(!inStockOnly)}
                 style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, marginBottom: 20, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.borderLight }}
               >
-                <Text style={{ color: colors.textPrimary, fontSize: 14, fontFamily: 'Quicksand-SemiBold' }}>
+                <Text style={{ color: colors.textPrimary, fontSize: 14, fontFamily: 'Poppins-SemiBold' }}>
                   Produits en stock uniquement
                 </Text>
                 <View style={{ width: 48, height: 26, borderRadius: 13, backgroundColor: inStockOnly ? '#10B981' : colors.borderLight, justifyContent: 'center' }}>
@@ -645,13 +631,13 @@ export default function CategoryProductsScreen() {
                   style={{ flex: 1, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.secondary, alignItems: 'center' }}
                   onPress={handleResetFilters}
                 >
-                  <Text style={{ color: colors.textPrimary, fontFamily: 'Quicksand-SemiBold' }}>Réinitialiser</Text>
+                  <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-SemiBold' }}>Réinitialiser</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={{ flex: 1, paddingVertical: 14, borderRadius: 14, backgroundColor: '#10B981', alignItems: 'center' }}
                   onPress={handleApplyFilters}
                 >
-                  <Text style={{ color: '#fff', fontFamily: 'Quicksand-Bold' }}>Appliquer</Text>
+                  <Text style={{ color: '#fff', fontFamily: 'Poppins-Bold' }}>Appliquer</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>

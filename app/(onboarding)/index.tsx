@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
@@ -10,13 +9,13 @@ import OnboardingService from '../../services/OnboardingService';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const PRIMARY_COLOR = '#10B981';
-const PRIMARY_LIGHT = '#6EE7B7';
 
 interface OnboardingSlide {
 	id: string;
 	title: string;
 	description: string;
 	icon: keyof typeof Ionicons.glyphMap;
+	imageUri: string;
 }
 
 const slides: OnboardingSlide[] = [
@@ -25,18 +24,21 @@ const slides: OnboardingSlide[] = [
 		title: 'Découvrez des milliers de produits',
 		description: 'Explorez une vaste sélection de produits provenant d\'entreprises vérifiées et de confiance.',
 		icon: 'storefront-outline',
+		imageUri: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=800&q=80&fit=crop',
 	},
 	{
 		id: '2',
 		title: 'Connectez-vous aux entreprises',
 		description: 'Mettez-vous en relation directe avec des entreprises locales et découvrez leurs meilleures offres.',
 		icon: 'business-outline',
+		imageUri: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80&fit=crop',
 	},
 	{
 		id: '3',
 		title: 'Commandez en toute sécurité',
 		description: 'Profitez d\'une expérience d\'achat sécurisée avec suivi de commande en temps réel.',
 		icon: 'shield-checkmark-outline',
+		imageUri: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80&fit=crop',
 	},
 ];
 
@@ -115,15 +117,13 @@ export default function OnboardingScreen() {
 			>
 				{slides.map((slide, index) => (
 					<View key={slide.id} style={styles.slideContainer}>
-						<View style={styles.iconContainer}>
-							<LinearGradient
-								colors={[PRIMARY_COLOR, PRIMARY_LIGHT]}
-								start={{ x: 0, y: 0 }}
-								end={{ x: 1, y: 1 }}
-								style={styles.iconGradient}
-							>
-								<Ionicons name={slide.icon} size={80} color="white" />
-							</LinearGradient>
+						<View style={styles.imageContainer}>
+							<Image
+								source={{ uri: slide.imageUri }}
+								style={styles.slideImage}
+								resizeMode="cover"
+							/>
+							<View style={styles.imageOverlay} />
 						</View>
 
 						<Text style={styles.title}>{slide.title}</Text>
@@ -153,12 +153,7 @@ export default function OnboardingScreen() {
 					style={styles.nextButton}
 					activeOpacity={0.8}
 				>
-					<LinearGradient
-						colors={[PRIMARY_COLOR, PRIMARY_LIGHT]}
-						start={{ x: 0, y: 0 }}
-						end={{ x: 1, y: 1 }}
-						style={styles.nextButtonGradient}
-					>
+					<View style={styles.nextButtonGradient}>
 						<Text style={styles.nextButtonText}>
 							{currentIndex === slides.length - 1 ? 'Commencer' : 'Suivant'}
 						</Text>
@@ -167,7 +162,7 @@ export default function OnboardingScreen() {
 							size={24}
 							color="white"
 						/>
-					</LinearGradient>
+					</View>
 				</TouchableOpacity>
 			</View>
 		</View>
@@ -199,47 +194,49 @@ const styles = StyleSheet.create({
 	skipText: {
 		fontSize: 16,
 		color: '#6B7280',
-		fontFamily: 'Quicksand-SemiBold',
+		fontFamily: 'Poppins-SemiBold',
 	},
 	slideContainer: {
 		width: SCREEN_WIDTH,
 		flex: 1,
 		alignItems: 'center',
 		justifyContent: 'center',
-		paddingHorizontal: 40,
+		paddingHorizontal: 32,
 	},
-	iconContainer: {
-		marginBottom: 40,
-	},
-	iconGradient: {
-		width: 160,
-		height: 160,
-		borderRadius: 80,
-		alignItems: 'center',
-		justifyContent: 'center',
-		shadowColor: PRIMARY_COLOR,
-		shadowOffset: {
-			width: 0,
-			height: 8,
-		},
-		shadowOpacity: 0.3,
-		shadowRadius: 16,
+	imageContainer: {
+		width: SCREEN_WIDTH * 0.78,
+		height: SCREEN_WIDTH * 0.78,
+		borderRadius: 32,
+		overflow: 'hidden',
+		marginBottom: 36,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 8 },
+		shadowOpacity: 0.18,
+		shadowRadius: 20,
 		elevation: 12,
 	},
+	slideImage: {
+		width: '100%',
+		height: '100%',
+	},
+	imageOverlay: {
+		...StyleSheet.absoluteFillObject,
+		backgroundColor: 'rgba(6, 95, 70, 0.18)',
+	},
 	title: {
-		fontSize: 28,
-		fontFamily: 'Quicksand-Bold',
+		fontSize: 26,
+		fontFamily: 'Poppins-Bold',
 		color: '#111827',
 		textAlign: 'center',
-		marginBottom: 16,
+		marginBottom: 14,
 	},
 	description: {
-		fontSize: 16,
-		fontFamily: 'Quicksand-Regular',
+		fontSize: 15,
+		fontFamily: 'Poppins-Regular',
 		color: '#6B7280',
 		textAlign: 'center',
 		lineHeight: 24,
-		paddingHorizontal: 10,
+		paddingHorizontal: 6,
 	},
 	footer: {
 		paddingHorizontal: 20,
@@ -283,10 +280,12 @@ const styles = StyleSheet.create({
 		paddingVertical: 18,
 		paddingHorizontal: 32,
 		gap: 12,
+		backgroundColor: PRIMARY_COLOR,
+		borderRadius: 16,
 	},
 	nextButtonText: {
 		fontSize: 18,
-		fontFamily: 'Quicksand-Bold',
+		fontFamily: 'Poppins-Bold',
 		color: 'white',
 	},
 });

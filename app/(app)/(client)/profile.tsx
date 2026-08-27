@@ -193,7 +193,7 @@ export default function ProfileScreen() {
         {/* Header */}
         <View className="bg-white px-6 pt-16 pb-8">
           <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-2xl font-quicksand-bold text-gray-900">
+            <Text className="text-2xl font-poppins-bold text-gray-900">
               Profil
             </Text>
             <TouchableOpacity
@@ -213,7 +213,7 @@ export default function ProfileScreen() {
               />
             ) : (
               <View className="w-24 h-24 rounded-full bg-primary items-center justify-center">
-                <Text className="text-white font-quicksand-bold text-2xl">
+                <Text className="text-white font-poppins-bold text-2xl">
                   {profileData ? formatUserInitials(profileData) : 'U'}
                 </Text>
               </View>
@@ -228,7 +228,7 @@ export default function ProfileScreen() {
 
           {/* User Info */}
           <View className="items-center">
-            <Text className="text-xl font-quicksand-bold text-gray-900">
+            <Text className="text-xl font-poppins-bold text-gray-900">
               {profileData?.firstName} {profileData?.lastName}
             </Text>
             <Text className="text-sm font-quicksand text-gray-600 mt-1">
@@ -240,7 +240,7 @@ export default function ProfileScreen() {
         {/* Profile Form */}
         <View className="bg-white mx-4 rounded-2xl p-6 mt-4">
           <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-lg font-quicksand-bold text-gray-900">
+            <Text className="text-lg font-poppins-bold text-gray-900">
               Informations personnelles
             </Text>
             <TouchableOpacity
@@ -253,7 +253,7 @@ export default function ProfileScreen() {
               }}
               className="px-4 py-2 rounded-lg bg-primary"
             >
-              <Text className="text-white font-quicksand-semibold text-sm">
+              <Text className="text-white font-poppins-semibold text-sm">
                 {isEditing ? 'Sauvegarder' : 'Modifier'}
               </Text>
             </TouchableOpacity>
@@ -263,7 +263,7 @@ export default function ProfileScreen() {
           <View className="space-y-4">
             {/* First Name */}
             <View>
-              <Text className="text-sm font-quicksand-medium text-gray-700 mb-2">
+              <Text className="text-sm font-poppins-medium text-gray-700 mb-2">
                 Prénom
               </Text>
               <TextInput
@@ -279,7 +279,7 @@ export default function ProfileScreen() {
 
             {/* Last Name */}
             <View>
-              <Text className="text-sm font-quicksand-medium text-gray-700 mb-2">
+              <Text className="text-sm font-poppins-medium text-gray-700 mb-2">
                 Nom
               </Text>
               <TextInput
@@ -295,7 +295,7 @@ export default function ProfileScreen() {
 
             {/* Phone */}
             <View>
-              <Text className="text-sm font-quicksand-medium text-gray-700 mb-2">
+              <Text className="text-sm font-poppins-medium text-gray-700 mb-2">
                 Téléphone
               </Text>
               <TextInput
@@ -312,7 +312,7 @@ export default function ProfileScreen() {
 
             {/* Address */}
             <View>
-              <Text className="text-sm font-quicksand-medium text-gray-700 mb-2">
+              <Text className="text-sm font-poppins-medium text-gray-700 mb-2">
                 Adresse
               </Text>
               <TextInput
@@ -335,7 +335,7 @@ export default function ProfileScreen() {
               onPress={() => setIsEditing(false)}
               className="mt-4 px-4 py-2 rounded-lg bg-gray-200"
             >
-              <Text className="text-gray-700 font-quicksand-semibold text-sm text-center">
+              <Text className="text-gray-700 font-poppins-semibold text-sm text-center">
                 Annuler
               </Text>
             </TouchableOpacity>
@@ -344,7 +344,7 @@ export default function ProfileScreen() {
 
         {/* Quick Actions */}
         <View className="bg-white mx-4 rounded-2xl p-6 mt-4">
-          <Text className="text-lg font-quicksand-bold text-gray-900 mb-4">
+          <Text className="text-lg font-poppins-bold text-gray-900 mb-4">
             Actions rapides
           </Text>
           
@@ -398,7 +398,7 @@ export default function ProfileScreen() {
             onPress={handleLogout}
             className="bg-red-500 rounded-xl py-4 items-center"
           >
-            <Text className="text-white font-quicksand-semibold text-base">
+            <Text className="text-white font-poppins-semibold text-base">
               Se déconnecter
             </Text>
           </TouchableOpacity>
@@ -415,7 +415,7 @@ export default function ProfileScreen() {
         <View className="flex-1 bg-white">
           <View className="px-6 pt-4 pb-4 border-b border-gray-200">
             <View className="flex-row justify-between items-center">
-              <Text className="text-xl font-quicksand-bold text-gray-900">
+              <Text className="text-xl font-poppins-bold text-gray-900">
                 Paramètres
               </Text>
               <TouchableOpacity
@@ -428,7 +428,7 @@ export default function ProfileScreen() {
           </View>
 
           <ScrollView className="flex-1 px-6 pt-6">
-            <Text className="text-lg font-quicksand-bold text-gray-900 mb-4">
+            <Text className="text-lg font-poppins-bold text-gray-900 mb-4">
               Notifications
             </Text>
 
@@ -518,12 +518,12 @@ export default function ProfileScreen() {
             </View>
 
             {/* Titre */}
-            <Text className="text-xl font-quicksand-bold text-neutral-800 mb-2 text-center">
+            <Text className="text-xl font-poppins-bold text-neutral-800 mb-2 text-center">
               Déconnexion
             </Text>
 
             {/* Message */}
-            <Text className="text-base text-neutral-600 font-quicksand-medium mb-6 text-center">
+            <Text className="text-base text-neutral-600 font-poppins-medium mb-6 text-center">
               Êtes-vous sûr de vouloir vous déconnecter ?
             </Text>
 
@@ -533,7 +533,7 @@ export default function ProfileScreen() {
                 className="flex-1 bg-neutral-100 rounded-xl py-3"
                 onPress={() => setShowLogoutModal(false)}
               >
-                <Text className="text-neutral-700 font-quicksand-semibold text-center">
+                <Text className="text-neutral-700 font-poppins-semibold text-center">
                   Annuler
                 </Text>
               </TouchableOpacity>
@@ -541,7 +541,7 @@ export default function ProfileScreen() {
                 className="flex-1 bg-red-500 rounded-xl py-3"
                 onPress={confirmLogout}
               >
-                <Text className="text-white font-quicksand-semibold text-center">
+                <Text className="text-white font-poppins-semibold text-center">
                   Déconnecter
                 </Text>
               </TouchableOpacity>
