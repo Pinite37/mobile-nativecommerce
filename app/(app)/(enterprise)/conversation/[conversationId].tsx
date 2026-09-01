@@ -1,12 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
-  BackHandler,
   Easing,
   FlatList,
   Image,
@@ -14,7 +13,6 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
-  Pressable,
   Animated as RNAnimated,
   ScrollView,
   Text,
@@ -23,14 +21,7 @@ import {
   View,
 } from "react-native";
 // Removed reanimated Animated import since we are not using transition classes here
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-  KeyboardAvoidingView as KCKeyboardAvoidingView,
-  KeyboardAwareScrollView,
-} from "react-native-keyboard-controller";
 import NotificationModal, {
   useNotification,
 } from "../../../../components/ui/NotificationModal";
@@ -138,31 +129,13 @@ export default function ConversationDetails() {
   } | null>(null);
 
   // Offre de livraison (création depuis la conversation)
-  const [offerModalVisible, setOfferModalVisible] = useState(false);
-  const [creatingOffer, setCreatingOffer] = useState(false);
   // La zone de livraison a disparu du formulaire : c'est désormais le CLIENT
   // qui fournit son adresse en confirmant la commande. L'expiration aussi —
   // elle concerne la mission, fixée au moment de la publier, pas l'accord.
-  const [offerForm, setOfferForm] = useState<{
-    agreedTotal: string;
-    deliveryFee: string; // string pour TextInput, converti en nombre à l'envoi
-    deliveryFeePaidBy: "ENTREPRISE" | "CLIENT";
-    urgency: UrgencyLevel;
-    specialInstructions: string;
-    expiresAt: string; // ISO string — conservé pour la publication de mission
-  }>({
-    agreedTotal: "",
-    deliveryFee: "",
-    deliveryFeePaidBy: "CLIENT",
-    urgency: "MEDIUM",
-    specialInstructions: "",
-    expiresAt: "",
-  });
 
   // Commandes déjà proposées à ce client, pour ce produit.
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [publishingId, setPublishingId] = useState<string | null>(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [tempExpiryDate, setTempExpiryDate] = useState<Date | null>(null);
   const [tempPickerDate, setTempPickerDate] = useState<Date>(
@@ -172,7 +145,6 @@ export default function ConversationDetails() {
   const zoneInputRef = useRef<any>(null);
   const feeInputRef = useRef<any>(null);
   const instructionsInputRef = useRef<any>(null);
-  const formScrollRef = useRef<ScrollView>(null);
 
   // Demande d'adresse envoyée par le client lui-même (bouton "Partager mon
   // adresse de livraison" dans SA conversation) — quand elle existe, elle
@@ -192,7 +164,6 @@ export default function ConversationDetails() {
   // Sans point de retrait, le backend refuse de publier la mission : on
   // prévient dans le formulaire plutôt que de laisser l'entreprise le
   // remplir en entier pour échouer à l'envoi.
-  const [hasPickupPoint, setHasPickupPoint] = useState<boolean | null>(null);
 
   const conversationProductId =
     typeof conversation?.product === "string"
@@ -242,45 +213,86 @@ export default function ConversationDetails() {
 
   useEffect(() => {
     if (!conversation) return;
-    refreshCommandes();
+    // `refreshCommandes` n'est plus appelé ici : le useFocusEffect ci-dessous
+    // s'en charge, y compris au premier affichage — les deux ensemble
+    // faisaient deux appels identiques au montage.
     refreshMatchedDeliveryRequest();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversation?._id, conversationProductId]);
 
-  const openOfferModal = async () => {
-    if (!offerForm.expiresAt) {
-      const defaultExpiry = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-      setOfferForm((prev) => ({ ...prev, expiresAt: defaultExpiry }));
-    }
-    setOfferModalVisible(true);
+  // Au retour de l'écran de proposition. Tant que le formulaire était une
+  // feuille dans cette page, la création mettait la liste à jour par un
+  // setCommandes local ; sur un écran séparé, cet appel n'existe plus et la
+  // commande n'apparaissait qu'après avoir quitté puis rouvert la
+  // conversation.
+  useFocusEffect(
+    useCallback(() => {
+      if (conversation) refreshCommandes();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [conversation?._id])
+  );
 
-    EnterpriseService.listPickupPoints().then((points) =>
-      setHasPickupPoint(points.some((p) => p.isActive !== false))
-    );
+  // La proposition de commande a quitté cet écran : c'était une feuille en
+  // position absolue couvrant tout l'écran, avec laquelle le clavier n'a
+  // jamais cohabité correctement — quatre tentatives. Une route laisse le
+  // système gérer le clavier, et supprime le fond cliquable ainsi que
+  // l'interception du bouton retour Android.
+  const openOfferModal = () => {
+    if (!conversation) return;
+    const productId =
+      typeof conversation.product === "string"
+        ? conversation.product
+        : conversation.product?._id;
+    const customerId = getCustomerIdFromConversation(conversation, getCurrentUserId());
 
-    // Re-vérifier au cas où le client vient tout juste de l'envoyer.
-    const match = await refreshMatchedDeliveryRequest();
-    if (match) {
-      setOfferForm((prev) => ({ ...prev, deliveryZone: match.deliveryAddress }));
+    if (!productId || !customerId) {
+      showNotification(
+        "error",
+        "Données manquantes",
+        "Produit ou client introuvable pour proposer une commande"
+      );
+      return;
     }
+
+    // Une conversation couvre toute la relation avec un client, donc
+    // plusieurs produits. On transmet ceux abordés dans ce fil pour que
+    // l'entreprise choisisse : `conversation.product` seul désigne le dernier
+    // produit d'où le client est arrivé, pas celui dont on parle.
+    const normalizeProduct = (p: any) =>
+      p && typeof p === "object" && p._id
+        ? { _id: p._id, name: p.name, price: p.price }
+        : null;
+
+    let threadProducts = (Array.isArray((conversation as any).products)
+      ? (conversation as any).products.map(normalizeProduct).filter(Boolean)
+      : []) as { _id: string; name?: string; price?: number }[];
+
+    // `products[]` est vide sur les fils antérieurs à son introduction, et le
+    // restera tant que le client n'aura pas rouvert la discussion depuis une
+    // fiche produit. On retombe alors sur le produit current : l'écran doit
+    // toujours dire sur quoi porte la commande, même sans historique.
+    if (threadProducts.length === 0) {
+      const current = normalizeProduct(conversation.product);
+      if (current) threadProducts = [current];
+    }
+
+    router.push({
+      pathname: "/(app)/(enterprise)/commande/nouvelle",
+      params: {
+        conversationId: conversationId ?? "",
+        clientId: customerId,
+        productId,
+        products: JSON.stringify(threadProducts),
+        // `otherParticipant` est déclaré plus bas dans le composant ; il est
+        // bien initialisé au moment où cette fonction s'exécute (à l'appui),
+        // mais on reste tolérant : le sous-titre est décoratif.
+        clientName: otherParticipant
+          ? `${otherParticipant.firstName ?? ""} ${otherParticipant.lastName ?? ""}`.trim()
+          : "",
+      },
+    } as any);
   };
 
-  const closeOfferModal = () => {
-    setOfferModalVisible(false);
-    setMatchedDeliveryRequest(null);
-  };
-
-  // La sheet d'offre n'est plus une <Modal> native (voir plus bas pourquoi),
-  // donc le bouton retour Android ne la ferme plus tout seul — on le
-  // ré-intercepte manuellement pendant qu'elle est ouverte.
-  useEffect(() => {
-    if (!offerModalVisible) return;
-    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      closeOfferModal();
-      return true;
-    });
-    return () => sub.remove();
-  }, [offerModalVisible]);
 
   // États pour la gestion des confirmations de suppression
   const [confirmationVisible, setConfirmationVisible] = useState(false);
@@ -375,7 +387,7 @@ export default function ConversationDetails() {
           (p) => p.role === "CLIENT"
         );
         if (clientObj) return clientObj._id;
-        // Fallback: prendre l'autre participant différent de l'utilisateur courant
+        // Fallback: prendre l'autre participant différent de l'utilisateur current
         const otherObj = (conv.participants as any[]).find(
           (p) => p._id !== currentUserId
         );
@@ -393,7 +405,7 @@ export default function ConversationDetails() {
           if (currentUserId && ids.includes(currentUserId)) {
             return ids.find((id) => id !== currentUserId);
           }
-          // Dernier recours: retourner le premier si on ne connaît pas l'utilisateur courant
+          // Dernier recours: retourner le premier si on ne connaît pas l'utilisateur current
           return ids[0];
         }
       }
@@ -1001,110 +1013,6 @@ export default function ConversationDetails() {
   };
 
   // Création de l'offre de livraison
-  const submitOffer = async () => {
-    if (!conversation) return;
-    try {
-      // Déduire les IDs depuis la conversation
-      console.log("🚀 Soumission offre - début validation");
-      const productId =
-        typeof conversation.product === "string"
-          ? conversation.product
-          : conversation.product?._id;
-      console.log("🚀 Soumission offre - produit ID:", productId);
-      const customerId = getCustomerIdFromConversation(
-        conversation,
-        getCurrentUserId()
-      );
-      console.log("🚀 Soumission offre - client ID:", customerId);
-      if (!productId || !customerId) {
-        showNotification(
-          "error",
-          "Données manquantes",
-          "Produit ou client introuvable pour créer l'offre"
-        );
-        return;
-      }
-      const total = Number(offerForm.agreedTotal);
-      if (!offerForm.agreedTotal || isNaN(total) || total < 0) {
-        showNotification(
-          "warning",
-          "Prix convenu requis",
-          "Indiquez le montant sur lequel vous vous êtes mis d'accord"
-        );
-        return;
-      }
-      const fee = Number(offerForm.deliveryFee);
-      if (isNaN(fee) || fee < 0) {
-        showNotification(
-          "warning",
-          "Frais invalide",
-          "Les frais de livraison doivent être un nombre positif"
-        );
-        return;
-      }
-
-      setCreatingOffer(true);
-
-      // On ne crée plus directement une mission de livraison : on propose une
-      // COMMANDE. Le client la confirmera en fournissant SON adresse — c'est
-      // ce partage des rôles qui rend une mission incomplète impossible.
-      // Ni la zone de livraison (que l'entreprise ne connaît pas) ni
-      // l'expiration (qui concerne la mission) n'ont leur place ici.
-      const commande = await CommandeService.create({
-        client: customerId,
-        conversation: conversationId ?? undefined,
-        items: [{ product: productId, quantity: 1, unitPrice: total }],
-        agreedTotal: total,
-        deliveryFee: fee,
-        deliveryFeePaidBy: offerForm.deliveryFeePaidBy,
-      });
-
-      setCommandes((prev) => [commande, ...prev]);
-      showNotification(
-        "success",
-        "Commande proposée",
-        "Le client va confirmer et indiquer son adresse de livraison"
-      );
-      closeOfferModal();
-
-      setOfferForm({
-        agreedTotal: "",
-        deliveryFee: "",
-        deliveryFeePaidBy: "CLIENT",
-        urgency: "MEDIUM",
-        specialInstructions: "",
-        expiresAt: "",
-      });
-    } catch (error: any) {
-      console.error("❌ Erreur création offre:", error);
-
-      // Gestion spécifique des erreurs métier
-      if (error.response?.status === 400) {
-        const errorMessage = error.response?.data?.message;
-        if (errorMessage?.includes("n'appartient pas à votre entreprise")) {
-          showNotification(
-            "error",
-            "Produit non autorisé",
-            "Vous ne pouvez créer une offre que pour vos propres produits"
-          );
-          return;
-        }
-        if (errorMessage?.includes("produit")) {
-          showNotification("error", "Produit invalide", errorMessage);
-          return;
-        }
-      }
-
-      // Erreur générique
-      showNotification(
-        "error",
-        "Erreur",
-        error.message || "Impossible de créer l'offre"
-      );
-    } finally {
-      setCreatingOffer(false);
-    }
-  };
 
   // Fonction pour envoyer un message avec animation
   const handleSendPress = () => {
@@ -2662,473 +2570,6 @@ export default function ConversationDetails() {
           onClose={hideNotification}
         />
       ) : null}
-
-      {/* Modal pour la création d'offre de livraison */}
-      {/* PAS de <Modal> ici volontairement : sur Android, une <Modal>
-          ouvre une fenêtre native SÉPARÉE (Dialog), et le clavier logiciel
-          se retrouve parfois derrière cette fenêtre au lieu de la pousser —
-          ni "behavior=padding" ni statusBarTranslucent n'ont réglé ça. Un
-          simple View en overlay reste dans la même fenêtre que le reste de
-          l'écran, donc le clavier se comporte normalement. */}
-      {offerModalVisible && (
-      <View
-        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000, elevation: 1000 }}
-      >
-        {/* KeyboardAvoidingView de react-native-keyboard-controller, et non
-            celui de React Native. Les échecs précédents venaient d'ailleurs :
-            le manifeste Android déclarait adjustPan — l'OS faisait défiler
-            toute la fenêtre au lieu de la redimensionner, et aucun réglage
-            JS ne pouvait compenser ça. Le manifeste est passé à
-            adjustResize ; ce composant-ci suit la hauteur réelle du clavier
-            image par image plutôt que de deviner un padding. */}
-        <KCKeyboardAvoidingView
-          behavior="padding"
-          style={{ flex: 1, justifyContent: 'flex-end' }}
-        >
-          {/* Backdrop */}
-          <Pressable
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)' }}
-            onPress={closeOfferModal}
-          />
-
-          {/* Sheet */}
-          <View style={{ flex: 1, maxHeight: '90%', borderTopLeftRadius: 28, borderTopRightRadius: 28, backgroundColor: colors.card, overflow: 'hidden' }}>
-
-            {/* Handle pill */}
-            <View style={{ alignItems: 'center', paddingTop: 10, paddingBottom: 4 }}>
-              <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
-            </View>
-
-            {/* Header compact */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16 }}>
-              <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: 'rgba(16,185,129,0.12)', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
-                <Ionicons name="car" size={20} color="#10B981" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 18, lineHeight: 22 }}>
-                  {i18n.t('enterprise.messages.conversationDetail.deliveryOffer')}
-                </Text>
-                <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 12, marginTop: 1 }}>
-                  Renseignez les détails de votre offre
-                </Text>
-              </View>
-              <TouchableOpacity
-                onPress={closeOfferModal}
-                style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: colors.secondary, justifyContent: 'center', alignItems: 'center' }}
-              >
-                <Ionicons name="close" size={18} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-
-            {/* Séparateur */}
-            <View style={{ height: 1, backgroundColor: colors.border, marginHorizontal: 20 }} />
-
-            {/* Formulaire scrollable */}
-            <ScrollView
-              ref={formScrollRef}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-              style={{ flex: 1 }}
-              contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 32 }}
-            >
-              {hasPickupPoint === false && (
-                <TouchableOpacity
-                  activeOpacity={0.9}
-                  onPress={() => {
-                    closeOfferModal();
-                    router.push("/(app)/(enterprise)/profile/location-picker" as any);
-                  }}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    padding: 14,
-                    borderRadius: 14,
-                    marginBottom: 18,
-                    backgroundColor: isDark ? 'rgba(245,158,11,0.12)' : '#FEF6E7',
-                    borderWidth: 1,
-                    borderColor: isDark ? 'rgba(245,158,11,0.3)' : '#F7E0B5',
-                  }}
-                >
-                  <Ionicons name="storefront-outline" size={19} color={colors.warning} />
-                  <View style={{ flex: 1, marginLeft: 11 }}>
-                    <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 13 }}>
-                      Point de retrait manquant
-                    </Text>
-                    <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 12, marginTop: 1 }}>
-                      Définissez-le pour pouvoir publier cette livraison.
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={17} color={colors.textSecondary} />
-                </TouchableOpacity>
-              )}
-
-              {/* Prix convenu — remplace la zone de livraison, que
-                  l'entreprise ne connaît pas. C'est le client qui donnera
-                  son adresse en confirmant. */}
-              <View style={{ marginBottom: 18 }}>
-                <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
-                  Prix convenu
-                </Text>
-                <View style={{
-                  flexDirection: 'row', alignItems: 'center',
-                  backgroundColor: colors.secondary,
-                  borderWidth: 1.5,
-                  borderColor: colors.border,
-                  borderRadius: 14,
-                  paddingHorizontal: 14,
-                }}>
-                  <Ionicons name="pricetag-outline" size={16} color={colors.brandPrimary} style={{ marginRight: 8 }} />
-                  <TextInput
-                    ref={zoneInputRef}
-                    value={offerForm.agreedTotal}
-                    onChangeText={(text) => setOfferForm({ ...offerForm, agreedTotal: text })}
-                    placeholder="Montant total négocié"
-                    keyboardType="numeric"
-                    style={{ flex: 1, color: colors.textPrimary, fontFamily: 'Poppins-Medium', fontSize: 15, paddingVertical: 13 }}
-                    placeholderTextColor={colors.textSecondary}
-                    returnKeyType="next"
-                    onSubmitEditing={() => feeInputRef.current?.focus()}
-                    blurOnSubmit={false}
-                    onFocus={() => formScrollRef.current?.scrollTo({ y: 0, animated: true })}
-                  />
-                  <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Bold', fontSize: 12 }}>FCFA</Text>
-                </View>
-                <Text style={{ color: colors.textTertiary, fontFamily: 'Poppins-Medium', fontSize: 11, marginTop: 6 }}>
-                  Le montant sur lequel vous vous êtes mis d&apos;accord dans la discussion.
-                </Text>
-              </View>
-
-              {/* Frais de livraison */}
-              <View style={{ marginBottom: 18 }}>
-                <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
-                  {i18n.t('enterprise.messages.conversationDetail.offerForm.deliveryFee')}
-                </Text>
-                <View style={{
-                  flexDirection: 'row', alignItems: 'center',
-                  backgroundColor: colors.secondary,
-                  borderWidth: 1.5,
-                  borderColor: colors.border,
-                  borderRadius: 14,
-                  paddingHorizontal: 14,
-                }}>
-                  <Ionicons name="cash-outline" size={16} color="#10B981" style={{ marginRight: 8 }} />
-                  <TextInput
-                    ref={feeInputRef}
-                    value={offerForm.deliveryFee}
-                    onChangeText={(text) => setOfferForm({ ...offerForm, deliveryFee: text })}
-                    placeholder="0"
-                    keyboardType="numeric"
-                    style={{ flex: 1, color: colors.textPrimary, fontFamily: 'Poppins-SemiBold', fontSize: 15, paddingVertical: 13 }}
-                    placeholderTextColor={colors.textSecondary}
-                    returnKeyType="next"
-                    onSubmitEditing={() => instructionsInputRef.current?.focus()}
-                    blurOnSubmit={false}
-                    onFocus={() => formScrollRef.current?.scrollTo({ y: 0, animated: true })}
-                  />
-                  <View style={{ backgroundColor: 'rgba(16,185,129,0.1)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
-                    <Text style={{ color: '#10B981', fontFamily: 'Poppins-Bold', fontSize: 12 }}>FCFA</Text>
-                  </View>
-                </View>
-              </View>
-
-                            {/* Qui règle le livreur — le paiement se fait hors de l'app,
-                  ce choix dit seulement au livreur à qui présenter la note.
-                  Sans lui, il arrive sans savoir. */}
-              <View style={{ marginBottom: 18 }}>
-                <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
-                  Qui règle le livreur
-                </Text>
-                <View style={{ flexDirection: 'row', gap: 10 }}>
-                  {([
-                    { key: 'CLIENT' as const, label: 'Le client', hint: 'à la livraison' },
-                    { key: 'ENTREPRISE' as const, label: 'Vous', hint: 'au retrait' },
-                  ]).map((opt) => {
-                    const active = offerForm.deliveryFeePaidBy === opt.key;
-                    return (
-                      <TouchableOpacity
-                        key={opt.key}
-                        onPress={() => setOfferForm({ ...offerForm, deliveryFeePaidBy: opt.key })}
-                        activeOpacity={0.85}
-                        style={{
-                          flex: 1,
-                          paddingVertical: 12,
-                          paddingHorizontal: 12,
-                          borderRadius: 14,
-                          borderWidth: 1.5,
-                          borderColor: active ? colors.brandPrimary : colors.border,
-                          backgroundColor: active ? 'rgba(16,185,129,0.08)' : colors.secondary,
-                        }}
-                      >
-                        <Text style={{ color: active ? colors.brandPrimary : colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 13 }}>
-                          {opt.label}
-                        </Text>
-                        <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 11, marginTop: 1 }}>
-                          {opt.hint}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </View>
-
-{/* Urgence — chips horizontaux */}
-              <View style={{ marginBottom: 18 }}>
-                <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>
-                  {i18n.t('enterprise.messages.conversationDetail.offerForm.urgencyLevel')}
-                </Text>
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                  {([
-                    { value: 'LOW',    label: i18n.t('enterprise.messages.conversationDetail.offerForm.urgencyLow'),    icon: 'walk',    activeColor: '#10B981', activeBg: isDark ? 'rgba(16,185,129,0.15)' : '#ECFDF5' },
-                    { value: 'MEDIUM', label: i18n.t('enterprise.messages.conversationDetail.offerForm.urgencyMedium'), icon: 'bicycle', activeColor: '#F97316', activeBg: isDark ? 'rgba(249,115,22,0.15)' : '#FFF7ED' },
-                    { value: 'HIGH',   label: i18n.t('enterprise.messages.conversationDetail.offerForm.urgencyHigh'),   icon: 'rocket',  activeColor: '#EF4444', activeBg: isDark ? 'rgba(239,68,68,0.15)' : '#FEF2F2' },
-                  ] as const).map(({ value, label, icon, activeColor, activeBg }) => {
-                    const active = offerForm.urgency === value;
-                    return (
-                      <TouchableOpacity
-                        key={value}
-                        onPress={() => setOfferForm({ ...offerForm, urgency: value })}
-                        activeOpacity={0.75}
-                        style={{
-                          flex: 1,
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 6,
-                          paddingVertical: 10,
-                          paddingHorizontal: 6,
-                          borderRadius: 12,
-                          borderWidth: 1.5,
-                          borderColor: active ? activeColor : colors.border,
-                          backgroundColor: active ? activeBg : colors.secondary,
-                        }}
-                      >
-                        <Ionicons name={icon as any} size={15} color={active ? activeColor : colors.textSecondary} />
-                        <Text style={{ color: active ? activeColor : colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 12 }}>
-                          {label}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </View>
-
-              {/* Date d'expiration */}
-              <View style={{ marginBottom: 18 }}>
-                <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
-                  {i18n.t('enterprise.messages.conversationDetail.offerForm.expirationDate')}
-                </Text>
-                <TouchableOpacity
-                  onPress={() => {
-                    if (Platform.OS === "ios") {
-                      setTempPickerDate(offerForm.expiresAt ? new Date(offerForm.expiresAt) : new Date(Date.now() + 60 * 60 * 1000));
-                      closeOfferModal();
-                      setTimeout(() => setShowDatePicker(true), 300);
-                    } else {
-                      setShowDatePicker(true);
-                    }
-                  }}
-                  style={{
-                    flexDirection: 'row', alignItems: 'center',
-                    backgroundColor: colors.secondary,
-                    borderWidth: 1.5, borderColor: colors.border, borderRadius: 14,
-                    paddingHorizontal: 14, paddingVertical: 13,
-                  }}
-                >
-                  <Ionicons name="calendar-outline" size={16} color="#10B981" style={{ marginRight: 10 }} />
-                  <Text style={{ flex: 1, color: offerForm.expiresAt ? colors.textPrimary : colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 15 }}>
-                    {offerForm.expiresAt
-                      ? new Date(offerForm.expiresAt).toLocaleString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
-                      : i18n.t('enterprise.messages.conversationDetail.offerForm.chooseDateTime')}
-                  </Text>
-                  <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
-                </TouchableOpacity>
-                {Platform.OS === "android" && showDatePicker && (
-                  <DateTimePicker
-                    value={offerForm.expiresAt ? new Date(offerForm.expiresAt) : new Date(Date.now() + 60 * 60 * 1000)}
-                    mode={"date"}
-                    display={"default"}
-                    minimumDate={new Date()}
-                    onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
-                      setShowDatePicker(false);
-                      if ((event as any).type === "dismissed") return;
-                      const picked = selectedDate || new Date();
-                      setTempExpiryDate(picked);
-                      setShowTimePicker(true);
-                    }}
-                  />
-                )}
-                {Platform.OS === "android" && showTimePicker && (
-                  <DateTimePicker
-                    value={tempExpiryDate || new Date()}
-                    mode={"time"}
-                    display={"default"}
-                    onChange={(event: DateTimePickerEvent, selectedTime?: Date) => {
-                      setShowTimePicker(false);
-                      if ((event as any).type === "dismissed") return;
-                      const base = tempExpiryDate || new Date();
-                      const time = selectedTime || new Date();
-                      const final = new Date(base);
-                      final.setHours(time.getHours(), time.getMinutes(), 0, 0);
-                      setOfferForm({ ...offerForm, expiresAt: final.toISOString() });
-                      setTempExpiryDate(null);
-                    }}
-                  />
-                )}
-              </View>
-
-              {/* Instructions spéciales */}
-              <View style={{ marginBottom: 4 }}>
-                <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
-                  {i18n.t('enterprise.messages.conversationDetail.offerForm.specialInstructions')}
-                </Text>
-                <View style={{
-                  backgroundColor: colors.secondary,
-                  borderWidth: 1.5, borderColor: colors.border, borderRadius: 14,
-                  padding: 14,
-                }}>
-                  <TextInput
-                    ref={instructionsInputRef}
-                    value={offerForm.specialInstructions}
-                    onChangeText={(text) => setOfferForm({ ...offerForm, specialInstructions: text })}
-                    placeholder={i18n.t('enterprise.messages.conversationDetail.offerForm.specialInstructionsPlaceholder')}
-                    style={{ color: colors.textPrimary, fontFamily: 'Poppins-Medium', fontSize: 15, minHeight: 90, textAlignVertical: 'top' }}
-                    placeholderTextColor={colors.textSecondary}
-                    multiline
-                    returnKeyType="done"
-                    blurOnSubmit={true}
-                    onFocus={() => setTimeout(() => formScrollRef.current?.scrollToEnd({ animated: true }), 100)}
-                  />
-                </View>
-              </View>
-            </ScrollView>
-
-            {/* Actions fixées en bas */}
-            <View style={{
-              flexDirection: 'row', gap: 10,
-              paddingHorizontal: 20, paddingTop: 12,
-              paddingBottom: Math.max(insets.bottom + 4, 20),
-              borderTopWidth: 1, borderTopColor: colors.border,
-              backgroundColor: colors.card,
-            }}>
-              <TouchableOpacity
-                onPress={closeOfferModal}
-                disabled={creatingOffer}
-                style={{ flex: 1, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.secondary, justifyContent: 'center', alignItems: 'center' }}
-              >
-                <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 15 }}>
-                  {i18n.t('enterprise.messages.conversationDetail.cancel')}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={submitOffer}
-                disabled={creatingOffer}
-                style={{ flex: 2, borderRadius: 14, overflow: 'hidden', opacity: creatingOffer ? 0.7 : 1, backgroundColor: colors.brandPrimary, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', flexDirection: 'row', gap: 8 }}
-                activeOpacity={0.85}
-              >
-                {creatingOffer ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <>
-                    <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
-                    <Text style={{ color: '#FFFFFF', fontFamily: 'Poppins-Bold', fontSize: 15 }}>
-                      {i18n.t('enterprise.messages.conversationDetail.offerForm.publishOffer')}
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </KCKeyboardAvoidingView>
-      </View>
-      )}
-
-      {/* Modal iOS pour le sélecteur de date */}
-      {Platform.OS === "ios" && (
-        <Modal
-          visible={showDatePicker}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => {
-            setShowDatePicker(false);
-            setTimeout(() => openOfferModal(), 300);
-          }}
-        >
-          <View className="flex-1 bg-black/60 justify-center items-center px-6">
-            <View
-              className="rounded-3xl w-full"
-              style={{
-                backgroundColor: colors.card,
-                maxWidth: 400,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 8,
-                elevation: 8,
-              }}
-            >
-              {/* Header */}
-              <View className="px-6 pt-6 pb-4">
-                <Text style={{ color: colors.textPrimary }} className="text-xl font-poppins-bold text-center mb-2">
-                  {i18n.t('enterprise.messages.conversationDetail.offerForm.expirationDate')}
-                </Text>
-                <Text style={{ color: colors.textSecondary }} className="text-sm font-poppins-medium text-center">
-                  {i18n.t('enterprise.messages.conversationDetail.offerForm.chooseDateTimeDescription')}
-                </Text>
-              </View>
-
-              <View
-                style={{ marginHorizontal: 16, borderRadius: 16, overflow: "hidden", backgroundColor: colors.card }}
-              >
-                <DateTimePicker
-                  value={tempPickerDate}
-                  mode="datetime"
-                  display="spinner"
-                  minimumDate={new Date()}
-                  onChange={(_, selectedDate) => {
-                    if (!selectedDate) return;
-                    if (selectedDate > new Date()) setTempPickerDate(selectedDate);
-                  }}
-                  style={{ alignSelf: "center" }}
-                />
-              </View>
-
-              {/* Actions */}
-              <View className="flex-row px-6 py-6 gap-3">
-                <TouchableOpacity
-                  onPress={() => {
-                    setShowDatePicker(false);
-                    setTimeout(() => openOfferModal(), 300);
-                  }}
-                  style={{ backgroundColor: colors.secondary }}
-                  className="flex-1 py-4 rounded-2xl"
-                  activeOpacity={0.7}
-                >
-                  <Text style={{ color: colors.textPrimary }} className="font-poppins-bold text-base text-center">
-                    {i18n.t('enterprise.messages.conversationDetail.cancel')}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => {
-                    setOfferForm({
-                      ...offerForm,
-                      expiresAt: tempPickerDate.toISOString(),
-                    });
-                    setShowDatePicker(false);
-                    setTimeout(() => openOfferModal(), 300);
-                  }}
-                  className="flex-1 py-4 rounded-2xl"
-                  style={{ backgroundColor: "#10B981" }}
-                  activeOpacity={0.7}
-                >
-                  <Text className="text-white font-poppins-bold text-base text-center">
-                    {i18n.t('common.actions.understood')}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-      )}
 
       {/* Modal de retry pour message échoué */}
       <Modal
