@@ -8,6 +8,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { LogBox } from "react-native";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ToastProvider as ReanimatedToastProvider } from "../components/ui/ReanimatedToast/toast-provider";
 import { AuthProvider } from "../contexts/AuthContext";
 import { SocketProvider } from "../contexts/SocketContext";
@@ -65,6 +66,11 @@ export default function RootLayout() {
   }
 
   return (
+    // KeyboardProvider doit envelopper toute l'app : sans lui, les
+    // KeyboardAwareScrollView de react-native-keyboard-controller — déjà
+    // utilisés dans huit écrans — ne reçoivent aucun événement clavier et
+    // restent silencieusement inertes.
+    <KeyboardProvider>
     <QueryClientProvider client={queryClient}>
       <LocaleProvider>
         <ThemeProvider>
@@ -103,5 +109,6 @@ export default function RootLayout() {
         </ThemeProvider>
       </LocaleProvider>
     </QueryClientProvider>
+    </KeyboardProvider>
   );
 }

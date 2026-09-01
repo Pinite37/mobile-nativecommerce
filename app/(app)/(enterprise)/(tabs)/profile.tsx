@@ -1043,6 +1043,30 @@ function EnterpriseProfilePage() {
               <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
             </TouchableOpacity>
 
+            {/* Règlements livreurs — ce qu'on doit encore pour les courses
+                terminées. Le paiement se fait hors de l'app ; l'écran sert à
+                le déclarer pour que le livreur le voie. */}
+            <TouchableOpacity
+              onPress={() => router.push("/(app)/(enterprise)/settlements")}
+              className="flex-row items-center justify-between px-4 py-5"
+              style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
+            >
+              <View className="flex-row items-center">
+                <View className="w-10 h-10 rounded-full justify-center items-center" style={{ backgroundColor: isDark ? colors.brandPrimary + '20' : '#D1FAE5' }}>
+                  <Ionicons name="cash-outline" size={20} color={colors.brandPrimary} />
+                </View>
+                <View className="ml-4">
+                  <Text className="text-base font-poppins-medium" style={{ color: colors.textPrimary }}>
+                    Règlements livreurs
+                  </Text>
+                  <Text className="text-xs font-poppins mt-0.5" style={{ color: colors.textSecondary }}>
+                    Courses terminées à payer
+                  </Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+            </TouchableOpacity>
+
             {/* Notifications */}
             <TouchableOpacity
               onPress={() =>

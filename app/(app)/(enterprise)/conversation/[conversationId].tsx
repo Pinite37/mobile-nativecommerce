@@ -27,7 +27,10 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import {
+  KeyboardAvoidingView as KCKeyboardAvoidingView,
+  KeyboardAwareScrollView,
+} from "react-native-keyboard-controller";
 import NotificationModal, {
   useNotification,
 } from "../../../../components/ui/NotificationModal";
@@ -2671,12 +2674,14 @@ export default function ConversationDetails() {
       <View
         style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000, elevation: 1000 }}
       >
-        <KeyboardAvoidingView
-          // "height" sur Android laissait le clavier s'ouvrir SOUS la sheet
-          // au lieu de la pousser vers le haut (même souci edge-to-egde
-          // SDK 35+ que sur l'écran principal, voir plus haut) — "padding"
-          // sur les deux plateformes est le pattern qui marche déjà ailleurs
-          // dans ce fichier.
+        {/* KeyboardAvoidingView de react-native-keyboard-controller, et non
+            celui de React Native. Les échecs précédents venaient d'ailleurs :
+            le manifeste Android déclarait adjustPan — l'OS faisait défiler
+            toute la fenêtre au lieu de la redimensionner, et aucun réglage
+            JS ne pouvait compenser ça. Le manifeste est passé à
+            adjustResize ; ce composant-ci suit la hauteur réelle du clavier
+            image par image plutôt que de deviner un padding. */}
+        <KCKeyboardAvoidingView
           behavior="padding"
           style={{ flex: 1, justifyContent: 'flex-end' }}
         >
@@ -3033,7 +3038,7 @@ export default function ConversationDetails() {
               </TouchableOpacity>
             </View>
           </View>
-        </KeyboardAvoidingView>
+        </KCKeyboardAvoidingView>
       </View>
       )}
 

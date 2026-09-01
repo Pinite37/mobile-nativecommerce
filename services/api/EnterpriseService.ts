@@ -43,6 +43,10 @@ export interface Enterprise {
   products: string[];
   socialLinks: SocialLink[];
   deliveryPartners: DeliveryPartner[];
+  // Réservation des courses aux partenaires. Appliqué comme valeur par
+  // défaut aux offres publiées ensuite, puis figé sur chacune : le modifier
+  // ne redistribue pas les courses déjà en circulation.
+  deliveryPartnersOnly?: boolean;
   stats: EnterpriseStats;
   location: {
     city: string;
@@ -127,6 +131,7 @@ export interface UpdateUserProfileRequest {
 }
 
 export interface UpdateEnterpriseInfoRequest {
+  deliveryPartnersOnly?: boolean;
   companyName?: string;
   description?: string;
   socialLinks?: SocialLink[];

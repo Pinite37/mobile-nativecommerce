@@ -13,7 +13,6 @@ import {
   Animated,
   Dimensions,
   Easing,
-  FlatList,
   Modal,
   RefreshControl,
   Text,
@@ -78,6 +77,41 @@ export default function ClientEnterpriseDetails() {
   const navigation = useNavigation();
   const { isAuthenticated } = useAuth();
   const insets = useSafeAreaInsets();
+
+  // En-tête repliable : le bloc identité s'efface en défilant et une barre
+  // portant le nom prend sa place. Seules l'opacité et les transformations
+  // sont animées, ce qui permet useNativeDriver — la transition ne dépend
+  // donc pas du fil JS, occupé à rendre la grille de produits.
+  const scrollY = React.useRef(new Animated.Value(0)).current;
+  const heroOpacity = scrollY.interpolate({
+    inputRange: [0, 70, 115],
+    outputRange: [1, 1, 0],
+    extrapolate: "clamp",
+  });
+  const heroScale = scrollY.interpolate({
+    inputRange: [0, 115],
+    outputRange: [1, 0.92],
+    extrapolate: "clamp",
+  });
+  // Les deux plages se chevauchent à peine : le logo a fini de s'effacer
+  // avant que la barre n'arrive, sinon on lirait le nom à deux endroits.
+  const barOpacity = scrollY.interpolate({
+    inputRange: [95, 150],
+    outputRange: [0, 1],
+    extrapolate: "clamp",
+  });
+  const barTitleShift = scrollY.interpolate({
+    inputRange: [95, 150],
+    outputRange: [8, 0],
+    extrapolate: "clamp",
+  });
+  // La pastille du bouton retour s'efface quand la barre lui fournit un
+  // fond : deux fonds superposés feraient une tache.
+  const backChipOpacity = scrollY.interpolate({
+    inputRange: [95, 150],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
   const { colors, isDark } = useTheme();
 
   const [enterprise, setEnterprise] = useState<Enterprise | null>(null);
@@ -275,31 +309,17 @@ export default function ClientEnterpriseDetails() {
 
   const ListHeader = (
     <View>
-      {/* Flat header — INSIDE ListHeaderComponent */}
-      <View style={{
-        backgroundColor: colors.surface,
-        paddingTop: insets.top + 8,
-        paddingHorizontal: 20,
-        paddingBottom: 14,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.borderLight,
-        flexDirection: 'row',
-        alignItems: 'center',
-      }}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: colors.tertiary, alignItems: 'center', justifyContent: 'center' }}
-        >
-          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
-        </TouchableOpacity>
-        <Text numberOfLines={1} style={{ flex: 1, fontFamily: 'Poppins-SemiBold', fontSize: 18, color: colors.textPrimary, textAlign: 'center' }}>
-          {enterprise.companyName}
-        </Text>
-        <View style={{ width: 40 }} />
-      </View>
-
-      {/* Logo */}
-      <View style={{ alignItems: "center", marginTop: 20, marginBottom: 12 }}>
+      {/* Bloc identité : c'est lui qui s'efface. La barre fixe qui portait
+          le nom a disparu — elle doublonnait avec le bouton retour flottant
+          juste au-dessus, et empêchait tout effet de repli. */}
+      <Animated.View
+        style={{
+          paddingTop: insets.top + 58,
+          opacity: heroOpacity,
+          transform: [{ scale: heroScale }],
+        }}
+      >
+      <View style={{ alignItems: "center", marginBottom: 12 }}>
         <View style={{ position: "relative" }}>
           <View
             style={{
@@ -341,6 +361,16 @@ export default function ClientEnterpriseDetails() {
         </View>
       </View>
 
+      {/* Nom — il n'existait que dans la barre fixe. Sans lui dans le hero,
+          il n'y aurait rien à faire disparaître ni rien à remplacer. */}
+      <Text
+        numberOfLines={2}
+        className="font-poppins-bold text-center"
+        style={{ fontSize: 22, color: colors.textPrimary, paddingHorizontal: 32, marginBottom: 6 }}
+      >
+        {enterprise.companyName}
+      </Text>
+
       {/* Localisation */}
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
         <Ionicons name="location-sharp" size={13} color={colors.textTertiary} />
@@ -348,6 +378,7 @@ export default function ClientEnterpriseDetails() {
           {enterprise.location?.district}, {enterprise.location?.city}
         </Text>
       </View>
+      </Animated.View>
 
       {/* Stats pills */}
       <View style={{ flexDirection: "row", justifyContent: "center", gap: 10, marginBottom: 16, paddingHorizontal: 16 }}>
@@ -480,18 +511,13 @@ export default function ClientEnterpriseDetails() {
     <View style={{ flex: 1, backgroundColor: colors.secondary }}>
       <ExpoStatusBar style="light" translucent />
 
-      {/* Bouton retour flottant au-dessus de tout */}
-      <View style={{ position: "absolute", top: insets.top + 8, left: 16, zIndex: 100, elevation: 100 }}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={{ width: 40, height: 40, backgroundColor: "rgba(0,0,0,0.25)", borderRadius: 20, alignItems: "center", justifyContent: "center" }}
-        >
-          <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
-
-      <FlatList
+      <Animated.FlatList
         data={products}
+        scrollEventThrottle={16}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
         keyExtractor={(item) => item._id}
         numColumns={2}
         columnWrapperStyle={{ justifyContent: "space-between", paddingHorizontal: 16 }}
@@ -550,6 +576,74 @@ export default function ClientEnterpriseDetails() {
           </TouchableOpacity>
         )}
       />
+
+      {/* Barre repliée — apparaît quand le bloc identité a fini de
+          s'effacer. pointerEvents="none" : une vue à opacité 0 reçoit
+          quand même les touchers en React Native, elle bloquerait le
+          bouton retour en haut de page. */}
+      <Animated.View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          paddingTop: insets.top,
+          height: insets.top + 56,
+          backgroundColor: colors.surface,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.borderLight,
+          opacity: barOpacity,
+          justifyContent: "center",
+        }}
+      >
+        <Animated.Text
+          numberOfLines={1}
+          style={{
+            fontFamily: "Poppins-Bold",
+            fontSize: 17,
+            color: colors.textPrimary,
+            textAlign: "center",
+            marginHorizontal: 64,
+            transform: [{ translateY: barTitleShift }],
+          }}
+        >
+          {enterprise.companyName}
+        </Animated.Text>
+      </Animated.View>
+
+      {/* Retour — un seul désormais : il y en avait deux superposés en haut
+          de page, un flottant sombre et un dans la barre fixe. */}
+      <TouchableOpacity
+        onPress={() => router.back()}
+        activeOpacity={0.7}
+        hitSlop={10}
+        style={{
+          position: "absolute",
+          top: insets.top + 8,
+          left: 16,
+          width: 40,
+          height: 40,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Animated.View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            borderRadius: 20,
+            backgroundColor: colors.card,
+            borderWidth: 1,
+            borderColor: colors.border,
+            opacity: backChipOpacity,
+          }}
+        />
+        <Ionicons name="arrow-back" size={21} color={colors.textPrimary} />
+      </TouchableOpacity>
 
       {/* Modal d'erreur / info */}
       <Modal

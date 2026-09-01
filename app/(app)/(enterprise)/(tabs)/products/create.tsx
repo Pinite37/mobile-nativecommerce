@@ -30,7 +30,6 @@ import { Category, CreateProductRequest } from "../../../../../types/product";
 interface ProductFormImage {
   base64: string;
   uri: string;
-  loading?: boolean;
 }
 
 interface ProductForm {
@@ -88,7 +87,9 @@ export default function CreateProduct() {
 
   const maxImages = subscription?.plan?.features?.maxImagesPerProduct ?? 1;
   const maxProducts = subscription?.plan?.features?.maxProducts ?? 0;
-  const readyImages = form.images.filter(i => !i.loading);
+  // Plus de distinction « prête / en cours » : rien n'est envoyé avant la
+  // publication, toutes les images choisies sont immédiatement utilisables.
+  const readyImages = form.images;
 
   useFocusEffect(
     useCallback(() => {
@@ -138,26 +139,62 @@ export default function CreateProduct() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') return;
 
+    const restantes = maxImages - form.images.length;
+
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
+      // Sélection multiple : le plan autorise jusqu'à dix images, et les
+      // ajouter une par une imposait dix allers-retours dans la galerie.
+      // Le recadrage est incompatible avec la sélection multiple, d'où
+      // `allowsEditing` seulement quand on n'en prend qu'une.
+      allowsMultipleSelection: restantes > 1,
+      selectionLimit: restantes,
+      allowsEditing: restantes === 1,
       aspect: [1, 1],
       quality: 0.8,
       base64: true,
     });
 
-    if (!result.canceled && result.assets[0]) {
-      const asset = result.assets[0];
-      if ((asset.fileSize ?? 0) > 5 * 1024 * 1024) {
-        showError('Image trop lourde', 'Maximum 5 Mo par image');
-        return;
-      }
-      setForm(prev => ({ ...prev, images: [...prev.images, { base64: asset.base64 ?? '', uri: asset.uri, loading: true }] }));
-      setTimeout(() => {
-        setForm(prev => ({ ...prev, images: prev.images.map(img => img.uri === asset.uri ? { ...img, loading: false } : img) }));
-      }, 600);
+    if (result.canceled || !result.assets?.length) return;
+
+    const tropLourdes = result.assets.filter(a => (a.fileSize ?? 0) > 5 * 1024 * 1024);
+    const retenues = result.assets.filter(a => (a.fileSize ?? 0) <= 5 * 1024 * 1024);
+
+    if (retenues.length) {
+      // Aucun état de chargement : rien n'est envoyé ici. L'image est déjà
+      // en mémoire, le picker a fourni son base64. L'ancien code affichait
+      // un compteur pendant 600 ms via setTimeout — un délai inventé, qui
+      // bloquait en plus la validation du formulaire le temps qu'il passe.
+      setForm(prev => ({
+        ...prev,
+        images: [
+          ...prev.images,
+          ...retenues.map(a => ({ base64: a.base64 ?? '', uri: a.uri })),
+        ],
+      }));
       if (errors.images) setErrors(prev => ({ ...prev, images: undefined }));
     }
+
+    if (tropLourdes.length) {
+      showError(
+        tropLourdes.length > 1 ? 'Images trop lourdes' : 'Image trop lourde',
+        `${tropLourdes.length} image${tropLourdes.length > 1 ? 's ont' : ' a'} été ignorée${tropLourdes.length > 1 ? 's' : ''} : maximum 5 Mo par image`
+      );
+    }
+  };
+
+  /**
+   * La première image est la principale — c'est celle qui représente le
+   * produit partout ailleurs. Il fallait auparavant supprimer et réimporter
+   * dans le bon ordre pour la changer.
+   */
+  const setImagePrincipale = (index: number) => {
+    if (index === 0) return;
+    setForm(prev => {
+      const suivantes = [...prev.images];
+      const [choisie] = suivantes.splice(index, 1);
+      return { ...prev, images: [choisie, ...suivantes] };
+    });
   };
 
   const removeImage = (index: number) => {
@@ -252,51 +289,127 @@ export default function CreateProduct() {
             </View>
           </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
-            {form.images.map((img, idx) => (
-              <View key={idx} style={{ position: 'relative' }}>
-                <Image source={{ uri: img.uri }} style={{ width: 80, height: 80, borderRadius: 14 }} resizeMode="cover" />
-                {img.loading && (
-                  <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.35)', borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}>
-                    <ActivityIndicator size="small" color="#fff" />
-                  </View>
-                )}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            // `flexGrow` pour que l'encart vide (flex: 1) prenne toute la
+            // largeur disponible au lieu de se réduire à son contenu.
+            contentContainerStyle={{ gap: 10, flexGrow: 1 }}
+          >
+            {form.images.map((img, idx) => {
+              const principale = idx === 0;
+              return (
                 <TouchableOpacity
-                  onPress={() => removeImage(idx)}
-                  style={{ position: 'absolute', top: -5, right: -5, width: 20, height: 20, borderRadius: 10, backgroundColor: '#EF4444', alignItems: 'center', justifyContent: 'center' }}
+                  key={img.uri}
+                  onPress={() => setImagePrincipale(idx)}
+                  activeOpacity={principale ? 1 : 0.8}
+                  disabled={principale}
+                  style={{ width: 96, height: 96 }}
                 >
-                  <Ionicons name="close" size={12} color="#fff" />
-                </TouchableOpacity>
-                {idx === 0 && (
-                  <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 30, borderBottomLeftRadius: 14, borderBottomRightRadius: 14, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 4 }}>
-                    <Text style={{ color: '#fff', fontFamily: 'Poppins-Bold', fontSize: 8 }}>PRINCIPALE</Text>
-                  </View>
-                )}
-              </View>
-            ))}
+                  <Image
+                    source={{ uri: img.uri }}
+                    style={{
+                      width: 96,
+                      height: 96,
+                      borderRadius: 16,
+                      borderWidth: principale ? 2 : 1,
+                      borderColor: principale ? '#10B981' : colors.border,
+                    }}
+                    resizeMode="cover"
+                  />
 
-            {readyImages.length < maxImages && (
+                  {/* Bandeau discret plutôt qu'un voile noir sur le tiers bas
+                      de la vignette, qui masquait le produit lui-même. */}
+                  {principale ? (
+                    <View
+                      style={{
+                        position: 'absolute',
+                        bottom: 6,
+                        left: 6,
+                        backgroundColor: '#10B981',
+                        borderRadius: 6,
+                        paddingHorizontal: 6,
+                        paddingVertical: 2,
+                      }}
+                    >
+                      <Text style={{ color: '#fff', fontFamily: 'Poppins-Bold', fontSize: 9 }}>
+                        PRINCIPALE
+                      </Text>
+                    </View>
+                  ) : (
+                    // Sans cette indication, rien ne laissait deviner qu'on
+                    // peut changer la photo principale.
+                    <View
+                      style={{
+                        position: 'absolute',
+                        bottom: 6,
+                        left: 6,
+                        right: 6,
+                        backgroundColor: 'rgba(0,0,0,0.55)',
+                        borderRadius: 6,
+                        paddingVertical: 3,
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Text style={{ color: '#fff', fontFamily: 'Poppins-SemiBold', fontSize: 9 }}>
+                        Définir principale
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* Cible portée à 28 px et ramenée dans la vignette : à
+                      20 px en débord négatif, elle était sous le seuil
+                      tactile utilisable et pouvait être rognée par le
+                      défilement horizontal. */}
+                  <TouchableOpacity
+                    onPress={() => removeImage(idx)}
+                    hitSlop={8}
+                    style={{
+                      position: 'absolute',
+                      top: 5,
+                      right: 5,
+                      width: 28,
+                      height: 28,
+                      borderRadius: 14,
+                      backgroundColor: 'rgba(0,0,0,0.55)',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Ionicons name="close" size={16} color="#fff" />
+                  </TouchableOpacity>
+                </TouchableOpacity>
+              );
+            })}
+
+            {form.images.length > 0 && readyImages.length < maxImages && (
               <TouchableOpacity
                 onPress={handleImagePicker}
                 activeOpacity={0.7}
-                style={{ width: 80, height: 80, borderRadius: 14, borderWidth: 1.5, borderColor: '#10B981', borderStyle: 'dashed', backgroundColor: isDark ? 'rgba(16,185,129,0.07)' : '#F0FDF4', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                style={{ width: 96, height: 96, borderRadius: 16, borderWidth: 1.5, borderColor: '#10B981', borderStyle: 'dashed', backgroundColor: isDark ? 'rgba(16,185,129,0.07)' : '#F0FDF4', alignItems: 'center', justifyContent: 'center', gap: 4 }}
               >
                 <Ionicons name="add" size={26} color="#10B981" />
                 <Text style={{ color: '#10B981', fontFamily: 'Poppins-SemiBold', fontSize: 10 }}>Ajouter</Text>
               </TouchableOpacity>
             )}
 
-            {/* Placeholder vide si aucune image */}
+            {/* État vide. La tuile compacte « + Ajouter » ci-dessus est
+                masquée dans ce cas : les deux s'affichaient ensemble, soit
+                deux boutons d'ajout côte à côte pour la même action. */}
             {form.images.length === 0 && (
               <TouchableOpacity
                 onPress={handleImagePicker}
                 activeOpacity={0.7}
-                style={{ width: 200, height: 80, borderRadius: 14, borderWidth: 1.5, borderColor: colors.border, borderStyle: 'dashed', backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 10 }}
+                style={{ flex: 1, minHeight: 96, borderRadius: 16, borderWidth: 1.5, borderColor: '#10B981', borderStyle: 'dashed', backgroundColor: isDark ? 'rgba(16,185,129,0.07)' : '#F0FDF4', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 12, paddingHorizontal: 16 }}
               >
-                <Ionicons name="camera-outline" size={22} color={colors.textSecondary} />
+                <Ionicons name="camera-outline" size={26} color="#10B981" />
                 <View>
-                  <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-SemiBold', fontSize: 13 }}>Choisir une photo</Text>
-                  <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 11 }}>JPG, PNG · max 5 Mo</Text>
+                  <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-SemiBold', fontSize: 14 }}>
+                    {maxImages > 1 ? 'Ajouter des photos' : 'Ajouter une photo'}
+                  </Text>
+                  <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 11, marginTop: 1 }}>
+                    {maxImages > 1 ? `Jusqu'à ${maxImages} · max 5 Mo chacune` : 'JPG ou PNG · max 5 Mo'}
+                  </Text>
                 </View>
               </TouchableOpacity>
             )}

@@ -8,7 +8,6 @@ import {
   Animated,
   Dimensions,
   Easing,
-  FlatList,
   Modal,
   RefreshControl,
   Text,
@@ -35,6 +34,38 @@ export default function EnterpriseDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+
+  // En-tête repliable, identique à la fiche entreprise côté client et à la
+  // fiche partenaire de l'app livreur. Opacité et transformations seulement,
+  // donc useNativeDriver : la transition ne dépend pas du fil JS, occupé à
+  // rendre la grille de produits paginée.
+  const scrollY = React.useRef(new Animated.Value(0)).current;
+  const heroOpacity = scrollY.interpolate({
+    inputRange: [0, 70, 115],
+    outputRange: [1, 1, 0],
+    extrapolate: "clamp",
+  });
+  const heroScale = scrollY.interpolate({
+    inputRange: [0, 115],
+    outputRange: [1, 0.92],
+    extrapolate: "clamp",
+  });
+  const barOpacity = scrollY.interpolate({
+    inputRange: [95, 150],
+    outputRange: [0, 1],
+    extrapolate: "clamp",
+  });
+  const barTitleShift = scrollY.interpolate({
+    inputRange: [95, 150],
+    outputRange: [8, 0],
+    extrapolate: "clamp",
+  });
+  const backChipOpacity = scrollY.interpolate({
+    inputRange: [95, 150],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
+
   const { colors, isDark } = useTheme();
   const [enterprise, setEnterprise] = useState<Enterprise | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -369,33 +400,13 @@ export default function EnterpriseDetails() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ExpoStatusBar style="light" translucent backgroundColor="transparent" />
 
-      {/* Back button — fixed over gradient, always visible */}
-      <View
-        style={{
-          position: "absolute",
-          top: insets.top + 8,
-          left: 16,
-          zIndex: 100,
-          elevation: 100,
-        }}
-      >
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={{
-            width: 40,
-            height: 40,
-            backgroundColor: "rgba(0,0,0,0.25)",
-            borderRadius: 20,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
-
-      <FlatList
+      <Animated.FlatList
         data={products}
+        scrollEventThrottle={16}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
         renderItem={({ item }) => <ProductCard product={item} />}
         keyExtractor={(item) => item._id}
         numColumns={2}
@@ -416,34 +427,19 @@ export default function EnterpriseDetails() {
         onEndReachedThreshold={0.5}
         ListHeaderComponent={
           <View>
-            {/* Flat header — inside FlatList */}
-            <View style={{
-              backgroundColor: colors.surface,
-              paddingTop: insets.top + 8,
-              paddingHorizontal: 20,
-              paddingBottom: 14,
-              borderBottomWidth: 1,
-              borderBottomColor: colors.borderLight,
-              flexDirection: 'row',
-              alignItems: 'center',
-            }}>
-              <TouchableOpacity
-                onPress={() => router.back()}
-                style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: colors.tertiary, alignItems: 'center', justifyContent: 'center' }}
-              >
-                <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
-              </TouchableOpacity>
-              <Text
-                numberOfLines={1}
-                style={{ flex: 1, fontFamily: 'Poppins-SemiBold', fontSize: 18, color: colors.textPrimary, textAlign: 'center' }}
-              >
-                {enterprise.companyName}
-              </Text>
-              <View style={{ width: 40 }} />
-            </View>
-
+            {/* Bloc identité : c'est lui qui s'efface. La barre fixe qui
+                portait le nom a disparu — elle doublonnait avec le bouton
+                retour flottant juste au-dessus, et rendait tout repli
+                impossible. */}
+            <Animated.View
+              style={{
+                paddingTop: insets.top + 58,
+                opacity: heroOpacity,
+                transform: [{ scale: heroScale }],
+              }}
+            >
             {/* Logo */}
-            <View style={{ alignItems: "center", marginTop: 20, marginBottom: 12 }}>
+            <View style={{ alignItems: "center", marginBottom: 12 }}>
               <View
                 style={{
                   width: 88,
@@ -546,6 +542,7 @@ export default function EnterpriseDetails() {
                 </Text>
               </View>
             </View>
+            </Animated.View>
 
             {/* Description */}
             {enterprise.description ? (
@@ -843,6 +840,74 @@ export default function EnterpriseDetails() {
         }
         contentContainerStyle={{ paddingBottom: 120 }}
       />
+
+      {/* Barre repliée — apparaît quand le bloc identité a fini de
+          s'effacer. pointerEvents="none" : une vue à opacité 0 reçoit quand
+          même les touchers en React Native, elle bloquerait le bouton
+          retour en haut de page. */}
+      <Animated.View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          paddingTop: insets.top,
+          height: insets.top + 56,
+          backgroundColor: colors.surface,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.borderLight,
+          opacity: barOpacity,
+          justifyContent: "center",
+        }}
+      >
+        <Animated.Text
+          numberOfLines={1}
+          style={{
+            fontFamily: "Poppins-Bold",
+            fontSize: 17,
+            color: colors.textPrimary,
+            textAlign: "center",
+            marginHorizontal: 64,
+            transform: [{ translateY: barTitleShift }],
+          }}
+        >
+          {enterprise.companyName}
+        </Animated.Text>
+      </Animated.View>
+
+      {/* Retour — un seul désormais : il y en avait deux superposés en haut
+          de page, un flottant sombre et un dans la barre fixe. */}
+      <TouchableOpacity
+        onPress={() => router.back()}
+        activeOpacity={0.7}
+        hitSlop={10}
+        style={{
+          position: "absolute",
+          top: insets.top + 8,
+          left: 16,
+          width: 40,
+          height: 40,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Animated.View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            borderRadius: 20,
+            backgroundColor: colors.card,
+            borderWidth: 1,
+            borderColor: colors.border,
+            opacity: backChipOpacity,
+          }}
+        />
+        <Ionicons name="arrow-back" size={21} color={colors.textPrimary} />
+      </TouchableOpacity>
 
       {/* Error modal */}
       <Modal

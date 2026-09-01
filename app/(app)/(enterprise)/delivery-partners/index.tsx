@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Animated, Easing, FlatList, Image, RefreshControl, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, Easing, FlatList, Image, RefreshControl, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useToast } from '../../../../components/ui/ToastManager';
 import { useLocale } from '../../../../contexts/LocaleContext';
@@ -29,6 +29,10 @@ export default function DeliveryPartnersScreen() {
 	const [refreshing, setRefreshing] = useState(false);
 	const [enterprise, setEnterprise] = useState<Enterprise | null>(null);
 	const [totals, setTotals] = useState<{ total: number; associatedCount: number }>({ total: 0, associatedCount: 0 });
+	// Réservation des courses aux partenaires. `null` tant que le profil n'est
+	// pas chargé : afficher `false` par défaut ferait clignoter l'interrupteur.
+	const [partnersOnly, setPartnersOnly] = useState<boolean | null>(null);
+	const [savingLock, setSavingLock] = useState(false);
 
 	// Skeleton Loader Component
 	const ShimmerBlock = ({ style }: { style?: any }) => {
@@ -177,6 +181,28 @@ export default function DeliveryPartnersScreen() {
 	};
 
 	useEffect(() => { loadPartners(selectedCity || undefined); }, [loadPartners, selectedCity]);
+
+	useEffect(() => {
+		EnterpriseService.getProfile()
+			.then(({ enterprise: e }) => setPartnersOnly(!!e?.deliveryPartnersOnly))
+			.catch(() => setPartnersOnly(false));
+	}, []);
+
+	const togglePartnersOnly = async (value: boolean) => {
+		const precedent = partnersOnly;
+		setPartnersOnly(value);
+		setSavingLock(true);
+		try {
+			await EnterpriseService.updateEnterpriseInfoWithLogo({ deliveryPartnersOnly: value }, undefined);
+		} catch (error: any) {
+			// On remet l'interrupteur dans son état réel : le laisser afficher une
+			// valeur non enregistrée ferait croire à des courses protégées.
+			setPartnersOnly(precedent);
+			toast.showError('Erreur', error?.message || "Réglage non enregistré");
+		} finally {
+			setSavingLock(false);
+		}
+	};
 
 	useEffect(() => {
 		if (!search.trim()) {
@@ -435,6 +461,51 @@ export default function DeliveryPartnersScreen() {
 							keyExtractor={(item) => item._id}
 							contentContainerStyle={{ paddingTop: 20, paddingBottom: Math.max(insets.bottom, 20) + 60 }}
 							renderItem={renderItem}
+							ListHeaderComponent={
+								partnersOnly === null ? null : (
+									<View
+										className="mx-4 mb-5 rounded-2xl p-4"
+										style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}
+									>
+										<View className="flex-row items-center justify-between">
+											<View className="flex-row items-center flex-1 mr-3">
+												<Ionicons
+													name={partnersOnly ? 'lock-closed' : 'globe-outline'}
+													size={19}
+													color={partnersOnly ? colors.brandPrimary : colors.textSecondary}
+												/>
+												<Text
+													style={{ color: colors.textPrimary }}
+													className="text-base font-poppins-semibold ml-2.5 flex-1"
+												>
+													Réserver mes courses à mes partenaires
+												</Text>
+											</View>
+											<Switch
+												value={partnersOnly}
+												onValueChange={togglePartnersOnly}
+												disabled={savingLock}
+												trackColor={{ false: colors.border, true: 'rgba(16,185,129,0.4)' }}
+												thumbColor={partnersOnly ? '#10B981' : '#9CA3AF'}
+											/>
+										</View>
+										<Text
+											style={{ color: colors.textSecondary }}
+											className="text-sm font-poppins mt-2.5"
+										>
+											{partnersOnly
+												? "Seuls vos partenaires voient vos livraisons. Si aucun n'est disponible, la course reste sans livreur."
+												: "Vos partenaires sont servis en premier pendant 10 minutes. Passé ce délai, la course s'ouvre progressivement aux livreurs alentour."}
+										</Text>
+										<Text
+											style={{ color: colors.textTertiary }}
+											className="text-xs font-poppins mt-2"
+										>
+											S&apos;applique aux prochaines livraisons publiées, pas à celles déjà en cours.
+										</Text>
+									</View>
+								)
+							}
 							ListEmptyComponent={
 								<View className="items-center pt-20 px-6">
 									<View className="w-20 h-20 rounded-full items-center justify-center mb-4" style={{ backgroundColor: colors.tertiary }}>
