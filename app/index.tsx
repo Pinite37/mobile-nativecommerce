@@ -77,7 +77,7 @@ export default function Index() {
   return (
     <View style={{ flex: 1, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' }}>
       <Image
-        source={require('../assets/images/axiLogo.png')}
+        source={require('../assets/images/axi-logo.png')}
         style={{ width: 140, height: 140, resizeMode: 'contain', marginBottom: 40 }}
       />
       <ActivityIndicator size="large" color="#10B981" />
