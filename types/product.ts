@@ -40,7 +40,10 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  stock: number;
+  /** @deprecated Le stock a été retiré : la disponibilité se discute
+   *  directement entre le client et l'entreprise dans la conversation.
+   *  Encore présent sur les produits créés avant ce changement. */
+  stock?: number;
   images: string[];
   enterprise: string | Enterprise;
   category: string | {
@@ -93,7 +96,6 @@ export interface CreateProductRequest {
   name: string;
   description: string;
   price: number;
-  stock: number;
   category: string;
   images: string[]; // Les images sont des chaînes base64 directes
   isActive?: boolean;
@@ -116,7 +118,6 @@ export interface UpdateProductRequest {
   name?: string;
   description?: string;
   price?: number;
-  stock?: number;
   category?: string;
   images?: {
     base64: string;

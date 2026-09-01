@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -29,8 +29,10 @@ import MessagingService, {
   Message,
 } from "../../../../services/api/MessagingService";
 import ProductService from "../../../../services/api/ProductService";
+import CommandeService, { Commande } from "../../../../services/api/CommandeService";
 import StatusService, { StatusItem } from "../../../../services/api/StatusService";
 import { StatusViewer } from "../../../../components/ui/StatusViewer";
+import ConversationSearch from "../../../../components/messaging/ConversationSearch";
 import ChatWallpaper from "../../../../components/messaging/ChatWallpaper";
 import SwipeableMessageRow from "../../../../components/messaging/SwipeableMessageRow";
 import ConversationCacheService from "../../../../services/ConversationCacheService";
@@ -99,6 +101,24 @@ export default function ConversationDetails() {
   const [participants, setParticipants] = useState<any[]>([]);
   const [effectiveProduct, setEffectiveProduct] = useState<Product | null>(
     null
+  );
+  // Commandes que l'entreprise m'a proposées. Celles en attente de ma
+  // confirmation passent avant tout : sans mon adresse, rien ne peut partir.
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
+  /** Index visé par un saut en cours, pour que onScrollToIndexFailed puisse le rattraper. */
+  const pendingScrollIndexRef = useRef<number | null>(null);
+  const [commandes, setCommandes] = useState<Commande[]>([]);
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      CommandeService.listMine().then((list) => {
+        if (!cancelled) setCommandes(list);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [])
   );
   const [loading, setLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
@@ -1315,6 +1335,9 @@ export default function ConversationDetails() {
     const isCurrentUser = !!(getCurrentUserId() && senderId && senderId === getCurrentUserId());
     const isDeleted = item.metadata?.deleted || false;
     const isAnimated = item._localId === lastSentLocalId.current;
+    // Le message ramené par la recherche : sans repère visuel, l'utilisateur
+    // ne sait pas lequel des messages à l'écran il venait chercher.
+    const isHighlighted = item._id === highlightedMessageId;
 
     const bubble = <MessageBubble message={item} />;
     const wrappedBubble = !isCurrentUser ? (
@@ -1324,7 +1347,7 @@ export default function ConversationDetails() {
     ) : bubble;
 
     return (
-      <View>
+      <View style={isHighlighted ? { backgroundColor: 'rgba(16,185,129,0.14)', borderRadius: 14 } : undefined}>
         {showSep && currentTs ? (
           <View style={{ paddingVertical: 10, alignItems: 'center' }}>
             <View style={{ backgroundColor: 'rgba(16,185,129,0.10)', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, borderWidth: 1, borderColor: 'rgba(16,185,129,0.18)' }}>
@@ -1428,6 +1451,44 @@ export default function ConversationDetails() {
     return "Vendeur inconnu";
   })();
 
+  // Aller à un message trouvé par la recherche. S'il n'est pas dans les 50
+  // derniers — le cas justement intéressant — on recharge le fil DEPUIS ce
+  // message, puis on défile jusqu'à lui et on le met brièvement en évidence.
+  const jumpToMessage = async (messageId: string) => {
+    setSearchOpen(false);
+
+    const scrollTo = (list: Message[]) => {
+      const index = list.findIndex((m) => m._id === messageId);
+      if (index < 0) return false;
+      setHighlightedMessageId(messageId);
+      pendingScrollIndexRef.current = index;
+      setTimeout(() => {
+        flatListRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.5 });
+      }, 120);
+      setTimeout(() => { pendingScrollIndexRef.current = null; }, 1500);
+      setTimeout(() => setHighlightedMessageId(null), 2600);
+      return true;
+    };
+
+    if (scrollTo(messages)) return;
+
+    const data = await MessagingService.getMessagesUntil(conversationId!, messageId);
+    if (!data?.messages) return;
+    setMessages(data.messages);
+    if (data.truncated) {
+      // Cible hors de portée de la limite serveur : on l'annonce plutôt que
+      // de laisser l'utilisateur croire à un bug.
+      showNotification(
+        "info",
+        "Message trop ancien",
+        "La discussion est trop longue pour y accéder directement."
+      );
+      return;
+    }
+    setTimeout(() => scrollTo(data.messages), 200);
+  };
+
+
   return (
     <View style={{ flex: 1, backgroundColor: isDark ? '#0F1923' : '#EEF2F7' }}>
       <ChatWallpaper isDark={isDark} />
@@ -1461,6 +1522,12 @@ export default function ConversationDetails() {
           </View>
 
           <TouchableOpacity
+            style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.tertiary, justifyContent: 'center', alignItems: 'center', marginRight: 8 }}
+            onPress={() => setSearchOpen((v) => !v)}
+          >
+            <Ionicons name="search" size={19} color={colors.text} />
+          </TouchableOpacity>
+          <TouchableOpacity
             style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.tertiary, justifyContent: 'center', alignItems: 'center' }}
             onPress={() => router.push(`/(app)/(client)/product/${effectiveProduct?._id}` as any)}
           >
@@ -1468,6 +1535,71 @@ export default function ConversationDetails() {
           </TouchableOpacity>
         </View>
       </View>
+
+      <ConversationSearch
+        conversationId={conversationId!}
+        visible={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onJumpToMessage={jumpToMessage}
+      />
+
+      {/* Commandes proposées par l'entreprise. Celle en attente de MA
+          confirmation passe avant tout : tant que je n'ai pas donné mon
+          adresse, rien ne peut partir. */}
+      {commandes
+        .filter((c) => ["PROPOSEE", "CONFIRMEE", "EN_LIVRAISON"].includes(c.status))
+        .slice(0, 2)
+        .map((c) => {
+          const mustAct = c.status === "PROPOSEE";
+          return (
+            <TouchableOpacity
+              key={c._id}
+              activeOpacity={0.9}
+              onPress={() => router.push(`/(app)/(client)/commande/${c._id}` as any)}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 16,
+                paddingVertical: 11,
+                backgroundColor: mustAct ? "rgba(16,185,129,0.1)" : colors.card,
+                borderBottomWidth: 1,
+                borderBottomColor: colors.borderLight,
+              }}
+            >
+              <Ionicons
+                name={mustAct ? "alert-circle" : "receipt-outline"}
+                size={17}
+                color={mustAct ? colors.brandPrimary : colors.textTertiary}
+              />
+              <View style={{ flex: 1, marginLeft: 10 }}>
+                <Text
+                  style={{ color: colors.textPrimary }}
+                  className="font-poppins-bold text-xs"
+                  numberOfLines={1}
+                >
+                  {c.items?.[0]?.nameSnapshot || "Commande"} · {c.agreedTotal} FCFA
+                </Text>
+                <Text
+                  style={{ color: mustAct ? colors.brandPrimary : colors.textSecondary }}
+                  className="font-poppins-medium text-xs mt-0.5"
+                  numberOfLines={1}
+                >
+                  {mustAct
+                    ? "Confirmez et indiquez où livrer"
+                    : CommandeService.statusLabel(c.status)}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
+            </TouchableOpacity>
+          );
+        })}
+
+      {/* L'ancien bandeau « Partager / Confirmer mon adresse » a été retiré
+          ici. Il venait du mécanisme provisoire (DeliveryAddressRequest),
+          antérieur à la Commande : il affichait une adresse donnée pour une
+          livraison précédente, sans rapport avec la commande en cours — donc
+          deux bandeaux qui se contredisaient. L'adresse appartient désormais
+          à la commande, et se donne depuis son écran. */}
 
       {/* Messages et input */}
       {Platform.OS === "android" ? (
@@ -1480,81 +1612,24 @@ export default function ConversationDetails() {
             renderItem={renderMessageItem}
             keyExtractor={(item) => item._id}
             className="flex-1 px-4"
-            onScrollToIndexFailed={() => { flatListRef.current?.scrollToOffset({ offset: 0, animated: true }); }}
-            ListHeaderComponent={
-              effectiveProduct ? (
-                <TouchableOpacity
-                  style={{
-                    marginBottom: 16,
-                    borderRadius: 20,
-                    overflow: 'hidden',
-                    backgroundColor: colors.card,
-                    shadowColor: '#10B981',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.08,
-                    shadowRadius: 8,
-                    elevation: 3,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    padding: 12,
-                  }}
-                  onPress={() => {
-                    router.push(
-                      `/(app)/(client)/product/${effectiveProduct._id}` as any
-                    );
-                  }}
-                >
-                  <Image
-                    source={{
-                      uri:
-                        effectiveProduct.images?.[0] ||
-                        "https://via.placeholder.com/60x60/CCCCCC/FFFFFF?text=No+Image",
-                    }}
-                    style={{ width: 56, height: 56, borderRadius: 14 }}
-                    resizeMode="cover"
-                  />
-                  <View style={{ marginLeft: 12, flex: 1 }}>
-                    <Text
-                      style={{ fontSize: 14, fontFamily: 'Poppins-SemiBold', color: colors.textPrimary, marginBottom: 4 }}
-                      numberOfLines={1}
-                    >
-                      {effectiveProduct.name || i18n.t('client.messages.conversationDetail.productFallback')}
-                    </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <View style={{ backgroundColor: 'rgba(16,185,129,0.1)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}>
-                        <Text style={{ fontSize: 13, fontFamily: 'Poppins-Bold', color: '#10B981' }}>
-                          {effectiveProduct.price
-                            ? formatPrice(effectiveProduct.price)
-                            : i18n.t('client.messages.conversationDetail.priceUnavailable')}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
-                </TouchableOpacity>
-              ) : productLoadFailed ? (
-                <View style={{
-                  marginBottom: 16,
-                  borderRadius: 16,
-                  backgroundColor: isDark ? '#1A2332' : '#F3F4F6',
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  padding: 12,
-                  gap: 10,
-                }}>
-                  <View style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: isDark ? '#2D3748' : '#E5E7EB', justifyContent: 'center', alignItems: 'center' }}>
-                    <Ionicons name="cube-outline" size={20} color={colors.textTertiary} />
-                  </View>
-                  <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 13, flex: 1 }}>
-                    Ce produit n'est plus disponible
-                  </Text>
-                </View>
-              ) : null
-            }
+            onScrollToIndexFailed={(info) => {
+              // Un saut vers un message lointain échoue tant que la liste n'a
+              // pas mesuré les lignes intermédiaires : on approche à l'estime,
+              // puis on retente une fois le rendu fait.
+              const target = pendingScrollIndexRef.current;
+              if (target != null) {
+                flatListRef.current?.scrollToOffset({ offset: info.averageItemLength * target, animated: false });
+                setTimeout(() => {
+                  flatListRef.current?.scrollToIndex({ index: target, animated: true, viewPosition: 0.5 });
+                  pendingScrollIndexRef.current = null;
+                }, 280);
+                return;
+              }
+              flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+            }}
+            // Carte produit retirée : l'icône boutique dans l'en-tête mène
+            // déjà à la fiche produit, pas besoin de la dupliquer ici.
+            ListHeaderComponent={null}
             contentContainerStyle={{
               paddingTop: 8,
               paddingBottom: 20,
@@ -1673,81 +1748,24 @@ export default function ConversationDetails() {
             renderItem={renderMessageItem}
             keyExtractor={(item) => item._id}
             className="flex-1 px-4"
-            onScrollToIndexFailed={() => { flatListRef.current?.scrollToOffset({ offset: 0, animated: true }); }}
-            ListHeaderComponent={
-              effectiveProduct ? (
-                <TouchableOpacity
-                  style={{
-                    marginBottom: 16,
-                    borderRadius: 20,
-                    overflow: 'hidden',
-                    backgroundColor: colors.card,
-                    shadowColor: '#10B981',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.08,
-                    shadowRadius: 8,
-                    elevation: 3,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    padding: 12,
-                  }}
-                  onPress={() => {
-                    router.push(
-                      `/(app)/(client)/product/${effectiveProduct._id}` as any
-                    );
-                  }}
-                >
-                  <Image
-                    source={{
-                      uri:
-                        effectiveProduct.images?.[0] ||
-                        "https://via.placeholder.com/60x60/CCCCCC/FFFFFF?text=No+Image",
-                    }}
-                    style={{ width: 56, height: 56, borderRadius: 14 }}
-                    resizeMode="cover"
-                  />
-                  <View style={{ marginLeft: 12, flex: 1 }}>
-                    <Text
-                      style={{ fontSize: 14, fontFamily: 'Poppins-SemiBold', color: colors.textPrimary, marginBottom: 4 }}
-                      numberOfLines={1}
-                    >
-                      {effectiveProduct.name || i18n.t('client.messages.conversationDetail.productFallback')}
-                    </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <View style={{ backgroundColor: 'rgba(16,185,129,0.1)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}>
-                        <Text style={{ fontSize: 13, fontFamily: 'Poppins-Bold', color: '#10B981' }}>
-                          {effectiveProduct.price
-                            ? formatPrice(effectiveProduct.price)
-                            : i18n.t('client.messages.conversationDetail.priceUnavailable')}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
-                </TouchableOpacity>
-              ) : productLoadFailed ? (
-                <View style={{
-                  marginBottom: 16,
-                  borderRadius: 16,
-                  backgroundColor: isDark ? '#1A2332' : '#F3F4F6',
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  padding: 12,
-                  gap: 10,
-                }}>
-                  <View style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: isDark ? '#2D3748' : '#E5E7EB', justifyContent: 'center', alignItems: 'center' }}>
-                    <Ionicons name="cube-outline" size={20} color={colors.textTertiary} />
-                  </View>
-                  <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 13, flex: 1 }}>
-                    Ce produit n'est plus disponible
-                  </Text>
-                </View>
-              ) : null
-            }
+            onScrollToIndexFailed={(info) => {
+              // Un saut vers un message lointain échoue tant que la liste n'a
+              // pas mesuré les lignes intermédiaires : on approche à l'estime,
+              // puis on retente une fois le rendu fait.
+              const target = pendingScrollIndexRef.current;
+              if (target != null) {
+                flatListRef.current?.scrollToOffset({ offset: info.averageItemLength * target, animated: false });
+                setTimeout(() => {
+                  flatListRef.current?.scrollToIndex({ index: target, animated: true, viewPosition: 0.5 });
+                  pendingScrollIndexRef.current = null;
+                }, 280);
+                return;
+              }
+              flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+            }}
+            // Carte produit retirée : l'icône boutique dans l'en-tête mène
+            // déjà à la fiche produit, pas besoin de la dupliquer ici.
+            ListHeaderComponent={null}
             contentContainerStyle={{
               paddingTop: 8,
               paddingBottom: 120,

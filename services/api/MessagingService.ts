@@ -110,6 +110,14 @@ export interface MessagesResponse {
   };
 }
 
+export interface ConversationSearchHit {
+  _id: string;
+  text: string;
+  messageType: string;
+  createdAt: string;
+  sender?: { _id: string; firstName?: string; lastName?: string; role?: string };
+}
+
 class MessagingService {
   private baseUrl = '/messaging';
 
@@ -277,6 +285,48 @@ class MessagingService {
   /**
    * Récupérer les messages d'une conversation
    */
+  /**
+   * Recherche dans un fil. Côté serveur, et c'est délibéré : l'app ne
+   * charge que les 50 derniers messages, une recherche locale raterait
+   * précisément les échanges anciens — ceux qu'on cherche.
+   *
+   * Chercher le nom d'un produit tombe aussi sur son repère
+   * « À propos de : … », ce qui ramène au bon passage du fil.
+   */
+  async searchInConversation(conversationId: string, query: string): Promise<ConversationSearchHit[]> {
+    if (!query || query.trim().length < 2) return [];
+    try {
+      const r = await ApiService.get<ConversationSearchHit[]>(
+        `${this.baseUrl}/conversations/${conversationId}/search`,
+        { params: { q: query.trim() } }
+      );
+      return r.success && r.data ? r.data : [];
+    } catch (error: any) {
+      console.error('❌ MessagingService.searchInConversation:', error.response?.status, error.message);
+      return [];
+    }
+  }
+
+  /**
+   * Charge le fil DEPUIS un message donné jusqu'à aujourd'hui — complète la
+   * recherche : trouver un vieux message ne sert à rien si on ne peut pas y
+   * aller, or l'app ne charge que les 50 derniers.
+   *
+   * `truncated` à true signale une cible trop lointaine pour la limite
+   * serveur : le message ne sera pas dans la liste renvoyée.
+   */
+  async getMessagesUntil(conversationId: string, messageId: string): Promise<any | null> {
+    try {
+      const r = await ApiService.get<any>(
+        `${this.baseUrl}/conversations/${conversationId}/messages-until/${messageId}`
+      );
+      return r.success && r.data ? r.data : null;
+    } catch (error: any) {
+      console.error('❌ MessagingService.getMessagesUntil:', error.response?.status, error.message);
+      return null;
+    }
+  }
+
   async getConversationMessages(conversationId: string, page: number = 1, limit: number = 50): Promise<any> {
     console.log('🔄 MESSAGING SERVICE - Récupération messages conversation:', conversationId);
     

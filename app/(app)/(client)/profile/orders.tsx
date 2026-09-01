@@ -1,277 +1,202 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { StatusBar as ExpoStatusBar } from "expo-status-bar";
+import React, { useCallback, useState } from "react";
 import {
-    FlatList,
-    Image,
-    SafeAreaView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AppHeader } from "../../../../components/ui/AppHeader";
+import { useTheme } from "../../../../contexts/ThemeContext";
+import CommandeService, {
+  Commande,
+  CommandeStatus,
+} from "../../../../services/api/CommandeService";
+
+/**
+ * Mes commandes.
+ *
+ * Cet écran affichait jusqu'ici des données entièrement factices (iPhone 14,
+ * écouteurs…) : il n'y avait aucun objet « commande » dans le système à
+ * afficher. Il devient réel maintenant que la Commande existe.
+ */
+
+const TABS: { key: "EN_COURS" | CommandeStatus; label: string }[] = [
+  { key: "EN_COURS", label: "En cours" },
+  { key: "LIVREE", label: "Livrées" },
+  { key: "ANNULEE", label: "Annulées" },
+];
+
+const EN_COURS: CommandeStatus[] = ["PROPOSEE", "CONFIRMEE", "EN_LIVRAISON"];
 
 export default function OrdersScreen() {
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState("all");
+  const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
-  // Données fictives des commandes
-  const orders = [
-    {
-      id: "CMD001",
-      date: "2023-05-15",
-      status: "delivered",
-      totalItems: 3,
-      totalAmount: 187500,
-      items: [
-        {
-          id: 1,
-          name: "iPhone 14",
-          price: 150000,
-          image: "https://via.placeholder.com/80x80/3B82F6/FFFFFF?text=iPhone",
-          quantity: 1,
-        },
-        {
-          id: 2,
-          name: "Écouteurs sans fil",
-          price: 37500,
-          image: "https://via.placeholder.com/80x80/10B981/FFFFFF?text=Écouteurs",
-          quantity: 1,
-        },
-      ],
-    },
-    {
-      id: "CMD002",
-      date: "2023-06-02",
-      status: "processing",
-      totalItems: 1,
-      totalAmount: 55000,
-      items: [
-        {
-          id: 3,
-          name: "Smart Watch",
-          price: 55000,
-          image: "https://via.placeholder.com/80x80/F59E0B/FFFFFF?text=Watch",
-          quantity: 1,
-        },
-      ],
-    },
-    {
-      id: "CMD003",
-      date: "2023-06-10",
-      status: "cancelled",
-      totalItems: 2,
-      totalAmount: 120000,
-      items: [
-        {
-          id: 4,
-          name: "Casque audio",
-          price: 120000,
-          image: "https://via.placeholder.com/80x80/EF4444/FFFFFF?text=Casque",
-          quantity: 1,
-        },
-      ],
-    },
-  ];
+  const [commandes, setCommandes] = useState<Commande[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [tab, setTab] = useState<"EN_COURS" | CommandeStatus>("EN_COURS");
 
-  // Filtrer les commandes en fonction de l'onglet actif
-  const filteredOrders = activeTab === "all"
-    ? orders
-    : orders.filter(order => order.status === activeTab);
+  const load = useCallback(async () => {
+    const list = await CommandeService.listMine();
+    setCommandes(list);
+    setLoading(false);
+  }, []);
 
-  // Formatage du prix
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
   };
 
-  // Formatage de la date
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
+  const visible = commandes.filter((c) =>
+    tab === "EN_COURS" ? EN_COURS.includes(c.status) : c.status === tab
+  );
 
-  // Traduction du statut
-  const getStatusText = (status: string) => {
-    switch(status) {
-      case "delivered": return "Livré";
-      case "processing": return "En cours";
-      case "cancelled": return "Annulé";
-      default: return "Inconnu";
-    }
-  };
+  const countFor = (key: "EN_COURS" | CommandeStatus) =>
+    commandes.filter((c) => (key === "EN_COURS" ? EN_COURS.includes(c.status) : c.status === key)).length;
 
-  // Couleur du statut
-  const getStatusColor = (status: string) => {
-    switch(status) {
-      case "delivered": return "#10B981";
-      case "processing": return "#F59E0B";
-      case "cancelled": return "#EF4444";
-      default: return "#6B7280";
-    }
+  const renderItem = ({ item }: { item: Commande }) => {
+    const enterpriseName =
+      typeof item.enterprise === "object" ? item.enterprise.companyName : "Boutique";
+    const mustAct = item.status === "PROPOSEE";
+
+    return (
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={() => router.push(`/(app)/(client)/commande/${item._id}` as any)}
+        className="rounded-2xl p-4 mb-3"
+        style={{
+          backgroundColor: colors.card,
+          borderColor: mustAct ? colors.brandPrimary : colors.border,
+          borderWidth: mustAct ? 1.5 : 1,
+        }}
+      >
+        <View className="flex-row items-center justify-between mb-1.5">
+          <Text
+            style={{ color: mustAct ? colors.brandPrimary : colors.textSecondary }}
+            className="font-poppins-semibold text-xs uppercase"
+            numberOfLines={1}
+          >
+            {CommandeService.statusLabel(item.status)}
+          </Text>
+          <Text style={{ color: colors.textTertiary }} className="font-poppins text-xs">
+            {new Date(item.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+          </Text>
+        </View>
+
+        <Text style={{ color: colors.textPrimary }} className="font-poppins-bold text-base" numberOfLines={1}>
+          {item.items?.[0]?.nameSnapshot || "Commande"}
+          {item.items?.length > 1 ? ` + ${item.items.length - 1}` : ""}
+        </Text>
+        <Text style={{ color: colors.textSecondary }} className="font-poppins-medium text-sm mt-0.5" numberOfLines={1}>
+          {enterpriseName}
+        </Text>
+
+        <View
+          className="flex-row items-center justify-between pt-3 mt-3"
+          style={{ borderTopWidth: 1, borderTopColor: colors.borderLight }}
+        >
+          <Text style={{ color: colors.brandPrimary }} className="font-poppins-bold text-base">
+            {item.agreedTotal} FCFA
+          </Text>
+          {mustAct ? (
+            <View className="flex-row items-center">
+              <Text style={{ color: colors.brandPrimary }} className="font-poppins-semibold text-xs mr-1">
+                Confirmer
+              </Text>
+              <Ionicons name="chevron-forward" size={15} color={colors.brandPrimary} />
+            </View>
+          ) : (
+            <Ionicons name="chevron-forward" size={15} color={colors.textTertiary} />
+          )}
+        </View>
+      </TouchableOpacity>
+    );
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background-secondary">
-      {/* Header avec bouton retour */}
-      <View className="bg-white px-4 pt-16 pb-4 flex-row items-center">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="w-10 h-10 rounded-full bg-gray-100 justify-center items-center mr-4"
-        >
-          <Ionicons name="arrow-back" size={20} color="#374151" />
-        </TouchableOpacity>
-        <Text className="text-xl font-poppins-bold text-neutral-800">
-          Mes commandes
-        </Text>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <ExpoStatusBar style="auto" />
+      <AppHeader title="Mes commandes" onBack={() => router.back()} />
+
+      <View className="flex-row px-5 pt-4 pb-1" style={{ gap: 8 }}>
+        {TABS.map((t) => {
+          const active = tab === t.key;
+          const n = countFor(t.key);
+          return (
+            <TouchableOpacity
+              key={t.key}
+              onPress={() => setTab(t.key)}
+              activeOpacity={0.85}
+              className="rounded-full px-3.5 py-2"
+              style={{
+                backgroundColor: active ? colors.brandPrimary : colors.card,
+                borderWidth: 1,
+                borderColor: active ? colors.brandPrimary : colors.border,
+              }}
+            >
+              <Text
+                style={{ color: active ? "#FFFFFF" : colors.textSecondary }}
+                className="font-poppins-semibold text-xs"
+              >
+                {t.label}{n > 0 ? ` (${n})` : ""}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
-      {/* Onglets de filtre */}
-      <View className="bg-white px-4 py-3 flex-row border-t border-gray-100">
-        <TouchableOpacity
-          onPress={() => setActiveTab("all")}
-          className={`mr-4 pb-2 ${
-            activeTab === "all" ? "border-b-2 border-primary" : ""
-          }`}
-        >
-          <Text
-            className={`font-poppins-medium ${
-              activeTab === "all" ? "text-primary" : "text-gray-500"
-            }`}
-          >
-            Toutes
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setActiveTab("processing")}
-          className={`mr-4 pb-2 ${
-            activeTab === "processing" ? "border-b-2 border-primary" : ""
-          }`}
-        >
-          <Text
-            className={`font-poppins-medium ${
-              activeTab === "processing" ? "text-primary" : "text-gray-500"
-            }`}
-          >
-            En cours
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setActiveTab("delivered")}
-          className={`mr-4 pb-2 ${
-            activeTab === "delivered" ? "border-b-2 border-primary" : ""
-          }`}
-        >
-          <Text
-            className={`font-poppins-medium ${
-              activeTab === "delivered" ? "text-primary" : "text-gray-500"
-            }`}
-          >
-            Livrées
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setActiveTab("cancelled")}
-          className={`mr-4 pb-2 ${
-            activeTab === "cancelled" ? "border-b-2 border-primary" : ""
-          }`}
-        >
-          <Text
-            className={`font-poppins-medium ${
-              activeTab === "cancelled" ? "text-primary" : "text-gray-500"
-            }`}
-          >
-            Annulées
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Liste des commandes */}
-      <FlatList
-        data={filteredOrders}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: 16 }}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            className="bg-white rounded-2xl p-4 mb-4"
-            onPress={() => {/* Navigation vers le détail de la commande */}}
-          >
-            <View className="flex-row justify-between items-center mb-2">
-              <View className="flex-row items-center">
-                <Text className="text-base font-poppins-bold text-neutral-800">
-                  {item.id}
-                </Text>
-                <View
-                  className="ml-2 px-2 py-1 rounded"
-                  style={{ backgroundColor: `${getStatusColor(item.status)}20` }}
-                >
-                  <Text
-                    className="text-xs font-poppins-bold"
-                    style={{ color: getStatusColor(item.status) }}
-                  >
-                    {getStatusText(item.status)}
-                  </Text>
-                </View>
-              </View>
-              <Text className="text-sm font-quicksand text-neutral-500">
-                {formatDate(item.date)}
+      {loading ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator color={colors.brandPrimary} />
+        </View>
+      ) : (
+        <FlatList
+          data={visible}
+          keyExtractor={(item) => item._id}
+          renderItem={renderItem}
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingTop: 14,
+            paddingBottom: insets.bottom + 40,
+            flexGrow: 1,
+          }}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[colors.brandPrimary]}
+              tintColor={colors.brandPrimary}
+            />
+          }
+          ListEmptyComponent={
+            <View className="flex-1 items-center justify-center px-8" style={{ paddingTop: 60 }}>
+              <Ionicons name="receipt-outline" size={40} color={colors.textTertiary} />
+              <Text style={{ color: colors.textPrimary }} className="font-poppins-bold text-base mt-3 text-center">
+                {tab === "EN_COURS" ? "Aucune commande en cours" : "Rien ici"}
+              </Text>
+              <Text style={{ color: colors.textSecondary }} className="font-poppins text-sm mt-1 text-center">
+                Vos commandes apparaissent ici dès qu&apos;une boutique vous en propose une dans la
+                discussion.
               </Text>
             </View>
-
-            <View className="my-2 border-b border-gray-100" />
-
-            {/* Aperçu des articles */}
-            <View className="flex-row">
-              <View className="flex-row flex-wrap">
-                {item.items.slice(0, 3).map((product, index) => (
-                  <Image
-                    key={product.id}
-                    source={{ uri: product.image }}
-                    className="w-12 h-12 rounded-md mr-2 mb-2"
-                  />
-                ))}
-                {item.items.length > 3 && (
-                  <View className="w-12 h-12 rounded-md bg-gray-100 justify-center items-center">
-                    <Text className="font-poppins-bold text-neutral-700">
-                      +{item.items.length - 3}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </View>
-
-            <View className="flex-row justify-between items-center mt-3">
-              <Text className="text-sm font-poppins-medium text-neutral-600">
-                {item.totalItems} {item.totalItems > 1 ? 'articles' : 'article'}
-              </Text>
-              <View className="flex-row items-center">
-                <Text className="text-base font-poppins-bold text-neutral-800">
-                  {formatPrice(item.totalAmount)}
-                </Text>
-                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-              </View>
-            </View>
-
-            {item.status === "delivered" && (
-              <View className="mt-3 flex-row">
-                <TouchableOpacity className="flex-1 bg-primary/10 py-2 rounded-lg mr-2">
-                  <Text className="text-center text-primary font-poppins-semibold">
-                    Acheter à nouveau
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity className="flex-1 bg-neutral-100 py-2 rounded-lg">
-                  <Text className="text-center text-neutral-700 font-poppins-semibold">
-                    Évaluer
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </TouchableOpacity>
-        )}
-      />
-    </SafeAreaView>
+          }
+        />
+      )}
+    </View>
   );
 }

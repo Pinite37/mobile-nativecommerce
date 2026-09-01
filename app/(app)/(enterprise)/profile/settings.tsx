@@ -536,6 +536,22 @@ export default function EnterpriseSettingsScreen() {
                 onReset={resetLocationUpdate}
               />
             </View>
+
+            {/* Points de retrait — les lieux d'où partent les colis. Distinct
+                de la ville détectée ci-dessus, qui ne sert qu'à la recherche. */}
+            <TouchableOpacity
+              onPress={() => router.push("/(app)/(enterprise)/profile/location-picker" as any)}
+              className="flex-row items-center justify-between px-4 py-4"
+              style={{ borderTopColor: colors.border, borderTopWidth: 1 }}
+            >
+              <View className="flex-row items-center flex-1">
+                <Ionicons name="storefront-outline" size={20} color={colors.brandPrimary} />
+                <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-medium ml-3">
+                  Points de retrait
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
           </View>
         </View>
 

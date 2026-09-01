@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from 'expo-image-picker';
 import { Link, router, useFocusEffect } from "expo-router";
 import { useNavigation } from 'expo-router';
@@ -36,7 +37,6 @@ interface ProductForm {
   name: string;
   description: string;
   price: string;
-  stock: string;
   category: string;
   images: ProductFormImage[];
 }
@@ -45,7 +45,6 @@ interface FormErrors {
   name?: string;
   description?: string;
   price?: string;
-  stock?: string;
   category?: string;
   images?: string;
 }
@@ -65,6 +64,7 @@ export default function CreateProduct() {
   const { colors, isDark } = useTheme();
   const { showSuccess, showError } = useToast();
   const { subscription, hasReachedLimit } = useSubscription();
+  const queryClient = useQueryClient();
 
   const [loading, setLoading] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(true);
@@ -76,7 +76,6 @@ export default function CreateProduct() {
     name: '',
     description: '',
     price: '',
-    stock: '',
     category: '',
     images: [],
   });
@@ -86,7 +85,6 @@ export default function CreateProduct() {
   const nameRef = useRef<TextInput>(null);
   const descriptionRef = useRef<TextInput>(null);
   const priceRef = useRef<TextInput>(null);
-  const stockRef = useRef<TextInput>(null);
 
   const maxImages = subscription?.plan?.features?.maxImagesPerProduct ?? 1;
   const maxProducts = subscription?.plan?.features?.maxProducts ?? 0;
@@ -126,8 +124,6 @@ export default function CreateProduct() {
     if (!form.description.trim()) e.description = 'La description est requise';
     if (!form.price.trim() || isNaN(Number(form.price)) || Number(form.price) <= 0)
       e.price = 'Prix invalide';
-    if (!form.stock.trim() || isNaN(Number(form.stock)) || Number(form.stock) < 0)
-      e.stock = 'Stock invalide';
     if (!form.category) e.category = 'Choisissez une catégorie';
     if (readyImages.length === 0) e.images = 'Ajoutez au moins une photo';
     setErrors(e);
@@ -181,11 +177,19 @@ export default function CreateProduct() {
         name: form.name.trim(),
         description: form.description.trim(),
         price: Number(form.price),
-        stock: Number(form.stock),
         category: form.category,
         images: form.images.map(img => `data:image/jpeg;base64,${img.base64}`),
       };
       const created = await ProductService.createProduct(productData);
+
+      // Invalider tous les caches qui affichent la liste de produits de
+      // l'entreprise — sans ça, l'accueil (clé ['products', 'enterprise',
+      // 'featured']) et la liste de gestion (clé ['enterprise', 'products'])
+      // continuent d'afficher leurs données périmées jusqu'à un refresh manuel.
+      queryClient.invalidateQueries({ queryKey: ['products', 'enterprise', 'featured'] });
+      queryClient.invalidateQueries({ queryKey: ['products', 'popular'] });
+      queryClient.invalidateQueries({ queryKey: ['enterprise', 'products'] });
+
       showSuccess('Produit créé !', created.name);
       setTimeout(() => router.replace('/(app)/(enterprise)/(tabs)/products'), 1200);
     } catch (err: any) {
@@ -360,12 +364,12 @@ export default function CreateProduct() {
             <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: isDark ? 'rgba(245,158,11,0.2)' : '#FFFBEB', alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>
               <Ionicons name="cash-outline" size={16} color="#F59E0B" />
             </View>
-            <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 15 }}>Prix & stock</Text>
+            <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 15 }}>Prix</Text>
           </View>
 
-          <View style={{ flexDirection: 'row', gap: 12 }}>
+          <View>
             {/* Prix */}
-            <View style={{ flex: 1 }}>
+            <View>
               <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 7 }}>Prix *</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.secondary, borderRadius: 12, borderWidth: 1.5, borderColor: inputBorderColor('price') }}>
                 <TextInput
@@ -376,9 +380,8 @@ export default function CreateProduct() {
                   value={form.price}
                   onChangeText={t => { setForm(p => ({ ...p, price: t })); if (errors.price) setErrors(p => ({ ...p, price: undefined })); }}
                   keyboardType="numeric"
-                  returnKeyType="next"
-                  onSubmitEditing={() => stockRef.current?.focus()}
-                  blurOnSubmit={false}
+                  returnKeyType="done"
+                  onSubmitEditing={() => Keyboard.dismiss()}
                   onFocus={() => setFocusedField('price')}
                   onBlur={() => setFocusedField(null)}
                 />
@@ -389,29 +392,6 @@ export default function CreateProduct() {
               {errors.price && <Text style={{ color: '#EF4444', fontFamily: 'Poppins-Medium', fontSize: 12, marginTop: 5 }}>⚠ {errors.price}</Text>}
             </View>
 
-            {/* Stock */}
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 7 }}>Stock *</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.secondary, borderRadius: 12, borderWidth: 1.5, borderColor: inputBorderColor('stock') }}>
-                <TextInput
-                  ref={stockRef}
-                  style={{ flex: 1, paddingLeft: 14, paddingVertical: 12, color: colors.textPrimary, fontFamily: 'Poppins-SemiBold', fontSize: 16 }}
-                  placeholder="0"
-                  placeholderTextColor={colors.textSecondary}
-                  value={form.stock}
-                  onChangeText={t => { setForm(p => ({ ...p, stock: t })); if (errors.stock) setErrors(p => ({ ...p, stock: undefined })); }}
-                  keyboardType="numeric"
-                  returnKeyType="done"
-                  onSubmitEditing={() => Keyboard.dismiss()}
-                  onFocus={() => setFocusedField('stock')}
-                  onBlur={() => setFocusedField(null)}
-                />
-                <View style={{ backgroundColor: isDark ? 'rgba(100,116,139,0.15)' : '#F1F5F9', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginRight: 8 }}>
-                  <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Bold', fontSize: 11 }}>unités</Text>
-                </View>
-              </View>
-              {errors.stock && <Text style={{ color: '#EF4444', fontFamily: 'Poppins-Medium', fontSize: 12, marginTop: 5 }}>⚠ {errors.stock}</Text>}
-            </View>
           </View>
         </View>
 

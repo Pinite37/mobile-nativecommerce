@@ -12,6 +12,22 @@ export interface EnterpriseProfile {
   enterprise: Enterprise;
 }
 
+// Un lieu d'où partent les colis. `isLegacy` signale un point synthétisé à
+// la volée par le serveur depuis l'ancien champ location.coordinates : il
+// n'est pas encore persisté sous forme de liste, il le sera au premier
+// enregistrement depuis l'app.
+export interface PickupPoint {
+  _id?: string | null;
+  label: string;
+  coordinates: [number, number];
+  address: string;
+  isDefault: boolean;
+  isActive: boolean;
+  isLegacy?: boolean;
+}
+
+export type PickupPointInput = Omit<PickupPoint, '_id' | 'isLegacy'>;
+
 export interface Enterprise {
   _id: string;
   user: string;
@@ -31,7 +47,13 @@ export interface Enterprise {
   location: {
     city: string;
     district: string;
+    // DÉPRÉCIÉ — remplacé par pickupPoints. Toujours renvoyé par l'API et
+    // toujours lu côté serveur pour les entreprises qui n'ont pas encore de
+    // liste : aucune migration n'est nécessaire.
+    coordinates?: [number, number];
+    address?: string;
   };
+  pickupPoints?: PickupPoint[];
   isActive: boolean;
   lastActiveDate: string;
   blockedUntil?: string;
@@ -255,6 +277,40 @@ class EnterpriseService {
       throw new Error('Failed to update stats');
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to update stats');
+    }
+  }
+
+  // Points de retrait — les lieux d'où partent les colis. C'est l'un d'eux
+  // qui est figé sur chaque mission de livraison, jamais un GPS capturé à la
+  // volée au moment de créer l'offre.
+  async listPickupPoints(): Promise<PickupPoint[]> {
+    try {
+      const response = await ApiService.get<PickupPoint[]>(`${this.BASE_URL}/pickup-points`);
+      return response.success && response.data ? response.data : [];
+    } catch (error: any) {
+      console.error(
+        '❌ EnterpriseService.listPickupPoints error:',
+        error.response?.status,
+        error.response?.data,
+        error.message
+      );
+      return [];
+    }
+  }
+
+  async savePickupPoints(points: PickupPointInput[]): Promise<PickupPoint[]> {
+    try {
+      const response = await ApiService.put<PickupPoint[]>(`${this.BASE_URL}/pickup-points`, { points });
+      if (response.success && response.data) return response.data;
+      throw new Error(response.message || "Échec de l'enregistrement des points de retrait");
+    } catch (error: any) {
+      console.error(
+        '❌ EnterpriseService.savePickupPoints error:',
+        error.response?.status,
+        error.response?.data,
+        error.message
+      );
+      throw new Error(error.response?.data?.message || error.message || "Enregistrement impossible");
     }
   }
 

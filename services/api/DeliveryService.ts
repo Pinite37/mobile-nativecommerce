@@ -11,10 +11,16 @@ export interface CreateOfferPayload {
   urgency?: UrgencyLevel;
   specialInstructions?: string;
   expiresAt: string; // ISO string
-  // [longitude, latitude] du point de retrait — optionnel, capturé
-  // silencieusement (position de l'appareil au moment de la création) pour
-  // permettre au livreur de trier les offres par proximité.
+  // [longitude, latitude] du point de retrait — optionnel côté payload : en
+  // pratique le backend lit toujours l'emplacement précis de la boutique
+  // (Enterprise.location), ce champ n'a plus besoin d'être envoyé.
   pickupCoordinates?: [number, number];
+  // Choisis par le CLIENT lui-même via une DeliveryAddressRequest (bouton
+  // "Demander la livraison" sur la fiche produit) — pré-remplis dans le
+  // formulaire d'offre quand une demande en attente existe pour ce client.
+  deliveryCoordinates?: [number, number];
+  deliveryAddress?: string;
+  deliveryAddressRequestId?: string;
 }
 
 export interface CreateDeliveryCallPayload {
@@ -49,6 +55,11 @@ export interface DeliveryOffer {
   requestedDeliverers: string[];
   createdAt: string;
   updatedAt: string;
+  // Adresse précise de livraison — absente tant que le client ne l'a pas
+  // donnée (avant ou après la création de l'offre, voir DeliveryService
+  // listMyOffersForProduct / updateDeliveryAddress).
+  deliveryCoordinates?: { type: 'Point'; coordinates: [number, number] };
+  deliveryAddress?: string;
 }
 
 export interface DeliveryCall {
@@ -99,6 +110,42 @@ class DeliveryService {
     } catch (error: any) {
       console.error('❌ DeliveryService.listEnterpriseOffers error:', error);
       throw new Error(error.response?.data?.message || error.message || 'Chargement des offres échoué');
+    }
+  }
+
+  // Client : mes offres pour un produit (savoir si une adresse a déjà été précisée)
+  async listMyOffersForProduct(productId: string): Promise<DeliveryOffer[]> {
+    try {
+      const response = await ApiService.get<DeliveryOffer[]>(`${this.BASE_URL}/offers/mine/${productId}`);
+      return response.success && response.data ? response.data : [];
+    } catch (error: any) {
+      console.error(
+        '❌ DeliveryService.listMyOffersForProduct error:',
+        error.response?.status,
+        error.response?.data,
+        error.message
+      );
+      return [];
+    }
+  }
+
+  // Client : préciser/corriger l'adresse de livraison sur une offre déjà créée
+  async updateDeliveryAddress(
+    offerId: string,
+    params: { deliveryAddress: string; deliveryCoordinates: [number, number] }
+  ): Promise<DeliveryOffer> {
+    try {
+      const response = await ApiService.patch<DeliveryOffer>(`${this.BASE_URL}/offers/${offerId}/delivery-address`, params);
+      if (response.success && response.data) return response.data;
+      throw new Error(response.message || "Échec de la mise à jour de l'adresse");
+    } catch (error: any) {
+      console.error(
+        '❌ DeliveryService.updateDeliveryAddress error:',
+        error.response?.status,
+        error.response?.data,
+        error.message
+      );
+      throw new Error(error.response?.data?.message || error.message || "Mise à jour de l'adresse échouée");
     }
   }
 

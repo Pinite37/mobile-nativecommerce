@@ -28,23 +28,9 @@ export async function getSilentPickupCoordinates(): Promise<[number, number] | n
   return capturePosition();
 }
 
-/**
- * Capture de la position de l'appareil pour le point de retrait d'une
- * offre/course de livraison (en pratique l'endroit où se trouve la personne
- * qui crée l'offre, ex: la boutique) — demande la permission si nécessaire.
- * Retourne `null` en silence si refusée/indisponible : ne doit jamais
- * empêcher la création de l'offre elle-même.
- */
-export async function requestPickupCoordinates(): Promise<[number, number] | null> {
-  try {
-    const { status: existing } = await Location.getForegroundPermissionsAsync();
-    const granted =
-      existing === 'granted'
-        ? true
-        : (await Location.requestForegroundPermissionsAsync()).status === 'granted';
-    if (!granted) return null;
-    return capturePosition();
-  } catch {
-    return null;
-  }
-}
+// NOTE: on a supprimé requestPickupCoordinates() qui vivait ici — elle
+// capturait le GPS live du téléphone de l'entreprise AU MOMENT de créer une
+// offre, ce qui n'a aucun rapport avec où se trouve la boutique (position du
+// simulateur, du domicile, etc.). Le point de retrait est maintenant
+// l'emplacement précis de la boutique, choisi une fois sur la carte
+// (Profil > Emplacement de ma boutique) et lu directement côté backend.

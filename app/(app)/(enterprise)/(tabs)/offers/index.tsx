@@ -3,7 +3,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useCallback, useRef, useState } from "react";
 import { Image } from "expo-image";
@@ -33,6 +33,7 @@ import { useTheme } from "../../../../../contexts/ThemeContext";
 import { Shimmer } from "../../../../../components/ui/Shimmer";
 import { useSubscription } from "../../../../../contexts/SubscriptionContext";
 import i18n from "../../../../../i18n/i18n";
+import EnterpriseService from "../../../../../services/api/EnterpriseService";
 import DeliveryService, {
   CreateDeliveryCallPayload,
   DeliveryCall,
@@ -40,7 +41,6 @@ import DeliveryService, {
   DeliveryStatus,
   UrgencyLevel,
 } from "../../../../../services/api/DeliveryService";
-import { requestPickupCoordinates } from "../../../../../utils/SilentLocation";
 
 type FilterStatus = "ALL" | DeliveryStatus;
 type ViewMode = "OFFERS" | "CALLS";
@@ -137,6 +137,23 @@ export default function EnterpriseOffersScreen() {
   const bottomSpacer = barBaseHeight + insets.bottom + 16;
 
   const [viewMode, setViewMode] = useState<ViewMode>("CALLS");
+
+  // Une entreprise sans point de retrait ne peut plus publier de livraison :
+  // le backend refuse désormais une mission dont on ignore d'où part le colis.
+  // On l'annonce ICI plutôt que de la laisser remplir tout un formulaire pour
+  // se heurter à une erreur à l'envoi.
+  const [hasPickupPoint, setHasPickupPoint] = useState<boolean | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      EnterpriseService.listPickupPoints().then((points) => {
+        if (!cancelled) setHasPickupPoint(points.some((p) => p.isActive !== false));
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [])
+  );
   const [filter, setFilter] = useState<FilterStatus>("ALL");
   const [refreshing, setRefreshing] = useState(false);
   const [switcherWidth, setSwitcherWidth] = useState(0);
@@ -272,8 +289,10 @@ export default function EnterpriseOffersScreen() {
 
       setCreatingCall(true);
 
-      const pickupCoordinates = await requestPickupCoordinates();
-
+      // Le point de retrait n'est plus capturé ici : le backend lit
+      // désormais l'emplacement précis de la boutique, défini une fois pour
+      // toutes par l'entreprise (Profil > Emplacement de ma boutique) — pas
+      // le GPS live du téléphone au moment de créer l'appel.
       const payload: CreateDeliveryCallPayload = {
         productName: callForm.productName.trim(),
         description: callForm.description.trim(),
@@ -287,7 +306,6 @@ export default function EnterpriseOffersScreen() {
         urgency: callForm.urgency,
         specialInstructions: callForm.specialInstructions.trim(),
         expiresAt: expires.toISOString(),
-        ...(pickupCoordinates ? { pickupCoordinates } : {}),
       };
 
       await DeliveryService.createCall(payload);
@@ -1017,6 +1035,36 @@ export default function EnterpriseOffersScreen() {
     <View style={{ flex: 1, backgroundColor: colors.secondary, position: 'relative' }}>
       <ExpoStatusBar style={isDark ? "light" : "dark"} translucent />
       {renderHeader()}
+
+      {hasPickupPoint === false && (
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => router.push("/(app)/(enterprise)/profile/location-picker" as any)}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            marginHorizontal: 16,
+            marginTop: 12,
+            padding: 14,
+            borderRadius: 16,
+            backgroundColor: isDark ? "rgba(245,158,11,0.12)" : "#FEF6E7",
+            borderWidth: 1,
+            borderColor: isDark ? "rgba(245,158,11,0.3)" : "#F7E0B5",
+          }}
+        >
+          <Ionicons name="storefront-outline" size={20} color={colors.warning} />
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <Text style={{ color: colors.textPrimary }} className="font-poppins-bold text-sm">
+              Définissez votre point de retrait
+            </Text>
+            <Text style={{ color: colors.textSecondary }} className="font-poppins text-xs mt-0.5">
+              Sans lui, le livreur ne sait pas où venir chercher le colis — vous ne pouvez pas
+              publier de livraison.
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+        </TouchableOpacity>
+      )}
 
       <View style={{ flex: 1, backgroundColor: colors.primary }}>
         <FlatList

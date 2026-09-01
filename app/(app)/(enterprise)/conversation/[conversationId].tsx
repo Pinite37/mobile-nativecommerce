@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
+  BackHandler,
   Easing,
   FlatList,
   Image,
@@ -38,13 +39,18 @@ import DeliveryService, {
   CreateOfferPayload,
   UrgencyLevel,
 } from "../../../../services/api/DeliveryService";
-import { requestPickupCoordinates } from "../../../../utils/SilentLocation";
 import MessagingService, {
   Conversation,
   Message,
 } from "../../../../services/api/MessagingService";
 import StatusService, { StatusItem } from "../../../../services/api/StatusService";
+import EnterpriseService from "../../../../services/api/EnterpriseService";
+import CommandeService, { Commande } from "../../../../services/api/CommandeService";
+import DeliveryAddressRequestService, {
+  DeliveryAddressRequest,
+} from "../../../../services/api/DeliveryAddressRequestService";
 import { StatusViewer } from "../../../../components/ui/StatusViewer";
+import ConversationSearch from "../../../../components/messaging/ConversationSearch";
 import ChatWallpaper from "../../../../components/messaging/ChatWallpaper";
 import SwipeableMessageRow from "../../../../components/messaging/SwipeableMessageRow";
 import ConversationCacheService from "../../../../services/ConversationCacheService";
@@ -131,19 +137,28 @@ export default function ConversationDetails() {
   // Offre de livraison (création depuis la conversation)
   const [offerModalVisible, setOfferModalVisible] = useState(false);
   const [creatingOffer, setCreatingOffer] = useState(false);
+  // La zone de livraison a disparu du formulaire : c'est désormais le CLIENT
+  // qui fournit son adresse en confirmant la commande. L'expiration aussi —
+  // elle concerne la mission, fixée au moment de la publier, pas l'accord.
   const [offerForm, setOfferForm] = useState<{
-    deliveryZone: string;
+    agreedTotal: string;
     deliveryFee: string; // string pour TextInput, converti en nombre à l'envoi
+    deliveryFeePaidBy: "ENTREPRISE" | "CLIENT";
     urgency: UrgencyLevel;
     specialInstructions: string;
-    expiresAt: string; // ISO string
+    expiresAt: string; // ISO string — conservé pour la publication de mission
   }>({
-    deliveryZone: "",
+    agreedTotal: "",
     deliveryFee: "",
+    deliveryFeePaidBy: "CLIENT",
     urgency: "MEDIUM",
     specialInstructions: "",
     expiresAt: "",
   });
+
+  // Commandes déjà proposées à ce client, pour ce produit.
+  const [commandes, setCommandes] = useState<Commande[]>([]);
+  const [publishingId, setPublishingId] = useState<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [tempExpiryDate, setTempExpiryDate] = useState<Date | null>(null);
@@ -156,15 +171,113 @@ export default function ConversationDetails() {
   const instructionsInputRef = useRef<any>(null);
   const formScrollRef = useRef<ScrollView>(null);
 
-  const openOfferModal = () => {
+  // Demande d'adresse envoyée par le client lui-même (bouton "Partager mon
+  // adresse de livraison" dans SA conversation) — quand elle existe, elle
+  // remplace la saisie manuelle de la zone de livraison au lieu de la
+  // dupliquer. Récupérée dès que la conversation est chargée (pas seulement
+  // à l'ouverture du formulaire) pour l'afficher en bandeau permanent — sinon
+  // l'entreprise ne sait jamais que le client a déjà transmis une adresse
+  // tant qu'elle n'a pas ouvert "Créer une offre".
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
+  /** Index visé par un saut en cours, pour que onScrollToIndexFailed puisse le rattraper. */
+  const pendingScrollIndexRef = useRef<number | null>(null);
+
+  const [matchedDeliveryRequest, setMatchedDeliveryRequest] =
+    useState<DeliveryAddressRequest | null>(null);
+
+  // Sans point de retrait, le backend refuse de publier la mission : on
+  // prévient dans le formulaire plutôt que de laisser l'entreprise le
+  // remplir en entier pour échouer à l'envoi.
+  const [hasPickupPoint, setHasPickupPoint] = useState<boolean | null>(null);
+
+  const conversationProductId =
+    typeof conversation?.product === "string"
+      ? conversation.product
+      : conversation?.product?._id;
+
+  const refreshMatchedDeliveryRequest = useCallback(async () => {
+    try {
+      const customerId = getCustomerIdFromConversation(
+        conversation,
+        getCurrentUserId()
+      );
+      if (!conversationProductId || !customerId) {
+        setMatchedDeliveryRequest(null);
+        return null;
+      }
+
+      const pending = await DeliveryAddressRequestService.listPending(customerId);
+      const match = pending.find((r) => r.product?._id === conversationProductId) || null;
+      setMatchedDeliveryRequest(match);
+      return match;
+    } catch {
+      return null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversation, conversationProductId]);
+
+  const publishMission = async (commande: Commande) => {
+    setPublishingId(commande._id);
+    try {
+      await CommandeService.publishMission(commande._id);
+      showNotification("success", "Livraison publiée", "Les livreurs à proximité sont notifiés");
+      await refreshCommandes();
+    } catch (e: any) {
+      showNotification("error", "Publication impossible", e?.message || "Réessayez");
+    } finally {
+      setPublishingId(null);
+    }
+  };
+
+  const refreshCommandes = useCallback(async () => {
+    const customerId = getCustomerIdFromConversation(conversation, getCurrentUserId());
+    if (!customerId) return;
+    setCommandes(await CommandeService.listMine({ client: customerId }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversation]);
+
+  useEffect(() => {
+    if (!conversation) return;
+    refreshCommandes();
+    refreshMatchedDeliveryRequest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversation?._id, conversationProductId]);
+
+  const openOfferModal = async () => {
     if (!offerForm.expiresAt) {
       const defaultExpiry = new Date(Date.now() + 60 * 60 * 1000).toISOString();
       setOfferForm((prev) => ({ ...prev, expiresAt: defaultExpiry }));
     }
     setOfferModalVisible(true);
+
+    EnterpriseService.listPickupPoints().then((points) =>
+      setHasPickupPoint(points.some((p) => p.isActive !== false))
+    );
+
+    // Re-vérifier au cas où le client vient tout juste de l'envoyer.
+    const match = await refreshMatchedDeliveryRequest();
+    if (match) {
+      setOfferForm((prev) => ({ ...prev, deliveryZone: match.deliveryAddress }));
+    }
   };
 
-  const closeOfferModal = () => setOfferModalVisible(false);
+  const closeOfferModal = () => {
+    setOfferModalVisible(false);
+    setMatchedDeliveryRequest(null);
+  };
+
+  // La sheet d'offre n'est plus une <Modal> native (voir plus bas pourquoi),
+  // donc le bouton retour Android ne la ferme plus tout seul — on le
+  // ré-intercepte manuellement pendant qu'elle est ouverte.
+  useEffect(() => {
+    if (!offerModalVisible) return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      closeOfferModal();
+      return true;
+    });
+    return () => sub.remove();
+  }, [offerModalVisible]);
 
   // États pour la gestion des confirmations de suppression
   const [confirmationVisible, setConfirmationVisible] = useState(false);
@@ -908,65 +1021,53 @@ export default function ConversationDetails() {
         );
         return;
       }
-      if (
-        !offerForm.deliveryZone ||
-        !offerForm.deliveryFee ||
-        !offerForm.expiresAt
-      ) {
+      const total = Number(offerForm.agreedTotal);
+      if (!offerForm.agreedTotal || isNaN(total) || total < 0) {
         showNotification(
           "warning",
-          "Champs requis",
-          "Zone, frais et expiration sont requis"
+          "Prix convenu requis",
+          "Indiquez le montant sur lequel vous vous êtes mis d'accord"
         );
         return;
       }
       const fee = Number(offerForm.deliveryFee);
-      if (isNaN(fee) || fee <= 0) {
+      if (isNaN(fee) || fee < 0) {
         showNotification(
           "warning",
           "Frais invalide",
-          "Le frais de livraison doit être un nombre positif"
-        );
-        return;
-      }
-      const expires = new Date(offerForm.expiresAt);
-      if (isNaN(expires.getTime()) || expires <= new Date()) {
-        showNotification(
-          "warning",
-          "Expiration invalide",
-          "La date d'expiration doit être future"
+          "Les frais de livraison doivent être un nombre positif"
         );
         return;
       }
 
       setCreatingOffer(true);
 
-      const pickupCoordinates = await requestPickupCoordinates();
-
-      const payload: CreateOfferPayload = {
-        product: productId,
-        customer: customerId,
-        deliveryZone: offerForm.deliveryZone.trim(),
+      // On ne crée plus directement une mission de livraison : on propose une
+      // COMMANDE. Le client la confirmera en fournissant SON adresse — c'est
+      // ce partage des rôles qui rend une mission incomplète impossible.
+      // Ni la zone de livraison (que l'entreprise ne connaît pas) ni
+      // l'expiration (qui concerne la mission) n'ont leur place ici.
+      const commande = await CommandeService.create({
+        client: customerId,
+        conversation: conversationId ?? undefined,
+        items: [{ product: productId, quantity: 1, unitPrice: total }],
+        agreedTotal: total,
         deliveryFee: fee,
-        urgency: offerForm.urgency,
-        specialInstructions: offerForm.specialInstructions.trim(),
-        expiresAt: expires.toISOString(),
-        ...(pickupCoordinates ? { pickupCoordinates } : {}),
-      };
+        deliveryFeePaidBy: offerForm.deliveryFeePaidBy,
+      });
 
-      await DeliveryService.createOffer(payload);
+      setCommandes((prev) => [commande, ...prev]);
       showNotification(
         "success",
-        "Offre publiée",
-        "Votre offre de livraison a été créée"
+        "Commande proposée",
+        "Le client va confirmer et indiquer son adresse de livraison"
       );
       closeOfferModal();
-      // Message système de confirmation dans la conversation (optionnel)
 
-      // Réinitialiser le formulaire
       setOfferForm({
-        deliveryZone: "",
+        agreedTotal: "",
         deliveryFee: "",
+        deliveryFeePaidBy: "CLIENT",
         urgency: "MEDIUM",
         specialInstructions: "",
         expiresAt: "",
@@ -1682,6 +1783,9 @@ export default function ConversationDetails() {
     const isCurrentUser = !!(getCurrentUserId() && senderId && senderId === getCurrentUserId());
     const isDeleted = item.metadata?.deleted || false;
     const isAnimated = item._localId === lastSentLocalId.current;
+    // Le message ramené par la recherche : sans repère visuel, l'utilisateur
+    // ne sait pas lequel des messages à l'écran il venait chercher.
+    const isHighlighted = item._id === highlightedMessageId;
 
     const bubble = <MessageBubble message={item} />;
     const wrappedBubble = !isCurrentUser ? (
@@ -1691,7 +1795,7 @@ export default function ConversationDetails() {
     ) : bubble;
 
     return (
-      <View>
+      <View style={isHighlighted ? { backgroundColor: 'rgba(16,185,129,0.14)', borderRadius: 14 } : undefined}>
         {showSeparator && currentTs ? (
           <View style={{ paddingVertical: 10, alignItems: 'center' }}>
             <View style={{ backgroundColor: 'rgba(16,185,129,0.10)', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, borderWidth: 1, borderColor: 'rgba(16,185,129,0.18)' }}>
@@ -1863,6 +1967,44 @@ export default function ConversationDetails() {
         }
       : null,
   });
+  // Aller à un message trouvé par la recherche. S'il n'est pas dans les 50
+  // derniers — le cas justement intéressant — on recharge le fil DEPUIS ce
+  // message, puis on défile jusqu'à lui et on le met brièvement en évidence.
+  const jumpToMessage = async (messageId: string) => {
+    setSearchOpen(false);
+
+    const scrollTo = (list: Message[]) => {
+      const index = list.findIndex((m) => m._id === messageId);
+      if (index < 0) return false;
+      setHighlightedMessageId(messageId);
+      pendingScrollIndexRef.current = index;
+      setTimeout(() => {
+        flatListRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.5 });
+      }, 120);
+      setTimeout(() => { pendingScrollIndexRef.current = null; }, 1500);
+      setTimeout(() => setHighlightedMessageId(null), 2600);
+      return true;
+    };
+
+    if (scrollTo(messages)) return;
+
+    const data = await MessagingService.getMessagesUntil(conversationId!, messageId);
+    if (!data?.messages) return;
+    setMessages(data.messages);
+    if (data.truncated) {
+      // Cible hors de portée de la limite serveur : on l'annonce plutôt que
+      // de laisser l'utilisateur croire à un bug.
+      showNotification(
+        "info",
+        "Message trop ancien",
+        "La discussion est trop longue pour y accéder directement."
+      );
+      return;
+    }
+    setTimeout(() => scrollTo(data.messages), 200);
+  };
+
+
   return (
     <View style={{ flex: 1, backgroundColor: isDark ? '#0F1923' : '#EEF2F7' }}>
       <ChatWallpaperEnt isDark={isDark} />
@@ -1917,6 +2059,12 @@ export default function ConversationDetails() {
             )}
             <TouchableOpacity
               style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.tertiary, justifyContent: 'center', alignItems: 'center' }}
+              onPress={() => setSearchOpen((v) => !v)}
+            >
+              <Ionicons name="search" size={18} color={colors.text} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.tertiary, justifyContent: 'center', alignItems: 'center' }}
               onPress={() => {
                 const productId =
                   typeof conversation.product === "string"
@@ -1931,6 +2079,103 @@ export default function ConversationDetails() {
         </View>
       </View>
 
+      <ConversationSearch
+        conversationId={conversationId!}
+        visible={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onJumpToMessage={jumpToMessage}
+      />
+
+      {/* Commandes en cours avec ce client — l'entreprise suit leur état
+          sans quitter le fil. Trois étapes distinctes, car la commande reste
+          CONFIRMEE après publication (elle ne passe EN_LIVRAISON qu'à
+          l'acceptation d'un livreur) : sans distinguer « publiée » de
+          « à publier », le bouton restait affiché indéfiniment. */}
+      {commandes
+        .filter((c) => ["PROPOSEE", "CONFIRMEE", "EN_LIVRAISON"].includes(c.status))
+        .map((c) => {
+          const published = (c.missions?.length ?? 0) > 0;
+          const step: "ATTENTE_CLIENT" | "A_PUBLIER" | "PUBLIEE" | "EN_COURS" =
+            c.status === "PROPOSEE"
+              ? "ATTENTE_CLIENT"
+              : c.status === "EN_LIVRAISON"
+              ? "EN_COURS"
+              : published
+              ? "PUBLIEE"
+              : "A_PUBLIER";
+
+          const meta = {
+            ATTENTE_CLIENT: {
+              icon: "hourglass-outline" as const,
+              tint: colors.textSecondary,
+              bg: colors.secondary,
+              line: "En attente de confirmation et d'adresse du client",
+            },
+            A_PUBLIER: {
+              icon: "checkmark-circle" as const,
+              tint: colors.brandPrimary,
+              bg: "rgba(16,185,129,0.08)",
+              line: c.deliveryAddress?.address || "Adresse confirmée",
+            },
+            PUBLIEE: {
+              icon: "paper-plane-outline" as const,
+              tint: colors.brandPrimary,
+              bg: "rgba(16,185,129,0.08)",
+              line: "Livraison publiée · en attente d'un livreur",
+            },
+            EN_COURS: {
+              icon: "bicycle" as const,
+              tint: colors.brandPrimary,
+              bg: "rgba(16,185,129,0.08)",
+              line: "Un livreur a pris la course",
+            },
+          }[step];
+
+          return (
+            <View
+              key={c._id}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                backgroundColor: meta.bg,
+                borderBottomWidth: 1,
+                borderBottomColor: colors.borderLight,
+              }}
+            >
+              <Ionicons name={meta.icon} size={16} color={meta.tint} />
+              <View style={{ flex: 1, marginLeft: 9 }}>
+                <Text style={{ color: colors.textPrimary, fontFamily: "Poppins-SemiBold", fontSize: 12.5 }} numberOfLines={1}>
+                  {c.items?.[0]?.nameSnapshot || "Commande"} · {c.agreedTotal} FCFA
+                </Text>
+                <Text style={{ color: colors.textSecondary, fontFamily: "Poppins-Medium", fontSize: 11.5 }} numberOfLines={1}>
+                  {meta.line}
+                </Text>
+              </View>
+
+              {step === "A_PUBLIER" && (
+                <TouchableOpacity
+                  onPress={() => publishMission(c)}
+                  disabled={publishingId === c._id}
+                  activeOpacity={0.85}
+                  style={{
+                    backgroundColor: colors.brandPrimary,
+                    borderRadius: 10,
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                    opacity: publishingId === c._id ? 0.6 : 1,
+                  }}
+                >
+                  <Text style={{ color: "#FFFFFF", fontFamily: "Poppins-Bold", fontSize: 12 }}>
+                    {publishingId === c._id ? "…" : "Publier"}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          );
+        })}
+
       {/* Zone de contenu principal avec KeyboardAvoidingView */}
       {/* Android edge-to-edge (SDK 35+) : adjustResize est inopérant, le header reste fixe hors du KAV.
           behavior="padding" ajoute un padding bas = hauteur clavier → input toujours visible. */}
@@ -1942,7 +2187,21 @@ export default function ConversationDetails() {
             renderItem={renderMessageItem}
             keyExtractor={(item) => item._id}
             className="flex-1 px-4"
-            onScrollToIndexFailed={() => { flatListRef.current?.scrollToOffset({ offset: 0, animated: true }); }}
+            onScrollToIndexFailed={(info) => {
+              // Un saut vers un message lointain échoue tant que la liste n'a
+              // pas mesuré les lignes intermédiaires : on approche à l'estime,
+              // puis on retente une fois le rendu fait.
+              const target = pendingScrollIndexRef.current;
+              if (target != null) {
+                flatListRef.current?.scrollToOffset({ offset: info.averageItemLength * target, animated: false });
+                setTimeout(() => {
+                  flatListRef.current?.scrollToIndex({ index: target, animated: true, viewPosition: 0.5 });
+                  pendingScrollIndexRef.current = null;
+                }, 280);
+                return;
+              }
+              flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+            }}
             ListHeaderComponent={
               typeof conversation.product === "object" &&
               conversation.product ? (
@@ -2118,7 +2377,21 @@ export default function ConversationDetails() {
             renderItem={renderMessageItem}
             keyExtractor={(item) => item._id}
             className="flex-1 px-4"
-            onScrollToIndexFailed={() => { flatListRef.current?.scrollToOffset({ offset: 0, animated: true }); }}
+            onScrollToIndexFailed={(info) => {
+              // Un saut vers un message lointain échoue tant que la liste n'a
+              // pas mesuré les lignes intermédiaires : on approche à l'estime,
+              // puis on retente une fois le rendu fait.
+              const target = pendingScrollIndexRef.current;
+              if (target != null) {
+                flatListRef.current?.scrollToOffset({ offset: info.averageItemLength * target, animated: false });
+                setTimeout(() => {
+                  flatListRef.current?.scrollToIndex({ index: target, animated: true, viewPosition: 0.5 });
+                  pendingScrollIndexRef.current = null;
+                }, 280);
+                return;
+              }
+              flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+            }}
             ListHeaderComponent={
               typeof conversation.product === "object" &&
               conversation.product ? (
@@ -2388,14 +2661,23 @@ export default function ConversationDetails() {
       ) : null}
 
       {/* Modal pour la création d'offre de livraison */}
-      <Modal
-        visible={offerModalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={closeOfferModal}
+      {/* PAS de <Modal> ici volontairement : sur Android, une <Modal>
+          ouvre une fenêtre native SÉPARÉE (Dialog), et le clavier logiciel
+          se retrouve parfois derrière cette fenêtre au lieu de la pousser —
+          ni "behavior=padding" ni statusBarTranslucent n'ont réglé ça. Un
+          simple View en overlay reste dans la même fenêtre que le reste de
+          l'écran, donc le clavier se comporte normalement. */}
+      {offerModalVisible && (
+      <View
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000, elevation: 1000 }}
       >
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          // "height" sur Android laissait le clavier s'ouvrir SOUS la sheet
+          // au lieu de la pousser vers le haut (même souci edge-to-egde
+          // SDK 35+ que sur l'écran principal, voir plus haut) — "padding"
+          // sur les deux plateformes est le pattern qui marche déjà ailleurs
+          // dans ce fichier.
+          behavior="padding"
           style={{ flex: 1, justifyContent: 'flex-end' }}
         >
           {/* Backdrop */}
@@ -2444,10 +2726,43 @@ export default function ConversationDetails() {
               style={{ flex: 1 }}
               contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 32 }}
             >
-              {/* Zone de livraison */}
+              {hasPickupPoint === false && (
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => {
+                    closeOfferModal();
+                    router.push("/(app)/(enterprise)/profile/location-picker" as any);
+                  }}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    padding: 14,
+                    borderRadius: 14,
+                    marginBottom: 18,
+                    backgroundColor: isDark ? 'rgba(245,158,11,0.12)' : '#FEF6E7',
+                    borderWidth: 1,
+                    borderColor: isDark ? 'rgba(245,158,11,0.3)' : '#F7E0B5',
+                  }}
+                >
+                  <Ionicons name="storefront-outline" size={19} color={colors.warning} />
+                  <View style={{ flex: 1, marginLeft: 11 }}>
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 13 }}>
+                      Point de retrait manquant
+                    </Text>
+                    <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 12, marginTop: 1 }}>
+                      Définissez-le pour pouvoir publier cette livraison.
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={17} color={colors.textSecondary} />
+                </TouchableOpacity>
+              )}
+
+              {/* Prix convenu — remplace la zone de livraison, que
+                  l'entreprise ne connaît pas. C'est le client qui donnera
+                  son adresse en confirmant. */}
               <View style={{ marginBottom: 18 }}>
                 <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
-                  {i18n.t('enterprise.messages.conversationDetail.offerForm.deliveryZone')}
+                  Prix convenu
                 </Text>
                 <View style={{
                   flexDirection: 'row', alignItems: 'center',
@@ -2457,12 +2772,13 @@ export default function ConversationDetails() {
                   borderRadius: 14,
                   paddingHorizontal: 14,
                 }}>
-                  <Ionicons name="location-outline" size={16} color="#10B981" style={{ marginRight: 8 }} />
+                  <Ionicons name="pricetag-outline" size={16} color={colors.brandPrimary} style={{ marginRight: 8 }} />
                   <TextInput
                     ref={zoneInputRef}
-                    value={offerForm.deliveryZone}
-                    onChangeText={(text) => setOfferForm({ ...offerForm, deliveryZone: text })}
-                    placeholder={i18n.t('enterprise.messages.conversationDetail.offerForm.deliveryZonePlaceholder')}
+                    value={offerForm.agreedTotal}
+                    onChangeText={(text) => setOfferForm({ ...offerForm, agreedTotal: text })}
+                    placeholder="Montant total négocié"
+                    keyboardType="numeric"
                     style={{ flex: 1, color: colors.textPrimary, fontFamily: 'Poppins-Medium', fontSize: 15, paddingVertical: 13 }}
                     placeholderTextColor={colors.textSecondary}
                     returnKeyType="next"
@@ -2470,7 +2786,11 @@ export default function ConversationDetails() {
                     blurOnSubmit={false}
                     onFocus={() => formScrollRef.current?.scrollTo({ y: 0, animated: true })}
                   />
+                  <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Bold', fontSize: 12 }}>FCFA</Text>
                 </View>
+                <Text style={{ color: colors.textTertiary, fontFamily: 'Poppins-Medium', fontSize: 11, marginTop: 6 }}>
+                  Le montant sur lequel vous vous êtes mis d&apos;accord dans la discussion.
+                </Text>
               </View>
 
               {/* Frais de livraison */}
@@ -2506,7 +2826,47 @@ export default function ConversationDetails() {
                 </View>
               </View>
 
-              {/* Urgence — chips horizontaux */}
+                            {/* Qui règle le livreur — le paiement se fait hors de l'app,
+                  ce choix dit seulement au livreur à qui présenter la note.
+                  Sans lui, il arrive sans savoir. */}
+              <View style={{ marginBottom: 18 }}>
+                <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+                  Qui règle le livreur
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  {([
+                    { key: 'CLIENT' as const, label: 'Le client', hint: 'à la livraison' },
+                    { key: 'ENTREPRISE' as const, label: 'Vous', hint: 'au retrait' },
+                  ]).map((opt) => {
+                    const active = offerForm.deliveryFeePaidBy === opt.key;
+                    return (
+                      <TouchableOpacity
+                        key={opt.key}
+                        onPress={() => setOfferForm({ ...offerForm, deliveryFeePaidBy: opt.key })}
+                        activeOpacity={0.85}
+                        style={{
+                          flex: 1,
+                          paddingVertical: 12,
+                          paddingHorizontal: 12,
+                          borderRadius: 14,
+                          borderWidth: 1.5,
+                          borderColor: active ? colors.brandPrimary : colors.border,
+                          backgroundColor: active ? 'rgba(16,185,129,0.08)' : colors.secondary,
+                        }}
+                      >
+                        <Text style={{ color: active ? colors.brandPrimary : colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 13 }}>
+                          {opt.label}
+                        </Text>
+                        <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 11, marginTop: 1 }}>
+                          {opt.hint}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+{/* Urgence — chips horizontaux */}
               <View style={{ marginBottom: 18 }}>
                 <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>
                   {i18n.t('enterprise.messages.conversationDetail.offerForm.urgencyLevel')}
@@ -2674,7 +3034,8 @@ export default function ConversationDetails() {
             </View>
           </View>
         </KeyboardAvoidingView>
-      </Modal>
+      </View>
+      )}
 
       {/* Modal iOS pour le sélecteur de date */}
       {Platform.OS === "ios" && (
