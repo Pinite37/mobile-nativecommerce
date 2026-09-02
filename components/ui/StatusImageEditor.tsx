@@ -332,7 +332,7 @@ export function StatusImageEditor({
         <TouchableOpacity onPress={onClose} style={{ padding: 6, marginRight: 8 }}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={{ flex: 1, color: '#fff', fontSize: 16, fontFamily: 'Poppins-Bold' }}>
+        <Text style={{ flex: 1, color: '#fff', fontSize: 16, fontFamily: 'PlusJakartaSans-Bold' }}>
           Modifier la photo
         </Text>
         <TouchableOpacity
@@ -359,7 +359,7 @@ export function StatusImageEditor({
           ) : (
             <>
               <Ionicons name="checkmark" size={16} color="#fff" />
-              <Text style={{ color: '#fff', fontFamily: 'Poppins-Bold', fontSize: 14 }}>
+              <Text style={{ color: '#fff', fontFamily: 'PlusJakartaSans-Bold', fontSize: 14 }}>
                 Valider
               </Text>
             </>

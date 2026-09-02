@@ -77,14 +77,14 @@ export default function StatusModal({
                 />
               </View>
             </View>
-            <Text style={{ color: '#FFFFFF', fontFamily: 'Poppins-Bold', fontSize: 24, textAlign: 'center' }}>
+            <Text style={{ color: '#FFFFFF', fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, textAlign: 'center' }}>
               {title}
             </Text>
           </LinearGradient>
 
           {/* Message Content */}
           <View className="p-6 pt-5">
-            <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 16, textAlign: 'center', lineHeight: 24, marginBottom: 24 }}>
+            <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 16, textAlign: 'center', lineHeight: 24, marginBottom: 24 }}>
               {message}
             </Text>
 
@@ -94,7 +94,7 @@ export default function StatusModal({
               className="rounded-xl py-4 items-center justify-center shadow-sm"
               style={{ backgroundColor: isSuccess ? '#10B981' : '#EF4444' }}
             >
-              <Text style={{ color: '#FFFFFF', fontFamily: 'Poppins-Bold', fontSize: 16 }}>
+              <Text style={{ color: '#FFFFFF', fontFamily: 'PlusJakartaSans-Bold', fontSize: 16 }}>
                 {isSuccess ? i18n.t('common.actions.great') : i18n.t('common.actions.understood')}
               </Text>
             </TouchableOpacity>

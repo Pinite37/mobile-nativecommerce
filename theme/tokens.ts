@@ -1,15 +1,15 @@
 /**
  * Design tokens — AXI Marketplace
- * Police: Poppins | Couleurs: voir colors.ts
+ * Police: Plus Jakarta Sans | Couleurs: voir colors.ts
  */
 
 // ── Typographie ────────────────────────────────────────────────
 export const font = {
-  regular: "Poppins-Regular",
-  medium: "Poppins-Medium",
-  semibold: "Poppins-SemiBold",
-  bold: "Poppins-Bold",
-  light: "Poppins-Light",
+  regular: "PlusJakartaSans-Regular",
+  medium: "PlusJakartaSans-Medium",
+  semibold: "PlusJakartaSans-SemiBold",
+  bold: "PlusJakartaSans-Bold",
+  light: "PlusJakartaSans-Light",
 } as const;
 
 export const fontSize = {

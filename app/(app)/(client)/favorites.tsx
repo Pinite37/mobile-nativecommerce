@@ -116,7 +116,7 @@ export default function ClientFavorites() {
       onPress={() => setSelectedCategory(item.id)}
     >
       <Text
-        className={`text-sm font-poppins-medium ${
+        className={`text-sm font-jakarta-medium ${
           item.selected ? "text-white" : "text-neutral-700"
         }`}
       >
@@ -136,7 +136,7 @@ export default function ClientFavorites() {
           />
           {item.discount > 0 && (
             <View className="absolute top-1 left-1 bg-error-500 rounded-full px-2 py-1">
-              <Text className="text-white text-xs font-poppins-bold">
+              <Text className="text-white text-xs font-jakarta-bold">
                 -{item.discount}%
               </Text>
             </View>
@@ -145,7 +145,7 @@ export default function ClientFavorites() {
         
         <View className="ml-4 flex-1">
           <View className="flex-row items-start justify-between mb-1">
-            <Text className="text-base font-poppins-semibold text-neutral-800 flex-1 pr-2">
+            <Text className="text-base font-jakarta-semibold text-neutral-800 flex-1 pr-2">
               {item.name}
             </Text>
             <TouchableOpacity
@@ -162,11 +162,11 @@ export default function ClientFavorites() {
           
           <View className="flex-row items-center justify-between">
             <View>
-              <Text className="text-lg font-poppins-bold text-primary-500">
+              <Text className="text-lg font-jakarta-bold text-primary-500">
                 {formatPrice(item.price)}
               </Text>
               {item.discount > 0 && (
-                <Text className="text-sm font-poppins-medium text-neutral-500 line-through">
+                <Text className="text-sm font-jakarta-medium text-neutral-500 line-through">
                   {formatPrice(item.originalPrice)}
                 </Text>
               )}
@@ -179,7 +179,7 @@ export default function ClientFavorites() {
                 }`}
               />
               <Text
-                className={`text-xs font-poppins-medium ${
+                className={`text-xs font-jakarta-medium ${
                   item.inStock ? "text-success-600" : "text-error-600"
                 }`}
               >
@@ -195,7 +195,7 @@ export default function ClientFavorites() {
           className="flex-1 bg-primary-500 rounded-xl py-3 mr-2"
           disabled={!item.inStock}
         >
-          <Text className="text-white font-poppins-semibold text-center">
+          <Text className="text-white font-jakarta-semibold text-center">
             {item.inStock ? "Ajouter au panier" : "Indisponible"}
           </Text>
         </TouchableOpacity>
@@ -210,14 +210,14 @@ export default function ClientFavorites() {
   const renderEmptyState = () => (
     <View className="flex-1 justify-center items-center px-6">
       <Ionicons name="heart-outline" size={80} color="#D1D5DB" />
-      <Text className="text-xl font-poppins-bold text-neutral-800 mt-4 mb-2">
+      <Text className="text-xl font-jakarta-bold text-neutral-800 mt-4 mb-2">
         Aucun favori pour le moment
       </Text>
-      <Text className="text-center text-neutral-600 font-poppins-medium mb-6">
+      <Text className="text-center text-neutral-600 font-jakarta-medium mb-6">
         Ajoutez des produits à vos favoris pour les retrouver facilement ici
       </Text>
       <TouchableOpacity className="bg-primary-500 rounded-xl py-4 px-8">
-        <Text className="text-white font-poppins-semibold">
+        <Text className="text-white font-jakarta-semibold">
           Découvrir des produits
         </Text>
       </TouchableOpacity>
@@ -229,7 +229,7 @@ export default function ClientFavorites() {
       {/* Header */}
       <View className="bg-white pt-20 px-6 py-4">
         <View className="flex-row items-center justify-between">
-          <Text className="text-xl font-poppins-bold text-neutral-800">
+          <Text className="text-xl font-jakarta-bold text-neutral-800">
             Favoris
           </Text>
           <TouchableOpacity>
@@ -254,11 +254,11 @@ export default function ClientFavorites() {
 
           {/* Sort Options */}
           <View className="flex-row items-center justify-between px-6 py-2">
-            <Text className="text-sm font-poppins-medium text-neutral-600">
+            <Text className="text-sm font-jakarta-medium text-neutral-600">
               {favoriteProducts.length} produits
             </Text>
             <TouchableOpacity className="flex-row items-center">
-              <Text className="text-sm font-poppins-medium text-neutral-600 mr-1">
+              <Text className="text-sm font-jakarta-medium text-neutral-600 mr-1">
                 Trier par date
               </Text>
               <Ionicons name="chevron-down" size={16} color="#9CA3AF" />

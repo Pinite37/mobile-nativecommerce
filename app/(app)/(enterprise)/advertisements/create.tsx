@@ -69,10 +69,10 @@ function ImagePickerModal({
 
             {/* Header */}
             <View style={{ borderBottomColor: colors.border }} className="px-6 pb-4 border-b">
-              <Text style={{ color: colors.textPrimary }} className="text-lg font-poppins-bold">
+              <Text style={{ color: colors.textPrimary }} className="text-lg font-jakarta-bold">
                 {i18n.t("enterprise.advertisementsCreate.imagePicker.title")}
               </Text>
-              <Text style={{ color: colors.textSecondary }} className="text-sm font-poppins-medium mt-1">
+              <Text style={{ color: colors.textSecondary }} className="text-sm font-jakarta-medium mt-1">
                 {i18n.t("enterprise.advertisementsCreate.imagePicker.subtitle")}
               </Text>
             </View>
@@ -95,10 +95,10 @@ function ImagePickerModal({
                   <Ionicons name="camera" size={20} color="#3B82F6" />
                 </View>
                 <View className="flex-1">
-                  <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-semibold">
+                  <Text style={{ color: colors.textPrimary }} className="text-base font-jakarta-semibold">
                     {i18n.t("enterprise.advertisementsCreate.imagePicker.takePhoto")}
                   </Text>
-                  <Text style={{ color: colors.textSecondary }} className="text-sm font-poppins-medium">
+                  <Text style={{ color: colors.textSecondary }} className="text-sm font-jakarta-medium">
                     {i18n.t("enterprise.advertisementsCreate.imagePicker.takePhotoDescription")}
                   </Text>
                 </View>
@@ -119,10 +119,10 @@ function ImagePickerModal({
                 <Ionicons name="images" size={20} color="#10B981" />
               </View>
               <View className="flex-1">
-                <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-semibold">
+                <Text style={{ color: colors.textPrimary }} className="text-base font-jakarta-semibold">
                   {i18n.t("enterprise.advertisementsCreate.imagePicker.pickFromGallery")}
                 </Text>
-                <Text style={{ color: colors.textSecondary }} className="text-sm font-poppins-medium">
+                <Text style={{ color: colors.textSecondary }} className="text-sm font-jakarta-medium">
                   {i18n.t("enterprise.advertisementsCreate.imagePicker.pickFromGalleryDescription")}
                 </Text>
               </View>
@@ -137,7 +137,7 @@ function ImagePickerModal({
                 style={{ backgroundColor: colors.secondary }}
                 className="w-full py-4 rounded-2xl items-center"
               >
-                <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-semibold">
+                <Text style={{ color: colors.textPrimary }} className="text-base font-jakarta-semibold">
                   {i18n.t("enterprise.advertisementsCreate.imagePicker.cancel")}
                 </Text>
               </TouchableOpacity>
@@ -358,7 +358,7 @@ export default function CreateAdvertisement() {
           <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
         <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 18, color: colors.textPrimary }}>
+          <Text style={{ fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 18, color: colors.textPrimary }}>
             {isEditing ? i18n.t("enterprise.advertisementsCreate.title.edit") : i18n.t("enterprise.advertisementsCreate.title.create")}
           </Text>
         </View>
@@ -377,7 +377,7 @@ export default function CreateAdvertisement() {
         >
           {/* Image Section */}
           <View>
-            <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-semibold mb-3">
+            <Text style={{ color: colors.textPrimary }} className="text-base font-jakarta-semibold mb-3">
               {i18n.t("enterprise.advertisementsCreate.sections.images")}
             </Text>
 
@@ -414,14 +414,14 @@ export default function CreateAdvertisement() {
                 activeOpacity={0.7}
               >
                 <Ionicons name="add" size={32} color={colors.textSecondary} />
-                <Text style={{ color: colors.textSecondary }} className="font-poppins-medium mt-2 text-sm">
+                <Text style={{ color: colors.textSecondary }} className="font-jakarta-medium mt-2 text-sm">
                   {i18n.t("enterprise.advertisementsCreate.labels.addImage")}
                 </Text>
               </TouchableOpacity>
             )}
 
             {images.length === 0 && (
-              <Text style={{ color: colors.textSecondary }} className="font-poppins-medium text-xs mt-2 text-center">
+              <Text style={{ color: colors.textSecondary }} className="font-jakarta-medium text-xs mt-2 text-center">
                 {i18n.t("enterprise.advertisementsCreate.labels.requiredImage")}
               </Text>
             )}
@@ -429,7 +429,7 @@ export default function CreateAdvertisement() {
 
           {/* Title Section */}
           <View className="mt-6">
-            <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-semibold mb-3">
+            <Text style={{ color: colors.textPrimary }} className="text-base font-jakarta-semibold mb-3">
               {i18n.t("enterprise.advertisementsCreate.sections.title")}
             </Text>
             <TextInput
@@ -437,20 +437,20 @@ export default function CreateAdvertisement() {
               onChangeText={setTitle}
               placeholder={i18n.t("enterprise.advertisementsCreate.placeholders.title")}
               style={{ backgroundColor: colors.card, color: colors.textPrimary, borderColor: colors.border }}
-              className="rounded-2xl px-4 py-4 font-poppins-medium border"
+              className="rounded-2xl px-4 py-4 font-jakarta-medium border"
               placeholderTextColor={colors.textSecondary}
               maxLength={100}
               multiline
               numberOfLines={2}
             />
-            <Text style={{ color: colors.textSecondary }} className="text-xs font-poppins-medium mt-2 text-right">
+            <Text style={{ color: colors.textSecondary }} className="text-xs font-jakarta-medium mt-2 text-right">
               {title.length}/{i18n.t("enterprise.advertisementsCreate.limits.titleMax")} {i18n.t("enterprise.advertisementsCreate.labels.characters")}
             </Text>
           </View>
 
           {/* Description */}
           <View className="mt-6">
-            <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-semibold mb-3">
+            <Text style={{ color: colors.textPrimary }} className="text-base font-jakarta-semibold mb-3">
               {i18n.t("enterprise.advertisementsCreate.sections.description")}
             </Text>
             <TextInput
@@ -458,13 +458,13 @@ export default function CreateAdvertisement() {
               onChangeText={setDescription}
               placeholder={i18n.t("enterprise.advertisementsCreate.placeholders.description")}
               style={{ backgroundColor: colors.card, color: colors.textPrimary, borderColor: colors.border }}
-              className="rounded-2xl px-4 py-4 font-poppins-medium border"
+              className="rounded-2xl px-4 py-4 font-jakarta-medium border"
               placeholderTextColor={colors.textSecondary}
               multiline
               numberOfLines={4}
               maxLength={500}
             />
-            <Text style={{ color: colors.textSecondary }} className="text-xs font-poppins-medium mt-2 text-right">
+            <Text style={{ color: colors.textSecondary }} className="text-xs font-jakarta-medium mt-2 text-right">
               {description.length}/{i18n.t("enterprise.advertisementsCreate.limits.descriptionMax")}
             </Text>
           </View>
@@ -472,7 +472,7 @@ export default function CreateAdvertisement() {
           {/* Type & Audience */}
           <View className="mt-6 flex-row gap-3">
             <View className="flex-1">
-              <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-semibold mb-3">
+              <Text style={{ color: colors.textPrimary }} className="text-base font-jakarta-semibold mb-3">
                 {i18n.t("enterprise.advertisementsCreate.sections.type")}
               </Text>
               <View className="flex-row flex-wrap gap-2">
@@ -491,7 +491,7 @@ export default function CreateAdvertisement() {
                       style={{
                         color: type === t ? "#FFFFFF" : colors.textPrimary
                       }}
-                      className="text-xs font-poppins-semibold"
+                      className="text-xs font-jakarta-semibold"
                     >
                       {t}
                     </Text>
@@ -500,7 +500,7 @@ export default function CreateAdvertisement() {
               </View>
             </View>
             <View className="flex-1">
-              <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-semibold mb-3">
+              <Text style={{ color: colors.textPrimary }} className="text-base font-jakarta-semibold mb-3">
                 {i18n.t("enterprise.advertisementsCreate.sections.audience")}
               </Text>
               <View className="flex-row flex-wrap gap-2">
@@ -519,7 +519,7 @@ export default function CreateAdvertisement() {
                       style={{
                         color: audience === a ? "#FFFFFF" : colors.textPrimary
                       }}
-                      className="text-xs font-poppins-semibold"
+                      className="text-xs font-jakarta-semibold"
                     >
                       {a}
                     </Text>
@@ -536,7 +536,7 @@ export default function CreateAdvertisement() {
               className="rounded-2xl px-4 py-4 border flex-row items-center"
             >
               <Ionicons name="time-outline" size={20} color="#10B981" style={{ marginRight: 12 }} />
-              <Text style={{ color: colors.textSecondary }} className="font-poppins-medium text-sm flex-1">
+              <Text style={{ color: colors.textSecondary }} className="font-jakarta-medium text-sm flex-1">
                 {i18n.t("enterprise.advertisementsCreate.labels.autoStart", { defaultValue: "La publicité démarre immédiatement et reste active pendant 24h." })}
               </Text>
             </View>
@@ -545,7 +545,7 @@ export default function CreateAdvertisement() {
           {/* Preview Section */}
           {(title.trim() || images.length > 0) && (
             <View className="mt-8">
-              <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-semibold mb-3">
+              <Text style={{ color: colors.textPrimary }} className="text-base font-jakarta-semibold mb-3">
                 {i18n.t("enterprise.advertisementsCreate.sections.preview")}
               </Text>
               <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="rounded-2xl overflow-hidden border">
@@ -564,7 +564,7 @@ export default function CreateAdvertisement() {
                     />
                     <View className="absolute bottom-3 left-3 right-3">
                       <Text
-                        className="text-white font-poppins-bold text-lg"
+                        className="text-white font-jakarta-bold text-lg"
                         numberOfLines={2}
                       >
                         {title.trim() || i18n.t("enterprise.advertisementsCreate.preview.defaultTitle")}
@@ -573,7 +573,7 @@ export default function CreateAdvertisement() {
                   </View>
                 ) : (
                   <View style={{ backgroundColor: colors.secondary }} className="w-full h-32 items-center justify-center">
-                    <Text style={{ color: colors.textSecondary }} className="font-poppins-medium">
+                    <Text style={{ color: colors.textSecondary }} className="font-jakarta-medium">
                       {title.trim() || i18n.t("enterprise.advertisementsCreate.preview.defaultText")}
                     </Text>
                   </View>
@@ -607,7 +607,7 @@ export default function CreateAdvertisement() {
                 />
               )}
               <Text
-                className={`font-poppins-semibold text-base ${
+                className={`font-jakarta-semibold text-base ${
                   !validate() ? "text-white" : "text-neutral-500"
                 }`}
               >

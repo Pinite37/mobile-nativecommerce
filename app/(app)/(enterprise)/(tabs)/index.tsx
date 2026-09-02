@@ -737,7 +737,7 @@ export default function EnterpriseDashboard() {
         {/* Badge pour les produits avec beaucoup de ventes */}
         {item.stats?.totalSales > 10 && (
           <View className="absolute top-2 left-2 bg-success-500 rounded-full px-2 py-1">
-            <Text className="text-white text-xs font-poppins-bold">
+            <Text className="text-white text-xs font-jakarta-bold">
               Populaire
             </Text>
           </View>
@@ -757,11 +757,11 @@ export default function EnterpriseDashboard() {
         <Text
           numberOfLines={2}
           style={{ color: colors.textPrimary }}
-          className="text-sm font-poppins-semibold mb-1"
+          className="text-sm font-jakarta-semibold mb-1"
         >
           {item.name}
         </Text>
-        <Text style={{ color: colors.brandPrimary }} className="text-base font-poppins-bold mb-1">
+        <Text style={{ color: colors.brandPrimary }} className="text-base font-jakarta-bold mb-1">
           {formatPrice(item.price)}
         </Text>
       </View>
@@ -800,7 +800,7 @@ export default function EnterpriseDashboard() {
         />
         {item.stats?.totalSales > 10 && (
           <View className="absolute top-1 left-1 bg-success-500 rounded-full px-2 py-0.5">
-            <Text className="text-white text-[10px] font-poppins-bold">
+            <Text className="text-white text-[10px] font-jakarta-bold">
               Populaire
             </Text>
           </View>
@@ -811,13 +811,13 @@ export default function EnterpriseDashboard() {
           <Text
             numberOfLines={2}
             style={{ color: colors.textPrimary }}
-            className="text-sm font-poppins-semibold"
+            className="text-sm font-jakarta-semibold"
           >
             {item.name}
           </Text>
         </View>
         <View className="flex-row items-center justify-between mt-2">
-          <Text style={{ color: colors.brandPrimary }} className="text-base font-poppins-bold">
+          <Text style={{ color: colors.brandPrimary }} className="text-base font-jakarta-bold">
             {formatPrice(item.price)}
           </Text>
           <TouchableOpacity
@@ -876,13 +876,13 @@ export default function EnterpriseDashboard() {
         >
           <Text
             numberOfLines={2}
-            className="text-white font-poppins-bold text-base mb-1"
+            className="text-white font-jakarta-bold text-base mb-1"
           >
             {item.title}
           </Text>
           <Text
             numberOfLines={1}
-            className="text-white/90 font-poppins-medium text-xs"
+            className="text-white/90 font-jakarta-medium text-xs"
           >
             {new Date(item.endDate).toLocaleDateString("fr-FR", {
               day: "2-digit",
@@ -908,10 +908,10 @@ export default function EnterpriseDashboard() {
       {/* Ligne greeting + notification */}
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
         <View>
-          <Text style={{ fontFamily: 'Poppins-Regular', fontSize: 13, color: colors.textSecondary }}>
+          <Text style={{ fontFamily: 'PlusJakartaSans-Regular', fontSize: 13, color: colors.textSecondary }}>
             {`${greetUser()},`}
           </Text>
-          <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 22, color: colors.textPrimary }}>
+          <Text style={{ fontFamily: 'PlusJakartaSans-Bold', fontSize: 22, color: colors.textPrimary }}>
             {companyName || user?.firstName || "Entreprise"}
           </Text>
         </View>
@@ -935,7 +935,7 @@ export default function EnterpriseDashboard() {
         }}>
           <Ionicons name="search" size={20} color={colors.brandPrimary} />
           <TextInput
-            style={{ flex: 1, marginLeft: 10, color: colors.textPrimary, fontFamily: 'Poppins-SemiBold', fontSize: 15 }}
+            style={{ flex: 1, marginLeft: 10, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 15 }}
             placeholder={i18n.t("enterprise.dashboard.search.placeholder")}
             placeholderTextColor={colors.textTertiary}
             value={searchQuery}
@@ -966,7 +966,7 @@ export default function EnterpriseDashboard() {
               color={selectedCity ? '#10B981' : colors.textSecondary}
             />
             <Text numberOfLines={1} style={{
-              marginLeft: 5, fontSize: 13, fontFamily: 'Poppins-SemiBold',
+              marginLeft: 5, fontSize: 13, fontFamily: 'PlusJakartaSans-SemiBold',
               color: selectedCity ? '#059669' : colors.textSecondary,
               maxWidth: 60,
             }}>
@@ -1004,11 +1004,11 @@ export default function EnterpriseDashboard() {
               {showRecentSearches && recentSearches.length > 0 && (
                 <View>
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 6 }}>
-                    <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Poppins-SemiBold' }}>
+                    <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'PlusJakartaSans-SemiBold' }}>
                       Recherches récentes
                     </Text>
                     <TouchableOpacity onPress={clearSearchHistory}>
-                      <Text style={{ color: '#10B981', fontSize: 12, fontFamily: 'Poppins-SemiBold' }}>
+                      <Text style={{ color: '#10B981', fontSize: 12, fontFamily: 'PlusJakartaSans-SemiBold' }}>
                         Effacer tout
                       </Text>
                     </TouchableOpacity>
@@ -1020,7 +1020,7 @@ export default function EnterpriseDashboard() {
                       onPress={() => { setSearchQuery(search.query); performSearch(search.query); }}
                     >
                       <Ionicons name="time-outline" size={15} color={colors.textSecondary} />
-                      <Text style={{ flex: 1, marginLeft: 12, color: colors.textPrimary, fontFamily: 'Poppins-Medium', fontSize: 14 }} numberOfLines={1}>
+                      <Text style={{ flex: 1, marginLeft: 12, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 14 }} numberOfLines={1}>
                         {search.query}
                       </Text>
                       <TouchableOpacity onPress={() => removeFromSearchHistory(search.query)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -1041,7 +1041,7 @@ export default function EnterpriseDashboard() {
                       <View style={{ width: 30, height: 30, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.secondary }}>
                         <Ionicons name="search" size={14} color={colors.textSecondary} />
                       </View>
-                      <Text style={{ flex: 1, marginLeft: 12, color: colors.textPrimary, fontFamily: 'Poppins-Medium', fontSize: 14 }} numberOfLines={1}>
+                      <Text style={{ flex: 1, marginLeft: 12, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 14 }} numberOfLines={1}>
                         {suggestion.text || suggestion.value || suggestion.query || suggestion.name || ''}
                       </Text>
                       <Ionicons name="arrow-forward" size={14} color={colors.textSecondary} />
@@ -1115,7 +1115,7 @@ export default function EnterpriseDashboard() {
               }} className="px-4 py-4 border-b">
                 {/* En-tête résultats + toggle vue */}
                 <View className="flex-row items-center justify-between">
-                  <Text style={{ color: colors.textPrimary }} className="text-lg font-poppins-bold flex-1">
+                  <Text style={{ color: colors.textPrimary }} className="text-lg font-jakarta-bold flex-1">
                     Résultats pour &quot;{searchQuery}&quot;
                   </Text>
                   <View className="flex-row items-center">
@@ -1156,17 +1156,17 @@ export default function EnterpriseDashboard() {
                 {/* Infos supplémentaires */}
                 {searchInfo && (
                   <View className="flex-row items-center mt-1">
-                    <Text style={{ color: colors.textTertiary }} className="text-xs font-poppins-medium">
+                    <Text style={{ color: colors.textTertiary }} className="text-xs font-jakarta-medium">
                       {searchInfo.totalResults || searchResults.length} résultat
                       {searchInfo.totalResults > 1 ? "s" : ""}
                     </Text>
                     {searchInfo.searchTime && (
-                      <Text style={{ color: colors.textTertiary }} className="text-xs font-poppins-medium ml-2">
+                      <Text style={{ color: colors.textTertiary }} className="text-xs font-jakarta-medium ml-2">
                         • {searchInfo.searchTime}ms
                       </Text>
                     )}
                     {searchInfo.fromCache && (
-                      <Text className="text-xs text-green-600 font-poppins-medium ml-2">
+                      <Text className="text-xs text-green-600 font-jakarta-medium ml-2">
                         • En cache
                       </Text>
                     )}
@@ -1181,7 +1181,7 @@ export default function EnterpriseDashboard() {
                     style={{ backgroundColor: isDark ? colors.tertiary : "#F9FAFB", borderColor: colors.border }}
                   >
                     <Ionicons name="location-outline" size={14} color={colors.textSecondary} />
-                    <Text style={{ color: colors.textSecondary }} className="ml-1 text-xs font-poppins-medium">
+                    <Text style={{ color: colors.textSecondary }} className="ml-1 text-xs font-jakarta-medium">
                       {selectedCity}
                     </Text>
                   </TouchableOpacity>
@@ -1199,7 +1199,7 @@ export default function EnterpriseDashboard() {
                         size={14}
                         color={colors.textSecondary}
                       />
-                      <Text style={{ color: colors.textSecondary }} className="ml-1 text-xs font-poppins-medium">
+                      <Text style={{ color: colors.textSecondary }} className="ml-1 text-xs font-jakarta-medium">
                         {selectedNeighborhood}
                       </Text>
                     </TouchableOpacity>
@@ -1224,7 +1224,7 @@ export default function EnterpriseDashboard() {
                   >
                     <Text
                       style={{ color: selectedSort === "relevance" ? colors.brandPrimary : colors.textPrimary }}
-                      className={`text-xs font-poppins-semibold`}
+                      className={`text-xs font-jakarta-semibold`}
                     >
                       Pertinence
                     </Text>
@@ -1241,7 +1241,7 @@ export default function EnterpriseDashboard() {
                   >
                     <Text
                       style={{ color: selectedSort === "priceLow" ? colors.brandPrimary : colors.textPrimary }}
-                      className={`text-xs font-poppins-semibold`}
+                      className={`text-xs font-jakarta-semibold`}
                     >
                       Moins cher
                     </Text>
@@ -1258,7 +1258,7 @@ export default function EnterpriseDashboard() {
                   >
                     <Text
                       style={{ color: selectedSort === "priceHigh" ? colors.brandPrimary : colors.textPrimary }}
-                      className={`text-xs font-poppins-semibold`}
+                      className={`text-xs font-jakarta-semibold`}
                     >
                       Plus cher
                     </Text>
@@ -1275,7 +1275,7 @@ export default function EnterpriseDashboard() {
                   >
                     <Text
                       style={{ color: selectedSort === "newest" ? colors.brandPrimary : colors.textPrimary }}
-                      className={`text-xs font-poppins-semibold`}
+                      className={`text-xs font-jakarta-semibold`}
                     >
                       Nouveaux
                     </Text>
@@ -1324,7 +1324,7 @@ export default function EnterpriseDashboard() {
                 ) : (
                   <View className="items-center justify-center py-8">
                     <Ionicons name="search-outline" size={36} color={colors.textTertiary} />
-                    <Text style={{ color: colors.textSecondary }} className="mt-2 font-poppins-medium">
+                    <Text style={{ color: colors.textSecondary }} className="mt-2 font-jakarta-medium">
                       {i18n.t("enterprise.dashboard.empty.noProductsFound")}
                     </Text>
                     <TouchableOpacity
@@ -1332,7 +1332,7 @@ export default function EnterpriseDashboard() {
                       className="mt-3 px-4 py-2 rounded-full border"
                       style={{ borderColor: colors.brandSecondary }}
                     >
-                      <Text style={{ color: colors.brandPrimary }} className="font-poppins-semibold">
+                      <Text style={{ color: colors.brandPrimary }} className="font-jakarta-semibold">
                         Ajuster les filtres
                       </Text>
                     </TouchableOpacity>
@@ -1371,10 +1371,10 @@ export default function EnterpriseDashboard() {
                       color={colors.textTertiary}
                     />
                   </View>
-                  <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-bold text-center mb-2">
+                  <Text style={{ color: colors.textPrimary }} className="text-base font-jakarta-bold text-center mb-2">
                     {i18n.t("enterprise.dashboard.ads.noAds")}
                   </Text>
-                  <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand text-center">
+                  <Text style={{ color: colors.textSecondary }} className="text-sm font-jakarta text-center">
                     {i18n.t("enterprise.dashboard.ads.comeBack")}
                   </Text>
                 </View>
@@ -1385,10 +1385,10 @@ export default function EnterpriseDashboard() {
             <View style={{ backgroundColor: colors.secondary }} className="py-6">
               <View className="px-6 mb-6 flex-row items-center justify-between">
                 <View className="flex-1">
-                  <Text style={{ color: colors.textPrimary }} className="text-xl font-poppins-bold">
+                  <Text style={{ color: colors.textPrimary }} className="text-xl font-jakarta-bold">
                     {i18n.t("enterprise.dashboard.categories.title")}
                   </Text>
-                  <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand mt-1">
+                  <Text style={{ color: colors.textSecondary }} className="text-sm font-jakarta mt-1">
                     {i18n.t("enterprise.dashboard.categories.subtitle")}
                   </Text>
                 </View>
@@ -1403,7 +1403,7 @@ export default function EnterpriseDashboard() {
                   style={{ backgroundColor: isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5" }}
                   className="flex-row items-center rounded-xl px-3 py-2 ml-2"
                 >
-                  <Text style={{ color: colors.brandPrimary }} className="font-poppins-semibold text-sm mr-1">
+                  <Text style={{ color: colors.brandPrimary }} className="font-jakarta-semibold text-sm mr-1">
                     {i18n.t("enterprise.dashboard.categories.viewAll")}
                   </Text>
                   <Ionicons name="chevron-forward" size={14} color={colors.brandPrimary} />
@@ -1412,7 +1412,7 @@ export default function EnterpriseDashboard() {
               {loadingCategories ? (
                 <View className="flex-1 justify-center items-center py-8">
                   <ActivityIndicator size="large" color={colors.brandPrimary} />
-                  <Text style={{ color: colors.textSecondary }} className="mt-2 font-poppins-medium">
+                  <Text style={{ color: colors.textSecondary }} className="mt-2 font-jakarta-medium">
                     {i18n.t("enterprise.dashboard.categories.loading")}
                   </Text>
                 </View>
@@ -1452,7 +1452,7 @@ export default function EnterpriseDashboard() {
                               <Ionicons name="grid-outline" size={32} color={colors.textSecondary} />
                             )}
                           </View>
-                          <Text style={{ color: colors.textSecondary }} className="text-xs font-poppins-semibold text-center w-16 leading-4" numberOfLines={2}>
+                          <Text style={{ color: colors.textSecondary }} className="text-xs font-jakarta-semibold text-center w-16 leading-4" numberOfLines={2}>
                             {category.name}
                           </Text>
                         </TouchableOpacity>
@@ -1467,10 +1467,10 @@ export default function EnterpriseDashboard() {
               <View className="px-6 mb-6">
                 <View className="flex-row items-center justify-between">
                   <View>
-                    <Text style={{ color: colors.textPrimary }} className="text-xl font-poppins-bold">
+                    <Text style={{ color: colors.textPrimary }} className="text-xl font-jakarta-bold">
                       {i18n.t("enterprise.dashboard.featuredProducts.title")}
                     </Text>
-                    <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand mt-1">
+                    <Text style={{ color: colors.textSecondary }} className="text-sm font-jakarta mt-1">
                       {i18n.t("enterprise.dashboard.featuredProducts.subtitle")}
                     </Text>
                   </View>
@@ -1486,7 +1486,7 @@ export default function EnterpriseDashboard() {
                       style={{ backgroundColor: isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5" }}
                       className="flex-row items-center rounded-xl px-3 py-2"
                     >
-                      <Text style={{ color: colors.brandPrimary }} className="font-poppins-semibold text-sm mr-1">
+                      <Text style={{ color: colors.brandPrimary }} className="font-jakarta-semibold text-sm mr-1">
                         {i18n.t("enterprise.dashboard.featuredProducts.viewAll")}
                       </Text>
                       <Ionicons name="chevron-forward" size={14} color={colors.brandPrimary} />
@@ -1497,7 +1497,7 @@ export default function EnterpriseDashboard() {
               {loadingProducts ? (
                 <View className="flex-1 justify-center items-center py-8">
                   <ActivityIndicator size="large" color={colors.brandPrimary} />
-                  <Text style={{ color: colors.textSecondary }} className="mt-2 font-poppins-medium">
+                  <Text style={{ color: colors.textSecondary }} className="mt-2 font-jakarta-medium">
                     {i18n.t("enterprise.dashboard.featuredProducts.loading")}
                   </Text>
                 </View>
@@ -1518,10 +1518,10 @@ export default function EnterpriseDashboard() {
                   <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: isDark ? 'rgba(16,185,129,0.12)' : '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
                     <Ionicons name="bag-add-outline" size={30} color={colors.brandPrimary} />
                   </View>
-                  <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 16, marginBottom: 6, textAlign: 'center' }}>
+                  <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Bold', fontSize: 16, marginBottom: 6, textAlign: 'center' }}>
                     Aucun produit pour le moment
                   </Text>
-                  <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 13, textAlign: 'center', marginBottom: 18, lineHeight: 19 }}>
+                  <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, textAlign: 'center', marginBottom: 18, lineHeight: 19 }}>
                     Ajoutez vos premiers produits pour qu'ils apparaissent ici.
                   </Text>
                   <TouchableOpacity
@@ -1531,7 +1531,7 @@ export default function EnterpriseDashboard() {
                     style={{ backgroundColor: colors.brandPrimary, borderRadius: 14, paddingHorizontal: 22, paddingVertical: 11, flexDirection: 'row', alignItems: 'center', gap: 7 }}
                   >
                     <Ionicons name="add" size={18} color="#fff" />
-                    <Text style={{ color: '#fff', fontFamily: 'Poppins-Bold', fontSize: 14 }}>
+                    <Text style={{ color: '#fff', fontFamily: 'PlusJakartaSans-Bold', fontSize: 14 }}>
                       Ajouter un produit
                     </Text>
                   </TouchableOpacity>
@@ -1544,10 +1544,10 @@ export default function EnterpriseDashboard() {
               <View className="px-6 mb-6">
                 <View className="flex-row items-center justify-between">
                   <View>
-                    <Text style={{ color: colors.textPrimary }} className="text-xl font-poppins-bold">
+                    <Text style={{ color: colors.textPrimary }} className="text-xl font-jakarta-bold">
                       {i18n.t("enterprise.dashboard.popularProducts.title")}
                     </Text>
-                    <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand mt-1">
+                    <Text style={{ color: colors.textSecondary }} className="text-sm font-jakarta mt-1">
                       {i18n.t("enterprise.dashboard.popularProducts.subtitle")}
                     </Text>
                   </View>
@@ -1562,7 +1562,7 @@ export default function EnterpriseDashboard() {
                     style={{ backgroundColor: isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5" }}
                     className="flex-row items-center rounded-xl px-3 py-2"
                   >
-                    <Text style={{ color: colors.brandPrimary }} className="font-poppins-semibold text-sm mr-1">
+                    <Text style={{ color: colors.brandPrimary }} className="font-jakarta-semibold text-sm mr-1">
                       {i18n.t("enterprise.dashboard.popularProducts.viewAll")}
                     </Text>
                     <Ionicons name="chevron-forward" size={14} color={colors.brandPrimary} />
@@ -1572,7 +1572,7 @@ export default function EnterpriseDashboard() {
               {loadingPopular ? (
                 <View className="flex-1 justify-center items-center py-8">
                   <ActivityIndicator size="large" color={colors.brandPrimary} />
-                  <Text style={{ color: colors.textSecondary }} className="mt-2 font-poppins-medium">
+                  <Text style={{ color: colors.textSecondary }} className="mt-2 font-jakarta-medium">
                     {i18n.t("enterprise.dashboard.popularProducts.loading")}
                   </Text>
                 </View>
@@ -1589,7 +1589,7 @@ export default function EnterpriseDashboard() {
                   {loadingMorePopular && (
                     <View className="py-4 items-center">
                       <ActivityIndicator size="small" color={colors.brandPrimary} />
-                      <Text style={{ color: colors.textSecondary }} className="mt-2 text-sm font-poppins-medium">
+                      <Text style={{ color: colors.textSecondary }} className="mt-2 text-sm font-jakarta-medium">
                         Chargement de plus de tendances...
                       </Text>
                     </View>
@@ -1597,14 +1597,14 @@ export default function EnterpriseDashboard() {
                   {/* Informations de pagination en mode développement */}
                   {__DEV__ && hasNextPage && !loadingMorePopular && (
                     <View className="px-4 py-2">
-                      <Text style={{ color: colors.textTertiary }} className="text-xs text-center font-poppins-light">
+                      <Text style={{ color: colors.textTertiary }} className="text-xs text-center font-jakarta-light">
                         {popularProducts.length} produits • Faites défiler pour plus
                       </Text>
                     </View>
                   )}
                   {__DEV__ && !hasNextPage && popularProducts.length > 6 && (
                     <View className="px-4 py-2">
-                      <Text style={{ color: colors.textTertiary }} className="text-xs text-center font-poppins-light">
+                      <Text style={{ color: colors.textTertiary }} className="text-xs text-center font-jakarta-light">
                         Toutes les tendances affichées ({popularProducts.length} produits)
                       </Text>
                     </View>
@@ -1612,7 +1612,7 @@ export default function EnterpriseDashboard() {
                 </>
               ) : (
                 <View className="flex-1 justify-center items-center py-8">
-                  <Text style={{ color: colors.textSecondary }} className="font-poppins-medium">
+                  <Text style={{ color: colors.textSecondary }} className="font-jakarta-medium">
                     Aucune tendance disponible
                   </Text>
                 </View>
@@ -1647,7 +1647,7 @@ export default function EnterpriseDashboard() {
               <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: isDark ? 'rgba(16,185,129,0.2)' : '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
                 <Ionicons name="earth" size={18} color="#10B981" />
               </View>
-              <Text style={{ flex: 1, color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 17 }}>
+              <Text style={{ flex: 1, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Bold', fontSize: 17 }}>
                 {i18n.t("enterprise.dashboard.modals.city.title")}
               </Text>
               <TouchableOpacity
@@ -1666,7 +1666,7 @@ export default function EnterpriseDashboard() {
                 onChangeText={setCitySearch}
                 placeholder="Rechercher une ville..."
                 placeholderTextColor={colors.textSecondary}
-                style={{ flex: 1, color: colors.textPrimary, fontFamily: 'Poppins-Medium', fontSize: 14 }}
+                style={{ flex: 1, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 14 }}
               />
               {citySearch.length > 0 && (
                 <TouchableOpacity onPress={() => setCitySearch('')}>
@@ -1696,7 +1696,7 @@ export default function EnterpriseDashboard() {
                       backgroundColor: selected ? (isDark ? 'rgba(16,185,129,0.12)' : '#ECFDF5') : 'transparent',
                     }}
                   >
-                    <Text style={{ flex: 1, color: selected ? '#10B981' : colors.textPrimary, fontFamily: selected ? 'Poppins-Bold' : 'Poppins-Medium', fontSize: 15 }}>
+                    <Text style={{ flex: 1, color: selected ? '#10B981' : colors.textPrimary, fontFamily: selected ? 'PlusJakartaSans-Bold' : 'PlusJakartaSans-Medium', fontSize: 15 }}>
                       {isAll ? 'Toutes les villes' : item.name}
                     </Text>
                     {selected && <Ionicons name="checkmark-circle" size={18} color="#10B981" />}
@@ -1728,7 +1728,7 @@ export default function EnterpriseDashboard() {
               <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: isDark ? 'rgba(16,185,129,0.2)' : '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
                 <Ionicons name="location" size={18} color="#10B981" />
               </View>
-              <Text style={{ flex: 1, color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 17 }}>
+              <Text style={{ flex: 1, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Bold', fontSize: 17 }}>
                 {i18n.t("enterprise.dashboard.modals.neighborhood.title", { city: selectedCity })}
               </Text>
               <TouchableOpacity
@@ -1747,7 +1747,7 @@ export default function EnterpriseDashboard() {
                 onChangeText={setNeighborhoodSearch}
                 placeholder="Rechercher un quartier..."
                 placeholderTextColor={colors.textSecondary}
-                style={{ flex: 1, paddingVertical: 11, color: colors.textPrimary, fontFamily: 'Poppins-Medium', fontSize: 14 }}
+                style={{ flex: 1, paddingVertical: 11, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 14 }}
               />
               {neighborhoodSearch.length > 0 && (
                 <TouchableOpacity onPress={() => setNeighborhoodSearch('')}>
@@ -1774,7 +1774,7 @@ export default function EnterpriseDashboard() {
                       backgroundColor: selected ? (isDark ? 'rgba(16,185,129,0.12)' : '#ECFDF5') : 'transparent',
                     }}
                   >
-                    <Text style={{ flex: 1, color: selected ? '#10B981' : colors.textPrimary, fontFamily: selected ? 'Poppins-Bold' : 'Poppins-Medium', fontSize: 15 }}>
+                    <Text style={{ flex: 1, color: selected ? '#10B981' : colors.textPrimary, fontFamily: selected ? 'PlusJakartaSans-Bold' : 'PlusJakartaSans-Medium', fontSize: 15 }}>
                       {item}
                     </Text>
                     {selected && <Ionicons name="checkmark-circle" size={18} color="#10B981" />}

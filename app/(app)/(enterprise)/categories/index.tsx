@@ -58,7 +58,7 @@ export default function AllCategoriesPage() {
             ) : categories.length === 0 ? (
                 <View className="flex-1 items-center justify-center px-6">
                     <Ionicons name="file-tray-outline" size={64} color={colors.textSecondary} />
-                    <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 18, marginTop: 16 }}>
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Bold', fontSize: 18, marginTop: 16 }}>
                         {i18n.t("enterprise.categories.empty.title")}
                     </Text>
                 </View>
@@ -104,16 +104,16 @@ export default function AllCategoriesPage() {
                                 </View>
 
                                 <View style={{ flex: 1 }}>
-                                    <Text style={{ color: colors.textPrimary, fontSize: 16, fontFamily: 'Poppins-Bold', marginBottom: 4 }}>
+                                    <Text style={{ color: colors.textPrimary, fontSize: 16, fontFamily: 'PlusJakartaSans-Bold', marginBottom: 4 }}>
                                         {category.name}
                                     </Text>
                                     {category.description && (
-                                        <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Poppins-Medium' }} numberOfLines={1}>
+                                        <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'PlusJakartaSans-Medium' }} numberOfLines={1}>
                                             {category.description}
                                         </Text>
                                     )}
                                     {category.productCount !== undefined && (
-                                        <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Poppins-Medium', marginTop: 4 }}>
+                                        <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'PlusJakartaSans-Medium', marginTop: 4 }}>
                                             {category.productCount} {category.productCount > 1 ? i18n.t("enterprise.categories.products.plural") : i18n.t("enterprise.categories.products.singular")}
                                         </Text>
                                     )}

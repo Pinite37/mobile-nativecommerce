@@ -381,12 +381,12 @@ function EnterpriseSubscriptionsContent() {
               </View>
               <View className="flex-1">
                 <View className="flex-row items-center mb-1">
-                  <Text style={{ fontSize: 20, fontFamily: 'Poppins-Bold', color: colors.textPrimary }}>
+                  <Text style={{ fontSize: 20, fontFamily: 'PlusJakartaSans-Bold', color: colors.textPrimary }}>
                     {plan.name}
                   </Text>
                   {isCurrentPlan && (
                     <View className="bg-green-100 px-2.5 py-1 rounded-full ml-3">
-                      <Text className="text-[10px] font-poppins-bold text-green-700 tracking-wide">
+                      <Text className="text-[10px] font-jakarta-bold text-green-700 tracking-wide">
                         ACTIF
                       </Text>
                     </View>
@@ -394,13 +394,13 @@ function EnterpriseSubscriptionsContent() {
                 </View>
                 <View className="flex-row items-baseline">
                   <Text
-                    className="text-2xl font-poppins-bold"
+                    className="text-2xl font-jakarta-bold"
                     style={{ color: plan.color }}
                   >
                     {plan.price}
                   </Text>
                   {plan.period && (
-                    <Text style={{ fontSize: 14, fontFamily: 'Poppins-SemiBold', marginLeft: 6, color: colors.textSecondary }}>
+                    <Text style={{ fontSize: 14, fontFamily: 'PlusJakartaSans-SemiBold', marginLeft: 6, color: colors.textSecondary }}>
                       {plan.period}
                     </Text>
                   )}
@@ -410,7 +410,7 @@ function EnterpriseSubscriptionsContent() {
             {plan.popular && !isCurrentPlan && (
               <View className="absolute -top-2 -right-2">
                 <View className="bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-1.5 rounded-bl-2xl">
-                  <Text className="text-[10px] font-poppins-bold text-white tracking-wider">
+                  <Text className="text-[10px] font-jakarta-bold text-white tracking-wider">
                     {i18n.t("enterprise.subscriptions.plans.popular")}
                   </Text>
                 </View>
@@ -434,7 +434,7 @@ function EnterpriseSubscriptionsContent() {
                   style={{ fontWeight: "bold" }}
                 />
               </View>
-              <Text style={{ flex: 1, fontSize: 14, fontFamily: 'Poppins-Medium', color: colors.textSecondary, lineHeight: 20 }}>
+              <Text style={{ flex: 1, fontSize: 14, fontFamily: 'PlusJakartaSans-Medium', color: colors.textSecondary, lineHeight: 20 }}>
                 {f}
               </Text>
             </View>
@@ -446,7 +446,7 @@ function EnterpriseSubscriptionsContent() {
           {isCurrentPlan && !isTrialExpired ? (
             <View style={{ borderRadius: 16, paddingVertical: 16, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#D1FAE5' }}>
               <Ionicons name="checkmark-circle" size={20} color="#059669" />
-              <Text style={{ color: '#047857', fontFamily: 'Poppins-Bold', fontSize: 14, marginLeft: 10 }}>
+              <Text style={{ color: '#047857', fontFamily: 'PlusJakartaSans-Bold', fontSize: 14, marginLeft: 10 }}>
                 {i18n.t("enterprise.subscriptions.plans.current")}
               </Text>
             </View>
@@ -456,7 +456,7 @@ function EnterpriseSubscriptionsContent() {
               onPress={() => handleSelectPlan(plan)}
               activeOpacity={0.8}
             >
-              <Text style={{ color: '#FFFFFF', fontFamily: 'Poppins-Bold', fontSize: 16 }}>
+              <Text style={{ color: '#FFFFFF', fontFamily: 'PlusJakartaSans-Bold', fontSize: 16 }}>
                 {isTrialExpired
                   ? i18n.t("enterprise.subscriptions.plans.renew")
                   : `${i18n.t("enterprise.subscriptions.plans.choose")} ${plan.name}`}
@@ -531,7 +531,7 @@ function EnterpriseSubscriptionsContent() {
           >
             <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
-          <Text style={{ flex: 1, fontFamily: 'Poppins-Bold', fontSize: 18, color: colors.textPrimary, textAlign: 'center' }}>
+          <Text style={{ flex: 1, fontFamily: 'PlusJakartaSans-Bold', fontSize: 18, color: colors.textPrimary, textAlign: 'center' }}>
             {i18n.t("enterprise.subscriptions.title")}
           </Text>
           <TouchableOpacity style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: colors.tertiary, alignItems: 'center', justifyContent: 'center' }}>
@@ -562,7 +562,7 @@ function EnterpriseSubscriptionsContent() {
                             : "bg-green-400"
                         }`}
                       />
-                      <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5 }}>
+                      <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5 }}>
                         {isExpired()
                           ? i18n.t("enterprise.subscriptions.plans.expired")
                           : isExpiringSoon()
@@ -572,7 +572,7 @@ function EnterpriseSubscriptionsContent() {
                     </View>
                     {isExpiringSoon() && (
                       <View className="bg-amber-100 px-3 py-1 rounded-full border border-amber-200">
-                        <Text className="text-amber-700 font-poppins-bold text-[10px]">
+                        <Text className="text-amber-700 font-jakarta-bold text-[10px]">
                           {getDaysRemaining()} {i18n.t("enterprise.subscriptions.plans.daysRemaining")}
                         </Text>
                       </View>
@@ -580,10 +580,10 @@ function EnterpriseSubscriptionsContent() {
                   </View>
 
                   {/* Plan Name */}
-                  <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 24, marginBottom: 8 }}>
+                  <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, marginBottom: 8 }}>
                     {subscription.plan.name}
                   </Text>
-                  <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 14, marginBottom: 16, lineHeight: 20 }}>
+                  <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 14, marginBottom: 16, lineHeight: 20 }}>
                     {subscription.plan.description}
                   </Text>
 
@@ -591,7 +591,7 @@ function EnterpriseSubscriptionsContent() {
                   <View className="flex-row mb-4">
                     <View style={{ flex: 1, backgroundColor: colors.secondary, borderRadius: 12, padding: 12, marginRight: 8, borderWidth: 1, borderColor: colors.border }}>
                       <View className="flex-row items-center justify-between mb-1">
-                        <Text style={{ color: '#10B981', fontFamily: 'Poppins-Medium', fontSize: 11 }}>
+                        <Text style={{ color: '#10B981', fontFamily: 'PlusJakartaSans-Medium', fontSize: 11 }}>
                           {i18n.t("enterprise.subscriptions.plans.products")}
                         </Text>
                         <Ionicons
@@ -600,17 +600,17 @@ function EnterpriseSubscriptionsContent() {
                           color="#10B981"
                         />
                       </View>
-                      <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 18 }}>
+                      <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Bold', fontSize: 18 }}>
                         {subscription.usage.currentProducts}
                       </Text>
-                      <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 10 }}>
+                      <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 10 }}>
                         {i18n.t("enterprise.subscriptions.plans.on")} {subscription.plan.features.maxProducts}
                       </Text>
                     </View>
 
                     <View style={{ flex: 1, backgroundColor: colors.secondary, borderRadius: 12, padding: 12, marginLeft: 8, borderWidth: 1, borderColor: colors.border }}>
                       <View className="flex-row items-center justify-between mb-1">
-                        <Text style={{ color: '#3B82F6', fontFamily: 'Poppins-Medium', fontSize: 11 }}>
+                        <Text style={{ color: '#3B82F6', fontFamily: 'PlusJakartaSans-Medium', fontSize: 11 }}>
                           {i18n.t("enterprise.subscriptions.plans.expiration")}
                         </Text>
                         <Ionicons
@@ -619,13 +619,13 @@ function EnterpriseSubscriptionsContent() {
                           color="#3B82F6"
                         />
                       </View>
-                      <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 14 }}>
+                      <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Bold', fontSize: 14 }}>
                         {formatDate(subscription.endDate)
                           .split(" ")
                           .slice(0, 2)
                           .join(" ")}
                       </Text>
-                      <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 10 }}>
+                      <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 10 }}>
                         {getDaysRemaining()! > 0
                           ? `${getDaysRemaining()} ${i18n.t("enterprise.subscriptions.plans.days")}`
                           : i18n.t("enterprise.subscriptions.plans.expired")}
@@ -648,7 +648,7 @@ function EnterpriseSubscriptionsContent() {
                       }}
                       activeOpacity={0.7}
                     >
-                      <Text className="text-white font-poppins-bold text-sm">
+                      <Text className="text-white font-jakarta-bold text-sm">
                         {i18n.t("enterprise.subscriptions.plans.renew")}
                       </Text>
                     </TouchableOpacity>
@@ -662,10 +662,10 @@ function EnterpriseSubscriptionsContent() {
                 <View className="flex-row items-start">
                   <Ionicons name="lock-closed" size={22} color="#F59E0B" style={{ marginRight: 10, marginTop: 2 }} />
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 15, marginBottom: 4 }}>
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Bold', fontSize: 15, marginBottom: 4 }}>
                       Accès entreprise limité
                     </Text>
-                    <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 13, lineHeight: 20 }}>
+                    <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, lineHeight: 20 }}>
                       Fonctionnalité réservée aux comptes entreprise actifs.
                     </Text>
                   </View>
@@ -678,11 +678,11 @@ function EnterpriseSubscriptionsContent() {
               <View style={{ backgroundColor: '#FFFBEB', borderRadius: 16, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: '#FDE68A' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
                   <Ionicons name="flash" size={16} color="#D97706" style={{ marginRight: 6 }} />
-                  <Text style={{ color: '#92400E', fontFamily: 'Poppins-Bold', fontSize: 14 }}>
+                  <Text style={{ color: '#92400E', fontFamily: 'PlusJakartaSans-Bold', fontSize: 14 }}>
                     {isIosBillingRestricted ? "Accès restreint" : "Activation requise"}
                   </Text>
                 </View>
-                <Text style={{ color: '#78350F', fontFamily: 'Poppins-Medium', fontSize: 13, lineHeight: 20 }}>
+                <Text style={{ color: '#78350F', fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, lineHeight: 20 }}>
                   {isIosBillingRestricted
                     ? "Fonctionnalité réservée aux comptes entreprise actifs."
                     : "Activez un plan d'abonnement pour accéder à toutes les fonctionnalités."}
@@ -694,10 +694,10 @@ function EnterpriseSubscriptionsContent() {
             {!isIosBillingRestricted && (
               <>
                 <View className="mb-5">
-                  <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 4 }}>
+                  <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 4 }}>
                     {subscription ? i18n.t("enterprise.subscriptions.sections.otherPlans") : i18n.t("enterprise.subscriptions.sections.ourPlans")}
                   </Text>
-                  <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 24 }}>
+                  <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Bold', fontSize: 24 }}>
                     {subscription && isExpired()
                       ? i18n.t("enterprise.subscriptions.sections.renewSubscription")
                       : i18n.t("enterprise.subscriptions.sections.choosePlan")}
@@ -715,17 +715,17 @@ function EnterpriseSubscriptionsContent() {
                     <View className="w-20 h-20 rounded-full bg-red-50 items-center justify-center mb-4">
                       <Ionicons name="alert-circle" size={40} color="#EF4444" />
                     </View>
-                    <Text style={{ color: '#DC2626', fontFamily: 'Poppins-Bold', fontSize: 16, marginBottom: 8 }}>
+                    <Text style={{ color: '#DC2626', fontFamily: 'PlusJakartaSans-Bold', fontSize: 16, marginBottom: 8 }}>
                       {i18n.t("enterprise.subscriptions.sections.loadingError")}
                     </Text>
-                    <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 14, textAlign: 'center', paddingHorizontal: 32, marginBottom: 24 }}>
+                    <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 14, textAlign: 'center', paddingHorizontal: 32, marginBottom: 24 }}>
                       {error}
                     </Text>
                     <TouchableOpacity
                       onPress={loadData}
                       className="bg-primary-500 px-8 py-3 rounded-xl shadow-sm"
                     >
-                      <Text style={{ color: '#FFFFFF', fontFamily: 'Poppins-Bold', fontSize: 14 }}>
+                      <Text style={{ color: '#FFFFFF', fontFamily: 'PlusJakartaSans-Bold', fontSize: 14 }}>
                         {i18n.t("enterprise.subscriptions.sections.retry")}
                       </Text>
                     </TouchableOpacity>
@@ -744,7 +744,7 @@ function EnterpriseSubscriptionsContent() {
                   <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? 'rgba(16,185,129,0.2)' : '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>
                     <Ionicons name="information-circle" size={20} color="#10B981" />
                   </View>
-                  <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 17 }}>
+                  <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Bold', fontSize: 17 }}>
                     {i18n.t("enterprise.subscriptions.details.title")}
                   </Text>
                 </View>
@@ -753,17 +753,17 @@ function EnterpriseSubscriptionsContent() {
                 <View style={{ borderRadius: 14, marginBottom: 12, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6 }}>
                 <View style={{ backgroundColor: colors.card, borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: colors.border }}>
                   <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 4 }}>
-                    <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+                    <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
                       {i18n.t("enterprise.subscriptions.details.paymentInfo")}
                     </Text>
                   </View>
 
                   {/* Montant */}
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 13, borderTopWidth: 1, borderTopColor: colors.border }}>
-                    <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 13 }}>
+                    <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 13 }}>
                       {i18n.t("enterprise.subscriptions.details.amount")}
                     </Text>
-                    <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 15 }}>
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Bold', fontSize: 15 }}>
                       {subscription.payment.amount
                         ? `${subscription.payment.amount.toLocaleString()} FCFA`
                         : "N/A"}
@@ -772,11 +772,11 @@ function EnterpriseSubscriptionsContent() {
 
                   {/* Méthode */}
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 13, borderTopWidth: 1, borderTopColor: colors.border }}>
-                    <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 13 }}>
+                    <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 13 }}>
                       {i18n.t("enterprise.subscriptions.details.method")}
                     </Text>
                     <View style={{ backgroundColor: isDark ? 'rgba(16,185,129,0.15)' : '#ECFDF5', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
-                      <Text style={{ color: '#059669', fontFamily: 'Poppins-Bold', fontSize: 12 }}>
+                      <Text style={{ color: '#059669', fontFamily: 'PlusJakartaSans-Bold', fontSize: 12 }}>
                         {subscription.payment.method === "TRIAL"
                           ? i18n.t("enterprise.subscriptions.details.trial")
                           : subscription.payment.method || "—"}
@@ -787,10 +787,10 @@ function EnterpriseSubscriptionsContent() {
                   {/* Référence */}
                   {subscription.payment.reference && (
                     <View style={{ paddingHorizontal: 16, paddingVertical: 13, borderTopWidth: 1, borderTopColor: colors.border }}>
-                      <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 13, marginBottom: 4 }}>
+                      <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, marginBottom: 4 }}>
                         {i18n.t("enterprise.subscriptions.details.reference")}
                       </Text>
-                      <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Medium', fontSize: 11, lineHeight: 16 }} numberOfLines={2} ellipsizeMode="middle">
+                      <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 11, lineHeight: 16 }} numberOfLines={2} ellipsizeMode="middle">
                         {subscription.payment.reference}
                       </Text>
                     </View>
@@ -802,7 +802,7 @@ function EnterpriseSubscriptionsContent() {
                 <View style={{ borderRadius: 14, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6 }}>
                 <View style={{ backgroundColor: colors.card, borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: colors.border }}>
                   <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 4 }}>
-                    <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+                    <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
                       {i18n.t("enterprise.subscriptions.details.features")}
                     </Text>
                   </View>
@@ -829,7 +829,7 @@ function EnterpriseSubscriptionsContent() {
                         <View style={{ width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginRight: 12, backgroundColor: isEnabled ? (isDark ? 'rgba(16,185,129,0.15)' : '#ECFDF5') : (isDark ? colors.secondary : '#F9FAFB') }}>
                           <Ionicons name={icon as any} size={16} color={isEnabled ? '#10B981' : colors.textSecondary} />
                         </View>
-                        <Text style={{ flex: 1, fontFamily: 'Poppins-SemiBold', fontSize: 14, color: isEnabled ? colors.textPrimary : colors.textSecondary }}>
+                        <Text style={{ flex: 1, fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 14, color: isEnabled ? colors.textPrimary : colors.textSecondary }}>
                           {label}
                         </Text>
                         <Ionicons
@@ -852,14 +852,14 @@ function EnterpriseSubscriptionsContent() {
                   <Ionicons name="help-circle" size={24} color="#3B82F6" />
                 </View>
                 <View className="flex-1">
-                  <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 16, marginBottom: 4 }}>
+                  <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Bold', fontSize: 16, marginBottom: 4 }}>
                     {i18n.t("enterprise.subscriptions.help.title")}
                   </Text>
-                  <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 12, marginBottom: 12, lineHeight: 18 }}>
+                  <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 12, marginBottom: 12, lineHeight: 18 }}>
                     {i18n.t("enterprise.subscriptions.help.message")}
                   </Text>
                   <TouchableOpacity style={{ backgroundColor: '#3B82F6', alignSelf: 'flex-start', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, elevation: 3, shadowColor: '#3B82F6', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.3, shadowRadius: 6 }}>
-                    <Text style={{ color: '#FFFFFF', fontFamily: 'Poppins-SemiBold', fontSize: 12 }}>
+                    <Text style={{ color: '#FFFFFF', fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 12 }}>
                       {i18n.t("enterprise.subscriptions.help.contact")}
                     </Text>
                   </TouchableOpacity>
@@ -911,10 +911,10 @@ function EnterpriseSubscriptionsContent() {
             <View className="w-16 h-16 bg-primary-100 rounded-full items-center justify-center mb-4">
               <Ionicons name="card" size={32} color="#10B981" />
             </View>
-            <Text className="text-neutral-800 font-poppins-bold text-lg mb-2 text-center">
+            <Text className="text-neutral-800 font-jakarta-bold text-lg mb-2 text-center">
               {i18n.t("enterprise.subscriptions.processing.title")}
             </Text>
-            <Text className="text-neutral-600 font-poppins-medium text-sm text-center mb-4">
+            <Text className="text-neutral-600 font-jakarta-medium text-sm text-center mb-4">
               {i18n.t("enterprise.subscriptions.processing.message")}
             </Text>
             <View className="flex-row items-center">

@@ -62,10 +62,10 @@ export default function RoleSelectionScreen() {
             <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
 
-          <Text className="text-3xl font-poppins-bold mb-2" style={{ color: colors.textPrimary }}>
+          <Text className="text-3xl font-jakarta-bold mb-2" style={{ color: colors.textPrimary }}>
             Choisissez votre rôle
           </Text>
-          <Text className="text-base font-quicksand" style={{ color: colors.textSecondary }}>
+          <Text className="text-base font-jakarta" style={{ color: colors.textSecondary }}>
             Sélectionnez comment vous souhaitez utiliser notre plateforme
           </Text>
         </View>
@@ -87,10 +87,10 @@ export default function RoleSelectionScreen() {
                   <Ionicons name={role.icon as any} size={24} color={role.iconColor} />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-lg font-poppins-semibold mb-1" style={{ color: colors.textPrimary }}>
+                  <Text className="text-lg font-jakarta-semibold mb-1" style={{ color: colors.textPrimary }}>
                     {role.title}
                   </Text>
-                  <Text className="text-sm font-quicksand" style={{ color: colors.textSecondary }}>
+                  <Text className="text-sm font-jakarta" style={{ color: colors.textSecondary }}>
                     {role.description}
                   </Text>
                 </View>
@@ -118,7 +118,7 @@ export default function RoleSelectionScreen() {
             disabled={!selectedRole}
           >
             <Text
-              className="font-poppins-semibold text-base text-center"
+              className="font-jakarta-semibold text-base text-center"
               style={{ color: selectedRole ? '#FFFFFF' : colors.textSecondary }}
             >
               Continuer

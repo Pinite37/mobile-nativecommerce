@@ -42,11 +42,16 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    "Poppins-Regular": require("@expo-google-fonts/poppins/400Regular/Poppins_400Regular.ttf"),
-    "Poppins-Medium": require("@expo-google-fonts/poppins/500Medium/Poppins_500Medium.ttf"),
-    "Poppins-SemiBold": require("@expo-google-fonts/poppins/600SemiBold/Poppins_600SemiBold.ttf"),
-    "Poppins-Bold": require("@expo-google-fonts/poppins/700Bold/Poppins_700Bold.ttf"),
-    "Poppins-Light": require("@expo-google-fonts/poppins/300Light/Poppins_300Light.ttf"),
+    // Plus Jakarta Sans, chargée sous son vrai nom. Les migrations
+    // précédentes (Quicksand → Poppins) avaient conservé les anciens noms
+    // en alias : `fontFamily: "Quicksand-Bold"` rendait en réalité du
+    // Poppins. Deux noms pour une police, personne ne s'y retrouvait — les
+    // alias sont supprimés, il ne reste qu'une famille.
+    "PlusJakartaSans-Light": require("@expo-google-fonts/plus-jakarta-sans/300Light/PlusJakartaSans_300Light.ttf"),
+    "PlusJakartaSans-Regular": require("@expo-google-fonts/plus-jakarta-sans/400Regular/PlusJakartaSans_400Regular.ttf"),
+    "PlusJakartaSans-Medium": require("@expo-google-fonts/plus-jakarta-sans/500Medium/PlusJakartaSans_500Medium.ttf"),
+    "PlusJakartaSans-SemiBold": require("@expo-google-fonts/plus-jakarta-sans/600SemiBold/PlusJakartaSans_600SemiBold.ttf"),
+    "PlusJakartaSans-Bold": require("@expo-google-fonts/plus-jakarta-sans/700Bold/PlusJakartaSans_700Bold.ttf"),
   });
 
   useEffect(() => {

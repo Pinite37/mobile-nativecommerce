@@ -212,7 +212,7 @@ export default function EnterpriseFavoritesScreen() {
             <View>
               <Text
                 style={{ color: colors.textPrimary }}
-                className="text-lg font-poppins-bold"
+                className="text-lg font-jakarta-bold"
                 numberOfLines={2}
               >
                 {favoriteItem.product.name}
@@ -220,7 +220,7 @@ export default function EnterpriseFavoritesScreen() {
               {favoriteItem.product.description && (
                 <Text
                   style={{ color: colors.textSecondary }}
-                  className="text-sm font-quicksand mt-1"
+                  className="text-sm font-jakarta mt-1"
                   numberOfLines={1}
                 >
                   {favoriteItem.product.description}
@@ -231,11 +231,11 @@ export default function EnterpriseFavoritesScreen() {
             {/* Prix et infos */}
             <View className="mt-2">
               <View className="flex-row items-center justify-between">
-                <Text style={{ color: colors.brandPrimary }} className="text-xl font-poppins-bold">
+                <Text style={{ color: colors.brandPrimary }} className="text-xl font-jakarta-bold">
                   {favoriteItem.product.price.toLocaleString("fr-FR")} FCFA
                 </Text>
               </View>
-              <Text style={{ color: colors.textTertiary }} className="text-[10px] font-quicksand mt-1">
+              <Text style={{ color: colors.textTertiary }} className="text-[10px] font-jakarta mt-1">
                 {i18n.t("enterprise.favorites.labels.addedOn")}{" "}
                 {new Date(favoriteItem.createdAt).toLocaleDateString("fr-FR", {
                   day: "2-digit",
@@ -276,17 +276,17 @@ export default function EnterpriseFavoritesScreen() {
     return (
       <View style={{ flex: 1, backgroundColor: colors.secondary }} className="justify-center items-center p-6">
         <Ionicons name="alert-circle-outline" size={64} color={colors.error} />
-        <Text style={{ color: colors.textPrimary }} className="text-xl font-poppins-bold mt-4 text-center">
+        <Text style={{ color: colors.textPrimary }} className="text-xl font-jakarta-bold mt-4 text-center">
           {i18n.t("enterprise.favorites.error.title")}
         </Text>
-        <Text style={{ color: colors.textSecondary }} className="text-base font-quicksand mt-2 text-center">
+        <Text style={{ color: colors.textSecondary }} className="text-base font-jakarta mt-2 text-center">
           {error}
         </Text>
         <TouchableOpacity
           className="mt-6 bg-primary rounded-2xl px-6 py-3"
           onPress={() => fetchFavoriteProducts()}
         >
-          <Text className="text-white font-poppins-bold">{i18n.t("enterprise.favorites.error.retry")}</Text>
+          <Text className="text-white font-jakarta-bold">{i18n.t("enterprise.favorites.error.retry")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -317,12 +317,12 @@ export default function EnterpriseFavoritesScreen() {
           borderBottomColor: colors.borderLight,
         }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 24, color: colors.textPrimary }}>
+            <Text style={{ fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, color: colors.textPrimary }}>
               {i18n.t("enterprise.favorites.title")}
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.tertiary, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 }}>
               <Ionicons name="heart" size={14} color={colors.brandPrimary} style={{ marginRight: 6 }} />
-              <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 13, color: colors.textPrimary }}>
+              <Text style={{ fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: colors.textPrimary }}>
                 {favoriteItems.length}{" "}
                 {favoriteItems.length > 1 ? i18n.t("enterprise.favorites.count.products") : i18n.t("enterprise.favorites.count.product")}
               </Text>
@@ -334,10 +334,10 @@ export default function EnterpriseFavoritesScreen() {
         {favoriteItems.length === 0 ? (
           <View className="flex-1 justify-center items-center px-6">
             <Ionicons name="heart-outline" size={64} color={colors.textTertiary} />
-            <Text style={{ color: colors.textPrimary }} className="text-xl font-poppins-bold mt-4 text-center">
+            <Text style={{ color: colors.textPrimary }} className="text-xl font-jakarta-bold mt-4 text-center">
               {i18n.t("enterprise.favorites.empty.title")}
             </Text>
-            <Text style={{ color: colors.textSecondary }} className="text-base font-quicksand mt-2 text-center">
+            <Text style={{ color: colors.textSecondary }} className="text-base font-jakarta mt-2 text-center">
               {i18n.t("enterprise.favorites.empty.message")}
             </Text>
             <TouchableOpacity
@@ -345,7 +345,7 @@ export default function EnterpriseFavoritesScreen() {
               style={{ backgroundColor: colors.brandPrimary }}
               className="mt-6 rounded-2xl px-6 py-3"
             >
-              <Text style={{ color: colors.textOnBrand }} className="font-poppins-bold">
+              <Text style={{ color: colors.textOnBrand }} className="font-jakarta-bold">
                 {i18n.t("enterprise.favorites.empty.exploreButton")}
               </Text>
             </TouchableOpacity>
@@ -393,12 +393,12 @@ export default function EnterpriseFavoritesScreen() {
             </View>
 
             {/* Titre */}
-            <Text style={{ color: colors.textPrimary }} className="text-xl font-poppins-bold text-center mb-2">
+            <Text style={{ color: colors.textPrimary }} className="text-xl font-jakarta-bold text-center mb-2">
               {i18n.t("enterprise.favorites.deleteModal.title")}
             </Text>
 
             {/* Message */}
-            <Text style={{ color: colors.textSecondary }} className="text-base font-poppins-medium text-center mb-6">
+            <Text style={{ color: colors.textSecondary }} className="text-base font-jakarta-medium text-center mb-6">
               {i18n.t("enterprise.favorites.deleteModal.message")}
             </Text>
 
@@ -412,7 +412,7 @@ export default function EnterpriseFavoritesScreen() {
                 className="flex-1 py-3 rounded-xl"
                 activeOpacity={0.7}
               >
-                <Text style={{ color: colors.textPrimary }} className="font-poppins-bold text-center">
+                <Text style={{ color: colors.textPrimary }} className="font-jakarta-bold text-center">
                   {i18n.t("enterprise.favorites.deleteModal.cancel")}
                 </Text>
               </TouchableOpacity>
@@ -422,7 +422,7 @@ export default function EnterpriseFavoritesScreen() {
                 className="flex-1 py-3 rounded-xl"
                 activeOpacity={0.7}
               >
-                <Text style={{ color: colors.textOnBrand }} className="font-poppins-bold text-center">
+                <Text style={{ color: colors.textOnBrand }} className="font-jakarta-bold text-center">
                   {i18n.t("enterprise.favorites.deleteModal.confirm")}
                 </Text>
               </TouchableOpacity>
@@ -460,12 +460,12 @@ export default function EnterpriseFavoritesScreen() {
             </View>
 
             {/* Titre */}
-            <Text style={{ color: colors.textPrimary }} className="text-xl font-poppins-bold text-center mb-2">
+            <Text style={{ color: colors.textPrimary }} className="text-xl font-jakarta-bold text-center mb-2">
               {i18n.t("enterprise.favorites.errorModal.title")}
             </Text>
 
             {/* Message */}
-            <Text style={{ color: colors.textSecondary }} className="text-base font-poppins-medium text-center mb-6">
+            <Text style={{ color: colors.textSecondary }} className="text-base font-jakarta-medium text-center mb-6">
               {errorModal.message}
             </Text>
 
@@ -476,7 +476,7 @@ export default function EnterpriseFavoritesScreen() {
               className="py-3 rounded-xl"
               activeOpacity={0.7}
             >
-              <Text style={{ color: colors.textOnBrand }} className="font-poppins-bold text-center">
+              <Text style={{ color: colors.textOnBrand }} className="font-jakarta-bold text-center">
                 {i18n.t("enterprise.favorites.errorModal.ok")}
               </Text>
             </TouchableOpacity>

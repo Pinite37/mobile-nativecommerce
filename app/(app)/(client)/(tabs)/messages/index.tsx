@@ -531,7 +531,7 @@ export default function ClientMessagesPage() {
                   paddingHorizontal: 4,
                   borderWidth: 2, borderColor: isDark ? colors.background : '#fff',
                 }}>
-                  <Text style={{ color: '#fff', fontSize: 10, fontFamily: 'Poppins-Bold' }}>
+                  <Text style={{ color: '#fff', fontSize: 10, fontFamily: 'PlusJakartaSans-Bold' }}>
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </Text>
                 </View>
@@ -543,12 +543,12 @@ export default function ClientMessagesPage() {
               {/* Ligne 1 : nom + heure */}
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
                 <Text
-                  style={{ color: colors.textPrimary, fontFamily: isUnread ? 'Poppins-Bold' : 'Poppins-SemiBold', fontSize: 15, flex: 1, marginRight: 8 }}
+                  style={{ color: colors.textPrimary, fontFamily: isUnread ? 'PlusJakartaSans-Bold' : 'PlusJakartaSans-SemiBold', fontSize: 15, flex: 1, marginRight: 8 }}
                   numberOfLines={1}
                 >
                   {participantName}
                 </Text>
-                <Text style={{ color: isUnread ? '#10B981' : colors.textTertiary, fontFamily: isUnread ? 'Poppins-Bold' : 'Poppins-Medium', fontSize: 11 }}>
+                <Text style={{ color: isUnread ? '#10B981' : colors.textTertiary, fontFamily: isUnread ? 'PlusJakartaSans-Bold' : 'PlusJakartaSans-Medium', fontSize: 11 }}>
                   {lastMessageTime}
                 </Text>
               </View>
@@ -558,7 +558,7 @@ export default function ClientMessagesPage() {
                 {isStatusReply ? (
                   <>
                     <Ionicons name="play-circle-outline" size={13} color="#8B5CF6" style={{ marginRight: 4 }} />
-                    <Text style={{ color: '#8B5CF6', fontFamily: 'Poppins-SemiBold', fontSize: 11 }} numberOfLines={1}>
+                    <Text style={{ color: '#8B5CF6', fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 11 }} numberOfLines={1}>
                       Réponse à un statut
                     </Text>
                   </>
@@ -569,7 +569,7 @@ export default function ClientMessagesPage() {
                     ) : (
                       <Ionicons name="cube-outline" size={13} color={colors.textTertiary} style={{ marginRight: 4 }} />
                     )}
-                    <Text style={{ color: colors.textTertiary, fontFamily: 'Poppins-Medium', fontSize: 11 }} numberOfLines={1}>
+                    <Text style={{ color: colors.textTertiary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 11 }} numberOfLines={1}>
                       {conversation.product?.name && conversation.product?.price
                         ? `${conversation.product.name} • ${formatPrice(conversation.product.price)}`
                         : conversation.product?.name || ''}
@@ -584,7 +584,7 @@ export default function ClientMessagesPage() {
                   <Ionicons name={sentCheckIcon as any} size={14} color={sentCheckColor} style={{ marginRight: 4 }} />
                 )}
                 <Text
-                  style={{ color: isUnread ? colors.textPrimary : colors.textSecondary, fontFamily: isUnread ? 'Poppins-SemiBold' : 'Poppins-Medium', fontSize: 13, flex: 1 }}
+                  style={{ color: isUnread ? colors.textPrimary : colors.textSecondary, fontFamily: isUnread ? 'PlusJakartaSans-SemiBold' : 'PlusJakartaSans-Medium', fontSize: 13, flex: 1 }}
                   numberOfLines={1}
                 >
                   {String(messagePreview)}
@@ -656,7 +656,7 @@ export default function ClientMessagesPage() {
         borderBottomColor: colors.borderLight,
       }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 24, color: colors.textPrimary }}>
+          <Text style={{ fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, color: colors.textPrimary }}>
             Messages
           </Text>
           <TouchableOpacity
@@ -683,7 +683,7 @@ export default function ClientMessagesPage() {
               paddingLeft: 44,
               paddingRight: searchQuery.length > 0 ? 44 : 16,
               paddingVertical: 12,
-              fontFamily: 'Poppins-Medium',
+              fontFamily: 'PlusJakartaSans-Medium',
               fontSize: 14,
               height: 48,
             }}
@@ -721,7 +721,7 @@ export default function ClientMessagesPage() {
             />
             <Text
               style={{ color: !showUnreadOnly ? colors.brandPrimary : colors.textSecondary }}
-              className="font-poppins-bold text-xs"
+              className="font-jakarta-bold text-xs"
             >
               {i18n.t("client.messages.filters.all")}
             </Text>
@@ -745,14 +745,14 @@ export default function ClientMessagesPage() {
             />
             <Text
               style={{ color: showUnreadOnly ? colors.brandPrimary : colors.textSecondary }}
-              className="font-poppins-bold text-xs"
+              className="font-jakarta-bold text-xs"
             >
               {i18n.t("client.messages.filters.unread")}
             </Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={{ color: colors.textSecondary }} className="font-poppins-medium text-xs">
+        <Text style={{ color: colors.textSecondary }} className="font-jakarta-medium text-xs">
           {displayedConversations.length} {displayedConversations.length === 1 ? i18n.t("client.messages.conversation.singular") : i18n.t("client.messages.conversation.plural")}
         </Text>
       </View>
@@ -776,12 +776,12 @@ export default function ClientMessagesPage() {
             <View style={{ backgroundColor: colors.card }} className="p-6 rounded-full shadow-sm mb-6">
               <Ionicons name="chatbubbles-outline" size={48} color={colors.textSecondary} />
             </View>
-            <Text style={{ color: colors.textPrimary }} className="text-xl font-poppins-bold mb-2 text-center">
+            <Text style={{ color: colors.textPrimary }} className="text-xl font-jakarta-bold mb-2 text-center">
               {searchQuery.trim().length >= 2
                 ? i18n.t("client.messages.empty.noResults")
                 : i18n.t("client.messages.empty.noConversations")}
             </Text>
-            <Text style={{ color: colors.textSecondary }} className="font-poppins-medium text-center leading-6">
+            <Text style={{ color: colors.textSecondary }} className="font-jakarta-medium text-center leading-6">
               {searchQuery.trim().length >= 2
                 ? i18n.t("client.messages.empty.noResultsMessage", { query: searchQuery })
                 : i18n.t("client.messages.empty.noConversationsMessage")}
@@ -793,7 +793,7 @@ export default function ClientMessagesPage() {
                   router.push("/(app)/(client)/(tabs)/")
                 }
               >
-                <Text className="text-white font-poppins-bold text-base">
+                <Text className="text-white font-jakarta-bold text-base">
                   {i18n.t("client.messages.empty.discoverProducts")}
                 </Text>
               </TouchableOpacity>
@@ -848,7 +848,7 @@ export default function ClientMessagesPage() {
           >
             {/* Titre */}
             <View style={{ paddingHorizontal: 20, paddingVertical: 16 }}>
-              <Text style={{ color: colors.textPrimary }} className="font-poppins-bold text-lg text-center">
+              <Text style={{ color: colors.textPrimary }} className="font-jakarta-bold text-lg text-center">
                 {i18n.t("client.messages.contextMenu.title")}
               </Text>
             </View>
@@ -871,7 +871,7 @@ export default function ClientMessagesPage() {
               <View style={{ backgroundColor: colors.secondary }} className="w-10 h-10 rounded-full justify-center items-center mr-4">
                 <Ionicons name="archive-outline" size={20} color={colors.textSecondary} />
               </View>
-              <Text style={{ color: colors.textPrimary }} className="font-poppins-semibold text-base">
+              <Text style={{ color: colors.textPrimary }} className="font-jakarta-semibold text-base">
                 {i18n.t("client.messages.contextMenu.archive")}
               </Text>
             </TouchableOpacity>
@@ -897,7 +897,7 @@ export default function ClientMessagesPage() {
               </View>
               <Text
                 style={{ color: contextMenuLoading ? colors.textSecondary : '#EF4444' }}
-                className="font-poppins-semibold text-base"
+                className="font-jakarta-semibold text-base"
               >
                 {contextMenuLoading
                   ? i18n.t("client.messages.contextMenu.deleting")

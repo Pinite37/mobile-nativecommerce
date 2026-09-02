@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import DelivererSheet from "../../../../components/delivery/DelivererSheet";
 import LocationPickerMap from "../../../../components/location/LocationPickerMap";
 import { AppHeader } from "../../../../components/ui/AppHeader";
 import { useToast } from "../../../../components/ui/ToastManager";
@@ -30,14 +31,29 @@ export default function CommandeScreen() {
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState(false);
   const [picking, setPicking] = useState(false);
+  const [delivererSheet, setDelivererSheet] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      if (!commandeId) return;
-      setCommande(await CommandeService.getById(commandeId));
-      setLoading(false);
-    })();
+  const load = useCallback(async () => {
+    if (!commandeId) return;
+    setCommande(await CommandeService.getById(commandeId));
+    setLoading(false);
   }, [commandeId]);
+
+  // Au retour sur l'écran : le livreur a pu accepter, retirer le colis ou
+  // livrer pendant que le client était ailleurs.
+  useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  // Pendant la livraison, l'état change sans action du client. Un
+  // rafraîchissement discret évite de lui demander de tirer pour actualiser
+  // au moment précis où il attend son colis.
+  useEffect(() => {
+    const enLivraison =
+      commande?.delivery &&
+      ["ASSIGNED", "PICKED_UP"].includes(commande.delivery.status);
+    if (!enLivraison) return;
+    const timer = setInterval(load, 30000);
+    return () => clearInterval(timer);
+  }, [commande?.delivery?.status, load]);
 
   const handleConfirm = async (coordinates: [number, number], address: string) => {
     if (!commandeId) return;
@@ -109,7 +125,7 @@ export default function CommandeScreen() {
         <AppHeader title="Commande" onBack={() => router.back()} />
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="receipt-outline" size={40} color={colors.textTertiary} />
-          <Text style={{ color: colors.textPrimary }} className="font-poppins-bold text-base mt-3 text-center">
+          <Text style={{ color: colors.textPrimary }} className="font-jakarta-bold text-base mt-3 text-center">
             Commande introuvable
           </Text>
         </View>
@@ -154,16 +170,57 @@ export default function CommandeScreen() {
         >
           <Text
             style={{ color: awaitingMe ? colors.textSecondary : colors.brandPrimary }}
-            className="font-poppins-semibold text-xs uppercase"
+            className="font-jakarta-semibold text-xs uppercase"
           >
             {CommandeService.statusLabel(commande.status)}
           </Text>
           {awaitingMe && (
-            <Text style={{ color: colors.textSecondary }} className="font-poppins text-sm mt-1">
+            <Text style={{ color: colors.textSecondary }} className="font-jakarta text-sm mt-1">
               Indiquez où livrer pour que {enterpriseName} puisse organiser la course.
             </Text>
           )}
         </View>
+
+        {/* Suivi de la livraison. L'écran de suivi existait mais aucun
+            bouton n'y menait, et le client ne disposait ni de l'identifiant
+            de mission ni du moindre renseignement sur le livreur. */}
+        {commande.delivery && (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => setDelivererSheet(true)}
+            className="rounded-2xl p-4 mb-3.5 flex-row items-center"
+            style={{ backgroundColor: colors.card, borderColor: colors.brandPrimary, borderWidth: 1 }}
+          >
+            <View
+              style={{
+                width: 42, height: 42, borderRadius: 14,
+                backgroundColor: colors.brandLight,
+                alignItems: "center", justifyContent: "center",
+              }}
+            >
+              <Ionicons
+                name={commande.delivery.status === "PICKED_UP" ? "bicycle" : "storefront-outline"}
+                size={20}
+                color={colors.brandPrimary}
+              />
+            </View>
+            <View className="flex-1 ml-3">
+              <Text style={{ color: colors.textPrimary }} className="font-jakarta-bold text-sm">
+                {commande.delivery.status === "PICKED_UP"
+                  ? "Votre colis est en route"
+                  : commande.delivery.deliverer
+                    ? "Un livreur a pris la course"
+                    : "En attente d'un livreur"}
+              </Text>
+              <Text style={{ color: colors.textSecondary }} className="font-jakarta text-xs mt-0.5" numberOfLines={1}>
+                {commande.delivery.deliverer
+                  ? `${commande.delivery.deliverer.firstName ?? ""} ${commande.delivery.deliverer.lastName ?? ""}`.trim() || "Voir le livreur"
+                  : "La course est proposée aux livreurs proches"}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
+          </TouchableOpacity>
+        )}
 
         {/* Articles */}
         <View
@@ -176,10 +233,10 @@ export default function CommandeScreen() {
               className="flex-row items-center justify-between py-2"
               style={i > 0 ? { borderTopWidth: 1, borderTopColor: colors.borderLight } : undefined}
             >
-              <Text style={{ color: colors.textPrimary }} className="font-poppins-medium text-sm flex-1" numberOfLines={1}>
+              <Text style={{ color: colors.textPrimary }} className="font-jakarta-medium text-sm flex-1" numberOfLines={1}>
                 {it.quantity > 1 ? `${it.quantity} × ` : ""}{it.nameSnapshot}
               </Text>
-              <Text style={{ color: colors.textSecondary }} className="font-poppins-medium text-sm ml-3">
+              <Text style={{ color: colors.textSecondary }} className="font-jakarta-medium text-sm ml-3">
                 {it.unitPrice * it.quantity} FCFA
               </Text>
             </View>
@@ -189,19 +246,19 @@ export default function CommandeScreen() {
             className="flex-row items-center justify-between pt-3 mt-2"
             style={{ borderTopWidth: 1, borderTopColor: colors.border }}
           >
-            <Text style={{ color: colors.textPrimary }} className="font-poppins-bold text-sm">
+            <Text style={{ color: colors.textPrimary }} className="font-jakarta-bold text-sm">
               Prix convenu
             </Text>
-            <Text style={{ color: colors.brandPrimary }} className="font-poppins-bold text-lg">
+            <Text style={{ color: colors.brandPrimary }} className="font-jakarta-bold text-lg">
               {commande.agreedTotal} FCFA
             </Text>
           </View>
 
           <View className="flex-row items-center justify-between mt-2">
-            <Text style={{ color: colors.textSecondary }} className="font-poppins-medium text-xs">
+            <Text style={{ color: colors.textSecondary }} className="font-jakarta-medium text-xs">
               Frais de livraison · {commande.deliveryFeePaidBy === "CLIENT" ? "à votre charge" : "réglés par la boutique"}
             </Text>
-            <Text style={{ color: colors.textSecondary }} className="font-poppins-semibold text-xs">
+            <Text style={{ color: colors.textSecondary }} className="font-jakarta-semibold text-xs">
               {commande.deliveryFee} FCFA
             </Text>
           </View>
@@ -210,7 +267,7 @@ export default function CommandeScreen() {
         {/* Adresse de livraison */}
         <Text
           style={{ color: colors.textTertiary, letterSpacing: 0.7 }}
-          className="font-poppins-semibold text-xs uppercase mb-2.5 ml-1"
+          className="font-jakarta-semibold text-xs uppercase mb-2.5 ml-1"
         >
           Adresse de livraison
         </Text>
@@ -222,7 +279,7 @@ export default function CommandeScreen() {
           >
             <View className="flex-row items-start">
               <Ionicons name="location" size={18} color={colors.brandPrimary} style={{ marginTop: 1 }} />
-              <Text style={{ color: colors.textPrimary }} className="font-poppins-medium text-sm ml-2.5 flex-1">
+              <Text style={{ color: colors.textPrimary }} className="font-jakarta-medium text-sm ml-2.5 flex-1">
                 {commande.deliveryAddress?.address || "Position enregistrée"}
               </Text>
             </View>
@@ -235,7 +292,7 @@ export default function CommandeScreen() {
                 style={{ borderTopWidth: 1, borderTopColor: colors.borderLight }}
               >
                 <Ionicons name="create-outline" size={15} color={colors.brandPrimary} />
-                <Text style={{ color: colors.brandPrimary }} className="font-poppins-semibold text-sm ml-1.5">
+                <Text style={{ color: colors.brandPrimary }} className="font-jakarta-semibold text-sm ml-1.5">
                   Modifier l&apos;adresse
                 </Text>
               </TouchableOpacity>
@@ -249,12 +306,31 @@ export default function CommandeScreen() {
             style={{ backgroundColor: colors.brandPrimary }}
           >
             <Ionicons name="map" size={19} color="#FFFFFF" />
-            <Text className="text-white font-poppins-bold text-base ml-2">
+            <Text className="text-white font-jakarta-bold text-base ml-2">
               Choisir où livrer
             </Text>
           </TouchableOpacity>
         )}
       </ScrollView>
+
+      <DelivererSheet
+        visible={delivererSheet}
+        onClose={() => setDelivererSheet(false)}
+        delivery={commande.delivery ?? null}
+        onTrack={() =>
+          router.push({
+            pathname: "/(app)/(client)/tracking/[missionId]",
+            params: {
+              missionId: commande.delivery?.missionId ?? "",
+              // Destination transmise : la carte ne montrait que le point du
+              // livreur, sans repère de l'endroit où il doit arriver.
+              destLng: String(commande.deliveryAddress?.coordinates?.[0] ?? ""),
+              destLat: String(commande.deliveryAddress?.coordinates?.[1] ?? ""),
+              destLabel: commande.deliveryAddress?.address ?? "",
+            },
+          } as any)
+        }
+      />
     </View>
   );
 }

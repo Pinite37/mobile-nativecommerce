@@ -48,14 +48,14 @@ export function AppHeader({ title, subtitle, onBack, rightElement, noBorder }: A
       <View style={{ flex: 1 }}>
         <Text
           numberOfLines={1}
-          style={{ fontFamily: "Poppins-SemiBold", fontSize: 18, color: colors.textPrimary }}
+          style={{ fontFamily: "PlusJakartaSans-SemiBold", fontSize: 18, color: colors.textPrimary }}
         >
           {title}
         </Text>
         {subtitle ? (
           <Text
             numberOfLines={1}
-            style={{ fontFamily: "Poppins-Regular", fontSize: 12, color: colors.textSecondary, marginTop: 1 }}
+            style={{ fontFamily: "PlusJakartaSans-Regular", fontSize: 12, color: colors.textSecondary, marginTop: 1 }}
           >
             {subtitle}
           </Text>

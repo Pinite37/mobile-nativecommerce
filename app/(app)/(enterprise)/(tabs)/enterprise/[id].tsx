@@ -342,12 +342,12 @@ export default function EnterpriseDetails() {
       <View style={{ padding: 10 }}>
         <Text
           numberOfLines={2}
-          className="text-sm font-poppins-semibold"
+          className="text-sm font-jakarta-semibold"
           style={{ color: colors.text, marginBottom: 6, minHeight: 36, lineHeight: 18 }}
         >
           {product.name}
         </Text>
-        <Text className="text-sm font-poppins-bold" style={{ color: "#FE8C00" }}>
+        <Text className="text-sm font-jakarta-bold" style={{ color: "#FE8C00" }}>
           {formatPrice(product.price)}
         </Text>
       </View>
@@ -364,13 +364,13 @@ export default function EnterpriseDetails() {
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <Ionicons name="business-outline" size={64} color="#EF4444" />
           <Text
-            className="mt-4 text-xl font-poppins-bold"
+            className="mt-4 text-xl font-jakarta-bold"
             style={{ color: colors.text }}
           >
             {i18n.t("enterprise.profile.messages.loadError")}
           </Text>
           <Text
-            className="mt-2 font-poppins-medium text-center px-6"
+            className="mt-2 font-jakarta-medium text-center px-6"
             style={{ color: colors.textSecondary }}
           >
             L&apos;entreprise que vous recherchez n&apos;existe pas ou
@@ -380,7 +380,7 @@ export default function EnterpriseDetails() {
             className="mt-6 bg-primary-500 rounded-2xl px-6 py-3"
             onPress={() => router.back()}
           >
-            <Text className="text-white font-poppins-semibold">
+            <Text className="text-white font-jakarta-semibold">
               {i18n.t("common.actions.cancel")}
             </Text>
           </TouchableOpacity>
@@ -487,7 +487,7 @@ export default function EnterpriseDetails() {
               }}
             >
               <Text
-                className="text-xl font-poppins-bold text-center"
+                className="text-xl font-jakarta-bold text-center"
                 style={{ color: colors.text, marginBottom: 6 }}
               >
                 {enterprise.companyName}
@@ -506,7 +506,7 @@ export default function EnterpriseDetails() {
                     color={colors.textSecondary}
                   />
                   <Text
-                    className="text-sm font-poppins-medium ml-1"
+                    className="text-sm font-jakarta-medium ml-1"
                     style={{ color: colors.textSecondary }}
                   >
                     {locationText}
@@ -533,7 +533,7 @@ export default function EnterpriseDetails() {
                   }}
                 />
                 <Text
-                  className="text-xs font-poppins-semibold"
+                  className="text-xs font-jakarta-semibold"
                   style={{ color: "#16A34A" }}
                 >
                   {i18n.t(
@@ -553,7 +553,7 @@ export default function EnterpriseDetails() {
                 }}
               >
                 <Text
-                  className="font-poppins-medium leading-5 text-center"
+                  className="font-jakarta-medium leading-5 text-center"
                   style={{ color: colors.textSecondary, fontSize: 14 }}
                 >
                   {enterprise.description}
@@ -591,7 +591,7 @@ export default function EnterpriseDetails() {
                       color={isFollowing ? "#8B5CF6" : "#fff"}
                     />
                     <Text
-                      className="font-poppins-bold text-sm"
+                      className="font-jakarta-bold text-sm"
                       style={{ color: isFollowing ? "#8B5CF6" : "#fff" }}
                     >
                       {isFollowing ? "Ne plus suivre" : "Suivre"}
@@ -628,14 +628,14 @@ export default function EnterpriseDetails() {
                 >
                   <Ionicons name="cube" size={15} color="#10B981" />
                   <Text
-                    className="text-lg font-poppins-bold ml-1"
+                    className="text-lg font-jakarta-bold ml-1"
                     style={{ color: colors.text }}
                   >
                     {(enterprise as any).totalActiveProducts || products.length}
                   </Text>
                 </View>
                 <Text
-                  className="text-xs font-poppins-medium"
+                  className="text-xs font-jakarta-medium"
                   style={{ color: colors.textSecondary }}
                 >
                   {i18n.t(
@@ -655,11 +655,11 @@ export default function EnterpriseDetails() {
               >
                 <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 3 }}>
                   <Ionicons name="people" size={15} color="#8B5CF6" />
-                  <Text className="text-lg font-poppins-bold ml-1" style={{ color: colors.text }}>
+                  <Text className="text-lg font-jakarta-bold ml-1" style={{ color: colors.text }}>
                     {followerCount}
                   </Text>
                 </View>
-                <Text className="text-xs font-poppins-medium" style={{ color: colors.textSecondary }}>
+                <Text className="text-xs font-jakarta-medium" style={{ color: colors.textSecondary }}>
                   abonnés
                 </Text>
               </View>
@@ -669,7 +669,7 @@ export default function EnterpriseDetails() {
             {(hasPhone || hasWebsite) && (
               <View style={{ marginHorizontal: 20, marginBottom: 24 }}>
                 <Text
-                  className="text-sm font-poppins-semibold mb-3"
+                  className="text-sm font-jakarta-semibold mb-3"
                   style={{ color: colors.text }}
                 >
                   {i18n.t(
@@ -695,7 +695,7 @@ export default function EnterpriseDetails() {
                     >
                       <Ionicons name="logo-whatsapp" size={18} color="#16A34A" />
                       <Text
-                        className="font-poppins-semibold text-sm"
+                        className="font-jakarta-semibold text-sm"
                         style={{ color: "#16A34A" }}
                       >
                         {i18n.t(
@@ -720,7 +720,7 @@ export default function EnterpriseDetails() {
                     >
                       <Ionicons name="call" size={18} color="#EA580C" />
                       <Text
-                        className="font-poppins-semibold text-sm"
+                        className="font-jakarta-semibold text-sm"
                         style={{ color: "#EA580C" }}
                       >
                         {i18n.t(
@@ -747,7 +747,7 @@ export default function EnterpriseDetails() {
                   >
                     <Ionicons name="globe" size={18} color="#3B82F6" />
                     <Text
-                      className="font-poppins-semibold text-sm"
+                      className="font-jakarta-semibold text-sm"
                       style={{ color: "#3B82F6" }}
                     >
                       {i18n.t(
@@ -770,7 +770,7 @@ export default function EnterpriseDetails() {
             />
             <View style={{ paddingHorizontal: 20, marginBottom: 12 }}>
               <Text
-                className="text-lg font-poppins-bold"
+                className="text-lg font-jakarta-bold"
                 style={{ color: colors.text }}
               >
                 {i18n.t(
@@ -779,7 +779,7 @@ export default function EnterpriseDetails() {
               </Text>
               {pagination.total > 0 && (
                 <Text
-                  className="text-sm font-poppins-medium mt-1"
+                  className="text-sm font-jakarta-medium mt-1"
                   style={{ color: colors.textSecondary }}
                 >
                   {pagination.total}{" "}
@@ -796,7 +796,7 @@ export default function EnterpriseDetails() {
             <View style={{ paddingVertical: 16, alignItems: "center" }}>
               <ActivityIndicator size="small" color="#FE8C00" />
               <Text
-                className="mt-2 font-poppins-medium text-sm"
+                className="mt-2 font-jakarta-medium text-sm"
                 style={{ color: colors.textSecondary }}
               >
                 {i18n.t("enterprise.settings.loading")}
@@ -820,7 +820,7 @@ export default function EnterpriseDetails() {
                 color={colors.textSecondary}
               />
               <Text
-                className="mt-4 text-lg font-poppins-bold"
+                className="mt-4 text-lg font-jakarta-bold"
                 style={{ color: colors.textSecondary }}
               >
                 {i18n.t(
@@ -828,7 +828,7 @@ export default function EnterpriseDetails() {
                 )}
               </Text>
               <Text
-                className="mt-2 font-poppins-medium text-center px-6"
+                className="mt-2 font-jakarta-medium text-center px-6"
                 style={{ color: colors.textSecondary }}
               >
                 {i18n.t(
@@ -864,7 +864,7 @@ export default function EnterpriseDetails() {
         <Animated.Text
           numberOfLines={1}
           style={{
-            fontFamily: "Poppins-Bold",
+            fontFamily: "PlusJakartaSans-Bold",
             fontSize: 17,
             color: colors.textPrimary,
             textAlign: "center",
@@ -957,14 +957,14 @@ export default function EnterpriseDetails() {
             </View>
 
             <Text
-              className="text-xl font-poppins-bold text-center mb-2"
+              className="text-xl font-jakarta-bold text-center mb-2"
               style={{ color: colors.text }}
             >
               {errorModal.title}
             </Text>
 
             <Text
-              className="text-base font-poppins-medium text-center mb-6"
+              className="text-base font-jakarta-medium text-center mb-6"
               style={{ color: colors.textSecondary }}
             >
               {errorModal.message}
@@ -981,7 +981,7 @@ export default function EnterpriseDetails() {
               }}
               activeOpacity={0.7}
             >
-              <Text className="text-white font-poppins-bold text-center">
+              <Text className="text-white font-jakarta-bold text-center">
                 {i18n.t("common.actions.understood")}
               </Text>
             </TouchableOpacity>

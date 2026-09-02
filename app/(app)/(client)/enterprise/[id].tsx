@@ -287,14 +287,14 @@ export default function ClientEnterpriseDetails() {
               <Ionicons name="business-outline" size={34} color="#8B5CF6" />
             </View>
           </View>
-          <Text className="font-poppins-bold text-xl text-center" style={{ color: colors.textPrimary, marginBottom: 10 }}>
+          <Text className="font-jakarta-bold text-xl text-center" style={{ color: colors.textPrimary, marginBottom: 10 }}>
             {i18n.t("client.enterprise.error.notFound")}
           </Text>
-          <Text className="font-poppins-medium text-sm text-center" style={{ color: colors.textSecondary, marginBottom: 28 }}>
+          <Text className="font-jakarta-medium text-sm text-center" style={{ color: colors.textSecondary, marginBottom: 28 }}>
             {i18n.t("client.enterprise.error.notFoundMessage")}
           </Text>
           <TouchableOpacity onPress={() => router.back()} style={{ borderRadius: 14, paddingVertical: 14, paddingHorizontal: 32, backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)" }}>
-            <Text className="font-poppins-bold text-sm" style={{ color: colors.textSecondary }}>
+            <Text className="font-jakarta-bold text-sm" style={{ color: colors.textSecondary }}>
               {i18n.t("client.enterprise.error.back")}
             </Text>
           </TouchableOpacity>
@@ -365,7 +365,7 @@ export default function ClientEnterpriseDetails() {
           il n'y aurait rien à faire disparaître ni rien à remplacer. */}
       <Text
         numberOfLines={2}
-        className="font-poppins-bold text-center"
+        className="font-jakarta-bold text-center"
         style={{ fontSize: 22, color: colors.textPrimary, paddingHorizontal: 32, marginBottom: 6 }}
       >
         {enterprise.companyName}
@@ -374,7 +374,7 @@ export default function ClientEnterpriseDetails() {
       {/* Localisation */}
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
         <Ionicons name="location-sharp" size={13} color={colors.textTertiary} />
-        <Text className="font-poppins-medium text-sm" style={{ color: colors.textSecondary, marginLeft: 3 }}>
+        <Text className="font-jakarta-medium text-sm" style={{ color: colors.textSecondary, marginLeft: 3 }}>
           {enterprise.location?.district}, {enterprise.location?.city}
         </Text>
       </View>
@@ -384,20 +384,20 @@ export default function ClientEnterpriseDetails() {
       <View style={{ flexDirection: "row", justifyContent: "center", gap: 10, marginBottom: 16, paddingHorizontal: 16 }}>
         <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: isDark ? "rgba(16,185,129,0.12)" : "rgba(16,185,129,0.09)", borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, gap: 6 }}>
           <Ionicons name="cube-outline" size={14} color="#10B981" />
-          <Text className="font-poppins-bold text-sm" style={{ color: colors.textPrimary }}>
+          <Text className="font-jakarta-bold text-sm" style={{ color: colors.textPrimary }}>
             {(enterprise as any).totalActiveProducts || products.length}
           </Text>
-          <Text className="font-quicksand text-xs" style={{ color: colors.textSecondary }}>
+          <Text className="font-jakarta text-xs" style={{ color: colors.textSecondary }}>
             {i18n.t("client.enterprise.stats.products")}
           </Text>
         </View>
 
         <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: isDark ? "rgba(139,92,246,0.12)" : "rgba(139,92,246,0.09)", borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, gap: 6 }}>
           <Ionicons name="people-outline" size={14} color="#8B5CF6" />
-          <Text className="font-poppins-bold text-sm" style={{ color: colors.textPrimary }}>
+          <Text className="font-jakarta-bold text-sm" style={{ color: colors.textPrimary }}>
             {followerCount}
           </Text>
-          <Text className="font-quicksand text-xs" style={{ color: colors.textSecondary }}>
+          <Text className="font-jakarta text-xs" style={{ color: colors.textSecondary }}>
             abonnés
           </Text>
         </View>
@@ -406,7 +406,7 @@ export default function ClientEnterpriseDetails() {
       {/* Description */}
       {enterprise.description ? (
         <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
-          <Text className="font-poppins-medium text-sm text-center" style={{ color: colors.textSecondary, lineHeight: 20 }}>
+          <Text className="font-jakarta-medium text-sm text-center" style={{ color: colors.textSecondary, lineHeight: 20 }}>
             {enterprise.description}
           </Text>
         </View>
@@ -442,7 +442,7 @@ export default function ClientEnterpriseDetails() {
                 color={isFollowing ? "#8B5CF6" : "#fff"}
               />
               <Text
-                className="font-poppins-bold text-sm"
+                className="font-jakarta-bold text-sm"
                 style={{ color: isFollowing ? "#8B5CF6" : "#fff" }}
               >
                 {isFollowing ? "Ne plus suivre" : "Suivre"}
@@ -462,7 +462,7 @@ export default function ClientEnterpriseDetails() {
               style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: "#10B981", borderRadius: 14, paddingVertical: 12, gap: 8 }}
             >
               <Ionicons name="logo-whatsapp" size={18} color="#fff" />
-              <Text className="font-poppins-bold text-sm text-white">
+              <Text className="font-jakarta-bold text-sm text-white">
                 {i18n.t("client.enterprise.contact.whatsapp")}
               </Text>
             </TouchableOpacity>
@@ -473,7 +473,7 @@ export default function ClientEnterpriseDetails() {
               style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: colors.card, borderRadius: 14, paddingVertical: 12, gap: 8, borderWidth: 1, borderColor: colors.border }}
             >
               <Ionicons name="call-outline" size={18} color={colors.textPrimary} />
-              <Text className="font-poppins-bold text-sm" style={{ color: colors.textPrimary }}>
+              <Text className="font-jakarta-bold text-sm" style={{ color: colors.textPrimary }}>
                 {i18n.t("client.enterprise.contact.call")}
               </Text>
             </TouchableOpacity>
@@ -489,7 +489,7 @@ export default function ClientEnterpriseDetails() {
             style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: colors.card, borderRadius: 14, paddingVertical: 12, gap: 8, borderWidth: 1, borderColor: colors.border }}
           >
             <Ionicons name="globe-outline" size={18} color="#3B82F6" />
-            <Text className="font-poppins-bold text-sm" style={{ color: "#3B82F6" }}>
+            <Text className="font-jakarta-bold text-sm" style={{ color: "#3B82F6" }}>
               {i18n.t("client.enterprise.contact.website")}
             </Text>
           </TouchableOpacity>
@@ -499,7 +499,7 @@ export default function ClientEnterpriseDetails() {
       {/* Titre section produits */}
       {products.length > 0 && (
         <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
-          <Text className="font-poppins-bold text-base" style={{ color: colors.textPrimary }}>
+          <Text className="font-jakarta-bold text-base" style={{ color: colors.textPrimary }}>
             {i18n.t("client.enterprise.stats.products")}
           </Text>
         </View>
@@ -532,10 +532,10 @@ export default function ClientEnterpriseDetails() {
         ListEmptyComponent={
           <View style={{ alignItems: "center", justifyContent: "center", paddingTop: 40, paddingHorizontal: 32 }}>
             <Ionicons name="cube-outline" size={48} color={colors.textTertiary} />
-            <Text className="font-poppins-bold text-base text-center" style={{ color: colors.textSecondary, marginTop: 12 }}>
+            <Text className="font-jakarta-bold text-base text-center" style={{ color: colors.textSecondary, marginTop: 12 }}>
               {i18n.t("client.enterprise.empty.title")}
             </Text>
-            <Text className="font-poppins-medium text-sm text-center" style={{ color: colors.textTertiary, marginTop: 6 }}>
+            <Text className="font-jakarta-medium text-sm text-center" style={{ color: colors.textTertiary, marginTop: 6 }}>
               {i18n.t("client.enterprise.empty.message")}
             </Text>
           </View>
@@ -566,10 +566,10 @@ export default function ClientEnterpriseDetails() {
               cachePolicy="memory-disk"
             />
             <View style={{ padding: 10 }}>
-              <Text numberOfLines={2} className="font-poppins-semibold text-sm" style={{ color: colors.textPrimary, minHeight: 36 }}>
+              <Text numberOfLines={2} className="font-jakarta-semibold text-sm" style={{ color: colors.textPrimary, minHeight: 36 }}>
                 {item.name}
               </Text>
-              <Text className="font-poppins-bold text-sm" style={{ color: "#FE8C00", marginTop: 4 }}>
+              <Text className="font-jakarta-bold text-sm" style={{ color: "#FE8C00", marginTop: 4 }}>
                 {formatPrice(item.price)}
               </Text>
             </View>
@@ -600,7 +600,7 @@ export default function ClientEnterpriseDetails() {
         <Animated.Text
           numberOfLines={1}
           style={{
-            fontFamily: "Poppins-Bold",
+            fontFamily: "PlusJakartaSans-Bold",
             fontSize: 17,
             color: colors.textPrimary,
             textAlign: "center",
@@ -663,10 +663,10 @@ export default function ClientEnterpriseDetails() {
                 <Ionicons name="alert-circle" size={30} color="#EF4444" />
               </View>
             </View>
-            <Text className="font-poppins-bold text-lg text-center" style={{ color: colors.textPrimary, marginBottom: 8 }}>
+            <Text className="font-jakarta-bold text-lg text-center" style={{ color: colors.textPrimary, marginBottom: 8 }}>
               {errorModal.title}
             </Text>
-            <Text className="font-poppins-medium text-sm text-center" style={{ color: colors.textSecondary, marginBottom: 24, lineHeight: 20 }}>
+            <Text className="font-jakarta-medium text-sm text-center" style={{ color: colors.textSecondary, marginBottom: 24, lineHeight: 20 }}>
               {errorModal.message}
             </Text>
             <TouchableOpacity
@@ -674,7 +674,7 @@ export default function ClientEnterpriseDetails() {
               style={{ backgroundColor: "#10B981", borderRadius: 14, paddingVertical: 14, alignItems: "center" }}
               activeOpacity={0.8}
             >
-              <Text className="font-poppins-bold text-sm text-white">
+              <Text className="font-jakarta-bold text-sm text-white">
                 {i18n.t("client.enterprise.error.modalOk")}
               </Text>
             </TouchableOpacity>

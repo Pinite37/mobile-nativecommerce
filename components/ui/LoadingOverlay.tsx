@@ -42,7 +42,7 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
         <View className="items-center">
           <ActivityIndicator size="large" color="#FE8C00" />
           
-          <Text className="text-lg font-poppins-semibold text-gray-900 mt-4 mb-2">
+          <Text className="text-lg font-jakarta-semibold text-gray-900 mt-4 mb-2">
             {message}
           </Text>
           
@@ -50,16 +50,16 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
             <View className="items-center mt-4 p-4 bg-orange-50 rounded-xl">
               <View className="flex-row items-center mb-2">
                 <Ionicons name="wifi-outline" size={20} color="#F59E0B" />
-                <Text className="text-orange-600 font-poppins-semibold ml-2">
+                <Text className="text-orange-600 font-jakarta-semibold ml-2">
                   Connexion lente détectée
                 </Text>
               </View>
-              <Text className="text-orange-600 font-quicksand text-center text-sm">
+              <Text className="text-orange-600 font-jakarta text-center text-sm">
                 Vérifiez votre connexion internet ou réessayez plus tard
               </Text>
             </View>
           ) : (
-            <Text className="text-gray-600 font-quicksand text-center">
+            <Text className="text-gray-600 font-jakarta text-center">
               Récupération de vos données...
             </Text>
           )}

@@ -129,7 +129,7 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
               {/* Titre */}
               <Text style={{
                 fontSize: isTablet ? 24 : isSmallScreen ? 18 : 20,
-                fontFamily: 'Poppins-SemiBold',
+                fontFamily: 'PlusJakartaSans-SemiBold',
                 color: '#333',
                 textAlign: 'center',
                 marginBottom: 8,
@@ -140,7 +140,7 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
               {/* Description */}
               <Text style={{
                 fontSize: isTablet ? 16 : isSmallScreen ? 13 : 14,
-                fontFamily: 'Poppins-Regular',
+                fontFamily: 'PlusJakartaSans-Regular',
                 color: '#666',
                 textAlign: 'center',
                 lineHeight: isSmallScreen ? 18 : 20,
@@ -160,7 +160,7 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
                 <Ionicons name="checkmark-circle" size={isSmallScreen ? 18 : 20} color="#10B981" />
                 <Text style={{
                   fontSize: isTablet ? 16 : 14,
-                  fontFamily: 'Poppins-Regular',
+                  fontFamily: 'PlusJakartaSans-Regular',
                   color: '#333',
                   flex: 1,
                   lineHeight: 20,
@@ -178,7 +178,7 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
                 <Ionicons name="checkmark-circle" size={isSmallScreen ? 18 : 20} color="#10B981" />
                 <Text style={{
                   fontSize: isTablet ? 16 : 14,
-                  fontFamily: 'Poppins-Regular',
+                  fontFamily: 'PlusJakartaSans-Regular',
                   color: '#333',
                   flex: 1,
                   lineHeight: 20,
@@ -196,7 +196,7 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
                 <Ionicons name="checkmark-circle" size={isSmallScreen ? 18 : 20} color="#10B981" />
                 <Text style={{
                   fontSize: isTablet ? 16 : 14,
-                  fontFamily: 'Poppins-Regular',
+                  fontFamily: 'PlusJakartaSans-Regular',
                   color: '#333',
                   flex: 1,
                   lineHeight: 20,
@@ -229,7 +229,7 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
                 <Text style={{
                   color: '#10B981',
                   fontSize: isSmallScreen ? 14 : 16,
-                  fontFamily: 'Poppins-SemiBold',
+                  fontFamily: 'PlusJakartaSans-SemiBold',
                 }}>
                   Plus tard
                 </Text>
@@ -252,7 +252,7 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
                 <Text style={{
                   color: 'white',
                   fontSize: isSmallScreen ? 14 : 16,
-                  fontFamily: 'Poppins-SemiBold',
+                  fontFamily: 'PlusJakartaSans-SemiBold',
                 }} numberOfLines={1}>
                   {isLoading ? 'Configuration...' : 'Activer'}
                 </Text>
@@ -264,7 +264,7 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
               <Text style={{
                 color: '#FF3B30',
                 fontSize: 14,
-                fontFamily: 'Poppins-Regular',
+                fontFamily: 'PlusJakartaSans-Regular',
                 textAlign: 'center',
                 marginTop: 8,
               }}>
@@ -275,7 +275,7 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
             {/* Note de confidentialité */}
             <Text style={{
               fontSize: isSmallScreen ? 11 : 12,
-              fontFamily: 'Poppins-Regular',
+              fontFamily: 'PlusJakartaSans-Regular',
               color: '#999',
               textAlign: 'center',
               lineHeight: isSmallScreen ? 14 : 16,
@@ -325,7 +325,7 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
             {/* Titre */}
             <Text style={{
               fontSize: 20,
-              fontFamily: 'Poppins-Bold',
+              fontFamily: 'PlusJakartaSans-Bold',
               color: '#333',
               marginBottom: 8,
               textAlign: 'center',
@@ -336,7 +336,7 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
             {/* Message */}
             <Text style={{
               fontSize: 14,
-              fontFamily: 'Poppins-Regular',
+              fontFamily: 'PlusJakartaSans-Regular',
               color: '#666',
               textAlign: 'center',
               marginBottom: 24,
@@ -361,7 +361,7 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
               <Text style={{
                 color: 'white',
                 fontSize: 16,
-                fontFamily: 'Poppins-SemiBold',
+                fontFamily: 'PlusJakartaSans-SemiBold',
               }}>
                 OK
               </Text>
@@ -411,7 +411,7 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
             {/* Titre */}
             <Text style={{
               fontSize: 20,
-              fontFamily: 'Poppins-Bold',
+              fontFamily: 'PlusJakartaSans-Bold',
               color: '#333',
               marginBottom: 8,
               textAlign: 'center',
@@ -422,7 +422,7 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
             {/* Message */}
             <Text style={{
               fontSize: 14,
-              fontFamily: 'Poppins-Regular',
+              fontFamily: 'PlusJakartaSans-Regular',
               color: '#666',
               textAlign: 'center',
               marginBottom: 24,
@@ -451,7 +451,7 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
                 <Text style={{
                   color: '#666',
                   fontSize: 16,
-                  fontFamily: 'Poppins-SemiBold',
+                  fontFamily: 'PlusJakartaSans-SemiBold',
                 }}>
                   Plus tard
                 </Text>
@@ -476,7 +476,7 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
                 <Text style={{
                   color: 'white',
                   fontSize: 16,
-                  fontFamily: 'Poppins-SemiBold',
+                  fontFamily: 'PlusJakartaSans-SemiBold',
                 }}>
                   Paramètres
                 </Text>

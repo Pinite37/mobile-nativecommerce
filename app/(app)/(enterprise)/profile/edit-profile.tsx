@@ -124,7 +124,7 @@ export default function EditProfilePage() {
             ) : (
               <>
                 <Ionicons name="checkmark" size={16} color="#FFFFFF" />
-                <Text style={{ fontFamily: "Poppins-SemiBold", fontSize: 13, color: "#FFFFFF" }}>
+                <Text style={{ fontFamily: "PlusJakartaSans-SemiBold", fontSize: 13, color: "#FFFFFF" }}>
                   {i18n.t("enterprise.profile.modals.editProfile.save")}
                 </Text>
               </>
@@ -163,7 +163,7 @@ export default function EditProfilePage() {
                     justifyContent: "center",
                   }}
                 >
-                  <Text style={{ fontFamily: "Poppins-Bold", fontSize: 34, color: "#FFFFFF" }}>
+                  <Text style={{ fontFamily: "PlusJakartaSans-Bold", fontSize: 34, color: "#FFFFFF" }}>
                     {initials}
                   </Text>
                 </View>
@@ -186,7 +186,7 @@ export default function EditProfilePage() {
                 <Ionicons name="camera" size={15} color="#FFFFFF" />
               </View>
             </TouchableOpacity>
-            <Text style={{ fontFamily: "Poppins-Medium", fontSize: 13, color: colors.textSecondary, marginTop: 10 }}>
+            <Text style={{ fontFamily: "PlusJakartaSans-Medium", fontSize: 13, color: colors.textSecondary, marginTop: 10 }}>
               {i18n.t("enterprise.profile.modals.editProfile.changePhoto")}
             </Text>
           </View>
@@ -194,7 +194,7 @@ export default function EditProfilePage() {
           {/* Form */}
           <View style={{ gap: 16 }}>
             <View>
-              <Text style={{ fontFamily: "Poppins-SemiBold", fontSize: 13, color: colors.textPrimary, marginBottom: 8 }}>
+              <Text style={{ fontFamily: "PlusJakartaSans-SemiBold", fontSize: 13, color: colors.textPrimary, marginBottom: 8 }}>
                 {i18n.t("enterprise.profile.modals.editProfile.firstName")}
               </Text>
               <TextInput
@@ -209,7 +209,7 @@ export default function EditProfilePage() {
                   borderRadius: 14,
                   paddingHorizontal: 16,
                   paddingVertical: Platform.OS === "ios" ? 14 : 10,
-                  fontFamily: "Poppins-Regular",
+                  fontFamily: "PlusJakartaSans-Regular",
                   fontSize: 15,
                   color: colors.textPrimary,
                 }}
@@ -217,7 +217,7 @@ export default function EditProfilePage() {
             </View>
 
             <View>
-              <Text style={{ fontFamily: "Poppins-SemiBold", fontSize: 13, color: colors.textPrimary, marginBottom: 8 }}>
+              <Text style={{ fontFamily: "PlusJakartaSans-SemiBold", fontSize: 13, color: colors.textPrimary, marginBottom: 8 }}>
                 {i18n.t("enterprise.profile.modals.editProfile.lastName")}
               </Text>
               <TextInput
@@ -232,7 +232,7 @@ export default function EditProfilePage() {
                   borderRadius: 14,
                   paddingHorizontal: 16,
                   paddingVertical: Platform.OS === "ios" ? 14 : 10,
-                  fontFamily: "Poppins-Regular",
+                  fontFamily: "PlusJakartaSans-Regular",
                   fontSize: 15,
                   color: colors.textPrimary,
                 }}
@@ -240,7 +240,7 @@ export default function EditProfilePage() {
             </View>
 
             <View>
-              <Text style={{ fontFamily: "Poppins-SemiBold", fontSize: 13, color: colors.textPrimary, marginBottom: 8 }}>
+              <Text style={{ fontFamily: "PlusJakartaSans-SemiBold", fontSize: 13, color: colors.textPrimary, marginBottom: 8 }}>
                 {i18n.t("enterprise.profile.modals.editProfile.phone")}
               </Text>
               <TextInput
@@ -256,7 +256,7 @@ export default function EditProfilePage() {
                   borderRadius: 14,
                   paddingHorizontal: 16,
                   paddingVertical: Platform.OS === "ios" ? 14 : 10,
-                  fontFamily: "Poppins-Regular",
+                  fontFamily: "PlusJakartaSans-Regular",
                   fontSize: 15,
                   color: colors.textPrimary,
                 }}
@@ -264,7 +264,7 @@ export default function EditProfilePage() {
             </View>
 
             <View>
-              <Text style={{ fontFamily: "Poppins-SemiBold", fontSize: 13, color: colors.textPrimary, marginBottom: 8 }}>
+              <Text style={{ fontFamily: "PlusJakartaSans-SemiBold", fontSize: 13, color: colors.textPrimary, marginBottom: 8 }}>
                 {i18n.t("enterprise.profile.modals.editProfile.address")}
               </Text>
               <TextInput
@@ -282,7 +282,7 @@ export default function EditProfilePage() {
                   borderRadius: 14,
                   paddingHorizontal: 16,
                   paddingVertical: 14,
-                  fontFamily: "Poppins-Regular",
+                  fontFamily: "PlusJakartaSans-Regular",
                   fontSize: 15,
                   color: colors.textPrimary,
                   minHeight: 90,

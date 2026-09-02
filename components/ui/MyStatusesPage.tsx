@@ -148,7 +148,7 @@ export function MyStatusesPage({ visible, onClose, onOpenCreator, currentUserId 
         <View style={[styles.thumb, { backgroundColor: colors.surface }]}>
           {item.type === 'TEXT' ? (
             <View style={[StyleSheet.absoluteFill, { backgroundColor: item.backgroundColor, justifyContent: 'center', alignItems: 'center', padding: 5 }]}>
-              <Text style={{ color: item.textColor, fontSize: 8, fontFamily: 'Poppins-Bold', textAlign: 'center' }} numberOfLines={5}>
+              <Text style={{ color: item.textColor, fontSize: 8, fontFamily: 'PlusJakartaSans-Bold', textAlign: 'center' }} numberOfLines={5}>
                 {item.text}
               </Text>
             </View>
@@ -170,17 +170,17 @@ export function MyStatusesPage({ visible, onClose, onOpenCreator, currentUserId 
 
         {/* Infos */}
         <View style={{ flex: 1 }}>
-          <Text style={{ color: colors.textTertiary, fontSize: 12, fontFamily: 'Poppins-SemiBold', marginBottom: 5 }}>
+          <Text style={{ color: colors.textTertiary, fontSize: 12, fontFamily: 'PlusJakartaSans-SemiBold', marginBottom: 5 }}>
             {relativeTime(item.createdAt)}
           </Text>
           {(item.type === 'TEXT' || item.type === 'IMAGE_TEXT') && item.text ? (
-            <Text style={{ color: colors.textPrimary, fontSize: 14, fontFamily: 'Poppins-Medium', marginBottom: 7, lineHeight: 20 }} numberOfLines={2}>
+            <Text style={{ color: colors.textPrimary, fontSize: 14, fontFamily: 'PlusJakartaSans-Medium', marginBottom: 7, lineHeight: 20 }} numberOfLines={2}>
               {item.text}
             </Text>
           ) : null}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
             <Ionicons name="eye-outline" size={14} color="#10B981" />
-            <Text style={{ color: colors.textSecondary, fontSize: 13, fontFamily: 'Poppins-Bold' }}>
+            <Text style={{ color: colors.textSecondary, fontSize: 13, fontFamily: 'PlusJakartaSans-Bold' }}>
               {item.viewCount ?? 0} vue{(item.viewCount ?? 0) !== 1 ? 's' : ''}
             </Text>
           </View>
@@ -236,11 +236,11 @@ export function MyStatusesPage({ visible, onClose, onOpenCreator, currentUserId 
         ) : statuses.length === 0 ? (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 }}>
             <Ionicons name="albums-outline" size={56} color={colors.textTertiary} />
-            <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 16, textAlign: 'center', marginTop: 18, lineHeight: 24 }}>
+            <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 16, textAlign: 'center', marginTop: 18, lineHeight: 24 }}>
               Vous n'avez aucun statut actif
             </Text>
             <TouchableOpacity onPress={onOpenCreator} style={styles.createBtn}>
-              <Text style={{ color: '#fff', fontFamily: 'Poppins-Bold', fontSize: 15 }}>Créer un statut</Text>
+              <Text style={{ color: '#fff', fontFamily: 'PlusJakartaSans-Bold', fontSize: 15 }}>Créer un statut</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'PlusJakartaSans-Bold',
   },
   headerBtn: {
     padding: 6,
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
   },
   deleteBtnText: {
     color: '#EF4444',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'PlusJakartaSans-Bold',
     fontSize: 14,
   },
   item: {

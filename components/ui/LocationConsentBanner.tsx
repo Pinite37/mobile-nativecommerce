@@ -23,9 +23,9 @@ export function LocationConsentBanner({
       <TouchableOpacity onPress={onReset} activeOpacity={0.7} className="mb-4">
         <View className="flex-row items-center">
           <Ionicons name="location-outline" size={13} color="#9CA3AF" />
-          <Text className="text-xs font-quicksand text-neutral-400 ml-1">
+          <Text className="text-xs font-jakarta text-neutral-400 ml-1">
             Localisation ignorée —{" "}
-            <Text className="text-primary font-poppins-medium">
+            <Text className="text-primary font-jakarta-medium">
               Utiliser ma position
             </Text>
           </Text>
@@ -38,7 +38,7 @@ export function LocationConsentBanner({
     return (
       <View className="bg-white border border-neutral-200/60 rounded-2xl px-4 py-3 mb-4 shadow-sm flex-row items-center">
         <ActivityIndicator size="small" color="#10B981" />
-        <Text className="font-quicksand text-neutral-500 ml-3 text-sm">
+        <Text className="font-jakarta text-neutral-500 ml-3 text-sm">
           Détection de votre position...
         </Text>
       </View>
@@ -54,22 +54,22 @@ export function LocationConsentBanner({
               <Ionicons name="location" size={16} color="#10B981" />
             </View>
             <View className="flex-1">
-              <Text className="text-xs font-quicksand text-emerald-600 mb-0.5">
+              <Text className="text-xs font-jakarta text-emerald-600 mb-0.5">
                 Position détectée
               </Text>
               {detectedCity ? (
-                <Text className="font-poppins-semibold text-emerald-900 text-sm">
+                <Text className="font-jakarta-semibold text-emerald-900 text-sm">
                   {detectedCity}
                 </Text>
               ) : (
-                <Text className="font-quicksand text-emerald-700 text-xs">
+                <Text className="font-jakarta text-emerald-700 text-xs">
                   Coordonnées enregistrées
                 </Text>
               )}
             </View>
           </View>
           <TouchableOpacity onPress={onSkip} activeOpacity={0.7} className="ml-3">
-            <Text className="text-xs font-quicksand text-neutral-400 underline">
+            <Text className="text-xs font-jakarta text-neutral-400 underline">
               Ignorer
             </Text>
           </TouchableOpacity>
@@ -86,10 +86,10 @@ export function LocationConsentBanner({
             <Ionicons name="location-outline" size={16} color="#F59E0B" />
           </View>
           <View className="flex-1">
-            <Text className="font-poppins-medium text-amber-800 text-sm mb-0.5">
+            <Text className="font-jakarta-medium text-amber-800 text-sm mb-0.5">
               Localisation désactivée
             </Text>
-            <Text className="font-quicksand text-amber-700 text-xs leading-4">
+            <Text className="font-jakarta text-amber-700 text-xs leading-4">
               Activez la localisation dans les réglages ou renseignez votre ville manuellement.
             </Text>
           </View>
@@ -106,10 +106,10 @@ export function LocationConsentBanner({
             <Ionicons name="warning-outline" size={16} color="#9CA3AF" />
           </View>
           <View className="flex-1">
-            <Text className="font-poppins-medium text-neutral-700 text-sm mb-0.5">
+            <Text className="font-jakarta-medium text-neutral-700 text-sm mb-0.5">
               Position indisponible
             </Text>
-            <Text className="font-quicksand text-neutral-500 text-xs">
+            <Text className="font-jakarta text-neutral-500 text-xs">
               GPS désactivé ou signal faible.
             </Text>
           </View>
@@ -120,7 +120,7 @@ export function LocationConsentBanner({
             activeOpacity={0.8}
             className="flex-1 bg-neutral-200 rounded-xl py-2 items-center mr-2"
           >
-            <Text className="font-poppins-medium text-neutral-700 text-sm">
+            <Text className="font-jakarta-medium text-neutral-700 text-sm">
               Réessayer
             </Text>
           </TouchableOpacity>
@@ -129,7 +129,7 @@ export function LocationConsentBanner({
             activeOpacity={0.8}
             className="flex-1 border border-neutral-200 rounded-xl py-2 items-center"
           >
-            <Text className="font-quicksand text-neutral-500 text-sm">
+            <Text className="font-jakarta text-neutral-500 text-sm">
               Passer
             </Text>
           </TouchableOpacity>
@@ -146,10 +146,10 @@ export function LocationConsentBanner({
           <Ionicons name="locate-outline" size={18} color="#10B981" />
         </View>
         <View className="flex-1">
-          <Text className="font-poppins-medium text-neutral-800 text-sm">
+          <Text className="font-jakarta-medium text-neutral-800 text-sm">
             Détecter ma ville automatiquement
           </Text>
-          <Text className="font-quicksand text-neutral-400 text-xs">
+          <Text className="font-jakarta text-neutral-400 text-xs">
             Utilise le GPS de votre téléphone
           </Text>
         </View>
@@ -160,7 +160,7 @@ export function LocationConsentBanner({
           activeOpacity={0.8}
           className="flex-1 bg-emerald-500 rounded-xl py-2.5 items-center mr-2"
         >
-          <Text className="font-poppins-semibold text-white text-sm">
+          <Text className="font-jakarta-semibold text-white text-sm">
             Détecter ma position
           </Text>
         </TouchableOpacity>
@@ -169,7 +169,7 @@ export function LocationConsentBanner({
           activeOpacity={0.8}
           className="border border-neutral-200 rounded-xl py-2.5 px-4 items-center"
         >
-          <Text className="font-quicksand text-neutral-500 text-sm">
+          <Text className="font-jakarta text-neutral-500 text-sm">
             Passer
           </Text>
         </TouchableOpacity>

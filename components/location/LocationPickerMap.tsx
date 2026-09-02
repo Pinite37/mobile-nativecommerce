@@ -193,7 +193,7 @@ export default function LocationPickerMap({ initialCenter, onConfirm, confirming
               paddingVertical: 12,
               paddingHorizontal: 10,
               color: colors.textPrimary,
-              fontFamily: "Poppins-Medium",
+              fontFamily: "PlusJakartaSans-Medium",
               fontSize: 14.5,
             }}
           />
@@ -227,7 +227,7 @@ export default function LocationPickerMap({ initialCenter, onConfirm, confirming
                 style={{
                   padding: 16,
                   color: colors.textSecondary,
-                  fontFamily: "Poppins-Medium",
+                  fontFamily: "PlusJakartaSans-Medium",
                   fontSize: 13.5,
                 }}
               >
@@ -252,14 +252,14 @@ export default function LocationPickerMap({ initialCenter, onConfirm, confirming
                     <Ionicons name="location-outline" size={16} color={colors.textTertiary} />
                     <View style={{ flex: 1, marginLeft: 11 }}>
                       <Text
-                        style={{ color: colors.textPrimary, fontFamily: "Poppins-SemiBold", fontSize: 14 }}
+                        style={{ color: colors.textPrimary, fontFamily: "PlusJakartaSans-SemiBold", fontSize: 14 }}
                         numberOfLines={1}
                       >
                         {r.name}
                       </Text>
                       {r.context ? (
                         <Text
-                          style={{ color: colors.textSecondary, fontFamily: "Poppins-Medium", fontSize: 12, marginTop: 1 }}
+                          style={{ color: colors.textSecondary, fontFamily: "PlusJakartaSans-Medium", fontSize: 12, marginTop: 1 }}
                           numberOfLines={1}
                         >
                           {r.context}
@@ -269,7 +269,7 @@ export default function LocationPickerMap({ initialCenter, onConfirm, confirming
                     {/* La distance évite de partir sur un homonyme situé à
                         l'autre bout du pays — le tri par proximité est doux. */}
                     <Text
-                      style={{ color: colors.textTertiary, fontFamily: "Poppins-Medium", fontSize: 12, marginLeft: 8 }}
+                      style={{ color: colors.textTertiary, fontFamily: "PlusJakartaSans-Medium", fontSize: 12, marginLeft: 8 }}
                     >
                       {PlaceSearchService.formatDistance(r.distanceKm)}
                     </Text>
@@ -394,14 +394,14 @@ export default function LocationPickerMap({ initialCenter, onConfirm, confirming
             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
               <Ionicons name="location" size={14} color={colors.brandPrimary} />
               <Text
-                style={{ fontFamily: "Poppins-SemiBold", fontSize: 12, color: colors.brandPrimary, marginLeft: 5, letterSpacing: 0.3 }}
+                style={{ fontFamily: "PlusJakartaSans-SemiBold", fontSize: 12, color: colors.brandPrimary, marginLeft: 5, letterSpacing: 0.3 }}
               >
                 POINT DE LIVRAISON
               </Text>
             </View>
 
             <Text
-              style={{ fontFamily: "Poppins-Bold", fontSize: 16, color: colors.textPrimary, marginBottom: 14, minHeight: 22 }}
+              style={{ fontFamily: "PlusJakartaSans-Bold", fontSize: 16, color: colors.textPrimary, marginBottom: 14, minHeight: 22 }}
               numberOfLines={1}
             >
               {resolvingAddress ? "Recherche de l'adresse…" : address || "Adresse non identifiée"}
@@ -427,7 +427,7 @@ export default function LocationPickerMap({ initialCenter, onConfirm, confirming
               ) : (
                 <>
                   <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
-                  <Text style={{ fontFamily: "Poppins-Bold", fontSize: 15, color: "#FFFFFF" }}>
+                  <Text style={{ fontFamily: "PlusJakartaSans-Bold", fontSize: 15, color: "#FFFFFF" }}>
                     Confirmer cette position
                   </Text>
                 </>

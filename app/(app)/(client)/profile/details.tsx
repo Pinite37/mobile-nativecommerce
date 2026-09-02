@@ -296,26 +296,26 @@ export default function ProfileDetailsScreen() {
                 <Ionicons name="camera" size={16} color="#FFFFFF" />
               </View>
             </TouchableOpacity>
-            <Text className="text-center font-poppins-semibold" style={{ color: colors.brandPrimary }}>
+            <Text className="text-center font-jakarta-semibold" style={{ color: colors.brandPrimary }}>
               {i18n.t("client.details.photo.change")}
             </Text>
           </View>
 
           {/* Informations personnelles */}
           <View className="rounded-2xl mt-6 p-4" style={{ backgroundColor: colors.card }}>
-            <Text className="text-lg font-poppins-bold mb-4" style={{ color: colors.textPrimary }}>
+            <Text className="text-lg font-jakarta-bold mb-4" style={{ color: colors.textPrimary }}>
               {i18n.t("client.details.sections.personal")}
             </Text>
             
             {/* Prénom */}
             <View className="mb-4">
-              <Text className="text-sm font-poppins-medium mb-2" style={{ color: colors.textSecondary }}>
+              <Text className="text-sm font-jakarta-medium mb-2" style={{ color: colors.textSecondary }}>
                 {i18n.t("client.details.fields.firstName")}
               </Text>
               <TextInput
                 value={profile.firstName}
                 onChangeText={(text) => handleChange("firstName", text)}
-                className="border rounded-xl p-3 font-quicksand"
+                className="border rounded-xl p-3 font-jakarta"
                 style={{ borderColor: colors.border, backgroundColor: colors.secondary, color: colors.textPrimary }}
                 placeholder={i18n.t("client.details.placeholders.firstName")}
               />
@@ -323,13 +323,13 @@ export default function ProfileDetailsScreen() {
 
             {/* Nom */}
             <View className="mb-4">
-              <Text className="text-sm font-poppins-medium mb-2" style={{ color: colors.textSecondary }}>
+              <Text className="text-sm font-jakarta-medium mb-2" style={{ color: colors.textSecondary }}>
                 {i18n.t("client.details.fields.lastName")}
               </Text>
               <TextInput
                 value={profile.lastName}
                 onChangeText={(text) => handleChange("lastName", text)}
-                className="border rounded-xl p-3 font-quicksand"
+                className="border rounded-xl p-3 font-jakarta"
                 style={{ borderColor: colors.border, backgroundColor: colors.secondary, color: colors.textPrimary }}
                 placeholder={i18n.t("client.details.placeholders.lastName")}
               />
@@ -337,13 +337,13 @@ export default function ProfileDetailsScreen() {
 
             {/* Email */}
             <View className="mb-4">
-              <Text className="text-sm font-poppins-medium mb-2" style={{ color: colors.textSecondary }}>
+              <Text className="text-sm font-jakarta-medium mb-2" style={{ color: colors.textSecondary }}>
                 {i18n.t("client.details.fields.email")}
               </Text>
               <TextInput
                 value={profile.email}
                 onChangeText={(text) => handleChange("email", text)}
-                className="border rounded-xl p-3 font-quicksand"
+                className="border rounded-xl p-3 font-jakarta"
                 style={{ borderColor: colors.border, backgroundColor: colors.secondary, color: colors.textPrimary }}
                 placeholder={i18n.t("client.details.placeholders.email")}
                 keyboardType="email-address"
@@ -353,13 +353,13 @@ export default function ProfileDetailsScreen() {
 
             {/* Téléphone */}
             <View className="mb-4">
-              <Text className="text-sm font-poppins-medium mb-2" style={{ color: colors.textSecondary }}>
+              <Text className="text-sm font-jakarta-medium mb-2" style={{ color: colors.textSecondary }}>
                 {i18n.t("client.details.fields.phone")}
               </Text>
               <TextInput
                 value={profile.phone}
                 onChangeText={(text) => handleChange("phone", text)}
-                className="border rounded-xl p-3 font-quicksand"
+                className="border rounded-xl p-3 font-jakarta"
                 style={{ borderColor: colors.border, backgroundColor: colors.secondary, color: colors.textPrimary }}
                 placeholder={i18n.t("client.details.placeholders.phone")}
                 keyboardType="phone-pad"
@@ -369,7 +369,7 @@ export default function ProfileDetailsScreen() {
 
           {/* Sécurité */}
           {/* <View className="rounded-2xl mt-6 p-4" style={{ backgroundColor: colors.card }}>
-            <Text className="text-lg font-poppins-bold mb-4" style={{ color: colors.textPrimary }}>
+            <Text className="text-lg font-jakarta-bold mb-4" style={{ color: colors.textPrimary }}>
               {i18n.t("client.details.sections.security")}
             </Text>
             
@@ -379,7 +379,7 @@ export default function ProfileDetailsScreen() {
             >
               <View className="flex-row items-center">
                 <Ionicons name="lock-closed-outline" size={20} color={colors.textSecondary} />
-                <Text className="text-base font-poppins-medium ml-3" style={{ color: colors.textPrimary }}>
+                <Text className="text-base font-jakarta-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.details.security.changePassword")}
                 </Text>
               </View>
@@ -392,7 +392,7 @@ export default function ProfileDetailsScreen() {
             >
               <View className="flex-row items-center">
                 <Ionicons name="finger-print-outline" size={20} color={colors.textSecondary} />
-                <Text className="text-base font-poppins-medium ml-3" style={{ color: colors.textPrimary }}>
+                <Text className="text-base font-jakarta-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.details.security.biometric")}
                 </Text>
               </View>
@@ -406,7 +406,7 @@ export default function ProfileDetailsScreen() {
             >
               <View className="flex-row items-center">
                 <Ionicons name="notifications-outline" size={20} color={colors.textSecondary} />
-                <Text className="text-base font-poppins-medium ml-3" style={{ color: colors.textPrimary }}>
+                <Text className="text-base font-jakarta-medium ml-3" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.details.security.loginNotifications")}
                 </Text>
               </View>
@@ -420,19 +420,19 @@ export default function ProfileDetailsScreen() {
           <View className="rounded-2xl mt-6 p-4" style={{ backgroundColor: colors.card }}>
             <View className="flex-row items-center mb-3">
               <Ionicons name="location-outline" size={18} color={colors.textSecondary} />
-              <Text className="text-lg font-poppins-bold ml-2" style={{ color: colors.textPrimary }}>
+              <Text className="text-lg font-jakarta-bold ml-2" style={{ color: colors.textPrimary }}>
                 Localisation
               </Text>
             </View>
             {user?.location?.address ? (
               <View className="flex-row items-center mb-3 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2">
                 <Ionicons name="location" size={13} color="#10B981" />
-                <Text className="text-sm font-quicksand text-emerald-700 ml-2 flex-1">
+                <Text className="text-sm font-jakarta text-emerald-700 ml-2 flex-1">
                   {user.location.address}
                 </Text>
               </View>
             ) : (
-              <Text className="text-sm font-quicksand text-neutral-400 mb-3">
+              <Text className="text-sm font-jakarta text-neutral-400 mb-3">
                 Aucune localisation enregistrée
               </Text>
             )}
@@ -443,7 +443,7 @@ export default function ProfileDetailsScreen() {
               activeOpacity={0.88}
             >
               <Ionicons name="map" size={17} color="#FFFFFF" />
-              <Text className="font-poppins-bold text-sm text-white ml-2">
+              <Text className="font-jakarta-bold text-sm text-white ml-2">
                 Choisir précisément sur la carte
               </Text>
             </TouchableOpacity>
@@ -466,7 +466,7 @@ export default function ProfileDetailsScreen() {
               {saving ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <Text className="text-white text-center font-poppins-bold text-base">
+                <Text className="text-white text-center font-jakarta-bold text-base">
                   {i18n.t("client.details.actions.save")}
                 </Text>
               )}

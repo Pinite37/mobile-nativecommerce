@@ -96,7 +96,7 @@ function StatusCard({
           numberOfLines={3}
           style={{
             color: latestStatus.textColor,
-            fontFamily: 'Poppins-Bold',
+            fontFamily: 'PlusJakartaSans-Bold',
             fontSize: 11,
             textAlign: 'center',
             lineHeight: 15,
@@ -198,7 +198,7 @@ function StatusCard({
             position: 'absolute',
             bottom: 6, left: 5, right: 5,
             color: latestStatus ? '#fff' : (isDark ? 'rgba(255,255,255,0.7)' : '#374151'),
-            fontFamily: 'Poppins-SemiBold',
+            fontFamily: 'PlusJakartaSans-SemiBold',
             fontSize: 10,
             textAlign: 'center',
             lineHeight: 13,

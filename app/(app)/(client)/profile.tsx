@@ -175,7 +175,7 @@ export default function ProfileScreen() {
     return (
       <View className="flex-1 bg-gray-50 justify-center items-center">
         <ActivityIndicator size="large" color="#FE8C00" />
-        <Text className="text-gray-600 mt-4 font-quicksand">Chargement du profil...</Text>
+        <Text className="text-gray-600 mt-4 font-jakarta">Chargement du profil...</Text>
       </View>
     );
   }
@@ -193,7 +193,7 @@ export default function ProfileScreen() {
         {/* Header */}
         <View className="bg-white px-6 pt-16 pb-8">
           <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-2xl font-poppins-bold text-gray-900">
+            <Text className="text-2xl font-jakarta-bold text-gray-900">
               Profil
             </Text>
             <TouchableOpacity
@@ -213,7 +213,7 @@ export default function ProfileScreen() {
               />
             ) : (
               <View className="w-24 h-24 rounded-full bg-primary items-center justify-center">
-                <Text className="text-white font-poppins-bold text-2xl">
+                <Text className="text-white font-jakarta-bold text-2xl">
                   {profileData ? formatUserInitials(profileData) : 'U'}
                 </Text>
               </View>
@@ -228,10 +228,10 @@ export default function ProfileScreen() {
 
           {/* User Info */}
           <View className="items-center">
-            <Text className="text-xl font-poppins-bold text-gray-900">
+            <Text className="text-xl font-jakarta-bold text-gray-900">
               {profileData?.firstName} {profileData?.lastName}
             </Text>
-            <Text className="text-sm font-quicksand text-gray-600 mt-1">
+            <Text className="text-sm font-jakarta text-gray-600 mt-1">
               {profileData?.email}
             </Text>
           </View>
@@ -240,7 +240,7 @@ export default function ProfileScreen() {
         {/* Profile Form */}
         <View className="bg-white mx-4 rounded-2xl p-6 mt-4">
           <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-lg font-poppins-bold text-gray-900">
+            <Text className="text-lg font-jakarta-bold text-gray-900">
               Informations personnelles
             </Text>
             <TouchableOpacity
@@ -253,7 +253,7 @@ export default function ProfileScreen() {
               }}
               className="px-4 py-2 rounded-lg bg-primary"
             >
-              <Text className="text-white font-poppins-semibold text-sm">
+              <Text className="text-white font-jakarta-semibold text-sm">
                 {isEditing ? 'Sauvegarder' : 'Modifier'}
               </Text>
             </TouchableOpacity>
@@ -263,7 +263,7 @@ export default function ProfileScreen() {
           <View className="space-y-4">
             {/* First Name */}
             <View>
-              <Text className="text-sm font-poppins-medium text-gray-700 mb-2">
+              <Text className="text-sm font-jakarta-medium text-gray-700 mb-2">
                 Prénom
               </Text>
               <TextInput
@@ -271,7 +271,7 @@ export default function ProfileScreen() {
                 onChangeText={setFirstName}
                 placeholder="Entrez votre prénom"
                 editable={isEditing}
-                className={`border rounded-xl px-4 py-3 text-base font-quicksand ${
+                className={`border rounded-xl px-4 py-3 text-base font-jakarta ${
                   isEditing ? 'border-gray-300 bg-white' : 'border-gray-200 bg-gray-50'
                 }`}
               />
@@ -279,7 +279,7 @@ export default function ProfileScreen() {
 
             {/* Last Name */}
             <View>
-              <Text className="text-sm font-poppins-medium text-gray-700 mb-2">
+              <Text className="text-sm font-jakarta-medium text-gray-700 mb-2">
                 Nom
               </Text>
               <TextInput
@@ -287,7 +287,7 @@ export default function ProfileScreen() {
                 onChangeText={setLastName}
                 placeholder="Entrez votre nom"
                 editable={isEditing}
-                className={`border rounded-xl px-4 py-3 text-base font-quicksand ${
+                className={`border rounded-xl px-4 py-3 text-base font-jakarta ${
                   isEditing ? 'border-gray-300 bg-white' : 'border-gray-200 bg-gray-50'
                 }`}
               />
@@ -295,7 +295,7 @@ export default function ProfileScreen() {
 
             {/* Phone */}
             <View>
-              <Text className="text-sm font-poppins-medium text-gray-700 mb-2">
+              <Text className="text-sm font-jakarta-medium text-gray-700 mb-2">
                 Téléphone
               </Text>
               <TextInput
@@ -304,7 +304,7 @@ export default function ProfileScreen() {
                 placeholder="Entrez votre numéro"
                 keyboardType="phone-pad"
                 editable={isEditing}
-                className={`border rounded-xl px-4 py-3 text-base font-quicksand ${
+                className={`border rounded-xl px-4 py-3 text-base font-jakarta ${
                   isEditing ? 'border-gray-300 bg-white' : 'border-gray-200 bg-gray-50'
                 }`}
               />
@@ -312,7 +312,7 @@ export default function ProfileScreen() {
 
             {/* Address */}
             <View>
-              <Text className="text-sm font-poppins-medium text-gray-700 mb-2">
+              <Text className="text-sm font-jakarta-medium text-gray-700 mb-2">
                 Adresse
               </Text>
               <TextInput
@@ -322,7 +322,7 @@ export default function ProfileScreen() {
                 multiline
                 numberOfLines={3}
                 editable={isEditing}
-                className={`border rounded-xl px-4 py-3 text-base font-quicksand ${
+                className={`border rounded-xl px-4 py-3 text-base font-jakarta ${
                   isEditing ? 'border-gray-300 bg-white' : 'border-gray-200 bg-gray-50'
                 }`}
                 style={{ textAlignVertical: 'top' }}
@@ -335,7 +335,7 @@ export default function ProfileScreen() {
               onPress={() => setIsEditing(false)}
               className="mt-4 px-4 py-2 rounded-lg bg-gray-200"
             >
-              <Text className="text-gray-700 font-poppins-semibold text-sm text-center">
+              <Text className="text-gray-700 font-jakarta-semibold text-sm text-center">
                 Annuler
               </Text>
             </TouchableOpacity>
@@ -344,14 +344,14 @@ export default function ProfileScreen() {
 
         {/* Quick Actions */}
         <View className="bg-white mx-4 rounded-2xl p-6 mt-4">
-          <Text className="text-lg font-poppins-bold text-gray-900 mb-4">
+          <Text className="text-lg font-jakarta-bold text-gray-900 mb-4">
             Actions rapides
           </Text>
           
           <TouchableOpacity className="flex-row items-center justify-between py-3 border-b border-gray-100">
             <View className="flex-row items-center">
               <Ionicons name="notifications-outline" size={20} color="#6B7280" />
-              <Text className="text-base font-quicksand text-gray-900 ml-3">
+              <Text className="text-base font-jakarta text-gray-900 ml-3">
                 Notifications
               </Text>
             </View>
@@ -361,7 +361,7 @@ export default function ProfileScreen() {
           <TouchableOpacity className="flex-row items-center justify-between py-3 border-b border-gray-100">
             <View className="flex-row items-center">
               <Ionicons name="location-outline" size={20} color="#6B7280" />
-              <Text className="text-base font-quicksand text-gray-900 ml-3">
+              <Text className="text-base font-jakarta text-gray-900 ml-3">
                 Adresse de livraison
               </Text>
             </View>
@@ -371,7 +371,7 @@ export default function ProfileScreen() {
           <TouchableOpacity className="flex-row items-center justify-between py-3 border-b border-gray-100">
             <View className="flex-row items-center">
               <Ionicons name="card-outline" size={20} color="#6B7280" />
-              <Text className="text-base font-quicksand text-gray-900 ml-3">
+              <Text className="text-base font-jakarta text-gray-900 ml-3">
                 Méthodes de paiement
               </Text>
             </View>
@@ -384,7 +384,7 @@ export default function ProfileScreen() {
           >
             <View className="flex-row items-center">
               <Ionicons name="help-circle-outline" size={20} color="#6B7280" />
-              <Text className="text-base font-quicksand text-gray-900 ml-3">
+              <Text className="text-base font-jakarta text-gray-900 ml-3">
                 Aide & Support
               </Text>
             </View>
@@ -398,7 +398,7 @@ export default function ProfileScreen() {
             onPress={handleLogout}
             className="bg-red-500 rounded-xl py-4 items-center"
           >
-            <Text className="text-white font-poppins-semibold text-base">
+            <Text className="text-white font-jakarta-semibold text-base">
               Se déconnecter
             </Text>
           </TouchableOpacity>
@@ -415,7 +415,7 @@ export default function ProfileScreen() {
         <View className="flex-1 bg-white">
           <View className="px-6 pt-4 pb-4 border-b border-gray-200">
             <View className="flex-row justify-between items-center">
-              <Text className="text-xl font-poppins-bold text-gray-900">
+              <Text className="text-xl font-jakarta-bold text-gray-900">
                 Paramètres
               </Text>
               <TouchableOpacity
@@ -428,17 +428,17 @@ export default function ProfileScreen() {
           </View>
 
           <ScrollView className="flex-1 px-6 pt-6">
-            <Text className="text-lg font-poppins-bold text-gray-900 mb-4">
+            <Text className="text-lg font-jakarta-bold text-gray-900 mb-4">
               Notifications
             </Text>
 
             <View className="space-y-4">
               <View className="flex-row justify-between items-center">
                 <View>
-                  <Text className="text-base font-quicksand text-gray-900">
+                  <Text className="text-base font-jakarta text-gray-900">
                     Notifications par email
                   </Text>
-                  <Text className="text-sm font-quicksand text-gray-600">
+                  <Text className="text-sm font-jakarta text-gray-600">
                     Recevoir des notifications par email
                   </Text>
                 </View>
@@ -454,10 +454,10 @@ export default function ProfileScreen() {
 
               <View className="flex-row justify-between items-center">
                 <View>
-                  <Text className="text-base font-quicksand text-gray-900">
+                  <Text className="text-base font-jakarta text-gray-900">
                     Notifications push
                   </Text>
-                  <Text className="text-sm font-quicksand text-gray-600">
+                  <Text className="text-sm font-jakarta text-gray-600">
                     Recevoir des notifications push
                   </Text>
                 </View>
@@ -473,10 +473,10 @@ export default function ProfileScreen() {
 
               <View className="flex-row justify-between items-center">
                 <View>
-                  <Text className="text-base font-quicksand text-gray-900">
+                  <Text className="text-base font-jakarta text-gray-900">
                     Notifications SMS
                   </Text>
-                  <Text className="text-sm font-quicksand text-gray-600">
+                  <Text className="text-sm font-jakarta text-gray-600">
                     Recevoir des notifications par SMS
                   </Text>
                 </View>
@@ -518,12 +518,12 @@ export default function ProfileScreen() {
             </View>
 
             {/* Titre */}
-            <Text className="text-xl font-poppins-bold text-neutral-800 mb-2 text-center">
+            <Text className="text-xl font-jakarta-bold text-neutral-800 mb-2 text-center">
               Déconnexion
             </Text>
 
             {/* Message */}
-            <Text className="text-base text-neutral-600 font-poppins-medium mb-6 text-center">
+            <Text className="text-base text-neutral-600 font-jakarta-medium mb-6 text-center">
               Êtes-vous sûr de vouloir vous déconnecter ?
             </Text>
 
@@ -533,7 +533,7 @@ export default function ProfileScreen() {
                 className="flex-1 bg-neutral-100 rounded-xl py-3"
                 onPress={() => setShowLogoutModal(false)}
               >
-                <Text className="text-neutral-700 font-poppins-semibold text-center">
+                <Text className="text-neutral-700 font-jakarta-semibold text-center">
                   Annuler
                 </Text>
               </TouchableOpacity>
@@ -541,7 +541,7 @@ export default function ProfileScreen() {
                 className="flex-1 bg-red-500 rounded-xl py-3"
                 onPress={confirmLogout}
               >
-                <Text className="text-white font-poppins-semibold text-center">
+                <Text className="text-white font-jakarta-semibold text-center">
                   Déconnecter
                 </Text>
               </TouchableOpacity>

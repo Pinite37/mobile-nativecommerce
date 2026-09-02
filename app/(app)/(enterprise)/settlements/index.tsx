@@ -101,20 +101,20 @@ export default function SettlementsScreen() {
           <View className="flex-1 mr-3">
             <Text
               style={{ color: colors.textPrimary }}
-              className="font-poppins-bold text-base"
+              className="font-jakarta-bold text-base"
               numberOfLines={1}
             >
               {nom}
             </Text>
             <Text
               style={{ color: colors.textSecondary }}
-              className="font-poppins-medium text-sm mt-0.5"
+              className="font-jakarta-medium text-sm mt-0.5"
               numberOfLines={1}
             >
               {item.label}
               {item.missionType === "CALL" ? " · appel" : ""}
             </Text>
-            <Text style={{ color: colors.textTertiary }} className="font-poppins text-xs mt-1">
+            <Text style={{ color: colors.textTertiary }} className="font-jakarta text-xs mt-1">
               Terminée le{" "}
               {new Date(item.completedAt).toLocaleDateString("fr-FR", {
                 day: "numeric",
@@ -123,7 +123,7 @@ export default function SettlementsScreen() {
               })}
             </Text>
           </View>
-          <Text style={{ color: colors.brandPrimary }} className="font-poppins-bold text-base">
+          <Text style={{ color: colors.brandPrimary }} className="font-jakarta-bold text-base">
             {item.amount} FCFA
           </Text>
         </View>
@@ -141,7 +141,7 @@ export default function SettlementsScreen() {
             ) : (
               <>
                 <Ionicons name="checkmark-circle-outline" size={17} color="#FFFFFF" />
-                <Text className="text-white font-poppins-semibold text-sm ml-1.5">
+                <Text className="text-white font-jakarta-semibold text-sm ml-1.5">
                   Marquer comme payée
                 </Text>
               </>
@@ -153,7 +153,7 @@ export default function SettlementsScreen() {
             style={{ borderTopWidth: 1, borderTopColor: colors.borderLight }}
           >
             <Ionicons name="checkmark-done" size={15} color={colors.brandPrimary} />
-            <Text style={{ color: colors.textSecondary }} className="font-poppins-medium text-xs ml-1.5">
+            <Text style={{ color: colors.textSecondary }} className="font-jakarta-medium text-xs ml-1.5">
               Réglée
               {item.paidAt
                 ? ` le ${new Date(item.paidAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}`
@@ -187,7 +187,7 @@ export default function SettlementsScreen() {
             >
               <Text
                 style={{ color: actif ? "#FFFFFF" : colors.textSecondary }}
-                className="font-poppins-semibold text-xs"
+                className="font-jakarta-semibold text-xs"
               >
                 {k === "DUE" ? "À régler" : "Réglées"}
               </Text>
@@ -198,10 +198,10 @@ export default function SettlementsScreen() {
 
       {!loading && lines.length > 0 && (
         <View className="px-5 pt-4">
-          <Text style={{ color: colors.textTertiary }} className="font-poppins text-xs">
+          <Text style={{ color: colors.textTertiary }} className="font-jakarta text-xs">
             {tab === "DUE" ? "Reste à payer" : "Total réglé"}
           </Text>
-          <Text style={{ color: colors.textPrimary }} className="font-poppins-bold text-2xl">
+          <Text style={{ color: colors.textPrimary }} className="font-jakarta-bold text-2xl">
             {total} FCFA
           </Text>
         </View>
@@ -236,13 +236,13 @@ export default function SettlementsScreen() {
               <Ionicons name="cash-outline" size={40} color={colors.textTertiary} />
               <Text
                 style={{ color: colors.textPrimary }}
-                className="font-poppins-bold text-base mt-3 text-center"
+                className="font-jakarta-bold text-base mt-3 text-center"
               >
                 {tab === "DUE" ? "Rien à régler" : "Aucun règlement"}
               </Text>
               <Text
                 style={{ color: colors.textSecondary }}
-                className="font-poppins text-sm mt-1 text-center"
+                className="font-jakarta text-sm mt-1 text-center"
               >
                 {tab === "DUE"
                   ? "Les courses terminées par vos livreurs apparaissent ici jusqu'à ce que vous les régliez."

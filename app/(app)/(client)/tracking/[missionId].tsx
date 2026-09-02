@@ -11,12 +11,27 @@ import { useTheme } from "../../../../contexts/ThemeContext";
 const DEFAULT_CENTER: [number, number] = [2.4183, 6.3703];
 
 export default function ClientDeliveryTracking() {
-  const { missionId, lat, lng } = useLocalSearchParams<{ missionId: string; lat?: string; lng?: string }>();
+  const { missionId, lat, lng, destLat, destLng, destLabel } = useLocalSearchParams<{
+    missionId: string;
+    lat?: string;
+    lng?: string;
+    destLat?: string;
+    destLng?: string;
+    destLabel?: string;
+  }>();
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
 
+  const destination: [number, number] | null =
+    destLat && destLng && !isNaN(parseFloat(destLat)) && !isNaN(parseFloat(destLng))
+      ? [parseFloat(destLng), parseFloat(destLat)]
+      : null;
+
+  // Centrer sur la destination plutôt que sur Cotonou tant que le livreur
+  // n'a pas envoyé sa position : le client voit au moins où il attend.
   const fallbackCenter: [number, number] =
-    lat && lng ? [parseFloat(lng), parseFloat(lat)] : DEFAULT_CENTER;
+    destination ??
+    (lat && lng ? [parseFloat(lng), parseFloat(lat)] : DEFAULT_CENTER);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -51,10 +66,15 @@ export default function ClientDeliveryTracking() {
       </View>
 
       {missionId ? (
-        <DeliveryTrackingMap missionId={missionId} fallbackCenter={fallbackCenter} />
+        <DeliveryTrackingMap
+          missionId={missionId}
+          fallbackCenter={fallbackCenter}
+          destination={destination}
+          destinationLabel={destLabel}
+        />
       ) : (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <Text style={{ fontFamily: "Poppins-Medium", color: colors.textSecondary }}>
+          <Text style={{ fontFamily: "PlusJakartaSans-Medium", color: colors.textSecondary }}>
             Livraison introuvable
           </Text>
         </View>

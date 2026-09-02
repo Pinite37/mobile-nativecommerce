@@ -288,10 +288,10 @@ export default function ForgotPasswordScreen() {
           <View className="w-20 h-20 rounded-full items-center justify-center mb-5" style={{ backgroundColor: colors.brandLight }}>
             <Ionicons name={current.icon as any} size={40} color="#10B981" />
           </View>
-          <Text className="text-2xl font-poppins-bold text-center mb-2" style={{ color: colors.textPrimary }}>
+          <Text className="text-2xl font-jakarta-bold text-center mb-2" style={{ color: colors.textPrimary }}>
             {current.title}
           </Text>
-          <Text className="text-sm font-quicksand text-center px-4" style={{ color: colors.textSecondary }}>
+          <Text className="text-sm font-jakarta text-center px-4" style={{ color: colors.textSecondary }}>
             {current.subtitle}
           </Text>
         </View>
@@ -310,7 +310,7 @@ export default function ForgotPasswordScreen() {
                 autoCorrect={false}
                 returnKeyType="send"
                 onSubmitEditing={handleSendOtp}
-                className="border rounded-2xl px-5 py-4 text-base font-quicksand mb-6"
+                className="border rounded-2xl px-5 py-4 text-base font-jakarta mb-6"
                 style={{ backgroundColor: colors.secondary, borderColor: colors.border, color: colors.textPrimary, minHeight: 60 }}
               />
 
@@ -323,7 +323,7 @@ export default function ForgotPasswordScreen() {
                 {isSending && (
                   <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
                 )}
-                <Text className="text-white font-poppins-bold text-base">
+                <Text className="text-white font-jakarta-bold text-base">
                   {isSending ? "Envoi en cours..." : "Envoyer le code"}
                 </Text>
               </TouchableOpacity>
@@ -336,7 +336,7 @@ export default function ForgotPasswordScreen() {
               {/* Countdown visuel */}
               <View className="items-center mb-5">
                 <Text
-                  className={`text-sm font-poppins-semibold ${
+                  className={`text-sm font-jakarta-semibold ${
                     countdown === 0
                       ? "text-red-500"
                       : countdown <= 60
@@ -363,7 +363,7 @@ export default function ForgotPasswordScreen() {
                     keyboardType="number-pad"
                     maxLength={index === 0 ? OTP_LENGTH : 1}
                     selectTextOnFocus
-                    className="w-12 h-14 rounded-xl text-center text-xl font-poppins-bold border-2"
+                    className="w-12 h-14 rounded-xl text-center text-xl font-jakarta-bold border-2"
                     style={digit
                       ? { borderColor: '#10B981', backgroundColor: colors.brandLight, color: colors.textPrimary }
                       : { borderColor: colors.border, backgroundColor: colors.secondary, color: colors.textPrimary }}
@@ -380,16 +380,16 @@ export default function ForgotPasswordScreen() {
                   otpCode.length !== OTP_LENGTH ? "bg-emerald-300" : "bg-emerald-500"
                 }`}
               >
-                <Text className="text-white font-poppins-bold text-base">Continuer</Text>
+                <Text className="text-white font-jakarta-bold text-base">Continuer</Text>
               </TouchableOpacity>
 
               {/* Renvoyer */}
               <View className="items-center">
-                <Text className="text-sm font-quicksand mb-2" style={{ color: colors.textSecondary }}>
+                <Text className="text-sm font-jakarta mb-2" style={{ color: colors.textSecondary }}>
                   Vous n&apos;avez pas reçu le code ?
                 </Text>
                 {resendCooldown > 0 ? (
-                  <Text className="text-sm font-poppins-semibold" style={{ color: colors.textTertiary }}>
+                  <Text className="text-sm font-jakarta-semibold" style={{ color: colors.textTertiary }}>
                     Renvoyer dans {resendCooldown}s
                   </Text>
                 ) : (
@@ -397,7 +397,7 @@ export default function ForgotPasswordScreen() {
                     {isResending ? (
                       <ActivityIndicator size="small" color="#10B981" />
                     ) : (
-                      <Text className="text-sm font-poppins-bold text-emerald-600">
+                      <Text className="text-sm font-jakarta-bold text-emerald-600">
                         Renvoyer le code
                       </Text>
                     )}
@@ -418,7 +418,7 @@ export default function ForgotPasswordScreen() {
                   placeholder="Nouveau mot de passe"
                   placeholderTextColor={colors.textTertiary}
                   secureTextEntry={!showNewPassword}
-                  className="border rounded-2xl px-5 py-4 pr-12 text-base font-quicksand"
+                  className="border rounded-2xl px-5 py-4 pr-12 text-base font-jakarta"
                   style={{ backgroundColor: colors.secondary, borderColor: colors.border, color: colors.textPrimary, minHeight: 60 }}
                 />
                 <TouchableOpacity
@@ -442,7 +442,7 @@ export default function ForgotPasswordScreen() {
                   placeholder="Confirmer le mot de passe"
                   placeholderTextColor={colors.textTertiary}
                   secureTextEntry={!showConfirmPassword}
-                  className="border rounded-2xl px-5 py-4 pr-12 text-base font-quicksand"
+                  className="border rounded-2xl px-5 py-4 pr-12 text-base font-jakarta"
                   style={{ backgroundColor: colors.secondary, borderColor: colors.border, color: colors.textPrimary, minHeight: 60 }}
                   returnKeyType="done"
                   onSubmitEditing={handleResetPassword}
@@ -461,7 +461,7 @@ export default function ForgotPasswordScreen() {
               </View>
 
               {/* Hint règle */}
-              <Text className="text-xs font-quicksand mb-6 px-1" style={{ color: colors.textTertiary }}>
+              <Text className="text-xs font-jakarta mb-6 px-1" style={{ color: colors.textTertiary }}>
                 Au moins 8 caractères, une majuscule, une minuscule et un chiffre
               </Text>
 
@@ -475,7 +475,7 @@ export default function ForgotPasswordScreen() {
                 {isSubmitting && (
                   <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
                 )}
-                <Text className="text-white font-poppins-bold text-base">
+                <Text className="text-white font-jakarta-bold text-base">
                   {isSubmitting ? "Réinitialisation..." : "Réinitialiser le mot de passe"}
                 </Text>
               </TouchableOpacity>

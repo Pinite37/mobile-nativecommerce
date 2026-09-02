@@ -164,7 +164,7 @@ export default function PickupPointsScreen() {
         contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: insets.bottom + 40 }}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={{ color: colors.textSecondary }} className="font-poppins text-sm mb-5">
+        <Text style={{ color: colors.textSecondary }} className="font-jakarta text-sm mb-5">
           Les lieux d&apos;où partent vos colis. Le livreur est envoyé au point choisi lors de la
           création de la livraison — c&apos;est l&apos;adresse qu&apos;il verra.
         </Text>
@@ -179,10 +179,10 @@ export default function PickupPointsScreen() {
             style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }}
           >
             <Ionicons name="storefront-outline" size={34} color={colors.textTertiary} />
-            <Text style={{ color: colors.textPrimary }} className="font-poppins-bold text-base mt-3 text-center">
+            <Text style={{ color: colors.textPrimary }} className="font-jakarta-bold text-base mt-3 text-center">
               Aucun point de retrait
             </Text>
-            <Text style={{ color: colors.textSecondary }} className="font-poppins text-sm mt-1 text-center">
+            <Text style={{ color: colors.textSecondary }} className="font-jakarta text-sm mt-1 text-center">
               Vous ne pourrez pas publier de livraison tant qu&apos;aucun point n&apos;est défini.
             </Text>
           </View>
@@ -203,21 +203,21 @@ export default function PickupPointsScreen() {
                   />
                   <View className="flex-1 ml-3">
                     <View className="flex-row items-center flex-wrap" style={{ gap: 8 }}>
-                      <Text style={{ color: colors.textPrimary }} className="font-poppins-bold text-base">
+                      <Text style={{ color: colors.textPrimary }} className="font-jakarta-bold text-base">
                         {p.label}
                       </Text>
                       {p.isDefault && (
                         <View
                           style={{ backgroundColor: colors.brandLight, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 }}
                         >
-                          <Text style={{ color: colors.brandPrimary }} className="font-poppins-semibold text-xs">
+                          <Text style={{ color: colors.brandPrimary }} className="font-jakarta-semibold text-xs">
                             Par défaut
                           </Text>
                         </View>
                       )}
                     </View>
                     {p.address ? (
-                      <Text style={{ color: colors.textSecondary }} className="font-poppins text-sm mt-0.5">
+                      <Text style={{ color: colors.textSecondary }} className="font-jakarta text-sm mt-0.5">
                         {p.address}
                       </Text>
                     ) : null}
@@ -230,14 +230,14 @@ export default function PickupPointsScreen() {
                 >
                   {!p.isDefault && (
                     <TouchableOpacity onPress={() => setDefault(i)} disabled={saving} activeOpacity={0.7}>
-                      <Text style={{ color: colors.brandPrimary }} className="font-poppins-semibold text-sm">
+                      <Text style={{ color: colors.brandPrimary }} className="font-jakarta-semibold text-sm">
                         Définir par défaut
                       </Text>
                     </TouchableOpacity>
                   )}
                   <View className="flex-1" />
                   <TouchableOpacity onPress={() => remove(i)} disabled={saving} activeOpacity={0.7}>
-                    <Text style={{ color: colors.error }} className="font-poppins-semibold text-sm">
+                    <Text style={{ color: colors.error }} className="font-jakarta-semibold text-sm">
                       Supprimer
                     </Text>
                   </TouchableOpacity>
@@ -259,7 +259,7 @@ export default function PickupPointsScreen() {
           ) : (
             <>
               <Ionicons name="add" size={19} color="#FFFFFF" />
-              <Text className="text-white font-poppins-bold text-base ml-1.5">
+              <Text className="text-white font-jakarta-bold text-base ml-1.5">
                 Ajouter un point de retrait
               </Text>
             </>
@@ -271,10 +271,10 @@ export default function PickupPointsScreen() {
       <Modal visible={!!pending} transparent animationType="fade" onRequestClose={() => setPending(null)} statusBarTranslucent>
         <View className="flex-1 justify-center px-6" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <View className="rounded-3xl p-6" style={{ backgroundColor: colors.card }}>
-            <Text style={{ color: colors.textPrimary }} className="font-poppins-bold text-lg">
+            <Text style={{ color: colors.textPrimary }} className="font-jakarta-bold text-lg">
               Nommer ce point
             </Text>
-            <Text style={{ color: colors.textSecondary }} className="font-poppins text-sm mt-1">
+            <Text style={{ color: colors.textSecondary }} className="font-jakarta text-sm mt-1">
               Un nom court que vous reconnaîtrez au moment de créer une livraison.
             </Text>
 
@@ -292,13 +292,13 @@ export default function PickupPointsScreen() {
                 paddingHorizontal: 14,
                 paddingVertical: 13,
                 color: colors.textPrimary,
-                fontFamily: "Poppins-Medium",
+                fontFamily: "PlusJakartaSans-Medium",
                 fontSize: 15,
               }}
             />
 
             {pending?.address ? (
-              <Text style={{ color: colors.textTertiary }} className="font-poppins text-xs mt-2">
+              <Text style={{ color: colors.textTertiary }} className="font-jakarta text-xs mt-2">
                 {pending.address}
               </Text>
             ) : null}
@@ -310,7 +310,7 @@ export default function PickupPointsScreen() {
                 style={{ backgroundColor: colors.secondary }}
                 activeOpacity={0.85}
               >
-                <Text style={{ color: colors.textPrimary }} className="font-poppins-semibold text-sm">
+                <Text style={{ color: colors.textPrimary }} className="font-jakarta-semibold text-sm">
                   Annuler
                 </Text>
               </TouchableOpacity>
@@ -320,7 +320,7 @@ export default function PickupPointsScreen() {
                 style={{ backgroundColor: colors.brandPrimary }}
                 activeOpacity={0.85}
               >
-                <Text className="text-white font-poppins-semibold text-sm">Enregistrer</Text>
+                <Text className="text-white font-jakarta-semibold text-sm">Enregistrer</Text>
               </TouchableOpacity>
             </View>
           </View>

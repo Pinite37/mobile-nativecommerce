@@ -246,13 +246,13 @@ export default function AdvertisementDetails() {
           <View className="flex-1 justify-center items-center px-6">
             <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
             <Text
-              className="text-lg font-poppins-bold mt-4"
+              className="text-lg font-jakarta-bold mt-4"
               style={{ color: colors.textPrimary }}
             >
               {i18n.t("client.advertisement.error.notFound")}
             </Text>
             <Text
-              className="font-poppins-medium text-center mt-2"
+              className="font-jakarta-medium text-center mt-2"
               style={{ color: colors.textSecondary }}
             >
               {i18n.t("client.advertisement.error.notFoundMessage")}
@@ -261,7 +261,7 @@ export default function AdvertisementDetails() {
               onPress={() => router.back()}
               className="mt-6 bg-primary-500 py-3 rounded-full"
             >
-              <Text className="text-white font-poppins-bold">
+              <Text className="text-white font-jakarta-bold">
                 {i18n.t("client.advertisement.error.back")}
               </Text>
             </TouchableOpacity>
@@ -326,7 +326,7 @@ export default function AdvertisementDetails() {
                       color={colors.textSecondary}
                     />
                     <Text
-                      className="mt-2 font-poppins-medium"
+                      className="mt-2 font-jakarta-medium"
                       style={{ color: colors.textSecondary }}
                     >
                       {i18n.t("client.advertisement.image.notAvailable")}
@@ -355,7 +355,7 @@ export default function AdvertisementDetails() {
                 className="absolute top-4 left-4 bg-primary-500 px-4 py-2 rounded-full"
                 style={{ elevation: 3 }}
               >
-                <Text className="text-white text-xs font-poppins-bold uppercase tracking-wider">
+                <Text className="text-white text-xs font-jakarta-bold uppercase tracking-wider">
                   {advertisement.type}
                 </Text>
               </View>
@@ -367,7 +367,7 @@ export default function AdvertisementDetails() {
               >
                 <View className="flex-row items-center">
                   <Ionicons name="calendar" size={12} color="#FFFFFF" />
-                  <Text className="text-white text-xs font-poppins-semibold ml-1">
+                  <Text className="text-white text-xs font-jakarta-semibold ml-1">
                     {formatDate(advertisement.endDate)}
                   </Text>
                 </View>
@@ -380,7 +380,7 @@ export default function AdvertisementDetails() {
                   activeOpacity={0.8}
                 >
                   <Ionicons name="images-outline" size={14} color="#FFFFFF" />
-                  <Text className="text-white text-xs font-poppins-semibold ml-1">
+                  <Text className="text-white text-xs font-jakarta-semibold ml-1">
                     Voir
                   </Text>
                 </TouchableOpacity>
@@ -391,14 +391,14 @@ export default function AdvertisementDetails() {
             <View style={{ paddingHorizontal: 20, paddingTop: 24, gap: 20 }}>
               {/* Titre */}
               <View>
-                <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 22, lineHeight: 30 }}>
+                <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Bold', fontSize: 22, lineHeight: 30 }}>
                   {advertisement.title}
                 </Text>
                 <View style={{ height: 3, width: 48, backgroundColor: '#10B981', borderRadius: 2, marginTop: 10 }} />
               </View>
 
               {/* Description */}
-              <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 15, lineHeight: 24 }}>
+              <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 15, lineHeight: 24 }}>
                 {advertisement.description}
               </Text>
 
@@ -408,7 +408,7 @@ export default function AdvertisementDetails() {
                   <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#10B98118', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
                     <Ionicons name="information-circle" size={18} color="#10B981" />
                   </View>
-                  <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 15 }}>
+                  <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Bold', fontSize: 15 }}>
                     {i18n.t("client.advertisement.info.title")}
                   </Text>
                 </View>
@@ -418,10 +418,10 @@ export default function AdvertisementDetails() {
                     <Ionicons name="calendar-outline" size={17} color="#10B981" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 12, marginBottom: 2 }}>
+                    <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 12, marginBottom: 2 }}>
                       {i18n.t("client.advertisement.info.validity")}
                     </Text>
-                    <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-SemiBold', fontSize: 14 }}>
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 14 }}>
                       {i18n.t("client.advertisement.info.validUntil", { date: formatDate(advertisement.endDate) })}
                     </Text>
                   </View>
@@ -432,10 +432,10 @@ export default function AdvertisementDetails() {
                     <Ionicons name="eye-outline" size={17} color="#3B82F6" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 12, marginBottom: 2 }}>
+                    <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 12, marginBottom: 2 }}>
                       {i18n.t("client.advertisement.info.views")}
                     </Text>
-                    <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-SemiBold', fontSize: 14 }}>
+                    <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 14 }}>
                       {i18n.t("client.advertisement.info.viewsCount", { count: advertisement.views || 0 })}
                     </Text>
                   </View>
@@ -450,7 +450,7 @@ export default function AdvertisementDetails() {
                   activeOpacity={0.85}
                 >
                   <Ionicons name="chatbubble-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-                  <Text style={{ color: '#FFFFFF', fontFamily: 'Poppins-Bold', fontSize: 15 }}>
+                  <Text style={{ color: '#FFFFFF', fontFamily: 'PlusJakartaSans-Bold', fontSize: 15 }}>
                     {i18n.t("client.advertisement.actions.contactCompany")}
                   </Text>
                 </TouchableOpacity>
@@ -461,7 +461,7 @@ export default function AdvertisementDetails() {
                   activeOpacity={0.85}
                 >
                   <Ionicons name="share-outline" size={18} color="#10B981" style={{ marginRight: 8 }} />
-                  <Text style={{ color: '#10B981', fontFamily: 'Poppins-Bold', fontSize: 15 }}>
+                  <Text style={{ color: '#10B981', fontFamily: 'PlusJakartaSans-Bold', fontSize: 15 }}>
                     {i18n.t("client.advertisement.actions.shareOffer")}
                   </Text>
                 </TouchableOpacity>
@@ -473,10 +473,10 @@ export default function AdvertisementDetails() {
                   <Ionicons name="time-outline" size={17} color="#10B981" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 14, marginBottom: 6 }}>
+                  <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Bold', fontSize: 14, marginBottom: 6 }}>
                     {i18n.t("client.advertisement.limitedTime.title")}
                   </Text>
-                  <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 13, lineHeight: 20 }}>
+                  <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, lineHeight: 20 }}>
                     {i18n.t("client.advertisement.limitedTime.message")}
                   </Text>
                 </View>
@@ -510,7 +510,7 @@ export default function AdvertisementDetails() {
 
             {/* Titre */}
             <Text
-              className="text-xl font-poppins-bold mb-2 text-center"
+              className="text-xl font-jakarta-bold mb-2 text-center"
               style={{ color: colors.textPrimary }}
             >
               {i18n.t("messages.error")}
@@ -518,7 +518,7 @@ export default function AdvertisementDetails() {
 
             {/* Message */}
             <Text
-              className="text-base font-poppins-medium mb-6 text-center"
+              className="text-base font-jakarta-medium mb-6 text-center"
               style={{ color: colors.textSecondary }}
             >
               {i18n.t("client.advertisement.error.loading")}
@@ -532,7 +532,7 @@ export default function AdvertisementDetails() {
                 router.back();
               }}
             >
-              <Text className="text-white font-poppins-semibold text-center">
+              <Text className="text-white font-jakarta-semibold text-center">
                 {i18n.t("client.advertisement.error.modalOk")}
               </Text>
             </TouchableOpacity>
@@ -560,7 +560,7 @@ export default function AdvertisementDetails() {
               >
                 <Ionicons name="close" size={20} color="#FFFFFF" />
               </TouchableOpacity>
-              <Text className="text-white font-poppins-medium">
+              <Text className="text-white font-jakarta-medium">
                 {currentImageIndex + 1}/{advertisement?.images?.length || 0}
               </Text>
               <View className="w-10" />

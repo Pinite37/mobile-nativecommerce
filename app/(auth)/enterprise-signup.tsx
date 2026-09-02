@@ -471,7 +471,7 @@ export default function EnterpriseSignUpScreen() {
       borderTopLeftRadius: 14,
       borderBottomLeftRadius: 14,
     },
-    input: { color: colors.textPrimary, fontFamily: "Poppins-Medium" },
+    input: { color: colors.textPrimary, fontFamily: "PlusJakartaSans-Medium" },
     callingCode: { color: colors.textPrimary },
   };
 
@@ -492,7 +492,7 @@ export default function EnterpriseSignUpScreen() {
   );
 
   const fieldLabel = (label: string) => (
-    <Text style={{ fontFamily: "Poppins-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>
+    <Text style={{ fontFamily: "PlusJakartaSans-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>
       {label}
     </Text>
   );
@@ -509,7 +509,7 @@ export default function EnterpriseSignUpScreen() {
             placeholder="Votre Entreprise SARL"
             placeholderTextColor={colors.textTertiary}
             onFocus={() => scrollToInput(companyNameRef)}
-            style={{ flex: 1, fontFamily: "Poppins-Medium", fontSize: 15, color: colors.textPrimary }}
+            style={{ flex: 1, fontFamily: "PlusJakartaSans-Medium", fontSize: 15, color: colors.textPrimary }}
           />
         )}
       </View>
@@ -524,7 +524,7 @@ export default function EnterpriseSignUpScreen() {
             placeholderTextColor={colors.textTertiary}
             keyboardType="email-address"
             autoCapitalize="none"
-            style={{ flex: 1, fontFamily: "Poppins-Medium", fontSize: 15, color: colors.textPrimary }}
+            style={{ flex: 1, fontFamily: "PlusJakartaSans-Medium", fontSize: 15, color: colors.textPrimary }}
           />
         )}
       </View>
@@ -547,7 +547,7 @@ export default function EnterpriseSignUpScreen() {
   const SectionDivider = ({ label }: { label: string }) => (
     <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8, marginBottom: 18 }}>
       <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
-      <Text style={{ fontFamily: "Poppins-SemiBold", fontSize: 11, color: colors.textTertiary, marginHorizontal: 12, letterSpacing: 0.8, textTransform: "uppercase" }}>
+      <Text style={{ fontFamily: "PlusJakartaSans-SemiBold", fontSize: 11, color: colors.textTertiary, marginHorizontal: 12, letterSpacing: 0.8, textTransform: "uppercase" }}>
         {label}
       </Text>
       <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
@@ -556,10 +556,10 @@ export default function EnterpriseSignUpScreen() {
 
   const renderStep2 = () => (
     <View>
-      <Text style={{ fontFamily: "Poppins-Bold", fontSize: 17, color: colors.textPrimary, marginBottom: 4 }}>
+      <Text style={{ fontFamily: "PlusJakartaSans-Bold", fontSize: 17, color: colors.textPrimary, marginBottom: 4 }}>
         Localisation
       </Text>
-      <Text style={{ fontFamily: "Poppins-Regular", fontSize: 14, color: colors.textSecondary, marginBottom: 20 }}>
+      <Text style={{ fontFamily: "PlusJakartaSans-Regular", fontSize: 14, color: colors.textSecondary, marginBottom: 20 }}>
         Tous ces champs sont optionnels
       </Text>
 
@@ -585,7 +585,7 @@ export default function EnterpriseSignUpScreen() {
             activeOpacity={0.7}
           >
             <Ionicons name="location-outline" size={18} color={colors.textTertiary} style={{ marginRight: 12 }} />
-            <Text style={{ flex: 1, fontFamily: "Poppins-Medium", fontSize: 15, color: colors.textPrimary }}>{selectedCity}</Text>
+            <Text style={{ flex: 1, fontFamily: "PlusJakartaSans-Medium", fontSize: 15, color: colors.textPrimary }}>{selectedCity}</Text>
             <Ionicons name="chevron-down" size={18} color={colors.textTertiary} />
           </TouchableOpacity>
         </View>
@@ -606,7 +606,7 @@ export default function EnterpriseSignUpScreen() {
           activeOpacity={0.7}
         >
           <Ionicons name="map-outline" size={18} color={colors.textTertiary} style={{ marginRight: 12 }} />
-          <Text style={{ flex: 1, fontFamily: "Poppins-Medium", fontSize: 15, color: selectedDistrict ? colors.textPrimary : colors.textTertiary }}>
+          <Text style={{ flex: 1, fontFamily: "PlusJakartaSans-Medium", fontSize: 15, color: selectedDistrict ? colors.textPrimary : colors.textTertiary }}>
             {selectedDistrict || "Sélectionnez un quartier"}
           </Text>
           <Ionicons name="chevron-down" size={18} color={colors.textTertiary} />
@@ -628,7 +628,7 @@ export default function EnterpriseSignUpScreen() {
             multiline
             numberOfLines={3}
             textAlignVertical="top"
-            style={{ flex: 1, fontFamily: "Poppins-Medium", fontSize: 15, color: colors.textPrimary }}
+            style={{ flex: 1, fontFamily: "PlusJakartaSans-Medium", fontSize: 15, color: colors.textPrimary }}
           />,
           true
         )}
@@ -646,7 +646,7 @@ export default function EnterpriseSignUpScreen() {
             onFocus={() => scrollToInput(ifuNumberRef)}
             keyboardType="numeric"
             maxLength={13}
-            style={{ flex: 1, fontFamily: "Poppins-Medium", fontSize: 15, color: colors.textPrimary }}
+            style={{ flex: 1, fontFamily: "PlusJakartaSans-Medium", fontSize: 15, color: colors.textPrimary }}
           />
         )}
       </View>
@@ -655,10 +655,10 @@ export default function EnterpriseSignUpScreen() {
 
   const renderStep3 = () => (
     <View>
-      <Text style={{ fontFamily: "Poppins-Bold", fontSize: 17, color: colors.textPrimary, marginBottom: 4 }}>
+      <Text style={{ fontFamily: "PlusJakartaSans-Bold", fontSize: 17, color: colors.textPrimary, marginBottom: 4 }}>
         Contact & Représentant
       </Text>
-      <Text style={{ fontFamily: "Poppins-Regular", fontSize: 14, color: colors.textSecondary, marginBottom: 20 }}>
+      <Text style={{ fontFamily: "PlusJakartaSans-Regular", fontSize: 14, color: colors.textSecondary, marginBottom: 20 }}>
         Tous ces champs sont optionnels
       </Text>
 
@@ -671,7 +671,7 @@ export default function EnterpriseSignUpScreen() {
               onChangeText={setFirstName}
               placeholder="Jean"
               placeholderTextColor={colors.textTertiary}
-              style={{ flex: 1, fontFamily: "Poppins-Medium", fontSize: 15, color: colors.textPrimary }}
+              style={{ flex: 1, fontFamily: "PlusJakartaSans-Medium", fontSize: 15, color: colors.textPrimary }}
             />
           )}
         </View>
@@ -683,7 +683,7 @@ export default function EnterpriseSignUpScreen() {
               onChangeText={setLastName}
               placeholder="DOSSOU"
               placeholderTextColor={colors.textTertiary}
-              style={{ flex: 1, fontFamily: "Poppins-Medium", fontSize: 15, color: colors.textPrimary }}
+              style={{ flex: 1, fontFamily: "PlusJakartaSans-Medium", fontSize: 15, color: colors.textPrimary }}
             />
           )}
         </View>
@@ -710,7 +710,7 @@ export default function EnterpriseSignUpScreen() {
             onChangeText={setAddress}
             placeholder="Cotonou, Akpakpa"
             placeholderTextColor={colors.textTertiary}
-            style={{ flex: 1, fontFamily: "Poppins-Medium", fontSize: 15, color: colors.textPrimary }}
+            style={{ flex: 1, fontFamily: "PlusJakartaSans-Medium", fontSize: 15, color: colors.textPrimary }}
           />
         )}
       </View>
@@ -725,7 +725,7 @@ export default function EnterpriseSignUpScreen() {
             placeholderTextColor={colors.textTertiary}
             keyboardType="email-address"
             autoCapitalize="none"
-            style={{ flex: 1, fontFamily: "Poppins-Medium", fontSize: 15, color: colors.textPrimary }}
+            style={{ flex: 1, fontFamily: "PlusJakartaSans-Medium", fontSize: 15, color: colors.textPrimary }}
           />
         )}
       </View>
@@ -753,7 +753,7 @@ export default function EnterpriseSignUpScreen() {
             placeholderTextColor={colors.textTertiary}
             keyboardType="url"
             autoCapitalize="none"
-            style={{ flex: 1, fontFamily: "Poppins-Medium", fontSize: 15, color: colors.textPrimary }}
+            style={{ flex: 1, fontFamily: "PlusJakartaSans-Medium", fontSize: 15, color: colors.textPrimary }}
           />
         )}
       </View>
@@ -777,7 +777,7 @@ export default function EnterpriseSignUpScreen() {
             placeholder="••••••••"
             placeholderTextColor={colors.textTertiary}
             secureTextEntry={!showPassword}
-            style={{ flex: 1, fontFamily: "Poppins-Medium", fontSize: 15, color: colors.textPrimary }}
+            style={{ flex: 1, fontFamily: "PlusJakartaSans-Medium", fontSize: 15, color: colors.textPrimary }}
           />
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)} activeOpacity={0.7}>
             <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={colors.textTertiary} />
@@ -800,7 +800,7 @@ export default function EnterpriseSignUpScreen() {
             placeholder="••••••••"
             placeholderTextColor={colors.textTertiary}
             secureTextEntry={!showConfirmPassword}
-            style={{ flex: 1, fontFamily: "Poppins-Medium", fontSize: 15, color: colors.textPrimary }}
+            style={{ flex: 1, fontFamily: "PlusJakartaSans-Medium", fontSize: 15, color: colors.textPrimary }}
           />
           <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} activeOpacity={0.7}>
             <Ionicons name={showConfirmPassword ? "eye-off-outline" : "eye-outline"} size={20} color={colors.textTertiary} />
@@ -821,7 +821,7 @@ export default function EnterpriseSignUpScreen() {
             color={password.length >= 6 ? "#10B981" : colors.textTertiary}
           />
           <Text style={{
-            fontFamily: "Poppins-Medium", fontSize: 13, marginLeft: 8,
+            fontFamily: "PlusJakartaSans-Medium", fontSize: 13, marginLeft: 8,
             color: password.length >= 6 ? "#10B981" : colors.textSecondary,
           }}>
             Au moins 6 caractères
@@ -834,7 +834,7 @@ export default function EnterpriseSignUpScreen() {
             color={password === confirmPassword && password ? "#10B981" : colors.textTertiary}
           />
           <Text style={{
-            fontFamily: "Poppins-Medium", fontSize: 13, marginLeft: 8,
+            fontFamily: "PlusJakartaSans-Medium", fontSize: 13, marginLeft: 8,
             color: password === confirmPassword && password ? "#10B981" : colors.textSecondary,
           }}>
             Les mots de passe correspondent
@@ -856,10 +856,10 @@ export default function EnterpriseSignUpScreen() {
         }}>
           {agreedToTerms && <Ionicons name="checkmark" size={13} color="#fff" />}
         </View>
-        <Text style={{ fontFamily: "Poppins-Regular", fontSize: 13, color: colors.textSecondary, flex: 1, lineHeight: 20 }}>
+        <Text style={{ fontFamily: "PlusJakartaSans-Regular", fontSize: 13, color: colors.textSecondary, flex: 1, lineHeight: 20 }}>
           J&apos;accepte les{" "}
           <Text
-            style={{ color: "#10B981", fontFamily: "Poppins-SemiBold" }}
+            style={{ color: "#10B981", fontFamily: "PlusJakartaSans-SemiBold" }}
             onPress={() => Linking.openURL("https://axi-contrat.vercel.app")}
           >
             conditions d&apos;utilisation
@@ -900,10 +900,10 @@ export default function EnterpriseSignUpScreen() {
             style={{ width: 110, height: 36, marginBottom: 16 }}
             resizeMode="contain"
           />
-          <Text style={{ fontFamily: "Poppins-Bold", fontSize: 26, color: colors.textPrimary, marginBottom: 4 }}>
+          <Text style={{ fontFamily: "PlusJakartaSans-Bold", fontSize: 26, color: colors.textPrimary, marginBottom: 4 }}>
             Compte Entreprise
           </Text>
-          <Text style={{ fontFamily: "Poppins-Regular", fontSize: 14, color: colors.textSecondary, marginBottom: 20 }}>
+          <Text style={{ fontFamily: "PlusJakartaSans-Regular", fontSize: 14, color: colors.textSecondary, marginBottom: 20 }}>
             {currentStep === 1 && "Parlez-nous de votre entreprise"}
             {currentStep === 2 && "Localisation & présentation (optionnel)"}
             {currentStep === 3 && "Contact & représentant (optionnel)"}
@@ -923,7 +923,7 @@ export default function EnterpriseSignUpScreen() {
                   }}>
                     {step < currentStep
                       ? <Ionicons name="checkmark" size={16} color="#fff" />
-                      : <Text style={{ fontFamily: "Poppins-Bold", fontSize: 13, color: step === currentStep ? "#fff" : colors.textSecondary }}>{step}</Text>
+                      : <Text style={{ fontFamily: "PlusJakartaSans-Bold", fontSize: 13, color: step === currentStep ? "#fff" : colors.textSecondary }}>{step}</Text>
                     }
                   </View>
                   {index < 3 && (
@@ -969,7 +969,7 @@ export default function EnterpriseSignUpScreen() {
                   paddingVertical: 12, marginBottom: 10,
                 }}
               >
-                <Text style={{ fontFamily: "Poppins-Medium", fontSize: 14, color: colors.textSecondary, marginRight: 4 }}>
+                <Text style={{ fontFamily: "PlusJakartaSans-Medium", fontSize: 14, color: colors.textSecondary, marginRight: 4 }}>
                   Passer cette étape
                 </Text>
                 <Ionicons name="arrow-forward" size={15} color={colors.textSecondary} />
@@ -988,7 +988,7 @@ export default function EnterpriseSignUpScreen() {
                   activeOpacity={0.8}
                 >
                   <Ionicons name="arrow-back" size={18} color={colors.textPrimary} />
-                  <Text style={{ fontFamily: "Poppins-SemiBold", fontSize: 15, color: colors.textPrimary }}>Retour</Text>
+                  <Text style={{ fontFamily: "PlusJakartaSans-SemiBold", fontSize: 15, color: colors.textPrimary }}>Retour</Text>
                 </TouchableOpacity>
               )}
 
@@ -1003,7 +1003,7 @@ export default function EnterpriseSignUpScreen() {
                 activeOpacity={0.85}
               >
                 {isLoading && <ActivityIndicator size="small" color="#fff" />}
-                <Text style={{ fontFamily: "Poppins-Bold", fontSize: 15, color: "#fff" }}>
+                <Text style={{ fontFamily: "PlusJakartaSans-Bold", fontSize: 15, color: "#fff" }}>
                   {isLoading ? null : currentStep === TOTAL_STEPS ? "Créer le compte" : "Continuer"}
                 </Text>
                 {currentStep < TOTAL_STEPS && !isLoading && (
@@ -1013,11 +1013,11 @@ export default function EnterpriseSignUpScreen() {
             </View>
 
             <View style={{ flexDirection: "row", justifyContent: "center" }}>
-              <Text style={{ fontFamily: "Poppins-Regular", fontSize: 14, color: colors.textSecondary }}>
+              <Text style={{ fontFamily: "PlusJakartaSans-Regular", fontSize: 14, color: colors.textSecondary }}>
                 Déjà un compte ?{" "}
               </Text>
               <TouchableOpacity onPress={handleSignIn} activeOpacity={0.7}>
-                <Text style={{ fontFamily: "Poppins-Bold", fontSize: 14, color: "#10B981" }}>
+                <Text style={{ fontFamily: "PlusJakartaSans-Bold", fontSize: 14, color: "#10B981" }}>
                   Se connecter
                 </Text>
               </TouchableOpacity>
@@ -1039,7 +1039,7 @@ export default function EnterpriseSignUpScreen() {
                 <TouchableWithoutFeedback onPress={() => {}}>
                   <View className="rounded-t-3xl max-h-96" style={{ backgroundColor: colors.card }}>
                     <View className="p-4 border-b" style={{ borderColor: colors.border }}>
-                      <Text className="text-lg font-poppins-bold text-center" style={{ color: colors.textPrimary }}>
+                      <Text className="text-lg font-jakarta-bold text-center" style={{ color: colors.textPrimary }}>
                         Sélectionner la Ville
                       </Text>
                     </View>
@@ -1054,7 +1054,7 @@ export default function EnterpriseSignUpScreen() {
                           activeOpacity={0.7}
                         >
                           <Text
-                            className={`font-quicksand text-base ${selectedCity === item.name ? "text-primary-500 font-poppins-bold" : ""}`}
+                            className={`font-jakarta text-base ${selectedCity === item.name ? "text-primary-500 font-jakarta-bold" : ""}`}
                             style={{ color: selectedCity === item.name ? undefined : colors.textPrimary }}
                           >
                             {item.name}
@@ -1082,7 +1082,7 @@ export default function EnterpriseSignUpScreen() {
                 <TouchableWithoutFeedback onPress={() => {}}>
                   <View className="rounded-t-3xl max-h-96" style={{ backgroundColor: colors.card }}>
                     <View className="p-4 border-b" style={{ borderColor: colors.border }}>
-                      <Text className="text-lg font-poppins-bold text-center" style={{ color: colors.textPrimary }}>
+                      <Text className="text-lg font-jakarta-bold text-center" style={{ color: colors.textPrimary }}>
                         Sélectionner le Quartier
                       </Text>
                     </View>
@@ -1097,7 +1097,7 @@ export default function EnterpriseSignUpScreen() {
                           activeOpacity={0.7}
                         >
                           <Text
-                            className={`font-quicksand text-base ${selectedDistrict === item ? "text-primary-500 font-poppins-bold" : ""}`}
+                            className={`font-jakarta text-base ${selectedDistrict === item ? "text-primary-500 font-jakarta-bold" : ""}`}
                             style={{ color: selectedDistrict === item ? undefined : colors.textPrimary }}
                           >
                             {item}

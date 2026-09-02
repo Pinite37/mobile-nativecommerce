@@ -105,10 +105,10 @@ export default function NotificationModal({
                 <Ionicons name={icon as any} size={24} color={color} />
               </View>
               <View className="flex-1">
-                <Text className="text-lg font-poppins-bold text-neutral-800 mb-1">
+                <Text className="text-lg font-jakarta-bold text-neutral-800 mb-1">
                   {title}
                 </Text>
-                <Text className="text-base text-neutral-600 font-poppins-medium leading-5">
+                <Text className="text-base text-neutral-600 font-jakarta-medium leading-5">
                   {message}
                 </Text>
               </View>

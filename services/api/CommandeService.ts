@@ -34,6 +34,31 @@ export interface GeoLabel {
   coordinates?: [number, number];
 }
 
+/**
+ * Qui livre, où en est la course, comment le joindre.
+ *
+ * `null` tant qu'aucune mission n'est publiée. Le téléphone du livreur est
+ * obligatoire à son inscription — c'est ce qui permet au client de le
+ * joindre s'il ne trouve pas l'adresse ou s'il n'est pas là.
+ */
+export interface CommandeDelivery {
+  missionId: string;
+  status: 'OPEN' | 'ASSIGNED' | 'PICKED_UP' | 'COMPLETED' | 'CANCELLED' | 'RETURNED';
+  pickedUpAt?: string | null;
+  deliveryFee?: number;
+  durationMin?: number | null;
+  distanceKm?: number | null;
+  missionCount?: number;
+  deliverer?: {
+    _id: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    profileImage?: string;
+    vehicleType?: string;
+  } | null;
+}
+
 export interface Commande {
   _id: string;
   client: string | { _id: string; firstName?: string; lastName?: string; phone?: string };
@@ -48,6 +73,8 @@ export interface Commande {
   deliveryFeePaidBy: 'ENTREPRISE' | 'CLIENT';
   status: CommandeStatus;
   missions?: string[];
+  /** Renseigné par le serveur sur getById uniquement. */
+  delivery?: CommandeDelivery | null;
   cancelStage?: 'AVANT_PUBLICATION' | 'APRES_ACCEPTATION' | 'APRES_RETRAIT';
   cancelReason?: string;
   createdAt: string;

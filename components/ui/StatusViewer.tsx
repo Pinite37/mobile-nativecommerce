@@ -497,7 +497,7 @@ export function StatusViewer({
     if (status.type === 'TEXT') {
       return (
         <View style={{ flex: 1, backgroundColor: status.backgroundColor, justifyContent: 'center', alignItems: 'center', padding: 32 }}>
-          <Text style={{ color: status.textColor, fontSize: 28, fontFamily: 'Poppins-Bold', textAlign: 'center', lineHeight: 38 }}>
+          <Text style={{ color: status.textColor, fontSize: 28, fontFamily: 'PlusJakartaSans-Bold', textAlign: 'center', lineHeight: 38 }}>
             {status.text}
           </Text>
         </View>
@@ -516,7 +516,7 @@ export function StatusViewer({
     if (currentStatus.type === 'TEXT') {
       return (
         <View style={{ flex: 1, backgroundColor: currentStatus.backgroundColor, justifyContent: 'center', alignItems: 'center', padding: 32 }}>
-          <Text style={{ color: currentStatus.textColor, fontSize: 28, fontFamily: 'Poppins-Bold', textAlign: 'center', lineHeight: 38 }}>
+          <Text style={{ color: currentStatus.textColor, fontSize: 28, fontFamily: 'PlusJakartaSans-Bold', textAlign: 'center', lineHeight: 38 }}>
             {currentStatus.text}
           </Text>
         </View>
@@ -609,7 +609,7 @@ export function StatusViewer({
                     <Ionicons name="pencil" size={14} color="rgba(255,255,255,0.6)" />
                   </TouchableOpacity>
                 )}
-                <Text style={{ color: '#fff', fontSize: 15, fontFamily: 'Poppins-SemiBold', textAlign: 'center', flexShrink: 1 }}>
+                <Text style={{ color: '#fff', fontSize: 15, fontFamily: 'PlusJakartaSans-SemiBold', textAlign: 'center', flexShrink: 1 }}>
                   {captionText}
                 </Text>
               </View>
@@ -640,7 +640,7 @@ export function StatusViewer({
                 paddingHorizontal: 18,
                 paddingVertical: Platform.OS === 'ios' ? 12 : 8,
                 color: '#fff',
-                fontFamily: 'Poppins-Medium',
+                fontFamily: 'PlusJakartaSans-Medium',
                 fontSize: 15,
                 borderWidth: 1,
                 borderColor: 'rgba(255,255,255,0.3)',
@@ -685,7 +685,7 @@ export function StatusViewer({
             )}
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ color: '#fff', fontFamily: 'Poppins-Bold', fontSize: 14 }}>
+            <Text style={{ color: '#fff', fontFamily: 'PlusJakartaSans-Bold', fontSize: 14 }}>
               {currentGroup.enterprise.companyName || `${currentGroup.enterprise.firstName} ${currentGroup.enterprise.lastName}`}
             </Text>
           </View>
@@ -708,7 +708,7 @@ export function StatusViewer({
             /* Compteur de vues */
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <Ionicons name="eye-outline" size={18} color="rgba(255,255,255,0.85)" />
-              <Text style={{ color: 'rgba(255,255,255,0.85)', fontFamily: 'Poppins-SemiBold', fontSize: 14 }}>
+              <Text style={{ color: 'rgba(255,255,255,0.85)', fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 14 }}>
                 {currentStatus.viewCount ?? 0} vue{(currentStatus.viewCount ?? 0) !== 1 ? 's' : ''}
               </Text>
             </View>
@@ -730,7 +730,7 @@ export function StatusViewer({
                   paddingHorizontal: 18,
                   paddingVertical: Platform.OS === 'ios' ? 12 : 8,
                   color: '#fff',
-                  fontFamily: 'Poppins-Medium',
+                  fontFamily: 'PlusJakartaSans-Medium',
                   fontSize: 15,
                   borderWidth: 1,
                   borderColor: 'rgba(255,255,255,0.3)',

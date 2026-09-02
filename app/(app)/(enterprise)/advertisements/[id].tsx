@@ -332,7 +332,7 @@ export default function AdvertisementDetail() {
                 {statusInfo && (
                   <View className="absolute top-4 left-4 px-3 py-1.5 rounded-full backdrop-blur-md bg-white/90">
                     <Text
-                      className="text-xs font-poppins-bold"
+                      className="text-xs font-jakarta-bold"
                       style={{ color: statusInfo.color }}
                     >
                       {statusInfo.label}
@@ -347,33 +347,33 @@ export default function AdvertisementDetail() {
             )}
             <View className="p-6">
               <Text
-                className="text-xl font-poppins-bold leading-7"
+                className="text-xl font-jakarta-bold leading-7"
                 style={{ color: colors.textPrimary }}
                 numberOfLines={3}
               >
                 {ad.title}
               </Text>
-              <Text className="mt-3 font-poppins-medium leading-relaxed text-base" style={{ color: colors.textSecondary }}>
+              <Text className="mt-3 font-jakarta-medium leading-relaxed text-base" style={{ color: colors.textSecondary }}>
                 {ad.description}
               </Text>
               <View className="mt-6 flex-row flex-wrap gap-2">
                 <View style={{ backgroundColor: colors.secondary, borderColor: colors.border }} className="px-3.5 py-1.5 rounded-full border">
-                  <Text className="font-poppins-bold text-xs" style={{ color: colors.textPrimary }}>
+                  <Text className="font-jakarta-bold text-xs" style={{ color: colors.textPrimary }}>
                     {ad.type}
                   </Text>
                 </View>
                 <View style={{ backgroundColor: colors.secondary, borderColor: colors.border }} className="px-3.5 py-1.5 rounded-full border">
-                  <Text className="font-poppins-bold text-xs" style={{ color: colors.textPrimary }}>
+                  <Text className="font-jakarta-bold text-xs" style={{ color: colors.textPrimary }}>
                     Audience: {ad.targetAudience}
                   </Text>
                 </View>
               </View>
               <View style={{ borderTopColor: colors.border }} className="mt-6 border-t pt-5 flex-row justify-between">
                 <View>
-                  <Text className="text-xs font-poppins-bold uppercase tracking-wider" style={{ color: colors.textSecondary }}>
+                  <Text className="text-xs font-jakarta-bold uppercase tracking-wider" style={{ color: colors.textSecondary }}>
                     {i18n.t("enterprise.advertisementDetail.info.start")}
                   </Text>
-                  <Text className="text-base font-poppins-bold mt-1" style={{ color: colors.textPrimary }}>
+                  <Text className="text-base font-jakarta-bold mt-1" style={{ color: colors.textPrimary }}>
                     {new Date(ad.startDate).toLocaleString("fr-FR", {
                       dateStyle: "medium",
                       timeStyle: "short",
@@ -381,10 +381,10 @@ export default function AdvertisementDetail() {
                   </Text>
                 </View>
                 <View className="items-end">
-                  <Text className="text-xs font-poppins-bold uppercase tracking-wider" style={{ color: colors.textSecondary }}>
+                  <Text className="text-xs font-jakarta-bold uppercase tracking-wider" style={{ color: colors.textSecondary }}>
                     {i18n.t("enterprise.advertisementDetail.info.end")}
                   </Text>
-                  <Text className="text-base font-poppins-bold mt-1" style={{ color: colors.textPrimary }}>
+                  <Text className="text-base font-jakarta-bold mt-1" style={{ color: colors.textPrimary }}>
                     {new Date(ad.endDate).toLocaleString("fr-FR", {
                       dateStyle: "medium",
                       timeStyle: "short",
@@ -401,11 +401,11 @@ export default function AdvertisementDetail() {
                       color="#059669"
                       style={{ marginRight: 6 }}
                     />
-                    <Text className="text-xs font-poppins-bold uppercase tracking-wider" style={{ color: colors.textSecondary }}>
+                    <Text className="text-xs font-jakarta-bold uppercase tracking-wider" style={{ color: colors.textSecondary }}>
                       {i18n.t("enterprise.advertisementDetail.info.views")}
                     </Text>
                   </View>
-                  <Text className="text-2xl font-poppins-bold" style={{ color: colors.textPrimary }}>
+                  <Text className="text-2xl font-jakarta-bold" style={{ color: colors.textPrimary }}>
                     {ad.views ?? 0}
                   </Text>
                 </View>
@@ -417,11 +417,11 @@ export default function AdvertisementDetail() {
                       color="#D97706"
                       style={{ marginRight: 6 }}
                     />
-                    <Text className="text-xs font-poppins-bold uppercase tracking-wider" style={{ color: colors.textSecondary }}>
+                    <Text className="text-xs font-jakarta-bold uppercase tracking-wider" style={{ color: colors.textSecondary }}>
                       {i18n.t("enterprise.advertisementDetail.info.clicks")}
                     </Text>
                   </View>
-                  <Text className="text-2xl font-poppins-bold" style={{ color: colors.textPrimary }}>
+                  <Text className="text-2xl font-jakarta-bold" style={{ color: colors.textPrimary }}>
                     {ad.clicks ?? 0}
                   </Text>
                 </View>
@@ -446,7 +446,7 @@ export default function AdvertisementDetail() {
                       color="#FFFFFF"
                       style={{ marginRight: 8 }}
                     />
-                    <Text className="text-white font-poppins-bold text-base">
+                    <Text className="text-white font-jakarta-bold text-base">
                       Relancer (24h)
                     </Text>
                   </View>
@@ -465,7 +465,7 @@ export default function AdvertisementDetail() {
                       color="#FFFFFF"
                       style={{ marginRight: 8 }}
                     />
-                    <Text className="text-white font-poppins-bold text-base">
+                    <Text className="text-white font-jakarta-bold text-base">
                       {i18n.t("enterprise.advertisementDetail.actions.pause")}
                     </Text>
                   </View>
@@ -484,7 +484,7 @@ export default function AdvertisementDetail() {
                       color="#FFFFFF"
                       style={{ marginRight: 8 }}
                     />
-                    <Text className="text-white font-poppins-bold text-base">
+                    <Text className="text-white font-jakarta-bold text-base">
                       {i18n.t("enterprise.advertisementDetail.actions.activate")}
                     </Text>
                   </View>
@@ -548,10 +548,10 @@ export default function AdvertisementDetail() {
 
               {/* Content */}
               <View className="px-6 pb-6">
-                <Text className="text-xl font-poppins-bold text-center mb-2" style={{ color: colors.textPrimary }}>
+                <Text className="text-xl font-jakarta-bold text-center mb-2" style={{ color: colors.textPrimary }}>
                   {confirmationAction?.title}
                 </Text>
-                <Text className="text-base font-poppins-medium text-center leading-5" style={{ color: colors.textSecondary }}>
+                <Text className="text-base font-jakarta-medium text-center leading-5" style={{ color: colors.textSecondary }}>
                   {confirmationAction?.message}
                 </Text>
               </View>
@@ -563,7 +563,7 @@ export default function AdvertisementDetail() {
                   style={{ backgroundColor: colors.secondary }}
                   className="flex-1 py-4 rounded-2xl items-center"
                 >
-                  <Text className="text-base font-poppins-semibold" style={{ color: colors.textPrimary }}>
+                  <Text className="text-base font-jakarta-semibold" style={{ color: colors.textPrimary }}>
                     {i18n.t("enterprise.advertisementDetail.buttons.cancel")}
                   </Text>
                 </TouchableOpacity>
@@ -572,7 +572,7 @@ export default function AdvertisementDetail() {
                   className="flex-1 py-4 rounded-2xl items-center"
                   style={{ backgroundColor: confirmationAction?.confirmColor }}
                 >
-                  <Text className="text-base font-poppins-semibold text-white">
+                  <Text className="text-base font-jakarta-semibold text-white">
                     {confirmationAction?.confirmText}
                   </Text>
                 </TouchableOpacity>

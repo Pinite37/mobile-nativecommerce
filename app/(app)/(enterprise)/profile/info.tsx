@@ -163,7 +163,7 @@ export default function EnterpriseInfoScreen() {
     return (
       <SafeAreaView className="flex-1 bg-white justify-center items-center">
         <ActivityIndicator size="large" color="#FE8C00" />
-        <Text className="mt-4 text-neutral-600 font-poppins-medium">
+        <Text className="mt-4 text-neutral-600 font-jakarta-medium">
           Chargement des informations...
         </Text>
       </SafeAreaView>
@@ -176,7 +176,7 @@ export default function EnterpriseInfoScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#374151" />
         </TouchableOpacity>
-        <Text className="text-lg font-poppins-bold text-neutral-800">
+        <Text className="text-lg font-jakarta-bold text-neutral-800">
           Informations entreprise
         </Text>
         <View style={{ width: 24 }} />
@@ -205,27 +205,27 @@ export default function EnterpriseInfoScreen() {
                 <Ionicons name="camera-outline" size={16} color="#FFF" />
               </View>
             </TouchableOpacity>
-            <Text className="text-primary-600 font-poppins-medium">
+            <Text className="text-primary-600 font-jakarta-medium">
               Modifier le logo
             </Text>
           </View>
 
           {/* Nom de l'entreprise */}
           <View className="mb-4">
-            <Text className="text-neutral-700 font-poppins-semibold mb-2 pl-1">
+            <Text className="text-neutral-700 font-jakarta-semibold mb-2 pl-1">
               Nom de l&apos;entreprise*
             </Text>
             <TextInput
               value={name}
               onChangeText={setName}
               placeholder="Nom de votre entreprise"
-              className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
+              className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-jakarta-regular"
             />
           </View>
 
           {/* Description */}
           <View className="mb-4">
-            <Text className="text-neutral-700 font-poppins-semibold mb-2 pl-1">
+            <Text className="text-neutral-700 font-jakarta-semibold mb-2 pl-1">
               Description
             </Text>
             <TextInput
@@ -234,31 +234,31 @@ export default function EnterpriseInfoScreen() {
               placeholder="Description de votre entreprise"
               multiline
               numberOfLines={4}
-              className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
+              className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-jakarta-regular"
               textAlignVertical="top"
             />
           </View>
 
           {/* Coordonnées */}
           <View className="mb-6">
-            <Text className="text-lg font-poppins-bold text-neutral-800 mb-3 pl-1">
+            <Text className="text-lg font-jakarta-bold text-neutral-800 mb-3 pl-1">
               Coordonnées
             </Text>
             
             <View className="mb-4">
-              <Text className="text-neutral-700 font-poppins-semibold mb-2 pl-1">
+              <Text className="text-neutral-700 font-jakarta-semibold mb-2 pl-1">
                 Site web
               </Text>
               <TextInput
                 value={website}
                 onChangeText={setWebsite}
                 placeholder="https://www.votreentreprise.com"
-                className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
+                className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-jakarta-regular"
               />
             </View>
             
             <View className="mb-4">
-              <Text className="text-neutral-700 font-poppins-semibold mb-2 pl-1">
+              <Text className="text-neutral-700 font-jakarta-semibold mb-2 pl-1">
                 Téléphone
               </Text>
               <TextInput
@@ -266,12 +266,12 @@ export default function EnterpriseInfoScreen() {
                 onChangeText={setPhone}
                 placeholder="Numéro de téléphone"
                 keyboardType="phone-pad"
-                className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
+                className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-jakarta-regular"
               />
             </View>
             
             <View>
-              <Text className="text-neutral-700 font-poppins-semibold mb-2 pl-1">
+              <Text className="text-neutral-700 font-jakarta-semibold mb-2 pl-1">
                 Adresse
               </Text>
               <TextInput
@@ -280,7 +280,7 @@ export default function EnterpriseInfoScreen() {
                 placeholder="Adresse de votre entreprise"
                 multiline
                 numberOfLines={3}
-                className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
+                className="bg-white border border-neutral-200 rounded-xl px-4 py-3 text-neutral-800 font-jakarta-regular"
                 textAlignVertical="top"
               />
             </View>
@@ -288,7 +288,7 @@ export default function EnterpriseInfoScreen() {
 
           {/* Ville & Quartier */}
           <View className="mb-6">
-            <Text className="text-lg font-poppins-bold text-neutral-800 mb-3 pl-1">
+            <Text className="text-lg font-jakarta-bold text-neutral-800 mb-3 pl-1">
               Localisation
             </Text>
 
@@ -302,7 +302,7 @@ export default function EnterpriseInfoScreen() {
 
             {locationStatus !== "granted" && (
               <View className="mb-4">
-                <Text className="text-neutral-700 font-poppins-semibold mb-2 pl-1">
+                <Text className="text-neutral-700 font-jakarta-semibold mb-2 pl-1">
                   Ville
                 </Text>
                 <TouchableOpacity
@@ -310,7 +310,7 @@ export default function EnterpriseInfoScreen() {
                   onPress={() => setCityModalVisible(true)}
                   activeOpacity={0.7}
                 >
-                  <Text className={`font-quicksand ${city ? "text-neutral-800" : "text-neutral-400"}`}>
+                  <Text className={`font-jakarta ${city ? "text-neutral-800" : "text-neutral-400"}`}>
                     {city || "Sélectionnez une ville"}
                   </Text>
                   <Ionicons name="chevron-down" size={18} color="#9CA3AF" />
@@ -319,7 +319,7 @@ export default function EnterpriseInfoScreen() {
             )}
 
             <View>
-              <Text className="text-neutral-700 font-poppins-semibold mb-2 pl-1">
+              <Text className="text-neutral-700 font-jakarta-semibold mb-2 pl-1">
                 Quartier
               </Text>
               <TouchableOpacity
@@ -328,7 +328,7 @@ export default function EnterpriseInfoScreen() {
                 disabled={!city}
                 activeOpacity={0.7}
               >
-                <Text className={`font-quicksand ${district ? "text-neutral-800" : "text-neutral-400"}`}>
+                <Text className={`font-jakarta ${district ? "text-neutral-800" : "text-neutral-400"}`}>
                   {district || "Sélectionnez un quartier"}
                 </Text>
                 <Ionicons name="chevron-down" size={18} color="#9CA3AF" />
@@ -338,7 +338,7 @@ export default function EnterpriseInfoScreen() {
 
           {/* Réseaux sociaux */}
           <View className="mb-6">
-            <Text className="text-lg font-poppins-bold text-neutral-800 mb-3 pl-1">
+            <Text className="text-lg font-jakarta-bold text-neutral-800 mb-3 pl-1">
               Réseaux sociaux
             </Text>
             
@@ -348,13 +348,13 @@ export default function EnterpriseInfoScreen() {
                   value={link.platform}
                   onChangeText={(value) => handleUpdateSocialLink(index, 'platform', value)}
                   placeholder="Plateforme (ex: Facebook)"
-                  className="flex-1 bg-white border border-neutral-200 rounded-l-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
+                  className="flex-1 bg-white border border-neutral-200 rounded-l-xl px-4 py-3 text-neutral-800 font-jakarta-regular"
                 />
                 <TextInput
                   value={link.url}
                   onChangeText={(value) => handleUpdateSocialLink(index, 'url', value)}
                   placeholder="URL"
-                  className="flex-2 bg-white border-t border-r border-b border-neutral-200 rounded-r-xl px-4 py-3 text-neutral-800 font-quicksand-regular"
+                  className="flex-2 bg-white border-t border-r border-b border-neutral-200 rounded-r-xl px-4 py-3 text-neutral-800 font-jakarta-regular"
                   style={{ flex: 2 }}
                 />
                 <TouchableOpacity 
@@ -371,7 +371,7 @@ export default function EnterpriseInfoScreen() {
               className="flex-row items-center mt-2"
             >
               <Ionicons name="add-circle" size={20} color="#FE8C00" />
-              <Text className="text-primary-500 font-poppins-medium ml-1">
+              <Text className="text-primary-500 font-jakarta-medium ml-1">
                 Ajouter un réseau social
               </Text>
             </TouchableOpacity>
@@ -386,7 +386,7 @@ export default function EnterpriseInfoScreen() {
             {saving ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
-              <Text className="text-white font-poppins-bold text-center">
+              <Text className="text-white font-jakarta-bold text-center">
                 Enregistrer les modifications
               </Text>
             )}
@@ -401,7 +401,7 @@ export default function EnterpriseInfoScreen() {
             <TouchableWithoutFeedback onPress={() => {}}>
               <View className="bg-white rounded-t-3xl max-h-96">
                 <View className="p-4 border-b border-neutral-200">
-                  <Text className="text-lg font-poppins-bold text-center text-neutral-900">
+                  <Text className="text-lg font-jakarta-bold text-center text-neutral-900">
                     Sélectionner la Ville
                   </Text>
                 </View>
@@ -414,7 +414,7 @@ export default function EnterpriseInfoScreen() {
                       onPress={() => { setCity(item.name); setDistrict(""); setCityModalVisible(false); }}
                       activeOpacity={0.7}
                     >
-                      <Text className={`font-quicksand text-base ${city === item.name ? "text-primary-500 font-poppins-bold" : "text-neutral-900"}`}>
+                      <Text className={`font-jakarta text-base ${city === item.name ? "text-primary-500 font-jakarta-bold" : "text-neutral-900"}`}>
                         {item.name}
                       </Text>
                     </TouchableOpacity>
@@ -433,7 +433,7 @@ export default function EnterpriseInfoScreen() {
             <TouchableWithoutFeedback onPress={() => {}}>
               <View className="bg-white rounded-t-3xl max-h-96">
                 <View className="p-4 border-b border-neutral-200">
-                  <Text className="text-lg font-poppins-bold text-center text-neutral-900">
+                  <Text className="text-lg font-jakarta-bold text-center text-neutral-900">
                     Sélectionner le Quartier
                   </Text>
                 </View>
@@ -446,7 +446,7 @@ export default function EnterpriseInfoScreen() {
                       onPress={() => { setDistrict(item); setDistrictModalVisible(false); }}
                       activeOpacity={0.7}
                     >
-                      <Text className={`font-quicksand text-base ${district === item ? "text-primary-500 font-poppins-bold" : "text-neutral-900"}`}>
+                      <Text className={`font-jakarta text-base ${district === item ? "text-primary-500 font-jakarta-bold" : "text-neutral-900"}`}>
                         {item}
                       </Text>
                     </TouchableOpacity>

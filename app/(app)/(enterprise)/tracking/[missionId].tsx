@@ -54,7 +54,7 @@ export default function EnterpriseDeliveryTracking() {
         <DeliveryTrackingMap missionId={missionId} fallbackCenter={fallbackCenter} />
       ) : (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <Text style={{ fontFamily: "Poppins-Medium", color: colors.textSecondary }}>
+          <Text style={{ fontFamily: "PlusJakartaSans-Medium", color: colors.textSecondary }}>
             Livraison introuvable
           </Text>
         </View>

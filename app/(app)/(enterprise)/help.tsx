@@ -92,7 +92,7 @@ export default function EnterpriseHelpScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#374151" />
         </TouchableOpacity>
-        <Text className="text-lg font-poppins-bold text-neutral-800">
+        <Text className="text-lg font-jakarta-bold text-neutral-800">
           Aide et support
         </Text>
         <View style={{ width: 24 }} />
@@ -107,7 +107,7 @@ export default function EnterpriseHelpScreen() {
               value={searchQuery}
               onChangeText={setSearchQuery}
               placeholder="Rechercher dans l'aide"
-              className="flex-1 px-2 py-3 font-quicksand-regular"
+              className="flex-1 px-2 py-3 font-jakarta-regular"
             />
             {searchQuery.length > 0 && (
               <TouchableOpacity onPress={() => setSearchQuery('')}>
@@ -119,7 +119,7 @@ export default function EnterpriseHelpScreen() {
 
         {/* Contact rapide */}
         <View className="px-4 mb-6">
-          <Text className="text-lg font-poppins-bold text-neutral-800 mb-3 pl-1">
+          <Text className="text-lg font-jakarta-bold text-neutral-800 mb-3 pl-1">
             Contact rapide
           </Text>
           <View className="flex-row justify-between">
@@ -130,7 +130,7 @@ export default function EnterpriseHelpScreen() {
               <View className="w-12 h-12 bg-primary-100 rounded-full justify-center items-center mb-2">
                 <Ionicons name="call-outline" size={20} color="#FE8C00" />
               </View>
-              <Text className="text-neutral-800 font-poppins-semibold text-center">
+              <Text className="text-neutral-800 font-jakarta-semibold text-center">
                 Appeler le support
               </Text>
             </TouchableOpacity>
@@ -142,7 +142,7 @@ export default function EnterpriseHelpScreen() {
               <View className="w-12 h-12 bg-success-100 rounded-full justify-center items-center mb-2">
                 <Ionicons name="mail-outline" size={20} color="#10B981" />
               </View>
-              <Text className="text-neutral-800 font-poppins-semibold text-center">
+              <Text className="text-neutral-800 font-jakarta-semibold text-center">
                 Email au support
               </Text>
             </TouchableOpacity>
@@ -151,7 +151,7 @@ export default function EnterpriseHelpScreen() {
 
         {/* FAQ */}
         <View className="px-4 mb-6">
-          <Text className="text-lg font-poppins-bold text-neutral-800 mb-3 pl-1">
+          <Text className="text-lg font-jakarta-bold text-neutral-800 mb-3 pl-1">
             Questions fréquentes
           </Text>
           <View className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden">
@@ -162,7 +162,7 @@ export default function EnterpriseHelpScreen() {
                     className="flex-row items-center justify-between px-4 py-4"
                     onPress={() => toggleFAQ(faqs.indexOf(faq))}
                   >
-                    <Text className="flex-1 text-base font-poppins-medium text-neutral-800">
+                    <Text className="flex-1 text-base font-jakarta-medium text-neutral-800">
                       {faq.question}
                     </Text>
                     <Ionicons 
@@ -174,7 +174,7 @@ export default function EnterpriseHelpScreen() {
                   
                   {faq.isExpanded && (
                     <View className="px-4 pb-4">
-                      <Text className="text-neutral-600 font-quicksand-regular">
+                      <Text className="text-neutral-600 font-jakarta-regular">
                         {faq.answer}
                       </Text>
                     </View>
@@ -184,7 +184,7 @@ export default function EnterpriseHelpScreen() {
             ) : (
               <View className="px-4 py-6 items-center">
                 <Ionicons name="search" size={36} color="#D1D5DB" />
-                <Text className="text-neutral-500 font-poppins-medium mt-2 text-center">
+                <Text className="text-neutral-500 font-jakarta-medium mt-2 text-center">
                   Aucun résultat trouvé pour &quot;{searchQuery}&quot;
                 </Text>
               </View>
@@ -194,11 +194,11 @@ export default function EnterpriseHelpScreen() {
 
         {/* Formulaire de contact */}
         <View className="px-4 mb-10">
-          <Text className="text-lg font-poppins-bold text-neutral-800 mb-3 pl-1">
+          <Text className="text-lg font-jakarta-bold text-neutral-800 mb-3 pl-1">
             Nous contacter
           </Text>
           <View className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-4">
-            <Text className="text-neutral-700 font-poppins-medium mb-3">
+            <Text className="text-neutral-700 font-jakarta-medium mb-3">
               Décrivez votre problème ou posez-nous une question :
             </Text>
             <View className="mb-4">
@@ -208,7 +208,7 @@ export default function EnterpriseHelpScreen() {
                 placeholder="Entrez votre message ici..."
                 multiline
                 numberOfLines={5}
-                className="bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 min-h-[120px] text-neutral-700 font-quicksand-regular"
+                className="bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 min-h-[120px] text-neutral-700 font-jakarta-regular"
                 textAlignVertical="top"
               />
             </View>
@@ -220,7 +220,7 @@ export default function EnterpriseHelpScreen() {
               {isSubmitting ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <Text className="text-white font-poppins-semibold">
+                <Text className="text-white font-jakarta-semibold">
                   Envoyer le message
                 </Text>
               )}
@@ -233,17 +233,17 @@ export default function EnterpriseHelpScreen() {
           <View className="bg-primary-100 rounded-2xl p-4">
             <View className="flex-row justify-between items-center">
               <View className="flex-1">
-                <Text className="text-lg font-poppins-bold text-primary-700 mb-2">
+                <Text className="text-lg font-jakarta-bold text-primary-700 mb-2">
                   Centre d&apos;aide
                 </Text>
-                <Text className="text-primary-600 font-quicksand-regular mb-4">
+                <Text className="text-primary-600 font-jakarta-regular mb-4">
                   Consultez notre documentation complète pour en savoir plus sur l&apos;utilisation de NativeCommerce Business.
                 </Text>
                 <TouchableOpacity
                   onPress={() => Linking.openURL('https://docs.nativecommerce.com')}
                   className="bg-primary-500 rounded-lg py-2 px-3 self-start"
                 >
-                  <Text className="text-white font-poppins-semibold">
+                  <Text className="text-white font-jakarta-semibold">
                     Consulter la documentation
                   </Text>
                 </TouchableOpacity>

@@ -185,7 +185,7 @@ export default function ImagePickerModal({
       <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
         <View className="px-6 pt-4 pb-4" style={{ borderBottomColor: colors.border, borderBottomWidth: 1 }}>
           <View className="flex-row justify-between items-center">
-            <Text className="text-xl font-poppins-bold" style={{ color: colors.textPrimary }}>
+            <Text className="text-xl font-jakarta-bold" style={{ color: colors.textPrimary }}>
               {i18n.t('client.details.photo.modal.title')}
             </Text>
             <TouchableOpacity
@@ -201,7 +201,7 @@ export default function ImagePickerModal({
         {isUploading ? (
           <View className="flex-1 justify-center items-center">
             <ActivityIndicator size="large" color="#FE8C00" />
-            <Text className="mt-4 font-quicksand" style={{ color: colors.textSecondary }}>
+            <Text className="mt-4 font-jakarta" style={{ color: colors.textSecondary }}>
               {i18n.t('client.details.photo.modal.uploading')}
             </Text>
           </View>
@@ -216,10 +216,10 @@ export default function ImagePickerModal({
                 <Ionicons name="camera" size={24} color={colors.brandPrimary} />
               </View>
               <View>
-                <Text className="text-lg font-poppins-semibold" style={{ color: colors.textPrimary }}>
+                <Text className="text-lg font-jakarta-semibold" style={{ color: colors.textPrimary }}>
                   {i18n.t('client.details.photo.modal.takePhoto')}
                 </Text>
-                <Text className="text-sm font-quicksand" style={{ color: colors.textSecondary }}>
+                <Text className="text-sm font-jakarta" style={{ color: colors.textSecondary }}>
                   {i18n.t('client.details.photo.modal.takePhotoDescription')}
                 </Text>
               </View>
@@ -234,10 +234,10 @@ export default function ImagePickerModal({
                 <Ionicons name="images" size={24} color="#3B82F6" />
               </View>
               <View>
-                <Text className="text-lg font-poppins-semibold" style={{ color: colors.textPrimary }}>
+                <Text className="text-lg font-jakarta-semibold" style={{ color: colors.textPrimary }}>
                   {i18n.t('client.details.photo.modal.pickFromGallery')}
                 </Text>
-                <Text className="text-sm font-quicksand" style={{ color: colors.textSecondary }}>
+                <Text className="text-sm font-jakarta" style={{ color: colors.textSecondary }}>
                   {i18n.t('client.details.photo.modal.pickFromGalleryDescription')}
                 </Text>
               </View>
@@ -252,10 +252,10 @@ export default function ImagePickerModal({
                 <Ionicons name="trash" size={24} color="#EF4444" />
               </View>
               <View>
-                <Text className="text-lg font-poppins-semibold" style={{ color: '#DC2626' }}>
+                <Text className="text-lg font-jakarta-semibold" style={{ color: '#DC2626' }}>
                   {i18n.t('client.details.photo.modal.removePhoto')}
                 </Text>
-                <Text className="text-sm font-quicksand" style={{ color: colors.textSecondary }}>
+                <Text className="text-sm font-jakarta" style={{ color: colors.textSecondary }}>
                   {i18n.t('client.details.photo.modal.removePhotoDescription')}
                 </Text>
               </View>

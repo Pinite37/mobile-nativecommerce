@@ -344,19 +344,19 @@ export default function CategoryProductsScreen() {
           )}
           {item.stock === 0 && (
             <View className="absolute top-2 left-2 bg-red-500 px-2 py-1 rounded-lg">
-              <Text className="text-white text-xs font-poppins-bold">{i18n.t("client.category.product.outOfStock")}</Text>
+              <Text className="text-white text-xs font-jakarta-bold">{i18n.t("client.category.product.outOfStock")}</Text>
             </View>
           )}
         </View>
         <View className="mt-2">
-          <Text className="text-sm font-poppins-semibold" style={{ color: colors.textPrimary }} numberOfLines={2}>
+          <Text className="text-sm font-jakarta-semibold" style={{ color: colors.textPrimary }} numberOfLines={2}>
             {item.name}
           </Text>
-          <Text className="text-lg font-poppins-bold mt-1" style={{ color: colors.brandPrimary }}>
+          <Text className="text-lg font-jakarta-bold mt-1" style={{ color: colors.brandPrimary }}>
             {formatPrice(item.price)}
           </Text>
           {enterprise && (
-            <Text className="text-xs font-poppins-medium mt-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
+            <Text className="text-xs font-jakarta-medium mt-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
               {enterprise.companyName}
             </Text>
           )}
@@ -394,13 +394,13 @@ export default function CategoryProductsScreen() {
           />
           {item.stock === 0 && (
             <View className="absolute inset-0 bg-black/50 rounded-xl items-center justify-center">
-              <Text className="text-white text-xs font-poppins-bold">{i18n.t("client.category.product.outOfStock")}</Text>
+              <Text className="text-white text-xs font-jakarta-bold">{i18n.t("client.category.product.outOfStock")}</Text>
             </View>
           )}
         </View>
         <View className="flex-1">
           <View className="flex-row justify-between items-start">
-            <Text className="text-sm font-poppins-semibold flex-1" style={{ color: colors.textPrimary }} numberOfLines={2}>
+            <Text className="text-sm font-jakarta-semibold flex-1" style={{ color: colors.textPrimary }} numberOfLines={2}>
               {item.name}
             </Text>
             {isAuthenticated && (
@@ -413,11 +413,11 @@ export default function CategoryProductsScreen() {
               </TouchableOpacity>
             )}
           </View>
-          <Text className="text-lg font-poppins-bold mt-1" style={{ color: colors.brandPrimary }}>
+          <Text className="text-lg font-jakarta-bold mt-1" style={{ color: colors.brandPrimary }}>
             {formatPrice(item.price)}
           </Text>
           {enterprise && (
-            <Text className="text-xs font-poppins-medium mt-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
+            <Text className="text-xs font-jakarta-medium mt-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
               {enterprise.companyName}
             </Text>
           )}
@@ -440,11 +440,11 @@ export default function CategoryProductsScreen() {
             <Ionicons name="arrow-back" size={22} color={colors.text} />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: colors.text }} numberOfLines={1}>
+            <Text style={{ fontSize: 18, fontFamily: 'PlusJakartaSans-Bold', color: colors.text }} numberOfLines={1}>
               {loading && !category ? i18n.t("client.category.loading") : category?.name || i18n.t("client.category.defaultTitle")}
             </Text>
             {!loading && (
-              <Text style={{ fontSize: 12, color: colors.textSecondary, fontFamily: 'Poppins-Medium' }}>
+              <Text style={{ fontSize: 12, color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Medium' }}>
                 {totalProducts} {totalProducts > 1 ? i18n.t("client.category.productCount.plural") : i18n.t("client.category.productCount.singular")}
               </Text>
             )}
@@ -475,7 +475,7 @@ export default function CategoryProductsScreen() {
         <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.tertiary, borderRadius: 15, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 10 }}>
           <Ionicons name="search" size={20} color={colors.textSecondary} />
           <TextInput
-            className="flex-1 ml-2 font-poppins-medium"
+            className="flex-1 ml-2 font-jakarta-medium"
             style={{ color: colors.textPrimary }}
             placeholder={i18n.t("client.category.search.placeholder")}
             placeholderTextColor={colors.textSecondary}
@@ -491,7 +491,7 @@ export default function CategoryProductsScreen() {
                 className="mr-2 rounded-lg px-3 py-1"
                 style={{ backgroundColor: colors.brandPrimary }}
               >
-                <Text className="text-white text-xs font-poppins-semibold">{i18n.t("client.category.search.button")}</Text>
+                <Text className="text-white text-xs font-jakarta-semibold">{i18n.t("client.category.search.button")}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => {
                 setSearchQuery('');
@@ -527,7 +527,7 @@ export default function CategoryProductsScreen() {
                 color={sortBy === sort.value ? '#FFFFFF' : colors.textSecondary}
               />
               <Text
-                style={{ marginLeft: 4, fontSize: 12, fontFamily: 'Poppins-SemiBold', color: sortBy === sort.value ? '#FFFFFF' : colors.textSecondary }}
+                style={{ marginLeft: 4, fontSize: 12, fontFamily: 'PlusJakartaSans-SemiBold', color: sortBy === sort.value ? '#FFFFFF' : colors.textSecondary }}
               >
                 {sort.label}
               </Text>
@@ -551,10 +551,10 @@ export default function CategoryProductsScreen() {
       ) : products.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
           <Ionicons name="cube-outline" size={64} color={colors.textSecondary} />
-          <Text className="text-lg font-poppins-bold mt-4" style={{ color: colors.textPrimary }}>
+          <Text className="text-lg font-jakarta-bold mt-4" style={{ color: colors.textPrimary }}>
             {i18n.t("client.category.empty.title")}
           </Text>
-          <Text className="font-poppins-medium text-center mt-2" style={{ color: colors.textSecondary }}>
+          <Text className="font-jakarta-medium text-center mt-2" style={{ color: colors.textSecondary }}>
             {i18n.t("client.category.empty.message")}
           </Text>
           {(minPrice || maxPrice || inStockOnly || searchQuery) && (
@@ -562,7 +562,7 @@ export default function CategoryProductsScreen() {
               onPress={handleResetFilters}
               className="mt-4 bg-[#10b981] px-6 py-3 rounded-xl"
             >
-              <Text className="text-white font-poppins-semibold">{i18n.t("client.category.empty.resetFilters")}</Text>
+              <Text className="text-white font-jakarta-semibold">{i18n.t("client.category.empty.resetFilters")}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -598,7 +598,7 @@ export default function CategoryProductsScreen() {
 
           {/* Pagination info */}
           {!loadingMore && products.length > 0 && (
-            <Text className="text-center font-poppins-medium text-sm mt-4" style={{ color: colors.textSecondary }}>
+            <Text className="text-center font-jakarta-medium text-sm mt-4" style={{ color: colors.textSecondary }}>
               {i18n.t("client.category.pagination", { current: currentPage, total: totalPages })}
             </Text>
           )}
@@ -631,7 +631,7 @@ export default function CategoryProductsScreen() {
             </View>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-              <Text className="text-xl font-poppins-bold" style={{ color: colors.textPrimary }}>
+              <Text className="text-xl font-jakarta-bold" style={{ color: colors.textPrimary }}>
                 {i18n.t("client.category.filters.title")}
               </Text>
               <TouchableOpacity
@@ -644,13 +644,13 @@ export default function CategoryProductsScreen() {
 
             <ScrollView showsVerticalScrollIndicator={false}>
               <View style={{ marginBottom: 20 }}>
-                <Text className="text-xs font-poppins-bold" style={{ color: colors.textSecondary, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                <Text className="text-xs font-jakarta-bold" style={{ color: colors.textSecondary, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.6 }}>
                   {i18n.t("client.category.filters.price.label")}
                 </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <TextInput
                     style={{ flex: 1, backgroundColor: colors.secondary, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontSize: 14 }}
-                    className="font-poppins-medium"
+                    className="font-jakarta-medium"
                     placeholder={i18n.t("client.category.filters.price.min")}
                     placeholderTextColor={colors.textSecondary}
                     keyboardType="numeric"
@@ -660,7 +660,7 @@ export default function CategoryProductsScreen() {
                   <Text style={{ color: colors.textSecondary, fontSize: 16 }}>–</Text>
                   <TextInput
                     style={{ flex: 1, backgroundColor: colors.secondary, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontSize: 14 }}
-                    className="font-poppins-medium"
+                    className="font-jakarta-medium"
                     placeholder={i18n.t("client.category.filters.price.max")}
                     placeholderTextColor={colors.textSecondary}
                     keyboardType="numeric"
@@ -674,7 +674,7 @@ export default function CategoryProductsScreen() {
                 onPress={() => setInStockOnly(!inStockOnly)}
                 style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, marginBottom: 20, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.borderLight }}
               >
-                <Text className="text-sm font-poppins-semibold" style={{ color: colors.textPrimary }}>
+                <Text className="text-sm font-jakarta-semibold" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.category.filters.stock")}
                 </Text>
                 <View style={{ width: 48, height: 26, borderRadius: 13, backgroundColor: inStockOnly ? colors.brandPrimary : colors.borderLight, justifyContent: 'center' }}>
@@ -687,7 +687,7 @@ export default function CategoryProductsScreen() {
                   style={{ flex: 1, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.secondary, alignItems: 'center' }}
                   onPress={handleResetFilters}
                 >
-                  <Text className="font-poppins-semibold" style={{ color: colors.textPrimary }}>
+                  <Text className="font-jakarta-semibold" style={{ color: colors.textPrimary }}>
                     {i18n.t("client.category.filters.reset")}
                   </Text>
                 </TouchableOpacity>
@@ -695,7 +695,7 @@ export default function CategoryProductsScreen() {
                   style={{ flex: 1, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.brandPrimary, alignItems: 'center' }}
                   onPress={handleApplyFilters}
                 >
-                  <Text className="text-white font-poppins-bold">
+                  <Text className="text-white font-jakarta-bold">
                     {i18n.t("client.category.filters.apply")}
                   </Text>
                 </TouchableOpacity>

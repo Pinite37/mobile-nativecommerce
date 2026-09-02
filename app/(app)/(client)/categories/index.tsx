@@ -56,7 +56,7 @@ export default function AllCategoriesPage() {
             ) : categories.length === 0 ? (
                 <View className="flex-1 items-center justify-center px-6">
                     <Ionicons name="file-tray-outline" size={64} color={colors.textSecondary} />
-                    <Text className="text-lg font-poppins-bold mt-4" style={{ color: colors.textPrimary }}>
+                    <Text className="text-lg font-jakarta-bold mt-4" style={{ color: colors.textPrimary }}>
                         {i18n.t("client.categories.empty")}
                     </Text>
                 </View>
@@ -97,16 +97,16 @@ export default function AllCategoriesPage() {
                                 </View>
 
                                 <View className="flex-1">
-                                    <Text className="text-base font-poppins-bold mb-1" style={{ color: colors.textPrimary }}>
+                                    <Text className="text-base font-jakarta-bold mb-1" style={{ color: colors.textPrimary }}>
                                         {category.name}
                                     </Text>
                                     {category.description && (
-                                        <Text className="text-xs font-poppins-medium" numberOfLines={1} style={{ color: colors.textSecondary }}>
+                                        <Text className="text-xs font-jakarta-medium" numberOfLines={1} style={{ color: colors.textSecondary }}>
                                             {category.description}
                                         </Text>
                                     )}
                                     {category.productCount !== undefined && (
-                                        <Text className="text-xs font-poppins-medium mt-1" style={{ color: colors.textSecondary }}>
+                                        <Text className="text-xs font-jakarta-medium mt-1" style={{ color: colors.textSecondary }}>
                                             {i18n.t(category.productCount === 1 ? "client.categories.productCount.singular" : "client.categories.productCount.plural", { count: category.productCount })}
                                         </Text>
                                     )}

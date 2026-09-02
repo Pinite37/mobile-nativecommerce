@@ -246,13 +246,13 @@ export default function ProfileScreen() {
         <Ionicons name="person-circle-outline" size={72} color="#10B981" />
         <Text
           style={{ color: colors.textPrimary }}
-          className="text-2xl font-poppins-bold mt-4 text-center"
+          className="text-2xl font-jakarta-bold mt-4 text-center"
         >
           Connexion requise
         </Text>
         <Text
           style={{ color: colors.textSecondary }}
-          className="text-base font-quicksand mt-2 text-center"
+          className="text-base font-jakarta mt-2 text-center"
         >
           Connectez-vous pour accéder a votre profil.
         </Text>
@@ -260,7 +260,7 @@ export default function ProfileScreen() {
           className="mt-6 bg-primary rounded-2xl px-6 py-3"
           onPress={() => router.push("/(auth)/signin")}
         >
-          <Text className="text-white font-poppins-bold">Se connecter</Text>
+          <Text className="text-white font-jakarta-bold">Se connecter</Text>
         </TouchableOpacity>
       </View>
     );
@@ -308,15 +308,15 @@ export default function ProfileScreen() {
                   <Image source={{ uri: user.profileImage }} style={{ width: 80, height: 80, borderRadius: 40 }} resizeMode="cover" />
                 ) : (
                   <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 28, color: '#FFFFFF' }}>{userInitials}</Text>
+                    <Text style={{ fontFamily: 'PlusJakartaSans-Bold', fontSize: 28, color: '#FFFFFF' }}>{userInitials}</Text>
                   </View>
                 )}
               </View>
             </View>
-            <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 20, color: '#FFFFFF', textAlign: 'center' }} numberOfLines={1}>
+            <Text style={{ fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, color: '#FFFFFF', textAlign: 'center' }} numberOfLines={1}>
               {userName}
             </Text>
-            <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4 }} numberOfLines={1}>
+            <Text style={{ fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4 }} numberOfLines={1}>
               {user?.email || i18n.t("client.profile.placeholders.email")}
             </Text>
           </View>
@@ -333,8 +333,8 @@ export default function ProfileScreen() {
               <Ionicons name="storefront-outline" size={20} color={colors.brandPrimary} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 22, color: colors.textPrimary, lineHeight: 26 }}>{followingList.length}</Text>
-              <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 12, color: colors.textSecondary }}>Entreprises suivies</Text>
+              <Text style={{ fontFamily: 'PlusJakartaSans-Bold', fontSize: 22, color: colors.textPrimary, lineHeight: 26 }}>{followingList.length}</Text>
+              <Text style={{ fontFamily: 'PlusJakartaSans-Medium', fontSize: 12, color: colors.textSecondary }}>Entreprises suivies</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
           </TouchableOpacity>
@@ -370,7 +370,7 @@ export default function ProfileScreen() {
                   <Ionicons name={item.icon as any} size={20} color={colors.brandPrimary} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text className="font-poppins-semibold text-base" style={{ color: colors.textPrimary }}>
+                  <Text className="font-jakarta-semibold text-base" style={{ color: colors.textPrimary }}>
                     {item.title}
                   </Text>
                 </View>
@@ -402,7 +402,7 @@ export default function ProfileScreen() {
             }}
           >
             <Ionicons name="log-out-outline" size={20} color="#EF4444" />
-            <Text className="font-poppins-semibold" style={{ color: "#EF4444" }}>
+            <Text className="font-jakarta-semibold" style={{ color: "#EF4444" }}>
               {i18n.t("client.profile.logout.button")}
             </Text>
           </TouchableOpacity>
@@ -418,10 +418,10 @@ export default function ProfileScreen() {
       >
         <View className="flex-1 justify-center items-center bg-black/50 px-4">
           <View className="rounded-2xl p-6 w-full max-w-sm" style={{ backgroundColor: colors.card }}>
-            <Text className="text-xl font-poppins-bold mb-2" style={{ color: colors.textPrimary }}>
+            <Text className="text-xl font-jakarta-bold mb-2" style={{ color: colors.textPrimary }}>
               {confirmationAction?.title}
             </Text>
-            <Text className="text-base font-poppins-medium mb-6" style={{ color: colors.textSecondary }}>
+            <Text className="text-base font-jakarta-medium mb-6" style={{ color: colors.textSecondary }}>
               {confirmationAction?.message}
             </Text>
             <View className="flex-row space-x-3">
@@ -430,7 +430,7 @@ export default function ProfileScreen() {
                 style={{ backgroundColor: colors.secondary }}
                 onPress={closeConfirmation}
               >
-                <Text className="font-poppins-semibold text-center" style={{ color: colors.textPrimary }}>
+                <Text className="font-jakarta-semibold text-center" style={{ color: colors.textPrimary }}>
                   {i18n.t("client.profile.logout.modal.cancel")}
                 </Text>
               </TouchableOpacity>
@@ -439,7 +439,7 @@ export default function ProfileScreen() {
                 style={{ backgroundColor: confirmationAction?.confirmColor }}
                 onPress={executeConfirmedAction}
               >
-                <Text className="text-white font-poppins-semibold text-center">
+                <Text className="text-white font-jakarta-semibold text-center">
                   {confirmationAction?.confirmText}
                 </Text>
               </TouchableOpacity>

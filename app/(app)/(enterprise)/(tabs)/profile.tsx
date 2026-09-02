@@ -101,10 +101,10 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
         <Ionicons name={icon} size={18} color={iconColor} />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={{ fontFamily: "Poppins-Medium", fontSize: 11, color: colors.textTertiary, marginBottom: 1 }}>
+        <Text style={{ fontFamily: "PlusJakartaSans-Medium", fontSize: 11, color: colors.textTertiary, marginBottom: 1 }}>
           {label}
         </Text>
-        <Text style={{ fontFamily: "Poppins-SemiBold", fontSize: 14, color: onPress ? iconColor : colors.textPrimary }} numberOfLines={1}>
+        <Text style={{ fontFamily: "PlusJakartaSans-SemiBold", fontSize: 14, color: onPress ? iconColor : colors.textPrimary }} numberOfLines={1}>
           {value}
         </Text>
       </View>
@@ -130,7 +130,7 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
           <TouchableOpacity onPress={onClose} style={{ padding: 4 }}>
             <Ionicons name="close" size={22} color={colors.textSecondary} />
           </TouchableOpacity>
-          <Text style={{ fontFamily: "Poppins-Bold", fontSize: 17, color: colors.textPrimary }}>
+          <Text style={{ fontFamily: "PlusJakartaSans-Bold", fontSize: 17, color: colors.textPrimary }}>
             Mon entreprise
           </Text>
           <View style={{ width: 30 }} />
@@ -159,12 +159,12 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
                 alignItems: "center", justifyContent: "center",
                 marginBottom: 14,
               }}>
-                <Text style={{ color: "#fff", fontFamily: "Poppins-Bold", fontSize: 32 }}>
+                <Text style={{ color: "#fff", fontFamily: "PlusJakartaSans-Bold", fontSize: 32 }}>
                   {enterprise.companyName?.[0]?.toUpperCase() || "E"}
                 </Text>
               </View>
             )}
-            <Text style={{ fontFamily: "Poppins-Bold", fontSize: 20, color: colors.textPrimary, textAlign: "center", marginBottom: 6 }}>
+            <Text style={{ fontFamily: "PlusJakartaSans-Bold", fontSize: 20, color: colors.textPrimary, textAlign: "center", marginBottom: 6 }}>
               {enterprise.companyName}
             </Text>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
@@ -173,7 +173,7 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
                 backgroundColor: enterprise.isActive ? "#10B981" : "#9CA3AF",
               }} />
               <Text style={{
-                fontFamily: "Poppins-Medium", fontSize: 13,
+                fontFamily: "PlusJakartaSans-Medium", fontSize: 13,
                 color: enterprise.isActive ? "#10B981" : "#9CA3AF",
               }}>
                 {enterprise.isActive ? "Entreprise active" : "Inactive"}
@@ -182,7 +182,7 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
 
             {enterprise.description ? (
               <Text style={{
-                fontFamily: "Poppins-Regular", fontSize: 14,
+                fontFamily: "PlusJakartaSans-Regular", fontSize: 14,
                 color: colors.textSecondary, textAlign: "center",
                 lineHeight: 20, marginTop: 14, paddingHorizontal: 8,
               }}>
@@ -190,7 +190,7 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
               </Text>
             ) : (
               <Text style={{
-                fontFamily: "Poppins-Regular", fontSize: 14,
+                fontFamily: "PlusJakartaSans-Regular", fontSize: 14,
                 color: colors.textTertiary, fontStyle: "italic",
                 marginTop: 14,
               }}>
@@ -207,7 +207,7 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
             paddingHorizontal: 16,
             overflow: "hidden",
           }}>
-            <Text style={{ fontFamily: "Poppins-Bold", fontSize: 15, color: colors.textPrimary, paddingTop: 16, paddingBottom: 4 }}>
+            <Text style={{ fontFamily: "PlusJakartaSans-Bold", fontSize: 15, color: colors.textPrimary, paddingTop: 16, paddingBottom: 4 }}>
               Contact
             </Text>
             {enterprise.contactInfo?.website ? (
@@ -239,7 +239,7 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
             ) : null}
             {!hasContact && (
               <Text style={{
-                fontFamily: "Poppins-Regular", fontSize: 13,
+                fontFamily: "PlusJakartaSans-Regular", fontSize: 13,
                 color: colors.textTertiary, fontStyle: "italic",
                 paddingVertical: 16,
               }}>
@@ -257,7 +257,7 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
               paddingHorizontal: 16,
               overflow: "hidden",
             }}>
-              <Text style={{ fontFamily: "Poppins-Bold", fontSize: 15, color: colors.textPrimary, paddingTop: 16, paddingBottom: 4 }}>
+              <Text style={{ fontFamily: "PlusJakartaSans-Bold", fontSize: 15, color: colors.textPrimary, paddingTop: 16, paddingBottom: 4 }}>
                 Réseaux sociaux
               </Text>
               {enterprise.socialLinks.map((link, i) => (
@@ -281,7 +281,7 @@ const EnterpriseDetailsModal: React.FC<EnterpriseDetailsModalProps> = ({
             paddingHorizontal: 16,
             overflow: "hidden",
           }}>
-            <Text style={{ fontFamily: "Poppins-Bold", fontSize: 15, color: colors.textPrimary, paddingTop: 16, paddingBottom: 4 }}>
+            <Text style={{ fontFamily: "PlusJakartaSans-Bold", fontSize: 15, color: colors.textPrimary, paddingTop: 16, paddingBottom: 4 }}>
               Informations
             </Text>
             <ContactRow
@@ -332,11 +332,11 @@ const AddPartnerModal: React.FC<AddPartnerModalProps> = ({
         <View className="px-6 pt-6 pb-4 border-b border-neutral-200">
           <View className="flex-row items-center justify-between">
             <TouchableOpacity onPress={onClose}>
-              <Text className="text-primary-500 font-poppins-medium">
+              <Text className="text-primary-500 font-jakarta-medium">
                 {i18n.t("enterprise.profile.modals.addPartner.cancel")}
               </Text>
             </TouchableOpacity>
-            <Text className="text-lg font-poppins-bold">
+            <Text className="text-lg font-jakarta-bold">
               {i18n.t("enterprise.profile.modals.addPartner.title")}
             </Text>
             <TouchableOpacity
@@ -346,7 +346,7 @@ const AddPartnerModal: React.FC<AddPartnerModalProps> = ({
               {loading ? (
                 <ActivityIndicator size="small" color="#10B981" />
               ) : (
-                <Text className="text-primary-500 font-poppins-medium">
+                <Text className="text-primary-500 font-jakarta-medium">
                   {i18n.t("enterprise.profile.modals.addPartner.add")}
                 </Text>
               )}
@@ -356,13 +356,13 @@ const AddPartnerModal: React.FC<AddPartnerModalProps> = ({
 
         <View className="px-6 py-6">
           <View>
-            <Text className="text-neutral-700 font-poppins-medium mb-2">
+            <Text className="text-neutral-700 font-jakarta-medium mb-2">
               {i18n.t("enterprise.profile.modals.addPartner.partnerId")}
             </Text>
             <TextInput
               value={partnerId}
               onChangeText={setPartnerId}
-              className="bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 font-quicksand-regular"
+              className="bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 font-jakarta-regular"
               placeholder={i18n.t("enterprise.profile.modals.addPartner.placeholder")}
             />
             <Text className="text-neutral-500 text-sm mt-2">
@@ -664,10 +664,10 @@ function EnterpriseProfilePage() {
       <View className="flex-1" style={{ backgroundColor: colors.secondary }}>
         <View className="flex-1 justify-center items-center px-6">
           <Ionicons name="alert-circle" size={48} color={colors.error} />
-          <Text className="mt-4 font-poppins-bold text-lg text-center" style={{ color: colors.textPrimary }}>
+          <Text className="mt-4 font-jakarta-bold text-lg text-center" style={{ color: colors.textPrimary }}>
             {i18n.t("enterprise.profile.messages.loadError")}
           </Text>
-          <Text className="mt-2 font-poppins-medium text-center" style={{ color: colors.textSecondary }}>
+          <Text className="mt-2 font-jakarta-medium text-center" style={{ color: colors.textSecondary }}>
             {i18n.t("enterprise.profile.messages.loadErrorMessage")}
           </Text>
           <TouchableOpacity
@@ -675,7 +675,7 @@ function EnterpriseProfilePage() {
             className="mt-6 px-6 py-3 rounded-xl"
             style={{ backgroundColor: colors.brandPrimary }}
           >
-            <Text className="font-poppins-semibold" style={{ color: colors.textOnBrand }}>
+            <Text className="font-jakarta-semibold" style={{ color: colors.textOnBrand }}>
               {i18n.t("enterprise.profile.actions.retry")}
             </Text>
           </TouchableOpacity>
@@ -728,7 +728,7 @@ function EnterpriseProfilePage() {
                   <Image source={{ uri: profileData.enterprise.logo }} style={{ width: 84, height: 84, borderRadius: 42 }} resizeMode="cover" />
                 ) : (
                   <View style={{ width: 84, height: 84, borderRadius: 42, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 32, color: '#FFFFFF' }}>
+                    <Text style={{ fontFamily: 'PlusJakartaSans-Bold', fontSize: 32, color: '#FFFFFF' }}>
                       {profileData.enterprise.companyName?.[0]?.toUpperCase() || 'E'}
                     </Text>
                   </View>
@@ -739,12 +739,12 @@ function EnterpriseProfilePage() {
               )}
             </View>
 
-            <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 22, color: '#FFFFFF', textAlign: 'center' }} numberOfLines={2}>
+            <Text style={{ fontFamily: 'PlusJakartaSans-Bold', fontSize: 22, color: '#FFFFFF', textAlign: 'center' }} numberOfLines={2}>
               {profileData.enterprise.companyName}
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
               <Ionicons name="location" size={13} color="rgba(255,255,255,0.65)" />
-              <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 13, color: 'rgba(255,255,255,0.7)', marginLeft: 4 }} numberOfLines={1}>
+              <Text style={{ fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: 'rgba(255,255,255,0.7)', marginLeft: 4 }} numberOfLines={1}>
                 {profileData.enterprise.location.district}, {profileData.enterprise.location.city}
               </Text>
             </View>
@@ -755,24 +755,24 @@ function EnterpriseProfilePage() {
         <View style={{ marginTop: -46, paddingHorizontal: 16 }}>
           <View style={{ backgroundColor: isDark ? colors.cardElevated : colors.card, borderRadius: 22, flexDirection: 'row', borderWidth: isDark ? 1 : 0, borderColor: 'rgba(255,255,255,0.08)', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: isDark ? 0.45 : 0.12, shadowRadius: 18, elevation: 8 }}>
             <View style={{ flex: 1, alignItems: 'center', paddingVertical: 18 }}>
-              <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 22, color: colors.textPrimary }}>{followerCount}</Text>
-              <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
+              <Text style={{ fontFamily: 'PlusJakartaSans-Bold', fontSize: 22, color: colors.textPrimary }}>{followerCount}</Text>
+              <Text style={{ fontFamily: 'PlusJakartaSans-Medium', fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
                 Abonné{followerCount !== 1 ? 's' : ''}
               </Text>
             </View>
             <View style={{ width: 1, backgroundColor: colors.border, marginVertical: 12 }} />
             <TouchableOpacity style={{ flex: 1, alignItems: 'center', paddingVertical: 18 }} onPress={() => router.push('/(app)/(enterprise)/marketplace')} activeOpacity={0.7}>
-              <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 22, color: colors.textPrimary }}>{followingList.length}</Text>
-              <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
+              <Text style={{ fontFamily: 'PlusJakartaSans-Bold', fontSize: 22, color: colors.textPrimary }}>{followingList.length}</Text>
+              <Text style={{ fontFamily: 'PlusJakartaSans-Medium', fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
                 Suivi{followingList.length !== 1 ? 's' : ''}
               </Text>
             </TouchableOpacity>
             <View style={{ width: 1, backgroundColor: colors.border, marginVertical: 12 }} />
             <TouchableOpacity style={{ flex: 1, alignItems: 'center', paddingVertical: 18 }} onPress={handleNavigateToPartners} activeOpacity={0.7}>
-              <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 22, color: colors.textPrimary }}>
+              <Text style={{ fontFamily: 'PlusJakartaSans-Bold', fontSize: 22, color: colors.textPrimary }}>
                 {profileData.enterprise.deliveryPartners?.length || 0}
               </Text>
-              <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>Partenaires</Text>
+              <Text style={{ fontFamily: 'PlusJakartaSans-Medium', fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>Partenaires</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -780,11 +780,11 @@ function EnterpriseProfilePage() {
         {/* Description + action buttons */}
         <View style={{ paddingHorizontal: 16, paddingTop: 20, gap: 14, backgroundColor: colors.secondary }}>
           {profileData.enterprise.description ? (
-            <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 14, color: colors.textSecondary, lineHeight: 22 }} numberOfLines={3}>
+            <Text style={{ fontFamily: 'PlusJakartaSans-Medium', fontSize: 14, color: colors.textSecondary, lineHeight: 22 }} numberOfLines={3}>
               {profileData.enterprise.description}
             </Text>
           ) : (
-            <Text style={{ fontFamily: 'Poppins-Regular', fontSize: 14, color: colors.textTertiary, fontStyle: 'italic' }}>
+            <Text style={{ fontFamily: 'PlusJakartaSans-Regular', fontSize: 14, color: colors.textTertiary, fontStyle: 'italic' }}>
               {i18n.t("enterprise.profile.placeholders.noDescription")}
             </Text>
           )}
@@ -795,7 +795,7 @@ function EnterpriseProfilePage() {
               style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.tertiary, borderRadius: 12, paddingVertical: 12, gap: 6 }}
             >
               <Ionicons name="person-outline" size={15} color={colors.textPrimary} />
-              <Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 12, color: colors.textPrimary }}>
+              <Text style={{ fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 12, color: colors.textPrimary }}>
                 {i18n.t("enterprise.profile.actions.profile")}
               </Text>
             </TouchableOpacity>
@@ -804,7 +804,7 @@ function EnterpriseProfilePage() {
               style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.tertiary, borderRadius: 12, paddingVertical: 12, gap: 6 }}
             >
               <Ionicons name="people-outline" size={15} color={colors.textPrimary} />
-              <Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 12, color: colors.textPrimary }}>
+              <Text style={{ fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 12, color: colors.textPrimary }}>
                 {i18n.t("enterprise.profile.actions.partners")}
               </Text>
             </TouchableOpacity>
@@ -813,7 +813,7 @@ function EnterpriseProfilePage() {
               style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.tertiary, borderRadius: 12, paddingVertical: 12, gap: 6 }}
             >
               <Ionicons name="information-circle-outline" size={15} color={colors.textPrimary} />
-              <Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 12, color: colors.textPrimary }}>
+              <Text style={{ fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 12, color: colors.textPrimary }}>
                 {i18n.t("enterprise.profile.actions.details")}
               </Text>
             </TouchableOpacity>
@@ -822,7 +822,7 @@ function EnterpriseProfilePage() {
 
         {/* Marketing & Abonnements — liste propre */}
         <View style={{ paddingHorizontal: 16, paddingTop: 24, backgroundColor: colors.secondary }}>
-          <Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 11, color: colors.textTertiary, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 10, paddingLeft: 4 }}>
+          <Text style={{ fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 11, color: colors.textTertiary, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 10, paddingLeft: 4 }}>
             {i18n.t("enterprise.profile.sections.marketing")}
           </Text>
           <View style={{ backgroundColor: colors.card, borderRadius: 20, overflow: 'hidden' }}>
@@ -838,10 +838,10 @@ function EnterpriseProfilePage() {
                     <Ionicons name="megaphone-outline" size={18} color={colors.brandPrimary} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 14, color: colors.textPrimary }}>
+                    <Text style={{ fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 14, color: colors.textPrimary }}>
                       {i18n.t("enterprise.profile.features.advertisements.title")}
                     </Text>
-                    <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
+                    <Text style={{ fontFamily: 'PlusJakartaSans-Medium', fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
                       {i18n.t("enterprise.profile.features.advertisements.configure")}
                     </Text>
                   </View>
@@ -860,16 +860,16 @@ function EnterpriseProfilePage() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 2 }}>
-                      <Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 14, color: colors.textPrimary }}>
+                      <Text style={{ fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 14, color: colors.textPrimary }}>
                         {i18n.t("enterprise.profile.features.advertisements.title")}
                       </Text>
                       <View style={{ backgroundColor: isDark ? 'rgba(251,191,36,0.15)' : '#FEF3C7', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 10 }}>
-                        <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 9, color: '#D97706' }}>
+                        <Text style={{ fontFamily: 'PlusJakartaSans-Bold', fontSize: 9, color: '#D97706' }}>
                           {i18n.t("enterprise.profile.features.advertisements.premium")}
                         </Text>
                       </View>
                     </View>
-                    <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 12, color: colors.textSecondary }}>
+                    <Text style={{ fontFamily: 'PlusJakartaSans-Medium', fontSize: 12, color: colors.textSecondary }}>
                       {isIosBillingRestricted ? "Fonction réservée aux comptes actifs" : i18n.t("enterprise.profile.features.advertisements.upgrade")}
                     </Text>
                   </View>
@@ -889,10 +889,10 @@ function EnterpriseProfilePage() {
                   <Ionicons name="layers-outline" size={18} color={colors.brandPrimary} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 14, color: colors.textPrimary }}>
+                  <Text style={{ fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 14, color: colors.textPrimary }}>
                     {i18n.t("enterprise.profile.features.subscriptions.title")}
                   </Text>
-                  <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
+                  <Text style={{ fontFamily: 'PlusJakartaSans-Medium', fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
                     {subscription
                       ? subscription.plan.name
                       : isIosBillingRestricted
@@ -911,7 +911,7 @@ function EnterpriseProfilePage() {
           {/* Contact */}
           <View style={{ backgroundColor: colors.card, borderRadius: 20, overflow: "hidden" }}>
             <View style={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 8 }}>
-              <Text className="text-sm font-poppins-semibold" style={{ color: colors.textPrimary }}>
+              <Text className="text-sm font-jakarta-semibold" style={{ color: colors.textPrimary }}>
                 {i18n.t("enterprise.profile.sections.contact")}
               </Text>
             </View>
@@ -920,7 +920,7 @@ function EnterpriseProfilePage() {
                 <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#431407" : "#FFF7ED", alignItems: "center", justifyContent: "center", marginRight: 14 }}>
                   <Ionicons name="mail" size={17} color="#EA580C" />
                 </View>
-                <Text className="text-sm font-poppins-medium flex-1" style={{ color: colors.textPrimary }} numberOfLines={1}>
+                <Text className="text-sm font-jakarta-medium flex-1" style={{ color: colors.textPrimary }} numberOfLines={1}>
                   {profileData.enterprise.contactInfo.email}
                 </Text>
               </View>
@@ -930,7 +930,7 @@ function EnterpriseProfilePage() {
                 <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#052e16" : "#F0FDF4", alignItems: "center", justifyContent: "center", marginRight: 14 }}>
                   <Ionicons name="call" size={17} color="#16A34A" />
                 </View>
-                <Text className="text-sm font-poppins-medium flex-1" style={{ color: colors.textPrimary }} numberOfLines={1}>
+                <Text className="text-sm font-jakarta-medium flex-1" style={{ color: colors.textPrimary }} numberOfLines={1}>
                   {profileData.enterprise.contactInfo.phone}
                 </Text>
               </View>
@@ -940,7 +940,7 @@ function EnterpriseProfilePage() {
                 <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#052e16" : "#F0FDF4", alignItems: "center", justifyContent: "center", marginRight: 14 }}>
                   <Ionicons name="logo-whatsapp" size={17} color="#16A34A" />
                 </View>
-                <Text className="text-sm font-poppins-medium flex-1" style={{ color: colors.textPrimary }} numberOfLines={1}>
+                <Text className="text-sm font-jakarta-medium flex-1" style={{ color: colors.textPrimary }} numberOfLines={1}>
                   {profileData.enterprise.contactInfo.whatsapp}
                 </Text>
               </View>
@@ -950,7 +950,7 @@ function EnterpriseProfilePage() {
                 <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? "#1e3a5f" : "#EFF6FF", alignItems: "center", justifyContent: "center", marginRight: 14 }}>
                   <Ionicons name="globe" size={17} color="#3B82F6" />
                 </View>
-                <Text className="text-sm font-poppins-medium flex-1" style={{ color: colors.textPrimary }} numberOfLines={1}>
+                <Text className="text-sm font-jakarta-medium flex-1" style={{ color: colors.textPrimary }} numberOfLines={1}>
                   {profileData.enterprise.contactInfo.website}
                 </Text>
               </View>
@@ -960,7 +960,7 @@ function EnterpriseProfilePage() {
               !profileData.enterprise.contactInfo?.whatsapp &&
               !profileData.enterprise.contactInfo?.website && (
                 <View style={{ paddingHorizontal: 20, paddingBottom: 18, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 14 }}>
-                  <Text className="text-sm font-quicksand-regular italic" style={{ color: colors.textTertiary }}>
+                  <Text className="text-sm font-jakarta-regular italic" style={{ color: colors.textTertiary }}>
                     {i18n.t("enterprise.profile.contact.noInfo")}
                   </Text>
                 </View>
@@ -970,7 +970,7 @@ function EnterpriseProfilePage() {
           {/* Propriétaire */}
           <View style={{ backgroundColor: colors.card, borderRadius: 20, padding: 20 }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-              <Text className="text-sm font-poppins-semibold" style={{ color: colors.textPrimary }}>
+              <Text className="text-sm font-jakarta-semibold" style={{ color: colors.textPrimary }}>
                 {i18n.t("enterprise.profile.sections.owner")}
               </Text>
               <TouchableOpacity
@@ -978,7 +978,7 @@ function EnterpriseProfilePage() {
                 style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
               >
                 <Ionicons name="create-outline" size={15} color={colors.textSecondary} />
-                <Text className="text-xs font-poppins-medium" style={{ color: colors.textSecondary }}>
+                <Text className="text-xs font-jakarta-medium" style={{ color: colors.textSecondary }}>
                   {i18n.t("enterprise.profile.actions.edit")}
                 </Text>
               </TouchableOpacity>
@@ -992,18 +992,18 @@ function EnterpriseProfilePage() {
                 />
               ) : (
                 <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: isDark ? "#1f2937" : "#F3F4F6", alignItems: "center", justifyContent: "center", marginRight: 14 }}>
-                  <Text className="font-poppins-bold text-sm" style={{ color: colors.textSecondary }}>
+                  <Text className="font-jakarta-bold text-sm" style={{ color: colors.textSecondary }}>
                     {(`${profileData.user.firstName?.[0] || ""}${profileData.user.lastName?.[0] || ""}` || profileData.enterprise.companyName?.[0] || "E").toUpperCase()}
                   </Text>
                 </View>
               )}
               <View style={{ flex: 1 }}>
-                <Text className="text-base font-poppins-semibold" style={{ color: colors.textPrimary }} numberOfLines={1}>
+                <Text className="text-base font-jakarta-semibold" style={{ color: colors.textPrimary }} numberOfLines={1}>
                   {profileData.user.firstName || profileData.user.lastName
                     ? `${profileData.user.firstName || ""} ${profileData.user.lastName || ""}`.trim()
                     : profileData.enterprise.companyName}
                 </Text>
-                <Text className="text-sm font-poppins-medium mt-0.5" style={{ color: colors.textSecondary }} numberOfLines={1}>
+                <Text className="text-sm font-jakarta-medium mt-0.5" style={{ color: colors.textSecondary }} numberOfLines={1}>
                   {profileData.user.email}
                 </Text>
               </View>
@@ -1013,7 +1013,7 @@ function EnterpriseProfilePage() {
 
         {/* Menu de gestion */}
         <View style={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 4 }}>
-          <Text className="text-lg font-poppins-bold mb-4 pl-1" style={{ color: colors.textPrimary }}>
+          <Text className="text-lg font-jakarta-bold mb-4 pl-1" style={{ color: colors.textPrimary }}>
             {i18n.t("enterprise.profile.management.title")}
           </Text>
           <View style={{ backgroundColor: colors.card, borderRadius: 20, overflow: "hidden" }}>
@@ -1028,12 +1028,12 @@ function EnterpriseProfilePage() {
                   <Ionicons name="people-outline" size={20} color="#6366F1" />
                 </View>
                 <View className="ml-4">
-                  <Text className="text-base font-poppins-medium" style={{ color: colors.textPrimary }}>
+                  <Text className="text-base font-jakarta-medium" style={{ color: colors.textPrimary }}>
                     {i18n.t("enterprise.profile.management.partners")}
                   </Text>
                   {profileData.enterprise.deliveryPartners &&
                     profileData.enterprise.deliveryPartners.length > 0 && (
-                      <Text className="text-sm font-poppins-light" style={{ color: colors.textSecondary }}>
+                      <Text className="text-sm font-jakarta-light" style={{ color: colors.textSecondary }}>
                         {i18n.t("enterprise.profile.management.partnersCount", { count: profileData.enterprise.deliveryPartners.length })}
                       </Text>
                     )}
@@ -1056,10 +1056,10 @@ function EnterpriseProfilePage() {
                   <Ionicons name="cash-outline" size={20} color={colors.brandPrimary} />
                 </View>
                 <View className="ml-4">
-                  <Text className="text-base font-poppins-medium" style={{ color: colors.textPrimary }}>
+                  <Text className="text-base font-jakarta-medium" style={{ color: colors.textPrimary }}>
                     Règlements livreurs
                   </Text>
-                  <Text className="text-xs font-poppins mt-0.5" style={{ color: colors.textSecondary }}>
+                  <Text className="text-xs font-jakarta mt-0.5" style={{ color: colors.textSecondary }}>
                     Courses terminées à payer
                   </Text>
                 </View>
@@ -1080,10 +1080,10 @@ function EnterpriseProfilePage() {
                   <Ionicons name="notifications-outline" size={20} color={colors.brandPrimary} />
                 </View>
                 <View className="ml-4">
-                  <Text className="text-base font-poppins-medium" style={{ color: colors.textPrimary }}>
+                  <Text className="text-base font-jakarta-medium" style={{ color: colors.textPrimary }}>
                     {i18n.t("enterprise.profile.management.notifications")}
                   </Text>
-                  <Text className="text-sm font-poppins-light" style={{ color: colors.textSecondary }}>
+                  <Text className="text-sm font-jakarta-light" style={{ color: colors.textSecondary }}>
                     {i18n.t("enterprise.profile.management.notificationsDescription")}
                   </Text>
                 </View>
@@ -1109,10 +1109,10 @@ function EnterpriseProfilePage() {
                   <Ionicons name="settings-outline" size={20} color={colors.brandPrimary} />
                 </View>
                 <View className="ml-4">
-                  <Text className="text-base font-poppins-medium" style={{ color: colors.textPrimary }}>
+                  <Text className="text-base font-jakarta-medium" style={{ color: colors.textPrimary }}>
                     {i18n.t("enterprise.profile.management.settings")}
                   </Text>
-                  <Text className="text-sm font-poppins-light" style={{ color: colors.textSecondary }}>
+                  <Text className="text-sm font-jakarta-light" style={{ color: colors.textSecondary }}>
                     {i18n.t("enterprise.profile.management.settingsDescription")}
                   </Text>
                 </View>
@@ -1132,10 +1132,10 @@ function EnterpriseProfilePage() {
                   <Ionicons name="help-circle-outline" size={20} color={colors.brandPrimary} />
                 </View>
                 <View className="ml-4">
-                  <Text className="text-base font-poppins-medium" style={{ color: colors.textPrimary }}>
+                  <Text className="text-base font-jakarta-medium" style={{ color: colors.textPrimary }}>
                     {i18n.t("enterprise.profile.management.help")}
                   </Text>
-                  <Text className="text-sm font-poppins-light" style={{ color: colors.textSecondary }}>
+                  <Text className="text-sm font-jakarta-light" style={{ color: colors.textSecondary }}>
                     {i18n.t("enterprise.profile.management.helpDescription")}
                   </Text>
                 </View>
@@ -1154,10 +1154,10 @@ function EnterpriseProfilePage() {
                   <Ionicons name="globe-outline" size={20} color="#3B82F6" />
                 </View>
                 <View className="ml-4">
-                  <Text className="text-base font-poppins-medium" style={{ color: colors.textPrimary }}>
+                  <Text className="text-base font-jakarta-medium" style={{ color: colors.textPrimary }}>
                     Axi Marketplace
                   </Text>
-                  <Text className="text-sm font-poppins-light" style={{ color: colors.textSecondary }}>
+                  <Text className="text-sm font-jakarta-light" style={{ color: colors.textSecondary }}>
                     aximarketplace.com
                   </Text>
                 </View>
@@ -1184,7 +1184,7 @@ function EnterpriseProfilePage() {
             onPress={handleLogout}
           >
             <Ionicons name="log-out-outline" size={20} color="#EF4444" />
-            <Text className="font-poppins-semibold" style={{ color: "#EF4444" }}>
+            <Text className="font-jakarta-semibold" style={{ color: "#EF4444" }}>
               {i18n.t("enterprise.profile.management.logout")}
             </Text>
           </TouchableOpacity>
@@ -1192,7 +1192,7 @@ function EnterpriseProfilePage() {
 
         {/* App Info */}
         <View className="px-6 py-4">
-          <Text className="text-center text-xs font-poppins-medium" style={{ color: colors.textTertiary }}>
+          <Text className="text-center text-xs font-jakarta-medium" style={{ color: colors.textTertiary }}>
             {i18n.t("enterprise.profile.appInfo")}
           </Text>
         </View>
@@ -1229,10 +1229,10 @@ function EnterpriseProfilePage() {
           >
             <View className="flex-1 justify-center items-center px-4" style={{ backgroundColor: colors.overlay }}>
               <View className="rounded-2xl p-6 w-full max-w-sm" style={{ backgroundColor: colors.card }}>
-                <Text className="text-xl font-poppins-bold mb-2" style={{ color: colors.textPrimary }}>
+                <Text className="text-xl font-jakarta-bold mb-2" style={{ color: colors.textPrimary }}>
                   {confirmationAction?.title}
                 </Text>
-                <Text className="text-base font-poppins-medium mb-6" style={{ color: colors.textSecondary }}>
+                <Text className="text-base font-jakarta-medium mb-6" style={{ color: colors.textSecondary }}>
                   {confirmationAction?.message}
                 </Text>
                 <View className="flex-row space-x-3">
@@ -1241,7 +1241,7 @@ function EnterpriseProfilePage() {
                     style={{ backgroundColor: colors.tertiary }}
                     onPress={closeConfirmation}
                   >
-                    <Text className="font-poppins-semibold text-center" style={{ color: colors.textPrimary }}>
+                    <Text className="font-jakarta-semibold text-center" style={{ color: colors.textPrimary }}>
                       Annuler
                     </Text>
                   </TouchableOpacity>
@@ -1252,7 +1252,7 @@ function EnterpriseProfilePage() {
                     }}
                     onPress={executeConfirmedAction}
                   >
-                    <Text className="font-poppins-semibold text-center" style={{ color: colors.textOnBrand }}>
+                    <Text className="font-jakarta-semibold text-center" style={{ color: colors.textOnBrand }}>
                       {confirmationAction?.confirmText}
                     </Text>
                   </TouchableOpacity>

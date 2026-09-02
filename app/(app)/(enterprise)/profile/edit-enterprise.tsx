@@ -133,20 +133,20 @@ export default function EditEnterprisePage() {
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: Platform.OS === "ios" ? 14 : 10,
-    fontFamily: "Poppins-Regular",
+    fontFamily: "PlusJakartaSans-Regular",
     fontSize: 15,
     color: colors.textPrimary,
   };
 
   const labelStyle = {
-    fontFamily: "Poppins-SemiBold",
+    fontFamily: "PlusJakartaSans-SemiBold",
     fontSize: 13,
     color: colors.textPrimary,
     marginBottom: 8,
   };
 
   const sectionTitleStyle = {
-    fontFamily: "Poppins-Bold",
+    fontFamily: "PlusJakartaSans-Bold",
     fontSize: 16,
     color: colors.textPrimary,
     marginBottom: 14,
@@ -179,7 +179,7 @@ export default function EditEnterprisePage() {
             ) : (
               <>
                 <Ionicons name="checkmark" size={16} color="#FFFFFF" />
-                <Text style={{ fontFamily: "Poppins-SemiBold", fontSize: 13, color: "#FFFFFF" }}>
+                <Text style={{ fontFamily: "PlusJakartaSans-SemiBold", fontSize: 13, color: "#FFFFFF" }}>
                   {i18n.t("enterprise.profile.modals.editEnterprise.save")}
                 </Text>
               </>
@@ -209,7 +209,7 @@ export default function EditEnterprisePage() {
                 />
               ) : (
                 <View style={{ width: 100, height: 100, borderRadius: 50, backgroundColor: colors.brandPrimary, alignItems: "center", justifyContent: "center" }}>
-                  <Text style={{ fontFamily: "Poppins-Bold", fontSize: 34, color: "#FFFFFF" }}>
+                  <Text style={{ fontFamily: "PlusJakartaSans-Bold", fontSize: 34, color: "#FFFFFF" }}>
                     {companyName?.[0]?.toUpperCase() || "E"}
                   </Text>
                 </View>
@@ -218,7 +218,7 @@ export default function EditEnterprisePage() {
                 <Ionicons name="camera" size={15} color="#FFFFFF" />
               </View>
             </TouchableOpacity>
-            <Text style={{ fontFamily: "Poppins-Medium", fontSize: 13, color: colors.brandPrimary, marginTop: 10 }}>
+            <Text style={{ fontFamily: "PlusJakartaSans-Medium", fontSize: 13, color: colors.brandPrimary, marginTop: 10 }}>
               {i18n.t("enterprise.profile.modals.editEnterprise.changeLogo")}
             </Text>
           </View>
@@ -310,14 +310,14 @@ export default function EditEnterprisePage() {
             <Text style={sectionTitleStyle}>{i18n.t("enterprise.profile.modals.editEnterprise.socialNetworks")}</Text>
             <TouchableOpacity onPress={addSocialLink} style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
               <Ionicons name="add-circle" size={20} color={colors.brandPrimary} />
-              <Text style={{ fontFamily: "Poppins-Medium", fontSize: 13, color: colors.brandPrimary }}>
+              <Text style={{ fontFamily: "PlusJakartaSans-Medium", fontSize: 13, color: colors.brandPrimary }}>
                 {i18n.t("enterprise.profile.modals.editEnterprise.addSocial")}
               </Text>
             </TouchableOpacity>
           </View>
 
           {socialLinks.length === 0 ? (
-            <Text style={{ fontFamily: "Poppins-Regular", fontSize: 13, color: colors.textTertiary, fontStyle: "italic", marginBottom: 16 }}>
+            <Text style={{ fontFamily: "PlusJakartaSans-Regular", fontSize: 13, color: colors.textTertiary, fontStyle: "italic", marginBottom: 16 }}>
               {i18n.t("enterprise.profile.modals.editEnterprise.noSocial")}
             </Text>
           ) : (

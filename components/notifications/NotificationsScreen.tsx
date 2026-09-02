@@ -175,13 +175,13 @@ export default function NotificationsScreen({
                 />
               </View>
               <Text
-                className="font-poppins-bold text-base"
+                className="font-jakarta-bold text-base"
                 style={{ color: colors.textPrimary, marginBottom: 6 }}
               >
                 Tout est calme ici
               </Text>
               <Text
-                className="font-poppins-medium text-sm text-center"
+                className="font-jakarta-medium text-sm text-center"
                 style={{ color: colors.textSecondary, maxWidth: 260 }}
               >
                 {emptyMessage}
@@ -237,13 +237,13 @@ export default function NotificationsScreen({
                     />
                   )}
                   <Text
-                    className="font-poppins-bold"
+                    className="font-jakarta-bold"
                     style={{ color: colors.textPrimary, fontSize: 14 }}
                   >
                     {item.title}
                   </Text>
                   <Text
-                    className="font-poppins-medium"
+                    className="font-jakarta-medium"
                     style={{
                       color: colors.textSecondary,
                       fontSize: 13,
@@ -254,7 +254,7 @@ export default function NotificationsScreen({
                     {item.message}
                   </Text>
                   <Text
-                    className="font-quicksand"
+                    className="font-jakarta"
                     style={{
                       color: colors.textTertiary,
                       fontSize: 11,

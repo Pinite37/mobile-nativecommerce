@@ -77,17 +77,11 @@ module.exports = {
         },
       },
       fontFamily: {
-        poppins: ["Poppins-Regular", "sans-serif"],
-        "poppins-bold": ["Poppins-Bold", "sans-serif"],
-        "poppins-semibold": ["Poppins-SemiBold", "sans-serif"],
-        "poppins-medium": ["Poppins-Medium", "sans-serif"],
-        "poppins-light": ["Poppins-Light", "sans-serif"],
-        // Aliases pour compatibilité pendant la migration
-        quicksand: ["Poppins-Regular", "sans-serif"],
-        "quicksand-bold": ["Poppins-Bold", "sans-serif"],
-        "quicksand-semibold": ["Poppins-SemiBold", "sans-serif"],
-        "quicksand-light": ["Poppins-Light", "sans-serif"],
-        "quicksand-medium": ["Poppins-Medium", "sans-serif"],
+        jakarta: ["PlusJakartaSans-Regular", "sans-serif"],
+        "jakarta-light": ["PlusJakartaSans-Light", "sans-serif"],
+        "jakarta-medium": ["PlusJakartaSans-Medium", "sans-serif"],
+        "jakarta-semibold": ["PlusJakartaSans-SemiBold", "sans-serif"],
+        "jakarta-bold": ["PlusJakartaSans-Bold", "sans-serif"],
       },
       borderRadius: {
         "card": "20px",

@@ -12,6 +12,12 @@ interface DeliveryTrackingMapProps {
   missionId: string;
   /** [longitude, latitude] — utilisé tant qu'aucune position live n'est reçue. */
   fallbackCenter: [number, number];
+  /**
+   * Point d'arrivée. La carte ne montrait que le livreur : sans repère de
+   * destination, impossible de savoir s'il se rapproche ou s'en éloigne.
+   */
+  destination?: [number, number] | null;
+  destinationLabel?: string;
 }
 
 /**
@@ -19,7 +25,12 @@ interface DeliveryTrackingMapProps {
  * assigné en temps réel via la room Socket.IO `mission:${missionId}`
  * (voir delivers_mobile/hooks/useActiveMissionLocationTracking).
  */
-export default function DeliveryTrackingMap({ missionId, fallbackCenter }: DeliveryTrackingMapProps) {
+export default function DeliveryTrackingMap({
+  missionId,
+  fallbackCenter,
+  destination,
+  destinationLabel,
+}: DeliveryTrackingMapProps) {
   const { colors } = useTheme();
   const cameraRef = useRef<CameraRef>(null);
   const [position, setPosition] = useState<[number, number] | null>(null);
@@ -54,6 +65,48 @@ export default function DeliveryTrackingMap({ missionId, fallbackCenter }: Deliv
           ref={cameraRef}
           initialViewState={{ center: position ?? fallbackCenter, zoom: 14 }}
         />
+        {destination && (
+          <Marker id="destination" lngLat={destination} anchor="center">
+            <View style={{ alignItems: "center" }}>
+              <View
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 15,
+                  backgroundColor: colors.error,
+                  borderWidth: 3,
+                  borderColor: "#FFFFFF",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Ionicons name="home" size={14} color="#FFFFFF" />
+              </View>
+              {!!destinationLabel && (
+                <View
+                  style={{
+                    marginTop: 5,
+                    maxWidth: 170,
+                    paddingHorizontal: 8,
+                    paddingVertical: 3,
+                    borderRadius: 8,
+                    backgroundColor: colors.card,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                  }}
+                >
+                  <Text
+                    numberOfLines={1}
+                    style={{ color: colors.textPrimary, fontFamily: "PlusJakartaSans-SemiBold", fontSize: 11 }}
+                  >
+                    {destinationLabel}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </Marker>
+        )}
+
         {position && (
           <Marker id="deliverer" lngLat={position} anchor="center">
             <View
@@ -100,7 +153,7 @@ export default function DeliveryTrackingMap({ missionId, fallbackCenter }: Deliv
           }}
         >
           <Ionicons name="time-outline" size={18} color={colors.textSecondary} />
-          <Text style={{ fontFamily: "Poppins-Medium", fontSize: 13, color: colors.textSecondary, flex: 1 }}>
+          <Text style={{ fontFamily: "PlusJakartaSans-Medium", fontSize: 13, color: colors.textSecondary, flex: 1 }}>
             En attente de la position du livreur…
           </Text>
         </View>
@@ -122,7 +175,7 @@ export default function DeliveryTrackingMap({ missionId, fallbackCenter }: Deliv
           }}
         >
           <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.brandPrimary }} />
-          <Text style={{ fontFamily: "Poppins-Medium", fontSize: 12, color: colors.textSecondary }}>
+          <Text style={{ fontFamily: "PlusJakartaSans-Medium", fontSize: 12, color: colors.textSecondary }}>
             Position en direct
           </Text>
         </View>

@@ -715,12 +715,12 @@ export default function ClientHome() {
                 <View className="absolute top-2 left-2 flex-row flex-wrap gap-1">
                     {item.stats && item.stats.totalSales > 10 && (
                         <View className="bg-emerald-500/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-sm">
-                            <Text className="text-white text-[10px] font-poppins-bold">{i18n.t('client.home.badges.top')}</Text>
+                            <Text className="text-white text-[10px] font-jakarta-bold">{i18n.t('client.home.badges.top')}</Text>
                         </View>
                     )}
                     {(item as any).promotion && (
                         <View className="bg-red-500/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-sm">
-                            <Text className="text-white text-[10px] font-poppins-bold">{i18n.t('client.home.badges.promo')}</Text>
+                            <Text className="text-white text-[10px] font-jakarta-bold">{i18n.t('client.home.badges.promo')}</Text>
                         </View>
                     )}
                 </View>
@@ -745,15 +745,15 @@ export default function ClientHome() {
             </View>
 
             <View className="p-3">
-                <Text numberOfLines={1} style={{ color: colors.textSecondary }} className="text-xs font-poppins-medium mb-0.5">
+                <Text numberOfLines={1} style={{ color: colors.textSecondary }} className="text-xs font-jakarta-medium mb-0.5">
                     {(item.category as any)?.name || 'Divers'}
                 </Text>
-                <Text numberOfLines={2} style={{ color: colors.textPrimary }} className="text-sm font-poppins-bold leading-5 h-10 mb-1">
+                <Text numberOfLines={2} style={{ color: colors.textPrimary }} className="text-sm font-jakarta-bold leading-5 h-10 mb-1">
                     {item.name}
                 </Text>
 
                 <View className="flex-row items-center justify-between mt-1">
-                    <Text className="text-base font-poppins-bold text-emerald-600">
+                    <Text className="text-base font-jakarta-bold text-emerald-600">
                         {formatPrice(item.price)}
                     </Text>
                 </View>
@@ -776,15 +776,15 @@ export default function ClientHome() {
                 <View>
                     {isAuthenticated ? (
                         <>
-                            <Text style={{ fontFamily: 'Poppins-Regular', fontSize: 13, color: colors.textSecondary }}>
+                            <Text style={{ fontFamily: 'PlusJakartaSans-Regular', fontSize: 13, color: colors.textSecondary }}>
                                 {`${greetUser()},`}
                             </Text>
-                            <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 22, color: colors.textPrimary }}>
+                            <Text style={{ fontFamily: 'PlusJakartaSans-Bold', fontSize: 22, color: colors.textPrimary }}>
                                 {user?.firstName || "Utilisateur"}
                             </Text>
                         </>
                     ) : (
-                        <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 20, color: colors.textPrimary }}>
+                        <Text style={{ fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, color: colors.textPrimary }}>
                             Bienvenue sur Aximarketplace
                         </Text>
                     )}
@@ -811,7 +811,7 @@ export default function ClientHome() {
                 }}>
                     <Ionicons name="search" size={20} color="#10B981" />
                     <TextInput
-                        style={{ flex: 1, marginLeft: 10, color: colors.textPrimary, fontFamily: 'Poppins-SemiBold', fontSize: 15 }}
+                        style={{ flex: 1, marginLeft: 10, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 15 }}
                         placeholder={i18n.t('client.home.search.placeholder')}
                         placeholderTextColor={colors.textSecondary}
                         value={searchQuery}
@@ -842,7 +842,7 @@ export default function ClientHome() {
                             color={selectedCity ? '#10B981' : colors.textSecondary}
                         />
                         <Text numberOfLines={1} style={{
-                            marginLeft: 5, fontSize: 13, fontFamily: 'Poppins-SemiBold',
+                            marginLeft: 5, fontSize: 13, fontFamily: 'PlusJakartaSans-SemiBold',
                             color: selectedCity ? '#059669' : colors.textSecondary,
                             maxWidth: 70,
                         }}>
@@ -880,11 +880,11 @@ export default function ClientHome() {
                             {showRecentSearches && recentSearches.length > 0 && (
                                 <View>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 6 }}>
-                                        <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Poppins-SemiBold' }}>
+                                        <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'PlusJakartaSans-SemiBold' }}>
                                             {i18n.t('client.home.search.recentSearches')}
                                         </Text>
                                         <TouchableOpacity onPress={clearSearchHistory}>
-                                            <Text style={{ color: '#10B981', fontSize: 12, fontFamily: 'Poppins-SemiBold' }}>
+                                            <Text style={{ color: '#10B981', fontSize: 12, fontFamily: 'PlusJakartaSans-SemiBold' }}>
                                                 {i18n.t('client.home.search.clearHistory')}
                                             </Text>
                                         </TouchableOpacity>
@@ -896,7 +896,7 @@ export default function ClientHome() {
                                             onPress={() => { setSearchQuery(recentSearch.query); performSearch(recentSearch.query); }}
                                         >
                                             <Ionicons name="time-outline" size={15} color={colors.textSecondary} />
-                                            <Text style={{ flex: 1, marginLeft: 12, color: colors.textPrimary, fontFamily: 'Poppins-Medium', fontSize: 14 }} numberOfLines={1}>
+                                            <Text style={{ flex: 1, marginLeft: 12, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 14 }} numberOfLines={1}>
                                                 {recentSearch.query}
                                             </Text>
                                             <TouchableOpacity onPress={(e) => { e.stopPropagation(); removeFromSearchHistory(recentSearch.query); }} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -921,7 +921,7 @@ export default function ClientHome() {
                                                 <View style={{ width: 30, height: 30, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: color + '18' }}>
                                                     <Ionicons name={suggestion.type === 'product' ? 'cube-outline' : suggestion.type === 'category' ? 'folder-outline' : 'business-outline'} size={15} color={color} />
                                                 </View>
-                                                <Text style={{ flex: 1, marginLeft: 12, color: colors.textPrimary, fontFamily: 'Poppins-Medium', fontSize: 14 }} numberOfLines={1}>
+                                                <Text style={{ flex: 1, marginLeft: 12, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 14 }} numberOfLines={1}>
                                                     {suggestion.text}
                                                 </Text>
                                                 <Ionicons name="arrow-forward" size={14} color={colors.textSecondary} />
@@ -955,7 +955,7 @@ export default function ClientHome() {
                 />
                 {item.stats.totalSales > 10 && (
                     <View className="absolute top-1 left-1 bg-success-500 rounded-full px-2 py-0.5">
-                        <Text className="text-white text-[10px] font-poppins-bold">
+                        <Text className="text-white text-[10px] font-jakarta-bold">
                             {i18n.t('client.home.badges.popular')}
                         </Text>
                     </View>
@@ -963,12 +963,12 @@ export default function ClientHome() {
             </View>
             <View className="flex-1 justify-between">
                 <View>
-                    <Text numberOfLines={2} style={{ color: colors.textPrimary }} className="text-sm font-poppins-semibold">
+                    <Text numberOfLines={2} style={{ color: colors.textPrimary }} className="text-sm font-jakarta-semibold">
                         {item.name}
                     </Text>
                 </View>
                 <View className="flex-row items-center justify-between mt-2">
-                    <Text className="text-base font-poppins-bold text-primary-600">
+                    <Text className="text-base font-jakarta-bold text-primary-600">
                         {formatPrice(item.price)}
                     </Text>
                     {isAuthenticated && (
@@ -1032,13 +1032,13 @@ export default function ClientHome() {
                 >
                     <Text
                         numberOfLines={2}
-                        className="text-white font-poppins-bold text-base mb-1"
+                        className="text-white font-jakarta-bold text-base mb-1"
                     >
                         {item.title}
                     </Text>
                     <Text
                         numberOfLines={1}
-                        className="text-white/90 font-poppins-medium text-xs"
+                        className="text-white/90 font-jakarta-medium text-xs"
                     >
                         {new Date(item.endDate).toLocaleDateString("fr-FR", {
                             day: "2-digit",
@@ -1102,7 +1102,7 @@ export default function ClientHome() {
                             }} className="px-4 py-4 border-b">
                                 {/* En-tête résultats + toggle vue */}
                                 <View className="flex-row items-center justify-between">
-                                    <Text style={{ color: colors.textPrimary }} className="text-lg font-poppins-bold flex-1">
+                                    <Text style={{ color: colors.textPrimary }} className="text-lg font-jakarta-bold flex-1">
                                         {i18n.t('client.home.searchResults.title', { query: searchQuery })}
                                     </Text>
                                     <View className="flex-row items-center">
@@ -1132,16 +1132,16 @@ export default function ClientHome() {
                                 {/* Infos supplémentaires */}
                                 {searchInfo && (
                                     <View className="flex-row items-center mt-1">
-                                        <Text style={{ color: colors.textSecondary }} className="text-xs font-poppins-medium">
+                                        <Text style={{ color: colors.textSecondary }} className="text-xs font-jakarta-medium">
                                             {i18n.t('client.home.searchResults.resultsCount', { count: searchInfo.totalResults || searchResults.length })}
                                         </Text>
                                         {searchInfo.searchTime && (
-                                            <Text className="text-xs text-neutral-400 font-poppins-medium ml-2">
+                                            <Text className="text-xs text-neutral-400 font-jakarta-medium ml-2">
                                                 • {i18n.t('client.home.searchResults.searchTime', { time: searchInfo.searchTime })}
                                             </Text>
                                         )}
                                         {searchInfo.fromCache && (
-                                            <Text className="text-xs text-green-600 font-poppins-medium ml-2">
+                                            <Text className="text-xs text-green-600 font-jakarta-medium ml-2">
                                                 • {i18n.t('client.home.searchResults.fromCache')}
                                             </Text>
                                         )}
@@ -1156,7 +1156,7 @@ export default function ClientHome() {
                                         style={{ backgroundColor: '#F9FAFB', borderColor: '#E5E7EB' }}
                                     >
                                         <Ionicons name="location-outline" size={14} color="#6B7280" />
-                                        <Text className="ml-1 text-xs font-poppins-medium text-neutral-700">
+                                        <Text className="ml-1 text-xs font-jakarta-medium text-neutral-700">
                                             {selectedCity}
                                         </Text>
                                     </TouchableOpacity>
@@ -1167,7 +1167,7 @@ export default function ClientHome() {
                                             style={{ backgroundColor: '#F9FAFB', borderColor: '#E5E7EB' }}
                                         >
                                             <Ionicons name="navigate-outline" size={14} color="#6B7280" />
-                                            <Text className="ml-1 text-xs font-poppins-medium text-neutral-700">
+                                            <Text className="ml-1 text-xs font-jakarta-medium text-neutral-700">
                                                 {selectedNeighborhood}
                                             </Text>
                                         </TouchableOpacity>
@@ -1181,7 +1181,7 @@ export default function ClientHome() {
                                         className="px-3 py-1.5 rounded-full border mr-2"
                                         style={{ backgroundColor: selectedSort === 'relevance' ? '#FFF1E6' : '#F3F4F6', borderColor: selectedSort === 'relevance' ? '#FED7AA' : '#E5E7EB' }}
                                     >
-                                        <Text className={`text-xs font-poppins-semibold ${selectedSort === 'relevance' ? 'text-primary-600' : 'text-neutral-700'}`}>
+                                        <Text className={`text-xs font-jakarta-semibold ${selectedSort === 'relevance' ? 'text-primary-600' : 'text-neutral-700'}`}>
                                             {i18n.t('client.home.searchResults.relevance')}
                                         </Text>
                                     </TouchableOpacity>
@@ -1190,7 +1190,7 @@ export default function ClientHome() {
                                         className="px-3 py-1.5 rounded-full border mr-2"
                                         style={{ backgroundColor: selectedSort === 'priceLow' ? '#FFF1E6' : '#F3F4F6', borderColor: selectedSort === 'priceLow' ? '#FED7AA' : '#E5E7EB' }}
                                     >
-                                        <Text className={`text-xs font-poppins-semibold ${selectedSort === 'priceLow' ? 'text-primary-600' : 'text-neutral-700'}`}>
+                                        <Text className={`text-xs font-jakarta-semibold ${selectedSort === 'priceLow' ? 'text-primary-600' : 'text-neutral-700'}`}>
                                             {i18n.t('client.home.searchResults.priceLowToHigh')}
                                         </Text>
                                     </TouchableOpacity>
@@ -1199,7 +1199,7 @@ export default function ClientHome() {
                                         className="px-3 py-1.5 rounded-full border mr-2"
                                         style={{ backgroundColor: selectedSort === 'priceHigh' ? '#FFF1E6' : '#F3F4F6', borderColor: selectedSort === 'priceHigh' ? '#FED7AA' : '#E5E7EB' }}
                                     >
-                                        <Text className={`text-xs font-poppins-semibold ${selectedSort === 'priceHigh' ? 'text-primary-600' : 'text-neutral-700'}`}>
+                                        <Text className={`text-xs font-jakarta-semibold ${selectedSort === 'priceHigh' ? 'text-primary-600' : 'text-neutral-700'}`}>
                                             {i18n.t('client.home.searchResults.priceHighToLow')}
                                         </Text>
                                     </TouchableOpacity>
@@ -1208,7 +1208,7 @@ export default function ClientHome() {
                                         className="px-3 py-1.5 rounded-full border"
                                         style={{ backgroundColor: selectedSort === 'newest' ? '#FFF1E6' : '#F3F4F6', borderColor: selectedSort === 'newest' ? '#FED7AA' : '#E5E7EB' }}
                                     >
-                                        <Text className={`text-xs font-poppins-semibold ${selectedSort === 'newest' ? 'text-primary-600' : 'text-neutral-700'}`}>
+                                        <Text className={`text-xs font-jakarta-semibold ${selectedSort === 'newest' ? 'text-primary-600' : 'text-neutral-700'}`}>
                                             {i18n.t('client.home.searchResults.newest')}
                                         </Text>
                                     </TouchableOpacity>
@@ -1250,7 +1250,7 @@ export default function ClientHome() {
                                 ) : (
                                     <View className="items-center justify-center py-8">
                                         <Ionicons name="search-outline" size={36} color={colors.textSecondary} />
-                                        <Text className="mt-2 text-neutral-600 font-poppins-medium">
+                                        <Text className="mt-2 text-neutral-600 font-jakarta-medium">
                                             {i18n.t('client.home.empty.noProductsFound')}
                                         </Text>
                                         <TouchableOpacity
@@ -1258,7 +1258,7 @@ export default function ClientHome() {
                                             className="mt-3 px-4 py-2 rounded-full border"
                                             style={{ borderColor: '#FED7AA' }}
                                         >
-                                            <Text className="text-primary-600 font-poppins-semibold">
+                                            <Text className="text-primary-600 font-jakarta-semibold">
                                                 {i18n.t('client.home.empty.adjustFilters')}
                                             </Text>
                                         </TouchableOpacity>
@@ -1297,10 +1297,10 @@ export default function ClientHome() {
                                     <View className="w-16 h-16 rounded-full bg-neutral-100 items-center justify-center mb-4">
                                         <Ionicons name="megaphone-outline" size={32} color="#9CA3AF" />
                                     </View>
-                                    <Text className="text-base font-poppins-bold text-neutral-800 text-center mb-2">
+                                    <Text className="text-base font-jakarta-bold text-neutral-800 text-center mb-2">
                                         {i18n.t('client.home.ads.noAds')}
                                     </Text>
-                                    <Text style={{ color: colors.textSecondary }} className="text-sm font-quicksand text-center">
+                                    <Text style={{ color: colors.textSecondary }} className="text-sm font-jakarta text-center">
                                         {i18n.t('client.home.ads.comeBackSoon')}
                                     </Text>
                                 </View>
@@ -1311,10 +1311,10 @@ export default function ClientHome() {
                         <View className="py-6">
                             <View className="px-6 mb-4 flex-row justify-between items-end">
                                 <View>
-                                    <Text style={{ color: colors.textPrimary }} className="text-xl font-poppins-bold">
+                                    <Text style={{ color: colors.textPrimary }} className="text-xl font-jakarta-bold">
                                         {i18n.t('client.home.categories.title')}
                                     </Text>
-                                    <Text style={{ color: colors.textSecondary }} className="text-xs font-quicksand">
+                                    <Text style={{ color: colors.textSecondary }} className="text-xs font-jakarta">
                                         {i18n.t('client.home.categories.subtitle')}
                                     </Text>
                                 </View>
@@ -1323,7 +1323,7 @@ export default function ClientHome() {
                                     style={{ backgroundColor: isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5" }}
                                     className="flex-row items-center rounded-xl px-3 py-2 ml-2"
                                 >
-                                    <Text style={{ color: colors.brandPrimary }} className="font-poppins-semibold text-sm mr-1">
+                                    <Text style={{ color: colors.brandPrimary }} className="font-jakarta-semibold text-sm mr-1">
                                         {i18n.t('client.home.featuredProducts.viewAll')}
                                     </Text>
                                     <Ionicons name="chevron-forward" size={14} color={colors.brandPrimary} />
@@ -1363,7 +1363,7 @@ export default function ClientHome() {
                                                         />
                                                     )}
                                                 </View>
-                                                <Text style={{ color: colors.textPrimary }} className="text-xs font-poppins-semibold text-center w-16 leading-4" numberOfLines={2}>
+                                                <Text style={{ color: colors.textPrimary }} className="text-xs font-jakarta-semibold text-center w-16 leading-4" numberOfLines={2}>
                                                     {category.name}
                                                 </Text>
                                             </TouchableOpacity>
@@ -1377,7 +1377,7 @@ export default function ClientHome() {
                         {/* Featured Products (changé en vertical avec 2 colonnes) */}
                         <View className="py-4 px-6">
                             <View className="mb-4 flex-row justify-between items-center">
-                                <Text style={{ color: colors.textPrimary }} className="text-xl font-poppins-bold">
+                                <Text style={{ color: colors.textPrimary }} className="text-xl font-jakarta-bold">
                                     {i18n.t('client.home.featuredProducts.title')}
                                 </Text>
                                 <TouchableOpacity
@@ -1385,7 +1385,7 @@ export default function ClientHome() {
                                     style={{ backgroundColor: isDark ? "rgba(16, 185, 129, 0.1)" : "#ECFDF5" }}
                                     className="flex-row items-center rounded-xl px-3 py-2 ml-2"
                                 >
-                                    <Text style={{ color: colors.brandPrimary }} className="font-poppins-semibold text-sm mr-1">
+                                    <Text style={{ color: colors.brandPrimary }} className="font-jakarta-semibold text-sm mr-1">
                                         {i18n.t('client.home.featuredProducts.viewAll')}
                                     </Text>
                                     <Ionicons name="chevron-forward" size={14} color={colors.brandPrimary} />
@@ -1394,7 +1394,7 @@ export default function ClientHome() {
                             {loadingProducts ? (
                                 <View className="flex-1 justify-center items-center py-8">
                                     <ActivityIndicator size="large" color="#10B981" />
-                                    <Text style={{ color: colors.textSecondary }} className="mt-2 font-poppins-medium">
+                                    <Text style={{ color: colors.textSecondary }} className="mt-2 font-jakarta-medium">
                                         {i18n.t('client.home.featuredProducts.loading')}
                                     </Text>
                                 </View>
@@ -1411,7 +1411,7 @@ export default function ClientHome() {
                                     {loadingMoreProducts && (
                                         <View className="py-4 items-center">
                                             <ActivityIndicator size="small" color="#10B981" />
-                                            <Text style={{ color: colors.textSecondary }} className="text-xs mt-2 font-poppins-medium">
+                                            <Text style={{ color: colors.textSecondary }} className="text-xs mt-2 font-jakarta-medium">
                                                 Chargement de plus de produits...
                                             </Text>
                                         </View>
@@ -1419,14 +1419,14 @@ export default function ClientHome() {
                                     {/* Indicateurs de développement */}
                                     {__DEV__ && hasNextPage && !loadingMoreProducts && (
                                         <View className="py-2 items-center">
-                                            <Text style={{ color: colors.textTertiary }} className="text-xs font-poppins-medium">
+                                            <Text style={{ color: colors.textTertiary }} className="text-xs font-jakarta-medium">
                                                 {featuredProducts.length} produits • Faites défiler pour plus
                                             </Text>
                                         </View>
                                     )}
                                     {__DEV__ && !hasNextPage && featuredProducts.length > 6 && (
                                         <View className="py-2 items-center">
-                                            <Text style={{ color: colors.textTertiary }} className="text-xs font-poppins-medium">
+                                            <Text style={{ color: colors.textTertiary }} className="text-xs font-jakarta-medium">
                                                 Tous les produits affichés • {featuredProducts.length} au total
                                             </Text>
                                         </View>
@@ -1434,7 +1434,7 @@ export default function ClientHome() {
                                 </>
                             ) : (
                                 <View className="flex-1 justify-center items-center py-8">
-                                    <Text style={{ color: colors.textSecondary }} className="font-poppins-medium">
+                                    <Text style={{ color: colors.textSecondary }} className="font-jakarta-medium">
                                         {i18n.t('client.home.featuredProducts.noProducts')}
                                     </Text>
                                 </View>
@@ -1463,7 +1463,7 @@ export default function ClientHome() {
                                     <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: isDark ? 'rgba(16,185,129,0.2)' : '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
                                         <Ionicons name="earth" size={18} color="#10B981" />
                                     </View>
-                                    <Text style={{ flex: 1, color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 17 }}>
+                                    <Text style={{ flex: 1, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Bold', fontSize: 17 }}>
                                         {i18n.t('client.home.modals.city.title')}
                                     </Text>
                                     <TouchableOpacity
@@ -1482,7 +1482,7 @@ export default function ClientHome() {
                                         onChangeText={setCitySearch}
                                         placeholder="Rechercher une ville..."
                                         placeholderTextColor={colors.textSecondary}
-                                        style={{ flex: 1, color: colors.textPrimary, fontFamily: 'Poppins-Medium', fontSize: 14 }}
+                                        style={{ flex: 1, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 14 }}
                                     />
                                     {citySearch.length > 0 && (
                                         <TouchableOpacity onPress={() => setCitySearch('')}>
@@ -1512,7 +1512,7 @@ export default function ClientHome() {
                                                     backgroundColor: selected ? (isDark ? 'rgba(16,185,129,0.12)' : '#ECFDF5') : 'transparent',
                                                 }}
                                             >
-                                                <Text style={{ flex: 1, color: selected ? '#10B981' : colors.textPrimary, fontFamily: selected ? 'Poppins-Bold' : 'Poppins-Medium', fontSize: 15 }}>
+                                                <Text style={{ flex: 1, color: selected ? '#10B981' : colors.textPrimary, fontFamily: selected ? 'PlusJakartaSans-Bold' : 'PlusJakartaSans-Medium', fontSize: 15 }}>
                                                     {isAll ? 'Toutes les villes' : item.name}
                                                 </Text>
                                                 {selected && <Ionicons name="checkmark-circle" size={18} color="#10B981" />}
@@ -1544,7 +1544,7 @@ export default function ClientHome() {
                                     <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: isDark ? 'rgba(16,185,129,0.2)' : '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
                                         <Ionicons name="location" size={18} color="#10B981" />
                                     </View>
-                                    <Text style={{ flex: 1, color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 17 }}>
+                                    <Text style={{ flex: 1, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Bold', fontSize: 17 }}>
                                         {i18n.t('client.home.modals.neighborhood.title', { city: selectedCity })}
                                     </Text>
                                     <TouchableOpacity
@@ -1563,7 +1563,7 @@ export default function ClientHome() {
                                         onChangeText={setNeighborhoodSearch}
                                         placeholder="Rechercher un quartier..."
                                         placeholderTextColor={colors.textSecondary}
-                                        style={{ flex: 1, paddingVertical: 11, color: colors.textPrimary, fontFamily: 'Poppins-Medium', fontSize: 14 }}
+                                        style={{ flex: 1, paddingVertical: 11, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 14 }}
                                     />
                                     {neighborhoodSearch.length > 0 && (
                                         <TouchableOpacity onPress={() => setNeighborhoodSearch('')}>
@@ -1590,7 +1590,7 @@ export default function ClientHome() {
                                                     backgroundColor: selected ? (isDark ? 'rgba(16,185,129,0.12)' : '#ECFDF5') : 'transparent',
                                                 }}
                                             >
-                                                <Text style={{ flex: 1, color: selected ? '#10B981' : colors.textPrimary, fontFamily: selected ? 'Poppins-Bold' : 'Poppins-Medium', fontSize: 15 }}>
+                                                <Text style={{ flex: 1, color: selected ? '#10B981' : colors.textPrimary, fontFamily: selected ? 'PlusJakartaSans-Bold' : 'PlusJakartaSans-Medium', fontSize: 15 }}>
                                                     {item}
                                                 </Text>
                                                 {selected && <Ionicons name="checkmark-circle" size={18} color="#10B981" />}

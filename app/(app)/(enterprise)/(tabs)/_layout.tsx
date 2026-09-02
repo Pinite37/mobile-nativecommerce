@@ -88,7 +88,7 @@ export default function TabsLayout() {
         // Les styles ci-dessous sont moins critiques car la CustomTabBar gère désormais l'affichage
         tabBarLabelStyle: {
           fontSize: 11,
-          fontFamily: "Poppins-SemiBold",
+          fontFamily: "PlusJakartaSans-SemiBold",
           marginTop: 6,
           marginBottom: 2,
           lineHeight: 13,
@@ -102,7 +102,7 @@ export default function TabsLayout() {
         },
         headerTitleStyle: {
           fontSize: 18,
-          fontFamily: "Poppins-SemiBold",
+          fontFamily: "PlusJakartaSans-SemiBold",
           color: "#1F2937",
         },
       }}

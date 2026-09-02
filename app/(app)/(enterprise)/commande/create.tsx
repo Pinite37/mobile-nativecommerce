@@ -119,7 +119,7 @@ export default function CreateCommandeScreen() {
     <View className="mb-5">
       <Text
         style={{ color: colors.textTertiary, letterSpacing: 0.7 }}
-        className="font-poppins-semibold text-xs uppercase mb-2 ml-1"
+        className="font-jakarta-semibold text-xs uppercase mb-2 ml-1"
       >
         {label}
       </Text>
@@ -139,16 +139,16 @@ export default function CreateCommandeScreen() {
             paddingVertical: 14,
             paddingHorizontal: 10,
             color: colors.textPrimary,
-            fontFamily: "Poppins-SemiBold",
+            fontFamily: "PlusJakartaSans-SemiBold",
             fontSize: 16,
           }}
         />
-        <Text style={{ color: colors.brandPrimary }} className="font-poppins-bold text-xs">
+        <Text style={{ color: colors.brandPrimary }} className="font-jakarta-bold text-xs">
           FCFA
         </Text>
       </View>
       {!!hint && (
-        <Text style={{ color: colors.textTertiary }} className="font-poppins text-xs mt-1.5 ml-1">
+        <Text style={{ color: colors.textTertiary }} className="font-jakarta text-xs mt-1.5 ml-1">
           {hint}
         </Text>
       )}
@@ -183,10 +183,10 @@ export default function CreateCommandeScreen() {
           >
             <Ionicons name="storefront-outline" size={19} color={colors.warning} />
             <View className="flex-1 ml-3">
-              <Text style={{ color: colors.textPrimary }} className="font-poppins-bold text-sm">
+              <Text style={{ color: colors.textPrimary }} className="font-jakarta-bold text-sm">
                 Point de retrait manquant
               </Text>
-              <Text style={{ color: colors.textSecondary }} className="font-poppins text-xs mt-0.5">
+              <Text style={{ color: colors.textSecondary }} className="font-jakarta text-xs mt-0.5">
                 Définissez-le pour pouvoir publier la livraison ensuite.
               </Text>
             </View>
@@ -200,7 +200,7 @@ export default function CreateCommandeScreen() {
           <View className="mb-5">
             <Text
               style={{ color: colors.textTertiary, letterSpacing: 0.7 }}
-              className="font-poppins-semibold text-xs uppercase mb-2 ml-1"
+              className="font-jakarta-semibold text-xs uppercase mb-2 ml-1"
             >
               Produit concerné
             </Text>
@@ -227,7 +227,7 @@ export default function CreateCommandeScreen() {
                     <View className="flex-1 ml-3">
                       <Text
                         style={{ color: isSelected ? colors.brandSecondary : colors.textPrimary }}
-                        className="font-poppins-semibold text-sm"
+                        className="font-jakarta-semibold text-sm"
                         numberOfLines={1}
                       >
                         {p.name || "Produit"}
@@ -235,7 +235,7 @@ export default function CreateCommandeScreen() {
                       {typeof p.price === "number" && (
                         <Text
                           style={{ color: colors.textSecondary }}
-                          className="font-poppins text-xs mt-0.5"
+                          className="font-jakarta text-xs mt-0.5"
                         >
                           Prix affiché : {p.price.toLocaleString("fr-FR")} FCFA
                         </Text>
@@ -258,7 +258,7 @@ export default function CreateCommandeScreen() {
             <Ionicons name="cube-outline" size={17} color={colors.textTertiary} />
             <Text
               style={{ color: colors.textPrimary }}
-              className="font-poppins-semibold text-sm ml-2.5 flex-1"
+              className="font-jakarta-semibold text-sm ml-2.5 flex-1"
               numberOfLines={1}
             >
               {threadProducts[0].name || "Produit"}
@@ -285,7 +285,7 @@ export default function CreateCommandeScreen() {
 
         <Text
           style={{ color: colors.textTertiary, letterSpacing: 0.7 }}
-          className="font-poppins-semibold text-xs uppercase mb-2 ml-1"
+          className="font-jakarta-semibold text-xs uppercase mb-2 ml-1"
         >
           Qui règle le livreur
         </Text>
@@ -309,13 +309,13 @@ export default function CreateCommandeScreen() {
               >
                 <Text
                   style={{ color: isSelected ? colors.brandSecondary : colors.textPrimary }}
-                  className="font-poppins-bold text-sm"
+                  className="font-jakarta-bold text-sm"
                 >
                   {option.title}
                 </Text>
                 <Text
                   style={{ color: isSelected ? colors.brandPrimary : colors.textSecondary }}
-                  className="font-poppins text-xs mt-0.5"
+                  className="font-jakarta text-xs mt-0.5"
                 >
                   {option.detail}
                 </Text>
@@ -332,18 +332,18 @@ export default function CreateCommandeScreen() {
             style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}
           >
             <View className="flex-row items-center justify-between">
-              <Text style={{ color: colors.textSecondary }} className="font-poppins-medium text-sm">
+              <Text style={{ color: colors.textSecondary }} className="font-jakarta-medium text-sm">
                 Produit
               </Text>
-              <Text style={{ color: colors.textPrimary }} className="font-poppins-semibold text-sm">
+              <Text style={{ color: colors.textPrimary }} className="font-jakarta-semibold text-sm">
                 {total.toLocaleString("fr-FR")} FCFA
               </Text>
             </View>
             <View className="flex-row items-center justify-between mt-2">
-              <Text style={{ color: colors.textSecondary }} className="font-poppins-medium text-sm">
+              <Text style={{ color: colors.textSecondary }} className="font-jakarta-medium text-sm">
                 Livraison · {paidBy === "CLIENT" ? "payée par le client" : "à votre charge"}
               </Text>
-              <Text style={{ color: colors.textPrimary }} className="font-poppins-semibold text-sm">
+              <Text style={{ color: colors.textPrimary }} className="font-jakarta-semibold text-sm">
                 {fee.toLocaleString("fr-FR")} FCFA
               </Text>
             </View>
@@ -351,10 +351,10 @@ export default function CreateCommandeScreen() {
               className="flex-row items-center justify-between pt-3 mt-3"
               style={{ borderTopWidth: 1, borderTopColor: colors.borderLight }}
             >
-              <Text style={{ color: colors.textPrimary }} className="font-poppins-bold text-sm">
+              <Text style={{ color: colors.textPrimary }} className="font-jakarta-bold text-sm">
                 {paidBy === "CLIENT" ? "Le client règle" : "Le client règle"}
               </Text>
-              <Text style={{ color: colors.brandPrimary }} className="font-poppins-bold text-lg">
+              <Text style={{ color: colors.brandPrimary }} className="font-jakarta-bold text-lg">
                 {(paidBy === "CLIENT" ? total + fee : total).toLocaleString("fr-FR")} FCFA
               </Text>
             </View>
@@ -384,7 +384,7 @@ export default function CreateCommandeScreen() {
           ) : (
             <>
               <Ionicons name="checkmark-circle" size={19} color="#FFFFFF" />
-              <Text className="text-white font-poppins-bold text-base ml-2">
+              <Text className="text-white font-jakarta-bold text-base ml-2">
                 Proposer la commande
               </Text>
             </>

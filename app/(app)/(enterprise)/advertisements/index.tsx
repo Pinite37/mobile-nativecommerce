@@ -339,7 +339,7 @@ export default function EnterpriseAdvertisements() {
             <View className="absolute top-4 left-4 px-2.5 py-1 rounded-full backdrop-blur-md bg-white/90">
               <Text
                 style={{
-                  fontFamily: "Poppins-Bold",
+                  fontFamily: "PlusJakartaSans-Bold",
                   fontSize: 11,
                   color: style.text,
                 }}
@@ -358,7 +358,7 @@ export default function EnterpriseAdvertisements() {
           <View className="flex-row items-start justify-between">
             <Text
               style={{ color: colors.textPrimary }}
-              className="flex-1 text-lg font-poppins-bold mr-4 leading-6"
+              className="flex-1 text-lg font-jakarta-bold mr-4 leading-6"
               numberOfLines={2}
             >
               {item.title}
@@ -380,7 +380,7 @@ export default function EnterpriseAdvertisements() {
               color={colors.textSecondary}
               style={{ marginRight: 6 }}
             />
-            <Text style={{ color: colors.textSecondary }} className="text-xs font-poppins-medium">
+            <Text style={{ color: colors.textSecondary }} className="text-xs font-jakarta-medium">
               {i18n.t("enterprise.advertisements.card.created")}{" "}
               {new Date(item.createdAt).toLocaleDateString(locale === "fr" ? "fr-FR" : "en-US", {
                 day: "numeric",
@@ -413,7 +413,7 @@ export default function EnterpriseAdvertisements() {
           >
             <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
-          <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 20, color: colors.textPrimary }}>
+          <Text style={{ fontFamily: 'PlusJakartaSans-Bold', fontSize: 20, color: colors.textPrimary }}>
             {i18n.t("enterprise.advertisements.title")}
           </Text>
           <TouchableOpacity
@@ -422,7 +422,7 @@ export default function EnterpriseAdvertisements() {
             activeOpacity={0.8}
           >
             <Ionicons name="add" size={18} color="#fff" />
-            <Text style={{ color: '#fff', fontFamily: 'Poppins-Bold', fontSize: 13, marginLeft: 4 }}>
+            <Text style={{ color: '#fff', fontFamily: 'PlusJakartaSans-Bold', fontSize: 13, marginLeft: 4 }}>
               {i18n.t("enterprise.advertisements.create")}
             </Text>
           </TouchableOpacity>
@@ -436,7 +436,7 @@ export default function EnterpriseAdvertisements() {
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholder={i18n.t("enterprise.advertisements.search.placeholder")}
-            style={{ fontFamily: "Poppins-Medium", backgroundColor: colors.tertiary, color: colors.textPrimary, borderRadius: 15, height: 48, paddingLeft: 44, paddingRight: 40, fontSize: 14 }}
+            style={{ fontFamily: "PlusJakartaSans-Medium", backgroundColor: colors.tertiary, color: colors.textPrimary, borderRadius: 15, height: 48, paddingLeft: 44, paddingRight: 40, fontSize: 14 }}
             placeholderTextColor={colors.textTertiary}
           />
           {searchQuery.length > 0 && (
@@ -486,47 +486,47 @@ export default function EnterpriseAdvertisements() {
             }}
             ListHeaderComponent={
               <View className="mb-6">
-                <Text style={{ color: colors.textSecondary }} className="font-poppins-bold text-xs uppercase tracking-wider mb-3">
+                <Text style={{ color: colors.textSecondary }} className="font-jakarta-bold text-xs uppercase tracking-wider mb-3">
                   {i18n.t("enterprise.advertisements.summary.title")}
                 </Text>
                 <View className="flex-row gap-3">
                   <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="flex-1 rounded-2xl p-4 border">
                     <View className="flex-row items-center mb-2">
                       <View className="w-2 h-2 rounded-full bg-emerald-500 mr-2" />
-                      <Text style={{ color: colors.textSecondary }} className="text-xs font-poppins-bold">
+                      <Text style={{ color: colors.textSecondary }} className="text-xs font-jakarta-bold">
                         {i18n.t("enterprise.advertisements.summary.active")}
                       </Text>
                     </View>
-                    <Text style={{ color: colors.textPrimary }} className="text-2xl font-poppins-bold">
+                    <Text style={{ color: colors.textPrimary }} className="text-2xl font-jakarta-bold">
                       {ads.filter((a) => a.status === "active").length}
                     </Text>
                   </View>
                   <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="flex-1 rounded-2xl p-4 border">
                     <View className="flex-row items-center mb-2">
                       <View className="w-2 h-2 rounded-full bg-amber-500 mr-2" />
-                      <Text style={{ color: colors.textSecondary }} className="text-xs font-poppins-bold">
+                      <Text style={{ color: colors.textSecondary }} className="text-xs font-jakarta-bold">
                         {i18n.t("enterprise.advertisements.summary.paused")}
                       </Text>
                     </View>
-                    <Text style={{ color: colors.textPrimary }} className="text-2xl font-poppins-bold">
+                    <Text style={{ color: colors.textPrimary }} className="text-2xl font-jakarta-bold">
                       {ads.filter((a) => a.status === "paused").length}
                     </Text>
                   </View>
                   <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="flex-1 rounded-2xl p-4 border">
                     <View className="flex-row items-center mb-2">
                       <View className="w-2 h-2 rounded-full bg-neutral-400 mr-2" />
-                      <Text style={{ color: colors.textSecondary }} className="text-xs font-poppins-bold">
+                      <Text style={{ color: colors.textSecondary }} className="text-xs font-jakarta-bold">
                         {i18n.t("enterprise.advertisements.summary.expired")}
                       </Text>
                     </View>
-                    <Text style={{ color: colors.textPrimary }} className="text-2xl font-poppins-bold">
+                    <Text style={{ color: colors.textPrimary }} className="text-2xl font-jakarta-bold">
                       {ads.filter((a) => a.status === "expired").length}
                     </Text>
                   </View>
                 </View>
 
                 <View className="mt-6">
-                  <Text style={{ color: colors.textSecondary }} className="font-poppins-bold text-xs uppercase tracking-wider mb-3">
+                  <Text style={{ color: colors.textSecondary }} className="font-jakarta-bold text-xs uppercase tracking-wider mb-3">
                     {i18n.t("enterprise.advertisements.filters.title")}
                   </Text>
                   <View className="flex-row flex-wrap gap-2">
@@ -550,7 +550,7 @@ export default function EnterpriseAdvertisements() {
                           style={{
                             color: filterStatus === s.key ? colors.card : colors.textSecondary
                           }}
-                          className="text-xs font-poppins-bold"
+                          className="text-xs font-jakarta-bold"
                         >
                           {s.label}
                         </Text>
@@ -560,11 +560,11 @@ export default function EnterpriseAdvertisements() {
                 </View>
 
                 <View className="mt-4 flex-row items-center justify-between">
-                  <Text style={{ color: colors.textSecondary }} className="text-xs font-poppins-medium">
+                  <Text style={{ color: colors.textSecondary }} className="text-xs font-jakarta-medium">
                     {filteredAds.length} {filteredAds.length > 1 ? i18n.t("enterprise.advertisements.results.plural") : i18n.t("enterprise.advertisements.results.singular")}
                   </Text>
                   {searchQuery.length > 0 && (
-                    <Text className="text-xs font-poppins-medium text-primary-600">
+                    <Text className="text-xs font-jakarta-medium text-primary-600">
                       {i18n.t("enterprise.advertisements.results.search")} &ldquo;{searchQuery}&rdquo;
                     </Text>
                   )}
@@ -578,7 +578,7 @@ export default function EnterpriseAdvertisements() {
                     <ActivityIndicator color="#10B981" />
                   ) : (
                     <Text
-                      style={{ fontFamily: "Poppins-Regular", color: colors.textSecondary }}
+                      style={{ fontFamily: "PlusJakartaSans-Regular", color: colors.textSecondary }}
                       className="text-xs"
                     >
                       {i18n.t("enterprise.advertisements.loadMore")}
@@ -593,7 +593,7 @@ export default function EnterpriseAdvertisements() {
               <View className="items-center mt-20 px-8">
                 <Ionicons name="image-outline" size={46} color={colors.textSecondary} />
                 <Text
-                  style={{ fontFamily: "Poppins-SemiBold", color: colors.textPrimary }}
+                  style={{ fontFamily: "PlusJakartaSans-SemiBold", color: colors.textPrimary }}
                   className="mt-4"
                 >
                   {searchQuery || filterStatus !== "all"
@@ -601,7 +601,7 @@ export default function EnterpriseAdvertisements() {
                     : i18n.t("enterprise.advertisements.empty.noAds")}
                 </Text>
                 <Text
-                  style={{ fontFamily: "Poppins-Regular", color: colors.textSecondary }}
+                  style={{ fontFamily: "PlusJakartaSans-Regular", color: colors.textSecondary }}
                   className="mt-2 text-center text-sm"
                 >
                   {searchQuery || filterStatus !== "all"
@@ -613,7 +613,7 @@ export default function EnterpriseAdvertisements() {
                   className="mt-6 bg-primary-500 px-6 py-3 rounded-xl"
                 >
                   <Text
-                    style={{ fontFamily: "Poppins-SemiBold" }}
+                    style={{ fontFamily: "PlusJakartaSans-SemiBold" }}
                     className="text-white"
                   >
                     {i18n.t("enterprise.advertisements.empty.createAd")}
@@ -652,12 +652,12 @@ export default function EnterpriseAdvertisements() {
 
               {/* Menu Header */}
               <View style={{ borderBottomColor: colors.border }} className="px-6 pb-4 border-b">
-                <Text style={{ color: colors.textPrimary }} className="text-lg font-poppins-bold">
+                <Text style={{ color: colors.textPrimary }} className="text-lg font-jakarta-bold">
                   {i18n.t("enterprise.advertisements.menu.title")}
                 </Text>
                 <Text
                   style={{ color: colors.textSecondary }}
-                  className="text-sm font-poppins-medium mt-1"
+                  className="text-sm font-jakarta-medium mt-1"
                   numberOfLines={1}
                 >
                   {selectedAd?.title}
@@ -679,10 +679,10 @@ export default function EnterpriseAdvertisements() {
                       <Ionicons name="pause" size={20} color="#F59E0B" />
                     </View>
                     <View className="flex-1">
-                      <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-semibold">
+                      <Text style={{ color: colors.textPrimary }} className="text-base font-jakarta-semibold">
                         {i18n.t("enterprise.advertisements.menu.pause")}
                       </Text>
-                      <Text style={{ color: colors.textSecondary }} className="text-sm font-poppins-medium">
+                      <Text style={{ color: colors.textSecondary }} className="text-sm font-jakarta-medium">
                         {i18n.t("enterprise.advertisements.menu.pauseDescription")}
                       </Text>
                     </View>
@@ -708,13 +708,13 @@ export default function EnterpriseAdvertisements() {
                     </View>
                     <View className="flex-1">
                       <Text
-                        style={{ fontFamily: "Poppins-SemiBold", color: colors.textPrimary }}
+                        style={{ fontFamily: "PlusJakartaSans-SemiBold", color: colors.textPrimary }}
                         className="text-base"
                       >
                         {i18n.t("enterprise.advertisements.menu.activate")}
                       </Text>
                       <Text
-                        style={{ fontFamily: "Poppins-Regular", color: colors.textSecondary }}
+                        style={{ fontFamily: "PlusJakartaSans-Regular", color: colors.textSecondary }}
                         className="text-sm"
                       >
                         {i18n.t("enterprise.advertisements.menu.activateDescription")}
@@ -740,13 +740,13 @@ export default function EnterpriseAdvertisements() {
                   </View>
                   <View className="flex-1">
                     <Text
-                      style={{ fontFamily: "Poppins-SemiBold" }}
+                      style={{ fontFamily: "PlusJakartaSans-SemiBold" }}
                       className="text-base text-red-600"
                     >
                       {i18n.t("enterprise.advertisements.menu.delete")}
                     </Text>
                     <Text
-                      style={{ fontFamily: "Poppins-Regular", color: colors.textSecondary }}
+                      style={{ fontFamily: "PlusJakartaSans-Regular", color: colors.textSecondary }}
                       className="text-sm"
                     >
                       {i18n.t("enterprise.advertisements.menu.deleteDescription")}
@@ -767,7 +767,7 @@ export default function EnterpriseAdvertisements() {
                   className="w-full py-4 rounded-2xl items-center"
                 >
                   <Text
-                    style={{ fontFamily: "Poppins-SemiBold", color: colors.textPrimary }}
+                    style={{ fontFamily: "PlusJakartaSans-SemiBold", color: colors.textPrimary }}
                     className="text-base"
                   >
                     {i18n.t("enterprise.advertisements.cancel")}
@@ -822,10 +822,10 @@ export default function EnterpriseAdvertisements() {
 
               {/* Content */}
               <View className="px-6 pb-6">
-                <Text style={{ color: colors.textPrimary }} className="text-xl font-poppins-bold text-center mb-2">
+                <Text style={{ color: colors.textPrimary }} className="text-xl font-jakarta-bold text-center mb-2">
                   {confirmationAction?.title}
                 </Text>
-                <Text style={{ color: colors.textSecondary }} className="text-base font-poppins-medium text-center leading-5">
+                <Text style={{ color: colors.textSecondary }} className="text-base font-jakarta-medium text-center leading-5">
                   {confirmationAction?.message}
                 </Text>
               </View>
@@ -837,7 +837,7 @@ export default function EnterpriseAdvertisements() {
                   style={{ backgroundColor: colors.secondary }}
                   className="flex-1 py-4 rounded-2xl items-center"
                 >
-                  <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-semibold">
+                  <Text style={{ color: colors.textPrimary }} className="text-base font-jakarta-semibold">
                     {i18n.t("enterprise.advertisements.cancel")}
                   </Text>
                 </TouchableOpacity>
@@ -846,7 +846,7 @@ export default function EnterpriseAdvertisements() {
                   className="flex-1 py-4 rounded-2xl items-center"
                   style={{ backgroundColor: confirmationAction?.confirmColor }}
                 >
-                  <Text className="text-base font-poppins-semibold text-white">
+                  <Text className="text-base font-jakarta-semibold text-white">
                     {confirmationAction?.confirmText}
                   </Text>
                 </TouchableOpacity>

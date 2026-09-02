@@ -83,7 +83,7 @@ export default function LocationPickerScreen() {
       >
         <Text
           style={{
-            fontFamily: "Poppins-SemiBold",
+            fontFamily: "PlusJakartaSans-SemiBold",
             fontSize: 15,
             color: colors.textPrimary,
             backgroundColor: colors.card,

@@ -210,7 +210,7 @@ export default function DeliveryPartnerDetailScreen() {
 
 		return (
 			<View style={[circle, { backgroundColor: colors.tertiary }]}>
-				<Text style={{ fontSize: size / 2.8, fontFamily: 'Poppins-Bold', color: colors.textSecondary }}>
+				<Text style={{ fontSize: size / 2.8, fontFamily: 'PlusJakartaSans-Bold', color: colors.textSecondary }}>
 					{initials}
 				</Text>
 			</View>
@@ -240,7 +240,7 @@ export default function DeliveryPartnerDetailScreen() {
 						>
 							<Ionicons name="arrow-back" size={20} color={colors.text} />
 						</TouchableOpacity>
-						<Text style={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: colors.text }}>
+						<Text style={{ fontSize: 18, fontFamily: 'PlusJakartaSans-Bold', color: colors.text }}>
 							{i18n.t("enterprise.deliveryPartners.detail.notFound.title")}
 						</Text>
 					</View>
@@ -251,10 +251,10 @@ export default function DeliveryPartnerDetailScreen() {
 					<View className="w-20 h-20 rounded-full items-center justify-center mb-4" style={{ backgroundColor: colors.tertiary }}>
 						<Ionicons name="alert-circle" size={32} color={colors.error} />
 					</View>
-					<Text className="font-poppins-semibold text-lg text-center mb-2" style={{ color: colors.textPrimary }}>
+					<Text className="font-jakarta-semibold text-lg text-center mb-2" style={{ color: colors.textPrimary }}>
 						{i18n.t("enterprise.deliveryPartners.detail.notFound.message")}
 					</Text>
-					<Text className="font-quicksand-regular text-center mb-6" style={{ color: colors.textSecondary }}>
+					<Text className="font-jakarta-regular text-center mb-6" style={{ color: colors.textSecondary }}>
 						{i18n.t("enterprise.deliveryPartners.detail.notFound.description")}
 					</Text>
 					<TouchableOpacity
@@ -262,7 +262,7 @@ export default function DeliveryPartnerDetailScreen() {
 						className="rounded-xl px-6 py-3"
 						style={{ backgroundColor: colors.brandPrimary }}
 					>
-						<Text className="font-poppins-semibold text-white">{i18n.t("enterprise.deliveryPartners.detail.notFound.backButton")}</Text>
+						<Text className="font-jakarta-semibold text-white">{i18n.t("enterprise.deliveryPartners.detail.notFound.backButton")}</Text>
 					</TouchableOpacity>
 				</View>
 			</View>
@@ -282,7 +282,7 @@ export default function DeliveryPartnerDetailScreen() {
 					>
 						<Ionicons name="arrow-back" size={20} color={colors.text} />
 					</TouchableOpacity>
-					<Text style={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: colors.text }}>
+					<Text style={{ fontSize: 18, fontFamily: 'PlusJakartaSans-Bold', color: colors.text }}>
 						{i18n.t("enterprise.deliveryPartners.detail.title")}
 					</Text>
 				</View>
@@ -311,20 +311,20 @@ export default function DeliveryPartnerDetailScreen() {
 					</View>
 
 					{/* Nom et statut */}
-					<Text style={{ fontSize: 22, fontFamily: 'Poppins-Bold', color: colors.text, textAlign: 'center', marginBottom: 8 }}>
+					<Text style={{ fontSize: 22, fontFamily: 'PlusJakartaSans-Bold', color: colors.text, textAlign: 'center', marginBottom: 8 }}>
 						{partner.firstName} {partner.lastName}
 					</Text>
 
 					<View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
 						<View style={{ paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, backgroundColor: partner.availability ? colors.success + '20' : colors.textSecondary + '20' }}>
-							<Text style={{ fontSize: 13, fontFamily: 'Poppins-SemiBold', color: partner.availability ? colors.success : colors.textSecondary }}>
+							<Text style={{ fontSize: 13, fontFamily: 'PlusJakartaSans-SemiBold', color: partner.availability ? colors.success : colors.textSecondary }}>
 								{partner.availability ? i18n.t("enterprise.deliveryPartners.status.available") : i18n.t("enterprise.deliveryPartners.status.unavailable")}
 							</Text>
 						</View>
 
 						{partner.isVerified && (
 							<View style={{ paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, backgroundColor: colors.info + '20' }}>
-								<Text style={{ fontSize: 13, fontFamily: 'Poppins-SemiBold', color: colors.info }}>✓ {i18n.t("enterprise.deliveryPartners.badges.verified")}</Text>
+								<Text style={{ fontSize: 13, fontFamily: 'PlusJakartaSans-SemiBold', color: colors.info }}>✓ {i18n.t("enterprise.deliveryPartners.badges.verified")}</Text>
 							</View>
 						)}
 					</View>
@@ -344,7 +344,7 @@ export default function DeliveryPartnerDetailScreen() {
 							elevation: 3,
 						}}
 					>
-						<Text className="font-poppins-bold text-lg mb-4" style={{ color: colors.textPrimary }}>
+						<Text className="font-jakarta-bold text-lg mb-4" style={{ color: colors.textPrimary }}>
 							{i18n.t("enterprise.deliveryPartners.detail.sections.generalInfo")}
 						</Text>
 
@@ -355,8 +355,8 @@ export default function DeliveryPartnerDetailScreen() {
 									<Ionicons name="mail" size={16} color={colors.brandPrimary} />
 								</View>
 								<View className="flex-1">
-									<Text className="font-poppins-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.email")}</Text>
-									<Text className="font-poppins-semibold" style={{ color: colors.textPrimary }}>{partner.email}</Text>
+									<Text className="font-jakarta-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.email")}</Text>
+									<Text className="font-jakarta-semibold" style={{ color: colors.textPrimary }}>{partner.email}</Text>
 								</View>
 							</View>
 						)}
@@ -368,8 +368,8 @@ export default function DeliveryPartnerDetailScreen() {
 									<Ionicons name="call" size={16} color={colors.brandPrimary} />
 								</View>
 								<View className="flex-1">
-									<Text className="font-poppins-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.phone")}</Text>
-									<Text className="font-poppins-semibold" style={{ color: colors.textPrimary }}>{partner.phone}</Text>
+									<Text className="font-jakarta-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.phone")}</Text>
+									<Text className="font-jakarta-semibold" style={{ color: colors.textPrimary }}>{partner.phone}</Text>
 								</View>
 							</View>
 						)}
@@ -381,8 +381,8 @@ export default function DeliveryPartnerDetailScreen() {
 									<Ionicons name="bicycle" size={16} color={colors.brandPrimary} />
 								</View>
 								<View className="flex-1">
-									<Text className="font-poppins-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.vehicle")}</Text>
-									<Text className="font-poppins-semibold" style={{ color: colors.textPrimary }}>{partner.vehicleType}</Text>
+									<Text className="font-jakarta-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.vehicle")}</Text>
+									<Text className="font-jakarta-semibold" style={{ color: colors.textPrimary }}>{partner.vehicleType}</Text>
 								</View>
 							</View>
 						)}
@@ -401,7 +401,7 @@ export default function DeliveryPartnerDetailScreen() {
 								elevation: 3,
 							}}
 						>
-							<Text className="font-poppins-bold text-lg mb-4" style={{ color: colors.textPrimary }}>
+							<Text className="font-jakarta-bold text-lg mb-4" style={{ color: colors.textPrimary }}>
 								{i18n.t("enterprise.deliveryPartners.detail.sections.workingHours")}
 							</Text>
 
@@ -410,8 +410,8 @@ export default function DeliveryPartnerDetailScreen() {
 									<Ionicons name="time" size={16} color={colors.warning} />
 								</View>
 								<View className="flex-1">
-									<Text className="font-poppins-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.timeRange")}</Text>
-									<Text className="font-poppins-semibold" style={{ color: colors.textPrimary }}>
+									<Text className="font-jakarta-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.timeRange")}</Text>
+									<Text className="font-jakarta-semibold" style={{ color: colors.textPrimary }}>
 										{(partner as any).workingHours.start} - {(partner as any).workingHours.end}
 									</Text>
 								</View>
@@ -432,7 +432,7 @@ export default function DeliveryPartnerDetailScreen() {
 								elevation: 3,
 							}}
 						>
-							<Text className="font-poppins-bold text-lg mb-4" style={{ color: colors.textPrimary }}>
+							<Text className="font-jakarta-bold text-lg mb-4" style={{ color: colors.textPrimary }}>
 								{i18n.t("enterprise.deliveryPartners.detail.sections.performance")}
 							</Text>
 
@@ -442,8 +442,8 @@ export default function DeliveryPartnerDetailScreen() {
 										<Ionicons name="star" size={16} color={colors.warning} />
 									</View>
 									<View className="flex-1">
-										<Text className="font-poppins-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.averageRating")}</Text>
-										<Text className="font-poppins-semibold" style={{ color: colors.textPrimary }}>
+										<Text className="font-jakarta-medium text-sm" style={{ color: colors.textTertiary }}>{i18n.t("enterprise.deliveryPartners.detail.labels.averageRating")}</Text>
+										<Text className="font-jakarta-semibold" style={{ color: colors.textPrimary }}>
 											{partner.rating.toFixed(1)} / 5
 										</Text>
 									</View>
@@ -453,7 +453,7 @@ export default function DeliveryPartnerDetailScreen() {
 							{/* Statistiques supplémentaires si disponibles */}
 							{(partner as any).stats && Object.keys((partner as any).stats).length > 0 && (
 								<View className="pt-3" style={{ borderTopColor: colors.borderLight }}>
-									<Text className="font-poppins-medium text-sm mb-2" style={{ color: colors.textSecondary }}>
+									<Text className="font-jakarta-medium text-sm mb-2" style={{ color: colors.textSecondary }}>
 										{i18n.t("enterprise.deliveryPartners.detail.labels.detailedStats")}
 									</Text>
 								</View>
@@ -473,7 +473,7 @@ export default function DeliveryPartnerDetailScreen() {
 							elevation: 3,
 						}}
 					>
-						<Text className="font-poppins-bold text-lg mb-4" style={{ color: colors.textPrimary }}>
+						<Text className="font-jakarta-bold text-lg mb-4" style={{ color: colors.textPrimary }}>
 							{i18n.t("enterprise.deliveryPartners.detail.sections.associationStatus")}
 						</Text>
 
@@ -481,7 +481,7 @@ export default function DeliveryPartnerDetailScreen() {
 							// Loading state for association check
 							<View className="items-center py-4">
 								<ActivityIndicator size="small" color={colors.brandPrimary} />
-								<Text className="font-poppins-medium text-sm mt-2" style={{ color: colors.textSecondary }}>
+								<Text className="font-jakarta-medium text-sm mt-2" style={{ color: colors.textSecondary }}>
 									{i18n.t("enterprise.deliveryPartners.detail.status.checking")}
 								</Text>
 							</View>
@@ -489,11 +489,11 @@ export default function DeliveryPartnerDetailScreen() {
 							<View className="rounded-xl p-4 mb-4" style={{ backgroundColor: colors.success + '20', borderColor: colors.success + '40', borderWidth: 1 }}>
 								<View className="flex-row items-center justify-center mb-2">
 									<Ionicons name="checkmark-circle" size={24} color={colors.success} />
-									<Text className="font-poppins-bold text-lg ml-2" style={{ color: colors.success }}>
+									<Text className="font-jakarta-bold text-lg ml-2" style={{ color: colors.success }}>
 										{i18n.t("enterprise.deliveryPartners.detail.status.associated.title")}
 									</Text>
 								</View>
-								<Text className="font-poppins-medium text-center mb-4" style={{ color: colors.success }}>
+								<Text className="font-jakarta-medium text-center mb-4" style={{ color: colors.success }}>
 									{i18n.t("enterprise.deliveryPartners.detail.status.associated.description")}
 								</Text>
 
@@ -509,7 +509,7 @@ export default function DeliveryPartnerDetailScreen() {
 									) : (
 										<View className="flex-row items-center">
 											<Ionicons name="remove-circle" size={18} color="#FFFFFF" />
-											<Text className="font-poppins-semibold text-white ml-2">
+											<Text className="font-jakarta-semibold text-white ml-2">
 												{i18n.t("enterprise.deliveryPartners.detail.actions.dissociate")}
 											</Text>
 										</View>
@@ -521,11 +521,11 @@ export default function DeliveryPartnerDetailScreen() {
 								<View className="rounded-xl p-4 mb-4" style={{ backgroundColor: colors.tertiary, borderColor: colors.border, borderWidth: 1 }}>
 									<View className="flex-row items-center justify-center mb-2">
 										<Ionicons name="information-circle" size={24} color={colors.textSecondary} />
-										<Text className="font-poppins-bold text-lg ml-2" style={{ color: colors.textPrimary }}>
+										<Text className="font-jakarta-bold text-lg ml-2" style={{ color: colors.textPrimary }}>
 											{i18n.t("enterprise.deliveryPartners.detail.status.notAssociated.title")}
 										</Text>
 									</View>
-									<Text className="font-poppins-medium text-center" style={{ color: colors.textSecondary }}>
+									<Text className="font-jakarta-medium text-center" style={{ color: colors.textSecondary }}>
 										{i18n.t("enterprise.deliveryPartners.detail.status.notAssociated.description")}
 									</Text>
 								</View>
@@ -541,7 +541,7 @@ export default function DeliveryPartnerDetailScreen() {
 									) : (
 										<View style={{ flexDirection: 'row', alignItems: 'center' }}>
 											<Ionicons name="add-circle" size={20} color="#FFFFFF" />
-											<Text style={{ fontFamily: 'Poppins-Bold', color: '#FFFFFF', marginLeft: 8 }}>
+											<Text style={{ fontFamily: 'PlusJakartaSans-Bold', color: '#FFFFFF', marginLeft: 8 }}>
 												{i18n.t("enterprise.deliveryPartners.detail.actions.associate")}
 											</Text>
 										</View>
@@ -581,10 +581,10 @@ export default function DeliveryPartnerDetailScreen() {
 
 							{/* Content */}
 							<View className="px-6 pb-6">
-								<Text className="text-xl font-poppins-bold text-center mb-2" style={{ color: colors.textPrimary }}>
+								<Text className="text-xl font-jakarta-bold text-center mb-2" style={{ color: colors.textPrimary }}>
 									{i18n.t("enterprise.deliveryPartners.detail.modal.dissociate.title")}
 								</Text>
-								<Text className="text-base font-poppins-medium text-center leading-5" style={{ color: colors.textSecondary }}>
+								<Text className="text-base font-jakarta-medium text-center leading-5" style={{ color: colors.textSecondary }}>
 									{i18n.t("enterprise.deliveryPartners.detail.modal.dissociate.message", { name: `${partner?.firstName} ${partner?.lastName}` })}
 								</Text>
 							</View>
@@ -596,7 +596,7 @@ export default function DeliveryPartnerDetailScreen() {
 									className="flex-1 py-4 rounded-2xl items-center"
 									style={{ backgroundColor: colors.tertiary }}
 								>
-									<Text className="text-base font-poppins-semibold" style={{ color: colors.textPrimary }}>
+									<Text className="text-base font-jakarta-semibold" style={{ color: colors.textPrimary }}>
 										{i18n.t("enterprise.deliveryPartners.detail.modal.dissociate.cancel")}
 									</Text>
 								</TouchableOpacity>
@@ -605,7 +605,7 @@ export default function DeliveryPartnerDetailScreen() {
 									className="flex-1 py-4 rounded-2xl items-center"
 									style={{ backgroundColor: colors.error }}
 								>
-									<Text className="text-base font-poppins-semibold text-white">
+									<Text className="text-base font-jakarta-semibold text-white">
 										{i18n.t("enterprise.deliveryPartners.detail.modal.dissociate.confirm")}
 									</Text>
 								</TouchableOpacity>

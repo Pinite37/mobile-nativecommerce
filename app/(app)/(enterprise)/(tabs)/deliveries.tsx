@@ -167,7 +167,7 @@ export default function EnterpriseDeliveries() {
       onPress={() => setSelectedFilter(item.id)}
     >
       <Text
-        className={`text-sm font-poppins-medium ${
+        className={`text-sm font-jakarta-medium ${
           selectedFilter === item.id ? "text-white" : "text-neutral-700"
         }`}
       >
@@ -184,7 +184,7 @@ export default function EnterpriseDeliveries() {
         {/* Delivery Header */}
         <View className="flex-row items-center justify-between mb-3">
           <View>
-            <Text className="text-base font-poppins-bold text-neutral-800">
+            <Text className="text-base font-jakarta-bold text-neutral-800">
               {item.id}
             </Text>
             <Text className="text-sm text-neutral-600">
@@ -197,7 +197,7 @@ export default function EnterpriseDeliveries() {
           >
             <Ionicons name={status.icon as any} size={14} color={status.color} />
             <Text
-              className="text-xs font-poppins-semibold ml-1"
+              className="text-xs font-jakarta-semibold ml-1"
               style={{ color: status.color }}
             >
               {status.text}
@@ -208,7 +208,7 @@ export default function EnterpriseDeliveries() {
         {/* Customer Info */}
         <View className="bg-background-secondary rounded-xl p-3 mb-3">
           <View className="flex-row items-center justify-between mb-2">
-            <Text className="text-sm font-poppins-semibold text-neutral-800">
+            <Text className="text-sm font-jakarta-semibold text-neutral-800">
               {item.customer.name}
             </Text>
             <TouchableOpacity>
@@ -234,7 +234,7 @@ export default function EnterpriseDeliveries() {
             resizeMode="cover"
           />
           <View className="ml-3 flex-1">
-            <Text className="text-sm font-poppins-semibold text-neutral-800">
+            <Text className="text-sm font-jakarta-semibold text-neutral-800">
               {item.driver.name}
             </Text>
             <Text className="text-xs text-neutral-600">
@@ -252,17 +252,17 @@ export default function EnterpriseDeliveries() {
         {/* Delivery Details */}
         <View className="flex-row items-center justify-between mb-3">
           <View>
-            <Text className="text-sm font-poppins-medium text-neutral-700">
+            <Text className="text-sm font-jakarta-medium text-neutral-700">
               Programmée: {formatDate(item.scheduledDate)}
             </Text>
             {item.deliveredDate && (
-              <Text className="text-sm font-poppins-medium text-success-600">
+              <Text className="text-sm font-jakarta-medium text-success-600">
                 Livrée: {formatDate(item.deliveredDate)}
               </Text>
             )}
           </View>
           <View className="items-end">
-            <Text className="text-lg font-poppins-bold text-primary-500">
+            <Text className="text-lg font-jakarta-bold text-primary-500">
               {formatPrice(item.total)}
             </Text>
             <Text className="text-xs text-neutral-600">
@@ -275,7 +275,7 @@ export default function EnterpriseDeliveries() {
         <View className="bg-neutral-50 rounded-lg p-2 mb-3">
           <View className="flex-row items-center">
             <Ionicons name="barcode" size={16} color="#6B7280" />
-            <Text className="text-sm font-poppins-medium text-neutral-700 ml-2">
+            <Text className="text-sm font-jakarta-medium text-neutral-700 ml-2">
               Suivi: {item.trackingNumber}
             </Text>
           </View>
@@ -286,7 +286,7 @@ export default function EnterpriseDeliveries() {
           <View className="bg-warning-50 rounded-lg p-2 mb-3">
             <View className="flex-row items-start">
               <Ionicons name="information-circle" size={16} color="#F59E0B" />
-              <Text className="text-sm font-poppins-medium text-warning-600 ml-2 flex-1">
+              <Text className="text-sm font-jakarta-medium text-warning-600 ml-2 flex-1">
                 {item.notes}
               </Text>
             </View>
@@ -297,7 +297,7 @@ export default function EnterpriseDeliveries() {
         <View className="flex-row items-center justify-between pt-3 border-t border-neutral-100">
           <TouchableOpacity className="flex-row items-center">
             <Ionicons name="map-outline" size={16} color="#6B7280" />
-            <Text className="text-sm font-poppins-medium text-neutral-700 ml-2">
+            <Text className="text-sm font-jakarta-medium text-neutral-700 ml-2">
               Voir sur la carte
             </Text>
           </TouchableOpacity>
@@ -305,7 +305,7 @@ export default function EnterpriseDeliveries() {
           <View className="flex-row items-center space-x-2">
             {item.status === "assigned" && (
               <TouchableOpacity className="bg-primary-500 rounded-lg px-4 py-2">
-                <Text className="text-white text-sm font-poppins-semibold">
+                <Text className="text-white text-sm font-jakarta-semibold">
                   Notifier le livreur
                 </Text>
               </TouchableOpacity>
@@ -313,14 +313,14 @@ export default function EnterpriseDeliveries() {
             
             {item.status === "in_transit" && (
               <TouchableOpacity className="bg-secondary-500 rounded-lg px-4 py-2">
-                <Text className="text-white text-sm font-poppins-semibold">
+                <Text className="text-white text-sm font-jakarta-semibold">
                   Suivre
                 </Text>
               </TouchableOpacity>
             )}
             
             <TouchableOpacity className="bg-background-secondary rounded-lg px-4 py-2">
-              <Text className="text-neutral-700 text-sm font-poppins-semibold">
+              <Text className="text-neutral-700 text-sm font-jakarta-semibold">
                 Détails
               </Text>
             </TouchableOpacity>
@@ -333,10 +333,10 @@ export default function EnterpriseDeliveries() {
   const renderEmptyState = () => (
     <View className="flex-1 justify-center items-center px-6">
       <Ionicons name="car-outline" size={80} color="#D1D5DB" />
-      <Text className="text-xl font-poppins-bold text-neutral-800 mt-4 mb-2">
+      <Text className="text-xl font-jakarta-bold text-neutral-800 mt-4 mb-2">
         Aucune livraison trouvée
       </Text>
-      <Text className="text-center text-neutral-600 font-poppins-medium mb-6">
+      <Text className="text-center text-neutral-600 font-jakarta-medium mb-6">
         Les livraisons de vos commandes apparaîtront ici
       </Text>
     </View>
@@ -347,13 +347,13 @@ export default function EnterpriseDeliveries() {
       {/* Header */}
       <View className="bg-white px-6 py-4 pt-20" >
         <View className="flex-row items-center justify-between">
-          <Text className="text-xl font-poppins-bold text-neutral-800">
+          <Text className="text-xl font-jakarta-bold text-neutral-800">
             Livraisons
           </Text>
           <TouchableOpacity className="bg-primary-500 rounded-xl py-2 px-4">
             <View className="flex-row items-center">
               <Ionicons name="add" size={20} color="#FFFFFF" />
-              <Text className="text-white font-poppins-semibold ml-1">
+              <Text className="text-white font-jakarta-semibold ml-1">
                 Programmer
               </Text>
             </View>
@@ -364,28 +364,28 @@ export default function EnterpriseDeliveries() {
       {/* Summary Stats */}
       <View className="flex-row px-4 py-4 space-x-2">
         <View className="flex-1 bg-white rounded-2xl p-4 shadow-sm border border-neutral-100">
-          <Text className="text-2xl font-poppins-bold text-primary-500">
+          <Text className="text-2xl font-jakarta-bold text-primary-500">
             {deliveries.filter(d => d.status === 'in_transit').length}
           </Text>
-          <Text className="text-sm font-poppins-medium text-neutral-600">
+          <Text className="text-sm font-jakarta-medium text-neutral-600">
             En transit
           </Text>
         </View>
         
         <View className="flex-1 bg-white rounded-2xl p-4 shadow-sm border border-neutral-100">
-          <Text className="text-2xl font-poppins-bold text-success-500">
+          <Text className="text-2xl font-jakarta-bold text-success-500">
             {deliveries.filter(d => d.status === 'delivered').length}
           </Text>
-          <Text className="text-sm font-poppins-medium text-neutral-600">
+          <Text className="text-sm font-jakarta-medium text-neutral-600">
             Livrées
           </Text>
         </View>
         
         <View className="flex-1 bg-white rounded-2xl p-4 shadow-sm border border-neutral-100">
-          <Text className="text-2xl font-poppins-bold text-warning-500">
+          <Text className="text-2xl font-jakarta-bold text-warning-500">
             {deliveries.filter(d => d.status === 'assigned').length}
           </Text>
-          <Text className="text-sm font-poppins-medium text-neutral-600">
+          <Text className="text-sm font-jakarta-medium text-neutral-600">
             En attente
           </Text>
         </View>

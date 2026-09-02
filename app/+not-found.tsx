@@ -145,7 +145,7 @@ export default function NotFoundScreen() {
 
                     {/* 404 Text */}
                     <Text
-                        className="text-7xl font-poppins-bold mb-2"
+                        className="text-7xl font-jakarta-bold mb-2"
                         style={{
                             color: "#FE8C00",
                             textShadowColor: isDark ? "rgba(254, 140, 0, 0.3)" : "rgba(254, 140, 0, 0.2)",
@@ -158,7 +158,7 @@ export default function NotFoundScreen() {
 
                     {/* Main Title */}
                     <Text
-                        className="text-2xl font-poppins-bold text-center mb-3"
+                        className="text-2xl font-jakarta-bold text-center mb-3"
                         style={{ color: colors.textPrimary }}
                     >
                         {i18n.t("notFound.title") || "Page introuvable"}
@@ -166,7 +166,7 @@ export default function NotFoundScreen() {
 
                     {/* Description */}
                     <Text
-                        className="text-base font-poppins-medium text-center mb-8 px-4"
+                        className="text-base font-jakarta-medium text-center mb-8 px-4"
                         style={{ color: colors.textSecondary, lineHeight: 24 }}
                     >
                         {i18n.t("notFound.description") ||
@@ -202,7 +202,7 @@ export default function NotFoundScreen() {
                                 className="py-4 px-6 flex-row items-center justify-center"
                             >
                                 <Ionicons name="home" size={20} color="#FFFFFF" />
-                                <Text className="text-white text-base font-poppins-bold ml-2">
+                                <Text className="text-white text-base font-jakarta-bold ml-2">
                                     {i18n.t("notFound.goHome") || "Retour à l'accueil"}
                                 </Text>
                             </LinearGradient>
@@ -226,7 +226,7 @@ export default function NotFoundScreen() {
                                     color={colors.textPrimary}
                                 />
                                 <Text
-                                    className="text-base font-poppins-bold ml-2"
+                                    className="text-base font-jakarta-bold ml-2"
                                     style={{ color: colors.textPrimary }}
                                 >
                                     {i18n.t("notFound.goBack") || "Page précédente"}
@@ -248,7 +248,7 @@ export default function NotFoundScreen() {
                             color={colors.textTertiary}
                         />
                         <Text
-                            className="text-xs font-poppins-medium ml-2"
+                            className="text-xs font-jakarta-medium ml-2"
                             style={{ color: colors.textTertiary }}
                         >
                             {i18n.t("notFound.help") || "Besoin d'aide ? Contactez le support"}

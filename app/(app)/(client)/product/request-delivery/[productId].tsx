@@ -105,7 +105,7 @@ export default function RequestDeliveryScreen() {
       >
         <Text
           style={{
-            fontFamily: "Poppins-SemiBold",
+            fontFamily: "PlusJakartaSans-SemiBold",
             fontSize: 15,
             color: colors.textPrimary,
             backgroundColor: colors.card,

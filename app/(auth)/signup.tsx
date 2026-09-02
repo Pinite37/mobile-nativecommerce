@@ -272,36 +272,36 @@ export default function SignUpScreen() {
           style={{ width: 110, height: 36, marginBottom: 22 }}
           resizeMode="contain"
         />
-        <Text style={{ fontFamily: "Poppins-Bold", fontSize: 28, color: colors.textPrimary, marginBottom: 4 }}>
+        <Text style={{ fontFamily: "PlusJakartaSans-Bold", fontSize: 28, color: colors.textPrimary, marginBottom: 4 }}>
           Créer un compte
         </Text>
-        <Text style={{ fontFamily: "Poppins-Regular", fontSize: 15, color: colors.textSecondary, marginBottom: 28 }}>
+        <Text style={{ fontFamily: "PlusJakartaSans-Regular", fontSize: 15, color: colors.textSecondary, marginBottom: 28 }}>
           Inscrivez-vous pour commencer
         </Text>
 
         {/* Prénom / Nom */}
         <View style={{ flexDirection: "row", gap: 12, marginBottom: 14 }}>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontFamily: "Poppins-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>Prénom</Text>
+            <Text style={{ fontFamily: "PlusJakartaSans-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>Prénom</Text>
             {inputRow("person-outline",
               <TextInput
                 value={firstName}
                 onChangeText={setFirstName}
                 placeholder="Prénom"
                 placeholderTextColor={colors.textTertiary}
-                style={{ flex: 1, fontFamily: "Poppins-Medium", fontSize: 15, color: colors.textPrimary }}
+                style={{ flex: 1, fontFamily: "PlusJakartaSans-Medium", fontSize: 15, color: colors.textPrimary }}
               />
             )}
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontFamily: "Poppins-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>Nom</Text>
+            <Text style={{ fontFamily: "PlusJakartaSans-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>Nom</Text>
             {inputRow("person-outline",
               <TextInput
                 value={lastName}
                 onChangeText={setLastName}
                 placeholder="Nom"
                 placeholderTextColor={colors.textTertiary}
-                style={{ flex: 1, fontFamily: "Poppins-Medium", fontSize: 15, color: colors.textPrimary }}
+                style={{ flex: 1, fontFamily: "PlusJakartaSans-Medium", fontSize: 15, color: colors.textPrimary }}
               />
             )}
           </View>
@@ -309,7 +309,7 @@ export default function SignUpScreen() {
 
         {/* Email */}
         <View style={{ marginBottom: 14 }}>
-          <Text style={{ fontFamily: "Poppins-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>Email</Text>
+          <Text style={{ fontFamily: "PlusJakartaSans-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>Email</Text>
           {inputRow("mail-outline",
             <TextInput
               value={email}
@@ -318,14 +318,14 @@ export default function SignUpScreen() {
               placeholderTextColor={colors.textTertiary}
               keyboardType="email-address"
               autoCapitalize="none"
-              style={{ flex: 1, fontFamily: "Poppins-Medium", fontSize: 15, color: colors.textPrimary }}
+              style={{ flex: 1, fontFamily: "PlusJakartaSans-Medium", fontSize: 15, color: colors.textPrimary }}
             />
           )}
         </View>
 
         {/* Téléphone */}
         <View style={{ marginBottom: 14 }}>
-          <Text style={{ fontFamily: "Poppins-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>Téléphone</Text>
+          <Text style={{ fontFamily: "PlusJakartaSans-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>Téléphone</Text>
           <PhoneInput
             value={phone}
             onChangePhoneNumber={setPhone}
@@ -346,7 +346,7 @@ export default function SignUpScreen() {
                 borderTopLeftRadius: 14,
                 borderBottomLeftRadius: 14,
               },
-              input: { color: colors.textPrimary, fontFamily: "Poppins-Medium" },
+              input: { color: colors.textPrimary, fontFamily: "PlusJakartaSans-Medium" },
               callingCode: { color: colors.textPrimary },
             }}
           />
@@ -354,21 +354,21 @@ export default function SignUpScreen() {
 
         {/* Adresse */}
         <View style={{ marginBottom: 14 }}>
-          <Text style={{ fontFamily: "Poppins-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>Adresse</Text>
+          <Text style={{ fontFamily: "PlusJakartaSans-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>Adresse</Text>
           {inputRow("location-outline",
             <TextInput
               value={address}
               onChangeText={setAddress}
               placeholder="Adresse complète"
               placeholderTextColor={colors.textTertiary}
-              style={{ flex: 1, fontFamily: "Poppins-Medium", fontSize: 15, color: colors.textPrimary }}
+              style={{ flex: 1, fontFamily: "PlusJakartaSans-Medium", fontSize: 15, color: colors.textPrimary }}
             />
           )}
         </View>
 
         {/* Mot de passe */}
         <View style={{ marginBottom: 14 }}>
-          <Text style={{ fontFamily: "Poppins-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>Mot de passe</Text>
+          <Text style={{ fontFamily: "PlusJakartaSans-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>Mot de passe</Text>
           <View style={{
             flexDirection: "row", alignItems: "center",
             backgroundColor: colors.card, borderWidth: 1,
@@ -382,7 +382,7 @@ export default function SignUpScreen() {
               placeholder="••••••••"
               placeholderTextColor={colors.textTertiary}
               secureTextEntry={!showPassword}
-              style={{ flex: 1, fontFamily: "Poppins-Medium", fontSize: 15, color: colors.textPrimary }}
+              style={{ flex: 1, fontFamily: "PlusJakartaSans-Medium", fontSize: 15, color: colors.textPrimary }}
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)} activeOpacity={0.7}>
               <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={colors.textTertiary} />
@@ -392,7 +392,7 @@ export default function SignUpScreen() {
 
         {/* Confirmer mot de passe */}
         <View style={{ marginBottom: 20 }}>
-          <Text style={{ fontFamily: "Poppins-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>Confirmer le mot de passe</Text>
+          <Text style={{ fontFamily: "PlusJakartaSans-SemiBold", fontSize: 13, color: colors.textSecondary, marginBottom: 8 }}>Confirmer le mot de passe</Text>
           <View style={{
             flexDirection: "row", alignItems: "center",
             backgroundColor: colors.card, borderWidth: 1,
@@ -406,7 +406,7 @@ export default function SignUpScreen() {
               placeholder="••••••••"
               placeholderTextColor={colors.textTertiary}
               secureTextEntry={!showConfirmPassword}
-              style={{ flex: 1, fontFamily: "Poppins-Medium", fontSize: 15, color: colors.textPrimary }}
+              style={{ flex: 1, fontFamily: "PlusJakartaSans-Medium", fontSize: 15, color: colors.textPrimary }}
             />
             <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} activeOpacity={0.7}>
               <Ionicons name={showConfirmPassword ? "eye-off-outline" : "eye-outline"} size={20} color={colors.textTertiary} />
@@ -438,13 +438,13 @@ export default function SignUpScreen() {
             }}>
               {agreedToTerms && <Ionicons name="checkmark" size={13} color="#fff" />}
             </View>
-            <Text style={{ fontFamily: "Poppins-Regular", fontSize: 13, color: colors.textSecondary, flex: 1, lineHeight: 20 }}>
+            <Text style={{ fontFamily: "PlusJakartaSans-Regular", fontSize: 13, color: colors.textSecondary, flex: 1, lineHeight: 20 }}>
               J&#39;accepte les{" "}
-              <Text style={{ color: "#10B981", fontFamily: "Poppins-SemiBold" }} onPress={() => Linking.openURL("https://nativecommerce.com/terms")}>
+              <Text style={{ color: "#10B981", fontFamily: "PlusJakartaSans-SemiBold" }} onPress={() => Linking.openURL("https://nativecommerce.com/terms")}>
                 termes et conditions
               </Text>{" "}
               et la{" "}
-              <Text style={{ color: "#10B981", fontFamily: "Poppins-SemiBold" }} onPress={() => Linking.openURL("https://nativecommerce.com/privacy")}>
+              <Text style={{ color: "#10B981", fontFamily: "PlusJakartaSans-SemiBold" }} onPress={() => Linking.openURL("https://nativecommerce.com/privacy")}>
                 politique de confidentialité
               </Text>
             </Text>
@@ -463,18 +463,18 @@ export default function SignUpScreen() {
           }}
         >
           {isLoading && <ActivityIndicator size="small" color="#fff" style={{ marginRight: 10 }} />}
-          <Text style={{ fontFamily: "Poppins-Bold", fontSize: 16, color: "#fff" }}>
+          <Text style={{ fontFamily: "PlusJakartaSans-Bold", fontSize: 16, color: "#fff" }}>
             {isLoading ? null : "Créer le compte"}
           </Text>
         </TouchableOpacity>
 
         {/* Lien connexion */}
         <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
-          <Text style={{ fontFamily: "Poppins-Regular", fontSize: 14, color: colors.textSecondary }}>
+          <Text style={{ fontFamily: "PlusJakartaSans-Regular", fontSize: 14, color: colors.textSecondary }}>
             Vous avez déjà un compte ?{" "}
           </Text>
           <TouchableOpacity onPress={handleSignIn}>
-            <Text style={{ fontFamily: "Poppins-Bold", fontSize: 14, color: "#10B981" }}>
+            <Text style={{ fontFamily: "PlusJakartaSans-Bold", fontSize: 14, color: "#10B981" }}>
               Se connecter
             </Text>
           </TouchableOpacity>

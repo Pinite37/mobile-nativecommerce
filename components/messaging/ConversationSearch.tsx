@@ -119,7 +119,7 @@ export default function ConversationSearch({
               paddingVertical: 10,
               paddingHorizontal: 9,
               color: colors.textPrimary,
-              fontFamily: "Poppins-Medium",
+              fontFamily: "PlusJakartaSans-Medium",
               fontSize: 14,
             }}
           />
@@ -140,7 +140,7 @@ export default function ConversationSearch({
           hitSlop={10}
           style={{ marginLeft: 12 }}
         >
-          <Text style={{ color: colors.brandPrimary }} className="font-poppins-semibold text-sm">
+          <Text style={{ color: colors.brandPrimary }} className="font-jakarta-semibold text-sm">
             Fermer
           </Text>
         </TouchableOpacity>
@@ -154,7 +154,7 @@ export default function ConversationSearch({
                 paddingHorizontal: 16,
                 paddingBottom: 16,
                 color: colors.textSecondary,
-                fontFamily: "Poppins-Medium",
+                fontFamily: "PlusJakartaSans-Medium",
                 fontSize: 13,
               }}
             >
@@ -186,12 +186,12 @@ export default function ConversationSearch({
                   <View style={{ flex: 1, marginLeft: 10 }}>
                     <Text
                       style={{ color: colors.textPrimary }}
-                      className="font-poppins-medium text-sm"
+                      className="font-jakarta-medium text-sm"
                       numberOfLines={2}
                     >
                       {h.text}
                     </Text>
-                    <Text style={{ color: colors.textTertiary }} className="font-poppins text-xs mt-0.5">
+                    <Text style={{ color: colors.textTertiary }} className="font-jakarta text-xs mt-0.5">
                       {h.sender?.firstName ? `${h.sender.firstName} · ` : ""}
                       {formatDate(h.createdAt)}
                     </Text>

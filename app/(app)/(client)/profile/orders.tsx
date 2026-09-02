@@ -87,21 +87,21 @@ export default function OrdersScreen() {
         <View className="flex-row items-center justify-between mb-1.5">
           <Text
             style={{ color: mustAct ? colors.brandPrimary : colors.textSecondary }}
-            className="font-poppins-semibold text-xs uppercase"
+            className="font-jakarta-semibold text-xs uppercase"
             numberOfLines={1}
           >
             {CommandeService.statusLabel(item.status)}
           </Text>
-          <Text style={{ color: colors.textTertiary }} className="font-poppins text-xs">
+          <Text style={{ color: colors.textTertiary }} className="font-jakarta text-xs">
             {new Date(item.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
           </Text>
         </View>
 
-        <Text style={{ color: colors.textPrimary }} className="font-poppins-bold text-base" numberOfLines={1}>
+        <Text style={{ color: colors.textPrimary }} className="font-jakarta-bold text-base" numberOfLines={1}>
           {item.items?.[0]?.nameSnapshot || "Commande"}
           {item.items?.length > 1 ? ` + ${item.items.length - 1}` : ""}
         </Text>
-        <Text style={{ color: colors.textSecondary }} className="font-poppins-medium text-sm mt-0.5" numberOfLines={1}>
+        <Text style={{ color: colors.textSecondary }} className="font-jakarta-medium text-sm mt-0.5" numberOfLines={1}>
           {enterpriseName}
         </Text>
 
@@ -109,12 +109,12 @@ export default function OrdersScreen() {
           className="flex-row items-center justify-between pt-3 mt-3"
           style={{ borderTopWidth: 1, borderTopColor: colors.borderLight }}
         >
-          <Text style={{ color: colors.brandPrimary }} className="font-poppins-bold text-base">
+          <Text style={{ color: colors.brandPrimary }} className="font-jakarta-bold text-base">
             {item.agreedTotal} FCFA
           </Text>
           {mustAct ? (
             <View className="flex-row items-center">
-              <Text style={{ color: colors.brandPrimary }} className="font-poppins-semibold text-xs mr-1">
+              <Text style={{ color: colors.brandPrimary }} className="font-jakarta-semibold text-xs mr-1">
                 Confirmer
               </Text>
               <Ionicons name="chevron-forward" size={15} color={colors.brandPrimary} />
@@ -150,7 +150,7 @@ export default function OrdersScreen() {
             >
               <Text
                 style={{ color: active ? "#FFFFFF" : colors.textSecondary }}
-                className="font-poppins-semibold text-xs"
+                className="font-jakarta-semibold text-xs"
               >
                 {t.label}{n > 0 ? ` (${n})` : ""}
               </Text>
@@ -186,10 +186,10 @@ export default function OrdersScreen() {
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center px-8" style={{ paddingTop: 60 }}>
               <Ionicons name="receipt-outline" size={40} color={colors.textTertiary} />
-              <Text style={{ color: colors.textPrimary }} className="font-poppins-bold text-base mt-3 text-center">
+              <Text style={{ color: colors.textPrimary }} className="font-jakarta-bold text-base mt-3 text-center">
                 {tab === "EN_COURS" ? "Aucune commande en cours" : "Rien ici"}
               </Text>
-              <Text style={{ color: colors.textSecondary }} className="font-poppins text-sm mt-1 text-center">
+              <Text style={{ color: colors.textSecondary }} className="font-jakarta text-sm mt-1 text-center">
                 Vos commandes apparaissent ici dès qu&apos;une boutique vous en propose une dans la
                 discussion.
               </Text>

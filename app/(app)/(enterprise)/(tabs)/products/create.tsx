@@ -259,8 +259,8 @@ export default function CreateProduct() {
           </TouchableOpacity>
         </Link>
         <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-SemiBold', fontSize: 18 }}>Nouveau produit</Text>
-          <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Regular', fontSize: 12, marginTop: 1 }}>Remplissez les informations ci-dessous</Text>
+          <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 18 }}>Nouveau produit</Text>
+          <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Regular', fontSize: 12, marginTop: 1 }}>Remplissez les informations ci-dessous</Text>
         </View>
         <View style={{ width: 40 }} />
       </View>
@@ -279,11 +279,11 @@ export default function CreateProduct() {
             <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: isDark ? 'rgba(99,102,241,0.2)' : '#EEF2FF', alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>
               <Ionicons name="images-outline" size={16} color="#6366F1" />
             </View>
-            <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 15, flex: 1 }}>
+            <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Bold', fontSize: 15, flex: 1 }}>
               Photos du produit
             </Text>
             <View style={{ backgroundColor: readyImages.length > 0 ? 'rgba(16,185,129,0.12)' : colors.secondary, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 }}>
-              <Text style={{ color: readyImages.length > 0 ? '#10B981' : colors.textSecondary, fontFamily: 'Poppins-Bold', fontSize: 12 }}>
+              <Text style={{ color: readyImages.length > 0 ? '#10B981' : colors.textSecondary, fontFamily: 'PlusJakartaSans-Bold', fontSize: 12 }}>
                 {readyImages.length}/{maxImages}
               </Text>
             </View>
@@ -332,7 +332,7 @@ export default function CreateProduct() {
                         paddingVertical: 2,
                       }}
                     >
-                      <Text style={{ color: '#fff', fontFamily: 'Poppins-Bold', fontSize: 9 }}>
+                      <Text style={{ color: '#fff', fontFamily: 'PlusJakartaSans-Bold', fontSize: 9 }}>
                         PRINCIPALE
                       </Text>
                     </View>
@@ -351,7 +351,7 @@ export default function CreateProduct() {
                         alignItems: 'center',
                       }}
                     >
-                      <Text style={{ color: '#fff', fontFamily: 'Poppins-SemiBold', fontSize: 9 }}>
+                      <Text style={{ color: '#fff', fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 9 }}>
                         Définir principale
                       </Text>
                     </View>
@@ -389,7 +389,7 @@ export default function CreateProduct() {
                 style={{ width: 96, height: 96, borderRadius: 16, borderWidth: 1.5, borderColor: '#10B981', borderStyle: 'dashed', backgroundColor: isDark ? 'rgba(16,185,129,0.07)' : '#F0FDF4', alignItems: 'center', justifyContent: 'center', gap: 4 }}
               >
                 <Ionicons name="add" size={26} color="#10B981" />
-                <Text style={{ color: '#10B981', fontFamily: 'Poppins-SemiBold', fontSize: 10 }}>Ajouter</Text>
+                <Text style={{ color: '#10B981', fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 10 }}>Ajouter</Text>
               </TouchableOpacity>
             )}
 
@@ -404,10 +404,10 @@ export default function CreateProduct() {
               >
                 <Ionicons name="camera-outline" size={26} color="#10B981" />
                 <View>
-                  <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-SemiBold', fontSize: 14 }}>
+                  <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 14 }}>
                     {maxImages > 1 ? 'Ajouter des photos' : 'Ajouter une photo'}
                   </Text>
-                  <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 11, marginTop: 1 }}>
+                  <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 11, marginTop: 1 }}>
                     {maxImages > 1 ? `Jusqu'à ${maxImages} · max 5 Mo chacune` : 'JPG ou PNG · max 5 Mo'}
                   </Text>
                 </View>
@@ -416,7 +416,7 @@ export default function CreateProduct() {
           </ScrollView>
 
           {errors.images && (
-            <Text style={{ color: '#EF4444', fontFamily: 'Poppins-Medium', fontSize: 12, marginTop: 10 }}>⚠ {errors.images}</Text>
+            <Text style={{ color: '#EF4444', fontFamily: 'PlusJakartaSans-Medium', fontSize: 12, marginTop: 10 }}>⚠ {errors.images}</Text>
           )}
         </View>
 
@@ -426,17 +426,17 @@ export default function CreateProduct() {
             <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: isDark ? 'rgba(16,185,129,0.2)' : '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>
               <Ionicons name="create-outline" size={16} color="#10B981" />
             </View>
-            <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 15 }}>Informations</Text>
+            <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Bold', fontSize: 15 }}>Informations</Text>
           </View>
 
           {/* Nom */}
           <View>
-            <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 7 }}>
+            <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 7 }}>
               Nom du produit *
             </Text>
             <TextInput
               ref={nameRef}
-              style={{ backgroundColor: colors.secondary, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontFamily: 'Poppins-Medium', fontSize: 15, borderWidth: 1.5, borderColor: inputBorderColor('name') }}
+              style={{ backgroundColor: colors.secondary, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 15, borderWidth: 1.5, borderColor: inputBorderColor('name') }}
               placeholder="Ex : Robe en wax taille M, Samsung Galaxy A55..."
               placeholderTextColor={colors.textSecondary}
               value={form.name}
@@ -447,17 +447,17 @@ export default function CreateProduct() {
               onFocus={() => setFocusedField('name')}
               onBlur={() => setFocusedField(null)}
             />
-            {errors.name && <Text style={{ color: '#EF4444', fontFamily: 'Poppins-Medium', fontSize: 12, marginTop: 5 }}>⚠ {errors.name}</Text>}
+            {errors.name && <Text style={{ color: '#EF4444', fontFamily: 'PlusJakartaSans-Medium', fontSize: 12, marginTop: 5 }}>⚠ {errors.name}</Text>}
           </View>
 
           {/* Description */}
           <View>
-            <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 7 }}>
+            <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 7 }}>
               Description *
             </Text>
             <TextInput
               ref={descriptionRef}
-              style={{ backgroundColor: colors.secondary, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontFamily: 'Poppins-Medium', fontSize: 15, borderWidth: 1.5, borderColor: inputBorderColor('description'), minHeight: 95, textAlignVertical: 'top' }}
+              style={{ backgroundColor: colors.secondary, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 15, borderWidth: 1.5, borderColor: inputBorderColor('description'), minHeight: 95, textAlignVertical: 'top' }}
               placeholder="Matière, taille disponible, état, utilisation..."
               placeholderTextColor={colors.textSecondary}
               value={form.description}
@@ -467,7 +467,7 @@ export default function CreateProduct() {
               onFocus={() => setFocusedField('description')}
               onBlur={() => setFocusedField(null)}
             />
-            {errors.description && <Text style={{ color: '#EF4444', fontFamily: 'Poppins-Medium', fontSize: 12, marginTop: 5 }}>⚠ {errors.description}</Text>}
+            {errors.description && <Text style={{ color: '#EF4444', fontFamily: 'PlusJakartaSans-Medium', fontSize: 12, marginTop: 5 }}>⚠ {errors.description}</Text>}
           </View>
         </View>
 
@@ -477,17 +477,17 @@ export default function CreateProduct() {
             <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: isDark ? 'rgba(245,158,11,0.2)' : '#FFFBEB', alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>
               <Ionicons name="cash-outline" size={16} color="#F59E0B" />
             </View>
-            <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 15 }}>Prix</Text>
+            <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Bold', fontSize: 15 }}>Prix</Text>
           </View>
 
           <View>
             {/* Prix */}
             <View>
-              <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 7 }}>Prix *</Text>
+              <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 7 }}>Prix *</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.secondary, borderRadius: 12, borderWidth: 1.5, borderColor: inputBorderColor('price') }}>
                 <TextInput
                   ref={priceRef}
-                  style={{ flex: 1, paddingLeft: 14, paddingVertical: 12, color: colors.textPrimary, fontFamily: 'Poppins-SemiBold', fontSize: 16 }}
+                  style={{ flex: 1, paddingLeft: 14, paddingVertical: 12, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 16 }}
                   placeholder="0"
                   placeholderTextColor={colors.textSecondary}
                   value={form.price}
@@ -499,10 +499,10 @@ export default function CreateProduct() {
                   onBlur={() => setFocusedField(null)}
                 />
                 <View style={{ backgroundColor: isDark ? 'rgba(245,158,11,0.15)' : '#FEF3C7', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginRight: 8 }}>
-                  <Text style={{ color: '#F59E0B', fontFamily: 'Poppins-Bold', fontSize: 11 }}>FCFA</Text>
+                  <Text style={{ color: '#F59E0B', fontFamily: 'PlusJakartaSans-Bold', fontSize: 11 }}>FCFA</Text>
                 </View>
               </View>
-              {errors.price && <Text style={{ color: '#EF4444', fontFamily: 'Poppins-Medium', fontSize: 12, marginTop: 5 }}>⚠ {errors.price}</Text>}
+              {errors.price && <Text style={{ color: '#EF4444', fontFamily: 'PlusJakartaSans-Medium', fontSize: 12, marginTop: 5 }}>⚠ {errors.price}</Text>}
             </View>
 
           </View>
@@ -514,7 +514,7 @@ export default function CreateProduct() {
             <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: isDark ? 'rgba(139,92,246,0.2)' : '#F5F3FF', alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>
               <Ionicons name="grid-outline" size={16} color="#8B5CF6" />
             </View>
-            <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-Bold', fontSize: 15, flex: 1 }}>Catégorie *</Text>
+            <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Bold', fontSize: 15, flex: 1 }}>Catégorie *</Text>
             {form.category && <Ionicons name="checkmark-circle" size={18} color="#10B981" />}
           </View>
 
@@ -538,7 +538,7 @@ export default function CreateProduct() {
                       backgroundColor: selected ? (isDark ? 'rgba(139,92,246,0.15)' : '#F5F3FF') : colors.secondary,
                     }}
                   >
-                    <Text style={{ fontFamily: selected ? 'Poppins-Bold' : 'Poppins-Medium', fontSize: 13, color: selected ? '#8B5CF6' : colors.textPrimary }}>
+                    <Text style={{ fontFamily: selected ? 'PlusJakartaSans-Bold' : 'PlusJakartaSans-Medium', fontSize: 13, color: selected ? '#8B5CF6' : colors.textPrimary }}>
                       {cat.name}
                     </Text>
                   </TouchableOpacity>
@@ -547,7 +547,7 @@ export default function CreateProduct() {
             </View>
           )}
 
-          {errors.category && <Text style={{ color: '#EF4444', fontFamily: 'Poppins-Medium', fontSize: 12, marginTop: 10 }}>⚠ {errors.category}</Text>}
+          {errors.category && <Text style={{ color: '#EF4444', fontFamily: 'PlusJakartaSans-Medium', fontSize: 12, marginTop: 10 }}>⚠ {errors.category}</Text>}
         </View>
 
       </KeyboardAwareScrollView>
@@ -572,7 +572,7 @@ export default function CreateProduct() {
             ) : (
               <>
                 <Ionicons name="checkmark-circle" size={20} color="#fff" />
-                <Text style={{ color: '#fff', fontFamily: 'Poppins-Bold', fontSize: 16 }}>
+                <Text style={{ color: '#fff', fontFamily: 'PlusJakartaSans-Bold', fontSize: 16 }}>
                   Publier le produit
                 </Text>
               </>

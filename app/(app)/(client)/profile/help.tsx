@@ -78,7 +78,7 @@ export default function HelpScreen() {
           <View className="flex-row items-center bg-white rounded-xl px-4 py-3">
             <Ionicons name="search-outline" size={20} color="#9CA3AF" />
             <TextInput
-              className="flex-1 ml-2 font-quicksand"
+              className="flex-1 ml-2 font-jakarta"
               placeholder="Rechercher une question"
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -93,7 +93,7 @@ export default function HelpScreen() {
 
         {/* FAQ */}
         <View className="px-4 mb-6">
-          <Text className="text-lg font-poppins-bold text-neutral-800 mb-4">
+          <Text className="text-lg font-jakarta-bold text-neutral-800 mb-4">
             Questions fréquentes
           </Text>
           <View className="bg-white rounded-2xl overflow-hidden">
@@ -108,7 +108,7 @@ export default function HelpScreen() {
                   className="flex-row justify-between items-center p-4"
                   onPress={() => toggleFaq(item.id)}
                 >
-                  <Text className="text-base font-poppins-medium text-neutral-800 flex-1 pr-4">
+                  <Text className="text-base font-jakarta-medium text-neutral-800 flex-1 pr-4">
                     {item.question}
                   </Text>
                   <Ionicons
@@ -119,7 +119,7 @@ export default function HelpScreen() {
                 </TouchableOpacity>
                 {openFaq === item.id && (
                   <View className="px-4 pb-4">
-                    <Text className="text-neutral-600 font-quicksand">
+                    <Text className="text-neutral-600 font-jakarta">
                       {item.answer}
                     </Text>
                   </View>
@@ -131,7 +131,7 @@ export default function HelpScreen() {
 
         {/* Options de contact */}
         <View className="px-4 mb-6">
-          <Text className="text-lg font-poppins-bold text-neutral-800 mb-4">
+          <Text className="text-lg font-jakarta-bold text-neutral-800 mb-4">
             Contactez-nous
           </Text>
           <View className="bg-white rounded-2xl overflow-hidden">
@@ -145,10 +145,10 @@ export default function HelpScreen() {
                 <Ionicons name="mail-outline" size={20} color="#3B82F6" />
               </View>
               <View className="flex-1">
-                <Text className="text-base font-poppins-medium text-neutral-800">
+                <Text className="text-base font-jakarta-medium text-neutral-800">
                   Email
                 </Text>
-                <Text className="text-sm font-quicksand text-neutral-500">
+                <Text className="text-sm font-jakarta text-neutral-500">
                   support@marketplace.com
                 </Text>
               </View>
@@ -165,10 +165,10 @@ export default function HelpScreen() {
                 <Ionicons name="call-outline" size={20} color="#10B981" />
               </View>
               <View className="flex-1">
-                <Text className="text-base font-poppins-medium text-neutral-800">
+                <Text className="text-base font-jakarta-medium text-neutral-800">
                   Téléphone
                 </Text>
-                <Text className="text-sm font-quicksand text-neutral-500">
+                <Text className="text-sm font-jakarta text-neutral-500">
                   +229 97 12 34 56
                 </Text>
               </View>
@@ -185,10 +185,10 @@ export default function HelpScreen() {
                 <Ionicons name="chatbubble-outline" size={20} color="#8B5CF6" />
               </View>
               <View className="flex-1">
-                <Text className="text-base font-poppins-medium text-neutral-800">
+                <Text className="text-base font-jakarta-medium text-neutral-800">
                   Chat en direct
                 </Text>
-                <Text className="text-sm font-quicksand text-neutral-500">
+                <Text className="text-sm font-jakarta text-neutral-500">
                   Disponible de 8h à 20h
                 </Text>
               </View>
@@ -199,32 +199,32 @@ export default function HelpScreen() {
 
         {/* Formulaire de contact */}
         <View className="px-4 mb-8">
-          <Text className="text-lg font-poppins-bold text-neutral-800 mb-4">
+          <Text className="text-lg font-jakarta-bold text-neutral-800 mb-4">
             Envoyez-nous un message
           </Text>
           <View className="bg-white rounded-2xl p-4">
             <View className="mb-4">
-              <Text className="text-sm font-poppins-medium text-neutral-600 mb-2">
+              <Text className="text-sm font-jakarta-medium text-neutral-600 mb-2">
                 Sujet
               </Text>
               <TextInput
-                className="border border-gray-200 rounded-xl p-3 font-quicksand"
+                className="border border-gray-200 rounded-xl p-3 font-jakarta"
                 placeholder="Sujet de votre message"
               />
             </View>
             <View className="mb-4">
-              <Text className="text-sm font-poppins-medium text-neutral-600 mb-2">
+              <Text className="text-sm font-jakarta-medium text-neutral-600 mb-2">
                 Message
               </Text>
               <TextInput
-                className="border border-gray-200 rounded-xl p-3 font-quicksand h-32"
+                className="border border-gray-200 rounded-xl p-3 font-jakarta h-32"
                 placeholder="Décrivez votre problème en détail"
                 multiline={true}
                 textAlignVertical="top"
               />
             </View>
             <TouchableOpacity className="bg-primary py-3 rounded-xl">
-              <Text className="text-white text-center font-poppins-bold">
+              <Text className="text-white text-center font-jakarta-bold">
                 Envoyer
               </Text>
             </TouchableOpacity>
@@ -233,7 +233,7 @@ export default function HelpScreen() {
 
         {/* Guides */}
         <View className="px-4 mb-8">
-          <Text className="text-lg font-poppins-bold text-neutral-800 mb-4">
+          <Text className="text-lg font-jakarta-bold text-neutral-800 mb-4">
             Guides et tutoriels
           </Text>
           <ScrollView
@@ -246,10 +246,10 @@ export default function HelpScreen() {
                 <Ionicons name="book-outline" size={32} color="#3B82F6" />
               </View>
               <View className="p-3">
-                <Text className="text-base font-poppins-semibold text-neutral-800">
+                <Text className="text-base font-jakarta-semibold text-neutral-800">
                   Guide d&apos;achat
                 </Text>
-                <Text className="text-xs font-quicksand text-neutral-500 mt-1">
+                <Text className="text-xs font-jakarta text-neutral-500 mt-1">
                   Apprenez à faire vos achats en toute sécurité
                 </Text>
               </View>
@@ -260,10 +260,10 @@ export default function HelpScreen() {
                 <Ionicons name="shield-checkmark-outline" size={32} color="#F59E0B" />
               </View>
               <View className="p-3">
-                <Text className="text-base font-poppins-semibold text-neutral-800">
+                <Text className="text-base font-jakarta-semibold text-neutral-800">
                   Sécurité des paiements
                 </Text>
-                <Text className="text-xs font-quicksand text-neutral-500 mt-1">
+                <Text className="text-xs font-jakarta text-neutral-500 mt-1">
                   Tout savoir sur la protection de vos transactions
                 </Text>
               </View>
@@ -274,10 +274,10 @@ export default function HelpScreen() {
                 <Ionicons name="swap-horizontal-outline" size={32} color="#10B981" />
               </View>
               <View className="p-3">
-                <Text className="text-base font-poppins-semibold text-neutral-800">
+                <Text className="text-base font-jakarta-semibold text-neutral-800">
                   Retours et remboursements
                 </Text>
-                <Text className="text-xs font-quicksand text-neutral-500 mt-1">
+                <Text className="text-xs font-jakarta text-neutral-500 mt-1">
                   Procédure pour retourner un article
                 </Text>
               </View>

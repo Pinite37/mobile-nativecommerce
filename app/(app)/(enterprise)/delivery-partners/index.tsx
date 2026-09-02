@@ -148,7 +148,7 @@ export default function DeliveryPartnersScreen() {
 
 		return (
 			<View style={{ width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.brandPrimary }}>
-				<Text className="text-white font-poppins-bold text-base">
+				<Text className="text-white font-jakarta-bold text-base">
 					{initials}
 				</Text>
 			</View>
@@ -261,15 +261,15 @@ export default function DeliveryPartnersScreen() {
 						</View>
 
 						<View className="flex-1">
-							<Text className="font-poppins-semibold text-base" style={{ color: colors.textPrimary }} numberOfLines={1}>
+							<Text className="font-jakarta-semibold text-base" style={{ color: colors.textPrimary }} numberOfLines={1}>
 								{item.firstName} {item.lastName}
 							</Text>
 							<View className="flex-row items-center mt-1">
-								<Text className="text-sm font-poppins-medium" style={{ color: colors.textSecondary }}>
+								<Text className="text-sm font-jakarta-medium" style={{ color: colors.textSecondary }}>
 									{item.availability ? i18n.t("enterprise.deliveryPartners.status.available") : i18n.t("enterprise.deliveryPartners.status.unavailable")}
 								</Text>
 								{item.vehicleType && (
-									<Text className="text-sm font-poppins-medium ml-2" style={{ color: colors.textTertiary }}>
+									<Text className="text-sm font-jakarta-medium ml-2" style={{ color: colors.textTertiary }}>
 										• {item.vehicleType}
 									</Text>
 								)}
@@ -282,12 +282,12 @@ export default function DeliveryPartnersScreen() {
 						<View className="flex-row items-center flex-wrap">
 							{item.isVerified && (
 								<View className="mr-2 px-2 py-1 bg-success-100 rounded-full">
-									<Text className="text-xs font-poppins-semibold text-success-700">✓ {i18n.t("enterprise.deliveryPartners.badges.verified")}</Text>
+									<Text className="text-xs font-jakarta-semibold text-success-700">✓ {i18n.t("enterprise.deliveryPartners.badges.verified")}</Text>
 								</View>
 							)}
 							{item.isAssociated && (
 								<View className="px-2 py-1 bg-primary-100 rounded-full">
-									<Text className="text-xs font-poppins-semibold text-primary-700">{i18n.t("enterprise.deliveryPartners.badges.associated")}</Text>
+									<Text className="text-xs font-jakarta-semibold text-primary-700">{i18n.t("enterprise.deliveryPartners.badges.associated")}</Text>
 								</View>
 							)}
 						</View>
@@ -295,7 +295,7 @@ export default function DeliveryPartnersScreen() {
 						{item.rating !== undefined && (
 							<View className="flex-row items-center">
 								<Ionicons name="star" size={14} color="#F59E0B" />
-								<Text className="text-sm font-poppins-semibold text-warning-600 ml-1">
+								<Text className="text-sm font-jakarta-semibold text-warning-600 ml-1">
 									{item.rating.toFixed(1)}
 								</Text>
 							</View>
@@ -308,7 +308,7 @@ export default function DeliveryPartnersScreen() {
 							{item.city && (
 								<View className="flex-row items-center mb-2">
 									<Ionicons name="location" size={14} color={colors.textTertiary} />
-									<Text className="text-sm font-poppins-medium ml-2 flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
+									<Text className="text-sm font-jakarta-medium ml-2 flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
 										{item.city}
 									</Text>
 								</View>
@@ -316,7 +316,7 @@ export default function DeliveryPartnersScreen() {
 							{item.phone && (
 								<View className="flex-row items-center mb-2">
 									<Ionicons name="call" size={14} color={colors.textTertiary} />
-									<Text className="text-sm font-poppins-medium ml-2 flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
+									<Text className="text-sm font-jakarta-medium ml-2 flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
 										{item.phone}
 									</Text>
 								</View>
@@ -324,7 +324,7 @@ export default function DeliveryPartnersScreen() {
 							{item.email && (
 								<View className="flex-row items-center">
 									<Ionicons name="mail" size={14} color={colors.textTertiary} />
-									<Text className="text-sm font-poppins-medium ml-2 flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
+									<Text className="text-sm font-jakarta-medium ml-2 flex-1" style={{ color: colors.textSecondary }} numberOfLines={1}>
 										{item.email}
 									</Text>
 								</View>
@@ -338,7 +338,7 @@ export default function DeliveryPartnersScreen() {
 							<View className="rounded-xl px-4 py-3 items-center" style={{ backgroundColor: colors.tertiary }}>
 								<View className="flex-row items-center">
 									<Ionicons name="checkmark-circle" size={16} color={colors.textSecondary} />
-									<Text className="font-poppins-semibold text-sm ml-2" style={{ color: colors.textSecondary }}>
+									<Text className="font-jakarta-semibold text-sm ml-2" style={{ color: colors.textSecondary }}>
 										{i18n.t("enterprise.deliveryPartners.actions.alreadyAssociated")}
 									</Text>
 								</View>
@@ -355,7 +355,7 @@ export default function DeliveryPartnersScreen() {
 								) : (
 									<View className="flex-row items-center justify-center">
 										<Ionicons name="add-circle" size={16} color="#FFFFFF" />
-										<Text className="font-poppins-semibold text-sm text-white ml-2">
+										<Text className="font-jakarta-semibold text-sm text-white ml-2">
 											{i18n.t("enterprise.deliveryPartners.actions.associate")}
 										</Text>
 									</View>
@@ -385,7 +385,7 @@ export default function DeliveryPartnersScreen() {
 							>
 								<Ionicons name="arrow-back" size={20} color={colors.text} />
 							</TouchableOpacity>
-							<Text style={{ fontSize: 20, fontFamily: 'Poppins-Bold', color: colors.text }}>
+							<Text style={{ fontSize: 20, fontFamily: 'PlusJakartaSans-Bold', color: colors.text }}>
 								{i18n.t("enterprise.deliveryPartners.title")}
 							</Text>
 						</View>
@@ -393,16 +393,16 @@ export default function DeliveryPartnersScreen() {
 						{/* Statistiques */}
 						<View style={{ flexDirection: 'row', backgroundColor: colors.tertiary, borderRadius: 12, padding: 12, marginBottom: 10 }}>
 							<View style={{ alignItems: 'center', flex: 1 }}>
-								<Text style={{ fontSize: 13, fontFamily: 'Poppins-Medium', color: colors.textSecondary }}>{i18n.t("enterprise.deliveryPartners.stats.total")}</Text>
-								<Text style={{ fontSize: 22, fontFamily: 'Poppins-Bold', color: colors.text }}>{totals.total}</Text>
+								<Text style={{ fontSize: 13, fontFamily: 'PlusJakartaSans-Medium', color: colors.textSecondary }}>{i18n.t("enterprise.deliveryPartners.stats.total")}</Text>
+								<Text style={{ fontSize: 22, fontFamily: 'PlusJakartaSans-Bold', color: colors.text }}>{totals.total}</Text>
 							</View>
 							<View style={{ alignItems: 'center', flex: 1 }}>
-								<Text style={{ fontSize: 13, fontFamily: 'Poppins-Medium', color: colors.textSecondary }}>{i18n.t("enterprise.deliveryPartners.stats.associated")}</Text>
-								<Text style={{ fontSize: 22, fontFamily: 'Poppins-Bold', color: colors.text }}>{totals.associatedCount}</Text>
+								<Text style={{ fontSize: 13, fontFamily: 'PlusJakartaSans-Medium', color: colors.textSecondary }}>{i18n.t("enterprise.deliveryPartners.stats.associated")}</Text>
+								<Text style={{ fontSize: 22, fontFamily: 'PlusJakartaSans-Bold', color: colors.text }}>{totals.associatedCount}</Text>
 							</View>
 							<View style={{ alignItems: 'center', flex: 1 }}>
-								<Text style={{ fontSize: 13, fontFamily: 'Poppins-Medium', color: colors.textSecondary }}>{i18n.t("enterprise.deliveryPartners.stats.available")}</Text>
-								<Text style={{ fontSize: 22, fontFamily: 'Poppins-Bold', color: colors.text }}>
+								<Text style={{ fontSize: 13, fontFamily: 'PlusJakartaSans-Medium', color: colors.textSecondary }}>{i18n.t("enterprise.deliveryPartners.stats.available")}</Text>
+								<Text style={{ fontSize: 22, fontFamily: 'PlusJakartaSans-Bold', color: colors.text }}>
 									{partners.filter(p => p.availability).length}
 								</Text>
 							</View>
@@ -416,7 +416,7 @@ export default function DeliveryPartnersScreen() {
 								onChangeText={setSearch}
 								placeholder={i18n.t("enterprise.deliveryPartners.searchPlaceholder")}
 								placeholderTextColor={colors.textSecondary}
-								style={{ flex: 1, color: colors.text, fontFamily: 'Poppins-Medium' }}
+								style={{ flex: 1, color: colors.text, fontFamily: 'PlusJakartaSans-Medium' }}
 								autoCapitalize="none"
 							/>
 							{search.length > 0 && (
@@ -436,7 +436,7 @@ export default function DeliveryPartnersScreen() {
 								onPress={() => setSelectedCity('')}
 								style={{ marginRight: 8, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, backgroundColor: !selectedCity ? colors.brandPrimary : colors.tertiary }}
 							>
-								<Text style={{ fontSize: 12, fontFamily: 'Poppins-SemiBold', color: !selectedCity ? '#FFFFFF' : colors.textSecondary }}>
+								<Text style={{ fontSize: 12, fontFamily: 'PlusJakartaSans-SemiBold', color: !selectedCity ? '#FFFFFF' : colors.textSecondary }}>
 									Toutes
 								</Text>
 							</TouchableOpacity>
@@ -446,7 +446,7 @@ export default function DeliveryPartnersScreen() {
 									onPress={() => setSelectedCity(city.name)}
 									style={{ marginRight: 8, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, backgroundColor: selectedCity === city.name ? colors.brandPrimary : colors.tertiary }}
 								>
-									<Text style={{ fontSize: 12, fontFamily: 'Poppins-SemiBold', color: selectedCity === city.name ? '#FFFFFF' : colors.textSecondary }}>
+									<Text style={{ fontSize: 12, fontFamily: 'PlusJakartaSans-SemiBold', color: selectedCity === city.name ? '#FFFFFF' : colors.textSecondary }}>
 										{city.name}
 									</Text>
 								</TouchableOpacity>
@@ -476,7 +476,7 @@ export default function DeliveryPartnersScreen() {
 												/>
 												<Text
 													style={{ color: colors.textPrimary }}
-													className="text-base font-poppins-semibold ml-2.5 flex-1"
+													className="text-base font-jakarta-semibold ml-2.5 flex-1"
 												>
 													Réserver mes courses à mes partenaires
 												</Text>
@@ -491,7 +491,7 @@ export default function DeliveryPartnersScreen() {
 										</View>
 										<Text
 											style={{ color: colors.textSecondary }}
-											className="text-sm font-poppins mt-2.5"
+											className="text-sm font-jakarta mt-2.5"
 										>
 											{partnersOnly
 												? "Seuls vos partenaires voient vos livraisons. Si aucun n'est disponible, la course reste sans livreur."
@@ -499,7 +499,7 @@ export default function DeliveryPartnersScreen() {
 										</Text>
 										<Text
 											style={{ color: colors.textTertiary }}
-											className="text-xs font-poppins mt-2"
+											className="text-xs font-jakarta mt-2"
 										>
 											S&apos;applique aux prochaines livraisons publiées, pas à celles déjà en cours.
 										</Text>
@@ -511,10 +511,10 @@ export default function DeliveryPartnersScreen() {
 									<View className="w-20 h-20 rounded-full items-center justify-center mb-4" style={{ backgroundColor: colors.tertiary }}>
 										<Ionicons name="people" size={32} color={colors.textTertiary} />
 									</View>
-									<Text className="font-poppins-semibold text-lg text-center mb-2" style={{ color: colors.textPrimary }}>
+									<Text className="font-jakarta-semibold text-lg text-center mb-2" style={{ color: colors.textPrimary }}>
 										{i18n.t("enterprise.deliveryPartners.empty.title")}
 									</Text>
-									<Text className="font-quicksand-regular text-center" style={{ color: colors.textSecondary }}>
+									<Text className="font-jakarta-regular text-center" style={{ color: colors.textSecondary }}>
 										{i18n.t("enterprise.deliveryPartners.empty.message")}
 									</Text>
 								</View>

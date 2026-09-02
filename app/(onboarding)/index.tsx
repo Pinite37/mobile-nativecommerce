@@ -205,17 +205,17 @@ const styles = StyleSheet.create({
 	skipText: {
 		fontSize: 14,
 		color: '#FFFFFF',
-		fontFamily: 'Poppins-SemiBold',
+		fontFamily: 'PlusJakartaSans-SemiBold',
 	},
 	title: {
 		fontSize: 30,
-		fontFamily: 'Poppins-Bold',
+		fontFamily: 'PlusJakartaSans-Bold',
 		color: '#FFFFFF',
 		marginBottom: 12,
 	},
 	description: {
 		fontSize: 15,
-		fontFamily: 'Poppins-Regular',
+		fontFamily: 'PlusJakartaSans-Regular',
 		color: 'rgba(255,255,255,0.85)',
 		lineHeight: 23,
 	},
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
 	},
 	nextButtonText: {
 		fontSize: 17,
-		fontFamily: 'Poppins-Bold',
+		fontFamily: 'PlusJakartaSans-Bold',
 		color: '#FFFFFF',
 	},
 });

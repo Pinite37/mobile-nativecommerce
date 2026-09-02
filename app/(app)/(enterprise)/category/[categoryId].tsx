@@ -290,21 +290,21 @@ export default function CategoryProductsScreen() {
           </TouchableOpacity>
           {item.stock === 0 && (
             <View className="absolute top-2 left-2 bg-red-500 px-2 py-1 rounded-lg">
-              <Text className="text-white text-xs font-poppins-bold">Épuisé</Text>
+              <Text className="text-white text-xs font-jakarta-bold">Épuisé</Text>
             </View>
           )}
         </View>
         <View style={{ padding: 8 }}>
-          <Text style={{ color: colors.textPrimary, fontSize: 14, fontFamily: 'Poppins-Bold' }} numberOfLines={2}>
+          <Text style={{ color: colors.textPrimary, fontSize: 14, fontFamily: 'PlusJakartaSans-Bold' }} numberOfLines={2}>
             {item.name}
           </Text>
           <View className="flex-row items-center justify-between mt-1">
-            <Text style={{ color: '#10B981', fontSize: 16, fontFamily: 'Poppins-Bold' }}>
+            <Text style={{ color: '#10B981', fontSize: 16, fontFamily: 'PlusJakartaSans-Bold' }}>
               {formatPrice(item.price)}
             </Text>
           </View>
           {enterprise && (
-            <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Poppins-Medium', marginTop: 4 }} numberOfLines={1}>
+            <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'PlusJakartaSans-Medium', marginTop: 4 }} numberOfLines={1}>
               {enterprise.companyName}
             </Text>
           )}
@@ -346,13 +346,13 @@ export default function CategoryProductsScreen() {
           />
           {item.stock === 0 && (
             <View className="absolute inset-0 bg-black/50 rounded-xl items-center justify-center">
-              <Text className="text-white text-xs font-poppins-bold">Épuisé</Text>
+              <Text className="text-white text-xs font-jakarta-bold">Épuisé</Text>
             </View>
           )}
         </View>
         <View className="flex-1">
           <View className="flex-row justify-between items-start">
-            <Text style={{ color: colors.textPrimary, fontSize: 14, fontFamily: 'Poppins-SemiBold', flex: 1 }} numberOfLines={2}>
+            <Text style={{ color: colors.textPrimary, fontSize: 14, fontFamily: 'PlusJakartaSans-SemiBold', flex: 1 }} numberOfLines={2}>
               {item.name}
             </Text>
             <TouchableOpacity onPress={() => toggleFavorite(item._id)} className="ml-2">
@@ -363,11 +363,11 @@ export default function CategoryProductsScreen() {
               />
             </TouchableOpacity>
           </View>
-          <Text style={{ color: '#10B981', fontSize: 18, fontFamily: 'Poppins-Bold', marginTop: 4 }}>
+          <Text style={{ color: '#10B981', fontSize: 18, fontFamily: 'PlusJakartaSans-Bold', marginTop: 4 }}>
             {formatPrice(item.price)}
           </Text>
           {enterprise && (
-            <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Poppins-Medium', marginTop: 4 }} numberOfLines={1}>
+            <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'PlusJakartaSans-Medium', marginTop: 4 }} numberOfLines={1}>
               {enterprise.companyName}
             </Text>
           )}
@@ -390,11 +390,11 @@ export default function CategoryProductsScreen() {
             <Ionicons name="arrow-back" size={22} color={colors.text} />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: colors.text }} numberOfLines={1}>
+            <Text style={{ fontSize: 18, fontFamily: 'PlusJakartaSans-Bold', color: colors.text }} numberOfLines={1}>
               {loading && !category ? 'Chargement...' : category?.name || 'Catégorie'}
             </Text>
             {!loading && (
-              <Text style={{ fontSize: 12, color: colors.textSecondary, fontFamily: 'Poppins-Medium' }}>
+              <Text style={{ fontSize: 12, color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Medium' }}>
                 {totalProducts} produit{totalProducts > 1 ? 's' : ''}
               </Text>
             )}
@@ -425,7 +425,7 @@ export default function CategoryProductsScreen() {
         <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.tertiary, borderRadius: 15, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 10, marginTop: 10 }}>
           <Ionicons name="search" size={20} color={colors.textSecondary} />
           <TextInput
-            style={{ flex: 1, marginLeft: 8, color: colors.textPrimary, fontFamily: 'Poppins-Medium' }}
+            style={{ flex: 1, marginLeft: 8, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Medium' }}
             placeholder="Rechercher dans cette catégorie..."
             placeholderTextColor={colors.textSecondary}
             value={searchQuery}
@@ -475,7 +475,7 @@ export default function CategoryProductsScreen() {
                 color={sortBy === sort.value ? '#FFFFFF' : colors.textSecondary}
               />
               <Text
-                style={{ marginLeft: 4, fontSize: 12, fontFamily: 'Poppins-SemiBold', color: sortBy === sort.value ? '#FFFFFF' : colors.textSecondary }}
+                style={{ marginLeft: 4, fontSize: 12, fontFamily: 'PlusJakartaSans-SemiBold', color: sortBy === sort.value ? '#FFFFFF' : colors.textSecondary }}
               >
                 {sort.label}
               </Text>
@@ -499,10 +499,10 @@ export default function CategoryProductsScreen() {
       ) : products.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
           <Ionicons name="cube-outline" size={64} color={colors.textSecondary} />
-          <Text style={{ color: colors.textPrimary, fontSize: 18, fontFamily: 'Poppins-Bold', marginTop: 16 }}>
+          <Text style={{ color: colors.textPrimary, fontSize: 18, fontFamily: 'PlusJakartaSans-Bold', marginTop: 16 }}>
             Aucun produit trouvé
           </Text>
-          <Text style={{ color: colors.textSecondary, fontFamily: 'Poppins-Medium', textAlign: 'center', marginTop: 8 }}>
+          <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Medium', textAlign: 'center', marginTop: 8 }}>
             Essayez de modifier vos filtres ou votre recherche
           </Text>
           {(minPrice || maxPrice || inStockOnly || searchQuery) && (
@@ -510,7 +510,7 @@ export default function CategoryProductsScreen() {
               onPress={handleResetFilters}
               style={{ marginTop: 16, backgroundColor: '#10B981', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 }}
             >
-              <Text style={{ color: '#FFFFFF', fontFamily: 'Poppins-SemiBold' }}>Réinitialiser les filtres</Text>
+              <Text style={{ color: '#FFFFFF', fontFamily: 'PlusJakartaSans-SemiBold' }}>Réinitialiser les filtres</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -546,7 +546,7 @@ export default function CategoryProductsScreen() {
 
           {/* Pagination info */}
           {!loadingMore && products.length > 0 && (
-            <Text style={{ textAlign: 'center', color: colors.textSecondary, fontFamily: 'Poppins-Medium', fontSize: 14, marginTop: 16 }}>
+            <Text style={{ textAlign: 'center', color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 14, marginTop: 16 }}>
               Page {currentPage} sur {totalPages}
             </Text>
           )}
@@ -579,7 +579,7 @@ export default function CategoryProductsScreen() {
             </View>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-              <Text style={{ color: colors.textPrimary, fontSize: 20, fontFamily: 'Poppins-Bold' }}>Filtres</Text>
+              <Text style={{ color: colors.textPrimary, fontSize: 20, fontFamily: 'PlusJakartaSans-Bold' }}>Filtres</Text>
               <TouchableOpacity
                 onPress={closeFilters}
                 style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center' }}
@@ -590,12 +590,12 @@ export default function CategoryProductsScreen() {
 
             <ScrollView showsVerticalScrollIndicator={false}>
               <View style={{ marginBottom: 20 }}>
-                <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'Poppins-Bold', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'PlusJakartaSans-Bold', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.6 }}>
                   Prix (FCFA)
                 </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <TextInput
-                    style={{ flex: 1, backgroundColor: colors.secondary, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontFamily: 'Poppins-Medium', fontSize: 14 }}
+                    style={{ flex: 1, backgroundColor: colors.secondary, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 14 }}
                     placeholder="Min"
                     placeholderTextColor={colors.textSecondary}
                     keyboardType="numeric"
@@ -604,7 +604,7 @@ export default function CategoryProductsScreen() {
                   />
                   <Text style={{ color: colors.textSecondary, fontSize: 16 }}>–</Text>
                   <TextInput
-                    style={{ flex: 1, backgroundColor: colors.secondary, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontFamily: 'Poppins-Medium', fontSize: 14 }}
+                    style={{ flex: 1, backgroundColor: colors.secondary, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 14 }}
                     placeholder="Max"
                     placeholderTextColor={colors.textSecondary}
                     keyboardType="numeric"
@@ -618,7 +618,7 @@ export default function CategoryProductsScreen() {
                 onPress={() => setInStockOnly(!inStockOnly)}
                 style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, marginBottom: 20, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.borderLight }}
               >
-                <Text style={{ color: colors.textPrimary, fontSize: 14, fontFamily: 'Poppins-SemiBold' }}>
+                <Text style={{ color: colors.textPrimary, fontSize: 14, fontFamily: 'PlusJakartaSans-SemiBold' }}>
                   Produits en stock uniquement
                 </Text>
                 <View style={{ width: 48, height: 26, borderRadius: 13, backgroundColor: inStockOnly ? '#10B981' : colors.borderLight, justifyContent: 'center' }}>
@@ -631,13 +631,13 @@ export default function CategoryProductsScreen() {
                   style={{ flex: 1, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.secondary, alignItems: 'center' }}
                   onPress={handleResetFilters}
                 >
-                  <Text style={{ color: colors.textPrimary, fontFamily: 'Poppins-SemiBold' }}>Réinitialiser</Text>
+                  <Text style={{ color: colors.textPrimary, fontFamily: 'PlusJakartaSans-SemiBold' }}>Réinitialiser</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={{ flex: 1, paddingVertical: 14, borderRadius: 14, backgroundColor: '#10B981', alignItems: 'center' }}
                   onPress={handleApplyFilters}
                 >
-                  <Text style={{ color: '#fff', fontFamily: 'Poppins-Bold' }}>Appliquer</Text>
+                  <Text style={{ color: '#fff', fontFamily: 'PlusJakartaSans-Bold' }}>Appliquer</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>

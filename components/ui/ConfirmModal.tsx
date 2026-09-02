@@ -96,13 +96,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 17,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'PlusJakartaSans-Bold',
     textAlign: 'center',
     marginBottom: 8,
   },
   message: {
     fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'PlusJakartaSans-Medium',
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 4,
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   },
   confirmBtnText: {
     color: '#fff',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'PlusJakartaSans-Bold',
     fontSize: 15,
   },
   cancelBtn: {
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   cancelBtnText: {
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'PlusJakartaSans-SemiBold',
     fontSize: 15,
   },
 });

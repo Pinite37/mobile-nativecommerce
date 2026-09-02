@@ -315,12 +315,12 @@ export default function EnterpriseProducts() {
             <View className="mt-3">
               <Text
                 style={{ color: colors.textPrimary }}
-                className="text-sm font-poppins-semibold"
+                className="text-sm font-jakarta-semibold"
                 numberOfLines={1}
               >
                 {item.name}
               </Text>
-              <Text style={{ color: colors.brandPrimary }} className="text-xs font-poppins-medium mt-1">
+              <Text style={{ color: colors.brandPrimary }} className="text-xs font-jakarta-medium mt-1">
                 {formatPrice(item.price)}
               </Text>
               <View className="flex-row items-center mt-1">
@@ -332,7 +332,7 @@ export default function EnterpriseProducts() {
               </View>
               <View className="flex-row items-center mt-1 justify-between">
                 <Text
-                  className="text-[10px] font-poppins-medium"
+                  className="text-[10px] font-jakarta-medium"
                   style={{ color: stockStatus.color }}
                 >
                   {stockStatus.text}
@@ -342,7 +342,7 @@ export default function EnterpriseProducts() {
                   style={{ backgroundColor: statusStyle.bg }}
                 >
                   <Text
-                    className="text-[10px] font-poppins-semibold"
+                    className="text-[10px] font-jakarta-semibold"
                     style={{ color: statusStyle.color }}
                   >
                     {item.isActive ? i18n.t("enterprise.products.status.active") : i18n.t("enterprise.products.status.inactive")}
@@ -383,11 +383,11 @@ export default function EnterpriseProducts() {
           <View className="ml-4 flex-1">
             <View className="flex-row items-start justify-between mb-2">
               <View className="flex-1 pr-2">
-                <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-semibold">
+                <Text style={{ color: colors.textPrimary }} className="text-base font-jakarta-semibold">
                   {item.name}
                 </Text>
                 {typeof item.category === "object" && (
-                  <Text style={{ color: colors.textSecondary }} className="text-sm font-poppins-medium">
+                  <Text style={{ color: colors.textSecondary }} className="text-sm font-jakarta-medium">
                     {item.category.name}
                   </Text>
                 )}
@@ -398,7 +398,7 @@ export default function EnterpriseProducts() {
                   style={{ backgroundColor: statusStyle.bg }}
                 >
                   <Text
-                    className="text-xs font-poppins-semibold"
+                    className="text-xs font-jakarta-semibold"
                     style={{ color: statusStyle.color }}
                   >
                     {item.isActive ? i18n.t("enterprise.products.status.active") : i18n.t("enterprise.products.status.inactive")}
@@ -420,13 +420,13 @@ export default function EnterpriseProducts() {
             </View>
             <View className="flex-row items-center mb-3">
               <Ionicons name="star" size={14} color={colors.brandPrimary} />
-              <Text style={{ color: colors.textSecondary }} className="text-xs ml-1 font-poppins-light">
+              <Text style={{ color: colors.textSecondary }} className="text-xs ml-1 font-jakarta-light">
                 {item.stats.averageRating.toFixed(1)} ({item.stats.totalReviews}{" "}
                 {i18n.t("enterprise.products.reviews")})
               </Text>
             </View>
             <View className="flex-row items-center justify-between">
-              <Text style={{ color: colors.brandPrimary }} className="text-lg font-poppins-bold">
+              <Text style={{ color: colors.brandPrimary }} className="text-lg font-jakarta-bold">
                 {formatPrice(item.price)}
               </Text>
               <View
@@ -434,7 +434,7 @@ export default function EnterpriseProducts() {
                 style={{ backgroundColor: stockStatus.color + "15" }}
               >
                 <Text
-                  className="text-xs font-poppins-semibold"
+                  className="text-xs font-jakarta-semibold"
                   style={{ color: stockStatus.color }}
                 >
                   {stockStatus.text}
@@ -452,7 +452,7 @@ export default function EnterpriseProducts() {
             }}
           >
             <Ionicons name="trash-outline" size={18} color={colors.error} />
-            <Text style={{ color: colors.error }} className="font-poppins-semibold ml-2">
+            <Text style={{ color: colors.error }} className="font-jakarta-semibold ml-2">
               {i18n.t("enterprise.products.actions.delete")}
             </Text>
           </TouchableOpacity>
@@ -480,12 +480,12 @@ export default function EnterpriseProducts() {
     return (
       <View className="flex-1 justify-center items-center px-6">
         <Ionicons name="cube-outline" size={80} color={colors.textTertiary} />
-        <Text style={{ color: colors.textPrimary }} className="text-xl font-poppins-bold mt-4 mb-2">
+        <Text style={{ color: colors.textPrimary }} className="text-xl font-jakarta-bold mt-4 mb-2">
           {searchQuery.trim() || selectedCategory !== "all"
             ? i18n.t("enterprise.products.empty.noProductsFound")
             : i18n.t("enterprise.products.empty.noProducts")}
         </Text>
-        <Text style={{ color: colors.textSecondary }} className="text-center font-poppins-medium mb-6">
+        <Text style={{ color: colors.textSecondary }} className="text-center font-jakarta-medium mb-6">
           {searchQuery.trim() || selectedCategory !== "all"
             ? i18n.t("enterprise.products.empty.noProductsFoundMessage")
             : i18n.t("enterprise.products.empty.noProductsMessage")}
@@ -497,7 +497,7 @@ export default function EnterpriseProducts() {
             router.push("/(app)/(enterprise)/(tabs)/products/create");
           }}
         >
-          <Text style={{ color: colors.textOnBrand }} className="font-poppins-semibold">
+          <Text style={{ color: colors.textOnBrand }} className="font-jakarta-semibold">
             {i18n.t("enterprise.products.addProduct")}
           </Text>
         </TouchableOpacity>
@@ -520,7 +520,7 @@ export default function EnterpriseProducts() {
       >
         <View className="flex-1 justify-center items-center px-6">
           <View style={{ backgroundColor: colors.card }} className="rounded-2xl p-6 w-full max-w-sm">
-            <Text style={{ color: colors.textPrimary }} className="text-lg font-poppins-bold mb-4">
+            <Text style={{ color: colors.textPrimary }} className="text-lg font-jakarta-bold mb-4">
               {i18n.t("enterprise.products.sort.title")}
             </Text>
 
@@ -540,7 +540,7 @@ export default function EnterpriseProducts() {
                   style={{
                     color: selectedSort === option.id ? colors.textOnBrand : colors.textPrimary
                   }}
-                  className="font-poppins-medium"
+                  className="font-jakarta-medium"
                 >
                   {option.name}
                 </Text>
@@ -552,7 +552,7 @@ export default function EnterpriseProducts() {
               className="mt-4 py-3 px-4 rounded-xl"
               onPress={() => setShowSortModal(false)}
             >
-              <Text style={{ color: colors.textPrimary }} className="font-poppins-medium text-center">
+              <Text style={{ color: colors.textPrimary }} className="font-jakarta-medium text-center">
                 {i18n.t("enterprise.products.sort.cancel")}
               </Text>
             </TouchableOpacity>
@@ -621,10 +621,10 @@ export default function EnterpriseProducts() {
       <View style={{ paddingHorizontal: 20, marginBottom: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 24, color: colors.textPrimary }}>
+            <Text style={{ fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, color: colors.textPrimary }}>
               {i18n.t("enterprise.products.title")}
             </Text>
-            <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>
+            <Text style={{ fontFamily: 'PlusJakartaSans-Medium', fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>
               {products.length} {products.length !== 1 ? i18n.t("enterprise.products.catalogPlural") : i18n.t("enterprise.products.catalog")}
             </Text>
           </View>
@@ -633,7 +633,7 @@ export default function EnterpriseProducts() {
             style={{ backgroundColor: colors.brandPrimary, borderRadius: 15, paddingHorizontal: 14, paddingVertical: 10, flexDirection: 'row', alignItems: 'center' }}
           >
             <Ionicons name="add" size={18} color="#fff" />
-            <Text style={{ color: '#fff', fontFamily: 'Poppins-Bold', fontSize: 13, marginLeft: 4 }}>
+            <Text style={{ color: '#fff', fontFamily: 'PlusJakartaSans-Bold', fontSize: 13, marginLeft: 4 }}>
               {i18n.t("enterprise.products.addButton")}
             </Text>
           </TouchableOpacity>
@@ -657,7 +657,7 @@ export default function EnterpriseProducts() {
               height: 48,
               paddingLeft: 44,
               paddingRight: 44,
-              fontFamily: 'Poppins-Medium',
+              fontFamily: 'PlusJakartaSans-Medium',
               fontSize: 14,
             }}
             placeholderTextColor={colors.textTertiary}
@@ -700,7 +700,7 @@ export default function EnterpriseProducts() {
               onPress={() => setSelectedCategory(item._id)}
             >
               <Text style={{
-                fontFamily: 'Poppins-Bold',
+                fontFamily: 'PlusJakartaSans-Bold',
                 fontSize: 13,
                 color: selectedCategory === item._id ? '#FFFFFF' : colors.textSecondary,
               }}>
@@ -718,7 +718,7 @@ export default function EnterpriseProducts() {
           style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.tertiary, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 }}
         >
           <Ionicons name="swap-vertical" size={16} color={colors.brandPrimary} />
-          <Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 13, color: colors.textPrimary, marginLeft: 6 }}>
+          <Text style={{ fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 13, color: colors.textPrimary, marginLeft: 6 }}>
             {sortOptions.find((o) => o.id === selectedSort)?.name}
           </Text>
           <Ionicons name="chevron-down" size={14} color={colors.textSecondary} style={{ marginLeft: 4 }} />
@@ -727,7 +727,7 @@ export default function EnterpriseProducts() {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           {searchQuery.trim().length > 0 && (
             <View style={{ backgroundColor: colors.tertiary, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 }}>
-              <Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 13, color: colors.textSecondary }}>
+              <Text style={{ fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 13, color: colors.textSecondary }}>
                 {products.length} {products.length !== 1 ? i18n.t("enterprise.products.resultsPlural") : i18n.t("enterprise.products.results")}
               </Text>
             </View>
@@ -843,10 +843,10 @@ export default function EnterpriseProducts() {
 
               {/* Content */}
               <View className="px-6 pb-6">
-                <Text style={{ color: colors.textPrimary }} className="text-xl font-poppins-bold text-center mb-2">
+                <Text style={{ color: colors.textPrimary }} className="text-xl font-jakarta-bold text-center mb-2">
                   {confirmationAction?.title}
                 </Text>
-                <Text style={{ color: colors.textSecondary }} className="text-base font-poppins-medium text-center leading-5">
+                <Text style={{ color: colors.textSecondary }} className="text-base font-jakarta-medium text-center leading-5">
                   {confirmationAction?.message}
                 </Text>
               </View>
@@ -858,7 +858,7 @@ export default function EnterpriseProducts() {
                   style={{ backgroundColor: colors.tertiary }}
                   className="flex-1 py-4 rounded-2xl items-center"
                 >
-                  <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-semibold">
+                  <Text style={{ color: colors.textPrimary }} className="text-base font-jakarta-semibold">
                     {i18n.t("enterprise.products.actions.cancel")}
                   </Text>
                 </TouchableOpacity>
@@ -867,7 +867,7 @@ export default function EnterpriseProducts() {
                   className="flex-1 py-4 rounded-2xl items-center"
                   style={{ backgroundColor: confirmationAction?.confirmColor }}
                 >
-                  <Text style={{ color: colors.textOnBrand }} className="text-base font-poppins-semibold">
+                  <Text style={{ color: colors.textOnBrand }} className="text-base font-jakarta-semibold">
                     {confirmationAction?.confirmText}
                   </Text>
                 </TouchableOpacity>
@@ -919,12 +919,12 @@ export default function EnterpriseProducts() {
                     <View className="flex-1">
                       <Text
                         style={{ color: colors.textPrimary }}
-                        className="text-base font-poppins-bold"
+                        className="text-base font-jakarta-bold"
                         numberOfLines={2}
                       >
                         {selectedProductForMenu.name}
                       </Text>
-                      <Text style={{ color: colors.brandPrimary }} className="text-sm font-poppins-medium mt-1">
+                      <Text style={{ color: colors.brandPrimary }} className="text-sm font-jakarta-medium mt-1">
                         {formatPrice(selectedProductForMenu.price)}
                       </Text>
                     </View>
@@ -954,7 +954,7 @@ export default function EnterpriseProducts() {
                   >
                     <Ionicons name="eye" size={20} color={colors.brandPrimary} />
                   </View>
-                  <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-semibold flex-1">
+                  <Text style={{ color: colors.textPrimary }} className="text-base font-jakarta-semibold flex-1">
                     {i18n.t("enterprise.products.actions.viewDetails")}
                   </Text>
                   <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
@@ -991,7 +991,7 @@ export default function EnterpriseProducts() {
                         }
                       />
                     </View>
-                    <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-semibold flex-1">
+                    <Text style={{ color: colors.textPrimary }} className="text-base font-jakarta-semibold flex-1">
                       {selectedProductForMenu.isActive
                         ? i18n.t("enterprise.products.actions.deactivate")
                         : i18n.t("enterprise.products.actions.activate")}
@@ -1022,7 +1022,7 @@ export default function EnterpriseProducts() {
                   >
                     <Ionicons name="trash" size={20} color={colors.error} />
                   </View>
-                  <Text style={{ color: colors.error }} className="text-base font-poppins-semibold flex-1">
+                  <Text style={{ color: colors.error }} className="text-base font-jakarta-semibold flex-1">
                     {i18n.t("enterprise.products.actions.delete")}
                   </Text>
                   <Ionicons name="chevron-forward" size={20} color={colors.error} />
@@ -1039,7 +1039,7 @@ export default function EnterpriseProducts() {
                     setSelectedProductForMenu(null);
                   }}
                 >
-                  <Text style={{ color: colors.textPrimary }} className="text-base font-poppins-semibold">
+                  <Text style={{ color: colors.textPrimary }} className="text-base font-jakarta-semibold">
                     {i18n.t("enterprise.products.actions.cancel")}
                   </Text>
                 </TouchableOpacity>
