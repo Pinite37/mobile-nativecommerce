@@ -1,8 +1,26 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect } from 'react';
 import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import type { ToastType } from './context';
+
+// Codes couleur/icône repris du système de notifications supprimé (bulle
+// surgissant du haut), pour que la fusion des deux systèmes ne change rien à
+// la lecture des messages : un succès reste vert, une erreur reste rouge.
+const VARIANT_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
+  success: 'checkmark-circle',
+  error: 'close-circle',
+  warning: 'warning',
+  info: 'information-circle',
+};
+
+const VARIANT_COLOR: Record<string, string> = {
+  success: '#10B981',
+  error: '#EF4444',
+  warning: '#F59E0B',
+  info: '#3B82F6',
+};
 
 type ToastProps = {
   index: number;
@@ -116,8 +134,21 @@ const { width: windowWidth } = useWindowDimensions();
       >
         <Animated.View style={styles.textContainer}>
           <Animated.View style={[rVisibleContainerStyle, styles.rowCenter]}>
-            {Boolean(toast.leading) && <>{toast.leading?.()}</>}
-            <View style={[styles.columnCenter, { marginLeft: toast.leading ? 10 : 0 }]}>
+            {toast.leading ? (
+              <>{toast.leading()}</>
+            ) : toast.variant ? (
+              <Ionicons
+                name={VARIANT_ICON[toast.variant]}
+                size={22}
+                color={VARIANT_COLOR[toast.variant]}
+              />
+            ) : null}
+            <View
+              style={[
+                styles.columnCenter,
+                { marginLeft: toast.leading || toast.variant ? 10 : 0 },
+              ]}
+            >
               <Text style={styles.title}>{toast.title as any}</Text>
               {toast.subtitle && <Text style={styles.subtitle}>{toast.subtitle as any}</Text>}
             </View>

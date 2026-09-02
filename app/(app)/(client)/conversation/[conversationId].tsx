@@ -17,9 +17,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import NotificationModal, {
-  useNotification,
-} from "../../../../components/ui/NotificationModal";
+import { useToast } from "../../../../components/ui/ReanimatedToast/context";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { useSocket } from "../../../../hooks/useSocket";
@@ -81,8 +79,7 @@ export default function ConversationDetails() {
     onMessageDeleted,
     onMessagesRead,
   } = useSocket();
-  const { notification, showNotification, hideNotification } =
-    useNotification();
+  const { showToast } = useToast();
   // Garde-fous pour éviter les rechargements multiples
   const initialLoadRef = useRef(false);
   const productLoadRef = useRef(false);
@@ -455,7 +452,11 @@ export default function ConversationDetails() {
         MessagingService.markMessagesAsRead(conversationId!).catch(() => {});
       } catch (error) {
         if (!cancelled && !cached) {
-          showNotification("error", "Erreur", "Impossible de charger la conversation");
+          showToast({
+            variant: "error",
+            title: "Erreur",
+            subtitle: "Impossible de charger la conversation",
+          });
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -1231,7 +1232,11 @@ export default function ConversationDetails() {
       );
     } catch (error) {
       console.error("❌ Erreur suppression message:", error);
-      showNotification("error", "Erreur", "Impossible de supprimer le message");
+      showToast({
+        variant: "error",
+        title: "Erreur",
+        subtitle: "Impossible de supprimer le message",
+      });
     }
   };
 
@@ -1478,16 +1483,15 @@ export default function ConversationDetails() {
     if (data.truncated) {
       // Cible hors de portée de la limite serveur : on l'annonce plutôt que
       // de laisser l'utilisateur croire à un bug.
-      showNotification(
-        "info",
-        "Message trop ancien",
-        "La discussion est trop longue pour y accéder directement."
-      );
+      showToast({
+        variant: "info",
+        title: "Message trop ancien",
+        subtitle: "La discussion est trop longue pour y accéder directement.",
+      });
       return;
     }
     setTimeout(() => scrollTo(data.messages), 200);
   };
-
 
   return (
     <View style={{ flex: 1, backgroundColor: isDark ? '#0F1923' : '#EEF2F7' }}>
@@ -1975,17 +1979,6 @@ export default function ConversationDetails() {
           </View>
         </TouchableOpacity>
       </Modal>
-
-      {/* Notification Modal */}
-      {notification && (
-        <NotificationModal
-          visible={notification.visible}
-          type={notification.type}
-          title={notification.title}
-          message={notification.message}
-          onClose={hideNotification}
-        />
-      )}
 
       {/* Modal Actions du message — slide-up animé */}
       <Modal

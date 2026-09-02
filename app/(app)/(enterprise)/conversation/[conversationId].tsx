@@ -22,9 +22,7 @@ import {
 } from "react-native";
 // Removed reanimated Animated import since we are not using transition classes here
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import NotificationModal, {
-  useNotification,
-} from "../../../../components/ui/NotificationModal";
+import { useToast } from "../../../../components/ui/ReanimatedToast/context";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { useSocket } from "../../../../hooks/useSocket";
@@ -62,7 +60,6 @@ const conversationCache = new Map<
 >();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes en millisecondes
 
-
 const ChatWallpaperEnt = ChatWallpaper;
 const SwipeableRow = SwipeableMessageRow;
 
@@ -89,8 +86,7 @@ export default function ConversationDetails() {
     onMessageDeleted,
     onMessagesRead,
   } = useSocket();
-  const { notification, showNotification, hideNotification } =
-    useNotification();
+  const { showToast } = useToast();
   const { colors, isDark } = useTheme();
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
 
@@ -195,10 +191,18 @@ export default function ConversationDetails() {
     setPublishingId(commande._id);
     try {
       await CommandeService.publishMission(commande._id);
-      showNotification("success", "Livraison publiée", "Les livreurs à proximité sont notifiés");
+      showToast({
+        variant: "success",
+        title: "Livraison publiée",
+        subtitle: "Les livreurs à proximité sont notifiés",
+      });
       await refreshCommandes();
     } catch (e: any) {
-      showNotification("error", "Publication impossible", e?.message || "Réessayez");
+      showToast({
+        variant: "error",
+        title: "Publication impossible",
+        subtitle: e?.message || "Réessayez",
+      });
     } finally {
       setPublishingId(null);
     }
@@ -246,11 +250,11 @@ export default function ConversationDetails() {
     const customerId = getCustomerIdFromConversation(conversation, getCurrentUserId());
 
     if (!productId || !customerId) {
-      showNotification(
-        "error",
-        "Données manquantes",
-        "Produit ou client introuvable pour proposer une commande"
-      );
+      showToast({
+        variant: "error",
+        title: "Données manquantes",
+        subtitle: "Produit ou client introuvable pour proposer une commande",
+      });
       return;
     }
 
@@ -292,7 +296,6 @@ export default function ConversationDetails() {
       },
     } as any);
   };
-
 
   // États pour la gestion des confirmations de suppression
   const [confirmationVisible, setConfirmationVisible] = useState(false);
@@ -737,11 +740,11 @@ export default function ConversationDetails() {
         MessagingService.markMessagesAsRead(conversationId!).catch(() => {});
       } catch (error) {
         if (!cached) {
-          showNotification(
-            "error",
-            i18n.t("messages.error"),
-            i18n.t("enterprise.messages.conversationDetail.errors.loadConversation")
-          );
+          showToast({
+            variant: "error",
+            title: i18n.t("messages.error"),
+            subtitle: i18n.t("enterprise.messages.conversationDetail.errors.loadConversation"),
+          });
         }
       } finally {
         setLoading(false);
@@ -755,7 +758,7 @@ export default function ConversationDetails() {
     return () => {
       loadedConversationRef.current = null;
     };
-  }, [conversationId, showNotification]);
+  }, [conversationId, showToast]);
 
   // === GESTION SOCKET.IO ===
   useEffect(() => {
@@ -1041,11 +1044,11 @@ export default function ConversationDetails() {
   const requestPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      showNotification(
-        "warning",
-        "Permission requise",
-        "Nous avons besoin de l'autorisation pour accéder à vos photos."
-      );
+      showToast({
+        variant: "warning",
+        title: "Permission requise",
+        subtitle: "Nous avons besoin de l'autorisation pour accéder à vos photos.",
+      });
       return false;
     }
     return true;
@@ -1054,11 +1057,11 @@ export default function ConversationDetails() {
   const requestCameraPermissions = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
-      showNotification(
-        "warning",
-        "Permission requise",
-        "Nous avons besoin de l'autorisation pour utiliser votre caméra."
-      );
+      showToast({
+        variant: "warning",
+        title: "Permission requise",
+        subtitle: "Nous avons besoin de l'autorisation pour utiliser votre caméra.",
+      });
       return false;
     }
     return true;
@@ -1089,7 +1092,11 @@ export default function ConversationDetails() {
       }
     } catch (error) {
       console.error("Erreur sélection image:", error);
-      showNotification("error", "Erreur", "Impossible de sélectionner l'image");
+      showToast({
+        variant: "error",
+        title: "Erreur",
+        subtitle: "Impossible de sélectionner l'image",
+      });
     }
   };
 
@@ -1117,7 +1124,11 @@ export default function ConversationDetails() {
       }
     } catch (error) {
       console.error("Erreur prise photo:", error);
-      showNotification("error", "Erreur", "Impossible de prendre la photo");
+      showToast({
+        variant: "error",
+        title: "Erreur",
+        subtitle: "Impossible de prendre la photo",
+      });
     }
   };
 
@@ -1480,7 +1491,11 @@ export default function ConversationDetails() {
       reloadMessages();
     } catch (error) {
       console.error("❌ Erreur suppression message:", error);
-      showNotification("error", "Erreur", "Impossible de supprimer le message");
+      showToast({
+        variant: "error",
+        title: "Erreur",
+        subtitle: "Impossible de supprimer le message",
+      });
     }
   };
 
@@ -1905,16 +1920,15 @@ export default function ConversationDetails() {
     if (data.truncated) {
       // Cible hors de portée de la limite serveur : on l'annonce plutôt que
       // de laisser l'utilisateur croire à un bug.
-      showNotification(
-        "info",
-        "Message trop ancien",
-        "La discussion est trop longue pour y accéder directement."
-      );
+      showToast({
+        variant: "info",
+        title: "Message trop ancien",
+        subtitle: "La discussion est trop longue pour y accéder directement.",
+      });
       return;
     }
     setTimeout(() => scrollTo(data.messages), 200);
   };
-
 
   return (
     <View style={{ flex: 1, backgroundColor: isDark ? '#0F1923' : '#EEF2F7' }}>
@@ -2560,16 +2574,6 @@ export default function ConversationDetails() {
         </TouchableOpacity>
       </Modal>
 
-      {/* Notification Modal */}
-      {notification ? (
-        <NotificationModal
-          visible={!!notification.visible}
-          type={notification.type}
-          title={notification.title}
-          message={notification.message}
-          onClose={hideNotification}
-        />
-      ) : null}
 
       {/* Modal de retry pour message échoué */}
       <Modal

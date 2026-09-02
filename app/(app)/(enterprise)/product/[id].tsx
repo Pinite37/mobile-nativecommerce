@@ -28,9 +28,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Shimmer } from "../../../../components/ui/Shimmer";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import NotificationModal, {
-  useNotification,
-} from "../../../../components/ui/NotificationModal";
+import { useToast } from "../../../../components/ui/ReanimatedToast/context";
 import { useLocale } from "../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { ErrorState } from "../../../../components/ui/ErrorState";
@@ -59,8 +57,7 @@ export default function ProductDetails() {
   const insets = useSafeAreaInsets();
   useLocale();
   const { colors, isDark } = useTheme();
-  const { notification, showNotification, hideNotification } =
-    useNotification();
+  const { showToast } = useToast();
   const imagesListRef = useRef<FlatList<string>>(null);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -236,13 +233,13 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
     const result = await openWhatsAppChat({ phone, message });
 
     if (!result.ok) {
-      showNotification(
-        "warning",
-        i18n.t("enterprise.productDetails.notifications.whatsappNotAvailable"),
-        i18n.t(
+      showToast({
+        variant: "warning",
+        title: i18n.t("enterprise.productDetails.notifications.whatsappNotAvailable"),
+        subtitle: i18n.t(
           "enterprise.productDetails.notifications.whatsappNotAvailableMessage",
         ),
-      );
+      });
       makePhoneCall(phone);
     }
   };
@@ -251,16 +248,15 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
     const result = await openPhoneCall(phone);
 
     if (!result.ok) {
-      showNotification(
-        "error",
-        i18n.t("enterprise.productDetails.notifications.callError"),
-        result.reason === "invalid_phone"
+      showToast({
+        variant: "error",
+        title: i18n.t("enterprise.productDetails.notifications.callError"),
+        subtitle: result.reason === "invalid_phone"
           ? "Numéro de téléphone invalide"
           : i18n.t("enterprise.productDetails.notifications.callErrorMessage"),
-      );
+      });
     }
   };
-
 
   const SkeletonProduct = () => (
     <View className="flex-1" style={{ backgroundColor: "transparent" }}>
@@ -743,11 +739,11 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
                   );
                 } catch (error) {
                   console.error("Erreur création conversation:", error);
-                  showNotification(
-                    "error",
-                    "Erreur",
-                    "Impossible de créer la conversation",
-                  );
+                  showToast({
+                    variant: "error",
+                    title: "Erreur",
+                    subtitle: "Impossible de créer la conversation",
+                  });
                 }
               }}
               style={{
@@ -858,13 +854,6 @@ Pouvez-vous me donner plus d'informations ? Merci !`;
         </View>
       </Modal>
 
-      <NotificationModal
-        visible={notification?.visible || false}
-        type={notification?.type || "info"}
-        title={notification?.title || ""}
-        message={notification?.message || ""}
-        onClose={hideNotification}
-      />
     </View>
   );
 }

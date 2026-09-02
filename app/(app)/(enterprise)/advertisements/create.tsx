@@ -18,9 +18,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import NotificationModal, {
-  useNotification,
-} from "../../../../components/ui/NotificationModal";
+import { useToast } from "../../../../components/ui/ReanimatedToast/context";
 import { useLocale } from "../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import i18n from "../../../../i18n/i18n";
@@ -155,8 +153,7 @@ export default function CreateAdvertisement() {
   const isEditing = !!params.id;
   useLocale();
   const { colors, isDark } = useTheme();
-  const { notification, showNotification, hideNotification } =
-    useNotification();
+  const { showToast } = useToast();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -174,11 +171,11 @@ export default function CreateAdvertisement() {
   // Fonction pour afficher le choix d'image (Alert natif sur iOS, Modal custom sur Android)
   const showImagePickerOptions = () => {
     if (images.length >= 1) {
-      showNotification(
-        "info",
-        i18n.t("enterprise.advertisementsCreate.warnings.limitReached"),
-        i18n.t("enterprise.advertisementsCreate.limits.maxImages")
-      );
+      showToast({
+        variant: "info",
+        title: i18n.t("enterprise.advertisementsCreate.warnings.limitReached"),
+        subtitle: i18n.t("enterprise.advertisementsCreate.limits.maxImages"),
+      });
       return;
     }
 
@@ -211,21 +208,21 @@ export default function CreateAdvertisement() {
 
   const pickImage = async () => {
     if (images.length >= 1) {
-      showNotification(
-        "info",
-        i18n.t("enterprise.advertisementsCreate.warnings.limitReached"),
-        i18n.t("enterprise.advertisementsCreate.limits.maxImages")
-      );
+      showToast({
+        variant: "info",
+        title: i18n.t("enterprise.advertisementsCreate.warnings.limitReached"),
+        subtitle: i18n.t("enterprise.advertisementsCreate.limits.maxImages"),
+      });
       return;
     }
 
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      showNotification(
-        "error",
-        i18n.t("enterprise.advertisementsCreate.permissions.galleryDenied"),
-        i18n.t("enterprise.advertisementsCreate.permissions.galleryMessage")
-      );
+      showToast({
+        variant: "error",
+        title: i18n.t("enterprise.advertisementsCreate.permissions.galleryDenied"),
+        subtitle: i18n.t("enterprise.advertisementsCreate.permissions.galleryMessage"),
+      });
       return;
     }
 
@@ -243,7 +240,11 @@ export default function CreateAdvertisement() {
       const base64Data = asset.base64 || "";
 
       if (!base64Data) {
-        showNotification("error", i18n.t("enterprise.advertisementsCreate.errors.generic"), i18n.t("enterprise.advertisementsCreate.errors.imageRead"));
+        showToast({
+          variant: "error",
+          title: i18n.t("enterprise.advertisementsCreate.errors.generic"),
+          subtitle: i18n.t("enterprise.advertisementsCreate.errors.imageRead"),
+        });
         return;
       }
 
@@ -256,21 +257,21 @@ export default function CreateAdvertisement() {
 
   const takePhoto = async () => {
     if (images.length >= 1) {
-      showNotification(
-        "info",
-        i18n.t("enterprise.advertisementsCreate.warnings.limitReached"),
-        i18n.t("enterprise.advertisementsCreate.limits.maxImages")
-      );
+      showToast({
+        variant: "info",
+        title: i18n.t("enterprise.advertisementsCreate.warnings.limitReached"),
+        subtitle: i18n.t("enterprise.advertisementsCreate.limits.maxImages"),
+      });
       return;
     }
 
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
-      showNotification(
-        "error",
-        i18n.t("advertisementsCreate.permissions.cameraDenied"),
-        i18n.t("advertisementsCreate.permissions.cameraMessage")
-      );
+      showToast({
+        variant: "error",
+        title: i18n.t("advertisementsCreate.permissions.cameraDenied"),
+        subtitle: i18n.t("advertisementsCreate.permissions.cameraMessage"),
+      });
       return;
     }
 
@@ -288,7 +289,11 @@ export default function CreateAdvertisement() {
       const base64Data = asset.base64 || "";
 
       if (!base64Data) {
-        showNotification("error", i18n.t("enterprise.advertisementsCreate.errors.generic"), i18n.t("enterprise.advertisementsCreate.errors.photoRead"));
+        showToast({
+          variant: "error",
+          title: i18n.t("enterprise.advertisementsCreate.errors.generic"),
+          subtitle: i18n.t("enterprise.advertisementsCreate.errors.photoRead"),
+        });
         return;
       }
 
@@ -309,7 +314,7 @@ export default function CreateAdvertisement() {
   const submit = async () => {
     const error = validate();
     if (error) {
-      showNotification("error", "Erreur", error);
+      showToast({ variant: "error", title: "Erreur", subtitle: error });
       return;
     }
     setSubmitting(true);
@@ -325,12 +330,20 @@ export default function CreateAdvertisement() {
         endDate: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
       };
       await AdvertisementService.create(payload);
-      showNotification("success", i18n.t("messages.success"), i18n.t("enterprise.advertisementsCreate.success.created"));
+      showToast({
+        variant: "success",
+        title: i18n.t("messages.success"),
+        subtitle: i18n.t("enterprise.advertisementsCreate.success.created"),
+      });
       setTimeout(() => {
         router.back();
       }, 1500);
     } catch (e: any) {
-      showNotification("error", i18n.t("enterprise.advertisementsCreate.errors.generic"), e?.message || i18n.t("enterprise.advertisementsCreate.errors.creationFailed"));
+      showToast({
+        variant: "error",
+        title: i18n.t("enterprise.advertisementsCreate.errors.generic"),
+        subtitle: e?.message || i18n.t("enterprise.advertisementsCreate.errors.creationFailed"),
+      });
     } finally {
       setSubmitting(false);
     }
@@ -619,15 +632,6 @@ export default function CreateAdvertisement() {
       </KeyboardAvoidingView>
 
       {/* Notification Modal */}
-      {notification && (
-        <NotificationModal
-          visible={notification.visible}
-          type={notification.type}
-          title={notification.title}
-          message={notification.message}
-          onClose={hideNotification}
-        />
-      )}
 
       {/* Image Picker Modal (Android uniquement) */}
       {Platform.OS === "android" && (

@@ -32,9 +32,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Shimmer } from "../../../../components/ui/Shimmer";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import NotificationModal, {
-  useNotification,
-} from "../../../../components/ui/NotificationModal";
+import { useToast } from "../../../../components/ui/ReanimatedToast/context";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useLocale } from "../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../contexts/ThemeContext";
@@ -68,8 +66,7 @@ export default function ProductDetails() {
   const insets = useSafeAreaInsets();
   useLocale();
   const { colors, isDark } = useTheme();
-  const { notification, showNotification, hideNotification } =
-    useNotification();
+  const { showToast } = useToast();
   const imagesListRef = useRef<FlatList<string>>(null);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -129,13 +126,12 @@ export default function ProductDetails() {
   ) => {
     if (isAuthenticated) return true;
 
-    showNotification("warning", "Connexion requise", message);
+    showToast({ variant: "warning", title: "Connexion requise", subtitle: message });
     setTimeout(() => {
       router.push("/(auth)/signin");
     }, 150);
     return false;
   };
-
 
   useEffect(() => {
     const loadProductDetails = async () => {
@@ -232,27 +228,27 @@ export default function ProductDetails() {
     try {
       if (isFavorite) {
         await ProductService.removeProductFromFavorites(id!);
-        showNotification(
-          "info",
-          i18n.t("client.product.favorites.title"),
-          i18n.t("client.product.favorites.removed"),
-        );
+        showToast({
+          variant: "info",
+          title: i18n.t("client.product.favorites.title"),
+          subtitle: i18n.t("client.product.favorites.removed"),
+        });
       } else {
         await ProductService.addProductToFavorites(id!);
-        showNotification(
-          "success",
-          i18n.t("client.product.favorites.title"),
-          i18n.t("client.product.favorites.added"),
-        );
+        showToast({
+          variant: "success",
+          title: i18n.t("client.product.favorites.title"),
+          subtitle: i18n.t("client.product.favorites.added"),
+        });
       }
       setIsFavorite(!isFavorite);
     } catch (error) {
       console.error("❌ Erreur lors de la mise à jour des favoris:", error);
-      showNotification(
-        "error",
-        "Erreur",
-        i18n.t("client.product.favorites.error"),
-      );
+      showToast({
+        variant: "error",
+        title: "Erreur",
+        subtitle: i18n.t("client.product.favorites.error"),
+      });
     }
   };
 
@@ -335,18 +331,22 @@ export default function ProductDetails() {
 
     // Vérifier que le numéro est valide
     if (!phone || phone.trim() === "") {
-      showNotification("error", "Erreur", "Numéro de téléphone non disponible");
+      showToast({
+        variant: "error",
+        title: "Erreur",
+        subtitle: "Numéro de téléphone non disponible",
+      });
       return;
     }
 
     const result = await openWhatsAppChat({ phone, message });
 
     if (!result.ok) {
-      showNotification(
-        "warning",
-        i18n.t("client.product.whatsapp.notAvailable"),
-        i18n.t("client.product.whatsapp.notAvailableMessage"),
-      );
+      showToast({
+        variant: "warning",
+        title: i18n.t("client.product.whatsapp.notAvailable"),
+        subtitle: i18n.t("client.product.whatsapp.notAvailableMessage"),
+      });
       makePhoneCall(phone);
     }
   };
@@ -363,13 +363,13 @@ export default function ProductDetails() {
     const result = await openPhoneCall(phone);
 
     if (!result.ok) {
-      showNotification(
-        "error",
-        "Erreur",
-        result.reason === "invalid_phone"
+      showToast({
+        variant: "error",
+        title: "Erreur",
+        subtitle: result.reason === "invalid_phone"
           ? "Numéro de téléphone non disponible"
           : i18n.t("client.product.contact.callError"),
-      );
+      });
     }
   };
 
@@ -377,7 +377,11 @@ export default function ProductDetails() {
     const result = await openWebsiteUrl(website);
 
     if (!result.ok) {
-      showNotification("error", "Erreur", "Impossible d'ouvrir le site web");
+      showToast({
+        variant: "error",
+        title: "Erreur",
+        subtitle: "Impossible d'ouvrir le site web",
+      });
     }
   };
 
@@ -1006,11 +1010,11 @@ export default function ProductDetails() {
                   );
                 } catch (error) {
                   console.error("Erreur création conversation:", error);
-                  showNotification(
-                    "error",
-                    "Erreur",
-                    "Impossible de créer la conversation",
-                  );
+                  showToast({
+                    variant: "error",
+                    title: "Erreur",
+                    subtitle: "Impossible de créer la conversation",
+                  });
                 }
               }}
               style={{
@@ -1129,13 +1133,6 @@ export default function ProductDetails() {
         </View>
       </Modal>
 
-      <NotificationModal
-        visible={notification?.visible || false}
-        type={notification?.type || "info"}
-        title={notification?.title || ""}
-        message={notification?.message || ""}
-        onClose={hideNotification}
-      />
     </View>
   );
 }

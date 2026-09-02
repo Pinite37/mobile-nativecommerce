@@ -24,9 +24,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import PhoneInput, { ICountry, getCountryByCca2 } from "react-native-international-phone-number";
-import NotificationModal, {
-  useNotification,
-} from "../../../../../components/ui/NotificationModal";
+import { useToast } from "../../../../../components/ui/ReanimatedToast/context";
 import LockedFeatureOverlay from "../../../../../components/enterprise/LockedFeatureOverlay";
 import { useLocale } from "../../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../../contexts/ThemeContext";
@@ -168,8 +166,7 @@ export default function EnterpriseOffersScreen() {
       tension: 120,
     }).start();
   }, [segmentAnim]);
-  const { notification, showNotification, hideNotification } =
-    useNotification();
+  const { showToast } = useToast();
 
   const queryClient = useQueryClient();
 
@@ -259,31 +256,31 @@ export default function EnterpriseOffersScreen() {
         !callForm.deliveryFee ||
         !callForm.expiresAt
       ) {
-        showNotification(
-          "warning",
-          i18n.t("enterprise.offers.calls.validation.requiredTitle"),
-          i18n.t("enterprise.offers.calls.validation.requiredMessage")
-        );
+        showToast({
+          variant: "warning",
+          title: i18n.t("enterprise.offers.calls.validation.requiredTitle"),
+          subtitle: i18n.t("enterprise.offers.calls.validation.requiredMessage"),
+        });
         return;
       }
 
       const fee = Number(callForm.deliveryFee);
       if (Number.isNaN(fee) || fee <= 0) {
-        showNotification(
-          "warning",
-          i18n.t("enterprise.offers.calls.validation.invalidFeeTitle"),
-          i18n.t("enterprise.offers.calls.validation.invalidFeeMessage")
-        );
+        showToast({
+          variant: "warning",
+          title: i18n.t("enterprise.offers.calls.validation.invalidFeeTitle"),
+          subtitle: i18n.t("enterprise.offers.calls.validation.invalidFeeMessage"),
+        });
         return;
       }
 
       const expires = new Date(callForm.expiresAt);
       if (Number.isNaN(expires.getTime()) || expires <= new Date()) {
-        showNotification(
-          "warning",
-          i18n.t("enterprise.offers.calls.validation.invalidExpiryTitle"),
-          i18n.t("enterprise.offers.calls.validation.invalidExpiryMessage")
-        );
+        showToast({
+          variant: "warning",
+          title: i18n.t("enterprise.offers.calls.validation.invalidExpiryTitle"),
+          subtitle: i18n.t("enterprise.offers.calls.validation.invalidExpiryMessage"),
+        });
         return;
       }
 
@@ -314,17 +311,17 @@ export default function EnterpriseOffersScreen() {
 
       setCallModalVisible(false);
       resetCallForm();
-      showNotification(
-        "success",
-        i18n.t("enterprise.offers.calls.create.successTitle"),
-        i18n.t("enterprise.offers.calls.create.successMessage")
-      );
+      showToast({
+        variant: "success",
+        title: i18n.t("enterprise.offers.calls.create.successTitle"),
+        subtitle: i18n.t("enterprise.offers.calls.create.successMessage"),
+      });
     } catch (error: any) {
-      showNotification(
-        "error",
-        i18n.t("enterprise.offers.calls.create.errorTitle"),
-        error.message || i18n.t("enterprise.offers.calls.create.errorMessage")
-      );
+      showToast({
+        variant: "error",
+        title: i18n.t("enterprise.offers.calls.create.errorTitle"),
+        subtitle: error.message || i18n.t("enterprise.offers.calls.create.errorMessage"),
+      });
     } finally {
       setCreatingCall(false);
     }
@@ -349,29 +346,29 @@ export default function EnterpriseOffersScreen() {
       if (selectedDeletion.type === "offer") {
         await DeliveryService.deleteOffer(selectedDeletion.id);
         queryClient.invalidateQueries({ queryKey: ['delivery', 'offers', filter] });
-        showNotification(
-          "success",
-          i18n.t("enterprise.offers.deleteModal.offerSuccessTitle"),
-          i18n.t("enterprise.offers.deleteModal.offerSuccessMessage")
-        );
+        showToast({
+          variant: "success",
+          title: i18n.t("enterprise.offers.deleteModal.offerSuccessTitle"),
+          subtitle: i18n.t("enterprise.offers.deleteModal.offerSuccessMessage"),
+        });
       } else {
         await DeliveryService.deleteCall(selectedDeletion.id);
         queryClient.invalidateQueries({ queryKey: ['delivery', 'calls', filter] });
-        showNotification(
-          "success",
-          i18n.t("enterprise.offers.deleteModal.callSuccessTitle"),
-          i18n.t("enterprise.offers.deleteModal.callSuccessMessage")
-        );
+        showToast({
+          variant: "success",
+          title: i18n.t("enterprise.offers.deleteModal.callSuccessTitle"),
+          subtitle: i18n.t("enterprise.offers.deleteModal.callSuccessMessage"),
+        });
       }
 
       setConfirmVisible(false);
       setTimeout(() => setSelectedDeletion(null), 250);
     } catch (e: any) {
-      showNotification(
-        "error",
-        i18n.t("enterprise.offers.deleteModal.errorTitle"),
-        e.message || i18n.t("enterprise.offers.deleteModal.errorMessage")
-      );
+      showToast({
+        variant: "error",
+        title: i18n.t("enterprise.offers.deleteModal.errorTitle"),
+        subtitle: e.message || i18n.t("enterprise.offers.deleteModal.errorMessage"),
+      });
     } finally {
       setConfirmLoading(false);
     }
@@ -1890,14 +1887,6 @@ export default function EnterpriseOffersScreen() {
           </View>
         </View>
       )}
-
-      <NotificationModal
-        visible={!!notification}
-        type={notification?.type || "info"}
-        title={notification?.title || ""}
-        message={notification?.message || ""}
-        onClose={hideNotification}
-      />
 
       {!isSubscriptionActive && (
         <LockedFeatureOverlay

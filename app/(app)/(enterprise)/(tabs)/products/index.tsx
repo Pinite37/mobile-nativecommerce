@@ -17,9 +17,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import NotificationModal, {
-  useNotification,
-} from "../../../../../components/ui/NotificationModal";
+import { useToast } from "../../../../../components/ui/ReanimatedToast/context";
 import LockedFeatureOverlay from "../../../../../components/enterprise/LockedFeatureOverlay";
 import { useLocale } from "../../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../../contexts/ThemeContext";
@@ -49,8 +47,7 @@ export default function EnterpriseProducts() {
   const isSubscriptionActive = subscription?.isActive === true;
   const sortOptions = getSortOptions();
   const params = useLocalSearchParams();
-  const { notification, showNotification, hideNotification } =
-    useNotification();
+  const { showToast } = useToast();
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
@@ -238,31 +235,31 @@ export default function EnterpriseProducts() {
         case "delete":
           await ProductService.deleteProduct(product._id);
           queryClient.invalidateQueries({ queryKey: ['enterprise', 'products'] });
-          showNotification(
-            "success",
-            i18n.t("enterprise.products.notifications.deleteSuccess"),
-            i18n.t("enterprise.products.notifications.deleteSuccessMessage")
-          );
+          showToast({
+            variant: "success",
+            title: i18n.t("enterprise.products.notifications.deleteSuccess"),
+            subtitle: i18n.t("enterprise.products.notifications.deleteSuccessMessage"),
+          });
           break;
         case "status_change":
           await ProductService.updateProduct(product._id, {
             isActive: !product.isActive,
           });
           queryClient.invalidateQueries({ queryKey: ['enterprise', 'products'] });
-          showNotification(
-            "success",
-            i18n.t("enterprise.products.notifications.statusSuccess"),
-            product.isActive ? i18n.t("enterprise.products.notifications.statusDeactivated") : i18n.t("enterprise.products.notifications.statusActivated")
-          );
+          showToast({
+            variant: "success",
+            title: i18n.t("enterprise.products.notifications.statusSuccess"),
+            subtitle: product.isActive ? i18n.t("enterprise.products.notifications.statusDeactivated") : i18n.t("enterprise.products.notifications.statusActivated"),
+          });
           break;
       }
     } catch (err: any) {
-      showNotification(
-        "error",
-        i18n.t("enterprise.products.notifications.error"),
-        err.message ||
-        (type === "delete" ? i18n.t("enterprise.products.notifications.deleteError") : i18n.t("enterprise.products.notifications.updateError"))
-      );
+      showToast({
+        variant: "error",
+        title: i18n.t("enterprise.products.notifications.error"),
+        subtitle: err.message ||
+        (type === "delete" ? i18n.t("enterprise.products.notifications.deleteError") : i18n.t("enterprise.products.notifications.updateError")),
+      });
     }
   };
 
@@ -1048,17 +1045,6 @@ export default function EnterpriseProducts() {
           </View>
         </TouchableOpacity>
       </Modal>
-
-      {/* Notification Modal */}
-      {notification && (
-        <NotificationModal
-          visible={notification.visible}
-          type={notification.type}
-          title={notification.title}
-          message={notification.message}
-          onClose={hideNotification}
-        />
-      )}
 
       {!isSubscriptionActive && (
         <LockedFeatureOverlay

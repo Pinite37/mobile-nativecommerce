@@ -23,9 +23,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import NotificationModal, {
-  useNotification,
-} from "../../../../components/ui/NotificationModal";
+import { useToast } from "../../../../components/ui/ReanimatedToast/context";
 import { useLocale } from "../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import i18n from "../../../../i18n/i18n";
@@ -128,8 +126,7 @@ export default function EnterpriseAdvertisements() {
   const insets = useSafeAreaInsets();
   const { locale } = useLocale();
   const { colors, isDark } = useTheme();
-  const { notification, showNotification, hideNotification } =
-    useNotification();
+  const { showToast } = useToast();
   const [ads, setAds] = useState<UIAd[]>([]);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
@@ -162,18 +159,18 @@ export default function EnterpriseAdvertisements() {
         setPage(res.pagination.page || requestedPage);
         setAds((prev) => (replace ? mapped : [...prev, ...mapped]));
       } catch (e: any) {
-        showNotification(
-          "error",
-          i18n.t("enterprise.advertisements.errors.loading"),
-          e?.message || i18n.t("enterprise.advertisements.errors.loadingMessage")
-        );
+        showToast({
+          variant: "error",
+          title: i18n.t("enterprise.advertisements.errors.loading"),
+          subtitle: e?.message || i18n.t("enterprise.advertisements.errors.loadingMessage"),
+        });
       } finally {
         setInitialLoading(false);
         setRefreshing(false);
         setFetchingMore(false);
       }
     },
-    [showNotification]
+    [showToast]
   );
 
   const loadPageRef = useRef(loadPage);
@@ -243,7 +240,11 @@ export default function EnterpriseAdvertisements() {
           break;
       }
     } catch (err: any) {
-      showNotification("error", i18n.t("enterprise.advertisements.errors.action"), err?.message || i18n.t("enterprise.advertisements.errors.actionMessage"));
+      showToast({
+        variant: "error",
+        title: i18n.t("enterprise.advertisements.errors.action"),
+        subtitle: err?.message || i18n.t("enterprise.advertisements.errors.actionMessage"),
+      });
     }
   };
 
@@ -856,16 +857,6 @@ export default function EnterpriseAdvertisements() {
         </TouchableOpacity>
       </Modal>
 
-      {/* Notification Modal */}
-      {notification && (
-        <NotificationModal
-          visible={notification.visible}
-          type={notification.type}
-          title={notification.title}
-          message={notification.message}
-          onClose={hideNotification}
-        />
-      )}
     </View>
   );
 }

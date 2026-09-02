@@ -35,9 +35,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import NotificationModal, {
-    useNotification,
-} from "../../../../../components/ui/NotificationModal";
 import { useToast } from "../../../../../components/ui/ToastManager";
 import { useTheme } from "../../../../../contexts/ThemeContext";
 import { Shimmer } from "../../../../../components/ui/Shimmer";
@@ -405,7 +402,7 @@ const SkeletonProduct = ({
 export default function ProductDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
-  const { notification, hideNotification } = useNotification();
+  
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -1324,13 +1321,6 @@ export default function ProductDetails() {
         </View>
       </Modal>
 
-      <NotificationModal
-        visible={notification?.visible || false}
-        type={notification?.type || "info"}
-        title={notification?.title || ""}
-        message={notification?.message || ""}
-        onClose={hideNotification}
-      />
     </View>
   );
 }

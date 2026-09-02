@@ -15,23 +15,29 @@ export const useToast = () => {
   const { showToast } = useReanimatedToast();
 
   const showSuccess = (title: string, message?: string) => {
-    showToast({ title, subtitle: message, autodismiss: true });
+    showToast({ title, subtitle: message, variant: 'success', autodismiss: true });
   };
 
   const showError = (title: string, message?: string) => {
-    showToast({ title, subtitle: message, autodismiss: true });
+    showToast({ title, subtitle: message, variant: 'error', autodismiss: true });
   };
 
   const showInfo = (title: string, message?: string) => {
-    showToast({ title, subtitle: message, autodismiss: true });
+    showToast({ title, subtitle: message, variant: 'info', autodismiss: true });
   };
 
   const showWarning = (title: string, message?: string) => {
-    showToast({ title, subtitle: message, autodismiss: true });
+    showToast({ title, subtitle: message, variant: 'warning', autodismiss: true });
   };
 
   return {
-    showToast: (config: any) => showToast({ title: config.title, subtitle: config.message, autodismiss: true }),
+    showToast: (config: any) =>
+      showToast({
+        title: config.title,
+        subtitle: config.message ?? config.subtitle,
+        variant: config.variant ?? config.type,
+        autodismiss: true,
+      }),
     showSuccess,
     showError,
     showInfo,

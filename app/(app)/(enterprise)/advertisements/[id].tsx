@@ -15,9 +15,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import NotificationModal, {
-  useNotification,
-} from "../../../../components/ui/NotificationModal";
+import { useToast } from "../../../../components/ui/ReanimatedToast/context";
 import { useLocale } from "../../../../contexts/LocaleContext";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import i18n from "../../../../i18n/i18n";
@@ -136,8 +134,7 @@ const SkeletonDetail: React.FC = () => {
 export default function AdvertisementDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { notification, showNotification, hideNotification } =
-    useNotification();
+  const { showToast } = useToast();
   const { locale } = useLocale();
   const { colors } = useTheme();
   const [ad, setAd] = useState<Advertisement | null>(null);
@@ -159,17 +156,17 @@ export default function AdvertisementDetail() {
       const data = await AdvertisementService.getById(id);
       setAd(data);
     } catch (e: any) {
-      showNotification(
-        "error",
-        i18n.t("enterprise.advertisementDetail.loading.error"),
-        i18n.t("enterprise.advertisementDetail.loading.message")
-      );
+      showToast({
+        variant: "error",
+        title: i18n.t("enterprise.advertisementDetail.loading.error"),
+        subtitle: i18n.t("enterprise.advertisementDetail.loading.message"),
+      });
       router.back();
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [id, showNotification]);
+  }, [id, showToast]);
 
   const loadRef = useRef(load);
 
@@ -247,11 +244,11 @@ export default function AdvertisementDetail() {
           break;
         case "delete":
           await AdvertisementService.delete(ad._id);
-          showNotification(
-            "success",
-            i18n.t("enterprise.advertisementDetail.success.deleted"),
-            i18n.t("enterprise.advertisementDetail.success.deletedMessage")
-          );
+          showToast({
+            variant: "success",
+            title: i18n.t("enterprise.advertisementDetail.success.deleted"),
+            subtitle: i18n.t("enterprise.advertisementDetail.success.deletedMessage"),
+          });
           router.back();
           break;
         case "activate":
@@ -261,15 +258,19 @@ export default function AdvertisementDetail() {
         case "relaunch":
           const relaunchRes = await AdvertisementService.relaunch(ad._id);
           setAd(relaunchRes);
-          showNotification(
-            "success",
-            "Publicité relancée",
-            "Votre publicité est de nouveau active pour 24h"
-          );
+          showToast({
+            variant: "success",
+            title: "Publicité relancée",
+            subtitle: "Votre publicité est de nouveau active pour 24h",
+          });
           break;
       }
     } catch (err: any) {
-      showNotification("error", i18n.t("enterprise.advertisementDetail.errors.generic"), err?.message || i18n.t("enterprise.advertisementDetail.errors.actionFailed"));
+      showToast({
+        variant: "error",
+        title: i18n.t("enterprise.advertisementDetail.errors.generic"),
+        subtitle: err?.message || i18n.t("enterprise.advertisementDetail.errors.actionFailed"),
+      });
     }
   };
 
@@ -582,16 +583,6 @@ export default function AdvertisementDetail() {
         </TouchableOpacity>
       </Modal>
 
-      {/* Notification Modal */}
-      {notification && (
-        <NotificationModal
-          visible={notification.visible}
-          type={notification.type}
-          title={notification.title}
-          message={notification.message}
-          onClose={hideNotification}
-        />
-      )}
     </View>
   );
 }
