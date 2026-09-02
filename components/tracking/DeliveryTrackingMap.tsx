@@ -1,7 +1,8 @@
 import { Camera, Map, Marker, type CameraRef } from "@maplibre/maplibre-react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useEffect, useRef, useState } from "react";
 import { Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../contexts/ThemeContext";
 import socketService from "../../services/socket/SocketService";
 
@@ -31,6 +32,7 @@ export default function DeliveryTrackingMap({
   destination,
   destinationLabel,
 }: DeliveryTrackingMapProps) {
+  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const cameraRef = useRef<CameraRef>(null);
   const [position, setPosition] = useState<[number, number] | null>(null);
@@ -126,17 +128,24 @@ export default function DeliveryTrackingMap({
                 elevation: 5,
               }}
             >
-              <Ionicons name="bicycle" size={18} color="#FFFFFF" />
+              {/* Ionicons n'a pas de moto : `bicycle` affichait un vélo.
+                  MaterialCommunityIcons en a une, et c'est le véhicule réel
+                  de la quasi-totalité des livreurs ici. */}
+              <MaterialCommunityIcons name="motorbike" size={20} color="#FFFFFF" />
             </View>
           </Marker>
         )}
       </Map>
 
+      {/* En bas et non en haut : à `top: 16` ce bandeau passait sous
+          l'îlot dynamique et sous le bouton retour, tronqué au point de
+          ressembler à un champ de recherche. Le bas est aussi la place
+          habituelle d'un état de suivi. */}
       {!position && (
         <View
           style={{
             position: "absolute",
-            top: 16,
+            bottom: insets.bottom + 20,
             left: 16,
             right: 16,
             backgroundColor: colors.card,
@@ -152,10 +161,18 @@ export default function DeliveryTrackingMap({
             elevation: 4,
           }}
         >
-          <Ionicons name="time-outline" size={18} color={colors.textSecondary} />
-          <Text style={{ fontFamily: "PlusJakartaSans-Medium", fontSize: 13, color: colors.textSecondary, flex: 1 }}>
-            En attente de la position du livreur…
-          </Text>
+          <Ionicons name="navigate-circle-outline" size={20} color={colors.textTertiary} />
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontFamily: "PlusJakartaSans-SemiBold", fontSize: 13, color: colors.textPrimary }}>
+              Position du livreur indisponible
+            </Text>
+            {/* Dire la raison plutôt que de laisser tourner un « en
+                attente » indéfini : la position n'est diffusée que lorsque
+                l'application du livreur est ouverte. */}
+            <Text style={{ fontFamily: "PlusJakartaSans-Medium", fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
+              Elle apparaîtra dès qu&apos;il ouvrira son application. Votre adresse de livraison reste affichée.
+            </Text>
+          </View>
         </View>
       )}
 
@@ -163,7 +180,7 @@ export default function DeliveryTrackingMap({
         <View
           style={{
             position: "absolute",
-            bottom: 16,
+            bottom: insets.bottom + 20,
             left: 16,
             backgroundColor: colors.card,
             borderRadius: 12,

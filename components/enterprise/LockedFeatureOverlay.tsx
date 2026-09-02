@@ -64,10 +64,15 @@ export default function LockedFeatureOverlay({
         zIndex: 50,
       }}
     >
+      {/* Bloc centré et non plus collé en bas : ancré en `flex-end`, il se
+          retrouvait écrasé juste au-dessus de la barre d'onglets, avec une
+          grande bande de liste floutée inutile au-dessus. Le décalage de 72
+          compense cette barre — un bloc géométriquement centré paraît trop bas
+          quand le bas de l'écran est déjà occupé. */}
       <LinearGradient
         colors={['transparent', 'rgba(0,0,0,0.55)', 'rgba(0,0,0,0.93)', '#000']}
-        locations={[0, 0.15, 0.4, 1]}
-        style={{ flex: 1, justifyContent: 'flex-end', paddingBottom: 40 }}
+        locations={[0, 0.06, 0.22, 1]}
+        style={{ flex: 1, justifyContent: 'center', paddingBottom: 72 }}
       >
         <View style={{ paddingHorizontal: 28 }}>
 

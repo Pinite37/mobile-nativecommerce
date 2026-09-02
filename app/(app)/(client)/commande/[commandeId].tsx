@@ -5,6 +5,8 @@ import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DelivererSheet from "../../../../components/delivery/DelivererSheet";
+import DeliveryTimeline from "../../../../components/delivery/DeliveryTimeline";
+import socketService from "../../../../services/socket/SocketService";
 import LocationPickerMap from "../../../../components/location/LocationPickerMap";
 import { AppHeader } from "../../../../components/ui/AppHeader";
 import { useToast } from "../../../../components/ui/ToastManager";
@@ -43,15 +45,35 @@ export default function CommandeScreen() {
   // livrer pendant que le client était ailleurs.
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  // Pendant la livraison, l'état change sans action du client. Un
-  // rafraîchissement discret évite de lui demander de tirer pour actualiser
-  // au moment précis où il attend son colis.
+  // Étapes en direct : le serveur annonce chaque transition dans la salle
+  // de la mission. Sans ça, la frise ne bougeait qu'au rafraîchissement
+  // périodique — trente secondes d'attente devant un écran figé, au moment
+  // précis où le client guette son colis.
+  const missionId = commande?.delivery?.missionId;
+  useEffect(() => {
+    if (!missionId) return;
+
+    socketService.joinMission(missionId);
+    const onStatus = (data: { missionId: string }) => {
+      if (data?.missionId !== missionId) return;
+      load();
+    };
+    socketService.on("mission_status_update", onStatus);
+
+    return () => {
+      socketService.off("mission_status_update", onStatus);
+      socketService.leaveMission(missionId);
+    };
+  }, [missionId, load]);
+
+  // Filet de sécurité : une notification perdue (réseau coupé, socket
+  // reconnecté) ne doit pas figer la frise indéfiniment.
   useEffect(() => {
     const enLivraison =
       commande?.delivery &&
       ["ASSIGNED", "PICKED_UP"].includes(commande.delivery.status);
     if (!enLivraison) return;
-    const timer = setInterval(load, 30000);
+    const timer = setInterval(load, 60000);
     return () => clearInterval(timer);
   }, [commande?.delivery?.status, load]);
 
@@ -180,6 +202,10 @@ export default function CommandeScreen() {
             </Text>
           )}
         </View>
+
+        {/* Frise des étapes : le client voyait un statut isolé sans savoir
+            ce qui restait à venir. */}
+        <DeliveryTimeline commande={commande} />
 
         {/* Suivi de la livraison. L'écran de suivi existait mais aucun
             bouton n'y menait, et le client ne disposait ni de l'identifiant
