@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -132,6 +132,36 @@ export default function ConversationDetails() {
   // Commandes déjà proposées à ce client, pour ce produit.
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [publishingId, setPublishingId] = useState<string | null>(null);
+
+  /**
+   * Bandeaux de commandes affichés en tête du fil.
+   *
+   * Ils s'empilaient sans limite : une entreprise avec beaucoup de commandes
+   * actives se retrouvait avec la liste des messages repoussée hors de l'écran.
+   * On en montre donc au plus MAX_BANDEAUX, et on annonce le reste.
+   *
+   * Le tri est ce qui rend le plafond sans danger : les commandes qui
+   * attendent une action (bouton « Publier ») remontent en tête, donc la
+   * troncature ne peut jamais masquer une action à faire.
+   */
+  const MAX_BANDEAUX = 2;
+  const bandeauxCommandes = useMemo(() => {
+    const actives = commandes.filter((c) =>
+      ["PROPOSEE", "CONFIRMEE", "EN_LIVRAISON"].includes(c.status),
+    );
+    const priorite = (c: Commande) => {
+      const publiee = (c.missions?.length ?? 0) > 0;
+      if (c.status === "CONFIRMEE" && !publiee) return 0; // à publier — action
+      if (c.status === "EN_LIVRAISON") return 1;
+      if (c.status === "CONFIRMEE") return 2;
+      return 3; // PROPOSEE — en attente du client
+    };
+    const triees = [...actives].sort((a, b) => priorite(a) - priorite(b));
+    return {
+      visibles: triees.slice(0, MAX_BANDEAUX),
+      restant: Math.max(0, triees.length - MAX_BANDEAUX),
+    };
+  }, [commandes]);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [tempExpiryDate, setTempExpiryDate] = useState<Date | null>(null);
   const [tempPickerDate, setTempPickerDate] = useState<Date>(
@@ -281,7 +311,7 @@ export default function ConversationDetails() {
     }
 
     router.push({
-      pathname: "/(app)/(enterprise)/commande/nouvelle",
+      pathname: "/(app)/(enterprise)/commande/create",
       params: {
         conversationId: conversationId ?? "",
         clientId: customerId,
@@ -2016,8 +2046,7 @@ export default function ConversationDetails() {
           CONFIRMEE après publication (elle ne passe EN_LIVRAISON qu'à
           l'acceptation d'un livreur) : sans distinguer « publiée » de
           « à publier », le bouton restait affiché indéfiniment. */}
-      {commandes
-        .filter((c) => ["PROPOSEE", "CONFIRMEE", "EN_LIVRAISON"].includes(c.status))
+      {bandeauxCommandes.visibles
         .map((c) => {
           const published = (c.missions?.length ?? 0) > 0;
           const step: "ATTENTE_CLIENT" | "A_PUBLIER" | "PUBLIEE" | "EN_COURS" =
@@ -2100,6 +2129,36 @@ export default function ConversationDetails() {
             </View>
           );
         })}
+
+      {/* Le reste n'est pas caché en silence : sans cette ligne, une entreprise
+          ne saurait pas que d'autres commandes sont en cours avec ce client. */}
+      {bandeauxCommandes.restant > 0 && (
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 16,
+            paddingVertical: 8,
+            backgroundColor: colors.secondary,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.borderLight,
+          }}
+        >
+          <Ionicons name="albums-outline" size={14} color={colors.textSecondary} />
+          <Text
+            style={{
+              marginLeft: 8,
+              color: colors.textSecondary,
+              fontFamily: "PlusJakartaSans-Medium",
+              fontSize: 11.5,
+            }}
+          >
+            {bandeauxCommandes.restant} autre
+            {bandeauxCommandes.restant > 1 ? "s" : ""} commande
+            {bandeauxCommandes.restant > 1 ? "s" : ""} en cours avec ce client
+          </Text>
+        </View>
+      )}
 
       {/* Zone de contenu principal avec KeyboardAvoidingView */}
       {/* Android edge-to-edge (SDK 35+) : adjustResize est inopérant, le header reste fixe hors du KAV.

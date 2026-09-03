@@ -11,11 +11,8 @@ import { Image } from "expo-image";
 import {
     Alert,
     ActivityIndicator,
-    BackHandler,
     Dimensions,
     FlatList,
-    Keyboard,
-    Animated,
     Modal,
     Pressable,
     RefreshControl,
@@ -37,12 +34,10 @@ import { useLocale } from "../../../../contexts/LocaleContext";
 import i18n from "../../../../i18n/i18n";
 import { useUnreadNotifications } from "../../../../hooks/useUnreadNotifications";
 import ProductService from "../../../../services/api/ProductService";
-import SearchService from "../../../../services/api/SearchService";
 import StatusService, { StatusGroup, StatusItem } from "../../../../services/api/StatusService";
 import MessagingService from "../../../../services/api/MessagingService";
 import { StatusBar as StatusBarComponent } from "../../../../components/ui/StatusBar";
 import { StatusViewer } from "../../../../components/ui/StatusViewer";
-import SearchCacheService, { RecentSearch } from "../../../../services/SearchCacheService";
 import { Category, Product } from "../../../../types/product";
 import { beninCities, neighborhoodsByCity } from "../../../../constants/LocationData";
 
@@ -119,21 +114,6 @@ export default function ClientHome() {
     const [refreshing, setRefreshing] = useState(false);
     const [imageRefreshKey, setImageRefreshKey] = useState(0); // Clé pour forcer le rechargement des images
 
-    // États pour la recherche
-    const [searchQuery, setSearchQuery] = useState('');
-    const [searchSuggestions, setSuggestions] = useState<any[]>([]);
-    const [showSuggestions, setShowSuggestions] = useState(false);
-    const [dropdownAnim] = useState(() => new Animated.Value(0));
-    const [resultsAnim] = useState(() => new Animated.Value(0));
-    const [loadingSearch, setLoadingSearch] = useState(false);
-    const [searchTimeout, setSearchTimeout] = useState<any>(null);
-    const [searchResults, setSearchResults] = useState<Product[]>([]);
-    const [showSearchResults, setShowSearchResults] = useState(false);
-    const [searchInfo, setSearchInfo] = useState<any>(null);
-    const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
-    const [showRecentSearches, setShowRecentSearches] = useState(false);
-    const [searchInputFocused, setSearchInputFocused] = useState(false);
-    const [resultsView, setResultsView] = useState<'grid' | 'list'>('grid');
     const [selectedSort, setSelectedSort] = useState<'relevance' | 'priceLow' | 'priceHigh' | 'newest'>('relevance');
 
     // Statuts
@@ -226,55 +206,6 @@ export default function ClientHome() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedCity]);
 
-    // Animation dropdown recherche
-    useEffect(() => {
-        if (showSuggestions || showRecentSearches) {
-            dropdownAnim.setValue(0);
-            Animated.spring(dropdownAnim, {
-                toValue: 1,
-                useNativeDriver: true,
-                tension: 80,
-                friction: 12,
-            }).start();
-        }
-    }, [showSuggestions, showRecentSearches]);
-
-    // Animation résultats de recherche
-    useEffect(() => {
-        if (showSearchResults) {
-            resultsAnim.setValue(0);
-            Animated.spring(resultsAnim, {
-                toValue: 1,
-                useNativeDriver: true,
-                tension: 70,
-                friction: 11,
-            }).start();
-        }
-    }, [showSearchResults]);
-
-    // Gestion du bouton retour pour masquer les résultats de recherche et suggestions
-    useEffect(() => {
-        const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-            if (showSearchResults) {
-                hideSearchResults();
-                return true; // Empêche la navigation arrière par défaut
-            }
-            if (showSuggestions) {
-                setShowSuggestions(false);
-                setSuggestions([]);
-                return true; // Empêche la navigation arrière par défaut
-            }
-            return false; // Laisse le comportement par défaut
-        });
-
-        return () => backHandler.remove();
-    }, [showSearchResults, showSuggestions]);
-
-    useEffect(() => {
-        loadRecentSearches();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
     // Forcer le rechargement des images quand on revient sur la page
     useFocusEffect(
         useCallback(() => {
@@ -282,7 +213,6 @@ export default function ClientHome() {
             setImageRefreshKey(prev => prev + 1);
         }, [])
     );
-
 
     const SkeletonCard = ({ style }: { style?: any }) => (
         <View style={[{ backgroundColor: colors.card, borderColor: colors.border }, style]} className="rounded-2xl shadow-sm border overflow-hidden">
@@ -439,208 +369,6 @@ export default function ClientHome() {
             default:
                 return 'popular';
         }
-    };
-
-    // Fonctions pour le cache et l'historique des recherches
-    const loadRecentSearches = async () => {
-        try {
-            const recent = await SearchCacheService.getRecentSearches();
-            setRecentSearches(recent);
-        } catch (error) {
-            console.error('❌ Erreur chargement recherches récentes:', error);
-        }
-    };
-
-    const clearSearchHistory = async () => {
-        try {
-            await SearchCacheService.clearRecentSearches();
-            setRecentSearches([]);
-        } catch (error) {
-            console.error('❌ Erreur vidage historique:', error);
-        }
-    };
-
-    const removeFromSearchHistory = async (query: string) => {
-        try {
-            await SearchCacheService.removeFromRecentSearches(query);
-            const updatedRecent = await SearchCacheService.getRecentSearches();
-            setRecentSearches(updatedRecent);
-        } catch (error) {
-            console.error('❌ Erreur suppression recherche:', error);
-        }
-    };
-
-    // Fonctions de recherche améliorées avec cache
-    const handleSearchChange = (text: string) => {
-        setSearchQuery(text);
-
-        if (searchTimeout) {
-            clearTimeout(searchTimeout);
-        }
-
-        if (text !== searchQuery) {
-            setShowSearchResults(false);
-            setSearchResults([]);
-            setSearchInfo(null);
-        }
-
-        if (text.length === 0 && searchInputFocused) {
-            setShowRecentSearches(true);
-            setShowSuggestions(false);
-        } else {
-            setShowRecentSearches(false);
-        }
-
-        if (text.length >= 2) {
-            const timeout = setTimeout(() => {
-                getSuggestions(text);
-            }, 300);
-            setSearchTimeout(timeout);
-        } else {
-            setSuggestions([]);
-            setShowSuggestions(false);
-        }
-    };
-
-    const handleSearchInputFocus = () => {
-        setSearchInputFocused(true);
-        if (searchQuery.length === 0) {
-            setShowRecentSearches(true);
-        }
-    };
-
-    const handleSearchInputBlur = () => {
-        setSearchInputFocused(false);
-        setTimeout(() => {
-            setShowRecentSearches(false);
-            setShowSuggestions(false);
-        }, 200);
-    };
-
-    // Fonction pour masquer les résultats de recherche
-    const hideSearchResults = () => {
-        Keyboard.dismiss();
-        Animated.timing(resultsAnim, {
-            toValue: 0,
-            duration: 220,
-            useNativeDriver: true,
-        }).start(() => {
-            setShowSearchResults(false);
-            setSearchResults([]);
-            setSearchInfo(null);
-        });
-    };
-
-    const getSuggestions = async (query: string) => {
-        try {
-            setLoadingSearch(true);
-            const suggestions = await SearchService.getSuggestions(query, 6);
-            setSuggestions(suggestions);
-            setShowSuggestions(suggestions.length > 0);
-        } catch (error) {
-            console.error('❌ Erreur suggestions:', error);
-        } finally {
-            setLoadingSearch(false);
-        }
-    };
-
-    const performSearch = async (query?: string) => {
-        const searchTerm = query || searchQuery;
-        if (!searchTerm.trim()) return;
-
-        try {
-            setLoadingSearch(true);
-            setShowSuggestions(false);
-            setShowRecentSearches(false);
-
-            const searchFilters = {
-                city: selectedCity,
-                district: selectedNeighborhood || undefined,
-                sort: mapSelectedSortToApi(selectedSort),
-                page: 1,
-                limit: 20
-            };
-
-            let cachedResults: any = null;
-            try {
-                cachedResults = await SearchCacheService.getCachedSearchResults(searchTerm, searchFilters);
-            } catch (e) { /* cache unavailable */ }
-
-            if (cachedResults) {
-                setSearchResults(cachedResults.results || []);
-                const searchInfoWithCache = {
-                    ...cachedResults.searchInfo,
-                    fromCache: true,
-                    query: searchTerm
-                };
-                setSearchInfo(searchInfoWithCache);
-                setShowSearchResults(true);
-                setLoadingSearch(false);
-                return;
-            }
-
-            const response = await ProductService.searchPublicProducts(searchTerm, searchFilters);
-
-            // Normaliser la réponse (certains services renvoient { products, pagination }, d’autres { data, searchInfo })
-            const results: Product[] = Array.isArray((response as any)?.data)
-                ? (response as any).data
-                : Array.isArray((response as any)?.products)
-                    ? (response as any).products
-                    : Array.isArray(response)
-                        ? (response as any)
-                        : [];
-
-            const normalizedInfo =
-                (response as any)?.searchInfo
-                || ((response as any)?.pagination
-                    ? { totalResults: (response as any).pagination?.total }
-                    : null);
-
-            setSearchResults(results);
-            setSearchInfo(normalizedInfo);
-            setShowSearchResults(true);
-
-            // Opérations de cache: ne doivent pas faire échouer l’UI
-            try {
-                await SearchCacheService.cacheSearchResults(searchTerm, results, normalizedInfo, searchFilters);
-                await SearchCacheService.addToRecentSearches(searchTerm, results.length);
-                await loadRecentSearches();
-            } catch (e) { /* cache unavailable */ }
-
-        } catch (error) {
-            console.error('❌ Erreur lors de la recherche:', error);
-            setSearchResults([]);
-            setSearchInfo(null);
-            setShowSearchResults(false);
-        } finally {
-            setLoadingSearch(false);
-        }
-    };
-
-    const selectSuggestion = (suggestion: any) => {
-        const text = suggestion?.text ?? '';
-        setSearchQuery(text);
-        setShowSuggestions(false);
-        setShowRecentSearches(false);
-
-        // Fermer le clavier pour éviter les conflits de tap
-        Keyboard.dismiss();
-
-        // Si c'est un produit identifiable, on navigue directement
-        if (suggestion?.type === 'product') {
-            const productId = suggestion?.id || suggestion?.productId || suggestion?._id;
-            if (productId) {
-                router.push(`/(app)/(client)/product/${productId}`);
-                return;
-            }
-        }
-
-        // Sinon, lancer la recherche
-        setTimeout(() => {
-            if (text && text.trim()) {
-                performSearch(text);
-            }
-        }, 0);
     };
 
     // Fonction pour sélectionner une ville
@@ -807,25 +535,45 @@ export default function ClientHome() {
                 <View style={{
                     backgroundColor: colors.tertiary,
                     borderRadius: 15, flexDirection: 'row', alignItems: 'center',
-                    paddingLeft: 14, height: 48, overflow: 'hidden',
+                    height: 48, overflow: 'hidden',
                 }}>
-                    <Ionicons name="search" size={20} color="#10B981" />
-                    <TextInput
-                        style={{ flex: 1, marginLeft: 10, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 15 }}
-                        placeholder={i18n.t('client.home.search.placeholder')}
-                        placeholderTextColor={colors.textSecondary}
-                        value={searchQuery}
-                        onChangeText={handleSearchChange}
-                        onFocus={handleSearchInputFocus}
-                        onBlur={handleSearchInputBlur}
-                        onSubmitEditing={() => performSearch()}
-                        returnKeyType="search"
-                    />
-                    {searchQuery.length > 0 && (
-                        <TouchableOpacity onPress={() => setSearchQuery('')} style={{ paddingRight: 8 }}>
-                            <Ionicons name="close-circle" size={18} color="#9CA3AF" />
-                        </TouchableOpacity>
-                    )}
+                    {/* Toute la zone gauche est tactile, loupe et marge comprises :
+                        l'icône placée hors du touchable ne réagissait pas, alors que
+                        c'est précisément là qu'on appuie pour chercher.
+                        Le champ n'est plus saisissable ici, il ouvre l'écran de
+                        recherche — qui a la place d'afficher suggestions, historique
+                        et résultats sans les empiler par-dessus l'accueil. Le
+                        périmètre courant (ville, quartier, tri) part avec, sinon la
+                        recherche ne porterait pas sur ce que l'utilisateur voit. */}
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        accessibilityRole="search"
+                        accessibilityLabel={i18n.t('client.home.search.placeholder')}
+                        onPress={() => router.push({
+                            pathname: '/(app)/(client)/search',
+                            params: {
+                                city: selectedCity || '',
+                                district: selectedNeighborhood || '',
+                                sort: mapSelectedSortToApi(selectedSort) || '',
+                            },
+                        })}
+                        style={{
+                            flex: 1, height: '100%', flexDirection: 'row',
+                            alignItems: 'center', paddingLeft: 14, paddingRight: 8,
+                        }}
+                    >
+                        <Ionicons name="search" size={20} color="#10B981" />
+                        <Text
+                            numberOfLines={1}
+                            style={{
+                                marginLeft: 10, flex: 1,
+                                color: colors.textSecondary,
+                                fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 15,
+                            }}
+                        >
+                            {i18n.t('client.home.search.placeholder')}
+                        </Text>
+                    </TouchableOpacity>
                     <View style={{ width: 1, height: 26, backgroundColor: colors.border }} />
                     <TouchableOpacity
                         onPress={() => setCityModalVisible(true)}
@@ -851,145 +599,11 @@ export default function ClientHome() {
                     </TouchableOpacity>
                 </View>
 
-                {/* Overlay transparent pour fermer le dropdown en tapant dans le vide */}
-                {(showSuggestions || showRecentSearches) && (
-                    <Pressable
-                        style={{ position: 'absolute', top: 0, left: -16, right: -16, bottom: -2000, zIndex: 90 }}
-                        onPress={() => { Keyboard.dismiss(); setShowSuggestions(false); setShowRecentSearches(false); }}
-                    />
-                )}
-
-                {/* Dropdown — position absolute, animé, par-dessus le contenu */}
-                {(showSuggestions || showRecentSearches) && (
-                    <Animated.View style={{
-                        position: 'absolute',
-                        top: 56, left: 0, right: 0,
-                        backgroundColor: colors.card,
-                        borderRadius: 16, maxHeight: 360,
-                        borderWidth: 1, borderColor: colors.border,
-                        zIndex: 100,
-                        opacity: dropdownAnim,
-                        transform: [{
-                            translateY: dropdownAnim.interpolate({
-                                inputRange: [0, 1],
-                                outputRange: [-10, 0],
-                            })
-                        }]
-                    }}>
-                        <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-                            {showRecentSearches && recentSearches.length > 0 && (
-                                <View>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 6 }}>
-                                        <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                                            {i18n.t('client.home.search.recentSearches')}
-                                        </Text>
-                                        <TouchableOpacity onPress={clearSearchHistory}>
-                                            <Text style={{ color: '#10B981', fontSize: 12, fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                                                {i18n.t('client.home.search.clearHistory')}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                    {recentSearches.slice(0, 5).map((recentSearch, index) => (
-                                        <TouchableOpacity
-                                            key={index}
-                                            style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 11 }}
-                                            onPress={() => { setSearchQuery(recentSearch.query); performSearch(recentSearch.query); }}
-                                        >
-                                            <Ionicons name="time-outline" size={15} color={colors.textSecondary} />
-                                            <Text style={{ flex: 1, marginLeft: 12, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 14 }} numberOfLines={1}>
-                                                {recentSearch.query}
-                                            </Text>
-                                            <TouchableOpacity onPress={(e) => { e.stopPropagation(); removeFromSearchHistory(recentSearch.query); }} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                                                <Ionicons name="close" size={14} color={colors.textSecondary} />
-                                            </TouchableOpacity>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-                            )}
-                            {showSuggestions && searchSuggestions.length > 0 && (
-                                <View style={showRecentSearches ? { borderTopWidth: 1, borderTopColor: colors.border, marginTop: 4 } : {}}>
-                                    {searchSuggestions.map((suggestion, index) => {
-                                        const getColor = (type: string) => type === 'product' ? '#10B981' : type === 'category' ? '#8B5CF6' : type === 'enterprise' ? '#F59E0B' : '#6B7280';
-                                        const color = getColor(suggestion.type);
-                                        return (
-                                            <TouchableOpacity
-                                                key={index}
-                                                style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 11 }}
-                                                onPress={() => selectSuggestion(suggestion)}
-                                                activeOpacity={0.7}
-                                            >
-                                                <View style={{ width: 30, height: 30, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: color + '18' }}>
-                                                    <Ionicons name={suggestion.type === 'product' ? 'cube-outline' : suggestion.type === 'category' ? 'folder-outline' : 'business-outline'} size={15} color={color} />
-                                                </View>
-                                                <Text style={{ flex: 1, marginLeft: 12, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 14 }} numberOfLines={1}>
-                                                    {suggestion.text}
-                                                </Text>
-                                                <Ionicons name="arrow-forward" size={14} color={colors.textSecondary} />
-                                            </TouchableOpacity>
-                                        );
-                                    })}
-                                </View>
-                            )}
-                            <View style={{ height: 8 }} />
-                        </ScrollView>
-                    </Animated.View>
-                )}
             </View>
         </View>
     );
 
     const renderSearchSection = () => null; // Search is now integrated in Header
-
-    const renderProductListItem = (item: Product) => (
-        <TouchableOpacity
-            style={{ backgroundColor: colors.card, borderColor: colors.border }}
-            className="rounded-2xl shadow-md border p-2 mb-3 overflow-hidden flex-row"
-            onPress={() => router.push(`/(app)/(client)/product/${item._id}`)}
-        >
-            <View className="relative mr-3">
-                <Image
-                    key={`image-list-${item._id}-${imageRefreshKey}`}
-                    source={{ uri: item.images[0] || "https://via.placeholder.com/150x150/CCCCCC/FFFFFF?text=No+Image" }}
-                    style={{ width: 96, height: 96, borderRadius: 12 }}
-                    contentFit="cover"
-                />
-                {item.stats.totalSales > 10 && (
-                    <View className="absolute top-1 left-1 bg-success-500 rounded-full px-2 py-0.5">
-                        <Text className="text-white text-[10px] font-jakarta-bold">
-                            {i18n.t('client.home.badges.popular')}
-                        </Text>
-                    </View>
-                )}
-            </View>
-            <View className="flex-1 justify-between">
-                <View>
-                    <Text numberOfLines={2} style={{ color: colors.textPrimary }} className="text-sm font-jakarta-semibold">
-                        {item.name}
-                    </Text>
-                </View>
-                <View className="flex-row items-center justify-between mt-2">
-                    <Text className="text-base font-jakarta-bold text-primary-600">
-                        {formatPrice(item.price)}
-                    </Text>
-                    {isAuthenticated && (
-                        <TouchableOpacity
-                            style={{ backgroundColor: colors.secondary }}
-                            className="rounded-full p-2"
-                            onPress={() => toggleFavorite(item._id)}
-                        >
-                            <Ionicons
-                                name={favorites.has(item._id) ? "heart" : "heart-outline"}
-                                size={18}
-                                color={favorites.has(item._id) ? "#EF4444" : colors.textSecondary}
-                            />
-                        </TouchableOpacity>
-                    )}
-                </View>
-            </View>
-        </TouchableOpacity>
-    );
-
-
 
     const renderAd = ({ item }: { item: any }) => {
         return (
@@ -1060,7 +674,6 @@ export default function ClientHome() {
                 <>
                     {renderHeader()}
 
-
                     <ScrollView
                         className="flex-1"
                         showsVerticalScrollIndicator={false}
@@ -1088,184 +701,6 @@ export default function ClientHome() {
                         }
                     >
                         {renderSearchSection()}
-
-                        {/* Résultats de recherche */}
-                        {showSearchResults && (
-                            <Animated.View style={{
-                                backgroundColor: colors.card,
-                                borderBottomColor: colors.border,
-                                marginTop: 14,
-                                marginHorizontal: 16,
-                                borderRadius: 16,
-                                opacity: resultsAnim,
-                                transform: [{ translateY: resultsAnim.interpolate({ inputRange: [0, 1], outputRange: [-20, 0] }) }],
-                            }} className="px-4 py-4 border-b">
-                                {/* En-tête résultats + toggle vue */}
-                                <View className="flex-row items-center justify-between">
-                                    <Text style={{ color: colors.textPrimary }} className="text-lg font-jakarta-bold flex-1">
-                                        {i18n.t('client.home.searchResults.title', { query: searchQuery })}
-                                    </Text>
-                                    <View className="flex-row items-center">
-                                        <View className="flex-row items-center bg-neutral-100 rounded-full p-1 mr-2">
-                                            <TouchableOpacity
-                                                onPress={() => setResultsView('grid')}
-                                                className={`px-2 py-1 rounded-full ${resultsView === 'grid' ? 'bg-white' : ''}`}
-                                            >
-                                                <Ionicons name="grid-outline" size={18} color={resultsView === 'grid' ? '#10B981' : '#6B7280'} />
-                                            </TouchableOpacity>
-                                            <TouchableOpacity
-                                                onPress={() => setResultsView('list')}
-                                                className={`px-2 py-1 rounded-full ${resultsView === 'list' ? 'bg-white' : ''}`}
-                                            >
-                                                <Ionicons name="list-outline" size={18} color={resultsView === 'list' ? '#10B981' : '#6B7280'} />
-                                            </TouchableOpacity>
-                                        </View>
-                                        <TouchableOpacity
-                                            onPress={hideSearchResults}
-                                            className="p-2 bg-neutral-100 rounded-full"
-                                        >
-                                            <Ionicons name="close" size={18} color="#6B7280" />
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-
-                                {/* Infos supplémentaires */}
-                                {searchInfo && (
-                                    <View className="flex-row items-center mt-1">
-                                        <Text style={{ color: colors.textSecondary }} className="text-xs font-jakarta-medium">
-                                            {i18n.t('client.home.searchResults.resultsCount', { count: searchInfo.totalResults || searchResults.length })}
-                                        </Text>
-                                        {searchInfo.searchTime && (
-                                            <Text className="text-xs text-neutral-400 font-jakarta-medium ml-2">
-                                                • {i18n.t('client.home.searchResults.searchTime', { time: searchInfo.searchTime })}
-                                            </Text>
-                                        )}
-                                        {searchInfo.fromCache && (
-                                            <Text className="text-xs text-green-600 font-jakarta-medium ml-2">
-                                                • {i18n.t('client.home.searchResults.fromCache')}
-                                            </Text>
-                                        )}
-                                    </View>
-                                )}
-
-                                {/* Chips localisation */}
-                                <View className="flex-row mt-3">
-                                    <TouchableOpacity
-                                        onPress={() => setCityModalVisible(true)}
-                                        className="flex-row items-center px-3 py-1.5 rounded-full border mr-2"
-                                        style={{ backgroundColor: '#F9FAFB', borderColor: '#E5E7EB' }}
-                                    >
-                                        <Ionicons name="location-outline" size={14} color="#6B7280" />
-                                        <Text className="ml-1 text-xs font-jakarta-medium text-neutral-700">
-                                            {selectedCity}
-                                        </Text>
-                                    </TouchableOpacity>
-                                    {!!selectedNeighborhood && (
-                                        <TouchableOpacity
-                                            onPress={() => setNeighborhoodModalVisible(true)}
-                                            className="flex-row items-center px-3 py-1.5 rounded-full border"
-                                            style={{ backgroundColor: '#F9FAFB', borderColor: '#E5E7EB' }}
-                                        >
-                                            <Ionicons name="navigate-outline" size={14} color="#6B7280" />
-                                            <Text className="ml-1 text-xs font-jakarta-medium text-neutral-700">
-                                                {selectedNeighborhood}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    )}
-                                </View>
-
-                                {/* Chips de tri */}
-                                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 8 }}>
-                                    <TouchableOpacity
-                                        onPress={() => setSelectedSort('relevance')}
-                                        className="px-3 py-1.5 rounded-full border mr-2"
-                                        style={{ backgroundColor: selectedSort === 'relevance' ? '#FFF1E6' : '#F3F4F6', borderColor: selectedSort === 'relevance' ? '#FED7AA' : '#E5E7EB' }}
-                                    >
-                                        <Text className={`text-xs font-jakarta-semibold ${selectedSort === 'relevance' ? 'text-primary-600' : 'text-neutral-700'}`}>
-                                            {i18n.t('client.home.searchResults.relevance')}
-                                        </Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        onPress={() => setSelectedSort('priceLow')}
-                                        className="px-3 py-1.5 rounded-full border mr-2"
-                                        style={{ backgroundColor: selectedSort === 'priceLow' ? '#FFF1E6' : '#F3F4F6', borderColor: selectedSort === 'priceLow' ? '#FED7AA' : '#E5E7EB' }}
-                                    >
-                                        <Text className={`text-xs font-jakarta-semibold ${selectedSort === 'priceLow' ? 'text-primary-600' : 'text-neutral-700'}`}>
-                                            {i18n.t('client.home.searchResults.priceLowToHigh')}
-                                        </Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        onPress={() => setSelectedSort('priceHigh')}
-                                        className="px-3 py-1.5 rounded-full border mr-2"
-                                        style={{ backgroundColor: selectedSort === 'priceHigh' ? '#FFF1E6' : '#F3F4F6', borderColor: selectedSort === 'priceHigh' ? '#FED7AA' : '#E5E7EB' }}
-                                    >
-                                        <Text className={`text-xs font-jakarta-semibold ${selectedSort === 'priceHigh' ? 'text-primary-600' : 'text-neutral-700'}`}>
-                                            {i18n.t('client.home.searchResults.priceHighToLow')}
-                                        </Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        onPress={() => setSelectedSort('newest')}
-                                        className="px-3 py-1.5 rounded-full border"
-                                        style={{ backgroundColor: selectedSort === 'newest' ? '#FFF1E6' : '#F3F4F6', borderColor: selectedSort === 'newest' ? '#FED7AA' : '#E5E7EB' }}
-                                    >
-                                        <Text className={`text-xs font-jakarta-semibold ${selectedSort === 'newest' ? 'text-primary-600' : 'text-neutral-700'}`}>
-                                            {i18n.t('client.home.searchResults.newest')}
-                                        </Text>
-                                    </TouchableOpacity>
-                                </ScrollView>
-
-                                {/* Contenu */}
-                                {loadingSearch ? (
-                                    resultsView === 'grid' ? (
-                                        <View className="flex-row flex-wrap justify-between mt-2">
-                                            {[0, 1, 2, 3].map((i) => (
-                                                <SkeletonProduct key={i} />
-                                            ))}
-                                        </View>
-                                    ) : (
-                                        <View className="mt-2">
-                                            {[0, 1, 2, 3].map((i) => (
-                                                <SkeletonProductList key={i} />
-                                            ))}
-                                        </View>
-                                    )
-                                ) : searchResults.length > 0 ? (
-                                    resultsView === 'grid' ? (
-                                        <View className="flex-row flex-wrap justify-between">
-                                            {searchResults.map((item, index) => (
-                                                <View key={`search-${item._id}-${index}`} style={{ width: productWidth }}>
-                                                    {renderProduct(item)}
-                                                </View>
-                                            ))}
-                                        </View>
-                                    ) : (
-                                        <View>
-                                            {searchResults.map((item, index) => (
-                                                <View key={`search-list-${item._id}-${index}`} className="w-full">
-                                                    {renderProductListItem(item)}
-                                                </View>
-                                            ))}
-                                        </View>
-                                    )
-                                ) : (
-                                    <View className="items-center justify-center py-8">
-                                        <Ionicons name="search-outline" size={36} color={colors.textSecondary} />
-                                        <Text className="mt-2 text-neutral-600 font-jakarta-medium">
-                                            {i18n.t('client.home.empty.noProductsFound')}
-                                        </Text>
-                                        <TouchableOpacity
-                                            onPress={() => setCityModalVisible(true)}
-                                            className="mt-3 px-4 py-2 rounded-full border"
-                                            style={{ borderColor: '#FED7AA' }}
-                                        >
-                                            <Text className="text-primary-600 font-jakarta-semibold">
-                                                {i18n.t('client.home.empty.adjustFilters')}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                )}
-                            </Animated.View>
-                        )}
 
                         {/* Statuts des entreprises suivies */}
                         {statusGroups.length > 0 && (
@@ -1345,7 +780,7 @@ export default function ClientHome() {
                                         return (
                                             <TouchableOpacity
                                                 key={categoryId}
-                                                onPress={() => category._id && router.push({ pathname: '/(app)/(client)/category/[id]', params: { id: category._id } })}
+                                                onPress={() => category._id && router.push({ pathname: '/(app)/(client)/category/[categoryId]', params: { categoryId: category._id } })}
                                                 className="mr-4 items-center"
                                             >
                                                 <View className="w-16 h-16 justify-center items-center mb-3">
@@ -1372,7 +807,6 @@ export default function ClientHome() {
                                 </ScrollView>
                             )}
                         </View>
-
 
                         {/* Featured Products (changé en vertical avec 2 colonnes) */}
                         <View className="py-4 px-6">

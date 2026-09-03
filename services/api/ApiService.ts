@@ -1,3 +1,4 @@
+import { enrichirErreur } from "../../utils/apiError";
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
@@ -59,6 +60,12 @@ class ApiService {
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse) => response,
       async (error: any) => {
+        // Le motif reel avant toute branche : axios ecrase error.message par
+        // « Request failed with status code 400 », alors que le serveur a
+        // detaille ce qui ne va pas. Enrichi ici une seule fois, tous les
+        // appelants qui lisent e.message affichent la bonne raison.
+        enrichirErreur(error);
+
         
         // Handle 401 errors (unauthorized) - Token expiré
         if (error.response?.status === 401) {

@@ -402,7 +402,7 @@ export default function EnterpriseSignUpScreen() {
 
         if (Platform.OS === "ios") {
           console.log("📱 iOS détecté: aucun parcours d'abonnement in-app");
-          router.replace("/(app)/(enterprise)/(tabs)/");
+          router.replace("/(app)/(enterprise)/(tabs)");
         } else {
           console.log("🎯 Affichage du modal de sélection de plan...");
           // Afficher le modal de sélection de plan au lieu de rediriger directement

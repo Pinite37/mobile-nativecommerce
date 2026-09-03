@@ -12,11 +12,8 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Image } from "expo-image";
 import {
   ActivityIndicator,
-  Animated,
-  BackHandler,
   Dimensions,
   FlatList,
-  Keyboard,
   Modal,
   Pressable,
   RefreshControl,
@@ -36,12 +33,8 @@ import { getCategoryIcon } from "../../../../constants/CategoryIcons";
 import CategoryService from "../../../../services/api/CategoryService";
 import EnterpriseService from "../../../../services/api/EnterpriseService";
 import ProductService from "../../../../services/api/ProductService";
-import SearchService from "../../../../services/api/SearchService";
 import { AuthDebugger } from "../../../../services/AuthDebugger";
 import { useUnreadNotifications } from "../../../../hooks/useUnreadNotifications";
-import SearchCacheService, {
-  RecentSearch,
-} from "../../../../services/SearchCacheService";
 import { Category, Product } from "../../../../types/product";
 import { beninCities, neighborhoodsByCity } from "../../../../constants/LocationData";
 import { StatusBar as StatusBarComponent } from "../../../../components/ui/StatusBar";
@@ -82,7 +75,7 @@ export default function EnterpriseDashboard() {
   const handleOpenStatusCreator = () => {
     const hasActiveSubscription = subscription?.isActive && subscription?.endDate && new Date(subscription.endDate) > new Date();
     if (!hasActiveSubscription) {
-      router.push('/(app)/(enterprise)/subscriptions/index');
+      router.push('/(app)/(enterprise)/subscriptions');
       return;
     }
     setCreatorVisible(true);
@@ -164,22 +157,9 @@ export default function EnterpriseDashboard() {
   const [citySearch, setCitySearch] = useState('');
 
   // États pour la recherche
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchSuggestions, setSuggestions] = useState<any[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [dropdownAnim] = useState(() => new Animated.Value(0));
-  const [resultsAnim] = useState(() => new Animated.Value(0));
   const [loadingSearch, setLoadingSearch] = useState(false);
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
-  const [searchTimeout, setSearchTimeout] = useState<any>(null);
-  const [showSearchResults, setShowSearchResults] = useState(false);
-  const [searchInfo, setSearchInfo] = useState<any>(null);
 
   // États pour l'historique des recherches
-  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
-  const [showRecentSearches, setShowRecentSearches] = useState(false);
-  const [searchInputFocused, setSearchInputFocused] = useState(false);
-  const [resultsView, setResultsView] = useState<"grid" | "list">("grid");
   const [selectedSort, setSelectedSort] = useState<
     "relevance" | "priceLow" | "priceHigh" | "newest"
   >("relevance");
@@ -258,64 +238,9 @@ export default function EnterpriseDashboard() {
   };
 
   useEffect(() => {
-    loadRecentSearches();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Animation dropdown recherche
-  useEffect(() => {
-    if (showSuggestions || showRecentSearches) {
-      dropdownAnim.setValue(0);
-      Animated.spring(dropdownAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        tension: 80,
-        friction: 12,
-      }).start();
-    }
-  }, [showSuggestions, showRecentSearches]);
-
-  // Animation résultats de recherche
-  useEffect(() => {
-    if (showSearchResults) {
-      resultsAnim.setValue(0);
-      Animated.spring(resultsAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        tension: 70,
-        friction: 11,
-      }).start();
-    }
-  }, [showSearchResults]);
-
-  useEffect(() => {
     setSelectedNeighborhood("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCity]);
-
-  // Gestion du bouton retour matériel
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      () => {
-        // Si on affiche les résultats de recherche, les masquer
-        if (showSearchResults) {
-          hideSearchResults();
-          return true; // Empêche la navigation arrière par défaut
-        }
-        // Si on affiche les suggestions, les masquer
-        if (showSuggestions) {
-          setShowSuggestions(false);
-          setSuggestions([]);
-          return true; // Empêche la navigation arrière par défaut
-        }
-        // Sinon, laisser le comportement par défaut (qui quittera l'app car c'est la page racine)
-        return false;
-      }
-    );
-
-    return () => backHandler.remove();
-  }, [showSearchResults, showSuggestions]);
 
   const refreshData = async () => {
     try {
@@ -409,35 +334,6 @@ export default function EnterpriseDashboard() {
     </View>
   );
 
-  // Fonctions pour le cache et l'historique des recherches
-  const loadRecentSearches = async () => {
-    try {
-      const recent = await SearchCacheService.getRecentSearches();
-      setRecentSearches(recent);
-    } catch (error) {
-      console.error("❌ Erreur chargement recherches récentes:", error);
-    }
-  };
-
-  const clearSearchHistory = async () => {
-    try {
-      await SearchCacheService.clearRecentSearches();
-      setRecentSearches([]);
-    } catch (error) {
-      console.error("❌ Erreur vidage historique:", error);
-    }
-  };
-
-  const removeFromSearchHistory = async (query: string) => {
-    try {
-      await SearchCacheService.removeFromRecentSearches(query);
-      const updatedRecent = await SearchCacheService.getRecentSearches();
-      setRecentSearches(updatedRecent);
-    } catch (error) {
-      console.error("❌ Erreur suppression recherche:", error);
-    }
-  };
-
   const toggleFavorite = async (productId: string) => {
     const isFavorite = (favorites as Set<string>).has(productId);
     try {
@@ -483,193 +379,6 @@ export default function EnterpriseDashboard() {
       default:
         return "popular";
     }
-  };
-
-  // Fonctions de recherche améliorées avec cache
-  const handleSearchChange = (text: string) => {
-    setSearchQuery(text);
-
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
-    }
-
-    if (text !== searchQuery) {
-      setShowSearchResults(false);
-      setSearchResults([]);
-      setSearchInfo(null);
-    }
-
-    if (text.length === 0 && searchInputFocused) {
-      setShowRecentSearches(true);
-      setShowSuggestions(false);
-    } else {
-      setShowRecentSearches(false);
-    }
-
-    if (text.length >= 2) {
-      const timeout = setTimeout(() => {
-        getSuggestions(text);
-      }, 300);
-      setSearchTimeout(timeout);
-    } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
-  };
-
-  const handleSearchInputFocus = () => {
-    setSearchInputFocused(true);
-    if (searchQuery.length === 0) {
-      setShowRecentSearches(true);
-    }
-  };
-
-  const handleSearchInputBlur = () => {
-    setSearchInputFocused(false);
-    setTimeout(() => {
-      setShowRecentSearches(false);
-      setShowSuggestions(false);
-    }, 200);
-  };
-
-  // Fonction pour masquer les résultats de recherche (parité client)
-  const hideSearchResults = () => {
-    Keyboard.dismiss();
-    Animated.timing(resultsAnim, {
-      toValue: 0,
-      duration: 220,
-      useNativeDriver: true,
-    }).start(() => {
-      setShowSearchResults(false);
-      setSearchResults([]);
-      setSearchInfo(null);
-    });
-  };
-
-  const getSuggestions = async (query: string) => {
-    try {
-      setLoadingSearch(true);
-      const suggestions = await SearchService.getSuggestions(query, 6);
-      setSuggestions(suggestions);
-      setShowSuggestions(suggestions.length > 0);
-    } catch (error) {
-      console.error("❌ Erreur suggestions:", error);
-    } finally {
-      setLoadingSearch(false);
-    }
-  };
-
-  const performSearch = async (query?: string) => {
-    const searchTerm = query || searchQuery;
-    if (!searchTerm.trim()) return;
-
-    try {
-      setLoadingSearch(true);
-      setShowSuggestions(false);
-      setShowRecentSearches(false);
-
-      const searchFilters = {
-        city: selectedCity,
-        district: selectedNeighborhood || undefined,
-        sort: mapSelectedSortToApi(selectedSort),
-        page: 1,
-        limit: 20,
-      };
-
-      let cachedResults: any = null;
-      try {
-        cachedResults = await SearchCacheService.getCachedSearchResults(
-          searchTerm,
-          searchFilters
-        );
-      } catch (e) { /* cache unavailable */ }
-
-      if (cachedResults) {
-        setSearchResults(cachedResults.results || []);
-        const searchInfoWithCache = {
-          ...cachedResults.searchInfo,
-          fromCache: true,
-          query: searchTerm,
-        };
-        setSearchInfo(searchInfoWithCache);
-        setShowSearchResults(true);
-        setLoadingSearch(false);
-        return;
-      }
-
-      const response = await ProductService.searchPublicProducts(
-        searchTerm,
-        searchFilters
-      );
-
-      // Normaliser la réponse (certains services renvoient { products, pagination }, d'autres { data, searchInfo })
-      const results: Product[] = Array.isArray((response as any)?.data)
-        ? (response as any).data
-        : Array.isArray((response as any)?.products)
-          ? (response as any).products
-          : Array.isArray(response)
-            ? (response as any)
-            : [];
-
-      const normalizedInfo =
-        (response as any)?.searchInfo ||
-        ((response as any)?.pagination
-          ? { totalResults: (response as any).pagination?.total }
-          : null);
-
-      setSearchResults(results);
-      setSearchInfo(normalizedInfo);
-      setShowSearchResults(true);
-
-      // Opérations de cache: ne doivent pas faire échouer l'UI
-      try {
-        await SearchCacheService.cacheSearchResults(
-          searchTerm,
-          results,
-          normalizedInfo,
-          searchFilters
-        );
-        await SearchCacheService.addToRecentSearches(
-          searchTerm,
-          results.length
-        );
-        await loadRecentSearches();
-      } catch (e) { /* cache unavailable */ }
-    } catch (error) {
-      console.error("❌ Erreur lors de la recherche:", error);
-      setSearchResults([]);
-      setSearchInfo(null);
-      setShowSearchResults(false);
-    } finally {
-      setLoadingSearch(false);
-    }
-  };
-
-  const selectSuggestion = (suggestion: any) => {
-    const text = suggestion?.text ?? "";
-    setSearchQuery(text);
-    setShowSuggestions(false);
-    setShowRecentSearches(false);
-
-    // Fermer le clavier pour éviter les conflits de tap
-    Keyboard.dismiss();
-
-    // Si c'est un produit identifiable, on navigue directement
-    if (suggestion?.type === "product") {
-      const productId =
-        suggestion?.id || suggestion?.productId || suggestion?._id;
-      if (productId) {
-        router.push(`/(app)/(enterprise)/product/${productId}`);
-        return;
-      }
-    }
-
-    // Sinon, lancer la recherche
-    setTimeout(() => {
-      if (text && text.trim()) {
-        performSearch(text);
-      }
-    }, 0);
   };
 
   // Fonction de test pour le refresh token
@@ -764,73 +473,6 @@ export default function EnterpriseDashboard() {
         <Text style={{ color: colors.brandPrimary }} className="text-base font-jakarta-bold mb-1">
           {formatPrice(item.price)}
         </Text>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const renderProductListItem = (item: Product) => (
-    <TouchableOpacity
-      style={{
-        backgroundColor: colors.card,
-        borderColor: colors.border,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.03,
-        shadowRadius: 4,
-        elevation: 1,
-      }}
-      className="rounded-2xl p-2 mb-3 w-full overflow-hidden flex-row border"
-      onPress={() => {
-        try {
-          router.push(`/(app)/(enterprise)/product/${item._id}`);
-        } catch (error) {
-          console.warn("Erreur navigation produit liste:", error);
-        }
-      }}
-    >
-      <View className="relative mr-3">
-        <Image
-          source={{
-            uri:
-              item.images[0] ||
-              "https://via.placeholder.com/150x150/CCCCCC/FFFFFF?text=No+Image",
-          }}
-          style={{ width: 96, height: 96, borderRadius: 12 }}
-          contentFit="cover"
-        />
-        {item.stats?.totalSales > 10 && (
-          <View className="absolute top-1 left-1 bg-success-500 rounded-full px-2 py-0.5">
-            <Text className="text-white text-[10px] font-jakarta-bold">
-              Populaire
-            </Text>
-          </View>
-        )}
-      </View>
-      <View className="flex-1 justify-between">
-        <View>
-          <Text
-            numberOfLines={2}
-            style={{ color: colors.textPrimary }}
-            className="text-sm font-jakarta-semibold"
-          >
-            {item.name}
-          </Text>
-        </View>
-        <View className="flex-row items-center justify-between mt-2">
-          <Text style={{ color: colors.brandPrimary }} className="text-base font-jakarta-bold">
-            {formatPrice(item.price)}
-          </Text>
-          <TouchableOpacity
-            className="bg-neutral-100 rounded-full p-2"
-            onPress={() => toggleFavorite(item._id)}
-          >
-            <Ionicons
-              name={favorites.has(item._id) ? "heart" : "heart-outline"}
-              size={18}
-              color={favorites.has(item._id) ? "#EF4444" : "#6B7280"}
-            />
-          </TouchableOpacity>
-        </View>
       </View>
     </TouchableOpacity>
   );
@@ -931,25 +573,41 @@ export default function EnterpriseDashboard() {
         <View style={{
           backgroundColor: colors.tertiary,
           borderRadius: 15, flexDirection: 'row', alignItems: 'center',
-          paddingLeft: 14, height: 48, overflow: 'hidden',
+          height: 48, overflow: 'hidden',
         }}>
-          <Ionicons name="search" size={20} color={colors.brandPrimary} />
-          <TextInput
-            style={{ flex: 1, marginLeft: 10, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 15 }}
-            placeholder={i18n.t("enterprise.dashboard.search.placeholder")}
-            placeholderTextColor={colors.textTertiary}
-            value={searchQuery}
-            onChangeText={handleSearchChange}
-            onFocus={handleSearchInputFocus}
-            onBlur={handleSearchInputBlur}
-            onSubmitEditing={() => performSearch()}
-            returnKeyType="search"
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')} style={{ paddingRight: 8 }}>
-              <Ionicons name="close-circle" size={18} color="#9CA3AF" />
-            </TouchableOpacity>
-          )}
+          {/* Toute la zone gauche est tactile, loupe et marge comprises. Le champ
+              n'est plus saisissable ici : il ouvre l'écran de recherche, partagé
+              avec l'espace client, qui a la place d'afficher suggestions,
+              historique et résultats sans les empiler par-dessus l'accueil. */}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            accessibilityRole="search"
+            accessibilityLabel={i18n.t("enterprise.dashboard.search.placeholder")}
+            onPress={() => router.push({
+              pathname: '/(app)/(enterprise)/search',
+              params: {
+                city: selectedCity || '',
+                district: selectedNeighborhood || '',
+                sort: mapSelectedSortToApi(selectedSort) || '',
+              },
+            })}
+            style={{
+              flex: 1, height: '100%', flexDirection: 'row',
+              alignItems: 'center', paddingLeft: 14, paddingRight: 8,
+            }}
+          >
+            <Ionicons name="search" size={20} color={colors.brandPrimary} />
+            <Text
+              numberOfLines={1}
+              style={{
+                marginLeft: 10, flex: 1,
+                color: colors.textTertiary,
+                fontFamily: 'PlusJakartaSans-SemiBold', fontSize: 15,
+              }}
+            >
+              {i18n.t("enterprise.dashboard.search.placeholder")}
+            </Text>
+          </TouchableOpacity>
           <View style={{ width: 1, height: 26, backgroundColor: colors.border }} />
           <TouchableOpacity
             onPress={() => setCityModalVisible(true)}
@@ -975,84 +633,6 @@ export default function EnterpriseDashboard() {
           </TouchableOpacity>
         </View>
 
-        {/* Overlay transparent pour fermer le dropdown en tapant dans le vide */}
-        {(showSuggestions || showRecentSearches) && (
-          <Pressable
-            style={{ position: 'absolute', top: 0, left: -16, right: -16, bottom: -2000, zIndex: 90 }}
-            onPress={() => { Keyboard.dismiss(); setShowSuggestions(false); setShowRecentSearches(false); }}
-          />
-        )}
-
-        {/* Dropdown — position absolute, animé, par-dessus le contenu */}
-        {(showSuggestions || showRecentSearches) && (
-          <Animated.View style={{
-            position: 'absolute',
-            top: 56, left: 0, right: 0,
-            backgroundColor: colors.card,
-            borderRadius: 16, maxHeight: 360,
-            borderWidth: 1, borderColor: colors.border,
-            zIndex: 100,
-            opacity: dropdownAnim,
-            transform: [{
-              translateY: dropdownAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [-10, 0],
-              })
-            }]
-          }}>
-            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-              {showRecentSearches && recentSearches.length > 0 && (
-                <View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 6 }}>
-                    <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                      Recherches récentes
-                    </Text>
-                    <TouchableOpacity onPress={clearSearchHistory}>
-                      <Text style={{ color: '#10B981', fontSize: 12, fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                        Effacer tout
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                  {recentSearches.map((search: RecentSearch, index: number) => (
-                    <TouchableOpacity
-                      key={index}
-                      style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 11 }}
-                      onPress={() => { setSearchQuery(search.query); performSearch(search.query); }}
-                    >
-                      <Ionicons name="time-outline" size={15} color={colors.textSecondary} />
-                      <Text style={{ flex: 1, marginLeft: 12, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 14 }} numberOfLines={1}>
-                        {search.query}
-                      </Text>
-                      <TouchableOpacity onPress={() => removeFromSearchHistory(search.query)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                        <Ionicons name="close" size={14} color={colors.textSecondary} />
-                      </TouchableOpacity>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-              {showSuggestions && searchSuggestions.length > 0 && (
-                <View style={showRecentSearches ? { borderTopWidth: 1, borderTopColor: colors.border, marginTop: 4 } : {}}>
-                  {searchSuggestions.map((suggestion: any, index: number) => (
-                    <TouchableOpacity
-                      key={index}
-                      style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 11 }}
-                      onPress={() => selectSuggestion(suggestion)}
-                    >
-                      <View style={{ width: 30, height: 30, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.secondary }}>
-                        <Ionicons name="search" size={14} color={colors.textSecondary} />
-                      </View>
-                      <Text style={{ flex: 1, marginLeft: 12, color: colors.textPrimary, fontFamily: 'PlusJakartaSans-Medium', fontSize: 14 }} numberOfLines={1}>
-                        {suggestion.text || suggestion.value || suggestion.query || suggestion.name || ''}
-                      </Text>
-                      <Ionicons name="arrow-forward" size={14} color={colors.textSecondary} />
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-              <View style={{ height: 8 }} />
-            </ScrollView>
-          </Animated.View>
-        )}
       </View>
     </View>
   );
@@ -1073,7 +653,6 @@ export default function EnterpriseDashboard() {
       ) : (
         <>
           {renderHeader()}
-
 
           <ScrollView
             className="flex-1"
@@ -1101,245 +680,6 @@ export default function EnterpriseDashboard() {
             }
           >
             {renderSearchSection()}
-
-            {/* Résultats de recherche — avant les statuts */}
-            {showSearchResults && (
-              <Animated.View style={{
-                backgroundColor: colors.card,
-                borderColor: colors.border,
-                marginTop: 14,
-                marginHorizontal: 16,
-                borderRadius: 16,
-                opacity: resultsAnim,
-                transform: [{ translateY: resultsAnim.interpolate({ inputRange: [0, 1], outputRange: [-20, 0] }) }],
-              }} className="px-4 py-4 border-b">
-                {/* En-tête résultats + toggle vue */}
-                <View className="flex-row items-center justify-between">
-                  <Text style={{ color: colors.textPrimary }} className="text-lg font-jakarta-bold flex-1">
-                    Résultats pour &quot;{searchQuery}&quot;
-                  </Text>
-                  <View className="flex-row items-center">
-                    <View style={{ backgroundColor: isDark ? colors.tertiary : "#F3F4F6" }} className="flex-row items-center rounded-full p-1 mr-2">
-                      <TouchableOpacity
-                        onPress={() => setResultsView("grid")}
-                        style={{ backgroundColor: resultsView === "grid" ? colors.card : "transparent" }}
-                        className={`px-2 py-1 rounded-full`}
-                      >
-                        <Ionicons
-                          name="grid-outline"
-                          size={18}
-                          color={resultsView === "grid" ? colors.brandPrimary : colors.textSecondary}
-                        />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => setResultsView("list")}
-                        style={{ backgroundColor: resultsView === "list" ? colors.card : "transparent" }}
-                        className={`px-2 py-1 rounded-full`}
-                      >
-                        <Ionicons
-                          name="list-outline"
-                          size={18}
-                          color={resultsView === "list" ? colors.brandPrimary : colors.textSecondary}
-                        />
-                      </TouchableOpacity>
-                    </View>
-                    <TouchableOpacity
-                      onPress={hideSearchResults}
-                      style={{ backgroundColor: isDark ? colors.tertiary : "#F3F4F6" }}
-                      className="p-2 rounded-full"
-                    >
-                      <Ionicons name="close" size={18} color={colors.textSecondary} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                {/* Infos supplémentaires */}
-                {searchInfo && (
-                  <View className="flex-row items-center mt-1">
-                    <Text style={{ color: colors.textTertiary }} className="text-xs font-jakarta-medium">
-                      {searchInfo.totalResults || searchResults.length} résultat
-                      {searchInfo.totalResults > 1 ? "s" : ""}
-                    </Text>
-                    {searchInfo.searchTime && (
-                      <Text style={{ color: colors.textTertiary }} className="text-xs font-jakarta-medium ml-2">
-                        • {searchInfo.searchTime}ms
-                      </Text>
-                    )}
-                    {searchInfo.fromCache && (
-                      <Text className="text-xs text-green-600 font-jakarta-medium ml-2">
-                        • En cache
-                      </Text>
-                    )}
-                  </View>
-                )}
-
-                {/* Chips localisation */}
-                <View className="flex-row mt-3">
-                  <TouchableOpacity
-                    onPress={() => setCityModalVisible(true)}
-                    className="flex-row items-center px-3 py-1.5 rounded-full border mr-2"
-                    style={{ backgroundColor: isDark ? colors.tertiary : "#F9FAFB", borderColor: colors.border }}
-                  >
-                    <Ionicons name="location-outline" size={14} color={colors.textSecondary} />
-                    <Text style={{ color: colors.textSecondary }} className="ml-1 text-xs font-jakarta-medium">
-                      {selectedCity}
-                    </Text>
-                  </TouchableOpacity>
-                  {!!selectedNeighborhood && (
-                    <TouchableOpacity
-                      onPress={() => setNeighborhoodModalVisible(true)}
-                      className="flex-row items-center px-3 py-1.5 rounded-full border"
-                      style={{
-                        backgroundColor: isDark ? colors.tertiary : "#F9FAFB",
-                        borderColor: colors.border,
-                      }}
-                    >
-                      <Ionicons
-                        name="navigate-outline"
-                        size={14}
-                        color={colors.textSecondary}
-                      />
-                      <Text style={{ color: colors.textSecondary }} className="ml-1 text-xs font-jakarta-medium">
-                        {selectedNeighborhood}
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-
-                {/* Chips de tri */}
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ paddingVertical: 8 }}
-                >
-                  <TouchableOpacity
-                    onPress={() => setSelectedSort("relevance")}
-                    className="px-3 py-1.5 rounded-full border mr-2"
-                    style={{
-                      backgroundColor:
-                        selectedSort === "relevance" ? "#FFF1E6" : "#F3F4F6",
-                      borderColor:
-                        selectedSort === "relevance" ? "#FED7AA" : "#E5E7EB",
-                    }}
-                  >
-                    <Text
-                      style={{ color: selectedSort === "relevance" ? colors.brandPrimary : colors.textPrimary }}
-                      className={`text-xs font-jakarta-semibold`}
-                    >
-                      Pertinence
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => setSelectedSort("priceLow")}
-                    className="px-3 py-1.5 rounded-full border mr-2"
-                    style={{
-                      backgroundColor:
-                        selectedSort === "priceLow" ? "#FFF1E6" : "#F3F4F6",
-                      borderColor:
-                        selectedSort === "priceLow" ? "#FED7AA" : "#E5E7EB",
-                    }}
-                  >
-                    <Text
-                      style={{ color: selectedSort === "priceLow" ? colors.brandPrimary : colors.textPrimary }}
-                      className={`text-xs font-jakarta-semibold`}
-                    >
-                      Moins cher
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => setSelectedSort("priceHigh")}
-                    className="px-3 py-1.5 rounded-full border mr-2"
-                    style={{
-                      backgroundColor:
-                        selectedSort === "priceHigh" ? "#FFF1E6" : "#F3F4F6",
-                      borderColor:
-                        selectedSort === "priceHigh" ? "#FED7AA" : "#E5E7EB",
-                    }}
-                  >
-                    <Text
-                      style={{ color: selectedSort === "priceHigh" ? colors.brandPrimary : colors.textPrimary }}
-                      className={`text-xs font-jakarta-semibold`}
-                    >
-                      Plus cher
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => setSelectedSort("newest")}
-                    className="px-3 py-1.5 rounded-full border"
-                    style={{
-                      backgroundColor:
-                        selectedSort === "newest" ? "#FFF1E6" : "#F3F4F6",
-                      borderColor:
-                        selectedSort === "newest" ? "#FED7AA" : "#E5E7EB",
-                    }}
-                  >
-                    <Text
-                      style={{ color: selectedSort === "newest" ? colors.brandPrimary : colors.textPrimary }}
-                      className={`text-xs font-jakarta-semibold`}
-                    >
-                      Nouveaux
-                    </Text>
-                  </TouchableOpacity>
-                </ScrollView>
-
-                {/* Contenu */}
-                {loadingSearch ? (
-                  resultsView === "grid" ? (
-                    <View className="flex-row flex-wrap justify-between mt-2">
-                      {[0, 1, 2, 3].map((i) => (
-                        <View
-                          key={i}
-                          className="w-[48%] h-40 bg-neutral-100 rounded-2xl mb-3"
-                        />
-                      ))}
-                    </View>
-                  ) : (
-                    <View className="mt-2">
-                      {[0, 1, 2, 3].map((i) => (
-                        <View
-                          key={i}
-                          className="w-full h-28 bg-neutral-100 rounded-2xl mb-3"
-                        />
-                      ))}
-                    </View>
-                  )
-                ) : searchResults.length > 0 ? (
-                  resultsView === "grid" ? (
-                    <View className="flex-row flex-wrap justify-between">
-                      {searchResults.map((item, index) => (
-                        <View key={`search-${item._id}-${index}`} className="w-[48%]">
-                          {renderProduct(item)}
-                        </View>
-                      ))}
-                    </View>
-                  ) : (
-                    <View>
-                      {searchResults.map((item, index) => (
-                        <View key={`search-list-${item._id}-${index}`} className="w-full">
-                          {renderProductListItem(item)}
-                        </View>
-                      ))}
-                    </View>
-                  )
-                ) : (
-                  <View className="items-center justify-center py-8">
-                    <Ionicons name="search-outline" size={36} color={colors.textTertiary} />
-                    <Text style={{ color: colors.textSecondary }} className="mt-2 font-jakarta-medium">
-                      {i18n.t("enterprise.dashboard.empty.noProductsFound")}
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() => setCityModalVisible(true)}
-                      className="mt-3 px-4 py-2 rounded-full border"
-                      style={{ borderColor: colors.brandSecondary }}
-                    >
-                      <Text style={{ color: colors.brandPrimary }} className="font-jakarta-semibold">
-                        Ajuster les filtres
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </Animated.View>
-            )}
 
             {/* Statuts */}
             {isAuthenticated && (statusGroups.length > 0 || userRole === 'ENTERPRISE') ? (

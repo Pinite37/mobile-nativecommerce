@@ -655,7 +655,7 @@ export default function MessagesPage() {
                   style={{ backgroundColor: colors.brandPrimary }}
                   className="mt-8 rounded-2xl px-8 py-3.5 shadow-lg shadow-primary-500/30"
                   onPress={() =>
-                    router.push("/(app)/(enterprise)/(tabs)/")
+                    router.push("/(app)/(enterprise)/(tabs)")
                   }
                 >
                   <Text style={{ color: colors.textOnBrand }} className="font-jakarta-bold text-base">

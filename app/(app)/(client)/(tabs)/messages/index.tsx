@@ -655,16 +655,14 @@ export default function ClientMessagesPage() {
         borderBottomWidth: 1,
         borderBottomColor: colors.borderLight,
       }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <View style={{ marginBottom: 14 }}>
+          {/* Bouton « nouvelle conversation » retiré : il renvoyait vers l'accueil
+              plutôt que d'ouvrir une vraie composition, et il n'existe côté client
+              aucun moyen de démarrer une conversation sans passer par une fiche
+              produit ou une entreprise. */}
           <Text style={{ fontFamily: 'PlusJakartaSans-Bold', fontSize: 24, color: colors.textPrimary }}>
             Messages
           </Text>
-          <TouchableOpacity
-            style={{ width: 42, height: 42, borderRadius: 14, backgroundColor: colors.tertiary, alignItems: 'center', justifyContent: 'center' }}
-            onPress={() => router.push("/")}
-          >
-            <Ionicons name="create-outline" size={20} color={colors.textPrimary} />
-          </TouchableOpacity>
         </View>
 
         {/* Barre de recherche */}
@@ -790,7 +788,7 @@ export default function ClientMessagesPage() {
               <TouchableOpacity
                 className="mt-8 bg-primary-600 rounded-2xl px-8 py-3.5 shadow-lg shadow-primary-500/30"
                 onPress={() =>
-                  router.push("/(app)/(client)/(tabs)/")
+                  router.push("/(app)/(client)/(tabs)")
                 }
               >
                 <Text className="text-white font-jakarta-bold text-base">

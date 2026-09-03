@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -106,6 +106,29 @@ export default function ConversationDetails() {
   /** Index visé par un saut en cours, pour que onScrollToIndexFailed puisse le rattraper. */
   const pendingScrollIndexRef = useRef<number | null>(null);
   const [commandes, setCommandes] = useState<Commande[]>([]);
+
+  /**
+   * Bandeaux de commandes affichés en tête du fil.
+   *
+   * Le plafond existait déjà, mais sans tri : le commentaire promettait que la
+   * commande en attente de MA confirmation passe avant tout, alors que rien ne
+   * l'ordonnait. Avec trois commandes actives, celle qui exige une action
+   * pouvait tomber hors des deux affichées, et le client restait bloqué sans
+   * savoir pourquoi.
+   */
+  const MAX_BANDEAUX = 2;
+  const bandeauxCommandes = useMemo(() => {
+    const actives = commandes.filter((c) =>
+      ["PROPOSEE", "CONFIRMEE", "EN_LIVRAISON"].includes(c.status),
+    );
+    const priorite = (c: Commande) =>
+      c.status === "PROPOSEE" ? 0 : c.status === "EN_LIVRAISON" ? 1 : 2;
+    const triees = [...actives].sort((a, b) => priorite(a) - priorite(b));
+    return {
+      visibles: triees.slice(0, MAX_BANDEAUX),
+      restant: Math.max(0, triees.length - MAX_BANDEAUX),
+    };
+  }, [commandes]);
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
@@ -1550,9 +1573,7 @@ export default function ConversationDetails() {
       {/* Commandes proposées par l'entreprise. Celle en attente de MA
           confirmation passe avant tout : tant que je n'ai pas donné mon
           adresse, rien ne peut partir. */}
-      {commandes
-        .filter((c) => ["PROPOSEE", "CONFIRMEE", "EN_LIVRAISON"].includes(c.status))
-        .slice(0, 2)
+      {bandeauxCommandes.visibles
         .map((c) => {
           const mustAct = c.status === "PROPOSEE";
           return (
@@ -1597,6 +1618,36 @@ export default function ConversationDetails() {
             </TouchableOpacity>
           );
         })}
+
+      {/* Le reste n'était pas signalé du tout : le client ignorait qu'il avait
+          d'autres commandes en cours avec cette entreprise. */}
+      {bandeauxCommandes.restant > 0 && (
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 16,
+            paddingVertical: 8,
+            backgroundColor: colors.secondary,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.borderLight,
+          }}
+        >
+          <Ionicons name="albums-outline" size={14} color={colors.textSecondary} />
+          <Text
+            style={{
+              marginLeft: 8,
+              color: colors.textSecondary,
+              fontFamily: "PlusJakartaSans-Medium",
+              fontSize: 11.5,
+            }}
+          >
+            {bandeauxCommandes.restant} autre
+            {bandeauxCommandes.restant > 1 ? "s" : ""} commande
+            {bandeauxCommandes.restant > 1 ? "s" : ""} en cours
+          </Text>
+        </View>
+      )}
 
       {/* L'ancien bandeau « Partager / Confirmer mon adresse » a été retiré
           ici. Il venait du mécanisme provisoire (DeliveryAddressRequest),
