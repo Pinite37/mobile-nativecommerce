@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import CommandesBanner, { LigneBandeauCommande } from "../../../../components/messaging/CommandesBanner";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -1570,84 +1571,29 @@ export default function ConversationDetails() {
         onJumpToMessage={jumpToMessage}
       />
 
-      {/* Commandes proposées par l'entreprise. Celle en attente de MA
-          confirmation passe avant tout : tant que je n'ai pas donné mon
-          adresse, rien ne peut partir. */}
-      {bandeauxCommandes.visibles
-        .map((c) => {
+      {/* Commandes proposées par l'entreprise, dans un bandeau rétractable :
+          celle en attente de MA confirmation passe avant tout et force le
+          bandeau ouvert, tant que je n'ai pas donné mon adresse rien ne peut
+          partir — le reste reste replié pour ne pas manger l'espace du fil. */}
+      <CommandesBanner
+        texteRestant="en cours"
+        restant={bandeauxCommandes.restant}
+        lignes={bandeauxCommandes.visibles.map((c): LigneBandeauCommande => {
           const mustAct = c.status === "PROPOSEE";
-          return (
-            <TouchableOpacity
-              key={c._id}
-              activeOpacity={0.9}
-              onPress={() => router.push(`/(app)/(client)/commande/${c._id}` as any)}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingHorizontal: 16,
-                paddingVertical: 11,
-                backgroundColor: mustAct ? "rgba(16,185,129,0.1)" : colors.card,
-                borderBottomWidth: 1,
-                borderBottomColor: colors.borderLight,
-              }}
-            >
-              <Ionicons
-                name={mustAct ? "alert-circle" : "receipt-outline"}
-                size={17}
-                color={mustAct ? colors.brandPrimary : colors.textTertiary}
-              />
-              <View style={{ flex: 1, marginLeft: 10 }}>
-                <Text
-                  style={{ color: colors.textPrimary }}
-                  className="font-jakarta-bold text-xs"
-                  numberOfLines={1}
-                >
-                  {c.items?.[0]?.nameSnapshot || "Commande"} · {c.agreedTotal} FCFA
-                </Text>
-                <Text
-                  style={{ color: mustAct ? colors.brandPrimary : colors.textSecondary }}
-                  className="font-jakarta-medium text-xs mt-0.5"
-                  numberOfLines={1}
-                >
-                  {mustAct
-                    ? "Confirmez et indiquez où livrer"
-                    : CommandeService.statusLabel(c.status)}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
-            </TouchableOpacity>
-          );
+          return {
+            id: c._id,
+            urgent: mustAct,
+            icone: mustAct ? "alert-circle" : "receipt-outline",
+            teinte: mustAct ? colors.brandPrimary : colors.textTertiary,
+            fond: mustAct ? "rgba(16,185,129,0.1)" : colors.card,
+            titre: `${c.items?.[0]?.nameSnapshot || "Commande"} · ${c.agreedTotal} FCFA`,
+            sousTitre: mustAct
+              ? "Confirmez et indiquez où livrer"
+              : CommandeService.statusLabel(c.status),
+            onPress: () => router.push(`/(app)/(client)/commande/${c._id}` as any),
+          };
         })}
-
-      {/* Le reste n'était pas signalé du tout : le client ignorait qu'il avait
-          d'autres commandes en cours avec cette entreprise. */}
-      {bandeauxCommandes.restant > 0 && (
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            paddingHorizontal: 16,
-            paddingVertical: 8,
-            backgroundColor: colors.secondary,
-            borderBottomWidth: 1,
-            borderBottomColor: colors.borderLight,
-          }}
-        >
-          <Ionicons name="albums-outline" size={14} color={colors.textSecondary} />
-          <Text
-            style={{
-              marginLeft: 8,
-              color: colors.textSecondary,
-              fontFamily: "PlusJakartaSans-Medium",
-              fontSize: 11.5,
-            }}
-          >
-            {bandeauxCommandes.restant} autre
-            {bandeauxCommandes.restant > 1 ? "s" : ""} commande
-            {bandeauxCommandes.restant > 1 ? "s" : ""} en cours
-          </Text>
-        </View>
-      )}
+      />
 
       {/* L'ancien bandeau « Partager / Confirmer mon adresse » a été retiré
           ici. Il venait du mécanisme provisoire (DeliveryAddressRequest),

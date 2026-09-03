@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import CommandesBanner, { LigneBandeauCommande } from "../../../../components/messaging/CommandesBanner";
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
@@ -2041,13 +2042,15 @@ export default function ConversationDetails() {
         onJumpToMessage={jumpToMessage}
       />
 
-      {/* Commandes en cours avec ce client — l'entreprise suit leur état
-          sans quitter le fil. Trois étapes distinctes, car la commande reste
-          CONFIRMEE après publication (elle ne passe EN_LIVRAISON qu'à
-          l'acceptation d'un livreur) : sans distinguer « publiée » de
-          « à publier », le bouton restait affiché indéfiniment. */}
-      {bandeauxCommandes.visibles
-        .map((c) => {
+      {/* Commandes en cours avec ce client, dans un bandeau rétractable. Trois
+          étapes distinctes, car la commande reste CONFIRMEE après publication
+          (elle ne passe EN_LIVRAISON qu'à l'acceptation d'un livreur) : sans
+          distinguer « publiée » de « à publier », le bouton restait affiché
+          indéfiniment. Une commande « à publier » force le bandeau ouvert. */}
+      <CommandesBanner
+        texteRestant="en cours avec ce client"
+        restant={bandeauxCommandes.restant}
+        lignes={bandeauxCommandes.visibles.map((c): LigneBandeauCommande => {
           const published = (c.missions?.length ?? 0) > 0;
           const step: "ATTENTE_CLIENT" | "A_PUBLIER" | "PUBLIEE" | "EN_COURS" =
             c.status === "PROPOSEE"
@@ -2060,105 +2063,50 @@ export default function ConversationDetails() {
 
           const meta = {
             ATTENTE_CLIENT: {
-              icon: "hourglass-outline" as const,
-              tint: colors.textSecondary,
-              bg: colors.secondary,
-              line: "En attente de confirmation et d'adresse du client",
+              icone: "hourglass-outline" as const,
+              teinte: colors.textSecondary,
+              fond: colors.card,
+              sousTitre: "En attente de confirmation et d'adresse du client",
             },
             A_PUBLIER: {
-              icon: "checkmark-circle" as const,
-              tint: colors.brandPrimary,
-              bg: "rgba(16,185,129,0.08)",
-              line: c.deliveryAddress?.address || "Adresse confirmée",
+              icone: "checkmark-circle" as const,
+              teinte: colors.brandPrimary,
+              fond: "rgba(16,185,129,0.08)",
+              sousTitre: c.deliveryAddress?.address || "Adresse confirmée",
             },
             PUBLIEE: {
-              icon: "paper-plane-outline" as const,
-              tint: colors.brandPrimary,
-              bg: "rgba(16,185,129,0.08)",
-              line: "Livraison publiée · en attente d'un livreur",
+              icone: "paper-plane-outline" as const,
+              teinte: colors.brandPrimary,
+              fond: "rgba(16,185,129,0.08)",
+              sousTitre: "Livraison publiée · en attente d'un livreur",
             },
             EN_COURS: {
-              icon: "bicycle" as const,
-              tint: colors.brandPrimary,
-              bg: "rgba(16,185,129,0.08)",
-              line: "Un livreur a pris la course",
+              icone: "bicycle" as const,
+              teinte: colors.brandPrimary,
+              fond: "rgba(16,185,129,0.08)",
+              sousTitre: "Un livreur a pris la course",
             },
           }[step];
 
-          return (
-            <View
-              key={c._id}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingHorizontal: 16,
-                paddingVertical: 10,
-                backgroundColor: meta.bg,
-                borderBottomWidth: 1,
-                borderBottomColor: colors.borderLight,
-              }}
-            >
-              <Ionicons name={meta.icon} size={16} color={meta.tint} />
-              <View style={{ flex: 1, marginLeft: 9 }}>
-                <Text style={{ color: colors.textPrimary, fontFamily: "PlusJakartaSans-SemiBold", fontSize: 12.5 }} numberOfLines={1}>
-                  {c.items?.[0]?.nameSnapshot || "Commande"} · {c.agreedTotal} FCFA
-                </Text>
-                <Text style={{ color: colors.textSecondary, fontFamily: "PlusJakartaSans-Medium", fontSize: 11.5 }} numberOfLines={1}>
-                  {meta.line}
-                </Text>
-              </View>
-
-              {step === "A_PUBLIER" && (
-                <TouchableOpacity
-                  onPress={() => publishMission(c)}
-                  disabled={publishingId === c._id}
-                  activeOpacity={0.85}
-                  style={{
-                    backgroundColor: colors.brandPrimary,
-                    borderRadius: 10,
-                    paddingHorizontal: 12,
-                    paddingVertical: 7,
-                    opacity: publishingId === c._id ? 0.6 : 1,
-                  }}
-                >
-                  <Text style={{ color: "#FFFFFF", fontFamily: "PlusJakartaSans-Bold", fontSize: 12 }}>
-                    {publishingId === c._id ? "…" : "Publier"}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          );
+          return {
+            id: c._id,
+            urgent: step === "A_PUBLIER",
+            icone: meta.icone,
+            teinte: meta.teinte,
+            fond: meta.fond,
+            titre: `${c.items?.[0]?.nameSnapshot || "Commande"} · ${c.agreedTotal} FCFA`,
+            sousTitre: meta.sousTitre,
+            action:
+              step === "A_PUBLIER"
+                ? {
+                    texte: "Publier",
+                    enCours: publishingId === c._id,
+                    onPress: () => publishMission(c),
+                  }
+                : undefined,
+          };
         })}
-
-      {/* Le reste n'est pas caché en silence : sans cette ligne, une entreprise
-          ne saurait pas que d'autres commandes sont en cours avec ce client. */}
-      {bandeauxCommandes.restant > 0 && (
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            paddingHorizontal: 16,
-            paddingVertical: 8,
-            backgroundColor: colors.secondary,
-            borderBottomWidth: 1,
-            borderBottomColor: colors.borderLight,
-          }}
-        >
-          <Ionicons name="albums-outline" size={14} color={colors.textSecondary} />
-          <Text
-            style={{
-              marginLeft: 8,
-              color: colors.textSecondary,
-              fontFamily: "PlusJakartaSans-Medium",
-              fontSize: 11.5,
-            }}
-          >
-            {bandeauxCommandes.restant} autre
-            {bandeauxCommandes.restant > 1 ? "s" : ""} commande
-            {bandeauxCommandes.restant > 1 ? "s" : ""} en cours avec ce client
-          </Text>
-        </View>
-      )}
+      />
 
       {/* Zone de contenu principal avec KeyboardAvoidingView */}
       {/* Android edge-to-edge (SDK 35+) : adjustResize est inopérant, le header reste fixe hors du KAV.
