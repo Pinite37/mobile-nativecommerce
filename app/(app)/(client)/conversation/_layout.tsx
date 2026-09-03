@@ -1,5 +1,6 @@
 import { Redirect, Stack } from "expo-router";
 import { useAuth } from "../../../../contexts/AuthContext";
+import { STACK_ANIMATION } from "../../../../theme/navigation";
 
 export default function ConversationLayout() {
   const { isLoading, isAuthenticated } = useAuth();
@@ -15,8 +16,8 @@ export default function ConversationLayout() {
   return (
     <Stack
       screenOptions={{
+        ...STACK_ANIMATION,
         headerShown: false,
-        contentStyle: { backgroundColor: "white" },
       }}
     >
       <Stack.Screen

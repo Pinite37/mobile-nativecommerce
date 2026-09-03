@@ -2,6 +2,7 @@ import Notifications from '@/services/notificationsModule';
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { STACK_ANIMATION } from "../../theme/navigation";
 
 export default function AppLayout() {
   const router = useRouter();
@@ -116,7 +117,7 @@ export default function AppLayout() {
   }, [isAuthenticated, userRole, lastNotificationResponse]);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ ...STACK_ANIMATION, headerShown: false }}>
       {/* En-tête natif désactivé pour TOUT le segment : chaque écran
         porte son propre AppHeader. Réglé ici plutôt qu'écran par
         écran — sinon toute page ajoutée ensuite hérite du header

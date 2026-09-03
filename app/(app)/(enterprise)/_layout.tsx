@@ -4,6 +4,7 @@ import { Platform } from "react-native";
 import { SubscriptionWelcomeModal } from "../../../components/enterprise/SubscriptionWelcomeModal";
 import { useAuth } from "../../../contexts/AuthContext";
 import { SubscriptionProvider, useSubscription } from "../../../contexts/SubscriptionContext";
+import { STACK_ANIMATION } from "../../../theme/navigation";
 
 // Composant interne qui gère l'affichage du modal
 function EnterpriseLayoutContent() {
@@ -37,7 +38,7 @@ function EnterpriseLayoutContent() {
           porte son propre AppHeader. Réglé ici plutôt qu'écran par
           écran — sinon toute page ajoutée ensuite hérite du header
           par défaut d'Expo Router et se retrouve avec deux bandeaux. */}
-      <Stack screenOptions={{ headerShown: false }}>
+      <Stack screenOptions={{ ...STACK_ANIMATION, headerShown: false }}>
         <Stack.Screen
           name="(tabs)"
           options={{

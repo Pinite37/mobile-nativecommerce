@@ -39,3 +39,7 @@ yarn-error.*
 app-example
 
 .env
+# Ce projet utilise yarn. Un package-lock.json qui traîne rend
+# ambigu le gestionnaire retenu par EAS Build et fait diverger les
+# installations locales selon la commande lancée.
+package-lock.json

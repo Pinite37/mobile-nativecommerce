@@ -1,10 +1,10 @@
 import { LocaleProvider } from "@/contexts/LocaleContext";
 import { PreferencesSync } from "@/contexts/PreferencesSync";
-import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import Notifications from "@/services/notificationsModule";
-import { Stack } from "expo-router";
+import { Stack, ThemeProvider as NavigationThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { LogBox } from "react-native";
@@ -13,6 +13,7 @@ import { ToastProvider as ReanimatedToastProvider } from "../components/ui/Reani
 import { AuthProvider } from "../contexts/AuthContext";
 import { SocketProvider } from "../contexts/SocketContext";
 import "./globals.css";
+import { STACK_ANIMATION, buildNavigationTheme } from "../theme/navigation";
 
 // Désactiver l'overlay LogBox (erreurs toujours visibles dans la console Metro)
 LogBox.ignoreAllLogs();
@@ -39,6 +40,40 @@ Notifications.setNotificationHandler({
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+/**
+ * Pile racine, isolée pour pouvoir lire le thème.
+ *
+ * useTheme n'est disponible que sous ThemeProvider, et la fonction racine se
+ * situe au-dessus. Sans ce découpage, le navigateur garderait le thème clair
+ * de React Navigation et son fond blanc resterait visible sous les écrans en
+ * mode sombre.
+ */
+function ThemedRootStack() {
+  const { colors, isDark } = useTheme();
+  return (
+    <NavigationThemeProvider value={buildNavigationTheme(colors, isDark)}>
+      {/* En-tête natif désactivé pour TOUT le segment : chaque écran porte son
+          propre AppHeader. Réglé ici plutôt qu'écran par écran — sinon toute
+          page ajoutée ensuite hérite du header par défaut d'Expo Router et se
+          retrouve avec deux bandeaux. */}
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          ...STACK_ANIMATION,
+          contentStyle: { backgroundColor: colors.background },
+        }}
+      >
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(app)" options={{ headerShown: false }} />
+        <Stack.Screen name="p/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+      </Stack>
+    </NavigationThemeProvider>
+  );
+}
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -83,30 +118,7 @@ export default function RootLayout() {
             <PreferencesSync>
               <SocketProvider>
                 <ReanimatedToastProvider>
-                  {/* En-tête natif désactivé pour TOUT le segment : chaque écran
-                      porte son propre AppHeader. Réglé ici plutôt qu'écran par
-                      écran — sinon toute page ajoutée ensuite hérite du header
-                      par défaut d'Expo Router et se retrouve avec deux bandeaux. */}
-                  <Stack screenOptions={{ headerShown: false }}>
-                    <Stack.Screen name="index" options={{ headerShown: false }} />
-                    <Stack.Screen
-                      name="(onboarding)"
-                      options={{ headerShown: false }}
-                    />
-                    <Stack.Screen
-                      name="(auth)"
-                      options={{ headerShown: false }}
-                    />
-                    <Stack.Screen name="(app)" options={{ headerShown: false }} />
-                    <Stack.Screen
-                      name="p/[id]"
-                      options={{ headerShown: false }}
-                    />
-                    <Stack.Screen
-                      name="+not-found"
-                      options={{ headerShown: false }}
-                    />
-                  </Stack>
+                  <ThemedRootStack />
                 </ReanimatedToastProvider>
               </SocketProvider>
             </PreferencesSync>

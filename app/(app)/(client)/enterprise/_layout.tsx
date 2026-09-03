@@ -1,8 +1,9 @@
 import { Stack } from "expo-router";
+import { STACK_ANIMATION } from "../../../../theme/navigation";
 
 export default function ClientEnterpriseStackLayout() {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ ...STACK_ANIMATION, headerShown: false }}>
       <Stack.Screen
         name="[id]"
         options={{

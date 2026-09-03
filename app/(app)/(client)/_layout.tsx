@@ -1,9 +1,11 @@
 import { Stack } from "expo-router";
+import { STACK_ANIMATION } from "../../../theme/navigation";
 
 export default function ClientLayout() {
   return (
     <Stack
       screenOptions={{
+        ...STACK_ANIMATION,
         headerShown: false, // Ensure all headers are hidden by default
         animation: 'slide_from_right',
       }}
