@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import AuthTransitionScreen from "../../components/ui/AuthTransitionScreen";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
@@ -48,9 +49,10 @@ export default function SignInScreen() {
     }
   }, [authLoading, isAuthenticated, userRole]);
 
-  // Ne rien afficher pendant le chargement ou si déjà connecté
+  // Le temps que la redirection ci-dessus se déclenche (les effets courent
+  // après le rendu) — un écran de transition plutôt qu'un flash blanc.
   if (authLoading || isAuthenticated) {
-    return null;
+    return <AuthTransitionScreen />;
   }
 
   const handleSignIn = async () => {

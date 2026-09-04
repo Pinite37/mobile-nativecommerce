@@ -108,9 +108,15 @@ class ApiService {
           try {
             const refreshToken = await TokenStorageService.getRefreshToken();
 
+            // Refresh token introuvable en stockage : on NE VIDE PAS la
+            // session pour autant. Une lecture peut échouer ponctuellement
+            // (voir TokenStorageService.readRaw) ; l'effacer sur ce seul
+            // signal transformait un incident de lecture en déconnexion
+            // définitive — la principale cause des "je me connecte et je me
+            // retrouve renvoyé vers la connexion". On laisse simplement
+            // remonter l'erreur d'origine ; c'est AuthContext qui tranche.
             if (!refreshToken) {
               this.isRefreshing = false;
-              await this.handleSessionExpired();
               return Promise.reject(error);
             }
 

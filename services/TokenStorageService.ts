@@ -57,15 +57,34 @@ class TokenStorageService {
 
   // ── Lecture / écriture (toujours appelées depuis l'intérieur de runExclusive) ──
 
+  // Une lecture ratée ici se propage jusqu'à AuthContext, qui interprète
+  // `null` comme « aucune session » et efface tout — un unique incident
+  // transitoire de SecureStore (device sous pression mémoire, keychain pas
+  // encore prête juste après le lancement…) transformait donc un glitch en
+  // déconnexion définitive. Un deuxième essai après une courte pause absorbe
+  // ce cas sans changer le contrat public (les appelants reçoivent toujours
+  // `null`, jamais une exception) : elle échoue vraiment deux fois de suite,
+  // ce qui est beaucoup plus rare qu'une fois.
+  private async readOnce(): Promise<AuthData | null> {
+    const raw = await SecureStore.getItemAsync(AUTH_KEY);
+    this.cached = raw ? JSON.parse(raw) : null;
+    this.cacheTs = Date.now();
+    return this.cached ?? null;
+  }
+
   private async readRaw(): Promise<AuthData | null> {
     if (this.isCacheValid()) return this.cached ?? null;
     try {
-      const raw = await SecureStore.getItemAsync(AUTH_KEY);
-      this.cached = raw ? JSON.parse(raw) : null;
-      this.cacheTs = Date.now();
-      return this.cached ?? null;
-    } catch {
-      return null;
+      return await this.readOnce();
+    } catch (e) {
+      console.warn('⚠️ TokenStorage - lecture échouée, nouvel essai dans 150ms:', (e as any)?.message);
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        return await this.readOnce();
+      } catch (e2) {
+        console.error('❌ TokenStorage - lecture impossible après 2 tentatives:', (e2 as any)?.message);
+        return null;
+      }
     }
   }
 

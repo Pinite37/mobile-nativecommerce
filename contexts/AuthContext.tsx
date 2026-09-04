@@ -51,10 +51,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       StartupPerformanceMonitor.mark('AuthContext - Début vérification');
 
-      // Migration depuis les anciennes clés séparées (une seule fois)
-      await TokenStorageService.migrateFromLegacy();
-
-      await PreCacheService.preloadCriticalData();
+      // Migration et préchargement sont des à-côtés, pas la source de vérité
+      // sur la session. Avant, une exception ici (l'une ou l'autre) tombait
+      // dans le catch global tout en bas, qui force `isAuthenticated: false`
+      // — un livreur avec des tokens parfaitement valides en stockage se
+      // retrouvait déconnecté à cause d'un souci de préchargement sans
+      // aucun rapport avec son authentification. Isolées ici, leurs erreurs
+      // ne peuvent plus atteindre la décision d'authentification.
+      try {
+        // Migration depuis les anciennes clés séparées (une seule fois)
+        await TokenStorageService.migrateFromLegacy();
+      } catch (e) {
+        console.warn('⚠️ AuthContext - Migration ignorée après échec:', (e as any)?.message);
+      }
+      try {
+        await PreCacheService.preloadCriticalData();
+      } catch (e) {
+        console.warn('⚠️ AuthContext - Préchargement ignoré après échec:', (e as any)?.message);
+      }
 
       const [tokens, storedUserData, storedRole, storedUserId] = await Promise.all([
         TokenStorageService.getTokens(),

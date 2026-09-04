@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import AuthTransitionScreen from '../../components/ui/AuthTransitionScreen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
@@ -23,9 +24,10 @@ export default function WelcomeScreen() {
     }
   }, [isLoading, isAuthenticated, userRole]);
 
-  // Ne rien afficher pendant le chargement ou si déjà connecté
+  // Le temps que la redirection ci-dessus se déclenche (les effets courent
+  // après le rendu) — un écran de transition plutôt qu'un flash blanc.
   if (isLoading || isAuthenticated) {
-    return null;
+    return <AuthTransitionScreen />;
   }
   const handleEmailAuth = () => {
     router.push('/(auth)/signin');
