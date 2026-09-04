@@ -89,7 +89,7 @@ export default function NotFoundScreen() {
                     width: 300,
                     height: 300,
                     borderRadius: 150,
-                    backgroundColor: isDark ? "rgba(254, 140, 0, 0.1)" : "rgba(254, 140, 0, 0.15)",
+                    backgroundColor: isDark ? "rgba(139, 92, 246, 0.1)" : "rgba(139, 92, 246, 0.15)",
                     opacity: 0.5,
                 }}
             />
@@ -121,8 +121,8 @@ export default function NotFoundScreen() {
                     <View
                         className="w-32 h-32 rounded-full justify-center items-center mb-6"
                         style={{
-                            backgroundColor: isDark ? "rgba(254, 140, 0, 0.15)" : "rgba(254, 140, 0, 0.1)",
-                            shadowColor: "#FE8C00",
+                            backgroundColor: isDark ? "rgba(139, 92, 246, 0.15)" : "rgba(139, 92, 246, 0.1)",
+                            shadowColor: "#8B5CF6",
                             shadowOffset: { width: 0, height: 8 },
                             shadowOpacity: 0.2,
                             shadowRadius: 16,
@@ -132,13 +132,13 @@ export default function NotFoundScreen() {
                         <View
                             className="w-24 h-24 rounded-full justify-center items-center"
                             style={{
-                                backgroundColor: isDark ? "rgba(254, 140, 0, 0.2)" : "rgba(254, 140, 0, 0.15)",
+                                backgroundColor: isDark ? "rgba(139, 92, 246, 0.2)" : "rgba(139, 92, 246, 0.15)",
                             }}
                         >
                             <Ionicons
                                 name="location-outline"
                                 size={56}
-                                color="#FE8C00"
+                                color="#8B5CF6"
                             />
                         </View>
                     </View>
@@ -147,8 +147,8 @@ export default function NotFoundScreen() {
                     <Text
                         className="text-7xl font-jakarta-bold mb-2"
                         style={{
-                            color: "#FE8C00",
-                            textShadowColor: isDark ? "rgba(254, 140, 0, 0.3)" : "rgba(254, 140, 0, 0.2)",
+                            color: "#8B5CF6",
+                            textShadowColor: isDark ? "rgba(139, 92, 246, 0.3)" : "rgba(139, 92, 246, 0.2)",
                             textShadowOffset: { width: 0, height: 4 },
                             textShadowRadius: 12,
                         }}
@@ -175,20 +175,19 @@ export default function NotFoundScreen() {
 
                     {/* Action Buttons */}
                     <View className="w-full max-w-xs">
-                        {/* Primary Button - Go Home */}
+                        {/* Bouton principal — retour à l'accueil.
+                            Avant : ce bouton étiqueté « Retour à l'accueil » appelait en
+                            réalité router.back() dès qu'un retour était possible, et
+                            n'allait à l'accueil que si aucun retour n'existait — l'action
+                            contredisait son propre libellé. Le bouton « Page précédente »
+                            juste en dessous couvre déjà le cas du retour ; celui-ci va
+                            toujours à l'accueil, sans condition. */}
                         <TouchableOpacity
-                            onPress={() => {
-                                // Try to go back first, if not possible, navigate to home
-                                if (router.canGoBack()) {
-                                    router.back();
-                                } else {
-                                    router.replace("/");
-                                }
-                            }}
+                            onPress={() => router.replace("/")}
                             activeOpacity={0.8}
                             className="mb-3 rounded-2xl overflow-hidden"
                             style={{
-                                shadowColor: "#FE8C00",
+                                shadowColor: "#8B5CF6",
                                 shadowOffset: { width: 0, height: 4 },
                                 shadowOpacity: 0.3,
                                 shadowRadius: 8,
@@ -196,7 +195,7 @@ export default function NotFoundScreen() {
                             }}
                         >
                             <LinearGradient
-                                colors={["#FE8C00", "#F97316"]}
+                                colors={["#8B5CF6", "#7C3AED"]}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 1 }}
                                 className="py-4 px-6 flex-row items-center justify-center"
@@ -217,7 +216,7 @@ export default function NotFoundScreen() {
                                 style={{
                                     backgroundColor: colors.card,
                                     borderWidth: 1.5,
-                                    borderColor: isDark ? "rgba(254, 140, 0, 0.3)" : "rgba(254, 140, 0, 0.2)",
+                                    borderColor: isDark ? "rgba(139, 92, 246, 0.3)" : "rgba(139, 92, 246, 0.2)",
                                 }}
                             >
                                 <Ionicons
