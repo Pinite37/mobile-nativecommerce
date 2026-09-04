@@ -559,7 +559,7 @@ export default function EnterpriseDashboard() {
         </View>
         <TouchableOpacity
           style={{ backgroundColor: colors.tertiary, borderRadius: 14, padding: 10, position: 'relative' }}
-          onPress={() => router.push('/(app)/(enterprise)/profile/notifications')}
+          onPress={() => router.push({ pathname: '/(app)/(enterprise)/notifications', params: { from: 'home' } })}
         >
           <Ionicons name="notifications-outline" size={22} color={colors.textPrimary} />
           {unreadCount > 0 && (

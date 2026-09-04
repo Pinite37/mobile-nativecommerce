@@ -520,7 +520,7 @@ export default function ClientHome() {
                 {isAuthenticated && (
                     <TouchableOpacity
                         style={{ backgroundColor: colors.tertiary, borderRadius: 14, padding: 10, position: 'relative' }}
-                        onPress={() => router.push('/(app)/(client)/profile/notifications')}
+                        onPress={() => router.push({ pathname: '/(app)/(client)/notifications', params: { from: 'home' } })}
                     >
                         <Ionicons name="notifications-outline" size={22} color={colors.textPrimary} />
                         {unreadCount > 0 && (

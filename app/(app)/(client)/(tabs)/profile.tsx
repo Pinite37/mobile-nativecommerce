@@ -223,7 +223,10 @@ export default function ProfileScreen() {
     {
       icon: "notifications-outline",
       title: i18n.t("client.profile.menu.notifications"),
-      route: "/(app)/(client)/profile/notifications",
+      // `from` distingue ce point d'entrée de la cloche de l'accueil, pour
+      // que le bouton retour de l'écran sache où revenir.
+      onPress: () =>
+        router.push({ pathname: "/(app)/(client)/notifications", params: { from: "profile" } }),
     },
     {
       icon: "settings-outline",

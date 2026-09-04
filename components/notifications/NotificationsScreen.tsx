@@ -22,6 +22,15 @@ import { AppHeader } from "@/components/ui/AppHeader";
 interface NotificationsScreenProps {
   title: string;
   emptyMessage: string;
+  /**
+   * Cible explicite du retour. Sans elle, `router.back()` restaure l'état
+   * d'historique d'Expo Router — qui ramenait systématiquement au profil,
+   * même en arrivant depuis l'accueil : cet écran vit sous un dossier nommé
+   * comme l'onglet Profil, et la résolution par URL confondait les deux.
+   * Chaque appelant connaît son propre point de départ ; autant le lui
+   * demander plutôt que deviner.
+   */
+  onBack?: () => void;
 }
 
 interface DisplayNotification extends NotificationData {
@@ -59,6 +68,7 @@ function timeAgo(dateString: string): string {
 export default function NotificationsScreen({
   title,
   emptyMessage,
+  onBack,
 }: NotificationsScreenProps) {
   const router = useRouter();
   const { colors, isDark } = useTheme();
@@ -120,7 +130,7 @@ export default function NotificationsScreen({
   return (
     <View style={{ flex: 1, backgroundColor: colors.secondary }}>
       <ExpoStatusBar style={isDark ? "light" : "dark"} />
-      <AppHeader title={title} onBack={() => router.back()} />
+      <AppHeader title={title} onBack={onBack ?? (() => router.back())} />
 
       {loading ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>

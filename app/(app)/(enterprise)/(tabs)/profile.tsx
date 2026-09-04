@@ -1070,7 +1070,7 @@ function EnterpriseProfilePage() {
             {/* Notifications */}
             <TouchableOpacity
               onPress={() =>
-                router.push("/(app)/(enterprise)/profile/notifications")
+                router.push({ pathname: "/(app)/(enterprise)/notifications", params: { from: "profile" } })
               }
               className="flex-row items-center justify-between px-4 py-5"
               style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
